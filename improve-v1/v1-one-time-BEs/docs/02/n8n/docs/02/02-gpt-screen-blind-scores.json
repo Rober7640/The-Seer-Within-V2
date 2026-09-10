@@ -1,0 +1,66 @@
+{
+  "houses": [
+    {
+      "house": 3,
+      "A": {
+        "readability": 7,
+        "trust": 6,
+        "humanness": 7,
+        "relevance": 6,
+        "continue": 7,
+        "recommend": 6
+      },
+      "B": {
+        "readability": 8,
+        "trust": 8,
+        "humanness": 7,
+        "relevance": 7,
+        "continue": 8,
+        "recommend": 8
+      },
+      "winner": "B"
+    },
+    {
+      "house": 5,
+      "A": {
+        "readability": 8,
+        "trust": 6,
+        "humanness": 7,
+        "relevance": 7,
+        "continue": 7,
+        "recommend": 6
+      },
+      "B": {
+        "readability": 8,
+        "trust": 4,
+        "humanness": 7,
+        "relevance": 6,
+        "continue": 6,
+        "recommend": 4
+      },
+      "winner": "A"
+    },
+    {
+      "house": 12,
+      "A": {
+        "readability": 8,
+        "trust": 7,
+        "humanness": 7,
+        "relevance": 7,
+        "continue": 7,
+        "recommend": 7
+      },
+      "B": {
+        "readability": 8,
+        "trust": 5,
+        "humanness": 7,
+        "relevance": 6,
+        "continue": 7,
+        "recommend": 5
+      },
+      "winner": "A"
+    }
+  ],
+  "verdict": "House 3: B. House 5: A, with a recognition-timing omission. House 12: A. These are local candidate judgments; labels do not establish consistent writer identities. The preferred excerpts still need attention to unsupported certainty, naturalness, and concrete personal application.",
+  "limitations": "Blind review of all six supplied excerpts against the supplied contract only. High confidence in the local preference directions; moderate confidence in exact numerical scores. Recommendation scores concern the writing shown, not an unseen full report. This is not customer NPS, customer testing, or proof of whole-report quality. Required genre forecasts were accepted as product commitments; invented supporting history, extra certainty, blame, and pressure were judged separately."
+}

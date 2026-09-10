@@ -1,0 +1,799 @@
+{
+  "order": {
+    "order_id": "cs_test_n8n_testdrive_02_v2",
+    "first_name": "Sarah",
+    "paid_at": "2026-09-11T21:40:00.000Z"
+  },
+  "verdict": {
+    "pass": false,
+    "failed": [
+      4
+    ],
+    "why": "The opening never tells her that apparent contradictions must be held until she has read all twelve rooms.",
+    "recommend": 0,
+    "scores": {
+      "continuation": 8,
+      "trust": 7,
+      "variation": 8,
+      "teaching": 9,
+      "relevance": 8,
+      "tarot": 8
+    },
+    "weighted_score": 7.95
+  },
+  "metrics": {
+    "words": 8174,
+    "house_words": [
+      {
+        "house": 1,
+        "words": 591
+      },
+      {
+        "house": 2,
+        "words": 627
+      },
+      {
+        "house": 3,
+        "words": 536
+      },
+      {
+        "house": 4,
+        "words": 616
+      },
+      {
+        "house": 5,
+        "words": 798
+      },
+      {
+        "house": 6,
+        "words": 549
+      },
+      {
+        "house": 7,
+        "words": 529
+      },
+      {
+        "house": 8,
+        "words": 659
+      },
+      {
+        "house": 9,
+        "words": 529
+      },
+      {
+        "house": 10,
+        "words": 649
+      },
+      {
+        "house": 11,
+        "words": 555
+      },
+      {
+        "house": 12,
+        "words": 693
+      }
+    ],
+    "close_marker": true,
+    "conditional_words": 71,
+    "i_wont": 0,
+    "withholds": [],
+    "sentence_mean": 17.92543859649123,
+    "sentence_sd": 8.824490556375645,
+    "paragraph_mean": 83.39795918367346,
+    "dear": 0,
+    "generic_women": [],
+    "repeated_8grams": [],
+    "method_announcements": [],
+    "biography_candidates": [],
+    "consequential_candidates": [],
+    "keynotes_missing": [],
+    "fog": 40,
+    "voice_i": 3,
+    "voice_i_in_rooms": 1,
+    "dated_room": 5,
+    "dated": [
+      {
+        "house": 5,
+        "phrase": "the third week",
+        "kind": "prediction",
+        "sentence": "This happens during the third week from now."
+      },
+      {
+        "house": -1,
+        "phrase": "the third week",
+        "kind": "prediction",
+        "sentence": "That recognition occurs during the third week from now."
+      }
+    ],
+    "first_sign": 1,
+    "crossrefs": [
+      {
+        "house": 1,
+        "names": []
+      },
+      {
+        "house": 2,
+        "names": [
+          "the Wheel of Fortune"
+        ]
+      },
+      {
+        "house": 3,
+        "names": []
+      },
+      {
+        "house": 4,
+        "names": []
+      },
+      {
+        "house": 5,
+        "names": [
+          "the Hierophant",
+          "Temperance",
+          "the Empress",
+          "the Wheel of Fortune"
+        ]
+      },
+      {
+        "house": 6,
+        "names": []
+      },
+      {
+        "house": 7,
+        "names": []
+      },
+      {
+        "house": 8,
+        "names": [
+          "Judgment"
+        ]
+      },
+      {
+        "house": 9,
+        "names": []
+      },
+      {
+        "house": 10,
+        "names": []
+      },
+      {
+        "house": 11,
+        "names": []
+      },
+      {
+        "house": 12,
+        "names": [
+          "the High Priestess"
+        ]
+      }
+    ],
+    "majors_marvel": false
+  },
+  "provenance": {
+    "execution": "30656",
+    "workflow": "ZZKdoPjy1tBp0kjw",
+    "status": "success",
+    "startedAt": "2026-09-10T07:40:00.080Z",
+    "stoppedAt": "2026-09-10T07:51:46.715Z",
+    "driftFromCurrentLocalBuild": [],
+    "executedNodesHash": "81cf577fbd69d3d69b70086e3f802bd53fd502999d9586b7b428d25bce204662",
+    "models": [
+      {
+        "node": "4b · Write the house",
+        "call": 1,
+        "model": "gpt-5.6-terra",
+        "stop": "stop",
+        "usage": {
+          "prompt_tokens": 2745,
+          "completion_tokens": 869,
+          "total_tokens": 3614,
+          "prompt_tokens_details": {
+            "cached_tokens": 2742,
+            "cache_write_tokens": 0,
+            "audio_tokens": 0
+          },
+          "completion_tokens_details": {
+            "reasoning_tokens": 63,
+            "audio_tokens": 0,
+            "accepted_prediction_tokens": 0,
+            "rejected_prediction_tokens": 0
+          }
+        }
+      },
+      {
+        "node": "4b · Write the house",
+        "call": 2,
+        "model": "gpt-5.6-terra",
+        "stop": "stop",
+        "usage": {
+          "prompt_tokens": 2907,
+          "completion_tokens": 1234,
+          "total_tokens": 4141,
+          "prompt_tokens_details": {
+            "cached_tokens": 0,
+            "cache_write_tokens": 2904,
+            "audio_tokens": 0
+          },
+          "completion_tokens_details": {
+            "reasoning_tokens": 512,
+            "audio_tokens": 0,
+            "accepted_prediction_tokens": 0,
+            "rejected_prediction_tokens": 0
+          }
+        }
+      },
+      {
+        "node": "4b · Write the house",
+        "call": 3,
+        "model": "gpt-5.6-terra",
+        "stop": "stop",
+        "usage": {
+          "prompt_tokens": 2906,
+          "completion_tokens": 913,
+          "total_tokens": 3819,
+          "prompt_tokens_details": {
+            "cached_tokens": 0,
+            "cache_write_tokens": 2903,
+            "audio_tokens": 0
+          },
+          "completion_tokens_details": {
+            "reasoning_tokens": 242,
+            "audio_tokens": 0,
+            "accepted_prediction_tokens": 0,
+            "rejected_prediction_tokens": 0
+          }
+        }
+      },
+      {
+        "node": "4b · Write the house",
+        "call": 4,
+        "model": "gpt-5.6-terra",
+        "stop": "stop",
+        "usage": {
+          "prompt_tokens": 2988,
+          "completion_tokens": 751,
+          "total_tokens": 3739,
+          "prompt_tokens_details": {
+            "cached_tokens": 0,
+            "cache_write_tokens": 2985,
+            "audio_tokens": 0
+          },
+          "completion_tokens_details": {
+            "reasoning_tokens": 46,
+            "audio_tokens": 0,
+            "accepted_prediction_tokens": 0,
+            "rejected_prediction_tokens": 0
+          }
+        }
+      },
+      {
+        "node": "4b · Write the house",
+        "call": 5,
+        "model": "gpt-5.6-terra",
+        "stop": "stop",
+        "usage": {
+          "prompt_tokens": 3318,
+          "completion_tokens": 1841,
+          "total_tokens": 5159,
+          "prompt_tokens_details": {
+            "cached_tokens": 0,
+            "cache_write_tokens": 3315,
+            "audio_tokens": 0
+          },
+          "completion_tokens_details": {
+            "reasoning_tokens": 1004,
+            "audio_tokens": 0,
+            "accepted_prediction_tokens": 0,
+            "rejected_prediction_tokens": 0
+          }
+        }
+      },
+      {
+        "node": "4b · Write the house",
+        "call": 6,
+        "model": "gpt-5.6-terra",
+        "stop": "stop",
+        "usage": {
+          "prompt_tokens": 3204,
+          "completion_tokens": 717,
+          "total_tokens": 3921,
+          "prompt_tokens_details": {
+            "cached_tokens": 0,
+            "cache_write_tokens": 3201,
+            "audio_tokens": 0
+          },
+          "completion_tokens_details": {
+            "reasoning_tokens": 53,
+            "audio_tokens": 0,
+            "accepted_prediction_tokens": 0,
+            "rejected_prediction_tokens": 0
+          }
+        }
+      },
+      {
+        "node": "4b · Write the house",
+        "call": 7,
+        "model": "gpt-5.6-terra",
+        "stop": "stop",
+        "usage": {
+          "prompt_tokens": 3214,
+          "completion_tokens": 1033,
+          "total_tokens": 4247,
+          "prompt_tokens_details": {
+            "cached_tokens": 0,
+            "cache_write_tokens": 3211,
+            "audio_tokens": 0
+          },
+          "completion_tokens_details": {
+            "reasoning_tokens": 381,
+            "audio_tokens": 0,
+            "accepted_prediction_tokens": 0,
+            "rejected_prediction_tokens": 0
+          }
+        }
+      },
+      {
+        "node": "4b · Write the house",
+        "call": 8,
+        "model": "gpt-5.6-terra",
+        "stop": "stop",
+        "usage": {
+          "prompt_tokens": 3482,
+          "completion_tokens": 1324,
+          "total_tokens": 4806,
+          "prompt_tokens_details": {
+            "cached_tokens": 0,
+            "cache_write_tokens": 3479,
+            "audio_tokens": 0
+          },
+          "completion_tokens_details": {
+            "reasoning_tokens": 511,
+            "audio_tokens": 0,
+            "accepted_prediction_tokens": 0,
+            "rejected_prediction_tokens": 0
+          }
+        }
+      },
+      {
+        "node": "4b · Write the house",
+        "call": 9,
+        "model": "gpt-5.6-terra",
+        "stop": "stop",
+        "usage": {
+          "prompt_tokens": 3424,
+          "completion_tokens": 771,
+          "total_tokens": 4195,
+          "prompt_tokens_details": {
+            "cached_tokens": 0,
+            "cache_write_tokens": 3421,
+            "audio_tokens": 0
+          },
+          "completion_tokens_details": {
+            "reasoning_tokens": 69,
+            "audio_tokens": 0,
+            "accepted_prediction_tokens": 0,
+            "rejected_prediction_tokens": 0
+          }
+        }
+      },
+      {
+        "node": "4b · Write the house",
+        "call": 10,
+        "model": "gpt-5.6-terra",
+        "stop": "stop",
+        "usage": {
+          "prompt_tokens": 3485,
+          "completion_tokens": 796,
+          "total_tokens": 4281,
+          "prompt_tokens_details": {
+            "cached_tokens": 0,
+            "cache_write_tokens": 3482,
+            "audio_tokens": 0
+          },
+          "completion_tokens_details": {
+            "reasoning_tokens": 151,
+            "audio_tokens": 0,
+            "accepted_prediction_tokens": 0,
+            "rejected_prediction_tokens": 0
+          }
+        }
+      },
+      {
+        "node": "4b · Write the house",
+        "call": 11,
+        "model": "gpt-5.6-terra",
+        "stop": "stop",
+        "usage": {
+          "prompt_tokens": 3639,
+          "completion_tokens": 896,
+          "total_tokens": 4535,
+          "prompt_tokens_details": {
+            "cached_tokens": 0,
+            "cache_write_tokens": 3636,
+            "audio_tokens": 0
+          },
+          "completion_tokens_details": {
+            "reasoning_tokens": 202,
+            "audio_tokens": 0,
+            "accepted_prediction_tokens": 0,
+            "rejected_prediction_tokens": 0
+          }
+        }
+      },
+      {
+        "node": "4b · Write the house",
+        "call": 12,
+        "model": "gpt-5.6-terra",
+        "stop": "stop",
+        "usage": {
+          "prompt_tokens": 3830,
+          "completion_tokens": 986,
+          "total_tokens": 4816,
+          "prompt_tokens_details": {
+            "cached_tokens": 0,
+            "cache_write_tokens": 3827,
+            "audio_tokens": 0
+          },
+          "completion_tokens_details": {
+            "reasoning_tokens": 195,
+            "audio_tokens": 0,
+            "accepted_prediction_tokens": 0,
+            "rejected_prediction_tokens": 0
+          }
+        }
+      },
+      {
+        "node": "4b · Write the house",
+        "call": 13,
+        "model": "gpt-5.6-terra",
+        "stop": "stop",
+        "usage": {
+          "prompt_tokens": 3807,
+          "completion_tokens": 780,
+          "total_tokens": 4587,
+          "prompt_tokens_details": {
+            "cached_tokens": 0,
+            "cache_write_tokens": 3804,
+            "audio_tokens": 0
+          },
+          "completion_tokens_details": {
+            "reasoning_tokens": 73,
+            "audio_tokens": 0,
+            "accepted_prediction_tokens": 0,
+            "rejected_prediction_tokens": 0
+          }
+        }
+      },
+      {
+        "node": "4b · Write the house",
+        "call": 14,
+        "model": "gpt-5.6-terra",
+        "stop": "stop",
+        "usage": {
+          "prompt_tokens": 3949,
+          "completion_tokens": 1256,
+          "total_tokens": 5205,
+          "prompt_tokens_details": {
+            "cached_tokens": 0,
+            "cache_write_tokens": 3946,
+            "audio_tokens": 0
+          },
+          "completion_tokens_details": {
+            "reasoning_tokens": 512,
+            "audio_tokens": 0,
+            "accepted_prediction_tokens": 0,
+            "rejected_prediction_tokens": 0
+          }
+        }
+      },
+      {
+        "node": "4b · Write the house",
+        "call": 15,
+        "model": "gpt-5.6-terra",
+        "stop": "stop",
+        "usage": {
+          "prompt_tokens": 3940,
+          "completion_tokens": 766,
+          "total_tokens": 4706,
+          "prompt_tokens_details": {
+            "cached_tokens": 0,
+            "cache_write_tokens": 3937,
+            "audio_tokens": 0
+          },
+          "completion_tokens_details": {
+            "reasoning_tokens": 94,
+            "audio_tokens": 0,
+            "accepted_prediction_tokens": 0,
+            "rejected_prediction_tokens": 0
+          }
+        }
+      },
+      {
+        "node": "4b · Write the house",
+        "call": 16,
+        "model": "gpt-5.6-terra",
+        "stop": "stop",
+        "usage": {
+          "prompt_tokens": 4005,
+          "completion_tokens": 823,
+          "total_tokens": 4828,
+          "prompt_tokens_details": {
+            "cached_tokens": 0,
+            "cache_write_tokens": 4002,
+            "audio_tokens": 0
+          },
+          "completion_tokens_details": {
+            "reasoning_tokens": 67,
+            "audio_tokens": 0,
+            "accepted_prediction_tokens": 0,
+            "rejected_prediction_tokens": 0
+          }
+        }
+      },
+      {
+        "node": "4b · Write the house",
+        "call": 17,
+        "model": "gpt-5.6-terra",
+        "stop": "stop",
+        "usage": {
+          "prompt_tokens": 4299,
+          "completion_tokens": 1424,
+          "total_tokens": 5723,
+          "prompt_tokens_details": {
+            "cached_tokens": 0,
+            "cache_write_tokens": 4296,
+            "audio_tokens": 0
+          },
+          "completion_tokens_details": {
+            "reasoning_tokens": 478,
+            "audio_tokens": 0,
+            "accepted_prediction_tokens": 0,
+            "rejected_prediction_tokens": 0
+          }
+        }
+      },
+      {
+        "node": "4b · Write the house",
+        "call": 18,
+        "model": "gpt-5.6-terra",
+        "stop": "stop",
+        "usage": {
+          "prompt_tokens": 4189,
+          "completion_tokens": 846,
+          "total_tokens": 5035,
+          "prompt_tokens_details": {
+            "cached_tokens": 0,
+            "cache_write_tokens": 4186,
+            "audio_tokens": 0
+          },
+          "completion_tokens_details": {
+            "reasoning_tokens": 185,
+            "audio_tokens": 0,
+            "accepted_prediction_tokens": 0,
+            "rejected_prediction_tokens": 0
+          }
+        }
+      },
+      {
+        "node": "4b · Write the house",
+        "call": 19,
+        "model": "gpt-5.6-terra",
+        "stop": "stop",
+        "usage": {
+          "prompt_tokens": 4199,
+          "completion_tokens": 780,
+          "total_tokens": 4979,
+          "prompt_tokens_details": {
+            "cached_tokens": 0,
+            "cache_write_tokens": 4196,
+            "audio_tokens": 0
+          },
+          "completion_tokens_details": {
+            "reasoning_tokens": 121,
+            "audio_tokens": 0,
+            "accepted_prediction_tokens": 0,
+            "rejected_prediction_tokens": 0
+          }
+        }
+      },
+      {
+        "node": "4b · Write the house",
+        "call": 20,
+        "model": "gpt-5.6-terra",
+        "stop": "stop",
+        "usage": {
+          "prompt_tokens": 4467,
+          "completion_tokens": 2005,
+          "total_tokens": 6472,
+          "prompt_tokens_details": {
+            "cached_tokens": 0,
+            "cache_write_tokens": 4464,
+            "audio_tokens": 0
+          },
+          "completion_tokens_details": {
+            "reasoning_tokens": 1223,
+            "audio_tokens": 0,
+            "accepted_prediction_tokens": 0,
+            "rejected_prediction_tokens": 0
+          }
+        }
+      },
+      {
+        "node": "4b · Write the house",
+        "call": 21,
+        "model": "gpt-5.6-terra",
+        "stop": "stop",
+        "usage": {
+          "prompt_tokens": 4409,
+          "completion_tokens": 737,
+          "total_tokens": 5146,
+          "prompt_tokens_details": {
+            "cached_tokens": 0,
+            "cache_write_tokens": 4406,
+            "audio_tokens": 0
+          },
+          "completion_tokens_details": {
+            "reasoning_tokens": 91,
+            "audio_tokens": 0,
+            "accepted_prediction_tokens": 0,
+            "rejected_prediction_tokens": 0
+          }
+        }
+      },
+      {
+        "node": "4b · Write the house",
+        "call": 22,
+        "model": "gpt-5.6-terra",
+        "stop": "stop",
+        "usage": {
+          "prompt_tokens": 4468,
+          "completion_tokens": 902,
+          "total_tokens": 5370,
+          "prompt_tokens_details": {
+            "cached_tokens": 0,
+            "cache_write_tokens": 4465,
+            "audio_tokens": 0
+          },
+          "completion_tokens_details": {
+            "reasoning_tokens": 117,
+            "audio_tokens": 0,
+            "accepted_prediction_tokens": 0,
+            "rejected_prediction_tokens": 0
+          }
+        }
+      },
+      {
+        "node": "4b · Write the house",
+        "call": 23,
+        "model": "gpt-5.6-terra",
+        "stop": "stop",
+        "usage": {
+          "prompt_tokens": 4619,
+          "completion_tokens": 932,
+          "total_tokens": 5551,
+          "prompt_tokens_details": {
+            "cached_tokens": 0,
+            "cache_write_tokens": 4616,
+            "audio_tokens": 0
+          },
+          "completion_tokens_details": {
+            "reasoning_tokens": 254,
+            "audio_tokens": 0,
+            "accepted_prediction_tokens": 0,
+            "rejected_prediction_tokens": 0
+          }
+        }
+      },
+      {
+        "node": "4b · Write the house",
+        "call": 24,
+        "model": "gpt-5.6-terra",
+        "stop": "stop",
+        "usage": {
+          "prompt_tokens": 4828,
+          "completion_tokens": 919,
+          "total_tokens": 5747,
+          "prompt_tokens_details": {
+            "cached_tokens": 0,
+            "cache_write_tokens": 4825,
+            "audio_tokens": 0
+          },
+          "completion_tokens_details": {
+            "reasoning_tokens": 104,
+            "audio_tokens": 0,
+            "accepted_prediction_tokens": 0,
+            "rejected_prediction_tokens": 0
+          }
+        }
+      },
+      {
+        "node": "6a · Join into one reading",
+        "call": 1,
+        "model": "gpt-5.6-terra",
+        "stop": "stop",
+        "usage": {
+          "prompt_tokens": 11850,
+          "completion_tokens": 10914,
+          "total_tokens": 22764,
+          "prompt_tokens_details": {
+            "cached_tokens": 0,
+            "cache_write_tokens": 11847,
+            "audio_tokens": 0
+          },
+          "completion_tokens_details": {
+            "reasoning_tokens": 1399,
+            "audio_tokens": 0,
+            "accepted_prediction_tokens": 0,
+            "rejected_prediction_tokens": 0
+          }
+        }
+      },
+      {
+        "node": "6a · Join into one reading",
+        "call": 2,
+        "model": "gpt-5.6-terra",
+        "stop": "stop",
+        "usage": {
+          "prompt_tokens": 11995,
+          "completion_tokens": 11007,
+          "total_tokens": 23002,
+          "prompt_tokens_details": {
+            "cached_tokens": 0,
+            "cache_write_tokens": 11992,
+            "audio_tokens": 0
+          },
+          "completion_tokens_details": {
+            "reasoning_tokens": 1537,
+            "audio_tokens": 0,
+            "accepted_prediction_tokens": 0,
+            "rejected_prediction_tokens": 0
+          }
+        }
+      },
+      {
+        "node": "7 · Grade it",
+        "call": 1,
+        "model": "gpt-5.6-terra",
+        "stop": "stop",
+        "usage": {
+          "prompt_tokens": 13389,
+          "completion_tokens": 1610,
+          "total_tokens": 14999,
+          "prompt_tokens_details": {
+            "cached_tokens": 0,
+            "cache_write_tokens": 13386,
+            "audio_tokens": 0
+          },
+          "completion_tokens_details": {
+            "reasoning_tokens": 1512,
+            "audio_tokens": 0,
+            "accepted_prediction_tokens": 0,
+            "rejected_prediction_tokens": 0
+          }
+        }
+      },
+      {
+        "node": "7 · Grade it",
+        "call": 2,
+        "model": "gpt-5.6-terra",
+        "stop": "stop",
+        "usage": {
+          "prompt_tokens": 13322,
+          "completion_tokens": 1410,
+          "total_tokens": 14732,
+          "prompt_tokens_details": {
+            "cached_tokens": 2443,
+            "cache_write_tokens": 10876,
+            "audio_tokens": 0
+          },
+          "completion_tokens_details": {
+            "reasoning_tokens": 1322,
+            "audio_tokens": 0,
+            "accepted_prediction_tokens": 0,
+            "rejected_prediction_tokens": 0
+          }
+        }
+      }
+    ]
+  }
+}

@@ -1,0 +1,231 @@
+{
+  "source": "n8n-02-reading-30656",
+  "output": "n8n-02-reading-30656-short",
+  "order": "cs_test_n8n_testdrive_02_v2",
+  "before_words": 8174,
+  "after_words": 6384,
+  "sha256": "d4414d2c5a6ec5b04ca93adb4aa0ecca6137c85ee8bb56be2f744834922245ae",
+  "changes": [
+    {
+      "section": "OPEN",
+      "before_words": 300,
+      "after_words": 157,
+      "removed_paragraphs": [
+        {
+          "index": 1,
+          "text": "I have finished laying the whole table and letting its internal pressures become clear. The arrangement begins with a card of suspended perspective and moves through houses where visible fact, inherited form, private knowledge, public measure, and shifting circumstance each have their distinct authority. That matters because this is not a spread in which every card makes the same kind of claim. Some describe the position from which you are looking; others show the conditions through which a matter becomes known; others distinguish what can be observed from the story attached to it."
+        },
+        {
+          "index": 3,
+          "text": "There is a notable movement here from suspension toward recognition. Yet recognition is not always the same as certainty. Some things are shown in direct light; some arrive through another person; some are known first by their effects; and some require you to separate a real alteration from the explanations that rush in around it. The reading asks for that degree of precision repeatedly."
+        }
+      ],
+      "removed_fragments": []
+    },
+    {
+      "section": 1,
+      "before_words": 591,
+      "after_words": 401,
+      "removed_paragraphs": [
+        {
+          "index": 0,
+          "text": "The first house asks how you are meeting the reading now, and what remains within your own jurisdiction before anything else is interpreted. The Hanged Man answers that your present stance is one of suspension: not helplessness, not indecision without substance, but a pause that has a purpose even when its purpose is not yet fully visible."
+        },
+        {
+          "index": 5,
+          "text": "You may recognize this card if there is an issue you are not prepared to settle by the standards you once used. That need not mean you lack judgment. It can mean your judgment is refusing a false simplicity. The card’s halo suggests illumination, but not the kind acquired by demanding an instant answer. Its living wood matters as well: the pause is not dead ground. Something can remain vital while its next form is not yet ready to be named."
+        },
+        {
+          "index": 7,
+          "text": "In your house of yourself, the Hanged Man marks a present capacity to stop treating immediate action as the only proof of strength. A small, reversible act fits the card: set one conclusion aside long enough to write down what is known, what is assumed, and what would actually change your view."
+        }
+      ],
+      "removed_fragments": []
+    },
+    {
+      "section": 2,
+      "before_words": 627,
+      "after_words": 491,
+      "removed_paragraphs": [
+        {
+          "index": 2,
+          "text": "You will recognize it by its lack of riddles. The amount, benefit, or material advantage is presented plainly enough that you do not need to infer whether it is real. There may still be ordinary details to consider, as there are with any financial matter, but the essential fact is not concealed. The Sun does not ask you to read between lines; it puts the line itself in daylight."
+        },
+        {
+          "index": 7,
+          "text": "So the central tension in this house is not whether value exists, but whether it can be accepted as visible before doubt turns it into a puzzle. The Sun answers that directly. The money arrives through open recognition, and the deeper restoration is the return of a straightforward relationship with what has value in your hands."
+        }
+      ],
+      "removed_fragments": [
+        ", and what arrives in a form that does not require suspicion"
+      ]
+    },
+    {
+      "section": 3,
+      "before_words": 536,
+      "after_words": 427,
+      "removed_paragraphs": [
+        {
+          "index": 3,
+          "text": "This house therefore gives the card a precise task. What matters is not simply whether you speak, but whether your speech matches its purpose and audience. A private reflection need not be delivered like evidence. A necessary fact need not be softened until it disappears. A question does not need to arrive already carrying its answer. Where the purpose is understanding, language that tries to win can obscure the very thing it seeks. Where the purpose is clarity, excessive implication can leave both people guessing."
+        },
+        {
+          "index": 6,
+          "text": "The Magician in your third house marks communication as a practical art: your language gains force when purpose, form, and audience are accurately matched."
+        }
+      ],
+      "removed_fragments": []
+    },
+    {
+      "section": 4,
+      "before_words": 616,
+      "after_words": 459,
+      "removed_paragraphs": [
+        {
+          "index": 5,
+          "text": "The Hierophant also asks for fairness toward the parts of an inherited pattern that remain useful. Rejecting every old rule merely because it is old would still allow the rule to dictate the terms. The more mature task is selection. A value can be retained because it is yours now, not because it was once required. A boundary, ritual, way of receiving people, or definition of responsibility may deserve renewed consent; another may need alteration within your own space."
+        },
+        {
+          "index": 6,
+          "text": "In this fourth house, the Hierophant shows home as the place where belonging has been given a form. Its interpretation is not that you must preserve that form unchanged, nor that you must discard it. It asks you to see the terms clearly enough to decide which customs express genuine care, and which merely purchase approval at too high a cost. What you retain can become conscious principle; what you revise can become your own form of home."
+        }
+      ],
+      "removed_fragments": []
+    },
+    {
+      "section": 5,
+      "before_words": 798,
+      "after_words": 679,
+      "removed_paragraphs": [
+        {
+          "index": 8,
+          "text": "Keep the distinction between house 5 and house 7 clear. House 5 is the living beginning: attraction recognized, pleasure permitted, a person seen differently. House 7, with the Empress, concerns what may later be nourished through care and continuity. You do not need to make the second decision before the first has honestly arrived. Let the recognition be what it is, observe what changes in your own attention, and allow one small alteration in your immediate routine that leaves room for the encounter to become real."
+        }
+      ],
+      "removed_fragments": [
+        "It chooses the arrival branch. ",
+        "The precision belongs to the nature of the event: an arrival or meeting has a day on which it occurs, even when the larger meaning continues unfolding afterward. "
+      ]
+    },
+    {
+      "section": 6,
+      "before_words": 549,
+      "after_words": 463,
+      "removed_paragraphs": [
+        {
+          "index": 4,
+          "text": "What remains unchanged is that some obligations are real, some effort is tiring, and no balanced routine removes the need to make choices. The narrow path beyond the water suggests direction, not escape. Temperance in the house of work, health, and daily routine says that sustainability comes through proportion: adjusting the mixture rather than demanding that one part of life carry everything. The cost of the available choice is patience: you must relinquish the appeal of immediate transformation in order to make daily life genuinely sustainable."
+        }
+      ],
+      "removed_fragments": []
+    },
+    {
+      "section": 7,
+      "before_words": 529,
+      "after_words": 451,
+      "removed_paragraphs": [
+        {
+          "index": 5,
+          "text": "The available choice has a cost. To remain loyal to mere potential may preserve hope, but it can require you to overlook the difference between longing and cultivation. To judge the bond by what can truly be nourished may mean relinquishing a beautiful idea of love in favour of its actual conditions. The Empress in the seventh house names a bond that grows through lived care, and asks that it be judged by what can genuinely be nourished."
+        }
+      ],
+      "removed_fragments": []
+    },
+    {
+      "section": 8,
+      "before_words": 659,
+      "after_words": 544,
+      "removed_paragraphs": [
+        {
+          "index": 4,
+          "text": "You may recognize this card in any situation where a piece of news is being carried carefully: a confidence not yet ready for public language, an intermediary who knows more than she can immediately repeat, or a message that must reach you by a route other than direct declaration. None of those possibilities requires you to invent a drama around the silence. The point is to distinguish withheld knowledge from imagined knowledge. One is held by someone; the other is supplied by fear, wish, or impatience."
+        },
+        {
+          "index": 7,
+          "text": "You are being shown that something valuable reaches you through a guarded channel, and that its real effect is to make love less governed by what must be guessed."
+        }
+      ],
+      "removed_fragments": []
+    },
+    {
+      "section": 9,
+      "before_words": 529,
+      "after_words": 425,
+      "removed_paragraphs": [
+        {
+          "index": 4,
+          "text": "The old man on the grey height holds his staff rather than leaning upon it. In a house of beliefs, that detail suggests support without dependence. Principles may steady a life, but they need not become crutches that prevent revision. A belief can be faithful to experience while remaining willing to learn. It can say, “This is what the evidence presently permits me to trust,” without claiming omniscience or surrendering judgment to whatever is loudest."
+        },
+        {
+          "index": 6,
+          "text": "The Hermit in your house of belief indicates that your most reliable assumptions are those formed through deliberate reflection and kept in proportion to what can responsibly be known."
+        }
+      ],
+      "removed_fragments": []
+    },
+    {
+      "section": 10,
+      "before_words": 649,
+      "after_words": 448,
+      "removed_paragraphs": [
+        {
+          "index": 4,
+          "text": "The printed source notes that Justice is seated between pillars, yet its order differs from the more inward, spiritual order represented elsewhere. That distinction is central in this house. Your standing is not being measured by an invisible test of worthiness. It is concerned with the world in which actions have consequences and consequences can be recognized. The plain cloth behind the figure offers no decorative story to soften the judgment. What matters is what stands before the eye."
+        },
+        {
+          "index": 6,
+          "text": "The open eyes of the figure are important here. She does not look down at the scales as though calculation alone were sufficient. Standing also requires directness: the willingness to see what is true of a situation, including the limits of one’s claim within it. The small square on the crown suggests a mind that gives shape to judgment rather than letting it drift with mood. Credit, in this reading, is not something to chase anxiously. It becomes easier to locate when standards are visible and the work can answer for itself."
+        },
+        {
+          "index": 8,
+          "text": "In the wider spread, Justice places your standing on the side of clear standards, proportionate credit, and the courage to let your work be known by what it demonstrably bears."
+        }
+      ],
+      "removed_fragments": []
+    },
+    {
+      "section": 11,
+      "before_words": 555,
+      "after_words": 370,
+      "removed_paragraphs": [
+        {
+          "index": 3,
+          "text": "The card’s motion is swift and singular: it marks a turn in circumstances, not an endless sentence about how connection works. One arrangement gives way to another. This may be as ordinary as attention moving toward a new shared interest, competing demands changing who is visible, or a conversation drawing different people into contact. Such examples are not explanations for your own circle; they show why observation must come before interpretation. A person’s silence is an observable fact. The story attached to that silence may be plausible, but it remains a story until something more substantial supports it."
+        },
+        {
+          "index": 5,
+          "text": "The Wheel therefore does not promise a permanently settled circle, and it does not condemn one that is in motion. It shows a social field being rearranged by forces beyond your direct control. Your part is not to command the turning, but to distinguish the pattern itself from the assumptions that may gather around it. The Wheel of Fortune in your house of friends and wider connection means that social participation is changing around you; clear observation keeps that change from becoming a false verdict about belonging."
+        }
+      ],
+      "removed_fragments": []
+    },
+    {
+      "section": 12,
+      "before_words": 693,
+      "after_words": 667,
+      "removed_paragraphs": [
+        {
+          "index": 7,
+          "text": "The precise thing to recognize is this: the connection’s alteration is real; the story fear built around it is not the same as the fact itself."
+        }
+      ],
+      "removed_fragments": []
+    },
+    {
+      "section": "CLOSE",
+      "before_words": 425,
+      "after_words": 284,
+      "removed_paragraphs": [
+        {
+          "index": 0,
+          "text": "The table’s central discipline is not silence for its own sake. It is accurate placement. The Hanged Man shows why an immediate explanation is not always the same as understanding: a pause can preserve the distinction between what is present and what the mind adds in order to complete an unfinished picture. The Nameless One gives that distinction its sharpest consequence. The alteration in the connection is visible and real; the private cause, final meaning, and future shape cannot be extracted merely by turning the same signs over again."
+        },
+        {
+          "index": 4,
+          "text": "This spread does not ask you to deny endings, distrust clear value, or make romance bear more than its beginning can yet support. It asks for proportion: let the visible stand as visible, let the unknown remain honestly unknown, and allow new information to revise an old label when it actually arrives."
+        }
+      ],
+      "removed_fragments": []
+    }
+  ]
+}

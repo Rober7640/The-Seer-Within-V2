@@ -11,7 +11,7 @@ gets deleted). See `docs/06/0-WORKFLOW-06.md`'s Fourth-round section for why thi
 | **Device** | **none.** No divination event. The creature itself carries the letter — her problem doesn't arrive until late, after the anatomy and its symbolism are fully walked through |
 | **Structure** | creature-first symbolism reveal, her problem arrives late — operator direction, 2026-09-01. Rejects the earlier product-led hooks (the wrist instruction, the container-problem claim) as too weak to open on |
 | **Merge token** | `%FIRSTNAME%` → `{{ subscriber.first_name \| capitalize }}` on AWeber, as 02–04 |
-| **Links** | three point to the booking page — `{{BOOKING_URL}}?c=1` (the close), `?c=2` (the P.S.), `?c=3` (the P.P.S., added 2026-09-03) |
+| **Links** | three point to the booking page — `https://theseerwithin.com/offers/wiccan/pixiu-bracelet?c=1` (the close), `?c=2` (the P.S.), `?c=3` (the P.P.S., added 2026-09-03) |
 | **Price** | never appears here — lives on the booking page, statement 6 |
 | **Brief** | not yet merged into `docs/00a-BRIEFS-BEs.md` — see `docs/06/06-SPEC-wishing-bracelet.md` |
 | **Companion candidates** | `06-E2-esl-kaucim.md` / `06-E2-esl-iching.md` only — the reading-led direction, kept deliberately. Every product-led runner-up (5 named DR-architecture letters, creature-b, the unheaded original, 4 subheadline styles, close-a, close-b) was deleted 2026-09-02 once this file won — see `docs/06/0-WORKFLOW-06.md`'s Fourth-round audit note |
@@ -338,7 +338,7 @@ I'm not going to tell you this fixes money in general. It's not going to conjure
 never realistically yours. What it does do: it pulls what's already somewhere in reach a little
 closer, and once it arrives, it doesn't let go again.
 
-[Let me send it]({{BOOKING_URL}}?c=1), and I'll walk you through the rest — where to send it, what
+[Let me send it](https://theseerwithin.com/offers/wiccan/pixiu-bracelet?c=1), and I'll walk you through the rest — where to send it, what
 to write on your one sentence, how to seal it in. Nothing complicated.
 
 I hope this holds for you the way it was built to, dear.
@@ -350,10 +350,10 @@ I hope this holds for you the way it was built to, dear.
 ## P.S. *(ships on every letter — settled 2026-08-10, no A/B)*
 
 P.S. If you remember one thing from tonight, let it be this: he has no way out. That's not a
-detail, that's the whole mechanism. [It's ready to send whenever you are.]({{BOOKING_URL}}?c=2)
+detail, that's the whole mechanism. [It's ready to send whenever you are.](https://theseerwithin.com/offers/wiccan/pixiu-bracelet?c=2)
 
 P.P.S. Left wrist, %FIRSTNAME%, never the right — it's the one that receives.
-[Send it to me.]({{BOOKING_URL}}?c=3)
+[Send it to me.](https://theseerwithin.com/offers/wiccan/pixiu-bracelet?c=3)
 
 ---
 

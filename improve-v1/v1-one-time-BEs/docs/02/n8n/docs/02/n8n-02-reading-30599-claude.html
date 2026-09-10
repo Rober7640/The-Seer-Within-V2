@@ -1,0 +1,327 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"><style>
+  /* ⛔ THE PAPER MARGIN CANNOT BE 0 — .inner's padding applies once, at the START of the div,
+     so any house running past one sheet continues hard against the paper edge. The border has
+     to come from @page so every sheet gets it. The cover is exempted twice over: it is a
+     deliberate full-bleed photograph and it must survive a reordering.
+     ⛔ NO BACKTICKS IN THIS BLOCK — one ends the template literal and the node stops parsing. */
+  @page { size: Letter; margin: .6in 0 .6in; }
+  @page :first { margin: 0; }
+  @page cover  { margin: 0; }
+  * { -webkit-print-color-adjust: exact; print-color-adjust: exact; box-sizing: border-box; }
+  body { font-family: Georgia, 'Times New Roman', serif; color: #2A2622; margin: 0;
+         font-size: 11.5pt; line-height: 1.62; }
+  h1, h2 { font-family: Georgia, serif; font-weight: bold; color: #2A2622; }
+
+  /* ── page 1 · the cover ────────────────────────────────────────────────────
+     ⛔ contain, not cover. The art is SQUARE and the page is portrait, so object-fit:cover
+     would crop the left and right cards off the wheel entirely. */
+  .cover { page: cover; position: relative; width: 8.5in; height: 11in; overflow: hidden;
+           page-break-after: always; background: #FBF8F1; }
+  .cover img { position: absolute; left: .35in; top: .9in; width: 7.8in; height: 7.8in;
+               object-fit: contain; }
+  .covertype { position: absolute; left: 0; right: 0; bottom: 1.1in; text-align: center;
+               font-size: 12.5pt; color: #6E6459; margin: 0; }
+  .covertype b { color: #2A2622; }
+
+  .inner { padding: .30in .95in .35in; }
+  /* ⭐ ITS OWN PAGE. Twelve rooms with a plain-English line each is a reference she will flip
+     back to, not a preamble — and cramming it above the opening pushed the letter onto page 3
+     anyway. Given a page it can breathe, and the reading starts clean. */
+  .intake { border: 1pt solid #DED4BE; background: #FAF7F0; padding: 20pt 22pt; margin: 0;
+            page-break-after: always; }
+  .intake .rm { margin: 0 0 7pt; page-break-inside: avoid; }
+  .intake p.gl { margin: 1pt 0 0 20pt; font-size: 9pt; line-height: 1.4; color: #7C766A; }
+  .intake .k { font-family: Helvetica, Arial, sans-serif; font-size: 7.5pt; letter-spacing: .18em;
+    text-transform: uppercase; color: #8A8377; margin: 0 0 9pt; }
+  .intake p.line { margin: 0; font-size: 11pt; line-height: 1.4; }
+  .intake p.line b { display: inline-block; width: 20pt; color: #8A6212; }
+  .intake .c { color: #6E6459; font-style: italic; }
+  .intake .ax { font-family: Helvetica, Arial, sans-serif; font-size: 7.5pt; color: #A79C88;
+                margin-left: 5pt; letter-spacing: .04em; }
+  .intake p.lede { font-size: 9.5pt; line-height: 1.55; color: #5C5348; margin: 0 0 8pt; }
+  .intake p.lede b { color: #8A6212; }
+  .intake p.foot { margin: 9pt 0 0; font-size: 8.5pt; color: #8A8377; font-style: italic;
+                   border-top: 1pt solid #E7DFCB; padding-top: 7pt; }
+  .intake b { color: #8A6212; }
+
+  .opening { margin-bottom: 26pt; }
+  .opening p:first-child { font-size: 13.5pt; line-height: 1.5; }
+  /* ⛔ NO DROP CAP. It used to sit on .opening's first paragraph, which was prose. The reading
+     now opens on a salutation — "Sarah," — so the cap rendered a giant S followed by "arah,"
+     and mangled the one word in the document that must be right. A drop cap cannot be applied
+     safely to a line whose content the model chooses. */
+  .opening p:first-child { font-weight: bold; }
+
+  /* ⭐ ONE HOUSE, ONE OPENING — twelve rooms should not run together, and the shipped
+     hand-made PDF page-breaks between them too. */
+  /* ⛔ house 1 MUST NOT force its own page. It did, and the opening's last paragraph was left
+     alone on a sheet that was 85% white space — in a document she paid $35 for. Every LATER
+     house still opens a page (twelve rooms should not run together), but the first one
+     continues straight on from the opening it belongs to. */
+  section { page-break-before: always; page-break-inside: auto; }
+  section:first-of-type { page-break-before: auto; }
+  /* ⛔ A HEADING MUST NOT BE LEFT AT THE FOOT OF A PAGE. Only house 1 can hit this — every
+     later house opens its own sheet — but house 1 continues from the opening, so on a real
+     n8n render (execution 30541) its "HOUSE 1 / yourself / …the Tower, a card of…" sat alone
+     at the bottom of page 2 with the passage starting on page 3. Keep the heading with the
+     text it heads, and keep a card and its caption together. */
+  .hh { page-break-inside: avoid; break-inside: avoid;
+        page-break-after: avoid;  break-after: avoid; }
+  section figure { page-break-inside: avoid; break-inside: avoid; }
+  section h2 { font-size: 16pt; line-height: 1.25; margin: 0 0 14pt; }
+  section h3 { font-family: Georgia, serif; font-weight: bold; font-size: 12.5pt;
+    line-height: 1.35; margin: -6pt 0 14pt; color: #5C5348; }
+  section h2 .n { display: block; font-family: Helvetica, Arial, sans-serif; font-size: 8pt;
+    letter-spacing: .18em; text-transform: uppercase; color: #8A6212; margin-bottom: 5pt; }
+  section figure { float: left; width: 1.9in; margin: 2pt 20pt 10pt 0; }
+  section figure img { width: 100%; display: block; border: 1pt solid #DDD6C6; }
+  section figcaption { font-family: Helvetica, Arial, sans-serif; font-size: 7pt;
+    letter-spacing: .13em; text-transform: uppercase; color: #8A8377; margin-top: 5pt;
+    text-align: center; line-height: 1.4; }
+  /* the plain meaning, under the card name — lower case and readable, not a label */
+  section figcaption .pl { display: block; margin-top: 5pt; font-family: Georgia, serif;
+    font-size: 8.5pt; letter-spacing: 0; text-transform: none; color: #6E6459;
+    font-style: italic; line-height: 1.45; }
+  p { margin: 0 0 9pt; }
+
+  /* ⭐ WAITE'S OWN WORDS. Set apart so it reads as a quoted authority and never as Evelyn —
+     a buyer must not think she wrote "shews" and "the flos campi". */
+  blockquote.waite { clear: both; margin: 4pt 0 16pt; padding: 12pt 16pt 10pt;
+    background: #F7F4EC; border-left: 2pt solid #C9BFA8; page-break-inside: avoid; }
+  blockquote.waite p { font-size: 9.5pt; line-height: 1.6; color: #5C5348; margin: 0 0 6pt;
+    font-style: italic; }
+  blockquote.waite cite { display: block; font-family: Helvetica, Arial, sans-serif;
+    font-size: 7pt; letter-spacing: .12em; text-transform: uppercase; color: #A0987F;
+    font-style: normal; }
+
+  .gift { page-break-before: always; }
+  .gift h2 { font-size: 15pt; margin: 22pt 0 10pt; }
+  .gift h2:first-child { margin-top: 0; }
+  .gift ul { margin: 0 0 9pt 16pt; padding: 0; }
+  .gift li { margin: 0 0 5pt; }
+
+  .colophon { page-break-inside: avoid; page-break-before: avoid; margin-top: 24pt;
+              border-top: 1pt solid #DED4BE; padding-top: 12pt; }
+  .colophon p { font-size: 9pt; line-height: 1.55; color: #7C776D; margin: 0 0 7pt; }
+  .colophon .sig { font-family: Georgia, serif; font-size: 11pt; color: #2A2622; }
+</style></head><body>
+  <div class="cover">
+    <img src="https://luna-assets-tsw.s3.ap-southeast-2.amazonaws.com/evelyn/02-cover-twelve.jpg" alt="">
+    <p class="covertype">Laid for <b>Sarah</b>
+       &nbsp;&middot;&nbsp; 7 September 2026</p>
+  </div>
+  <div class="inner">
+    <div class="intake">
+      <p class="k">Your twelve, as they were laid</p>
+      <p class="lede">A house is a room of a life. The wheel has twelve of them, and one card was
+      laid in each — it is the oldest spread there is for reading a whole life rather than a
+      single question.</p>
+      <p class="lede">The rooms come in <b>six pairs</b>, each one facing the room across the
+      wheel from it: what you own faces what reaches you through other people, home faces your
+      standing, romance faces your circle. Where a room below sends you across to another, that
+      pairing is why.</p>
+      <div class="rm">
+        <p class="line"><b>1</b>&nbsp; yourself
+          <span class="ax">&#8596; 7</span>
+          <span class="c">the Hermit</span></p>
+        <p class="gl">how you meet the world, and what starts with you</p></div><div class="rm">
+        <p class="line"><b>2</b>&nbsp; what you own
+          <span class="ax">&#8596; 8</span>
+          <span class="c">the High Priestess</span></p>
+        <p class="gl">money, and the things that are genuinely yours</p></div><div class="rm">
+        <p class="line"><b>3</b>&nbsp; what you say, and who you say it to
+          <span class="ax">&#8596; 9</span>
+          <span class="c">the Empress</span></p>
+        <p class="gl">conversations, messages, and the thing you rehearse and never send</p></div><div class="rm">
+        <p class="line"><b>4</b>&nbsp; home, and what you came from
+          <span class="ax">&#8596; 10</span>
+          <span class="c">the Magician</span></p>
+        <p class="gl">the house you live in, and the one you were raised in</p></div><div class="rm">
+        <p class="line"><b>5</b>&nbsp; romance, and what delights you
+          <span class="ax">&#8596; 11</span>
+          <span class="c">the Nameless One</span></p>
+        <p class="gl">attraction and pleasure — the beginning of things, before anything is settled</p></div><div class="rm">
+        <p class="line"><b>6</b>&nbsp; work, health, the daily grind
+          <span class="ax">&#8596; 12</span>
+          <span class="c">Strength</span></p>
+        <p class="gl">the ordinary week: the job, the body, the routine you repeat</p></div><div class="rm">
+        <p class="line"><b>7</b>&nbsp; who you are bound to
+          <span class="ax">&#8596; 1</span>
+          <span class="c">the Chariot</span></p>
+        <p class="gl">your partner, or whoever you are tied to whether or not it is called that</p></div><div class="rm">
+        <p class="line"><b>8</b>&nbsp; what is hidden, and what comes through others
+          <span class="ax">&#8596; 2</span>
+          <span class="c">Temperance</span></p>
+        <p class="gl">what reaches you through somebody else's hands — money, news, a decision made elsewhere</p></div><div class="rm">
+        <p class="line"><b>9</b>&nbsp; what you believe
+          <span class="ax">&#8596; 3</span>
+          <span class="c">the Fool</span></p>
+        <p class="gl">what you take to be true about how life works</p></div><div class="rm">
+        <p class="line"><b>10</b>&nbsp; your standing
+          <span class="ax">&#8596; 4</span>
+          <span class="c">the Hanged Man</span></p>
+        <p class="gl">how you are seen, and by the people whose opinion counts</p></div><div class="rm">
+        <p class="line"><b>11</b>&nbsp; your circle
+          <span class="ax">&#8596; 5</span>
+          <span class="c">Judgment</span></p>
+        <p class="gl">your friends, and who actually turns up</p></div><div class="rm">
+        <p class="line"><b>12</b>&nbsp; what is being kept from you
+          <span class="ax">&#8596; 6</span>
+          <span class="c">the Wheel of Fortune</span></p>
+        <p class="gl">what is real and close, and not visible from where you are standing</p></div>
+      <p class="lede foot">The pair marker &#8596; points to the room across the wheel. Nothing
+      to learn — it is there so a line that sends you to another room makes sense when it does.</p>
+    </div>
+    <div class="opening"><p>I laid your twelve last night, dear, with the lamp lit and the rest of the house asleep.</p><p>I would have bet on the fifth. That is where your question lives, and I expected it to be the room that kept me at the table.</p><p>It was the twelfth. What stands in your twelfth kept pulling my eye back to it, and I sat a long while before I would write it down.</p><p>Now the shape of it, flat, because you have paid for flat. This is a good draw with one hard room in it, and the hard thing there is something you have been kept from knowing.</p><p>The next two months are the window. Every one of the twelve begins inside that stretch.</p><p>And inside it, your life happens in three rooms — the second, the fifth and the twelfth. Money, an arrival, and a man's decision.</p><p>Twelve trumps and no minors; that was my instruction, not the deck's doing. It is the heaviest reading I lay, it costs me a night I do not get back, and your first draw asked for it.</p><p>What the letter left standing is settled here. Not in this opening — in the rooms themselves, each answer in the room it belongs to.</p><p>These are twelve rooms of one life. Not four answers with filler around them.</p><p>One thing before you start. You had to admit something to yourself to send me that money — that you could not work this out alone, and that you had stopped being able to ask anyone close to you. That admission is not an accusation, and nothing in these twelve cards holds it against you. It is the reason the reading is any use at all.</p><p>Read all twelve before you decide what they say. One card will promise you ease and the next will ask you for work, and they are not contradicting each other. A life does not run consistent either. The meaning is in how they sit together.</p></div><section>
+    <header class="hh">
+    <h2><span class="n">House 1</span>yourself</h2>
+    <h3>The cosmos has guided your choice to the Hermit, a card of the climb already finished</h3>
+    </header>
+    <figure><img src="https://luna-assets-tsw.s3.ap-southeast-2.amazonaws.com/evelyn/tarot-rws/the-hermit.jpg" alt="">
+      <figcaption>the Hermit
+        <span class="pl">gone up alone on purpose, and holding the light</span>
+      </figcaption>
+    </figure>
+    <blockquote class="waite"><p>The variation from the conventional models in this card is only that the lamp is not enveloped partially in the mantle of its bearer, who blends the idea of the Ancient of Days with the Light of the World. It is a star which shines in the lantern. I have said that this is a card of attainment, and to extend this conception the figure is seen holding up his beacon on an eminence. Therefore the Hermit is not a wise man in search of truth and justice; nor is he an especial example of experience. His beacon intimates that “where I am, you also may be.” It is a card which is understood quite incorrectly when it is connected with the idea of occult isolation.</p>
+      <cite>A. E. Waite, <em>The Pictorial Key to the Tarot</em>, 1911</cite></blockquote>
+    <div class="prose"><p>Behind the old man there is nothing but sky. No track worn up to where he stands, and none going down the far side — the painter gave him no way back and no way onward. The climb is over. He arrived.</p><p>So you are not stuck, and I will not let you call it that. You are standing where you spent years getting to.</p><p>Here is the thing I think you have never said out loud. You write the long answer, read it twice, then send the short one — and you carry the long one around with you all day.</p><p>The staff in his left hand is held upright, not leaned on. You do not need propping. Notice that the Chariot sits in your seventh: with him you move at his speed, and alone you move at yours.</p><p>The lamp lights one step. Send the long version once this month, to one person, and it will keep lighting them.</p><p>Nothing on that hill was given to you. The next card is about a thing that was.</p></div></section><section>
+    <header class="hh">
+    <h2><span class="n">House 2</span>what you own</h2>
+    <h3>The celestial wisdom has guided your selection to the High Priestess, a card of what is written and not yet read</h3>
+    </header>
+    <figure><img src="https://luna-assets-tsw.s3.ap-southeast-2.amazonaws.com/evelyn/tarot-rws/the-high-priestess.jpg" alt="">
+      <figcaption>the High Priestess
+        <span class="pl">something known and not yet said out loud</span>
+      </figcaption>
+    </figure>
+    <blockquote class="waite"><p>She has the lunar crescent at her feet, a horned diadem on her head, with a globe in the middle place, and a large solar cross on her breast. The scroll in her hands is inscribed with the word TORA. It is partly covered by her mantle, to shew that some things are implied and some spoken. She is seated between the white and black pillars of the mystic Temple, and the veil of the Temple is behind her: it is embroidered with palms and pomegranates. The vestments are flowing and gauzy, and the mantle suggests light—a shimmering radiance. She is really the Secret Church, the House which is of God and man. She is the spiritual Bride and Mother. She is, in fine, the Queen of the borrowed light.</p>
+      <cite>A. E. Waite, <em>The Pictorial Key to the Tarot</em>, 1911</cite></blockquote>
+    <div class="prose"><p>Two pillars, one black and one white, and each has a single letter cut into it — B and J. Not words. Letters, standing for something longer that nobody has spelled out for her.</p><p>Your money is written down somewhere, in full, and you have not been told the whole figure.</p><p>That is the door, dear, and I promised you a door. It is paper, and a stranger's desk. A letter or a statement with a sum on it that is already in your name.</p><p>Temperance in your eighth pours from one cup into another without spilling, and it is somebody else's hands doing the pouring. So a clerk checks, and the number read back to you is bigger than the one you have been living on.</p><p>You kept the papers when throwing them out would have been easier. That was right, and it is the thing that pays you. Ask in writing this month.</p><p>The scroll is in her hands, half of it under her mantle. She is waiting to be asked.</p></div></section><section>
+    <header class="hh">
+    <h2><span class="n">House 3</span>what you say, and who you say it to</h2>
+    <h3>The cosmic alignment has guided your choice to the Empress, a card of what is already growing</h3>
+    </header>
+    <figure><img src="https://luna-assets-tsw.s3.ap-southeast-2.amazonaws.com/evelyn/tarot-rws/the-empress.jpg" alt="">
+      <figcaption>the Empress
+        <span class="pl">something growing that needs feeding, not starting</span>
+      </figcaption>
+    </figure>
+    <blockquote class="waite"><p>A stately figure, seated, having rich vestments and royal aspect, as of a daughter of heaven and earth. Her diadem is of twelve stars, gathered in a cluster. The symbol of Venus is on the shield which rests near her. A field of corn is ripening in front of her, and beyond there is a fall of water. The sceptre which she bears is surmounted by the globe of this world. She is the inferior Garden of Eden, the Earthly Paradise. She is above all things universal fecundity and the outer sense of the Word. In another order of ideas, the card of the Empress signifies the door or gate by which an entrance is obtained into this life, as into the Garden of Venus.</p>
+      <cite>A. E. Waite, <em>The Pictorial Key to the Tarot</em>, 1911</cite></blockquote>
+    <div class="prose"><p>The sceptre is up in her hand, not resting on anything — a small globe at the top of it, held out over the field in front of her. She is not planting. She is standing over what is already up.</p><p>Warm words of yours are written and true already, dear. They are sitting where nobody can read them.</p><p>The corn is ripe and not one stalk has been cut. Someone has to walk out and bring it in.</p><p>In your ninth the Fool steps off with nothing packed, on a quiet belief you have never once defended out loud: that a person who wants to hear from you will ask first. That belief is what leaves your field standing.</p><p>I won't pretend this card hurries. It feeds what you feed, at the speed of a crop.</p><p>A woman who reads this as good news and waits hears his news second-hand, from somebody else's mouth.</p><p>You decided a long while back that you would not go cold on anyone to make a point. You chose right.</p></div></section><section>
+    <header class="hh">
+    <h2><span class="n">House 4</span>home, and what you came from</h2>
+    <h3>Your choice has been guided to the Magician, a card of what your own two hands can do</h3>
+    </header>
+    <figure><img src="https://luna-assets-tsw.s3.ap-southeast-2.amazonaws.com/evelyn/tarot-rws/the-magician.jpg" alt="">
+      <figcaption>the Magician
+        <span class="pl">you already have what the job needs</span>
+      </figcaption>
+    </figure>
+    <blockquote class="waite"><p>A youthful figure in the robe of a magician, having the countenance of divine Apollo. Above his head is the mysterious sign of the Holy Spirit, the sign of life, forming the figure 8 in a horizontal position. About his waist is a serpent-cincture, the serpent appearing to devour its own tail. In the Magician's right hand is a wand raised towards heaven, while the left hand is pointing to the earth. This dual sign shews the descent of grace, virtue and light, drawn from things above and derived to things below. On the table in front of the Magician are the symbols of the four Tarot suits, signifying the elements of natural life. Beneath are roses and lilies, the flos campi and lilium convallium, changed into garden flowers, to shew the culture of aspiration.</p>
+      <cite>A. E. Waite, <em>The Pictorial Key to the Tarot</em>, 1911</cite></blockquote>
+    <div class="prose"><p>The wand stands straight up in his right hand, held high, while his left hand points down at the bed of lilies. One line runs through the man from sky to soil. He is asking nobody for anything.</p><p>Whoever ran the house you were raised in ran it alone, and you learned the whole trade by watching them do it.</p><p>That is not a charge of stubbornness, dear, and I will not let you read it as one. What the card shows is a table already set with the cup, the coin, the sword and the wand. Nothing has to be sent for.</p><p>Look at what sits in your tenth, though. The Hanged Man hangs still while your home runs like clockwork — the private room has been paid for out of the public one.</p><p>So carry this out with you. Of the things you do at home, which did you choose, and which did you simply inherit?</p><p>You have been waiting on the next room since the letter came, and I know it. What stands in it settles which of the two readings was yours. Read it slowly. I did not write it quickly.</p></div></section><section>
+    <header class="hh">
+    <h2><span class="n">House 5</span>romance, and what delights you</h2>
+    <h3>The cosmic forces have guided your selection to the Nameless One, a card of one ending already decided</h3>
+    </header>
+    <figure><img src="https://luna-assets-tsw.s3.ap-southeast-2.amazonaws.com/evelyn/tarot-rws/death.jpg" alt="">
+      <figcaption>the Nameless One
+        <span class="pl">an ending already decided, coming at walking pace</span>
+      </figcaption>
+    </figure>
+    <blockquote class="waite"><p>The veil or mask of life is perpetuated in change, transformation and passage from lower to higher, and this is more fitly represented in the rectified Tarot by one of the apocalyptic visions than by the crude notion of the reaping skeleton. Behind it lies the whole world of ascent in the spirit. The mysterious horseman moves slowly, bearing a black banner emblazoned with the Mystic Rose, which signifies life. Between two pillars on the verge of the horizon there shines the sun of immortality. The horseman carries no visible weapon, but king and child and maiden fall before him, while a prelate with clasped hands awaits his end. The natural transit of man to the next stage of his being either is or may be one form of his progress.</p>
+      <cite>A. E. Waite, <em>The Pictorial Key to the Tarot</em>, 1911</cite></blockquote>
+    <div class="prose"><p>Far off on the skyline two pillars stand, and the sun rests low in the gap between them. The light is past the ride, not in it.</p><p>What you hold now is what this card has been sent to finish. I won't soften that, dear.</p><p>So nothing is being renewed for you. Something arrives instead — your twin flame, and the words are exact.</p><p>Judgment in your eleventh shows people standing up out of their places. He is already among the ones you know.</p><p>The fourth week from the day you read this. I can put a week on this room and on no other, because an arrival is an event, and the rest of your reading is weather.</p><p>He is going somewhere with his mind on the errand, and he stops. Arriving and being recognised are two different days, and women miss him braced for the wrong one.</p><p>Point at the message you reread and leave unanswered. The evening you keep clear for nobody. The name that comes up, and you turn the talk.</p><p>He is not braced for it either.</p></div></section><section>
+    <header class="hh">
+    <h2><span class="n">House 6</span>work, health, the daily grind</h2>
+    <h3>Your choice fell on Strength, a card of holding it down by hand, daily</h3>
+    </header>
+    <figure><img src="https://luna-assets-tsw.s3.ap-southeast-2.amazonaws.com/evelyn/tarot-rws/strength.jpg" alt="">
+      <figcaption>Strength
+        <span class="pl">holding something strong by hand, gently, every day</span>
+      </figcaption>
+    </figure>
+    <blockquote class="waite"><p>A woman, over whose head there broods the same symbol of life which we have seen in the card of the Magician, is closing the jaws of a lion. The only point in which this design differs from the conventional presentations is that her beneficent fortitude has already subdued the lion, which is being led by a chain of flowers. Fortitude, in one of its most exalted aspects, is connected with the Divine Mystery of Union, and with the strength which resides in contemplation. These higher meanings are intimated in a concealed manner by the chain of flowers, which signifies the sweet yoke and the light burden of Divine Law. There is one aspect in which the lion signifies the passions, and she who is called Strength is the higher nature in its liberation.</p>
+      <cite>A. E. Waite, <em>The Pictorial Key to the Tarot</em>, 1911</cite></blockquote>
+    <div class="prose"><p>The flowers at her waist are not a belt. The chain runs on off her hip and loops over the lion's neck — she is leading him by a garland, and it holds.</p><p>So what you keep down all week is not going anywhere, and I won't pretend it should. It gets held. By hand. Again tomorrow morning.</p><p>Your week is going into that holding, not into the tasks. You keep your voice level with the one who decides, and then you are awake at two.</p><p>Look at your twelfth. That wheel is turning on something nobody has told you yet, and the steadiness you spend at work is what buys the turn. You are paying in sleep.</p><p>This card will carry you, provided you stop spending it twice. Hold your tongue in the room, then say the whole thing aloud to one friend that same evening.</p><p>Do that the first day it happens again this week.</p></div></section><section>
+    <header class="hh">
+    <h2><span class="n">House 7</span>who you are bound to</h2>
+    <h3>Your choice has fallen on the Chariot, a card of movement already going somewhere</h3>
+    </header>
+    <figure><img src="https://luna-assets-tsw.s3.ap-southeast-2.amazonaws.com/evelyn/tarot-rws/the-chariot.jpg" alt="">
+      <figcaption>the Chariot
+        <span class="pl">already moving, and it goes where you point it</span>
+      </figcaption>
+    </figure>
+    <blockquote class="waite"><p>An erect and princely figure carrying a drawn sword and corresponding, broadly speaking, to the traditional description. On the shoulders of the victorious hero are supposed to be the Urim and Thummim. He has led captivity captive; he is conquest on all planes—in the mind, in science, in progress, in certain trials of initiation. He has thus replied to the sphinx; two sphinxes thus draw his chariot. He is above all things triumph in the mind. It is to be understood that the planes of his conquest are manifest or external and not within himself; that the liberation which he effects may leave himself in the bondage of the logical understanding. He is not hereditary royalty and he is not priesthood.</p>
+      <cite>A. E. Waite, <em>The Pictorial Key to the Tarot</em>, 1911</cite></blockquote>
+    <div class="prose"><p>He is standing in that stone chariot, not seated — feet planted on the floor of it, armour flat across his chest, no hand out to steady himself. The thing is moving and he is not braced.</p><p>Two sphinxes are harnessed in front, one black, one white. Not one strap runs from his hands to either of them.</p><p>So count the hands on the steering of this. One pair. Dear, they are not yours.</p><p>He set the road before you were up in the seat with him, and you have kept pace since.</p><p>The Hermit in your first put you on a hill you walked up alone. Nobody drove you there. In this room you are being driven, and I won't pretend it stops on its own.</p><p>The walled town behind him is already small.</p><p>Leave the seat as it stands and you arrive. Somewhere you never picked, on time, with the long answer still unsent in your pocket.</p><p>That is the pair of hands on your life, and it is worth knowing before the next card, because the next card takes weight off you. Not from him. From a woman.</p></div></section><section>
+    <header class="hh">
+    <h2><span class="n">House 8</span>what is hidden, and what comes through others</h2>
+    <h3>The cosmos has turned your hand to Temperance, a card of one load quietly divided</h3>
+    </header>
+    <figure><img src="https://luna-assets-tsw.s3.ap-southeast-2.amazonaws.com/evelyn/tarot-rws/temperance.jpg" alt="">
+      <figcaption>Temperance
+        <span class="pl">two things becoming one, at the speed of a season</span>
+      </figcaption>
+    </figure>
+    <blockquote class="waite"><p>A winged angel, with the sign of the sun upon his forehead and on his breast the square and triangle of the septenary. I speak of him in the masculine sense, but the figure is neither male nor female. It is held to be pouring the essences of life from chalice to chalice. It has one foot upon the earth and one upon waters. A direct path goes up to certain heights on the verge of the horizon, and above there is a great light, through which a crown is seen vaguely. Hereof is some part of the Secret of Eternal Life. It is called Temperance fantastically, because, when the rule of it obtains in our consciousness, it tempers, combines and harmonises the psychic and material natures.</p>
+      <cite>A. E. Waite, <em>The Pictorial Key to the Tarot</em>, 1911</cite></blockquote>
+    <div class="prose"><p>Above the two low hills there is a crown inside the light, faint enough to take for weather. It is not the sun. The narrow path leaves the water and goes toward it.</p><p>The second good thing owed to you arrives in this room, dear, and it is not money.</p><p>Somebody who has been letting you carry all of it starts carrying half. A woman, and there is no conversation about it — she simply begins doing the part you always did.</p><p>In your sixth you are gripping that garland by hand every morning, all week, both hands full. That grip is what gets poured off here, cup to cup, without you being asked.</p><p>What comes back to you is the evening, and your temper at nine o'clock. That is why this changes your love life and not your bank balance — the man in your fifth meets a woman with something left in her.</p><p>Let her do it badly the first time and say nothing, and she goes on doing it.</p></div></section><section>
+    <header class="hh">
+    <h2><span class="n">House 9</span>what you believe</h2>
+    <h3>The celestial wisdom has guided your selection to the Fool, a card of the step taken without proof</h3>
+    </header>
+    <figure><img src="https://luna-assets-tsw.s3.ap-southeast-2.amazonaws.com/evelyn/tarot-rws/the-fool.jpg" alt="">
+      <figcaption>the Fool
+        <span class="pl">a step taken before you can see where it lands</span>
+      </figcaption>
+    </figure>
+    <blockquote class="waite"><p>With light step, as if earth and its trammels had little power to restrain him, a young man in gorgeous vestments pauses at the brink of a precipice; he surveys the blue distance before him—its expanse of sky rather than the prospect below. His act of eager walking is still indicated, though he is stationary at the given moment; his dog is still bounding. The edge which opens on the depth has no terror; it is as if angels were waiting to uphold him. He has a rose in one hand and in the other a costly wand, from which depends over his right shoulder a wallet curiously embroidered. He is a prince of the other world on his travels through this one. He is the spirit in search of experience.</p>
+      <cite>A. E. Waite, <em>The Pictorial Key to the Tarot</em>, 1911</cite></blockquote>
+    <div class="prose"><p>The wallet swinging off the end of that wand has marks stitched into it, dim ones, and not one of them spells anything. He is carrying a record that cannot be read back. No receipts, no letters, nothing he could hold up as evidence that any of this has ever worked before.</p><p>You believe that if you have to ask for a thing, it does not count. That being wanted means being sought first.</p><p>You have caught yourself at this already and argued yourself out of it by lunchtime. I will not let you do that again — you were right the first time.</p><p>That rule is what leaves the Empress standing in your third with the corn uncut. The private belief is charging the field.</p><p>Ask for something this month with no proof it will be given.</p><p>The little dog is up on its back legs at his heel with its mouth open, making noise, and he steps anyway.</p></div></section><section>
+    <header class="hh">
+    <h2><span class="n">House 10</span>your standing</h2>
+    <h3>Your choice has led you to the Hanged Man, a card of waiting you tied yourself</h3>
+    </header>
+    <figure><img src="https://luna-assets-tsw.s3.ap-southeast-2.amazonaws.com/evelyn/tarot-rws/the-hanged-man.jpg" alt="">
+      <figcaption>the Hanged Man
+        <span class="pl">a wait you agreed to, paid for in time</span>
+      </figcaption>
+    </figure>
+    <blockquote class="waite"><p>The gallows from which he is suspended forms a Tau cross, while the figure—from the position of the legs—forms a fylfot cross. There is a nimbus about the head of the seeming martyr. It should be noted (1) that the tree of sacrifice is living wood, with leaves thereon; (2) that the face expresses deep entrancement, not suffering; (3) that the figure, as a whole, suggests life in suspension, but life and not death. It is a card of profound significance, but all the significance is veiled. It has been called falsely a card of martyrdom, a card of prudence, a card of the Great Work, a card of duty. I will say very simply on my own part that it expresses the relation, in one of its aspects, between the Divine and the Universe.</p>
+      <cite>A. E. Waite, <em>The Pictorial Key to the Tarot</em>, 1911</cite></blockquote>
+    <div class="prose"><p>His free leg is hooked back behind the tied one, knee pushed out, holding the shape of a four. A man in agony does not cross his legs like that.</p><p>Nobody strung him up. He knotted his own ankle to the beam, and the rope has not slipped since.</p><p>So your name is not moving, dear, and the hand on the rope is yours.</p><p>Your fourth has a man running a house single-handed, and every hour that goes into yours is an hour nobody outside watches you work. That is what is paying for this stillness.</p><p>Here is the part you have never said aloud. When the wrong name gets thanked in the room, you nod and pass the plate along — and you never mention it afterwards, not even at home.</p><p>I won't pretend the credit comes while you are still hanging there.</p><p>Green leaves are pushing out of that beam. What holds you is alive.</p><p>You decided long ago that the house came first. You chose that.</p></div></section><section>
+    <header class="hh">
+    <h2><span class="n">House 11</span>your circle</h2>
+    <h3>Your selection has fallen to Judgment, a card of one name called back</h3>
+    </header>
+    <figure><img src="https://luna-assets-tsw.s3.ap-southeast-2.amazonaws.com/evelyn/tarot-rws/judgement.jpg" alt="">
+      <figcaption>Judgment
+        <span class="pl">something from your past calling for an answer now</span>
+      </figcaption>
+    </figure>
+    <blockquote class="waite"><p>The great angel is here encompassed by clouds, but he blows his bannered trumpet, and the cross as usual is displayed on the banner. The dead are rising from their tombs—a woman on the right, a man on the left hand, and between them their child, whose back is turned. But in this card there are more than three who are restored. It should be noted that all the figures are as one in the wonder, adoration and ecstacy expressed by their attitudes. It is the card which registers the accomplishment of the great work of transformation in answer to the summons of the Supernal—which summons is heard and answered from within. It has been called truly in the past a card of eternal life.</p>
+      <cite>A. E. Waite, <em>The Pictorial Key to the Tarot</em>, 1911</cite></blockquote>
+    <div class="prose"><p>Three of them stand straight up out of open coffins on the water — a man on the left, a woman on the right, a child between them with its back to us, arms out from the shoulders. Nobody hauls them up. They stand because they heard something.</p><p>The trumpet sounds once. So a name out of your past comes back into your circle in the open, in front of the ones who stayed, and it does not come back a second time.</p><p>That name wants an answer from you, dear, and answering is your part in it — you are not on trial in front of these people.</p><p>You kept answering someone the rest of them had quietly given up on. That was right, and it is why this room has anybody standing in it at all.</p><p>One of them goes quiet when your luck turns. I won't pretend that is a loss.</p><p>When the good news lands, which of them do you tell first?</p><p>Hold that question one page longer. Before you can answer it you need the thing nobody in that circle has said to you, and it has been standing in your last room all along.</p></div></section><section>
+    <header class="hh">
+    <h2><span class="n">House 12</span>what is being kept from you</h2>
+    <h3>And your twelfth card is the Wheel of Fortune, a card of change arriving from outside</h3>
+    </header>
+    <figure><img src="https://luna-assets-tsw.s3.ap-southeast-2.amazonaws.com/evelyn/tarot-rws/wheel-of-fortune.jpg" alt="">
+      <figcaption>the Wheel of Fortune
+        <span class="pl">a change that comes from outside and does not ask</span>
+      </figcaption>
+    </figure>
+    <blockquote class="waite"><p>I have presented Typhon in his serpent form. The four Living Creatures of Ezekiel occupy the angles of the card. The symbolic picture stands for the perpetual motion of a fluidic universe and for the flux of human life. The Sphinx is the equilibrium therein. The transliteration of Taro as Rota is inscribed on the wheel, counterchanged with the letters of the Divine Name—to shew that Providence is implied through all. But this is the Divine intention within, and the similar intention without is exemplified by the four Living Creatures. Sometimes the sphinx is represented couchant on a pedestal above, which defrauds the symbolism by stultifying the essential idea of stability amidst movement. Behind the general notion expressed in the symbol there lies the denial of chance and the fatality which is implied therein.</p>
+      <cite>A. E. Waite, <em>The Pictorial Key to the Tarot</em>, 1911</cite></blockquote>
+    <div class="prose"><p>Eight letters run round the rim of that wheel, two alphabets taking turns, and there is no gap in them and no place where the reading starts. So you cannot tell where in the turn you are standing.</p><p>That is the whole of this room, dear.</p><p>The man you are bound to has already begun leaving. Not somebody out of your past coming back — the one in your seventh, feet planted, both reins in his own hands. He has started stepping down, and nobody around you can see it yet.</p><p>I won't pretend he tells you first. His half is decided.</p><p>Strength in your sixth is where it has been hiding. You hold your voice level with him, then lie awake at two, and you have been calling that tiredness.</p><p>A woman who takes a turning wheel for plain good luck and sits waiting hears this from a friend of his.</p><p>Ask him plainly, to his face, this week. Once.</p><p>The snake goes down the left side head first. On the right, at the same moment, the dog-headed figure is coming up.</p><p>Put the twelve beside each other and an order comes out of them.</p><p>The money in your second comes first, and the rest of it leans there. It is also what the Wheel in your twelfth has been sitting on — the paper and the man are one question, not two.</p><p>The hands taken off you in the eighth come second. If that is slow, the arrival in your fifth meets a tired woman instead of a rested one. Nothing else here is spoiled by being late.</p><p>What changes for you is the order you hear things in. You have been told last, at home and outside it. Now you are the one asking — the Fool in your ninth is where that habit turns over.</p><p>The first sign, inside five to seven days: paper with a figure on it, or a call about paper, and the figure is larger than the one in your head.</p><p>I have dated one room. The fifth, and no other — an arrival lands on a day, the rest of this moves like weather, and I will not pretend to date weather for you, dear.</p><p>Two months is when the movement starts, not when it is finished. Some of it will have opened inside a fortnight. The slow rooms are slow because of the card standing in them, and a woman who calls slow a failure gives up weeks short of it.</p><p>This week, write and ask for the whole figure. Keep a copy of what you send.</p></div></section>
+    <div class="gift"><h2>And now the second part, dear — this one is yours to keep</h2><p>When you have read your twelve properly — all of them, more than once — there is a second thing I want to give you, and it costs you nothing but a minute a night.</p><p>I said in my letter that the difference is not whether things happen to you. It is whether they happen to you from behind.</p><p>This is the practice that makes the difference. It is the only one I give away.</p><h2>What it is</h2><p>Twenty-eight nights. One line a night. That is the whole of it.</p><p>Each night before you sleep, you write down <strong>one thing you noticed that day that was different from the day before.</strong></p><p>Not how you felt. Not what you hope. What you <em>noticed</em>. Something someone said that they don&#x27;t usually say. A message that came at an odd hour. A silence where there is normally noise. The way a room went when you walked into it.</p><p>One line. Ordinary handwriting, ordinary paper, no ceremony. If nothing was different, write <em>nothing was different</em> — that is a real entry and you will want it later.</p><p>The reason is simple and it is not mystical, dear. Your twelfth house is holding something unsaid, and things like that are never invisible. They are only ever <em>unrecorded</em>. A woman notices eleven small wrong notes across a fortnight, forgets ten of them, and is genuinely astonished by the eleventh. She was told eleven times. She just had nowhere to put it.</p><p>The ledger is somewhere to put it.</p><h2>The four turns</h2><p><strong>Nights 1 to 7 — the first turn.</strong> Just notice. Don&#x27;t interpret, don&#x27;t join anything up, and above all don&#x27;t act on it. This week you are only training the eye. Write the line and close the book.</p><p>Your reading said the first sign shows itself inside five to seven days. It lands in this turn. You will not necessarily know it when it arrives — that is exactly why you are writing it down.</p><p><strong>Nights 8 to 14 — the second turn.</strong> Same one line, and add a second only when you genuinely have one. By now you will start wanting to explain what you&#x27;re writing. Resist it for one more week. An explanation written the same night is almost always the explanation you already believed that morning.</p><p><strong>Night 15 — the read-back. This is the night the practice pays.</strong> Do not write anything first. Sit down and read your fourteen lines in one sitting, in order, start to finish.</p><p>Something will come up off the page that was not visible on any single night. It always does. That is the whole reason for the fourteen — not one of those lines is worth much alone and together they are a pattern.</p><p>Then write your line for the fifteenth night, and write underneath it what you saw in the fourteen.</p><p><strong>Nights 15 to 21 — the third turn.</strong> Now you know what you have been noticing, so notice <em>that</em>. Your attention has something to point at, and you will find you catch things on the day now instead of three days late.</p><p><strong>Nights 22 to 28 — the fourth turn.</strong> Keep writing, and this week let yourself act on what you have found. Ask the question. Decline the thing. Say the sentence you have been keeping. You have three weeks of evidence behind you and you are no longer guessing.</p><p>On the twenty-eighth night, read the whole ledger through.</p><h2>The two love weeks</h2><p><strong>In the weeks your reading named</strong>, pay particular attention to the people you come across.</p><p>Your fifth house has something already in motion toward you, and your reading has said in its own room whether it arrives as a stranger or as someone already in the frame. Either way it comes in small — which is precisely the kind of thing the eye skips and the ledger catches.</p><p>Someone you know may reappear in these weeks. Someone in the frame may step forward in it. Write it down on the night, in the ordinary way, even when it seems far too small to mean anything.</p><p>Especially then. The ones that matter almost always look too small on the night.</p><h2>If nothing happens</h2><p>Then you run the twenty-eight again.</p><p>I mean that plainly and not as a consolation. Some women&#x27;s first cycle is all noise — four weeks of <em>nothing was different</em> — and their second cycle is the one that shows the shape. The practice is not a spell that either works or doesn&#x27;t. It is an eye being trained, and eyes take a while.</p><p>The second twenty-eight is easier than the first, and it is the one where the read-back on the fifteenth night stops you cold.</p><h2>And that is the gift</h2><p>Keep the book. Not for me — I don&#x27;t want to see it, and I&#x27;d rather you wrote freely than wrote something you&#x27;d be willing to show a reader.</p><p>Keep it because in eight weeks you are going to want to know whether you saw it coming.</p><p>You did. It will be on the page in your own handwriting, three weeks before it happened, in a line you thought was too small to matter.</p><p>That is what it is to stop finding out last.</p></div>
+    <div class="colophon">
+      <p>These twelve were laid for you and for nobody else. The writing is assisted &mdash; I
+      use a machine to help me put a reading into words. The draw is real and it is yours.</p>
+      <p class="sig">Evelyn</p>
+    </div>
+  </div>
+</body></html>

@@ -120,3 +120,7 @@ docs/aweber/*/sends/*/_build/
 # was picked FROM, and are reproducible from the prompts in prompts/. No other
 # funnel tracks its candidates either.
 improve-v1/fb-read/images/candidates/
+
+# Python runtime caches, regenerated locally.
+__pycache__/
+*.py[cod]

@@ -1,0 +1,754 @@
+{
+  "schema": "02-prose-audit/v2",
+  "file": "/Users/joel/Library/CloudStorage/OneDrive-altius/Fun Projects/The-Seer-Within-V2-Production-joel-chue/The-Seer-Within-V2-Production/improve-v1/v1-one-time-BEs/docs/02/dryrun-02-reading-cs_phase3_trust_v2_20260910_g.md",
+  "parser": {
+    "housesFound": 12,
+    "houseNumbers": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12
+    ],
+    "closeMarker": true
+  },
+  "wordCounts": {
+    "opening": 357,
+    "houses": [
+      {
+        "house": 1,
+        "name": "yourself",
+        "card": "the High Priestess",
+        "words": 560
+      },
+      {
+        "house": 2,
+        "name": "what you own",
+        "card": "the Magician",
+        "words": 639
+      },
+      {
+        "house": 3,
+        "name": "what you say, and who you say it to",
+        "card": "Justice",
+        "words": 556
+      },
+      {
+        "house": 4,
+        "name": "home, and what you came from",
+        "card": "the Hanged Man",
+        "words": 580
+      },
+      {
+        "house": 5,
+        "name": "romance, and what delights you",
+        "card": "the Wheel of Fortune",
+        "words": 732
+      },
+      {
+        "house": 6,
+        "name": "work, health, the daily grind",
+        "card": "the Hierophant",
+        "words": 565
+      },
+      {
+        "house": 7,
+        "name": "who you are bound to",
+        "card": "the Nameless One",
+        "words": 542
+      },
+      {
+        "house": 8,
+        "name": "what is hidden, and what comes through others",
+        "card": "Judgment",
+        "words": 659
+      },
+      {
+        "house": 9,
+        "name": "what you believe",
+        "card": "the Hermit",
+        "words": 701
+      },
+      {
+        "house": 10,
+        "name": "your standing",
+        "card": "the Empress",
+        "words": 560
+      },
+      {
+        "house": 11,
+        "name": "your circle",
+        "card": "Temperance",
+        "words": 532
+      },
+      {
+        "house": 12,
+        "name": "what is being kept from you",
+        "card": "the Sun",
+        "words": 716
+      }
+    ],
+    "interpretationTotal": 7342,
+    "close": 442,
+    "deliveredProseTotal": 8141
+  },
+  "repeatedCrossHouse8grams": {
+    "count": 0,
+    "occurrences": []
+  },
+  "phraseFamilies": {
+    "openers": {
+      "records": [
+        {
+          "house": 1,
+          "sentence": "There is a particular kind of quiet that isn't emptiness.",
+          "normalized": "there is a particular kind of quiet that isn't emptiness",
+          "kind": "other entry"
+        },
+        {
+          "house": 2,
+          "sentence": "Look at what is laid out in front of him: a cup, a coin with a star cut into it, a sword, a wand.",
+          "normalized": "look at what is laid out in front of him",
+          "kind": "visual/directive entry"
+        },
+        {
+          "house": 3,
+          "sentence": "House three is the house of ordinary talk — the message typed at midnight, the phrase you try out on a friend before you try it on the person it concerns, the sentence that has been sitting in your mouth so long it has worn smooth.",
+          "normalized": "roomname three is the roomname of ordinary talk",
+          "kind": "other entry"
+        },
+        {
+          "house": 4,
+          "sentence": "House four asks two things at once and expects one answer: the roof you live under now, and the household that taught you what a roof is for.",
+          "normalized": "roomname four asks two things at once and expects one answer",
+          "kind": "other entry"
+        },
+        {
+          "house": 5,
+          "sentence": "The Wheel is read badly more often than any other card in the deck, and always in the same direction: as luck.",
+          "normalized": "the wheel is read badly more often than any other card in the deck and always in the",
+          "kind": "image-led entry"
+        },
+        {
+          "house": 6,
+          "sentence": "At the end of an ordinary week you are more tired than the work accounts for.",
+          "normalized": "at the end of an ordinary week you are more tired than the work accounts for",
+          "kind": "other entry"
+        },
+        {
+          "house": 7,
+          "sentence": "Two misreadings sit on this card, and they cancel each other out.",
+          "normalized": "two misreadings sit on this card and they cancel each other out",
+          "kind": "image-led entry"
+        },
+        {
+          "house": 8,
+          "sentence": "House eight is the quiet house.",
+          "normalized": "roomname eight is the quiet roomname",
+          "kind": "other entry"
+        },
+        {
+          "house": 9,
+          "sentence": "The consequence shows up first as a delay.",
+          "normalized": "the consequence shows up first as a delay",
+          "kind": "other entry"
+        },
+        {
+          "house": 10,
+          "sentence": "In most working groups there is a gap between the person who is trusted and the person who is quoted.",
+          "normalized": "in most working groups there is a gap between the person who is trusted and the person who",
+          "kind": "other entry"
+        },
+        {
+          "house": 11,
+          "sentence": "The figure stands with one bare foot in the pool and the other flat on the bank, and it is not mid-stride.",
+          "normalized": "the figure stands with one bare foot in the pool and the other flat on the bank and",
+          "kind": "image-led entry"
+        },
+        {
+          "house": 12,
+          "sentence": "House twelve is usually read as a house of secrets, and that reading is lazy.",
+          "normalized": "roomname twelve is usually read as a roomname of secrets and that reading is lazy",
+          "kind": "other entry"
+        }
+      ],
+      "repeated": [
+        [
+          {
+            "house": 5,
+            "sentence": "The Wheel is read badly more often than any other card in the deck, and always in the same direction: as luck.",
+            "normalized": "the wheel is read badly more often than any other card in the deck and always in the",
+            "kind": "image-led entry"
+          },
+          {
+            "house": 7,
+            "sentence": "Two misreadings sit on this card, and they cancel each other out.",
+            "normalized": "two misreadings sit on this card and they cancel each other out",
+            "kind": "image-led entry"
+          },
+          {
+            "house": 11,
+            "sentence": "The figure stands with one bare foot in the pool and the other flat on the bank, and it is not mid-stride.",
+            "normalized": "the figure stands with one bare foot in the pool and the other flat on the bank and",
+            "kind": "image-led entry"
+          }
+        ]
+      ]
+    },
+    "endings": {
+      "records": [
+        {
+          "house": 1,
+          "sentence": "On whether you will let yourself count what you already hold as knowledge rather than weather.",
+          "normalized": "on whether you will let yourself count what you already hold as knowledge rather than weather",
+          "kind": "other exit"
+        },
+        {
+          "house": 2,
+          "sentence": "The value of that inventory is about to be established by someone else's money, and it will be worth more than your private estimate of it.",
+          "normalized": "the value of that inventory is about to be established by someone else's money and it will be",
+          "kind": "other exit"
+        },
+        {
+          "house": 3,
+          "sentence": "That division is the whole instruction.",
+          "normalized": "that division is the whole instruction",
+          "kind": "short aphoristic exit"
+        },
+        {
+          "house": 4,
+          "sentence": "Then watch what argues back inside you, because that objection is the inherited part speaking, and hearing it clearly is what the waiting is buying.",
+          "normalized": "then watch what argues back inside you because that objection is the inherited part speaking and hearing it",
+          "kind": "other exit"
+        },
+        {
+          "house": 5,
+          "sentence": "That is the tell, and it will arrive before you have any language for it.",
+          "normalized": "that is the tell and it will arrive before you have any language for it",
+          "kind": "other exit"
+        },
+        {
+          "house": 6,
+          "sentence": "Your energy will keep going where it is going for as long as you want the sanction that it buys — and wanting that sanction is a legitimate choice, provided you make it knowing the rate.",
+          "normalized": "your energy will keep going where it is going for as long as you want the sanction that",
+          "kind": "other exit"
+        },
+        {
+          "house": 7,
+          "sentence": "What arrives at that speed can be met standing up.",
+          "normalized": "what arrives at that speed can be met standing up",
+          "kind": "forward bridge"
+        },
+        {
+          "house": 8,
+          "sentence": "Something already decided is coming in, attached to a face you know, and it will change the romantic weather rather than merely the household budget.",
+          "normalized": "something already decided is coming in attached to a face you know and it will change the romantic",
+          "kind": "other exit"
+        },
+        {
+          "house": 9,
+          "sentence": "Only to stop charging yourself for the distance twice.",
+          "normalized": "only to stop charging yourself for the distance twice",
+          "kind": "short aphoristic exit"
+        },
+        {
+          "house": 10,
+          "sentence": "It is behind the thing itself, following it in, arriving when there is a harvest to attach a name to.",
+          "normalized": "it is behind the thing itself following it in arriving when there is a harvest to attach a",
+          "kind": "other exit"
+        },
+        {
+          "house": 11,
+          "sentence": "It is happening while your attention is on other rooms of this reading, and its work will only be legible in hindsight — one settled group where there used to be two.",
+          "normalized": "it is happening while your attention is on other rooms of this reading and its work will only",
+          "kind": "other exit"
+        },
+        {
+          "house": 12,
+          "sentence": "It gives you back the time you were spending on decipherment, and it charges you the comfort of not yet knowing.",
+          "normalized": "it gives you back the time you were spending on decipherment and it charges you the comfort of",
+          "kind": "other exit"
+        }
+      ],
+      "repeated": [
+        [
+          {
+            "house": 3,
+            "sentence": "That division is the whole instruction.",
+            "normalized": "that division is the whole instruction",
+            "kind": "short aphoristic exit"
+          },
+          {
+            "house": 9,
+            "sentence": "Only to stop charging yourself for the distance twice.",
+            "normalized": "only to stop charging yourself for the distance twice",
+            "kind": "short aphoristic exit"
+          }
+        ]
+      ]
+    }
+  },
+  "intimacyAndDemographics": {
+    "dearCount": 0,
+    "dearEvidence": [],
+    "womanMentionCount": 1,
+    "womanMentionEvidence": [
+      {
+        "area": "house 1",
+        "house": 1,
+        "sentence": "But a scroll kept entirely covered instructs no one and settles nothing, and a woman who mistakes every genuine conclusion for a passing feeling eventually stops trusting the one instrument that has been right.",
+        "occurrences": 1
+      }
+    ],
+    "genericWomenAssertionCount": 0,
+    "genericWomenEvidence": []
+  },
+  "methodAnnouncements": {
+    "count": 6,
+    "evidence": [
+      {
+        "area": "house 3",
+        "house": 3,
+        "sentence": "House three is the house of ordinary talk — the message typed at midnight, the phrase you try out on a friend before you try it on the person it concerns, the sentence that has been sitting in your mouth so long it has worn smooth."
+      },
+      {
+        "area": "house 3",
+        "house": 3,
+        "sentence": "If you say it plainly — the version with the justification stripped out, three lines instead of thirty — you enter a process that has a decision at the end of it, and decisions get dated and filed and are not easily reopened."
+      },
+      {
+        "area": "house 5",
+        "house": 5,
+        "sentence": "That is the whole argument of this room."
+      },
+      {
+        "area": "house 6",
+        "house": 6,
+        "sentence": "The card that governs the sixth house here is the one of sanctioned form, and the detail that settles it is the two ministers kneeling below the seat with their backs to us."
+      },
+      {
+        "area": "house 7",
+        "house": 7,
+        "sentence": "Here is where I want you to be precise with yourself, because the card is precise."
+      },
+      {
+        "area": "house 10",
+        "house": 10,
+        "sentence": "Think of an orchard three seasons in."
+      }
+    ]
+  },
+  "rhythm": {
+    "sentences": {
+      "count": 427,
+      "mean": 17.194379391100703,
+      "variance": 116.64371548135522,
+      "sd": 10.800172011655889,
+      "median": 15,
+      "min": 1,
+      "max": 63
+    },
+    "paragraphs": {
+      "count": 82,
+      "mean": 89.53658536585365,
+      "variance": 755.4437834622248,
+      "sd": 27.48533760866373,
+      "median": 91.5,
+      "min": 26,
+      "max": 152
+    }
+  },
+  "teachingConditionals": {
+    "occurrenceCount": 63,
+    "sentenceCount": 60,
+    "evidence": [
+      {
+        "area": "opening",
+        "house": null,
+        "sentence": "Twelve Majors and no lesser cards — the reading works only in the register of governing forces, the ones that move whether or not you attend to them."
+      },
+      {
+        "area": "opening",
+        "house": null,
+        "sentence": "When a room tells you the pace of your own hand, read it against the rooms that arrive on their own clock, because your tempo and theirs are not the same, and several confusions in this reading come from measuring one by the other."
+      },
+      {
+        "area": "opening",
+        "house": null,
+        "sentence": "Where a thing is settled I have said so plainly."
+      },
+      {
+        "area": "opening",
+        "house": null,
+        "sentence": "Where a thing remains genuinely open, I have left it open rather than dress a guess as a certainty."
+      },
+      {
+        "area": "house 1",
+        "house": 1,
+        "sentence": "That gap between what you have concluded and what you have spoken is where this whole stretch starts, and it starts in your hands, because the withholding is yours to keep or release."
+      },
+      {
+        "area": "house 1",
+        "house": 1,
+        "sentence": "The waiting serves you only up to the point where it becomes a way of never being accountable to what you already believe."
+      },
+      {
+        "area": "house 1",
+        "house": 1,
+        "sentence": "On whether you will let yourself count what you already hold as knowledge rather than weather."
+      },
+      {
+        "area": "house 2",
+        "house": 2,
+        "sentence": "He raised one hand and pointed the other and the whole apparatus of the work was already within arm's reach when he began."
+      },
+      {
+        "area": "house 2",
+        "house": 2,
+        "sentence": "Read together, these two cards say the sum arrives through the ordinary channel of your competence being recognized where it already operates."
+      },
+      {
+        "area": "house 2",
+        "house": 2,
+        "sentence": "Write the list if it helps, or simply count it."
+      },
+      {
+        "area": "house 3",
+        "house": 3,
+        "sentence": "Justice is what gets said once, in a room where it is written down."
+      },
+      {
+        "area": "house 3",
+        "house": 3,
+        "sentence": "Look at where the eyes are."
+      },
+      {
+        "area": "house 3",
+        "house": 3,
+        "sentence": "The weighing is not the interesting part — the weighing is arithmetic and it happens whether or not anyone attends to it."
+      },
+      {
+        "area": "house 3",
+        "house": 3,
+        "sentence": "An argument runs on intention: I meant well, you took it the wrong way, if you understood why I did it you would forgive it."
+      },
+      {
+        "area": "house 3",
+        "house": 3,
+        "sentence": "Where the comparison stops mattering is in the matter of warmth."
+      },
+      {
+        "area": "house 3",
+        "house": 3,
+        "sentence": "If you keep the unsent version unsent, the ledger stays as it stands, and you go on paying interest on a sentence you have already composed."
+      },
+      {
+        "area": "house 3",
+        "house": 3,
+        "sentence": "If you say it plainly — the version with the justification stripped out, three lines instead of thirty — you enter a process that has a decision at the end of it, and decisions get dated and filed and are not easily reopened."
+      },
+      {
+        "area": "house 3",
+        "house": 3,
+        "sentence": "This house is the one where you are the one speaking, and Justice sets the standard: what you say is going to be assessed on its accuracy, not its diplomacy."
+      },
+      {
+        "area": "house 4",
+        "house": 4,
+        "sentence": "He is tied by one ankle to a beam, and everything else about him — the crossed leg tucked behind the bound one, the elbows angled out where his hands are hidden — is arrangement, not accident."
+      },
+      {
+        "area": "house 4",
+        "house": 4,
+        "sentence": "Someone raised in a household where announcing a need was expensive learns to convert need into patience automatically."
+      },
+      {
+        "area": "house 4",
+        "house": 4,
+        "sentence": "Whether that describes yours is yours to check, but check it against the specific rooms you move through rather than against the idea of your childhood."
+      },
+      {
+        "area": "house 5",
+        "house": 5,
+        "sentence": "Look at where the wheel hangs: in open sky, with nothing under it and nothing holding it."
+      },
+      {
+        "area": "house 5",
+        "house": 5,
+        "sentence": "House five is romance as beginning and pursuit — the appetite, the first look, the pleasure of it — and it is not house seven, where things are bound."
+      },
+      {
+        "area": "house 5",
+        "house": 5,
+        "sentence": "Temperance in house 11 tells me where he stands."
+      },
+      {
+        "area": "house 5",
+        "house": 5,
+        "sentence": "When it happens he will be occupied — mid-task, sorting out some practical detail on behalf of a group of people, something not strictly his job that he has picked up because it needed doing."
+      },
+      {
+        "area": "house 5",
+        "house": 5,
+        "sentence": "If you were expecting the recognition to feel like an introduction, it will not; it will feel like a correction, as though a name you had been mispronouncing for a long time has just been said aloud."
+      },
+      {
+        "area": "house 5",
+        "house": 5,
+        "sentence": "The structure around you is confinement, not support, and it sits in house four — home and what you came from — where the Hanged Man shows a hold you consented to and then stopped noticing you had consented to."
+      },
+      {
+        "area": "house 5",
+        "house": 5,
+        "sentence": "And the place where you stopped choosing is house six, the daily grind, where the Hierophant sits: you surrendered the decision about how your ordinary week is shaped — what your days are arranged around, what hours belong to your work and what is left for your body — to an approved way of doing things that you did not design and have not reviewed."
+      },
+      {
+        "area": "house 6",
+        "house": 6,
+        "sentence": "This is the ruling power of the outward and manifest side of things, all that is righteous and sacred where it can be witnessed — and the price of that standing is the doing of things in the agreed manner, at the agreed pace, which is the pace of an institution rather than of a person who can see the shorter road."
+      },
+      {
+        "area": "house 6",
+        "house": 6,
+        "sentence": "If you finish having done something difficult, the tiredness has a shape and it recedes."
+      },
+      {
+        "area": "house 6",
+        "house": 6,
+        "sentence": "If you finish having spent yourself on rehearsal, deference, restating what was already settled, or bringing something into the accepted form when the substance was already sound, the tiredness has no shape and it does not recede."
+      },
+      {
+        "area": "house 6",
+        "house": 6,
+        "sentence": "The body is where the overhead gets stored."
+      },
+      {
+        "area": "house 6",
+        "house": 6,
+        "sentence": "Where the form is genuinely load-bearing, pay it and stop resenting it, because resentment is a second charge on the same bill."
+      },
+      {
+        "area": "house 6",
+        "house": 6,
+        "sentence": "Where you are performing correctness for no witness who requires it, that is your own money, and it is retrievable inside your own routine."
+      },
+      {
+        "area": "house 6",
+        "house": 6,
+        "sentence": "Your energy will keep going where it is going for as long as you want the sanction that it buys — and wanting that sanction is a legitimate choice, provided you make it knowing the rate."
+      },
+      {
+        "area": "house 7",
+        "house": 7,
+        "sentence": "House seven holds the person you are bound to, whether or not the binding has a name that either of you uses out loud."
+      },
+      {
+        "area": "house 7",
+        "house": 7,
+        "sentence": "Here is where I want you to be precise with yourself, because the card is precise."
+      },
+      {
+        "area": "house 7",
+        "house": 7,
+        "sentence": "The version where the arrangement survives untouched is not."
+      },
+      {
+        "area": "house 7",
+        "house": 7,
+        "sentence": "Set this against house five, where the Wheel sits."
+      },
+      {
+        "area": "house 8",
+        "house": 8,
+        "sentence": "If seven had promised continuity, this returning figure would arrive into an occupied room and would function as pressure, a complication to be managed."
+      },
+      {
+        "area": "house 9",
+        "house": 9,
+        "sentence": "Asked directly whether you think people can learn from each other, you would say yes, obviously, and mean it."
+      },
+      {
+        "area": "house 9",
+        "house": 9,
+        "sentence": "The belief operates below the level where you would ever have to argue for it."
+      },
+      {
+        "area": "house 9",
+        "house": 9,
+        "sentence": "House nine is not the house of opinions you hold; it is the house of the frame those opinions sit inside, and the frame here is a figure who climbed on purpose and stopped when he got there."
+      },
+      {
+        "area": "house 9",
+        "house": 9,
+        "sentence": "That is where the cost sits."
+      },
+      {
+        "area": "house 9",
+        "house": 9,
+        "sentence": "Consider what follows if the belief stays exactly as it is."
+      },
+      {
+        "area": "house 9",
+        "house": 9,
+        "sentence": "If, on the other hand, you loosened it into the version this card actually supports, very little of the accuracy would go."
+      },
+      {
+        "area": "house 9",
+        "house": 9,
+        "sentence": "The lamp says that where he stands, another person may stand too — which means the height was never the private property of the one who climbed it."
+      },
+      {
+        "area": "house 10",
+        "house": 10,
+        "sentence": "Trust accumulates quietly, in the small evidence of things having gone well, and it attaches to whoever was actually present when they went well."
+      },
+      {
+        "area": "house 10",
+        "house": 10,
+        "sentence": "Quotation attaches to whoever spoke last, or loudest, or in the room where the decision was minuted."
+      },
+      {
+        "area": "house 10",
+        "house": 10,
+        "sentence": "The people who matter to your position are already reading it correctly, and they are reading it as yours; the recognition is accurate before it is public, which is the opposite of the more common and more painful arrangement, where the name travels and the substance does not survive inspection."
+      },
+      {
+        "area": "house 10",
+        "house": 10,
+        "sentence": "If credit currently lags what you have built, that lag is a timing fact, not a verdict on the quality of your work or on how you are regarded by the people whose regard carries weight."
+      },
+      {
+        "area": "house 10",
+        "house": 10,
+        "sentence": "It is behind the thing itself, following it in, arriving when there is a harvest to attach a name to."
+      },
+      {
+        "area": "house 11",
+        "house": 11,
+        "sentence": "You may find, if you think back honestly, that some of the quiet predates anything you could have caused."
+      },
+      {
+        "area": "house 11",
+        "house": 11,
+        "sentence": "As for the ones who appear when your luck turns — they arrive here by overlap, not by news."
+      },
+      {
+        "area": "house 11",
+        "house": 11,
+        "sentence": "It is happening while your attention is on other rooms of this reading, and its work will only be legible in hindsight — one settled group where there used to be two."
+      },
+      {
+        "area": "house 12",
+        "house": 12,
+        "sentence": "The light is direct rather than reflected, which is exactly the distinction the source is drawing when it separates the sun of this world from what goes before the aspiring heart: this is not a light you interpret, it is a light you stand in."
+      },
+      {
+        "area": "house 12",
+        "house": 12,
+        "sentence": "It is a plain thing at a plain hour, and the only reason it has not reached you is where your feet are."
+      },
+      {
+        "area": "house 12",
+        "house": 12,
+        "sentence": "That is not an inference you built; it is behaviour, and behaviour is the part that stands in daylight, visible to anyone standing where the light falls."
+      },
+      {
+        "area": "house 12",
+        "house": 12,
+        "sentence": "As to how close — this has passed out of the internal stage, where a departure exists only as a private reconsideration, and into the behavioural one, where it shows in the ordinary texture of days."
+      },
+      {
+        "area": "close",
+        "house": null,
+        "sentence": "The recognition falls in the fourth week from now, counted from that meeting itself — the event, not any ornament of the card — when he is mid-task on a group's behalf and you see him properly for the first time."
+      }
+    ]
+  },
+  "explicitWithholding": {
+    "count": 0,
+    "evidence": []
+  },
+  "dates": {
+    "calendar": [],
+    "relative": [
+      {
+        "area": "house 3",
+        "house": 3,
+        "sentence": "Your speech this season is standing at the second."
+      },
+      {
+        "area": "house 5",
+        "house": 5,
+        "sentence": "The recognition falls in the fourth week from now."
+      },
+      {
+        "area": "house 5",
+        "house": 5,
+        "sentence": "The connection between those two facts and the fourth week is not mystical."
+      },
+      {
+        "area": "close",
+        "house": null,
+        "sentence": "The recognition falls in the fourth week from now, counted from that meeting itself — the event, not any ornament of the card — when he is mid-task on a group's behalf and you see him properly for the first time."
+      }
+    ],
+    "historicalDuration": []
+  },
+  "reviewSignals": {
+    "consequentialImperatives": [
+      {
+        "area": "house 2",
+        "house": 2,
+        "sentence": "Take honest stock of what you can presently do — not what you intend to learn, what your hands know now."
+      },
+      {
+        "area": "house 2",
+        "house": 2,
+        "sentence": "Write the list if it helps, or simply count it."
+      },
+      {
+        "area": "house 6",
+        "house": 6,
+        "sentence": "Where the form is genuinely load-bearing, pay it and stop resenting it, because resentment is a second charge on the same bill."
+      },
+      {
+        "area": "house 7",
+        "house": 7,
+        "sentence": "Here is where I want you to be precise with yourself, because the card is precise."
+      },
+      {
+        "area": "house 11",
+        "house": 11,
+        "sentence": "That recognition is optional and you should test it rather than accept it from me."
+      }
+    ],
+    "potentialUnsupportedBiography": [
+      {
+        "signal": "possession_or_entitlement",
+        "area": "house 1",
+        "house": 1,
+        "sentence": "You have that."
+      },
+      {
+        "signal": "work_or_location",
+        "area": "house 4",
+        "house": 4,
+        "sentence": "In the house you live in now it functions differently: it makes you the one who absorbs the delay, quietly, without anyone having to ask."
+      },
+      {
+        "signal": "possession_or_entitlement",
+        "area": "house 9",
+        "house": 9,
+        "sentence": "Something is put to you, you have a response ready in the first second, and you do not give it — not out of caution about the person, but because an answer that arrived that fast does not yet feel like it has been paid for."
+      }
+    ],
+    "note": "These are lexical review signals. Source support and practical consequence cannot be established from prose alone."
+  }
+}

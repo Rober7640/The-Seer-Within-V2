@@ -1,0 +1,678 @@
+[
+  {
+    "house": 1,
+    "house_name": "yourself",
+    "job": "Her present stance at the start of this, and what is in her own hands. Read the card as a stance she can recognize now, not as a personality verdict or an invented anecdote from her past.",
+    "card": "the-devil",
+    "card_name": "the Devil",
+    "reversed": false,
+    "agency": "The cosmos has guided your choice to",
+    "obligation": null,
+    "owes": false,
+    "architecture": {
+      "entry": "enter by clarifying the traditional meaning against a common misreading",
+      "customer_entry": "middle",
+      "development": [
+        "source evidence later in the argument",
+        "practical implication",
+        "what remains unchanged"
+      ],
+      "ending": "finish on a proportionate and reversible action",
+      "target_words": 550,
+      "may_use_address": false,
+      "may_name_waite": false,
+      "cross_room": "permitted only if it changes the interpretation",
+      "emphasis_position": "early"
+    },
+    "claim_ledger": {
+      "permitted_sources": [
+        "the buyer material summarized in the sales-letter context",
+        "the question belonging to house 1",
+        "the traditional meaning and supplied lore of the Devil",
+        "named evidence from another dealt card only when the architecture permits it"
+      ],
+      "obligation": null,
+      "forecast_scope": "state the card-and-house interpretation firmly in the present while leaving her past actions, private motives and unseen events unclaimed",
+      "unsupported_private_fields": [
+        "duration",
+        "profession",
+        "possession",
+        "diagnosis",
+        "private ritual",
+        "relationship history",
+        "count or tally",
+        "specific location",
+        "existing paperwork",
+        "private conversation",
+        "payment mechanics",
+        "customer motive",
+        "third-party intention"
+      ],
+      "illustration_rule": "an illustrative situation remains a possibility and never becomes her history",
+      "history_rule": "do not assert a specific past event, frequency or recency for her unless the buyer context or obligation establishes it",
+      "action_scope": "direct advice may concern only observation, reflection or a reversible change inside her own environment; never make a forecast depend on contacting, documenting, confronting, negotiating with or changing terms for another person or institution"
+    },
+    "keynote": "a hold you help hold, and profit from",
+    "takeaway": "Name what a comfort gives you and what it quietly costs"
+  },
+  {
+    "house": 2,
+    "house_name": "what you own",
+    "job": "Money, and what she already holds. ⭐ If a windfall has a door, this is the likeliest room for it — say plainly what arrives and through what.",
+    "card": "temperance",
+    "card_name": "Temperance",
+    "reversed": false,
+    "agency": "The celestial wisdom has guided your selection to",
+    "obligation": "FIRST WINDFALL. THIS ROOM IS THE DOOR. Name the source in ordinary words, state what the windfall is, and say how she can recognize its arrival. The card decides how it comes, never whether. Do not date it. SECOND-LETTER STAR DEBT. Decide whether the part being replenished is what she keeps or what she gives out; name what is being restored and how she notices it. The replenishment has begun. The room's card decides how, never whether. Do not name the Star as dealt or date this answer.",
+    "owes": true,
+    "architecture": {
+      "entry": "enter through a recognizable pattern in ordinary life",
+      "customer_entry": "late",
+      "development": [
+        "the card-house tension",
+        "plain meaning",
+        "personal application"
+      ],
+      "ending": "finish by resolving the room's central tension",
+      "target_words": 635,
+      "may_use_address": false,
+      "may_name_waite": false,
+      "cross_room": "required by the promise ledger",
+      "emphasis_position": "none"
+    },
+    "claim_ledger": {
+      "permitted_sources": [
+        "the buyer material summarized in the sales-letter context",
+        "the question belonging to house 2",
+        "the traditional meaning and supplied lore of Temperance",
+        "named evidence from another dealt card only when the architecture permits it",
+        "the result explicitly required by this room's promise obligation"
+      ],
+      "obligation": "FIRST WINDFALL. THIS ROOM IS THE DOOR. Name the source in ordinary words, state what the windfall is, and say how she can recognize its arrival. The card decides how it comes, never whether. Do not date it. SECOND-LETTER STAR DEBT. Decide whether the part being replenished is what she keeps or what she gives out; name what is being restored and how she notices it. The replenishment has begun. The room's card decides how, never whether. Do not name the Star as dealt or date this answer.",
+      "forecast_scope": "state every promised result firmly; derive how it arrives from this card and house, and add no biography, administrative fact, motive or causal condition beyond the obligation",
+      "unsupported_private_fields": [
+        "duration",
+        "profession",
+        "possession",
+        "diagnosis",
+        "private ritual",
+        "relationship history",
+        "count or tally",
+        "specific location",
+        "existing paperwork",
+        "private conversation",
+        "payment mechanics",
+        "customer motive",
+        "third-party intention"
+      ],
+      "illustration_rule": "an illustrative situation remains a possibility and never becomes her history",
+      "history_rule": "do not assert a specific past event, frequency or recency for her unless the buyer context or obligation establishes it",
+      "action_scope": "direct advice may concern only observation, reflection or a reversible change inside her own environment; never make a forecast depend on contacting, documenting, confronting, negotiating with or changing terms for another person or institution"
+    },
+    "keynote": "two streams joined; the pour, not the pitcher",
+    "takeaway": ""
+  },
+  {
+    "house": 3,
+    "house_name": "what you say, and who you say it to",
+    "job": "Communication and audience: how the card distinguishes kinds of speech, messages, listening, or silence. Offer recognizable categories before applying one; do not presume a particular conversation, unsent message, rehearsal, recipient, or dispute.",
+    "card": "the-hierophant",
+    "card_name": "the Hierophant",
+    "reversed": false,
+    "agency": "The cosmic alignment has guided your choice to",
+    "obligation": null,
+    "owes": false,
+    "architecture": {
+      "entry": "enter by clarifying the traditional meaning against a common misreading",
+      "customer_entry": "middle",
+      "development": [
+        "how the house changes the card",
+        "conditional consequences",
+        "personal application"
+      ],
+      "ending": "finish on a precise observation the buyer can recognize",
+      "target_words": 520,
+      "may_use_address": false,
+      "may_name_waite": true,
+      "cross_room": "permitted only if it changes the interpretation",
+      "emphasis_position": "middle"
+    },
+    "claim_ledger": {
+      "permitted_sources": [
+        "the buyer material summarized in the sales-letter context",
+        "the question belonging to house 3",
+        "the traditional meaning and supplied lore of the Hierophant",
+        "named evidence from another dealt card only when the architecture permits it"
+      ],
+      "obligation": null,
+      "forecast_scope": "state the card-and-house interpretation firmly in the present while leaving her past actions, private motives and unseen events unclaimed",
+      "unsupported_private_fields": [
+        "duration",
+        "profession",
+        "possession",
+        "diagnosis",
+        "private ritual",
+        "relationship history",
+        "count or tally",
+        "specific location",
+        "existing paperwork",
+        "private conversation",
+        "payment mechanics",
+        "customer motive",
+        "third-party intention"
+      ],
+      "illustration_rule": "an illustrative situation remains a possibility and never becomes her history",
+      "history_rule": "do not assert a specific past event, frequency or recency for her unless the buyer context or obligation establishes it",
+      "action_scope": "direct advice may concern only observation, reflection or a reversible change inside her own environment; never make a forecast depend on contacting, documenting, confronting, negotiating with or changing terms for another person or institution"
+    },
+    "keynote": "sanctioned speech, spoken where witnesses stand",
+    "takeaway": "Sympathy and standing are different; only one of them can decide"
+  },
+  {
+    "house": 4,
+    "house_name": "home, and what you came from",
+    "job": "Home, foundations, and patterns that can be learned in a household. Explain the card's possible domestic pattern and give her ways to recognize it; do not assert a childhood event, family rule, present living arrangement, or inherited habit as fact.",
+    "card": "the-hanged-man",
+    "card_name": "the Hanged Man",
+    "reversed": false,
+    "agency": "Your choice has been guided to",
+    "obligation": null,
+    "owes": false,
+    "architecture": {
+      "entry": "enter through the source evidence",
+      "customer_entry": "late",
+      "development": [
+        "plain explanation",
+        "conditional distinctions",
+        "personal application"
+      ],
+      "ending": "finish by resolving the room's central tension",
+      "target_words": 520,
+      "may_use_address": true,
+      "may_name_waite": true,
+      "cross_room": "keep this room self-contained",
+      "emphasis_position": "early"
+    },
+    "claim_ledger": {
+      "permitted_sources": [
+        "the buyer material summarized in the sales-letter context",
+        "the question belonging to house 4",
+        "the traditional meaning and supplied lore of the Hanged Man",
+        "named evidence from another dealt card only when the architecture permits it"
+      ],
+      "obligation": null,
+      "forecast_scope": "state the card-and-house interpretation firmly in the present while leaving her past actions, private motives and unseen events unclaimed",
+      "unsupported_private_fields": [
+        "duration",
+        "profession",
+        "possession",
+        "diagnosis",
+        "private ritual",
+        "relationship history",
+        "count or tally",
+        "specific location",
+        "existing paperwork",
+        "private conversation",
+        "payment mechanics",
+        "customer motive",
+        "third-party intention"
+      ],
+      "illustration_rule": "an illustrative situation remains a possibility and never becomes her history",
+      "history_rule": "do not assert a specific past event, frequency or recency for her unless the buyer context or obligation establishes it",
+      "action_scope": "direct advice may concern only observation, reflection or a reversible change inside her own environment; never make a forecast depend on contacting, documenting, confronting, negotiating with or changing terms for another person or institution"
+    },
+    "keynote": "a household that agreed to wait",
+    "takeaway": "Waiting that still teaches you something differs from waiting that merely continues"
+  },
+  {
+    "house": 5,
+    "house_name": "romance, and what delights you",
+    "job": "Romance as pleasure and pursuit — the beginning of things, not the binding of them. ⛔ Not the same room as house 7, and the difference between them is the reading's spine.",
+    "card": "strength",
+    "card_name": "Strength",
+    "reversed": false,
+    "agency": "The cosmic forces have guided your selection to",
+    "obligation": "LOVE ANSWER. Choose exactly one branch and show how this room's card decides it. RENEWAL: the person already on her mind becomes more attentive than ever; give the relative week and the first sign. ARRIVAL: use the words TWIN FLAME; give the relative week; describe the already-known man's manner and what he is occupied with when recognition occurs, without physical features. Distinguish arrival from recognition. Support the chosen branch from house 7 or house 11. Do not name the Lovers as dealt. SECOND-LETTER EMPEROR DEBT. Decide whether the structure is support or confinement and whether it sits in house 4 or house 8, using the cards in those rooms. Then decide whether she stopped choosing in house 2 or house 6 and name what decision she surrendered. The relationship is excluded from that second choice. Do not name the Emperor as dealt or add another date.",
+    "owes": true,
+    "architecture": {
+      "entry": "enter through the question asked by the house",
+      "customer_entry": "early",
+      "development": [
+        "how the house changes the card",
+        "conditional consequences",
+        "personal application"
+      ],
+      "ending": "finish on what this changes in the wider spread",
+      "target_words": 750,
+      "may_use_address": false,
+      "may_name_waite": false,
+      "cross_room": "required by the promise ledger",
+      "emphasis_position": "none"
+    },
+    "claim_ledger": {
+      "permitted_sources": [
+        "the buyer material summarized in the sales-letter context",
+        "the question belonging to house 5",
+        "the traditional meaning and supplied lore of Strength",
+        "named evidence from another dealt card only when the architecture permits it",
+        "the result explicitly required by this room's promise obligation"
+      ],
+      "obligation": "LOVE ANSWER. Choose exactly one branch and show how this room's card decides it. RENEWAL: the person already on her mind becomes more attentive than ever; give the relative week and the first sign. ARRIVAL: use the words TWIN FLAME; give the relative week; describe the already-known man's manner and what he is occupied with when recognition occurs, without physical features. Distinguish arrival from recognition. Support the chosen branch from house 7 or house 11. Do not name the Lovers as dealt. SECOND-LETTER EMPEROR DEBT. Decide whether the structure is support or confinement and whether it sits in house 4 or house 8, using the cards in those rooms. Then decide whether she stopped choosing in house 2 or house 6 and name what decision she surrendered. The relationship is excluded from that second choice. Do not name the Emperor as dealt or add another date.",
+      "forecast_scope": "state every promised result firmly; derive how it arrives from this card and house, and add no biography, administrative fact, motive or causal condition beyond the obligation",
+      "unsupported_private_fields": [
+        "duration",
+        "profession",
+        "possession",
+        "diagnosis",
+        "private ritual",
+        "relationship history",
+        "count or tally",
+        "specific location",
+        "existing paperwork",
+        "private conversation",
+        "payment mechanics",
+        "customer motive",
+        "third-party intention"
+      ],
+      "illustration_rule": "an illustrative situation remains a possibility and never becomes her history",
+      "history_rule": "do not assert a specific past event, frequency or recency for her unless the buyer context or obligation establishes it",
+      "action_scope": "direct advice may concern only observation, reflection or a reversible change inside her own environment; never make a forecast depend on contacting, documenting, confronting, negotiating with or changing terms for another person or institution"
+    },
+    "keynote": "held by hand, and wanted again tomorrow",
+    "takeaway": ""
+  },
+  {
+    "house": 6,
+    "house_name": "work, health, the daily grind",
+    "job": "The ordinary week: work, the body, and repeated routines. Distinguish possible demands and costs in observable terms; do not diagnose symptoms, assert where her energy goes, or invent her job or schedule.",
+    "card": "the-hermit",
+    "card_name": "the Hermit",
+    "reversed": false,
+    "agency": "Your choice fell on",
+    "obligation": null,
+    "owes": false,
+    "architecture": {
+      "entry": "enter through the tension between this card and this house",
+      "customer_entry": "early",
+      "development": [
+        "several categories the buyer can fill herself",
+        "source evidence",
+        "choice and cost"
+      ],
+      "ending": "finish on a proportionate and reversible action",
+      "target_words": 535,
+      "may_use_address": false,
+      "may_name_waite": false,
+      "cross_room": "keep this room self-contained",
+      "emphasis_position": "late"
+    },
+    "claim_ledger": {
+      "permitted_sources": [
+        "the buyer material summarized in the sales-letter context",
+        "the question belonging to house 6",
+        "the traditional meaning and supplied lore of the Hermit",
+        "named evidence from another dealt card only when the architecture permits it"
+      ],
+      "obligation": null,
+      "forecast_scope": "state the card-and-house interpretation firmly in the present while leaving her past actions, private motives and unseen events unclaimed",
+      "unsupported_private_fields": [
+        "duration",
+        "profession",
+        "possession",
+        "diagnosis",
+        "private ritual",
+        "relationship history",
+        "count or tally",
+        "specific location",
+        "existing paperwork",
+        "private conversation",
+        "payment mechanics",
+        "customer motive",
+        "third-party intention"
+      ],
+      "illustration_rule": "an illustrative situation remains a possibility and never becomes her history",
+      "history_rule": "do not assert a specific past event, frequency or recency for her unless the buyer context or obligation establishes it",
+      "action_scope": "direct advice may concern only observation, reflection or a reversible change inside her own environment; never make a forecast depend on contacting, documenting, confronting, negotiating with or changing terms for another person or institution"
+    },
+    "keynote": "one step lit, and slowly on purpose",
+    "takeaway": "Deliberate slowness can stop and restart; depletion cannot — that is the test"
+  },
+  {
+    "house": 7,
+    "house_name": "who you are bound to",
+    "job": "The binding one — partner, or the person she is tied to whether or not it is called that. ⭐ Read against house 5, this is where 'renewal or arrival' gets decided.",
+    "card": "the-high-priestess",
+    "card_name": "the High Priestess",
+    "reversed": false,
+    "agency": "Your choice has fallen on",
+    "obligation": null,
+    "owes": false,
+    "architecture": {
+      "entry": "enter through the question asked by the house",
+      "customer_entry": "middle",
+      "development": [
+        "several categories the buyer can fill herself",
+        "source evidence",
+        "choice and cost"
+      ],
+      "ending": "finish on the cost of the available choice",
+      "target_words": 520,
+      "may_use_address": true,
+      "may_name_waite": false,
+      "cross_room": "keep this room self-contained",
+      "emphasis_position": "late"
+    },
+    "claim_ledger": {
+      "permitted_sources": [
+        "the buyer material summarized in the sales-letter context",
+        "the question belonging to house 7",
+        "the traditional meaning and supplied lore of the High Priestess",
+        "named evidence from another dealt card only when the architecture permits it"
+      ],
+      "obligation": null,
+      "forecast_scope": "state the card-and-house interpretation firmly in the present while leaving her past actions, private motives and unseen events unclaimed",
+      "unsupported_private_fields": [
+        "duration",
+        "profession",
+        "possession",
+        "diagnosis",
+        "private ritual",
+        "relationship history",
+        "count or tally",
+        "specific location",
+        "existing paperwork",
+        "private conversation",
+        "payment mechanics",
+        "customer motive",
+        "third-party intention"
+      ],
+      "illustration_rule": "an illustrative situation remains a possibility and never becomes her history",
+      "history_rule": "do not assert a specific past event, frequency or recency for her unless the buyer context or obligation establishes it",
+      "action_scope": "direct advice may concern only observation, reflection or a reversible change inside her own environment; never make a forecast depend on contacting, documenting, confronting, negotiating with or changing terms for another person or institution"
+    },
+    "keynote": "bound to someone already known, half-said",
+    "takeaway": "An unspoken tie can last indefinitely; it cannot grow while unspoken"
+  },
+  {
+    "house": 8,
+    "house_name": "what is hidden, and what comes through others",
+    "job": "What is not being said, and what reaches her through somebody else's hands — money, news, a decision made about her elsewhere.",
+    "card": "wheel-of-fortune",
+    "card_name": "the Wheel of Fortune",
+    "reversed": false,
+    "agency": "The cosmos has turned your hand to",
+    "obligation": "SECOND WINDFALL. State what reaches her through another person, whose role or category brings it, and why it changes her love life rather than only her bank balance. The card decides how the promised windfall comes, never whether. Do not date it. SECOND-LETTER EMPEROR FOLLOW-THROUGH. Only if house 5 locates the structure in house 8, add no more than three sentences naming what exerts the control and the category of person through whom it is held, reasoned against house 4. Otherwise omit this debt here. Keep the windfall as the main subject. Do not name the Emperor as dealt or date this answer.",
+    "owes": true,
+    "architecture": {
+      "entry": "enter through the source evidence",
+      "customer_entry": "late",
+      "development": [
+        "the card-house tension",
+        "plain meaning",
+        "personal application"
+      ],
+      "ending": "finish on a precise observation the buyer can recognize",
+      "target_words": 635,
+      "may_use_address": false,
+      "may_name_waite": true,
+      "cross_room": "required by the promise ledger",
+      "emphasis_position": "none"
+    },
+    "claim_ledger": {
+      "permitted_sources": [
+        "the buyer material summarized in the sales-letter context",
+        "the question belonging to house 8",
+        "the traditional meaning and supplied lore of the Wheel of Fortune",
+        "named evidence from another dealt card only when the architecture permits it",
+        "the result explicitly required by this room's promise obligation"
+      ],
+      "obligation": "SECOND WINDFALL. State what reaches her through another person, whose role or category brings it, and why it changes her love life rather than only her bank balance. The card decides how the promised windfall comes, never whether. Do not date it. SECOND-LETTER EMPEROR FOLLOW-THROUGH. Only if house 5 locates the structure in house 8, add no more than three sentences naming what exerts the control and the category of person through whom it is held, reasoned against house 4. Otherwise omit this debt here. Keep the windfall as the main subject. Do not name the Emperor as dealt or date this answer.",
+      "forecast_scope": "state every promised result firmly; derive how it arrives from this card and house, and add no biography, administrative fact, motive or causal condition beyond the obligation",
+      "unsupported_private_fields": [
+        "duration",
+        "profession",
+        "possession",
+        "diagnosis",
+        "private ritual",
+        "relationship history",
+        "count or tally",
+        "specific location",
+        "existing paperwork",
+        "private conversation",
+        "payment mechanics",
+        "customer motive",
+        "third-party intention"
+      ],
+      "illustration_rule": "an illustrative situation remains a possibility and never becomes her history",
+      "history_rule": "do not assert a specific past event, frequency or recency for her unless the buyer context or obligation establishes it",
+      "action_scope": "direct advice may concern only observation, reflection or a reversible change inside her own environment; never make a forecast depend on contacting, documenting, confronting, negotiating with or changing terms for another person or institution"
+    },
+    "keynote": "it arrives carried, and does not ask",
+    "takeaway": ""
+  },
+  {
+    "house": 9,
+    "house_name": "what you believe",
+    "job": "Beliefs and assumptions about how life works. Develop the card's general belief pattern, widen it into alternatives she can test, and let her recognize the fit; do not claim a hidden belief, habitual response, or private thought as established biography.",
+    "card": "the-fool",
+    "card_name": "the Fool",
+    "reversed": false,
+    "agency": "The celestial wisdom has guided your selection to",
+    "obligation": null,
+    "owes": false,
+    "architecture": {
+      "entry": "enter through a recognizable pattern in ordinary life",
+      "customer_entry": "early",
+      "development": [
+        "an ordinary comparison only if it adds clarity",
+        "the comparison's limit",
+        "consequence"
+      ],
+      "ending": "finish on the consequence of the interpretation",
+      "target_words": 520,
+      "may_use_address": false,
+      "may_name_waite": false,
+      "cross_room": "keep this room self-contained",
+      "emphasis_position": "middle"
+    },
+    "claim_ledger": {
+      "permitted_sources": [
+        "the buyer material summarized in the sales-letter context",
+        "the question belonging to house 9",
+        "the traditional meaning and supplied lore of the Fool",
+        "named evidence from another dealt card only when the architecture permits it"
+      ],
+      "obligation": null,
+      "forecast_scope": "state the card-and-house interpretation firmly in the present while leaving her past actions, private motives and unseen events unclaimed",
+      "unsupported_private_fields": [
+        "duration",
+        "profession",
+        "possession",
+        "diagnosis",
+        "private ritual",
+        "relationship history",
+        "count or tally",
+        "specific location",
+        "existing paperwork",
+        "private conversation",
+        "payment mechanics",
+        "customer motive",
+        "third-party intention"
+      ],
+      "illustration_rule": "an illustrative situation remains a possibility and never becomes her history",
+      "history_rule": "do not assert a specific past event, frequency or recency for her unless the buyer context or obligation establishes it",
+      "action_scope": "direct advice may concern only observation, reflection or a reversible change inside her own environment; never make a forecast depend on contacting, documenting, confronting, negotiating with or changing terms for another person or institution"
+    },
+    "keynote": "beginnings need no permission, only motion",
+    "takeaway": "Motion serves you where no precedent exists; check where a record does"
+  },
+  {
+    "house": 10,
+    "house_name": "your standing",
+    "job": "Standing, reputation, position, and credit. Explain what the card says would make standing visible and how she can recognize the evidence; do not invent another person's private opinion or assert an unobserved workplace history.",
+    "card": "justice",
+    "card_name": "Justice",
+    "reversed": false,
+    "agency": "Your choice has led you to",
+    "obligation": null,
+    "owes": false,
+    "architecture": {
+      "entry": "enter through a consequence, then trace what produces it",
+      "customer_entry": "late",
+      "development": [
+        "an ordinary comparison only if it adds clarity",
+        "the comparison's limit",
+        "consequence"
+      ],
+      "ending": "finish on the consequence of the interpretation",
+      "target_words": 535,
+      "may_use_address": true,
+      "may_name_waite": false,
+      "cross_room": "keep this room self-contained",
+      "emphasis_position": "early"
+    },
+    "claim_ledger": {
+      "permitted_sources": [
+        "the buyer material summarized in the sales-letter context",
+        "the question belonging to house 10",
+        "the traditional meaning and supplied lore of Justice",
+        "named evidence from another dealt card only when the architecture permits it"
+      ],
+      "obligation": null,
+      "forecast_scope": "state the card-and-house interpretation firmly in the present while leaving her past actions, private motives and unseen events unclaimed",
+      "unsupported_private_fields": [
+        "duration",
+        "profession",
+        "possession",
+        "diagnosis",
+        "private ritual",
+        "relationship history",
+        "count or tally",
+        "specific location",
+        "existing paperwork",
+        "private conversation",
+        "payment mechanics",
+        "customer motive",
+        "third-party intention"
+      ],
+      "illustration_rule": "an illustrative situation remains a possibility and never becomes her history",
+      "history_rule": "do not assert a specific past event, frequency or recency for her unless the buyer context or obligation establishes it",
+      "action_scope": "direct advice may concern only observation, reflection or a reversible change inside her own environment; never make a forecast depend on contacting, documenting, confronting, negotiating with or changing terms for another person or institution"
+    },
+    "keynote": "works weighed, and the weighing written down",
+    "takeaway": "Standing shows in decisions that name you, not in warmth expressed"
+  },
+  {
+    "house": 11,
+    "house_name": "your circle",
+    "job": "Her circle and the observable ways people participate, arrive, connect, or go quiet. Explain the card's social pattern without assigning motives, trustworthiness, or a hidden reason to a particular person.",
+    "card": "the-sun",
+    "card_name": "the Sun",
+    "reversed": false,
+    "agency": "Your selection has fallen to",
+    "obligation": null,
+    "owes": false,
+    "architecture": {
+      "entry": "enter through a consequence, then trace what produces it",
+      "customer_entry": "middle",
+      "development": [
+        "plain explanation",
+        "conditional distinctions",
+        "personal application"
+      ],
+      "ending": "finish on the cost of the available choice",
+      "target_words": 550,
+      "may_use_address": false,
+      "may_name_waite": true,
+      "cross_room": "keep this room self-contained",
+      "emphasis_position": "middle"
+    },
+    "claim_ledger": {
+      "permitted_sources": [
+        "the buyer material summarized in the sales-letter context",
+        "the question belonging to house 11",
+        "the traditional meaning and supplied lore of the Sun",
+        "named evidence from another dealt card only when the architecture permits it"
+      ],
+      "obligation": null,
+      "forecast_scope": "state the card-and-house interpretation firmly in the present while leaving her past actions, private motives and unseen events unclaimed",
+      "unsupported_private_fields": [
+        "duration",
+        "profession",
+        "possession",
+        "diagnosis",
+        "private ritual",
+        "relationship history",
+        "count or tally",
+        "specific location",
+        "existing paperwork",
+        "private conversation",
+        "payment mechanics",
+        "customer motive",
+        "third-party intention"
+      ],
+      "illustration_rule": "an illustrative situation remains a possibility and never becomes her history",
+      "history_rule": "do not assert a specific past event, frequency or recency for her unless the buyer context or obligation establishes it",
+      "action_scope": "direct advice may concern only observation, reflection or a reversible change inside her own environment; never make a forecast depend on contacting, documenting, confronting, negotiating with or changing terms for another person or institution"
+    },
+    "keynote": "plain daylight; your circle needs no decoding",
+    "takeaway": "Read the surface here; treat decoding as a sign of another field"
+  },
+  {
+    "house": 12,
+    "house_name": "what is being kept from you",
+    "job": "The blind room. What is real, close, and not visible from where she stands. ⭐ The house the letter promised the most and the one she will read first.",
+    "card": "death",
+    "card_name": "the Nameless One",
+    "reversed": false,
+    "agency": "And your twelfth card is",
+    "obligation": "TOWER ANSWER. Choose between a person from before returning at the wrong moment and a person still present who has begun leaving. State how close the change is as a stage rather than a date, and explain what facing the right direction requires of her. Do not name the Tower as dealt. SECOND-LETTER MOON DEBT. State which part of her interpretation of the man is real and which part fear supplied. Explain why further reading of the same ambiguous evidence adds no information. Examine her interpretation rather than accusing him. Do not direct her to investigate, watch, or question him. The room's card decides how the real part appears, never whether one exists. Do not name the Moon as dealt or date this answer.",
+    "owes": true,
+    "architecture": {
+      "entry": "enter through the tension between this card and this house",
+      "customer_entry": "early",
+      "development": [
+        "source evidence later in the argument",
+        "practical implication",
+        "what remains unchanged"
+      ],
+      "ending": "finish on what this changes in the wider spread",
+      "target_words": 680,
+      "may_use_address": false,
+      "may_name_waite": false,
+      "cross_room": "required by the promise ledger",
+      "emphasis_position": "none"
+    },
+    "claim_ledger": {
+      "permitted_sources": [
+        "the buyer material summarized in the sales-letter context",
+        "the question belonging to house 12",
+        "the traditional meaning and supplied lore of the Nameless One",
+        "named evidence from another dealt card only when the architecture permits it",
+        "the result explicitly required by this room's promise obligation"
+      ],
+      "obligation": "TOWER ANSWER. Choose between a person from before returning at the wrong moment and a person still present who has begun leaving. State how close the change is as a stage rather than a date, and explain what facing the right direction requires of her. Do not name the Tower as dealt. SECOND-LETTER MOON DEBT. State which part of her interpretation of the man is real and which part fear supplied. Explain why further reading of the same ambiguous evidence adds no information. Examine her interpretation rather than accusing him. Do not direct her to investigate, watch, or question him. The room's card decides how the real part appears, never whether one exists. Do not name the Moon as dealt or date this answer.",
+      "forecast_scope": "state every promised result firmly; derive how it arrives from this card and house, and add no biography, administrative fact, motive or causal condition beyond the obligation",
+      "unsupported_private_fields": [
+        "duration",
+        "profession",
+        "possession",
+        "diagnosis",
+        "private ritual",
+        "relationship history",
+        "count or tally",
+        "specific location",
+        "existing paperwork",
+        "private conversation",
+        "payment mechanics",
+        "customer motive",
+        "third-party intention"
+      ],
+      "illustration_rule": "an illustrative situation remains a possibility and never becomes her history",
+      "history_rule": "do not assert a specific past event, frequency or recency for her unless the buyer context or obligation establishes it",
+      "action_scope": "direct advice may concern only observation, reflection or a reversible change inside her own environment; never make a forecast depend on contacting, documenting, confronting, negotiating with or changing terms for another person or institution"
+    },
+    "keynote": "a decided departure, arriving at walking pace",
+    "takeaway": ""
+  }
+]

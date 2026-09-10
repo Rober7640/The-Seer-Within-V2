@@ -1,0 +1,215 @@
+<!-- 08 · MARCUS DAILY — why-they-go-quiet · DESIGN 05 "the table"
+     Subject:   🕯️ %FIRSTNAME%, his quiet isn't what you think it is
+     Preheader: Her feet aren&rsquo;t tied. That&rsquo;s the whole card.
+     Copy rendered VERBATIM from docs/08-marcus/letters-02/why-they-go-quiet.md.
+
+     THE IDEA · a letter left on the kitchen table, with the photographs laid loose on it.
+     Three surfaces, three bgcolors, no background-images: the TABLE (#ded1ba) under the
+     SHEET (#f8f2e5) under the SLIP (#f0e4cd). The two PHOTOGRAPHS get a white print
+     mount with a heavy bottom edge, the way a real print is bordered; the three CARDS get
+     no mount, because a card on a table is an object, not a picture of one.
+     Nothing is centred: the masthead hangs left, the hero sits nearer the left edge than
+     the right, and the three cards are hand-placed down the page (left / right / left-of-centre) by PADDING,
+     never by float or align — a floated table alone in a cell collapses in Word.
+
+     ⛔ HEADSHOT · this build uses 08-headshot.jpg, the SQUARE original, NOT
+        08-headshot-round.jpg. The round one has its circle masked into the JPEG on a WHITE
+        ground; it only works on a white cell and this sheet is cream. The square print
+        inside a white mount is the intended look here anyway.
+     ⛔ The heroes are .jpg, NOT .png — the .png keys on S3 return 403.
+     ⛔ %FIRSTNAME% is the ESP merge tag and must reach AWeber INTACT. It is NOT a build
+        token. Any brace sweep must match {{...}} literally and leave % alone.
+     ⛔ {{BOOKING_URL}} is the one placeholder. No price, no clock, no deadline (08 SHAPE.md).
+     ⛔ Every text-bearing cell carries bgcolor + background-color + color, for the clients
+        that force dark mode. Do not strip any of the three, they are not redundant.
+     ⛔ Webfonts (Newsreader, Caveat) are a BONUS. Outlook and Gmail will not load them and
+        the design is drawn for the fallbacks: Georgia for text, Segoe Script / Bradley Hand
+        for the signature. Do not tune sizes to the webfont. -->
+<!DOCTYPE html>
+<html xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office" lang="en"><head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="x-apple-disable-message-reformatting">
+<meta name="color-scheme" content="light">
+<meta name="supported-color-schemes" content="light">
+<title>The Seer Within &mdash; Marcus</title>
+<!--[if mso]><xml><o:OfficeDocumentSettings><o:AllowPNG/><o:PixelsPerInch>96</o:PixelsPerInch></o:OfficeDocumentSettings></xml><![endif]-->
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,600;1,6..72,400;1,6..72,600&amp;family=Caveat:wght@500&amp;display=swap" rel="stylesheet">
+<style type="text/css">
+  body{-webkit-font-smoothing:antialiased;-webkit-text-size-adjust:100%;-ms-text-size-adjust:100%;margin:0;padding:0;width:100%;background-color:#ded1ba;}
+  img{border:0;height:auto;line-height:100%;max-width:100%;outline:none;text-decoration:none;-ms-interpolation-mode:bicubic;}
+  table,td{border-collapse:collapse;border-spacing:0;border:0;}
+  td{-webkit-text-size-adjust:100%;-ms-text-size-adjust:100%;}
+  body,a{word-break:break-word;}   /* a word too long for the column breaks instead
+                                        of widening the table */
+  @media only screen and (max-width:599px){
+    .container{width:100%!important;max-width:100%!important;}
+    .surface{padding-left:0!important;padding-right:0!important;padding-top:0!important;}
+    .px{padding-left:20px!important;padding-right:20px!important;}
+    .role{font-size:10.5px!important;letter-spacing:1.6px!important;}
+    /* the hero print keeps its off-centre bias, just tighter */
+    .heroPad{padding-left:14px!important;padding-right:24px!important;padding-bottom:26px!important;}
+    /* the three cards stay hand-placed, scaled to the narrow sheet */
+    .cardA{padding-left:20px!important;padding-right:12px!important;}
+    .cardB{padding-left:84px!important;padding-right:12px!important;}
+    .cardC{padding-left:46px!important;padding-right:12px!important;}
+    .slipPad{padding-left:14px!important;padding-right:12px!important;}
+    .slipIn{padding-left:18px!important;padding-right:18px!important;}
+    .h2{font-size:19px!important;line-height:28px!important;}
+  }
+</style>
+</head>
+<body style="margin:0;padding:0;background-color:#ded1ba;">
+<div style="display:none;max-height:0;overflow:hidden;mso-hide:all;font-size:1px;line-height:1px;color:#ded1ba;opacity:0;">Her feet aren&rsquo;t tied. That&rsquo;s the whole card.</div>
+<div style="display:none;max-height:0;overflow:hidden;">&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;</div>
+<center>
+
+<!-- THE TABLE · the surface the sheet is lying on. On a phone the sheet fills the
+     screen and the surface disappears; that is correct, you are holding the letter. -->
+<table align="center" cellpadding="0" cellspacing="0" border="0" width="100%" bgcolor="#ded1ba" role="presentation" style="background-color:#ded1ba;">
+<tr><td class="surface" align="center" bgcolor="#ded1ba" style="padding:34px 10px 44px;background-color:#ded1ba;">
+
+<!-- THE SHEET -->
+<table class="container" align="center" cellpadding="0" cellspacing="0" border="0" width="600" bgcolor="#f8f2e5" role="presentation" style="max-width:600px;width:100%;background-color:#f8f2e5;">
+
+  <!-- MASTHEAD · a snapshot in a white mount, his name beside it, hanging on the left
+       margin the way a letterhead does. ⛔ NOT centred. Two cells, never stacked: at
+       320px the mount is 104 and the name column still holds the tracked role line. -->
+  <tr><td class="px" bgcolor="#f8f2e5" style="padding:42px 52px 0;background-color:#f8f2e5;">
+    <table cellpadding="0" cellspacing="0" border="0" width="100%" role="presentation" bgcolor="#f8f2e5" style="background-color:#f8f2e5;">
+      <tr>
+        <td width="104" valign="top" bgcolor="#f8f2e5" style="width:104px;background-color:#f8f2e5;font-size:0;line-height:0;">
+          <table cellpadding="0" cellspacing="0" border="0" role="presentation" bgcolor="#ffffff" style="background-color:#ffffff;border:1px solid #e2d5bb;">
+            <tr><td bgcolor="#ffffff" style="padding:7px 7px 13px;background-color:#ffffff;font-size:0;line-height:0;"><img src="https://luna-assets-tsw.s3.ap-southeast-2.amazonaws.com/marcus/08/08-headshot.jpg" alt="Marcus Stone" width="88" height="88" style="display:block;width:88px;max-width:88px;height:auto;border:0;outline:none;text-decoration:none;-ms-interpolation-mode:bicubic;font-family:Georgia,'Times New Roman',Times,serif;font-size:13px;line-height:18px;color:#6f6353;"></td></tr>
+          </table>
+        </td>
+        <td width="22" bgcolor="#f8f2e5" style="width:22px;background-color:#f8f2e5;font-size:0;line-height:0;">&nbsp;</td>
+        <td valign="middle" bgcolor="#f8f2e5" style="background-color:#f8f2e5;">
+          <table cellpadding="0" cellspacing="0" border="0" width="100%" role="presentation" bgcolor="#f8f2e5" style="background-color:#f8f2e5;">
+            <tr><td bgcolor="#f8f2e5" style="padding:0 0 5px;background-color:#f8f2e5;font-family:'Newsreader',Georgia,'Times New Roman',Times,serif;font-size:23px;line-height:28px;mso-line-height-rule:exactly;color:#2b2620;letter-spacing:.2px;text-align:left;">Marcus Stone</td></tr>
+            <tr><td class="role" bgcolor="#f8f2e5" style="background-color:#f8f2e5;font-family:'Newsreader',Georgia,'Times New Roman',Times,serif;font-size:11px;line-height:16px;mso-line-height-rule:exactly;color:#8c7f6b;letter-spacing:2.2px;text-transform:uppercase;text-align:left;">Daily Tarot Reader</td></tr>
+          </table>
+        </td>
+      </tr>
+    </table></td></tr>
+
+  <!-- the letterhead rule. One hairline, then air. -->
+  <tr><td class="px" bgcolor="#f8f2e5" style="padding:26px 52px 0;background-color:#f8f2e5;"><table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation"><tr><td height="1" bgcolor="#e2d5bb" style="background-color:#e2d5bb;font-size:0;line-height:0;height:1px;">&nbsp;</td></tr></table></td></tr>
+
+  <!-- INTRO · the salutation is set larger, the way the first line of a letter is
+       written larger than the rest. ⛔ %FIRSTNAME% intact. -->
+  <tr><td class="px" bgcolor="#f8f2e5" style="padding:34px 52px 22px;background-color:#f8f2e5;font-family:'Newsreader',Georgia,'Times New Roman',Times,serif;font-size:22px;line-height:30px;mso-line-height-rule:exactly;color:#2b2620;text-align:left;letter-spacing:.2px;"><p style="margin:0;">%FIRSTNAME%,</p></td></tr>
+  <tr><td class="px" bgcolor="#f8f2e5" style="padding:0 52px 22px;background-color:#f8f2e5;font-family:'Newsreader',Georgia,'Times New Roman',Times,serif;font-size:18px;line-height:31px;mso-line-height-rule:exactly;color:#2b2620;text-align:left;"><p style="margin:0;">Marcus. Six cards on one question this morning: why he goes quiet. Three up, three face down. Rider&ndash;Waite.</p></td></tr>
+  <tr><td class="px" bgcolor="#f8f2e5" style="padding:0 52px 8px;background-color:#f8f2e5;font-family:'Newsreader',Georgia,'Times New Roman',Times,serif;font-size:18px;line-height:31px;mso-line-height-rule:exactly;color:#2b2620;text-align:left;"><p style="margin:0;">I&rsquo;ll say him. If yours is a her, swap it as you read &mdash; the cards don&rsquo;t care and neither do I.</p></td></tr>
+
+  <!-- HERO · the spread, in a white print mount, laid nearer the left edge than the
+       right (40 / 60) because a person putting a photograph down does not measure.
+       ⛔ SIZING — width attribute AND width:100%;max-width:474px;height:auto. A bare
+          px width on the image pins the table's min-content width and the .container
+          media query cannot override it; the copy then clips on a phone. -->
+  <tr><td class="heroPad" bgcolor="#f8f2e5" style="padding:8px 60px 34px 40px;background-color:#f8f2e5;font-size:0;line-height:0;">
+    <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" bgcolor="#ffffff" style="width:100%;background-color:#ffffff;border:1px solid #e2d5bb;">
+      <tr><td bgcolor="#ffffff" style="padding:12px 12px 20px;background-color:#ffffff;font-size:0;line-height:0;"><img src="https://luna-assets-tsw.s3.ap-southeast-2.amazonaws.com/marcus/08/08-hero-why-they-go-quiet.jpg" alt="Six Rider&ndash;Waite cards laid on a printed cloth &mdash; three face up in the top row, three face down in the bottom row" width="474" height="316" style="display:block;width:100%;max-width:474px;height:auto;border:0;outline:none;text-decoration:none;-ms-interpolation-mode:bicubic;font-family:Georgia,'Times New Roman',Times,serif;font-size:14px;line-height:22px;color:#6f6353;"></td></tr>
+    </table></td></tr>
+
+  <!-- THE TURNED CARDS · a short pen-stroke rule, the heading with the card named in
+       ink-red, then the print, then the reading.
+       ⛔ Face-down positions get NO picture. Only turned cards. -->
+
+  <!-- ONE -->
+  <tr><td class="px" bgcolor="#f8f2e5" style="padding:0 52px 0;background-color:#f8f2e5;"><table cellpadding="0" cellspacing="0" border="0" role="presentation" width="44"><tr><td height="1" width="44" bgcolor="#c6b797" style="background-color:#c6b797;font-size:0;line-height:0;height:1px;width:44px;">&nbsp;</td></tr></table></td></tr>
+  <tr><td class="px h2" bgcolor="#f8f2e5" style="padding:20px 52px 22px;background-color:#f8f2e5;font-family:'Newsreader',Georgia,'Times New Roman',Times,serif;font-size:20px;line-height:29px;mso-line-height-rule:exactly;color:#2b2620;font-weight:600;text-align:left;">One &mdash; what the quiet actually is. <em style="color:#8c3b26;">The Four of Cups.</em></td></tr>
+  <tr><td class="cardA" bgcolor="#f8f2e5" style="padding:0 52px 26px 52px;background-color:#f8f2e5;font-size:0;line-height:0;"><img src="https://luna-assets-tsw.s3.ap-southeast-2.amazonaws.com/evelyn/tarot-rws/four-of-cups.jpg" alt="The Four of Cups" width="196" height="336" style="display:block;border:1px solid #dccdb2;width:196px;max-width:196px;height:auto;border:0;outline:none;text-decoration:none;-ms-interpolation-mode:bicubic;font-family:Georgia,'Times New Roman',Times,serif;font-size:14px;line-height:22px;color:#6f6353;"></td></tr>
+  <tr><td class="px" bgcolor="#f8f2e5" style="padding:0 52px 22px;background-color:#f8f2e5;font-family:'Newsreader',Georgia,'Times New Roman',Times,serif;font-size:18px;line-height:31px;mso-line-height-rule:exactly;color:#2b2620;text-align:left;"><p style="margin:0;">A young man sitting on the ground under a tree, knees up, arms folded across his chest. Three gold cups on the grass in front of him. And out of a cloud beside him, a hand, holding out a fourth.</p></td></tr>
+  <tr><td class="px" bgcolor="#f8f2e5" style="padding:0 52px 22px;background-color:#f8f2e5;font-family:'Newsreader',Georgia,'Times New Roman',Times,serif;font-size:18px;line-height:31px;mso-line-height-rule:exactly;color:#2b2620;text-align:left;"><p style="margin:0;">He isn&rsquo;t looking at it. He&rsquo;s looking at the three he&rsquo;s already got.</p></td></tr>
+  <tr><td class="px" bgcolor="#f8f2e5" style="padding:0 52px 34px;background-color:#f8f2e5;font-family:'Newsreader',Georgia,'Times New Roman',Times,serif;font-size:18px;line-height:31px;mso-line-height-rule:exactly;color:#2b2620;text-align:left;"><p style="margin:0;">That&rsquo;s the quiet. He hasn&rsquo;t left and he hasn&rsquo;t stopped caring. He&rsquo;s sat down inside himself and he&rsquo;s staring at what&rsquo;s already in front of him. The hand is out. He isn&rsquo;t seeing it.</p></td></tr>
+
+  <!-- TWO · this print is laid over on the right of the sheet. -->
+  <tr><td class="px" bgcolor="#f8f2e5" style="padding:0 52px 0;background-color:#f8f2e5;"><table cellpadding="0" cellspacing="0" border="0" role="presentation" width="44"><tr><td height="1" width="44" bgcolor="#c6b797" style="background-color:#c6b797;font-size:0;line-height:0;height:1px;width:44px;">&nbsp;</td></tr></table></td></tr>
+  <tr><td class="px h2" bgcolor="#f8f2e5" style="padding:20px 52px 22px;background-color:#f8f2e5;font-family:'Newsreader',Georgia,'Times New Roman',Times,serif;font-size:20px;line-height:29px;mso-line-height-rule:exactly;color:#2b2620;font-weight:600;text-align:left;">Two &mdash; what it is not. <em style="color:#8c3b26;">The Three of Swords.</em></td></tr>
+  <tr><td class="cardB" bgcolor="#f8f2e5" style="padding:0 24px 26px 322px;background-color:#f8f2e5;font-size:0;line-height:0;"><img src="https://luna-assets-tsw.s3.ap-southeast-2.amazonaws.com/evelyn/tarot-rws/three-of-swords.jpg" alt="The Three of Swords" width="196" height="336" style="display:block;border:1px solid #dccdb2;width:196px;max-width:196px;height:auto;border:0;outline:none;text-decoration:none;-ms-interpolation-mode:bicubic;font-family:Georgia,'Times New Roman',Times,serif;font-size:14px;line-height:22px;color:#6f6353;"></td></tr>
+  <tr><td class="px" bgcolor="#f8f2e5" style="padding:0 52px 22px;background-color:#f8f2e5;font-family:'Newsreader',Georgia,'Times New Roman',Times,serif;font-size:18px;line-height:31px;mso-line-height-rule:exactly;color:#2b2620;text-align:left;"><p style="margin:0;">A red heart with three swords straight through it. Grey cloud, rain coming down.</p></td></tr>
+  <tr><td class="px" bgcolor="#f8f2e5" style="padding:0 52px 22px;background-color:#f8f2e5;font-family:'Newsreader',Georgia,'Times New Roman',Times,serif;font-size:18px;line-height:31px;mso-line-height-rule:exactly;color:#2b2620;text-align:left;"><p style="margin:0;">Here&rsquo;s the thing about that card, and it&rsquo;s why it&rsquo;s in position two. Nobody is holding those swords. They&rsquo;re just in it.</p></td></tr>
+  <tr><td class="px" bgcolor="#f8f2e5" style="padding:0 52px 34px;background-color:#f8f2e5;font-family:'Newsreader',Georgia,'Times New Roman',Times,serif;font-size:18px;line-height:31px;mso-line-height-rule:exactly;color:#2b2620;text-align:left;"><p style="margin:0;">The quiet is not a wound. It isn&rsquo;t something he did to you. It feels exactly like this card and it is not this card &mdash; and if you&rsquo;ve been reading his silence as an injury with your name on it, that&rsquo;s the first thing to put down this morning.</p></td></tr>
+
+  <!-- THREE · left of centre. Never actually centred. -->
+  <tr><td class="px" bgcolor="#f8f2e5" style="padding:0 52px 0;background-color:#f8f2e5;"><table cellpadding="0" cellspacing="0" border="0" role="presentation" width="44"><tr><td height="1" width="44" bgcolor="#c6b797" style="background-color:#c6b797;font-size:0;line-height:0;height:1px;width:44px;">&nbsp;</td></tr></table></td></tr>
+  <tr><td class="px h2" bgcolor="#f8f2e5" style="padding:20px 52px 22px;background-color:#f8f2e5;font-family:'Newsreader',Georgia,'Times New Roman',Times,serif;font-size:20px;line-height:29px;mso-line-height-rule:exactly;color:#2b2620;font-weight:600;text-align:left;">Three &mdash; what it costs you while it lasts. <em style="color:#8c3b26;">The Eight of Swords.</em></td></tr>
+  <tr><td class="cardC" bgcolor="#f8f2e5" style="padding:0 30px 26px 120px;background-color:#f8f2e5;font-size:0;line-height:0;"><img src="https://luna-assets-tsw.s3.ap-southeast-2.amazonaws.com/evelyn/tarot-rws/eight-of-swords.jpg" alt="The Eight of Swords" width="196" height="336" style="display:block;border:1px solid #dccdb2;width:196px;max-width:196px;height:auto;border:0;outline:none;text-decoration:none;-ms-interpolation-mode:bicubic;font-family:Georgia,'Times New Roman',Times,serif;font-size:14px;line-height:22px;color:#6f6353;"></td></tr>
+  <tr><td class="px" bgcolor="#f8f2e5" style="padding:0 52px 22px;background-color:#f8f2e5;font-family:'Newsreader',Georgia,'Times New Roman',Times,serif;font-size:18px;line-height:31px;mso-line-height-rule:exactly;color:#2b2620;text-align:left;"><p style="margin:0;">A woman standing in wet ground, wrapped and bound, a cloth over her eyes. Eight swords stuck upright in the earth around her. A castle up on the rock behind.</p></td></tr>
+  <tr><td class="px" bgcolor="#f8f2e5" style="padding:0 52px 22px;background-color:#f8f2e5;font-family:'Newsreader',Georgia,'Times New Roman',Times,serif;font-size:18px;line-height:31px;mso-line-height-rule:exactly;color:#2b2620;text-align:left;"><p style="margin:0;">Look at the swords. They don&rsquo;t join up. There&rsquo;s a clear gap in front of her, and her feet aren&rsquo;t tied.</p></td></tr>
+  <tr><td class="px" bgcolor="#f8f2e5" style="padding:0 52px 30px;background-color:#f8f2e5;font-family:'Newsreader',Georgia,'Times New Roman',Times,serif;font-size:18px;line-height:31px;mso-line-height-rule:exactly;color:#2b2620;text-align:left;"><p style="margin:0;">That&rsquo;s the cost. Not heartbreak &mdash; stillness. While he&rsquo;s sitting under his tree, you&rsquo;ve stopped moving, and nothing in the picture is actually holding you.</p></td></tr>
+
+  <!-- THE REVEAL · the pivot, then the three he has NOT turned. Those three sit in from
+       the margin behind a pencil rule — set apart and quieter, the way a face-down card
+       is still on the table but not yet readable. No fill, no box, no button. -->
+  <tr><td class="px" bgcolor="#f8f2e5" style="padding:0 52px 22px;background-color:#f8f2e5;font-family:'Newsreader',Georgia,'Times New Roman',Times,serif;font-size:18px;line-height:31px;mso-line-height-rule:exactly;color:#2b2620;text-align:left;"><p style="margin:0;">That&rsquo;s the three I can turn.</p></td></tr>
+  <tr><td class="px" bgcolor="#f8f2e5" style="padding:0 52px 26px;background-color:#f8f2e5;font-family:'Newsreader',Georgia,'Times New Roman',Times,serif;font-size:18px;line-height:31px;mso-line-height-rule:exactly;color:#2b2620;text-align:left;"><p style="margin:0;">The other three are the ones you want.</p></td></tr>
+
+  <tr><td class="px" bgcolor="#f8f2e5" style="padding:0 52px 30px;background-color:#f8f2e5;">
+    <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" bgcolor="#f8f2e5" style="background-color:#f8f2e5;">
+      <tr>
+        <td width="1" bgcolor="#c6b797" style="width:1px;background-color:#c6b797;font-size:0;line-height:0;">&nbsp;</td>
+        <td bgcolor="#f8f2e5" style="padding:0 0 0 24px;background-color:#f8f2e5;">
+          <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" bgcolor="#f8f2e5" style="background-color:#f8f2e5;">
+            <tr><td bgcolor="#f8f2e5" style="padding:0 0 20px;background-color:#f8f2e5;font-family:'Newsreader',Georgia,'Times New Roman',Times,serif;font-size:18px;line-height:31px;mso-line-height-rule:exactly;color:#2b2620;text-align:left;"><p style="margin:0;"><strong style="font-weight:600;">The fourth is what he&rsquo;s protecting.</strong> A man who sits down inside himself is always guarding something, and it&rsquo;s almost never the thing she&rsquo;d guess.</p></td></tr>
+            <tr><td bgcolor="#f8f2e5" style="padding:0 0 20px;background-color:#f8f2e5;font-family:'Newsreader',Georgia,'Times New Roman',Times,serif;font-size:18px;line-height:31px;mso-line-height-rule:exactly;color:#2b2620;text-align:left;"><p style="margin:0;"><strong style="font-weight:600;">The fifth is you</strong> &mdash; what you&rsquo;ve been doing inside his quiet. That&rsquo;s a different question from what you&rsquo;ve been feeling about it.</p></td></tr>
+            <tr><td bgcolor="#f8f2e5" style="padding:0;background-color:#f8f2e5;font-family:'Newsreader',Georgia,'Times New Roman',Times,serif;font-size:18px;line-height:31px;mso-line-height-rule:exactly;color:#2b2620;text-align:left;"><p style="margin:0;"><strong style="font-weight:600;">The sixth is what ends it.</strong> Not whether. What.</p></td></tr>
+          </table></td>
+      </tr>
+    </table></td></tr>
+
+  <!-- VALIDATE -->
+  <tr><td class="px" bgcolor="#f8f2e5" style="padding:0 52px 22px;background-color:#f8f2e5;font-family:'Newsreader',Georgia,'Times New Roman',Times,serif;font-size:18px;line-height:31px;mso-line-height-rule:exactly;color:#2b2620;text-align:left;"><p style="margin:0;">And you&rsquo;ve been decent about it. You&rsquo;ve given him room. You haven&rsquo;t chased him, you haven&rsquo;t made him explain himself, you&rsquo;ve let him have whatever this is. That&rsquo;s a generous way to treat someone and it&rsquo;s the right instinct.</p></td></tr>
+  <!-- TURN -->
+  <tr><td class="px" bgcolor="#f8f2e5" style="padding:0 52px 4px;background-color:#f8f2e5;font-family:'Newsreader',Georgia,'Times New Roman',Times,serif;font-size:18px;line-height:31px;mso-line-height-rule:exactly;color:#2b2620;text-align:left;"><p style="margin:0;">You&rsquo;ve just been standing still to do it.</p></td></tr>
+
+  <!-- THE ASK · a second slip of paper laid under the letter — it starts 18px left of the
+       text and stops short of it on the right, and only its bottom edge is drawn, so it
+       reads as something put down rather than a panel that was laid out. THE ONE LINK is inside the last sentence
+       of it: a permission verb, never a button, never the last thing in the letter. -->
+  <tr><td class="slipPad" bgcolor="#f8f2e5" style="padding:24px 56px 8px 34px;background-color:#f8f2e5;">
+    <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" bgcolor="#f0e4cd" style="width:100%;background-color:#f0e4cd;border-bottom:1px solid #dfceac;">
+      <tr><td bgcolor="#f0e4cd" style="background-color:#f0e4cd;font-size:0;line-height:0;height:26px;">&nbsp;</td></tr>
+      <tr><td class="slipIn" bgcolor="#f0e4cd" style="padding:0 30px 20px;background-color:#f0e4cd;font-family:'Newsreader',Georgia,'Times New Roman',Times,serif;font-size:18px;line-height:31px;mso-line-height-rule:exactly;color:#2b2620;text-align:left;"><p style="margin:0;">I can&rsquo;t turn those three for a list. What a man protects depends on the man, and I don&rsquo;t know yours.</p></td></tr>
+      <tr><td class="slipIn" bgcolor="#f0e4cd" style="padding:0 30px 20px;background-color:#f0e4cd;font-family:'Newsreader',Georgia,'Times New Roman',Times,serif;font-size:18px;line-height:31px;mso-line-height-rule:exactly;color:#2b2620;text-align:left;"><p style="margin:0;">So here&rsquo;s this morning&rsquo;s job, and it&rsquo;s one line. Write down what he did on the day it changed. Not how you felt about it. What he <em>did</em>. One sentence.</p></td></tr>
+      <tr><td class="slipIn" bgcolor="#f0e4cd" style="padding:0 30px 26px;background-color:#f0e4cd;font-family:'Newsreader',Georgia,'Times New Roman',Times,serif;font-size:18px;line-height:31px;mso-line-height-rule:exactly;color:#2b2620;text-align:left;"><p style="margin:0;">That sentence is all I need. <a href="{{BOOKING_URL}}" target="_blank" rel="noopener noreferrer" style="color:#8c3b26;text-decoration:underline;font-weight:600;">Open the other three here</a> &mdash; there&rsquo;s a box on that page, and that&rsquo;s what goes in it.</p></td></tr>
+    </table></td></tr>
+
+  <!-- THE ACT · hers. ⛔ the letter never closes on the link -->
+  <tr><td class="px" bgcolor="#f8f2e5" style="padding:30px 52px 0;background-color:#f8f2e5;font-family:'Newsreader',Georgia,'Times New Roman',Times,serif;font-size:18px;line-height:31px;mso-line-height-rule:exactly;color:#2b2620;text-align:left;"><p style="margin:0;">Then, today: name one thing you&rsquo;ve been holding until he comes back, and do it anyway.</p></td></tr>
+
+  <!-- SIGNATURE · name only, in ink. ⛔ the photograph is at the TOP, not here: two
+       pictures of the same man in one letter is one too many.
+       The script stack degrades on purpose — Segoe Script on Windows, Bradley Hand on
+       macOS, and Georgia italic at 27px anywhere
+       else, which still reads as a sign-off and never as a heading. -->
+  <tr><td class="px" bgcolor="#f8f2e5" style="padding:22px 52px 0;background-color:#f8f2e5;font-family:'Caveat','Segoe Script','Bradley Hand',Georgia,'Times New Roman',Times,serif;font-size:27px;line-height:36px;mso-line-height-rule:exactly;color:#39404e;letter-spacing:.3px;font-style:italic;text-align:left;">Marcus</td></tr>
+
+  <!-- P.S. · the thing added after he signed. Smaller, italic, in from the margin
+       behind the same pencil rule as the face-down three. -->
+  <tr><td class="px" bgcolor="#f8f2e5" style="padding:20px 52px 0;background-color:#f8f2e5;">
+    <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" bgcolor="#f8f2e5" style="background-color:#f8f2e5;">
+      <tr><td width="1" bgcolor="#c6b797" style="width:1px;background-color:#c6b797;font-size:0;line-height:0;">&nbsp;</td>
+          <td bgcolor="#f8f2e5" style="padding:0 0 0 24px;background-color:#f8f2e5;">
+            <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" bgcolor="#f8f2e5" style="background-color:#f8f2e5;">
+              <tr><td bgcolor="#f8f2e5" style="padding:1px 0 3px;background-color:#f8f2e5;font-family:'Newsreader',Georgia,'Times New Roman',Times,serif;font-size:16px;line-height:26px;mso-line-height-rule:exactly;color:#6f6353;font-style:italic;text-align:left;"><p style="margin:0;">P.S. Her feet aren&rsquo;t tied. That&rsquo;s the whole card.</p></td></tr>
+            </table></td></tr>
+    </table></td></tr>
+
+  <!-- FOOTER · unchanged block, left-aligned to the letter's own margin. Physical
+       address + both AWeber links are what keeps the send CAN-SPAM clean; do not
+       trim either. -->
+  <tr><td class="px" bgcolor="#f8f2e5" style="padding:44px 52px 0;background-color:#f8f2e5;"><table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation"><tr><td height="1" bgcolor="#e2d5bb" style="background-color:#e2d5bb;font-size:0;line-height:0;height:1px;">&nbsp;</td></tr></table></td></tr>
+  <tr><td class="px" align="left" bgcolor="#f8f2e5" style="padding:22px 52px 46px;background-color:#f8f2e5;font-family:'Newsreader',Georgia,'Times New Roman',Times,serif;font-size:12.5px;line-height:21px;mso-line-height-rule:exactly;color:#8c7f6b;text-align:left;">
+    Marcus Stone &middot; The Seer Within<br><br>
+    140 Broadway, Manhattan,<br>New York New York 10005<br>USA<br><br>
+    <a href="https://www.aweber.com/z/r/?ThisIsATestEmail" target="_blank" rel="noopener noreferrer" style="color:#8c7f6b;text-decoration:underline;">Unsubscribe</a>
+    &nbsp;&middot;&nbsp;
+    <a href="https://www.aweber.com/z/r/?ThisIsATestEmail" target="_blank" rel="noopener noreferrer" style="color:#8c7f6b;text-decoration:underline;">Change Subscriber Options</a></td></tr>
+
+  <!-- the sheet's shadow on the table. One hairline, nothing clever. -->
+  <tr><td height="2" bgcolor="#cdbfa4" style="background-color:#cdbfa4;font-size:0;line-height:0;height:2px;">&nbsp;</td></tr>
+
+</table></td></tr></table></center></body></html>

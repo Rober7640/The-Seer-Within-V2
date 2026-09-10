@@ -1,0 +1,17 @@
+[
+  {
+    "house": 3,
+    "A": "gpt-5.6-sol",
+    "B": "gpt-5.6-terra"
+  },
+  {
+    "house": 5,
+    "A": "gpt-5.6-terra",
+    "B": "gpt-5.6-sol"
+  },
+  {
+    "house": 12,
+    "A": "gpt-5.6-terra",
+    "B": "gpt-5.6-sol"
+  }
+]

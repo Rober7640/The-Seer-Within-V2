@@ -1,0 +1,46 @@
+{
+  "runs": [
+    {
+      "model": "gpt-5.6-sol",
+      "execution": "30653",
+      "elapsed_seconds": 73.576,
+      "tokens": {
+        "input": 13244,
+        "cache_read": 0,
+        "cache_write": 13235,
+        "output": 5239,
+        "reasoning": 2912
+      },
+      "estimated_usd": 0.170991,
+      "word_counts": {
+        "3": 569,
+        "5": 749,
+        "12": 590
+      }
+    },
+    {
+      "model": "gpt-5.6-terra",
+      "execution": "30654",
+      "elapsed_seconds": 24.798,
+      "tokens": {
+        "input": 13244,
+        "cache_read": 0,
+        "cache_write": 13235,
+        "output": 3510,
+        "reasoning": 1126
+      },
+      "estimated_usd": 0.0752255,
+      "word_counts": {
+        "3": 600,
+        "5": 755,
+        "12": 624
+      }
+    }
+  ],
+  "pricing_source": "https://developers.openai.com/api/docs/pricing",
+  "cost_scope": "Estimated standard API generation cost for three calls only, including cache writes and reasoning output; excludes review, n8n and any account-specific billing adjustments.",
+  "order": "cs_test_n8n_testdrive_02_v2",
+  "arc": "v2",
+  "terra_workflow": "M6OMsNdmw5BuCri9",
+  "terra_inactive_verified_by_driver": true
+}

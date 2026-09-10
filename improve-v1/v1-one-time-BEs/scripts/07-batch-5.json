@@ -1,0 +1,297 @@
+{
+  "_": "Batch 5 — calendar days 25–30 of the thirty (docs/07-marcus/voc/09-thirty-named-things.md). Designed to docs/07-marcus/07-spread-design-rules.md. ⛔ NOT merged into 07-spreads.json here — five agents design in parallel and the merge happens once. Validate with: node scripts/check-07-batch.mjs scripts/07-batch-5.json",
+  "going-well-and-scared": {
+    "name": "It's Going Well And I'm Waiting For It To Go Wrong",
+    "day": "thu",
+    "day_number": 25,
+    "slug_in_link": "going-well-and-scared",
+    "question": "Everything's finally going well, so why am I this frightened?",
+    "shape": "The good is real and the fear is older than the man, so the order runs: what is good, when the dread arrives, where the watching was learned, what it pays, what it costs, and what she would have to say.",
+    "positions": [
+      {
+        "n": 1,
+        "name": "What's actually good here",
+        "job": "What is genuinely good here, and what of it is solid. The part that is real, not a run-up to bad news",
+        "free": true
+      },
+      {
+        "n": 2,
+        "name": "The moment the dread arrives",
+        "job": "The ordinary moment the fear arrives — a quiet phone, a good evening ending. Not a mood she is in all day",
+        "free": false
+      },
+      {
+        "n": 3,
+        "name": "Where the watching was learned",
+        "job": "The last time something was good and then was not, and what she decided that day about good things",
+        "free": false
+      },
+      {
+        "n": 4,
+        "name": "What being braced pays you",
+        "job": "What being braced still earns her. Being first to know, and never being caught out at the end again",
+        "free": false
+      },
+      {
+        "n": 5,
+        "name": "What the watching takes from your days",
+        "job": "What the watching takes out of her own days. Every good evening spent half somewhere else, waiting for the turn",
+        "free": false
+      },
+      {
+        "n": 6,
+        "name": "What would have to be said out loud",
+        "job": "What she would have to say out loud, and to whom, for the watching to stop. No proof from him will do it",
+        "free": false
+      }
+    ]
+  },
+  "the-money-somebody-else-is-holding": {
+    "name": "The Money Somebody Else Is Holding",
+    "day": "fri",
+    "day_number": 26,
+    "slug_in_link": "the-money-somebody-else-is-holding",
+    "question": "Somebody else is holding what was meant to come to me. Where do I actually stand?",
+    "shape": "What is held, why it is held, what the holder gets from it, whether it is still moving, what the waiting costs and what it pays — and then the one piece that needs nobody else's signature.",
+    "positions": [
+      {
+        "n": 1,
+        "name": "What's actually being held",
+        "job": "What is genuinely in play here, and what has only ever been assumed to be there. Not anyone's account of it",
+        "free": true
+      },
+      {
+        "n": 2,
+        "name": "What the money is standing in for",
+        "job": "The older thing between them that the money is now carrying. What was unsettled long before there was anything to divide",
+        "free": false
+      },
+      {
+        "n": 3,
+        "name": "What the holder gets from holding it",
+        "job": "What the person holding it gets from holding it. The thing they would lose the day it was handed over",
+        "free": false
+      },
+      {
+        "n": 4,
+        "name": "Stalled, or stopped",
+        "job": "Whether the person holding it is still moving on this or has quietly stopped, and what their behaviour shows. Not a month",
+        "free": false
+      },
+      {
+        "n": 5,
+        "name": "What every month of waiting takes",
+        "job": "What every month of waiting takes out of her life. The decision she has not made because this is unfinished",
+        "free": false
+      },
+      {
+        "n": 6,
+        "name": "What's still yours while it's unsettled",
+        "job": "What is still hers while this is unsettled. Being owed keeps something open that a final no would close",
+        "free": false
+      },
+      {
+        "n": 7,
+        "name": "The part that needs nobody's signature",
+        "job": "The one piece of this she can settle without them, and what settling it costs her",
+        "free": false
+      }
+    ]
+  },
+  "is-he-the-one": {
+    "name": "Is He The One",
+    "day": "sat",
+    "day_number": 27,
+    "slug_in_link": "is-he-the-one",
+    "question": "Is he the one, and how would I even know?",
+    "shape": "The question is a test she has never written down, so the order is the test, whose it is, what it pays, what it costs, and what would actually settle it.",
+    "positions": [
+      {
+        "n": 1,
+        "name": "Where the two of you actually stand",
+        "job": "Where the two of them actually stand today. What has been settled between them in fact, and what has only been felt",
+        "free": true
+      },
+      {
+        "n": 2,
+        "name": "The test he's being put through",
+        "job": "The test she is quietly running on him. What would have to happen before she called it settled",
+        "free": false
+      },
+      {
+        "n": 3,
+        "name": "Whose test it is",
+        "job": "Where that test came from. Whose marriage, or which earlier man, wrote the standard she is measuring him against",
+        "free": false
+      },
+      {
+        "n": 4,
+        "name": "What the open question buys you",
+        "job": "What the question itself pays her. While it stays open, nobody has to be chosen and nothing has to be risked",
+        "free": false
+      },
+      {
+        "n": 5,
+        "name": "What the testing costs him",
+        "job": "What the testing takes out of what they already have. What it does to a man who is being measured and not told",
+        "free": false
+      },
+      {
+        "n": 6,
+        "name": "What would actually settle it",
+        "job": "What would actually settle this, and it is not a sign about him. The thing she would have to decide",
+        "free": false
+      }
+    ]
+  },
+  "my-child-doesnt-call": {
+    "name": "My Child Doesn't Call",
+    "day": "sun",
+    "day_number": 28,
+    "slug_in_link": "my-child-doesnt-call",
+    "question": "My child stopped speaking to me. What's actually going on, and what's left for me to do?",
+    "shape": "A silence has a story on the far side of it, somebody holding that story steady, and a bill running on this side — all three come before the one move that needs no reply.",
+    "positions": [
+      {
+        "n": 1,
+        "name": "What the silence is made of",
+        "job": "What the silence is actually made of, as the cut shows it. The shape of the distance, before anybody's reason for it",
+        "free": true
+      },
+      {
+        "n": 2,
+        "name": "The version of the family on the other side",
+        "job": "The version of the family her grown child is living inside. What happened, in that account, not in hers",
+        "free": false
+      },
+      {
+        "n": 3,
+        "name": "Who else is standing in the gap",
+        "job": "Who else is standing in the gap. A partner, a sibling, the other parent — and what the distance does for them",
+        "free": false
+      },
+      {
+        "n": 4,
+        "name": "How the messages land at the other end",
+        "job": "How the messages she does send land at the other end. What they read as there, which is not what she meant",
+        "free": false
+      },
+      {
+        "n": 5,
+        "name": "What the waiting has taken",
+        "job": "What the waiting has taken out of the rest of her life. The things she stopped doing while the phone stayed quiet",
+        "free": false
+      },
+      {
+        "n": 6,
+        "name": "What the open door keeps",
+        "job": "What holding the door open still keeps intact. The thing she has not yet had to accept, for as long as it stays open",
+        "free": false
+      },
+      {
+        "n": 7,
+        "name": "The one thing that needs no reply",
+        "job": "The one thing here that is hers to do and needs no reply to work. What doing it costs her",
+        "free": false
+      }
+    ]
+  },
+  "should-i-quit-my-job": {
+    "name": "Should I Quit My Job",
+    "day": "mon",
+    "day_number": 29,
+    "slug_in_link": "should-i-quit-my-job",
+    "question": "Should I quit this job, or is it me that needs to change?",
+    "shape": "What changed, whether it has happened before, what the job pays, what staying costs, whose voice holds the veto, where she has already gone in her head — and only then what has to happen before it can be decided.",
+    "positions": [
+      {
+        "n": 1,
+        "name": "What changed, the work or you",
+        "job": "What has actually changed here — the work itself, or what she is able to carry. Not which she would name",
+        "free": true
+      },
+      {
+        "n": 2,
+        "name": "Whether you've been here before",
+        "job": "The last time she left something like this, and what she told herself then. Whether this is the same exit or a different one",
+        "free": false
+      },
+      {
+        "n": 3,
+        "name": "What the job pays that isn't money",
+        "job": "What the job hands her besides the money. The thing she would have to replace the week after she left",
+        "free": false
+      },
+      {
+        "n": 4,
+        "name": "What another year in the chair costs",
+        "job": "What another year in the same chair costs her, and it is not money. Who she has become at home since it started",
+        "free": false
+      },
+      {
+        "n": 5,
+        "name": "Whose decision this really is",
+        "job": "Whose voice is in this decision. A mortgage, a partner, a parent's rule about steady work — and which one holds the veto",
+        "free": false
+      },
+      {
+        "n": 6,
+        "name": "Where you've already gone",
+        "job": "The point she had already left without moving. The tell in how she talks about the place now",
+        "free": false
+      },
+      {
+        "n": 7,
+        "name": "What has to happen before it can be decided",
+        "job": "What has to be found out or said first, before this is a decision and not a mood. What that costs her",
+        "free": false
+      }
+    ]
+  },
+  "the-reading-that-never-came-true": {
+    "name": "The Reading That Never Came True",
+    "day": "tue",
+    "day_number": 30,
+    "slug_in_link": "the-reading-that-never-came-true",
+    "question": "I was told it would have happened by now and it hasn't. Was any of it real?",
+    "shape": "A prediction has a week it landed in, a true half, a dated half, a bill and a comfort — name those five and the sixth is what still stands.",
+    "positions": [
+      {
+        "n": 1,
+        "name": "What you were actually told",
+        "job": "What she was handed that day, and what she has carried since. The reading as it was given, not as it has grown",
+        "free": true
+      },
+      {
+        "n": 2,
+        "name": "What you went looking for that week",
+        "job": "What was happening in her life the week she went looking, and what she needed the answer to do",
+        "free": false
+      },
+      {
+        "n": 3,
+        "name": "The part that described something real",
+        "job": "Which part of what she was told described something real, and which part was only a month on a calendar",
+        "free": false
+      },
+      {
+        "n": 4,
+        "name": "What holding the date took from you",
+        "job": "What a year of holding a date took from her. The things she did not start because something was coming",
+        "free": false
+      },
+      {
+        "n": 5,
+        "name": "What keeping it alive still gives you",
+        "job": "What keeping the old prediction alive still gives her. While it stands, the thing is still coming and nothing has to be decided",
+        "free": false
+      },
+      {
+        "n": 6,
+        "name": "What still stands, and what's yours to do",
+        "job": "What still stands in her situation today, and the one move that is hers now the date has passed",
+        "free": false
+      }
+    ]
+  }
+}

@@ -1,0 +1,65 @@
+{
+  "order": "cs_phase3_v2_20260910_d",
+  "build": "e0549923bfd2479d",
+  "drawHash": "041f1bc3ccd784c3",
+  "position": {
+    "house": 3,
+    "house_name": "what you say, and who you say it to",
+    "job": "Communication and audience: how the card distinguishes kinds of speech, messages, listening, or silence. Offer recognizable categories before applying one; do not presume a particular conversation, unsent message, rehearsal, recipient, or dispute.",
+    "card": "judgement",
+    "card_name": "Judgment",
+    "reversed": false,
+    "agency": "The cosmic alignment has guided your choice to",
+    "obligation": null,
+    "owes": false,
+    "architecture": {
+      "entry": "enter through the tension between this card and this house",
+      "customer_entry": "middle",
+      "development": [
+        "several categories the buyer can fill herself",
+        "source evidence",
+        "choice and cost"
+      ],
+      "ending": "finish on the consequence of the interpretation",
+      "target_words": 520,
+      "may_use_address": true,
+      "may_name_waite": false,
+      "cross_room": "keep this room self-contained",
+      "emphasis_position": "early"
+    },
+    "claim_ledger": {
+      "permitted_sources": [
+        "the buyer material summarized in the sales-letter context",
+        "the question belonging to house 3",
+        "the traditional meaning and supplied lore of Judgment",
+        "named evidence from another dealt card only when the architecture permits it"
+      ],
+      "obligation": null,
+      "forecast_scope": "state the card-and-house interpretation firmly in the present while leaving her past actions, private motives and unseen events unclaimed",
+      "unsupported_private_fields": [
+        "duration",
+        "profession",
+        "possession",
+        "diagnosis",
+        "private ritual",
+        "relationship history",
+        "count or tally",
+        "specific location",
+        "existing paperwork",
+        "private conversation",
+        "payment mechanics",
+        "customer motive",
+        "third-party intention"
+      ],
+      "illustration_rule": "an illustrative situation remains a possibility and never becomes her history",
+      "history_rule": "do not assert a specific past event, frequency or recency for her unless the buyer context or obligation establishes it",
+      "action_scope": "direct advice may concern only observation, reflection or a reversible change inside her own environment; never make a forecast depend on contacting, documenting, confronting, negotiating with or changing terms for another person or institution"
+    }
+  },
+  "prose": "Most of what anyone says in a week is upkeep. Confirmations, arrangements, the small courteous noise that keeps a shared life running — and this house, the house of what you say and to whom, is mostly built out of that material. Judgment is not made of that material at all. A trumpet is one note, played once, over open water, and everyone within earshot stands up. That is the tension in this room: the ordinary traffic of speech set against the one kind of utterance that does not belong to the traffic. Traditionally this card means something out of your own past calling for an answer now, and in the house of speech it names a register rather than an event — the register you reach for when a matter is not yours to introduce, only yours to reply to.\n\nIt helps to sort kinds of speech before deciding which one a situation is asking for. Some speech maintains: it keeps a relation at its current temperature and can be softened afterwards. Some informs, moving a fact from one head to another. Some persuades. And some answers — which is unlike the others, because it does not begin with you. Something already stated, already surfaced, already in the room turns and waits. Your options narrow to responding, deferring, or letting silence carry the reply. Listening splits along the same seam: there is listening that keeps the peace, listening that collects information, and listening that concedes the thing being said is actually addressed to you.\n\nThat seam matters because it changes what a listener understands, whatever your words are. Maintaining speech tells a person the relation is intact. Informing speech tells them a fact. Answering speech tells them that you have accepted the thing as concerning you — and a listener hears that acceptance before they hear the content. It is why a considered \"no\" often lands more gently than a warm deflection: the deflection, however kind, sends the message that the matter never quite arrived. A person can survive being refused. Being unaddressed is harder to place.\n\nThe picture printed above is unusually clear about which kind is in play. Nobody in it is arguing. The figures rise with their arms up, all in the same attitude, and the one in the middle has its back turned to us entirely — the response is not being performed for an audience. The summons, as the text says, is heard and answered from within. The call comes from outside; the reply cannot be delegated, rehearsed into safety, or handled by someone speaking on your behalf.\n\nThe cost of that is real, which is why thoughtful people postpone this register. An answer settles something, and settling is not easily undone. There are sound reasons to hold back: not wanting to reopen what has finally gone quiet, not yet knowing what you think, unwillingness to hand anyone a sentence they can carry off and use. None of that is cowardice, and silence chosen with your eyes open is itself a form of answer.\n\nNotice, too, that this card puts you among the risen rather than the accused. An accused person explains; a summoned person answers. That difference sets the tone of any sentence you might form.\n\nSo the reading of this house is firm, while its application stays yours: your speaking life is weighted here toward reply rather than initiative. You can test that privately — whether some topic arrives in your mind already complete, wanting no research, only a yes or a no. Where that is true, conversational skill is the wrong tool. The plainer register is.",
+  "takeaway": "Distinguish speech that maintains a relation from speech that answers something",
+  "experimental_stage": "local editorial repair; not installed in production workflow",
+  "repair_issues_sha256": "fd8dcd8771c3b7f4783ed0a18c47d7a1fbb6e5a5084c1704fd7148969d083c5b",
+  "repair_source": "experiment-prose_micro_b-house-3.json",
+  "word_count": 605
+}

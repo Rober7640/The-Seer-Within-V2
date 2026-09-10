@@ -3,6 +3,10 @@ import { upsell1CopyForOffer, upsell2CopyForOffer } from './backendOffers';
 import { TWIN_FLAME_UPSELL1 } from './upsellCopy/twinFlame';
 
 describe('offer-keyed upsell pitch registry', () => {
+  it('does not give the unfinished Marcus offer another offer’s pitch', () => {
+    expect(() => upsell1CopyForOffer('marcus-daily')).toThrow('No upsell pitch configured');
+    expect(() => upsell2CopyForOffer('marcus-daily')).toThrow('No upsell pitch configured');
+  });
   it('returns twin-flame copy for the twin-flame key', () => {
     expect(upsell1CopyForOffer('twin-flame')).toBe(TWIN_FLAME_UPSELL1);
   });

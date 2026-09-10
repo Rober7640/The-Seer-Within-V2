@@ -1,0 +1,6 @@
+{
+  "_": "⭐ THE DENOMINATOR for scripts/07-readout.mjs. One key per draw_date, value = the number of letters AWeber actually delivered that morning (`total_sent` on the sent broadcast, NOT the list size — bounces and unsubscribes move it every day).",
+  "_why": "⛔ A missing date is ranked LAST and printed as 'no send count'. It is never defaulted to the list size, because a guessed denominator produces a made-up ranking, and this table is the only thing deciding which of the thirty named things get built out.",
+  "_how": "AWeber → Broadcasts → Sent → the morning's letter → Total Sent. Or the API: GET /accounts/{id}/lists/{list}/broadcasts?status=sent (docs/aweber/aweber-broadcast.cjs has the auth).",
+  "_shape": "\"YYYY-MM-DD\": 74210"
+}

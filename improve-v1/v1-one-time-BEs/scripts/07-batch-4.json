@@ -1,0 +1,301 @@
+{
+  "is-there-someone-else": {
+    "name": "Is There Someone Else",
+    "day": "fri",
+    "day_number": 19,
+    "slug_in_link": "is-there-someone-else",
+    "question": "Is there someone else?",
+    "shape": "What changed, when it turned, what her own evidence proves, what the quiet is worth to him, what the watching has replaced, where it ends up, and the one question that gets an answer.",
+    "positions": [
+      {
+        "n": 1,
+        "name": "What actually changed",
+        "job": "The specific thing that is different now — the one she could name out loud, not the feeling that something is off",
+        "free": true
+      },
+      {
+        "n": 2,
+        "name": "The week it turned",
+        "job": "The point his attention moved, and what else was changing for him then. The turn itself, not the day she noticed it",
+        "free": false
+      },
+      {
+        "n": 3,
+        "name": "What her evidence adds up to",
+        "job": "What the small things she has been collecting actually prove, and the conclusion they only look like they carry",
+        "free": false
+      },
+      {
+        "n": 4,
+        "name": "What he gets out of not explaining",
+        "job": "What staying vague hands him, and what he would lose the day he explained himself",
+        "free": false
+      },
+      {
+        "n": 5,
+        "name": "What the watching has replaced",
+        "job": "What the checking has taken the place of in her day. The thing she used to spend that hour on",
+        "free": false
+      },
+      {
+        "n": 6,
+        "name": "Where the watching ends up",
+        "job": "What the watching hardens into if it goes on, and the part of it that stays after the question is answered",
+        "free": false
+      },
+      {
+        "n": 7,
+        "name": "The question that gets an answer",
+        "job": "The one thing she can ask him that gets an answer either way, and what asking it costs her",
+        "free": false
+      }
+    ]
+  },
+
+  "is-it-too-late-for-me": {
+    "name": "Is It Too Late For Me",
+    "day": "sat",
+    "day_number": 20,
+    "slug_in_link": "is-it-too-late-for-me",
+    "question": "Is it too late for me?",
+    "shape": "The thing she thinks she missed, then who handed her the deadline, what holding it spares her, what it has already taken, what she keeps walking past, and the first move.",
+    "positions": [
+      {
+        "n": 1,
+        "name": "What she thinks she has missed",
+        "job": "The specific thing she believes has gone past her. Not her age — the one thing she thinks the years took",
+        "free": true
+      },
+      {
+        "n": 2,
+        "name": "Where the deadline came from",
+        "job": "Who handed her the timetable she measures herself against, and what she was promised for keeping to it",
+        "free": false
+      },
+      {
+        "n": 3,
+        "name": "What 'too late' spares her",
+        "job": "What deciding it was too late keeps her safe from. What she has not had to attempt while it was true",
+        "free": false
+      },
+      {
+        "n": 4,
+        "name": "What the waiting has already taken",
+        "job": "What the years of holding still have already taken from her. One specific loss, not a general sadness",
+        "free": false
+      },
+      {
+        "n": 5,
+        "name": "What she keeps walking past",
+        "job": "What the thing she wants looks like at this age, and why she has not recognised it so far",
+        "free": false
+      },
+      {
+        "n": 6,
+        "name": "The first thing that is hers",
+        "job": "The first move she can make on it, and the part of that move she will want to skip",
+        "free": false
+      }
+    ]
+  },
+
+  "will-i-ever-have-my-own-place": {
+    "name": "Will I Ever Have My Own Place",
+    "day": "sun",
+    "day_number": 21,
+    "slug_in_link": "will-i-ever-have-my-own-place",
+    "question": "Will I ever have a place of my own?",
+    "shape": "The reason she gives, then where she learned it was not for her, what her staying put keeps running, the place she has been holding out for, what she wants the door for, what another year costs, and what she can start alone.",
+    "positions": [
+      {
+        "n": 1,
+        "name": "The reason she gives",
+        "job": "The reason she gives when somebody asks why she has not got her own place yet",
+        "free": true
+      },
+      {
+        "n": 2,
+        "name": "Where she learned it was not for her",
+        "job": "The first time she was shown that a place of her own belongs to other kinds of people",
+        "free": false
+      },
+      {
+        "n": 3,
+        "name": "What her staying put keeps running",
+        "job": "What her staying where she is keeps going, and who would have to make another arrangement the day she moved",
+        "free": false
+      },
+      {
+        "n": 4,
+        "name": "The place she has been holding out for",
+        "job": "The particular place she has been waiting for, and what it would have to include before she counted it",
+        "free": false
+      },
+      {
+        "n": 5,
+        "name": "What she wants the front door for",
+        "job": "What she wants a place of her own to make possible. The specific thing she cannot do where she is now",
+        "free": false
+      },
+      {
+        "n": 6,
+        "name": "What another year in it costs",
+        "job": "What one more year of the present arrangement takes from her, on top of the money",
+        "free": false
+      },
+      {
+        "n": 7,
+        "name": "What she can start on her own",
+        "job": "The single thing she can put in motion without another person agreeing to it, and what it costs her",
+        "free": false
+      }
+    ]
+  },
+
+  "should-i-stay-or-go": {
+    "name": "Should I Stay Or Go",
+    "day": "mon",
+    "day_number": 22,
+    "slug_in_link": "should-i-stay-or-go",
+    "question": "Should I stay or should I go?",
+    "shape": "The plain record of a month, then what her own behaviour has already settled, what she is waiting for permission to do, what staying still pays, what the deciding has cost, and what the decision asks of her first.",
+    "positions": [
+      {
+        "n": 1,
+        "name": "What the last month looked like",
+        "job": "The plain record of the last month between them, as it happened, not as either of them tells it",
+        "free": true
+      },
+      {
+        "n": 2,
+        "name": "What she has already decided",
+        "job": "What her own behaviour over the last year says she has already settled, whatever she still says out loud",
+        "free": false
+      },
+      {
+        "n": 3,
+        "name": "The permission she is waiting for",
+        "job": "The event she is waiting for that would make going defensible, and who she is preparing to explain it to",
+        "free": false
+      },
+      {
+        "n": 4,
+        "name": "What staying still pays",
+        "job": "What staying hands her that she would lose the same week she left. Not love — the practical thing",
+        "free": false
+      },
+      {
+        "n": 5,
+        "name": "What being undecided has cost",
+        "job": "What the years of not deciding have taken from her. One thing she used to do and no longer does",
+        "free": false
+      },
+      {
+        "n": 6,
+        "name": "What the decision asks of her first",
+        "job": "The first thing the decision she has already made would ask of her, and the part she keeps postponing",
+        "free": false
+      }
+    ]
+  },
+
+  "can-i-trust-anyone-again": {
+    "name": "Can I Trust Anyone Again",
+    "day": "tue",
+    "day_number": 23,
+    "slug_in_link": "can-i-trust-anyone-again",
+    "question": "Can I ever trust anyone again?",
+    "shape": "The checking she does now, then what the not-knowing taught her, what the guard still keeps off her, what she misreads as a warning, what the carefulness costs, what she is waiting to be given, and the smallest thing she could risk.",
+    "positions": [
+      {
+        "n": 1,
+        "name": "What she checks now",
+        "job": "The checking she does now without deciding to. The specific habit that was not there before",
+        "free": true
+      },
+      {
+        "n": 2,
+        "name": "What the not-knowing taught her",
+        "job": "What she learned to do in the stretch before she found out, and how well it worked",
+        "free": false
+      },
+      {
+        "n": 3,
+        "name": "What the guard still keeps off her",
+        "job": "What the checking is still protecting her from. The thing she has decided she will not be again",
+        "free": false
+      },
+      {
+        "n": 4,
+        "name": "What she reads as a warning",
+        "job": "The thing she takes for a red flag that is only a difference, and the one she talks herself out of",
+        "free": false
+      },
+      {
+        "n": 5,
+        "name": "What the carefulness costs",
+        "job": "What being this careful takes out of an ordinary week. Not loneliness — the practical thing it stops her doing",
+        "free": false
+      },
+      {
+        "n": 6,
+        "name": "What would have to be true first",
+        "job": "The proof she is waiting for before she risks anything, and who she has decided must supply it",
+        "free": false
+      },
+      {
+        "n": 7,
+        "name": "The smallest thing she could risk",
+        "job": "The smallest true thing she could tell somebody, and what it would cost her if it went wrong",
+        "free": false
+      }
+    ]
+  },
+
+  "where-is-he-and-have-i-already-met-him": {
+    "name": "Where Is He, And Have I Already Met Him",
+    "day": "wed",
+    "day_number": 24,
+    "slug_in_link": "where-is-he-and-have-i-already-met-him",
+    "question": "Where is he — and have I already met him?",
+    "shape": "The list she is scanning against, then where the list came from, the one thing that would actually mark him, what she keeps taking for it, the one she already decided about, and the habit in the way.",
+    "positions": [
+      {
+        "n": 1,
+        "name": "The list she is looking against",
+        "job": "What she has been scanning for. The list she would give if somebody asked her what she wants",
+        "free": true
+      },
+      {
+        "n": 2,
+        "name": "Where the list came from",
+        "job": "Who she built that list with, and which item on it belongs to somebody else entirely",
+        "free": false
+      },
+      {
+        "n": 3,
+        "name": "What she would know him by",
+        "job": "The one thing she has never been given, and how it would show in the first hour of knowing somebody",
+        "free": false
+      },
+      {
+        "n": 4,
+        "name": "What she keeps taking for it",
+        "job": "What she has been reading as the start of something, and what that attention is actually for",
+        "free": false
+      },
+      {
+        "n": 5,
+        "name": "The one she already decided about",
+        "job": "Somebody already in her life who was placed early and never looked at again. What did the placing",
+        "free": false
+      },
+      {
+        "n": 6,
+        "name": "What she would have to drop",
+        "job": "The one habit she would have to give up before she could see him at all, and what giving it up costs",
+        "free": false
+      }
+    ]
+  }
+}

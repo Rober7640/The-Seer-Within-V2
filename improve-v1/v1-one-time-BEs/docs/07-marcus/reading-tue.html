@@ -1,0 +1,139 @@
+<!DOCTYPE html><html><head><meta charset="utf-8">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600&display=swap">
+<style>
+  /* ⛔ THE PAPER MARGIN CANNOT BE 0. .inner's padding applies once, at the START of the div,
+     so any reading that runs past one sheet continues hard against the paper edge - text
+     touching the top, which is what a paying customer reported. The border has to come from
+     @page so that EVERY sheet gets it, continuations included.
+     ⭐ The cover is a deliberate full-bleed 8.5x11in photograph, so it is exempted twice over:
+     :first needs no named-page support, and cover survives a reordering. With neither rule it
+     grows a white frame AND spills its foot onto a second sheet.
+     ⛔ Horizontal stays 0 - left/right padding DOES repeat on every fragment, so moving it
+     into @page would flatten .9in and every other measure into one. Verified, not assumed.
+     ⛔ NO BACKTICKS IN THIS BLOCK. It lives inside a JS template literal; one backtick ends
+     the string and node 10a stops parsing. */
+  @page { size: Letter; margin: .55in 0 .55in; }
+  @page :first { margin: 0; }
+  @page cover  { margin: 0; }
+  * { -webkit-print-color-adjust: exact; print-color-adjust: exact; box-sizing: border-box; }
+  body { font-family: Georgia, 'Times New Roman', serif; color:#24262E; margin:0;
+         font-size:11.5pt; line-height:1.62; }
+  h1, h2, .display { font-family: Fraunces, Georgia, serif; font-weight:600; }
+
+  /* ── page 1 · the cover ─────────────────────────────────────────────────── */
+  .cover { page:cover; position:relative; width:8.5in; height:11in; overflow:hidden;
+           page-break-after:always; background:#1B1D22; }
+  .cover img { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; }
+  .cover .scrim { position:absolute; left:0; right:0; bottom:0; height:5.2in;
+    background:linear-gradient(to bottom, rgba(20,18,15,0) 0%, rgba(20,18,15,.72) 42%,
+                                          rgba(20,18,15,.93) 100%); }
+  .cover .type { position:absolute; left:0.85in; right:0.85in; bottom:0.9in; color:#FBF8F1; }
+  .cover .eyebrow { font-family:Helvetica,Arial,sans-serif; font-size:8.5pt;
+    letter-spacing:.24em; text-transform:uppercase; color:#E4D4B0; margin:0 0 10pt; }
+  .cover h1 { font-size:40pt; line-height:1.02; margin:0 0 12pt; letter-spacing:-.01em; }
+  .cover .sub { font-size:12pt; margin:0; color:#E8E2D6; }
+  .cover .sub b { font-weight:400; color:#FBF8F1; }
+
+  /* ── page 2 · what she asked, then the opening ──────────────────────────── */
+  .inner { padding: 0.30in 0.9in 0.35in; }   /* + @page's .55in = .85in / .90in, unchanged */
+  .intake { border:1pt solid #DED4BE; background:#FAF7F0; padding:16pt 18pt;
+            margin:0 0 24pt; page-break-inside:avoid; }
+  .intake .k { font-family:Helvetica,Arial,sans-serif; font-size:7.5pt; letter-spacing:.18em;
+    text-transform:uppercase; color:#8A8377; margin:0 0 7pt; }
+  .intake blockquote { margin:0 0 14pt; font-size:12.5pt; line-height:1.5; font-style:italic;
+    border-left:2pt solid #A8721C; padding-left:12pt; }
+  .facts { display:table; width:100%; border-top:1pt solid #E8DFCB; padding-top:11pt; }
+  .facts div { display:table-cell; font-family:Helvetica,Arial,sans-serif; font-size:8.5pt;
+    color:#6E6A62; line-height:1.45; }
+  .facts b { display:block; font-size:7.5pt; letter-spacing:.16em; text-transform:uppercase;
+    color:#A8721C; font-weight:bold; margin-bottom:3pt; }
+
+  /* ── the heading of a second or third answer — her own words ─────────────── */
+  h1.answer { font-size:19pt; line-height:1.28; margin:34pt 0 16pt; color:#1B1D22;
+              border-top:1pt solid #DED4BE; padding-top:16pt; page-break-after:avoid;
+              page-break-before:auto; font-style:italic; font-weight:400; clear:both; }
+  .head { margin-bottom:24pt; }
+  .head p:first-child { font-size:12.5pt; line-height:1.55; }
+  h1.answer .qn { display:block; font-family:Helvetica,Arial,sans-serif; font-size:7.5pt;
+    letter-spacing:.18em; text-transform:uppercase; color:#A8721C; font-style:normal;
+    font-weight:bold; margin-bottom:7pt; }
+  .intake blockquote .qn { display:block; font-family:Helvetica,Arial,sans-serif;
+    font-size:7pt; letter-spacing:.16em; text-transform:uppercase; color:#A8721C;
+    font-style:normal; margin-bottom:4pt; }
+
+  .opening { margin-bottom:26pt; }
+  .opening p:first-child { font-size:13.5pt; line-height:1.5; }
+  .opening p:first-child::first-letter { float:left; font-family:Fraunces, Georgia, serif;
+    font-size:44pt; line-height:.84; padding:4pt 7pt 0 0; color:#A8721C; font-weight:600; }
+
+  /* ── the positions ──────────────────────────────────────────────────────── */
+  section { page-break-inside:avoid; margin-bottom:30pt; overflow:hidden; }
+  section h2 { font-size:15pt; line-height:1.25; margin:0 0 12pt; color:#1B1D22;
+               letter-spacing:-.005em; }
+  section h2 .n { font-family:Helvetica,Arial,sans-serif; font-size:8.5pt; font-weight:bold;
+    letter-spacing:.14em; color:#A8721C; vertical-align:.32em; margin-right:10pt; }
+  section figure { float:left; width:1.6in; margin:2pt 18pt 8pt 0; }
+  section figure img { width:100%; display:block; border:1pt solid #DDD6C6; }
+  section figcaption { font-family:Helvetica,Arial,sans-serif; font-size:7pt;
+    letter-spacing:.13em; text-transform:uppercase; color:#8A8377; margin-top:5pt;
+    text-align:center; line-height:1.4; }
+  p { margin:0 0 9pt; }
+
+  /* ── the last page ──────────────────────────────────────────────────────── */
+  .colophon { page-break-inside:avoid; page-break-before:avoid; margin-top:22pt;
+              border-top:1pt solid #DED4BE; padding-top:12pt; }
+  .colophon p { font-size:9pt; line-height:1.55; color:#7C776D; margin:0 0 7pt; }
+  .colophon .sig { font-family:Fraunces, Georgia, serif; font-size:11pt; color:#24262E; }
+</style></head><body>
+  <div class="cover">
+    <img src="https://luna-assets-tsw.s3.ap-southeast-2.amazonaws.com/marcus/07-cover-the-two-doors.jpg" alt="">
+    <div class="scrim"></div>
+    <div class="type">
+      <p class="eyebrow">Marcus Stone &middot; The Seer Within</p>
+      <h1>The Two Doors</h1>
+      <p class="sub">Cut on 3 September 2026 &nbsp;&middot;&nbsp; read for <b>Sarah</b></p>
+    </div>
+  </div>
+  <div class="inner">
+    <div class="intake">
+      <p class="k">What Sarah asked</p>
+      <blockquote>I've been with him six years and we're not engaged, not living together, nothing has moved since 2023. He says he wants it all eventually. Do I keep waiting for him to be ready or do I go now while I still have the energy to start again?</blockquote>
+      <div class="facts">
+        <div><b>The spread</b>The Two Doors</div>
+        <div><b>Cards in it</b>8 &mdash; 2 you saw, 6 you didn't</div>
+        <div><b>You bought</b>The Spread</div>
+      </div>
+    </div>
+    <div class="opening"><p>Six cards on the table this morning, Sarah. I shuffled them face down and cut once, and I haven't touched them since.</p><p>You asked whether to keep waiting for him to be ready or go now while you still have the energy to start again. Go now. That's what these six say.</p><p>What I can see is what sits behind each door. What I can't see is him. No card here tells me what he'll do next year, and I won't pretend otherwise.</p><p>Six years is not a thing to be ashamed of. Nobody stays that long for nothing, and nothing in this spread calls you a fool for waiting.</p><p>One promise before I start. The last card is the best news in the whole spread, and there's a count on it I didn't choose. I'll point at it by name before the end.</p></div><section>
+      <h2><span class="n">3</span>Behind door one — what it costs</h2>
+      <figure><img src="https://luna-assets-tsw.s3.ap-southeast-2.amazonaws.com/evelyn/tarot-rws/four-of-swords.jpg" alt="Four of Swords">
+        <figcaption>Four of Swords</figcaption></figure>
+      <div class="prose"><p>A knight carved in stone, laid flat on a tomb, hands pressed together on his chest. Three swords hang on the wall above him. A fourth lies along the tomb beneath his body. Behind that, a coloured window with real daylight in it.</p><p>I can't see from this card how long he's been down there. Tombs don't come with dates, and nothing in the picture gives me a count of years.</p><p>What I can see is what door one takes from you. It takes the energy. That exact thing you said you've still got.</p><p>Waiting spends it quietly, nothing you'd notice on a Tuesday. So eventually can still arrive, Sarah, and find you too tired to start anything with it.</p><p>So door one takes the energy. I asked the deck next what staying hands back.</p></div></section><section>
+      <h2><span class="n">4</span>Behind door one — what it gives</h2>
+      <figure><img src="https://luna-assets-tsw.s3.ap-southeast-2.amazonaws.com/evelyn/tarot-rws/six-of-cups.jpg" alt="Six of Cups">
+        <figcaption>Six of Cups</figcaption></figure>
+      <div class="prose"><p>Two children in a walled courtyard. The taller one is holding out a cup stuffed with white flowers, and five more cups stand on the stone, every one of them flowering.</p><p>I can't see whose memories those are. The card hands me the sweetness and keeps the names.</p><p>What staying gives you is that, and it's genuine. Six years of shorthand. Being known without having to explain yourself from the start.</p><p>Some women tell me that's a marriage already, paperwork or not. Some tell me it's the loveliest thing left in a life that stopped moving. This card sits nearer the second one.</p><p>So door one does pay you, Sarah. It pays in the six years you've already got. It does not pay in eventually.</p><p>The sweetness is real. What I wanted then was the woman who lives in that courtyard three years on.</p></div></section><section>
+      <h2><span class="n">5</span>Behind door one — who she becomes</h2>
+      <figure><img src="https://luna-assets-tsw.s3.ap-southeast-2.amazonaws.com/evelyn/tarot-rws/nine-of-swords.jpg" alt="Nine of Swords">
+        <figcaption>Nine of Swords</figcaption></figure>
+      <div class="prose"><p>Nine swords hang on a black wall. Below them a woman sits up in bed, face in both hands, and the quilt over her legs is stitched with roses.</p><p>Fourteen years at this, and I'd rather not see this card land in a position about who you become.</p><p>Nothing in that picture accuses you of being stupid, or weak, or a doormat for staying. Not one of those swords has touched her. She isn't bleeding, and there's nobody else in the room.</p><p>What the card shows me is the hour. Three in the morning, awake, doing arithmetic on six years.</p><p>Door one keeps you up at night, Sarah. That's where the energy goes — nights spent counting whether he's ready yet, while eventually still hasn't arrived.</p><p>Door one, all three cards of it, done. Door two now, cost first, so the comparison is fair.</p></div></section><section>
+      <h2><span class="n">6</span>Behind door two — what it costs</h2>
+      <figure><img src="https://luna-assets-tsw.s3.ap-southeast-2.amazonaws.com/evelyn/tarot-rws/five-of-pentacles.jpg" alt="Five of Pentacles">
+        <figcaption>Five of Pentacles</figcaption></figure>
+      <div class="prose"><p>Snow. Two figures passing a church wall at night — one on crutches, one barefoot, both in rags. Above them a lit window with five gold coins set into the glass, and neither of them looks up.</p><p>I put my hand flat on this one when it landed. Fourteen years, and I'm never glad to see it in a cost position.</p><p>I can't tell you how long they've been out in that. The card gives me the cold and keeps the length of the winter.</p><p>Door two costs you a stretch outside the warm room. No fixed Sunday, no couple to be half of, nothing settled to tell your mother.</p><p>Nothing in that snow says you don't make it. Going now buys you the walk, Sarah — and the energy you've still got is what pays for it.</p><p>Cold, then. What I asked next was what the walk buys you.</p></div></section><section>
+      <h2><span class="n">7</span>Behind door two — what it gives</h2>
+      <figure><img src="https://luna-assets-tsw.s3.ap-southeast-2.amazonaws.com/evelyn/tarot-rws/ace-of-wands.jpg" alt="Ace of Wands">
+        <figcaption>Ace of Wands</figcaption></figure>
+      <div class="prose"><p>A hand comes out of a cloud holding a single wand, and the wand has green leaves sprouting off it. Eight of them are shaking loose. Far below, a castle on a hill and a river running past it.</p><p>I can't see from one card what the new thing turns out to be. The card gives me the sprout and keeps the name of it.</p><p>What door two hands you is a first. A Saturday with nothing of his in it. A drawer you stop leaving half empty. A January you book yourself.</p><p>Small things you could point at. That's what the energy to start again actually buys you, Sarah — not eventually, a month with a date on it.</p><p>One green sprout, no name on it. Last card, and this is the one I promised you.</p></div></section><section>
+      <h2><span class="n">8</span>Behind door two — who she becomes</h2>
+      <figure><img src="https://luna-assets-tsw.s3.ap-southeast-2.amazonaws.com/evelyn/tarot-rws/the-star.jpg" alt="The Star">
+        <figcaption>The Star</figcaption></figure>
+      <div class="prose"><p>A woman kneels at the edge of a pool, one knee on the ground, one foot in the water. She pours from two jugs — one into the pool, one out onto the grass behind her.</p><p>Count the sky with me. One large star, seven small ones. Eight.</p><p>Eight cups left standing at the mouth of that door, and eight lights over her head after. The same number, Sarah. Nothing was added to her out there, and she took nothing that wasn't hers.</p><p>What the card won't give me is the date she got there. It shows me her uncovered, with nobody watching, and keeps the year to itself.</p><p>Behind door two you stop waiting. The energy goes into the pouring instead.</p><p>Six cards. Four of them show somebody alone — the knight, the woman in bed, the two in the snow, the woman at the pool. Only the last of those four has her hands doing something.</p><p>The energy behind door one goes on arithmetic at three in the morning. Behind door two it goes into the pouring.</p><p>You asked whether to keep waiting or go now while you still have the energy to start again. Go now, Sarah.</p><p>Eight cups standing, eight lights over her head — that's the good news I said was coming. You arrive carrying what you already had.</p><p>Open your calendar tonight and find January. Put one thing in it that's yours.</p></div></section>
+    <div class="colophon">
+      <p>The cards in this reading are the cut I laid on 3 September 2026. The writing is
+      assisted &mdash; I use a machine to help me put the reading into words. The draw is real
+      and it is yours.</p>
+      <p class="sig">Marcus</p>
+    </div>
+  </div>
+</body></html>

@@ -20,11 +20,18 @@
 // on this account. Our tooling reads lists and writes subscribers; it has never
 // created one. Its id then lands in AWEBER_BE_CUSTOMER_LIST_ID.
 
-export type BackendOfferKey = 'twin-flame' | 'judgement-day' | 'pixiu-bracelet';
+// 🔴 RE-EXPORTED, NOT REDECLARED. This file used to carry its own copy of the union —
+// `'twin-flame' | 'judgement-day'` — which is two definitions of one fact, and they had
+// already drifted apart by the time 07 was added: shared/ knew about a third offer and
+// this file did not, so `beOrders.ts` failed to typecheck on a key that was perfectly
+// valid. One definition, imported.
+export type { BackendOfferKey } from '@shared/backendOffers';
+import type { BackendOffer, BackendOfferKey } from '@shared/backendOffers';
 
 export interface BackendOfferListing {
   /** The deck's number for the offer, as every doc cites it. */
-  number: '02' | '03' | '06';
+  // ⛔ Derived, not restated — the same drift that made BackendOfferKey wrong here.
+  number: BackendOffer['number'];
   /** Human name, for logs. */
   name: string;
   /** Applied to every buyer of this offer. Fires her thank-you email. */
@@ -97,6 +104,16 @@ export const BACKEND_OFFERS: Record<BackendOfferKey, BackendOfferListing> = {
     // reading being ready.
     initialListId: '6972552',
     bumpListId: '6972554',
+  },
+  // ⭐ 07 — the deck's first RECURRING offer. Tags only for now: no per-product AWeber
+  // list has been created for it, and ⚠ an unset `initialListId` folds the write into
+  // the shared customer list, which is the right default until one exists.
+  'marcus-daily': {
+    number: '07',
+    name: 'Marcus Daily Tarot',
+    tag: 'be-07-marcus-daily',
+    bumpTag: 'be-07-bump',
+    deliveredTag: 'be-07-delivered',
   },
 };
 

@@ -1,0 +1,1077 @@
+{
+  "_readme": [
+    "THE ONE DEFINITION of 02's spread. scripts/build-02-n8n.py writes these strings into the",
+    "workflow at BUILD time, so a change here is a regenerate, never a hand-edit of the JSON.",
+    "",
+    "⛔ SLUGS ARE DECLARED, NOT DERIVED. 07 slugifies the model's free text and still 403s when",
+    "the writer says 'The Wheel' — its own test plan calls that a live hazard. 02 closes it: the",
+    "card vocabulary is this file, the display name is Evelyn's, and the slug is the filename.",
+    "Two of them would break under any slugify: Death is spoken as 'the Nameless One', and",
+    "Judgment is spelled US-style in the copy while the scan is judgement.png."
+  ],
+  "draw": {
+    "houses": 12,
+    "_note": [
+      "🔴 TWELVE NEW CARDS, EVERY PURCHASE. OPERATOR DECISION 2026-09-08, and it settles the one",
+      "contradiction this offer has carried since it was built. ⛔ There are NO fixed cards. The",
+      "three she was shown are never laid again, in any house, for any buyer.",
+      "",
+      "⭐ WHY THIS IS THE RIGHT WAY ROUND. The letter says it in her own words — \"And they'll be",
+      "twelve NEW cards, dear. Not these three again. These three have already said what they came",
+      "to say.\" The previous design re-laid them and the two documents could not both ship. This",
+      "one needs no rewrite of anything she has already read.",
+      "",
+      "⚠ AND THE MECHANISM SURVIVES INTACT. The letter's engine was never 'your card moves' — it",
+      "was 'THE HOUSE DECIDES'. Both letters say so of their own middle card: v1, \"the house the",
+      "Lovers falls into is what separates them\"; v2, \"the house the Emperor falls into is",
+      "precisely what separates the two\". A NEW card standing in the room still answers it, which",
+      "is exactly what the hand-written product does — its fifth house holds the Chariot and is",
+      "headed 'and this is your answer about the Lovers'. The promise is paid BY THE ROOM."
+    ],
+    "excluded": [
+      "the-world",
+      "the-lovers",
+      "the-tower",
+      "the-star",
+      "the-emperor",
+      "the-moon"
+    ],
+    "_excluded_note": [
+      "⛔ SIX CARDS ARE SPENT, NOT THREE, AND THE RULE MUST NOT DEPEND ON WHICH LETTER SHE OPENED.",
+      "  · 02-E2 / 02-E4-esl-v1-B  spends the WORLD, the LOVERS and the TOWER",
+      "  · 02-E3 / 02-E4-esl-v2-B  spends the STAR, the EMPEROR and the MOON",
+      "02-E3 is the follow-up to the SAME woman, so a buyer from it has read all six. Drawing any",
+      "one of them hands her a card she has already been read, as if it were new.",
+      "⭐ A rule that depends on which letter she opened is a rule that will be got wrong, so all",
+      "six are excluded for everybody, always. ⚠ Counted: that leaves SIXTEEN cards for twelve",
+      "houses. Four spare is thin — if a third letter is ever written, it cannot spend three more",
+      "cards without the pool going below the spread. That is the constraint to watch."
+    ],
+    "excluded_names": {
+      "the-world": "the World",
+      "the-lovers": "the Lovers",
+      "the-tower": "the Tower",
+      "the-star": "the Star",
+      "the-emperor": "the Emperor",
+      "the-moon": "the Moon"
+    },
+    "_excluded_names_note": [
+      "⛔ DECLARED, NOT DERIVED — the same rule as `cards`. The joiner is handed these so it",
+      "can be told never to report one of them as ABSENT from the draw: they were removed",
+      "before the cut, so their absence is structural and means nothing.",
+      "⚠ The Star, the Emperor and the Moon are deliberately NOT in `cards`. A card with no",
+      "entry there can never reach the renderer, and that is a safety property worth",
+      "keeping — so their display names live here instead."
+    ],
+    "reversal_rate": 0,
+    "_reversal_note": [
+      "🔴 REVERSALS ARE OFF (operator, 2026-09-09). rate 0 — every card is drawn upright.",
+      "⭐ THE HAND-WRITTEN PRODUCT HAS ZERO. All twelve of build/02/02-product.md are upright,",
+      "and that document is the one that was proofed and shipped. Reversals were never part of",
+      "the thing that works; they were added when the offer became per-buyer.",
+      "⭐ AND THEY COST MORE THAN THEY PAID. Both faults a tarot reader caught in real readings",
+      "were reversals read as their own opposite — the Hanged Man as 'the waiting is over', and",
+      "Temperance delivering an announcement. At a 50% rate one buyer in five was getting a",
+      "reading with eight or more cards reversed, which is a materially harder document than the",
+      "one that was proofed.",
+      "⚠ NOTHING ELSE HAS BEEN TORN OUT. `card_lore` keeps every `reversed` entry, node 10 still",
+      "renders reversed art, and the parsers still carry the flag. Setting this back to 0.5 turns",
+      "reversals on again with no other edit — which is why it is a rate and not a deletion."
+    ]
+  },
+  "arcs": {
+    "_note": [
+      "⭐ ARC-GUIDED SELECTION. Operator decision, 2026-09-09 ('option 2 is safer'): the twelve are",
+      "still NEW cards, still one per house, still seeded off her order id — but they are no longer",
+      "dealt straight. Each buyer's letter sets the STORY SHAPE, and every house is filled from the",
+      "cards whose engine can carry that house's part of the story. Same arc, same shape; different",
+      "buyer, different cards.",
+      "",
+      "⭐ WHICH ARC. The letters' CTAs use separate ranges — 02-E2/v1 sends ?c=1..6, 02-E3/v2 sends",
+      "?c=21..26 — and the booking page now carries `c` into Stripe metadata as `c`. A v2 buyer has",
+      "read BOTH letters (E3 is a follow-up to the same woman), so v2 pays both letters' debts.",
+      "⛔ No `c`, or any value outside the v2 range, is v1: every buyer has read letter 1.",
+      "",
+      "⭐ THE CARD STILL DECIDES HOW, NEVER WHETHER. A room's candidate list is the set of cards whose",
+      "engine can carry that room's narrative role. A card is kept OUT of a room only where its lore",
+      "FENCE would contradict what that room owes — no card that 'cannot give a date' stands in the",
+      "one dated room — never because it is bad news. The promise rooms still pay through whatever",
+      "lands in them; the list just stops a fence and a debt from being handed to the same writer.",
+      "",
+      "⛔ EVERY LIST IS A SUBSET OF draw's pool (the sixteen). A card the letters spent can never",
+      "appear here; the build refuses it. And every card must appear in at least two rooms of each",
+      "arc, or the search starves on some seeds — node 3 fills the tightest room first and backtracks,",
+      "and scripts/check-02-draw.mjs proves it never fails across thousands of seeds.",
+      "",
+      "⛔ ROLE NAMES ARE FOR THE BUILDER, NOT THE WRITER. Nothing in `role` reaches a prompt — a role",
+      "name quoted to the model becomes a label it prints (see prompt-examples-become-templates)."
+    ],
+    "default": "v1",
+    "c_ranges": {
+      "v1": [
+        1,
+        9
+      ],
+      "v2": [
+        21,
+        26
+      ]
+    },
+    "v1": {
+      "letter": "02-E2 — the World, the Lovers, the Tower",
+      "shape": "Recognition → Shadow → Choice → Arrival",
+      "mechanism": "the house the Lovers falls into is what separates them",
+      "roles": {
+        "1": {
+          "role": "herself — a card of knowing or seeing",
+          "cards": [
+            "the-magician",
+            "the-high-priestess",
+            "the-sun",
+            "the-hermit",
+            "strength",
+            "judgement",
+            "the-fool"
+          ]
+        },
+        "2": {
+          "role": "the door — receiving, beginning (PAYS the first windfall)",
+          "cards": [
+            "wheel-of-fortune",
+            "the-empress",
+            "the-sun",
+            "the-magician",
+            "justice",
+            "temperance"
+          ]
+        },
+        "3": {
+          "role": "setup — her voice, what is said and unsaid",
+          "cards": [
+            "the-high-priestess",
+            "judgement",
+            "justice",
+            "the-hierophant",
+            "the-sun",
+            "strength",
+            "the-hanged-man"
+          ]
+        },
+        "4": {
+          "role": "setup — foundation, what she is running on",
+          "cards": [
+            "the-empress",
+            "the-hierophant",
+            "temperance",
+            "the-hermit",
+            "the-devil",
+            "the-hanged-man",
+            "strength"
+          ]
+        },
+        "5": {
+          "role": "choice and direction (PAYS which twin flame; the one dated room — no card whose fence forbids a date)",
+          "cards": [
+            "the-chariot",
+            "wheel-of-fortune",
+            "judgement",
+            "the-sun",
+            "the-fool",
+            "strength",
+            "the-magician",
+            "justice"
+          ]
+        },
+        "6": {
+          "role": "path — the daily grind, discipline",
+          "cards": [
+            "strength",
+            "temperance",
+            "the-hermit",
+            "the-hierophant",
+            "the-magician",
+            "the-chariot",
+            "the-hanged-man",
+            "justice"
+          ]
+        },
+        "7": {
+          "role": "bond — what she is tied to (read against 5)",
+          "cards": [
+            "the-devil",
+            "the-hierophant",
+            "temperance",
+            "the-hanged-man",
+            "the-empress",
+            "death",
+            "strength",
+            "the-high-priestess"
+          ]
+        },
+        "8": {
+          "role": "arrival through other hands (PAYS the second windfall)",
+          "cards": [
+            "death",
+            "wheel-of-fortune",
+            "the-high-priestess",
+            "judgement",
+            "justice",
+            "the-fool",
+            "the-devil"
+          ]
+        },
+        "9": {
+          "role": "integration — faith, what she takes to be true",
+          "cards": [
+            "the-hierophant",
+            "the-high-priestess",
+            "the-hermit",
+            "the-hanged-man",
+            "the-fool",
+            "the-sun",
+            "temperance",
+            "judgement"
+          ]
+        },
+        "10": {
+          "role": "integration — where she stands, and who sees it",
+          "cards": [
+            "the-sun",
+            "justice",
+            "the-hierophant",
+            "the-chariot",
+            "the-magician",
+            "the-empress",
+            "judgement",
+            "wheel-of-fortune"
+          ]
+        },
+        "11": {
+          "role": "integration — the circle, the witnesses",
+          "cards": [
+            "the-hierophant",
+            "the-sun",
+            "the-empress",
+            "temperance",
+            "the-hermit",
+            "wheel-of-fortune",
+            "the-fool",
+            "the-devil"
+          ]
+        },
+        "12": {
+          "role": "the hidden truth (PAYS who the Tower is)",
+          "cards": [
+            "the-high-priestess",
+            "the-devil",
+            "death",
+            "judgement",
+            "the-hermit",
+            "the-hanged-man",
+            "the-fool"
+          ]
+        }
+      }
+    },
+    "v2": {
+      "letter": "02-E3 — the Star, the Emperor, the Moon (a follow-up to the same woman; she has read both)",
+      "shape": "Illusion → Clarity → Power → Integration",
+      "mechanism": "the house the Emperor falls into is precisely what separates the two",
+      "roles": {
+        "1": {
+          "role": "herself — the shadow, what hides",
+          "cards": [
+            "the-high-priestess",
+            "the-hermit",
+            "the-hanged-man",
+            "the-devil",
+            "death",
+            "strength",
+            "the-fool"
+          ]
+        },
+        "2": {
+          "role": "renewal, replenishment (PAYS the Star — which pouring is being refilled — and the door)",
+          "cards": [
+            "wheel-of-fortune",
+            "the-empress",
+            "the-sun",
+            "temperance",
+            "the-magician",
+            "justice"
+          ]
+        },
+        "3": {
+          "role": "clarity — the voice, truth spoken",
+          "cards": [
+            "the-high-priestess",
+            "judgement",
+            "justice",
+            "the-sun",
+            "the-hierophant",
+            "strength",
+            "the-magician"
+          ]
+        },
+        "4": {
+          "role": "clarity — shelter, what holds her safe or holds her in",
+          "cards": [
+            "the-empress",
+            "the-hierophant",
+            "temperance",
+            "the-hermit",
+            "strength",
+            "the-hanged-man",
+            "the-devil"
+          ]
+        },
+        "5": {
+          "role": "power and authority — who has it, how it divides (PAYS the Emperor and which twin flame; the one dated room)",
+          "cards": [
+            "the-chariot",
+            "justice",
+            "the-hierophant",
+            "the-magician",
+            "strength",
+            "judgement",
+            "wheel-of-fortune",
+            "the-sun"
+          ]
+        },
+        "6": {
+          "role": "consequence — order, discipline",
+          "cards": [
+            "the-hierophant",
+            "temperance",
+            "strength",
+            "the-magician",
+            "the-chariot",
+            "the-hermit",
+            "justice",
+            "the-hanged-man"
+          ]
+        },
+        "7": {
+          "role": "consequence — what holds (read against 5)",
+          "cards": [
+            "the-devil",
+            "the-hierophant",
+            "temperance",
+            "the-hanged-man",
+            "the-empress",
+            "death",
+            "strength",
+            "the-high-priestess"
+          ]
+        },
+        "8": {
+          "role": "the unseen, what comes through others (PAYS the second windfall; the Emperor's other room)",
+          "cards": [
+            "the-high-priestess",
+            "death",
+            "wheel-of-fortune",
+            "judgement",
+            "the-devil",
+            "justice",
+            "the-fool"
+          ]
+        },
+        "9": {
+          "role": "integration — faith, truth-seeking",
+          "cards": [
+            "the-hierophant",
+            "the-high-priestess",
+            "the-hermit",
+            "the-hanged-man",
+            "the-fool",
+            "the-sun",
+            "temperance",
+            "judgement"
+          ]
+        },
+        "10": {
+          "role": "integration — position, the throne",
+          "cards": [
+            "the-sun",
+            "justice",
+            "the-hierophant",
+            "the-chariot",
+            "the-magician",
+            "the-empress",
+            "judgement",
+            "wheel-of-fortune"
+          ]
+        },
+        "11": {
+          "role": "integration — reflection, mirrors, who shows her herself",
+          "cards": [
+            "the-sun",
+            "the-hierophant",
+            "the-empress",
+            "temperance",
+            "the-hermit",
+            "wheel-of-fortune",
+            "the-fool",
+            "the-high-priestess"
+          ]
+        },
+        "12": {
+          "role": "truth revealed — the illusion dissolving (PAYS the Moon: which piece is real; and who the Tower is)",
+          "cards": [
+            "the-sun",
+            "judgement",
+            "justice",
+            "the-high-priestess",
+            "death",
+            "the-devil",
+            "the-hermit",
+            "the-hanged-man"
+          ]
+        }
+      }
+    }
+  },
+  "timing": {
+    "_note": [
+      "🔴 THE DATING LAW, AND IT IS THE HAND-WRITTEN PRODUCT'S OWN RULE, NOT AN INVENTION.",
+      "build/02/02-product.md closes with it in her own voice: \"I have dated one room and only",
+      "one. The fifth, because the Chariot is a card of motion and motion can be dated — weeks",
+      "four and five, and I meant it. The rest I have not dated, and I won't pretend I can.\"",
+      "",
+      "🔴 WHY IT IS HERE. A tarot reader's audit of two real generated readings counted SIX dated",
+      "claims in one and ten in the other — 'inside eight days', 'by week seven', 'between the",
+      "eighteenth and the twenty-fifth day from now'. Five of six had to go. A reader who dates",
+      "every room is not being generous, she is being unfalsifiable in twelve directions at once,",
+      "and the one date that was actually promised loses all its weight by standing in a crowd.",
+      "",
+      "⭐ WHAT THE LETTER ACTUALLY PROMISED, and it is only these two:",
+      "  · the Lovers — \"The full spread gives me the day. That's the thing I cannot do with three",
+      "    cards and can do with twelve — which door he comes through, which week, and what he",
+      "    looks like when he uses it.\" (02-E2 beat: 'the meeting')",
+      "  · the first sign — \"The first of it shows itself inside five to seven days\", said twice.",
+      "⛔ The World was promised a DOOR, never a day. The Tower was promised the SHAPE of it coming",
+      "  — \"a woman who's seen the shape of it coming weeks out\" — never a date. Nothing else in",
+      "  the letter promises timing at all.",
+      "",
+      "🔴 THIS BLOCK NOW DEPENDS ON 3+9, AND IT IS THE THIRD THING THAT DOES. `dated_card` is the",
+      "LOVERS, which works only because the Lovers is FIXED and is therefore in every single draw.",
+      "⛔ If the operator retires 3+9 for twelve genuinely new cards, this file needs three answers",
+      "it does not currently have:",
+      "  · WHICH ROOM IS DATED, when the Lovers may not be drawn at all. The hand-written product",
+      "    dated the room holding the CHARIOT, and gave the reason from the card — 'motion can be",
+      "    timed'. So the rule becomes card-led, not slot-led: date the room holding whichever",
+      "    motion card came up, and if none did, date nothing and say so.",
+      "  · THE THREE OBLIGATIONS have nowhere to live, and with them go the letter's promises.",
+      "  · card_lore's WORLD, LOVERS and TOWER need `reversed` entries, and their engines need",
+      "    rewriting back to textbook — they are deliberately product-true right now because the",
+      "    letter already told her what those three mean.",
+      "⭐ PHASE 3 TRUST REPAIR. Action timing outside house 5 was once exempted. The blind buyer",
+      "review found that deadlines attached to formal messages, work, money or relationships made",
+      "the reading feel coercive and created a second clock. House 5 now owns the only time window;",
+      "other rooms may give low-cost reversible guidance but no deadline."
+    ],
+    "dated_house": 5,
+    "_dated_house_note": [
+      "⭐ HOUSE 5 — romance, and what delights you. It is the room that answers the love promise,",
+      "and it is the room the hand-written product dated. ⛔ It used to be 'wherever the Lovers",
+      "fell', which only worked while the Lovers was in the spread; twelve NEW cards ended that."
+    ],
+    "frame": "the next two months",
+    "first_sign": "five to seven days",
+    "law_other": [
+      "Do not put any deadline, countdown, week window, day count, action timing or prediction timing in this room.",
+      "The whole reading has a two-month horizon, but this room must not introduce or repeat a time window."
+    ],
+    "law_dated": [
+      "This is the only dated room. Give one narrow relative week window, never a calendar date.",
+      "Justify the precision from the fact that an arrival or meeting is an event with a day; do not invent the reason from the card picture.",
+      "The week is forecast information, not a deadline for an action she must take.",
+      "State the love event as one relative week, not a numbered day interval. Any first sign in this house remains undated; the joiner alone supplies the separate five-to-seven-day countdown in the close."
+    ],
+    "law_close": [
+      "Name house 5 as the only dated room and explain why its event can be timed while the other rooms describe slower conditions.",
+      "Also pay the separate first-sign promise once, inside five to seven days.",
+      "End with useful forward movement that carries no deadline rather than a refusal to date the rest."
+    ]
+  },
+  "cards": {
+    "the-fool": "the Fool",
+    "the-magician": "the Magician",
+    "the-high-priestess": "the High Priestess",
+    "the-empress": "the Empress",
+    "the-hierophant": "the Hierophant",
+    "the-lovers": "the Lovers",
+    "the-tower": "the Tower",
+    "the-world": "the World",
+    "the-chariot": "the Chariot",
+    "strength": "Strength",
+    "the-hermit": "the Hermit",
+    "wheel-of-fortune": "the Wheel of Fortune",
+    "justice": "Justice",
+    "the-hanged-man": "the Hanged Man",
+    "death": "the Nameless One",
+    "temperance": "Temperance",
+    "the-devil": "the Devil",
+    "the-sun": "the Sun",
+    "judgement": "Judgment"
+  },
+  "_cards_note": [
+    "⛔ 'death' displays as 'the Nameless One' — Evelyn never says the word, and the shipped",
+    "   product does not either. ⛔ 'judgement' displays as 'Judgment': the copy is US-spelled,",
+    "   the scan is not. Both are why this map exists instead of a slugify().",
+    "⚠ 19 entries, not 22: the Star, the Emperor and the Moon are excluded above and so are",
+    "   deliberately absent — a card with no entry here can never reach the renderer."
+  ],
+  "card_lore": {
+    "_note": [
+      "🔴 THE FENCE ROUND EACH CARD, AND WHY IT EXISTS. A tarot reader's audit of two real generated",
+      "readings found the fault that matters most: claims the card on the table does not carry.",
+      "Temperance, in the house of standing, was made to deliver an announcement on a deadline —",
+      "\"by week seven your name is said in front of you\" — which Temperance cannot do at any speed;",
+      "the hand-written product says so itself (\"seasons are the speed Temperance works at\"). And",
+      "every reversed card was read by turning the picture over, which produced the Hanged Man",
+      "reversed as a man standing up free. Nothing in the pipeline had ever told the writer what a",
+      "card is drawn with or what would be a lie about it.",
+      "",
+      "⭐⭐ VERIFIED AGAINST WAITE, 2026-09-08. Every `drawn` entry has been checked line by line",
+      "against A. E. Waite's own descriptions in THE PICTORIAL KEY TO THE TAROT (1911) — the man who",
+      "commissioned this deck — at docs/08-marcus/reference/pictorial-key-to-the-tarot-waite-1911.txt.",
+      "That pass corrected about thirty details and added seven. A sample of what we had WRONG: the",
+      "Empress was lying down and is seated, and her corn is RIPENING not ripe; the Fool is stationary",
+      "at the brink, not mid-step over it; Judgment's dead rise from TOMBS, not boxes; the Hanged Man",
+      "hangs from a TAU cross; the High Priestess's scroll is in her HANDS under her mantle, not rolled",
+      "in her lap — and we had missed the solar cross on her breast altogether.",
+      "🔴 ⛔ USE HIM FOR THE PICTURES. DO NOT IMPORT HIS REVERSED MEANINGS. Waite's 1911 reversals are",
+      "archaic and several are unusable or actively backwards here: Wheel reversed is 'Increase,",
+      "abundance, superfluity'; Empress reversed is 'Light, truth, public rejoicings'; Hanged Man",
+      "reversed is 'Selfishness, the crowd, body politic'; Temperance reversed is 'things connected",
+      "with churches, religions, sects, the priesthood'. Taking those literally would undo the fix that",
+      "stopped the Hanged Man shipping as its own opposite. Every `reversed` field below is modern",
+      "practice and the Waite pass left all sixteen untouched.",
+      "⚠ AND HE CONTRADICTS US IN THREE PLACES WHERE WE ARE KEEPING OURS ON PURPOSE: he renounces the",
+      "seasons for Temperance (we use a season as a SPEED, not a meaning, and the fence depends on it);",
+      "he allows the Nameless One to mean a literal death; and §3 gives the Sun as 'fortunate",
+      "marriage'. His own view of that keyword list is that it is artificial and arbitrary — treat it",
+      "that way, and prefer his PICTURES, which are not.",
+      "⭐ ONE CHANGE OF MEANING CAME OUT OF IT AND IT WAS OURS THAT WAS WRONG. The Hermit's engine said",
+      "the looking was the point rather than the finding. Waite: 'this is a card of ATTAINMENT…",
+      "Therefore the Hermit is not, as Court de Gebelin explained, a wise man in search of truth.' He",
+      "has arrived and is holding the light up on the height. Fixed.",
+      "",
+      "⭐ `drawn` IS THE ACCURACY FENCE AND THE ANTI-TEMPLATE, BOTH. Every entry is genuinely on the",
+      "Rider-Waite-Smith card, and every entry is strong enough to open a passage on — because the",
+      "house prompt picks ONE of them per buyer, seeded off her order id, and tells the writer to",
+      "open there. 🔴 That is the fix for a measured bleed: two independent runs opened the Tower on",
+      "the same sentence (crown off, lightning past it, two figures still in the air, nobody landed).",
+      "A fixed prompt returns its favourite answer every time.",
+      "",
+      "⭐ `engine` IS A FENCE, NOT A MEANING. It says what the card is made of, at what tempo, and —",
+      "after the ⛔ — the single claim writers most often make that the card cannot carry. What the",
+      "card SAYS is still decided by the room it fell in and by what else is on the table. That is",
+      "VOICE rule 4, and the two do not contradict: the fence rules out lies, the spread supplies",
+      "the meaning.",
+      "⛔ THE THREE SHE WAS ALREADY SHOWN HAVE PRODUCT-TRUE ENGINES, NOT TEXTBOOK ONES. A generic",
+      "World says 'completion' and forbids naming her reward — but the letter already told her the",
+      "World is luck and two windfalls, and the obligation makes her name both. A generic Lovers",
+      "forbids naming the man — but the arrival branch has to say TWIN FLAME and name the week. So",
+      "those three fences are written to what the letter established, and they fence the thing that",
+      "would actually be a lie: that the CARD knows which door, or which of the two trees. It does",
+      "not. The house does. That is the mechanism this whole offer was sold on.",
+      "",
+      "⭐ `reversed` IS A MODIFICATION, NEVER AN OPPOSITE. The vocabulary across these entries is",
+      "blocked · turned inward · spent · delayed · leaking · forced early · refused · clung to past",
+      "its time. ⛔ NEVER derived from what the drawing looks like inverted. The three fixed cards",
+      "have no `reversed` key because draw.fixed_are_upright means they can never fall that way —",
+      "and build-02-n8n.py refuses to build if any DRAWABLE card is missing one."
+    ],
+    "the-world": {
+      "plain": "a full circle closed, and luck starting",
+      "drawn": [
+        "a naked woman dancing inside an elliptic green wreath, a violet scarf blown loose around her loins",
+        "a wand held in each hand, one and one, and nothing else carried",
+        "the wreath tied top and bottom with a red ribbon, the same knot both ends",
+        "four heads in the four corners of the card, each in cloud — a man, an eagle, a bull, a lion",
+        "one leg crossed behind the other at the knee, caught mid-step",
+        "nothing inside the wreath but her and the sky, no ground drawn under her feet"
+      ],
+      "engine": "the World is the finished circuit — a thing carried the whole way round and closed, witnessed on all four sides. In this reading it is the best card in the deck and it is LUCK: a run of misfortune ended and a run of good starting, and the windfalls she was promised sit inside that run — which is what she was told it means and what it goes on meaning. ⛔ It cannot say she earned it or that she must do something to keep it — the World arrives complete or it does not arrive. ⛔ And it says nothing by itself about WHICH DOOR the windfall comes through. That is the room it fell in. The card carries the fact; the house carries the door.",
+      "waite": "The four living creatures of the Apocalypse and Ezekiel's vision are grouped about an elliptic garland; within this garland there is the figure of a woman, whom the wind has girt about the loins with a light scarf, and this is all her vesture. She is in the act of dancing, and has a wand in either hand. It is eloquent as an image of the swirl of the sensitive life, of joy attained in the body, of the soul's intoxication in the earthly paradise. It should be noted that in the four quarters of the garland there are four flowers distinctively marked. It represents also the perfection and end of the Cosmos, the secret which is within it, the rapture of the universe when it understands itself in God."
+    },
+    "the-lovers": {
+      "plain": "a choice made in the open, with a price on it",
+      "drawn": [
+        "a naked man and a naked woman standing apart, close but not touching",
+        "a winged figure above them in red and purple, arms open over both, hair like flame",
+        "a tree behind the woman with a snake wound down the trunk, fruit in the branches",
+        "a tree behind the man bearing twelve fruits, each one drawn as a small flame",
+        "one grey mountain standing up between them in the distance",
+        "a wide sun directly above the winged figure, higher than everything else on the card",
+        "their eyes: she does not look at him — she looks up, past him, at the winged figure — and he looks at her"
+      ],
+      "engine": "the Lovers is a choice made in the open, watched, with a cost attached — and the two trees are the two things being chosen between. In this reading it carries a meeting, because that is what she was told and what she paid to have settled. ⛔ It cannot answer WHICH of the two on its own: appetite and the lasting thing look identical on this card, and that is precisely why the letter refused to choose and sent her here. The room it fell in decides it, and the rest of the table corroborates it. ⛔ It also cannot make the choice free. Whichever branch is hers, name what it asks of her.",
+      "waite": "The sun shines in the zenith, and beneath is a great winged figure with arms extended, pouring down influences. In the foreground are two human figures, male and female, unveiled before each other, as if Adam and Eve when they first occupied the paradise of the earthly body. Behind the man is the Tree of Life, bearing twelve fruits, and the Tree of the Knowledge of Good and Evil is behind the woman; the serpent is twining round it. The figures suggest youth, virginity, innocence and love before it is contaminated by gross material desire. This is in all simplicity the card of human love, here exhibited as part of the way, the truth and the life. In a very high sense, the card is a mystery of the Covenant and Sabbath."
+    },
+    "the-tower": {
+      "plain": "something built on an untruth, already coming down",
+      "drawn": [
+        "a grey tower standing on bare rock, no door drawn anywhere on it",
+        "a gold crown knocked clear off the top, tipping, still in the air",
+        "one bolt of lightning coming down out of dark cloud into where the crown was",
+        "fire coming out of three windows, pushing outward, not upward",
+        "two figures falling head-first, arms out, neither one landed",
+        "flame shapes loose in the air on both sides of the fall, falling with them"
+      ],
+      "engine": "the Tower is fast, and by the time it is drawn it has already begun. What comes down was built on something untrue, and the fall is the correction and not a punishment. ⭐ In this reading it arrives as a PERSON and not an event — that is what she was told, and it holds. ⛔ It cannot say she can stop it, slow it, or pick which part of the structure goes. What is on offer is the direction she is facing when it lands, and nothing beyond that.",
+      "waite": "It is idle to indicate that it depicts ruin in all its aspects, because it bears this evidence on the surface. I understand that the reference is to a House of Falsehood. It illustrates also in the most comprehensive way the old truth that “except the Lord build the house, they labour in vain that build it.” The Tower has been spoken of as the chastisement of pride and the intellect overwhelmed in the attempt to penetrate the Mystery of God; but in neither case do these explanations account for the two persons who are the living sufferers. The one is the literal word made void and the other its false interpretation. In yet a deeper sense, it may signify also the end of a dispensation."
+    },
+    "the-fool": {
+      "plain": "a step taken before you can see where it lands",
+      "drawn": [
+        "a young man stopped at the very brink of a cliff, still in the middle of a step",
+        "his eyes on the sky in front of him, not on the drop below",
+        "a white rose held loose in his lowered hand, stem down",
+        "a wand over his right shoulder with an embroidered wallet hanging off the end of it",
+        "dim marks worked into the wallet, none of them making a word",
+        "a small white dog up on its back legs at his heel, mouth open",
+        "a pale sun behind him, low and wide, and snow on the peaks behind that"
+      ],
+      "engine": "the Fool is the step taken before the ground is checked. It is a beginning with no record behind it and no guarantee in front of it. Its tempo is now — he is at the brink and the step is not finished. ⛔ It cannot say the step is safe, and it cannot say it works out.",
+      "reversed": "Reversed the Fool is refused. The beginning was genuinely available and she did not take it, and she has since called that decision the sensible one. It is not a start that failed; it is a start that was never made, and nothing has moved because nothing was risked. ⛔ Never read it as caution rewarded, and never take the meaning from the figure tipping over the cliff.",
+      "waite": "With light step, as if earth and its trammels had little power to restrain him, a young man in gorgeous vestments pauses at the brink of a precipice; he surveys the blue distance before him—its expanse of sky rather than the prospect below. His act of eager walking is still indicated, though he is stationary at the given moment; his dog is still bounding. The edge which opens on the depth has no terror; it is as if angels were waiting to uphold him. He has a rose in one hand and in the other a costly wand, from which depends over his right shoulder a wallet curiously embroidered. He is a prince of the other world on his travels through this one. He is the spirit in search of experience."
+    },
+    "the-magician": {
+      "plain": "you already have what the job needs",
+      "drawn": [
+        "a man standing at a table, a white wand held straight up in his right hand",
+        "his other hand pointing down at the ground, so the two arms make one line through him",
+        "four things laid out on the table in front of him — a cup, a coin marked with a star, a sword, a wand",
+        "a snake for a belt at his waist, with its own tail in its mouth",
+        "a sideways figure of eight floating above his head, touching nothing",
+        "red roses hanging above his head and white lilies growing in the bed beneath him"
+      ],
+      "engine": "the Magician is capability with the tools already in reach — everything he needs is on the table before he starts. It is will put onto material, and it moves at whatever speed the person moves. The card claims the means, never the result. ⛔ It cannot say someone else will do it for her.",
+      "reversed": "Reversed the Magician is leaking. The ability is real and it goes out sideways, into everything except her own work, so the means never reach her own table. She recognises it as constant effort with nothing of her own to show for it. ⛔ Not incompetence, not a fake, not 'she has no gift', and never read from the wand pointing at the floor.",
+      "waite": "A youthful figure in the robe of a magician, having the countenance of divine Apollo. Above his head is the mysterious sign of the Holy Spirit, the sign of life, forming the figure 8 in a horizontal position. About his waist is a serpent-cincture, the serpent appearing to devour its own tail. In the Magician's right hand is a wand raised towards heaven, while the left hand is pointing to the earth. This dual sign shews the descent of grace, virtue and light, drawn from things above and derived to things below. On the table in front of the Magician are the symbols of the four Tarot suits, signifying the elements of natural life. Beneath are roses and lilies, the flos campi and lilium convallium, changed into garden flowers, to shew the culture of aspiration."
+    },
+    "the-high-priestess": {
+      "plain": "something known and not yet said out loud",
+      "drawn": [
+        "a woman seated between two pillars, one black and one white, a single letter cut into each — B and J",
+        "a veil hung between the pillars behind her, palms and pomegranates worked into it",
+        "a scroll held in her hands with writing on it, half of it covered by her mantle",
+        "a cross with four arms of the same length on her breast",
+        "a crescent moon lying at her feet, under the hem of her robe",
+        "a crown of two horns with a round moon held between them",
+        "her robe running down into water at the bottom edge, the join not visible"
+      ],
+      "engine": "the High Priestess is what is known and not yet said. She has the answer in full and withholds it — the scroll is in her hands, and half of it is still under her mantle. She works by waiting, and she is slow. ⛔ It cannot hand over the secret, name the withheld thing, or say when it comes out.",
+      "reversed": "Reversed the High Priestess is clung to past its time. The withholding was right once and it is not right now: she already knows the answer and has still not said it out loud to the person it concerns. Nothing can respond to a thing that was never said. ⛔ Not 'her instinct is wrong' and not 'the secret comes out' — the instinct is sound, and it is the keeping of it that has gone on too long.",
+      "waite": "She has the lunar crescent at her feet, a horned diadem on her head, with a globe in the middle place, and a large solar cross on her breast. The scroll in her hands is inscribed with the word TORA. It is partly covered by her mantle, to shew that some things are implied and some spoken. She is seated between the white and black pillars of the mystic Temple, and the veil of the Temple is behind her: it is embroidered with palms and pomegranates. The vestments are flowing and gauzy, and the mantle suggests light—a shimmering radiance. She is really the Secret Church, the House which is of God and man. She is the spiritual Bride and Mother. She is, in fine, the Queen of the borrowed light."
+    },
+    "the-empress": {
+      "plain": "something growing that needs feeding, not starting",
+      "drawn": [
+        "a woman seated back among cushions in an open field",
+        "a crown of twelve stars gathered in a cluster on her head",
+        "a shield shaped like a heart resting beside her, the sign of Venus cut into its face",
+        "a sceptre held up in one hand with a globe on the end of it",
+        "a field of corn ripening in front of her, none of it cut yet",
+        "a wood behind her with water falling down through it"
+      ],
+      "engine": "the Empress is what is already growing and needs feeding — she does not start things, she brings them on. Her abundance has a body attached: it is material and living, never merely symbolic. She works at the speed of a crop and cannot be hurried. ⛔ It cannot promise a pregnancy.",
+      "reversed": "Reversed the Empress is spent. She has been the one doing the feeding, and the giving has drawn the source down faster than anything has put back into it. She recognises it as being depended on by everyone and provided for by no one, herself included. ⛔ Not barrenness, not 'she is a bad mother', and never the picture read as the crop hanging downward.",
+      "waite": "A stately figure, seated, having rich vestments and royal aspect, as of a daughter of heaven and earth. Her diadem is of twelve stars, gathered in a cluster. The symbol of Venus is on the shield which rests near her. A field of corn is ripening in front of her, and beyond there is a fall of water. The sceptre which she bears is surmounted by the globe of this world. She is the inferior Garden of Eden, the Earthly Paradise. She is above all things universal fecundity and the outer sense of the Word. In another order of ideas, the card of the Empress signifies the door or gate by which an entrance is obtained into this life, as into the Garden of Venus."
+    },
+    "the-hierophant": {
+      "plain": "the proper way of doing it, and what it costs to belong",
+      "drawn": [
+        "a robed figure seated high between two stone pillars, facing straight out",
+        "two ministers in white robes kneeling below him, their backs to us",
+        "two keys crossed on the floor at his feet, one gold and one silver",
+        "a staff in his left hand with three crossbars on it, the top one shortest",
+        "his right hand up, two fingers raised and two folded down",
+        "a crown of three tiers, stacked, on his head"
+      ],
+      "engine": "the Hierophant is the established way — the sanctioned form, done properly and in front of witnesses. It carries approval, and the price of approval is doing it their way. It moves at the speed of an institution, which is slow and on its own calendar. ⛔ It cannot say the rule is right, and it cannot bless what is done privately.",
+      "reversed": "Reversed the Hierophant is refused. The sanctioned form was on offer and it did not happen — either she would not take it or it was not given her — and she is living outside a structure she is still being measured against. ⛔ Not rebellion as a virtue and not 'she is free of it'. Being outside the form does not exempt her from its price; it changes how she pays it.",
+      "waite": "He wears the triple crown and is seated between two pillars, but they are not those of the Temple which is guarded by the High Priestess. In his left hand he holds a sceptre terminating in the triple cross, and with his right hand he gives the well-known ecclesiastical sign which is called that of esotericism, distinguishing between the manifest and concealed part of doctrine. At his feet are the crossed keys, and two priestly ministers in albs kneel before him. He has been usually called the Pope. He is the ruling power of external religion, as the High Priestess is the prevailing genius of the esoteric, withdrawn power. He symbolizes all things that are righteous and sacred on the manifest side."
+    },
+    "the-chariot": {
+      "plain": "already moving, and it goes where you point it",
+      "drawn": [
+        "a man standing upright in a stone chariot, armour across his chest",
+        "two sphinxes lying down in front of it, harnessed to it, one black and one white",
+        "no reins in his hands — nothing runs from him to them at all",
+        "a canopy of blue over him with white stars printed on it",
+        "a crescent moon on each shoulder, a face in each one",
+        "a walled town behind him, already at a distance"
+      ],
+      "engine": "the Chariot is movement already under way, held on course by the will of the person standing up in it. Because it is moving it can be timed. Its danger is not stopping — it goes exactly where it was pointed. ⛔ It cannot say the direction is right, only that she gets there.",
+      "reversed": "Reversed the Chariot is leaking. The force is intact and it is pulling in two directions at once, so effort goes in and no ground comes out. She recognises it as working harder than anyone around her and arriving nowhere she meant to be. ⛔ Not defeat and not 'she has given up' — the drive is all still there, it is the steering that has gone.",
+      "waite": "An erect and princely figure carrying a drawn sword and corresponding, broadly speaking, to the traditional description. On the shoulders of the victorious hero are supposed to be the Urim and Thummim. He has led captivity captive; he is conquest on all planes—in the mind, in science, in progress, in certain trials of initiation. He has thus replied to the sphinx; two sphinxes thus draw his chariot. He is above all things triumph in the mind. It is to be understood that the planes of his conquest are manifest or external and not within himself; that the liberation which he effects may leave himself in the bondage of the logical understanding. He is not hereditary royalty and he is not priesthood."
+    },
+    "strength": {
+      "plain": "holding something strong by hand, gently, every day",
+      "drawn": [
+        "a woman in a white dress with both hands on a lion's mouth, closing its jaws",
+        "the lion's head bowed, tongue out, tail hanging down behind",
+        "a chain of flowers round her waist that runs on and loops over the lion's neck",
+        "a whole wreath of flowers in her hair, not one or two",
+        "a sideways figure of eight floating above her head",
+        "one grey hill a long way behind, nothing drawn between her and it"
+      ],
+      "engine": "Strength is force handled without force. The animal is not killed, beaten or let loose — it is held, by hand, close up. It is patience with something in her that is real and dangerous and hers, and it has to be done again tomorrow. ⛔ It cannot say the lion goes away.",
+      "reversed": "Reversed Strength is spent. She has held it shut for a long time and the holding has used her up, so what gets out now gets out badly — too much at once, after far too long of nothing at all. That is the arm giving way, not the character. ⛔ Not weakness, and never 'she is the beast' — she is the woman holding it, and she is tired.",
+      "waite": "A woman, over whose head there broods the same symbol of life which we have seen in the card of the Magician, is closing the jaws of a lion. The only point in which this design differs from the conventional presentations is that her beneficent fortitude has already subdued the lion, which is being led by a chain of flowers. Fortitude, in one of its most exalted aspects, is connected with the Divine Mystery of Union, and with the strength which resides in contemplation. These higher meanings are intimated in a concealed manner by the chain of flowers, which signifies the sweet yoke and the light burden of Divine Law. There is one aspect in which the lion signifies the passions, and she who is called Strength is the higher nature in its liberation."
+    },
+    "the-hermit": {
+      "plain": "gone up alone on purpose, and holding the light",
+      "drawn": [
+        "an old man alone on a snow-grey peak, hooded, seen in profile",
+        "a lamp held out at shoulder height, a six-pointed star burning inside its glass",
+        "his cloak falling clear of the lamp, no part of it covering the light",
+        "a long grey staff in his other hand, held not leaned on",
+        "his beard and his robe the same grey, so the whole figure is one colour",
+        "nothing behind him but sky — no path drawn up, and none drawn down"
+      ],
+      "engine": "the Hermit is deliberate withdrawal. He climbed up there, he was not driven up. He is not searching for anything — he got where he was going, and what he does now is hold the light up on the height. The lamp reaches one step of ground at a time, so he is slow by choice. ⛔ It cannot say anyone comes to the light, and it cannot say he is lonely.",
+      "reversed": "Reversed the Hermit is clung to past its time. The withdrawal was chosen and it worked; what has not happened is choosing it a second time. She experiences it as peace and it is now simply where she lives. ⛔ Not loneliness done to her, and not that she should see more people — she chose this, correctly, and the choosing has not been renewed since.",
+      "waite": "The variation from the conventional models in this card is only that the lamp is not enveloped partially in the mantle of its bearer, who blends the idea of the Ancient of Days with the Light of the World. It is a star which shines in the lantern. I have said that this is a card of attainment, and to extend this conception the figure is seen holding up his beacon on an eminence. Therefore the Hermit is not a wise man in search of truth and justice; nor is he an especial example of experience. His beacon intimates that “where I am, you also may be.” It is a card which is understood quite incorrectly when it is connected with the idea of occult isolation."
+    },
+    "wheel-of-fortune": {
+      "plain": "a change that comes from outside and does not ask",
+      "drawn": [
+        "a wheel hanging in the sky with nothing holding it up",
+        "eight letters spaced around the rim of the wheel, two alphabets alternating, running the whole way round",
+        "a sphinx lying on top of the wheel with a sword held across it",
+        "a snake going down the left side of the wheel, head first",
+        "a dog-headed figure coming up the right side",
+        "four figures in the four corners, each in cloud with an open book — a man, an eagle, a bull, a lion"
+      ],
+      "engine": "the Wheel is change from outside her. It turns without asking and it does not consult the person sitting on it. It moves fast and it moves once, and what it changes is her circumstances, not her character. ⛔ It cannot say the turn was earned or deserved, and it cannot be turned back.",
+      "reversed": "Reversed the Wheel is delayed. The turn is real and it is late: what should have moved by now has not, and nothing she has done or failed to do explains why. This is a stall, not a punishment, and stalls end without her doing anything clever. ⛔ Not 'her luck has run out', and never read as the wheel turning backwards.",
+      "waite": "I have presented Typhon in his serpent form. The four Living Creatures of Ezekiel occupy the angles of the card. The symbolic picture stands for the perpetual motion of a fluidic universe and for the flux of human life. The Sphinx is the equilibrium therein. The transliteration of Taro as Rota is inscribed on the wheel, counterchanged with the letters of the Divine Name—to shew that Providence is implied through all. But this is the Divine intention within, and the similar intention without is exemplified by the four Living Creatures. Sometimes the sphinx is represented couchant on a pedestal above, which defrauds the symbolism by stultifying the essential idea of stability amidst movement. Behind the general notion expressed in the symbol there lies the denial of chance and the fatality which is implied therein."
+    },
+    "justice": {
+      "plain": "what was actually done, weighed and answered for",
+      "drawn": [
+        "a figure seated between two pillars with a plain purple cloth hung behind, nothing worked into it",
+        "a sword held straight up in the right hand, the point higher than the crown",
+        "a pair of scales in the left hand, hanging level, neither pan down",
+        "one foot showing under the hem of the red robe, the rest of her hidden",
+        "a small square set into the front of the crown",
+        "her eyes open and looking straight out, not down at the scales"
+      ],
+      "engine": "Justice is cause and effect made visible — the weighing of what was actually done, not what was meant by it. The sword is upright and not aimed, because it cuts both ways. Its business is formal and on the record: the kind of thing that gets decided, written down and dated. ⛔ It cannot say the outcome goes in her favour.",
+      "reversed": "Reversed Justice is delayed. The weighing is genuinely happening and it is taking far longer than it should, so what she is owed sits undecided rather than decided against her. She recognises it as waiting on someone else's answer with no way to hurry it. ⛔ Not injustice as a moral fact, and not 'she has been wronged and nobody will put it right' — the scales are still up, they are only slow.",
+      "waite": "It will be seen that the figure is seated between pillars, like the High Priestess, and on this account it seems desirable to indicate that the moral principle which deals unto every man according to his works—while, of course, it is in strict analogy with higher things—differs in its essence from the spiritual justice which is involved in the idea of election. The latter belongs to a mysterious order of Providence, in virtue of which it is possible for certain men to conceive the idea of dedication to the highest things. In conclusion, the pillars of Justice open into one world and the pillars of the High Priestess into another."
+    },
+    "the-hanged-man": {
+      "plain": "a wait you agreed to, paid for in time",
+      "drawn": [
+        "a man hanging head-down from a gallows shaped like a T, tied by one ankle",
+        "the gallows is living wood, small green leaves coming out of it",
+        "his free leg crossed behind the tied one, making the shape of a figure four",
+        "his hands out of sight behind his back, elbows out to the sides",
+        "a ring of yellow light around his head, as wide as his shoulders",
+        "his face wide awake and somewhere else, no strain in it anywhere"
+      ],
+      "engine": "the Hanged Man is willing suspension. He tied himself there; the price is time, and what he is paid in is a changed view. Nothing moves while he hangs, and that stillness is the whole mechanism. It has no deadline — it ends when the seeing is done. ⛔ It cannot say the waiting is over, and it cannot give a date.",
+      "reversed": "Reversed the Hanged Man is the surrender refused. She is still suspended — that has not changed — but she will not consent to it, so she is paying the time and not collecting the changed view it buys. She experiences the refusal as good judgement about timing rather than as a refusal. ⛔ NEVER read this as the waiting being over, the man standing up, the rope gone slack, or 'you are still living as though you are in the waiting part, and you are not' — that exact reading shipped to a buyer once and it is the fault this field exists to stop. ⛔ Never take the meaning from the picture turned the right way up.",
+      "waite": "The gallows from which he is suspended forms a Tau cross, while the figure—from the position of the legs—forms a fylfot cross. There is a nimbus about the head of the seeming martyr. It should be noted (1) that the tree of sacrifice is living wood, with leaves thereon; (2) that the face expresses deep entrancement, not suffering; (3) that the figure, as a whole, suggests life in suspension, but life and not death. It is a card of profound significance, but all the significance is veiled. It has been called falsely a card of martyrdom, a card of prudence, a card of the Great Work, a card of duty. I will say very simply on my own part that it expresses the relation, in one of its aspects, between the Divine and the Universe."
+    },
+    "death": {
+      "plain": "an ending already decided, coming at walking pace",
+      "drawn": [
+        "a skeleton in black armour riding a white horse at a walk, not a gallop",
+        "no scythe and no weapon of any kind anywhere in its hands",
+        "a black flag in its hand with one white rose on it, five petals",
+        "a king on the ground under the horse, his crown off and lying apart from him",
+        "a bishop in a tall hat standing in the horse's way, hands together, not moving",
+        "a child kneeling in front holding flowers, and a woman beside the child with her head turned away",
+        "two pillars far off on the skyline with the sun standing in the gap between them"
+      ],
+      "engine": "the Nameless One is an ending that has already been decided and is now being carried out. It comes at a walk, so it can be seen coming, and it cannot be argued with. What ends here does not come back in the same shape. ⛔ It cannot mean a literal death, and it cannot say what fills the space afterwards.",
+      "reversed": "Reversed the Nameless One is delayed. It is gentler than upright: the ending is not undone, it is paid in instalments instead of all at once, so the thing that is over goes on being partly present. ⛔ Not survival and not 'it does not end after all'. It ends; it only takes longer and costs more.",
+      "waite": "The veil or mask of life is perpetuated in change, transformation and passage from lower to higher, and this is more fitly represented in the rectified Tarot by one of the apocalyptic visions than by the crude notion of the reaping skeleton. Behind it lies the whole world of ascent in the spirit. The mysterious horseman moves slowly, bearing a black banner emblazoned with the Mystic Rose, which signifies life. Between two pillars on the verge of the horizon there shines the sun of immortality. The horseman carries no visible weapon, but king and child and maiden fall before him, while a prelate with clasped hands awaits his end. The natural transit of man to the next stage of his being either is or may be one form of his progress."
+    },
+    "temperance": {
+      "plain": "two things becoming one, at the speed of a season",
+      "drawn": [
+        "a winged figure in a white robe pouring water between two cups, one held higher than the other",
+        "the water crossing the gap in a stream that does not fall straight down",
+        "one bare foot standing in the pool, the other flat on the bank",
+        "the sign of the sun on the forehead, and a square with a triangle inside it on the chest",
+        "a narrow path going away from the water to two low hills, with light between them",
+        "a crown showing faintly inside that light, above the hills",
+        "yellow flowers growing at the water's edge, close by the standing foot"
+      ],
+      "engine": "Temperance is blending — two separate things becoming one usable thing, by degrees, in the right proportions. Its tempo is a SEASON, and the season is not negotiable. It works quietly while she is doing other things, and it is only visible looking backwards. ⛔ It cannot deliver an announcement, a verdict, a deadline, a promotion or sudden recognition. Nobody says her name in a room she is not in because Temperance was drawn.",
+      "reversed": "Reversed Temperance is forced early. The blending is being hurried against its season, so the proportions come out wrong the way over-corrected things do — too much of one, then too much of the other, then back. What is missing is not effort but the time she has not allowed. ⛔ Not imbalance as a character flaw, and not 'she is out of harmony'.",
+      "waite": "A winged angel, with the sign of the sun upon his forehead and on his breast the square and triangle of the septenary. I speak of him in the masculine sense, but the figure is neither male nor female. It is held to be pouring the essences of life from chalice to chalice. It has one foot upon the earth and one upon waters. A direct path goes up to certain heights on the verge of the horizon, and above there is a great light, through which a crown is seen vaguely. Hereof is some part of the Secret of Eternal Life. It is called Temperance fantastically, because, when the rule of it obtains in our consciousness, it tempers, combines and harmonises the psychic and material natures."
+    },
+    "the-devil": {
+      "plain": "a hold you take part in, and get something from",
+      "drawn": [
+        "a goat-headed figure with bat wings, perched on top of a black half-cube altar",
+        "his right hand raised and open, the palm turned out at us",
+        "a lit torch in the lowered hand, held pointing at the ground",
+        "an upside-down star set between the horns, above the eyes",
+        "a naked man and a naked woman chained by the neck to a ring in the front of the altar",
+        "the chains around their necks loose enough to lift straight off over the head",
+        "small horns on both of them, and a tail each — one ending in fire, one in grapes"
+      ],
+      "engine": "the Devil is bondage she is taking part in. The chains are loose and nobody is holding them on. It is an arrangement she gets something real out of, and it is stable, which is what makes it hard to leave. ⛔ It cannot say she is a victim of it, and it cannot name the day she walks out.",
+      "reversed": "Reversed the Devil is spent. This is the gentler of the two: what the arrangement paid her has run out, so the hold has weakened without her having decided anything — not freedom and not yet a choice, but the grip going slack while the collar is still on. ⛔ Not release, not 'she is out', and never read as the figure falling off his block. ⛔ AND NEVER FROM THE CHAINS: they hang loose on the upright card too, so slack chains are evidence of nothing and cannot be what shows the reversal — that reading shipped once, as its whole proof. The reversal is in what the hold is doing to her.",
+      "waite": "The Horned Goat of Mendes, with wings like those of a bat, is standing on an altar. At the pit of the stomach there is the sign of Mercury. The right hand is upraised and extended. In the left hand there is a great flaming torch, inverted towards the earth. A reversed pentagram is on the forehead. There is a ring in front of the altar, from which two chains are carried to the necks of two figures, male and female, as if Adam and Eve after the Fall. Hereof is the chain and fatality of the material life. The figures are tailed, to signify the animal nature, but there is human intelligence in the faces, and he who is exalted above them is not to be their master for ever."
+    },
+    "the-sun": {
+      "plain": "seen plainly, in daylight, nothing to work out",
+      "drawn": [
+        "a large sun with a face in it, straight rays and wavy rays alternating all the way round",
+        "a naked child on a white horse, bareback, both arms open",
+        "a wide red flag on a pole in the child's hand, streaming out sideways",
+        "four sunflowers growing above a grey wall, heads up over the top of it",
+        "a low grey wall running right across the card, the horse already out in front of it",
+        "a wreath on the child's head with one red feather standing up in it"
+      ],
+      "engine": "the Sun is a thing seen plainly, in daylight, with nothing hidden and nothing to decode. It is warmth, clarity, and being visible to other people. It is present tense — it describes the room she is in, not one she is heading for. ⛔ It cannot promise the good keeps, and it cannot say she gets the specific thing she asked for.",
+      "reversed": "Reversed the Sun is delayed. The good is real and it has not got into the room yet — she can describe the life she is nearly living, and describing it is as close as she has come. The shape of it is warmth she cannot feel: by every visible measure things are fine and she is flat inside it. ⛔ Not sadness as a verdict, and not 'her happiness is false' — it is late, not cancelled.",
+      "waite": "The naked child mounted on a white horse and displaying a red standard has been mentioned already as the better symbolism connected with this card. It is the destiny of the Supernatural East and the great and holy light which goes before the endless procession of humanity, coming out from the walled garden of the sensitive life and passing on the journey home. The card signifies, therefore, the transit from the manifest light of this world, represented by the glorious sun of earth, to the light of the world to come, which goes before aspiration and is typified by the heart of a child. The sun is that of consciousness in the spirit—the direct as the antithesis of the reflected light. The characteristic type of humanity has become a little child therein."
+    },
+    "judgement": {
+      "plain": "something from your past calling for an answer now",
+      "drawn": [
+        "a winged figure leaning out of grey cloud, blowing a long straight trumpet",
+        "a square flag hanging off the trumpet, a red cross on white",
+        "three grey figures standing up out of open coffins on the water, arms raised — a man on the left, a woman on the right, a child between them",
+        "the child in the middle with its back to us, arms straight out from the shoulders",
+        "more figures further off in the water, out of their coffins too, smaller",
+        "snow on the mountains along the whole back of the card"
+      ],
+      "engine": "Judgment is a summons. Something out of her own past is called up, in the open, and it wants an answer from her now. She is a participant in the reckoning, not a defendant in it. It arrives suddenly, and it is not repeated. ⛔ It cannot say the verdict, and it cannot say she is forgiven.",
+      "reversed": "Reversed Judgment is refused. The call came, unmistakably, and she did not answer it — and because it was never answered it is still open. She knows without being told which one it is. ⛔ Not self-doubt as a theme and not 'she is being judged' — she was called, she did not rise to it, and the call has not been repeated.",
+      "waite": "The great angel is here encompassed by clouds, but he blows his bannered trumpet, and the cross as usual is displayed on the banner. The dead are rising from their tombs—a woman on the right, a man on the left hand, and between them their child, whose back is turned. But in this card there are more than three who are restored. It should be noted that all the figures are as one in the wonder, adoration and ecstacy expressed by their attitudes. It is the card which registers the accomplishment of the great work of transformation in answer to the summons of the Supernal—which summons is heard and answered from within. It has been called truly in the past a card of eternal life."
+    }
+  },
+  "axes": {
+    "_note": [
+      "🔴 THE SPREAD HAS GEOMETRY AND WE WERE NOT USING IT. Twelve houses were being handed to the",
+      "writer as a LIST, so it wrote twelve separate readings and had to be ordered to cross-refer.",
+      "A competitor's Celtic Cross does it without being asked — because that spread's positions",
+      "relate by shape: a card CROSSES the significator, another sits at the BOTTOM of the reading.",
+      "⭐ The twelve houses have the same thing and it is older: they come in SIX AXES, each house",
+      "opposite the one six along. The axis is not decoration — it is the classic pairing every",
+      "astrologer reads, and each pair is one question asked from both ends.",
+      "⛔ So every house prompt is now handed the card standing in its OPPOSITE house, and told to",
+      "read the pair. That is a real relationship in the spread, not a cross-reference invented to",
+      "make the document feel joined up."
+    ],
+    "1": {
+      "opposite": 7,
+      "axis": "you, and the one you are bound to — who you are when alone against who you become in the pair"
+    },
+    "2": {
+      "opposite": 8,
+      "axis": "what you own against what comes through other hands — money you made against money you are given, owed or left"
+    },
+    "3": {
+      "opposite": 9,
+      "axis": "what you say against what you believe — the daily voice against the thing underneath it that you would not defend out loud"
+    },
+    "4": {
+      "opposite": 10,
+      "axis": "home against standing — the private room against the public one, and which of them you have been living for"
+    },
+    "5": {
+      "opposite": 11,
+      "axis": "romance against your circle — the one you want against the people already around you, and whether they overlap"
+    },
+    "6": {
+      "opposite": 12,
+      "axis": "the ordinary day against the blind room — what you do every week against what is happening that you cannot see"
+    },
+    "7": {
+      "opposite": 1,
+      "axis": "the one you are bound to, against you — what the binding has made of you, measured against who you are outside it"
+    },
+    "8": {
+      "opposite": 2,
+      "axis": "what comes through others against what you own — what arrives by somebody else's hand, against what you built"
+    },
+    "9": {
+      "opposite": 3,
+      "axis": "what you believe against what you say — the private conviction against the version you give out"
+    },
+    "10": {
+      "opposite": 4,
+      "axis": "standing against home — what you are credited for outside, against what it costs the house you live in"
+    },
+    "11": {
+      "opposite": 5,
+      "axis": "your circle against romance — the people who stayed, against the one you are waiting for"
+    },
+    "12": {
+      "opposite": 6,
+      "axis": "the blind room against the ordinary day — what you cannot see, against the week that is hiding it"
+    }
+  },
+  "houses": [
+    {
+      "number": 1,
+      "name": "yourself",
+      "job": "Her present stance at the start of this, and what is in her own hands. Read the card as a stance she can recognize now, not as a personality verdict or an invented anecdote from her past.",
+      "blurb": "how you meet the world, and what starts with you"
+    },
+    {
+      "number": 2,
+      "name": "what you own",
+      "job": "Money, and what she already holds. ⭐ If a windfall has a door, this is the likeliest room for it — say plainly what arrives and through what.",
+      "blurb": "money, and the things that are genuinely yours"
+    },
+    {
+      "number": 3,
+      "name": "what you say, and who you say it to",
+      "job": "Communication and audience: how the card distinguishes kinds of speech, messages, listening, or silence. Offer recognizable categories before applying one; do not presume a particular conversation, unsent message, rehearsal, recipient, or dispute.",
+      "blurb": "communication, messages, listening, and who receives them"
+    },
+    {
+      "number": 4,
+      "name": "home, and what you came from",
+      "job": "Home, foundations, and patterns that can be learned in a household. Explain the card's possible domestic pattern and give her ways to recognize it; do not assert a childhood event, family rule, present living arrangement, or inherited habit as fact.",
+      "blurb": "the house you live in, and the one you were raised in"
+    },
+    {
+      "number": 5,
+      "name": "romance, and what delights you",
+      "job": "Romance as pleasure and pursuit — the beginning of things, not the binding of them. ⛔ Not the same room as house 7, and the difference between them is the reading's spine.",
+      "blurb": "attraction and pleasure — the beginning of things, before anything is settled"
+    },
+    {
+      "number": 6,
+      "name": "work, health, the daily grind",
+      "job": "The ordinary week: work, the body, and repeated routines. Distinguish possible demands and costs in observable terms; do not diagnose symptoms, assert where her energy goes, or invent her job or schedule.",
+      "blurb": "the ordinary week: the job, the body, the routine you repeat"
+    },
+    {
+      "number": 7,
+      "name": "who you are bound to",
+      "job": "The binding one — partner, or the person she is tied to whether or not it is called that. ⭐ Read against house 5, this is where 'renewal or arrival' gets decided.",
+      "blurb": "your partner, or whoever you are tied to whether or not it is called that"
+    },
+    {
+      "number": 8,
+      "name": "what is hidden, and what comes through others",
+      "job": "What is not being said, and what reaches her through somebody else's hands — money, news, a decision made about her elsewhere.",
+      "blurb": "what reaches you through somebody else's hands — money, news, a decision made elsewhere"
+    },
+    {
+      "number": 9,
+      "name": "what you believe",
+      "job": "Beliefs and assumptions about how life works. Develop the card's general belief pattern, widen it into alternatives she can test, and let her recognize the fit; do not claim a hidden belief, habitual response, or private thought as established biography.",
+      "blurb": "what you take to be true about how life works"
+    },
+    {
+      "number": 10,
+      "name": "your standing",
+      "job": "Standing, reputation, position, and credit. Explain what the card says would make standing visible and how she can recognize the evidence; do not invent another person's private opinion or assert an unobserved workplace history.",
+      "blurb": "how you are seen, and by the people whose opinion counts"
+    },
+    {
+      "number": 11,
+      "name": "your circle",
+      "job": "Her circle and the observable ways people participate, arrive, connect, or go quiet. Explain the card's social pattern without assigning motives, trustworthiness, or a hidden reason to a particular person.",
+      "blurb": "your friends, and who actually turns up"
+    },
+    {
+      "number": 12,
+      "name": "what is being kept from you",
+      "job": "The blind room. What is real, close, and not visible from where she stands. ⭐ The house the letter promised the most and the one she will read first.",
+      "blurb": "what is real and close, and not visible from where you are standing"
+    }
+  ],
+  "obligations": {
+    "_note": [
+      "🔴 THE PROMISES ARE PINNED TO ROOMS NOW, NOT TO CARDS. The exact inverse of the previous",
+      "design, and it is forced by the operator's decision of 2026-09-08: twelve NEW cards, so the",
+      "three she was shown are not in the spread and cannot carry anything.",
+      "",
+      "⭐ THIS IS THE HAND-WRITTEN PRODUCT'S OWN SOLUTION, not an invention. build/02/02-product.md",
+      "lays twelve new cards and pays every withheld promise with whichever card landed in the room",
+      "that owes it:",
+      "  · house 2  · the Wheel of Fortune — 'here is the first of your two windfalls… This is the",
+      "             door. You asked me — and I could not tell you from the World alone.'",
+      "  · house 5  · the Chariot — 'and this is your answer about the Lovers'",
+      "  · house 8  · the Nameless One — 'your second windfall, and it arrives through someone",
+      "             else… now I can tell you what I could not tell you from the World'",
+      "  · house 12 · the High Priestess — 'And your twelfth card is the High Priestess. This is",
+      "             your Tower.'",
+      "",
+      "⛔ THE CARD DECIDES HOW, NEVER WHETHER. A random draw will sometimes stand a hard card in a",
+      "room that owes good news. That does not release the room — she is holding a letter that made",
+      "the promise. The card shapes what the answer looks like and how it arrives; the room still",
+      "pays. ⭐ This is why the draw needs no constraining: the standard's own second windfall",
+      "arrives through the NAMELESS ONE, which is nobody's lucky card, and it works.",
+      "",
+      "⭐ RESOLVED 2026-09-09 — BOTH LETTERS ARE PAID, BY ARC. These four are 02-E2/v1's promises,",
+      "which every buyer has read. 02-E3/v2 withholds three of its own on the same engine — the STAR,",
+      "the EMPEROR and the MOON — and a buyer who comes from v2 has read BOTH letters. Which letter",
+      "she bought from IS known now: the CTAs use separate ranges (v1 `?c=1..6`, v2 `?c=21..26`)",
+      "and the booking screen carries `c` into Stripe metadata. Node 3 reads it, and a v2 order is",
+      "paid from `obligations_v2` below, whose strings extend these four verbatim. See `arcs`."
+    ],
+    "2": "FIRST WINDFALL. THIS ROOM IS THE DOOR. Name the source in ordinary words, state what the windfall is, and say how she can recognize its arrival. The card decides how it comes, never whether. Do not date it.",
+    "5": "LOVE ANSWER. Choose exactly one branch and show how this room's card decides it. RENEWAL: the person already on her mind becomes more attentive than ever; give the relative week and the first sign. ARRIVAL: use the words TWIN FLAME; give the relative week; describe the already-known man's manner and what he is occupied with when recognition occurs, without physical features. Distinguish arrival from recognition. Support the chosen branch from house 7 or house 11. Do not name the Lovers as dealt.",
+    "8": "SECOND WINDFALL. State what reaches her through another person, whose role or category brings it, and why it changes her love life rather than only her bank balance. The card decides how the promised windfall comes, never whether. Do not date it.",
+    "12": "TOWER ANSWER. Choose between a person from before returning at the wrong moment and a person still present who has begun leaving. State how close the change is as a stage rather than a date, and explain what facing the right direction requires of her. Do not name the Tower as dealt."
+  },
+  "obligations_v2": {
+    "_note": [
+      "⭐ THE SECOND LETTER'S DEBTS, for v2 buyers (operator, 2026-09-09 — arcs by letter). 02-E3 goes",
+      "to the SAME woman, so a v2 buyer has read both letters and is owed both. Each string here",
+      "begins with the v1 string for the same room, byte for byte, and then adds the second letter's",
+      "debt: the STAR → house 2 (which pouring is being refilled), the EMPEROR → house 5 (floor or",
+      "shut room; which house it sits in, 4 or 8; and the room where she gave up the deciding seat),",
+      "and → house 8 only if house 5 puts the structure there, the MOON → house 12 (which piece of",
+      "what she assembled at night is real). The build refuses a v2 string that does not start with",
+      "its v1 string, so every audit that holds for v1 holds here. Node 3 picks the set by arc."
+    ],
+    "2": "FIRST WINDFALL. THIS ROOM IS THE DOOR. Name the source in ordinary words, state what the windfall is, and say how she can recognize its arrival. The card decides how it comes, never whether. Do not date it. SECOND-LETTER STAR DEBT. Decide whether the part being replenished is what she keeps or what she gives out; name what is being restored and how she notices it. The replenishment has begun. The room's card decides how, never whether. Do not name the Star as dealt or date this answer.",
+    "5": "LOVE ANSWER. Choose exactly one branch and show how this room's card decides it. RENEWAL: the person already on her mind becomes more attentive than ever; give the relative week and the first sign. ARRIVAL: use the words TWIN FLAME; give the relative week; describe the already-known man's manner and what he is occupied with when recognition occurs, without physical features. Distinguish arrival from recognition. Support the chosen branch from house 7 or house 11. Do not name the Lovers as dealt. SECOND-LETTER EMPEROR DEBT. Decide whether the structure is support or confinement and whether it sits in house 4 or house 8, using the cards in those rooms. Then decide whether she stopped choosing in house 2 or house 6 and name what decision she surrendered. The relationship is excluded from that second choice. Do not name the Emperor as dealt or add another date.",
+    "8": "SECOND WINDFALL. State what reaches her through another person, whose role or category brings it, and why it changes her love life rather than only her bank balance. The card decides how the promised windfall comes, never whether. Do not date it. SECOND-LETTER EMPEROR FOLLOW-THROUGH. Only if house 5 locates the structure in house 8, add no more than three sentences naming what exerts the control and the category of person through whom it is held, reasoned against house 4. Otherwise omit this debt here. Keep the windfall as the main subject. Do not name the Emperor as dealt or date this answer.",
+    "12": "TOWER ANSWER. Choose between a person from before returning at the wrong moment and a person still present who has begun leaving. State how close the change is as a stage rather than a date, and explain what facing the right direction requires of her. Do not name the Tower as dealt. SECOND-LETTER MOON DEBT. State which part of her interpretation of the man is real and which part fear supplied. Explain why further reading of the same ambiguous evidence adds no information. Examine her interpretation rather than accusing him. Do not direct her to investigate, watch, or question him. The room's card decides how the real part appears, never whether one exists. Do not name the Moon as dealt or date this answer."
+  },
+  "target_words": 6400,
+  "position_share": 0.915625,
+  "_words_note": [
+    "2026-09-10: operator approved a shorter report after a paired blind review preferred the 6,384-word edit (7.0/10).",
+    "Target 6,400 generated words before printed Waite blocks and static gift. Ordinary rooms are shorter; promise rooms retain more explanation.",
+    "House 5 and house 12 receive extended budgets. Balanced seeded jitter varies targets without changing the total allocation.",
+    "Opening 160 and close 280 words. Do not restore cut recaps merely to fill a target. This config needs a fresh generation test; the 7.0 score belongs to the edited PDF."
+  ],
+  "word_budget": {
+    "total_min": 6100,
+    "total_max": 6500,
+    "opening": 160,
+    "close": 280,
+    "ordinary": {
+      "target": 430,
+      "min": 350,
+      "max": 500
+    },
+    "promise": {
+      "target": 540,
+      "min": 480,
+      "max": 620
+    },
+    "extended": {
+      "houses": [
+        5,
+        12
+      ],
+      "target": 670,
+      "min": 580,
+      "max": 740
+    }
+  }
+}

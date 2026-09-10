@@ -1,0 +1,14 @@
+{
+  "3": {
+    "A": "baseline",
+    "B": "candidate"
+  },
+  "5": {
+    "A": "candidate",
+    "B": "baseline"
+  },
+  "12": {
+    "A": "baseline",
+    "B": "candidate"
+  }
+}

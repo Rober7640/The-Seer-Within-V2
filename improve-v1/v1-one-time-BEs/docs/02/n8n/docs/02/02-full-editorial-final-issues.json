@@ -1,0 +1,28 @@
+{
+  "houses": {
+    "2": {
+      "draft": "docs/02/experiment-full_editorial_c-house-2.json",
+      "issues": [
+        "Delete the final paragraph claiming resources remove an excuse or make all remaining constraints a matter of choice. Do not replace it with any assertion about her constraints. Finish with the difference between receiving resources and deciding what to do.",
+        "Delete the paragraph claiming Justice establishes the sum is proportionate or tied to daily labor. Keep Justice as a distinction between what can be counted and what cannot, without inventing valuation, prior work history or official calculation.",
+        "Keep the required first windfall through an existing capacity/holding and replenishment of giving. Explain visibility and recognition clearly without treating reader skepticism as a failure."
+      ]
+    },
+    "7": {
+      "draft": "docs/02/experiment-full_editorial_c-house-7.json",
+      "issues": [
+        "Remove the refusal that the card declines to describe an unconventional attachment or can see only an outer room. Explain the distinction between shared agreement and approval without withholding or declaring public form superior.",
+        "The conclusion must not assert an actual recognized formal bond. Retain the conditional applications and card meaning, and keep the distinction useful for varied relationships."
+      ]
+    },
+    "8": {
+      "draft": "docs/02/experiment-full_editorial_c-house-8.json",
+      "issues": [
+        "Delete the entire cross-reference claim that her tie is already governed by common terms, the money becomes known between her and a man, or she loses privacy. Replace it with an interpretive distinction about chosen commitments versus assumed expectations; do not infer an actual relationship status.",
+        "Delete the entire closing cost paragraph and the line denying injury. Do not imply accepting money binds her to terms, changes disclosure obligations or forces closure.",
+        "Keep only the required forecast: second windfall through an intermediary associated with something concluding; the added resource gives more freedom in romantic choices. Explain the meaning of transition and independent choice without adding procedure, obligations, private history or predicted emotions.",
+        "The source ending is a tarot meaning, not evidence of a legal arrangement or irrevocable personal decision. No new guarantees, private facts or moral lesson about how she must react."
+      ]
+    }
+  }
+}

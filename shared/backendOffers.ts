@@ -27,7 +27,7 @@
 // Trackdesk branch defaults an unrecognised product to conversionType 'sale', which
 // would book a backend reading as a main-funnel affiliate sale.
 
-export type BackendOfferKey = 'twin-flame' | 'judgement-day' | 'pixiu-bracelet';
+export type BackendOfferKey = 'twin-flame' | 'judgement-day' | 'pixiu-bracelet' | 'marcus-daily';
 
 /** Which of the two booking treatments sold it — decides where a cancel returns to. */
 export type BookingTreatment = 'page' | 'chat';
@@ -79,11 +79,59 @@ export const PIXIU_BRACELET_BUMP_PRODUCT_KEY = 'closed_purse';
  */
 export const BACKEND_PWYW_MAX_CENTS = 100_000;
 
+// 07 — Marcus Daily Tarot. ⭐ The deck's first RECURRING offer, and its first TIERED one.
+//
+// ⛔ 07-C5, locked 2026-09-04: a rung is HOW MANY OF HER QUESTIONS Marcus answers off one
+//    morning's cut. It is NEVER a quantity of our cards. The keys are unchanged from the
+//    old block ladder on purpose — Stripe, `be_orders.tier` and every test already read
+//    'spread' / 'pattern' / 'table'. Only what they MEAN changed.
+//
+// 🔴 THE LADDER IS DEFINED IN improve-v1/v1-one-time-BEs/scripts/07-spreads.json
+//    (`tier_model.tiers`). These constants are a second copy, because shared/ is bundled
+//    into the browser and cannot read a build script's JSON. `check-07-registry.mjs`
+//    asserts the two agree — if you change a price here, that check fails until the
+//    registry matches, which is the point.
+export const MARCUS_DAILY_TIER_CENTS = {
+  spread: 3500,
+  pattern: 5700,
+  table: 8700,
+} as const;
+
+// ⛔ n8n exact-matches this string (node 4 tests `o.bump_product_key === 'marcus_same_day'`).
+export const MARCUS_DAILY_BUMP_PRODUCT_KEY = 'marcus_same_day';
+export const MARCUS_DAILY_BUMP_CENTS = 1277;
+
 // ─── The catalog ───────────────────────────────────────────────────────────────
+
+/** 07's rungs. ⛔ The key is what the browser may send; the price is looked up here. */
+export type BackendTier = 'spread' | 'pattern' | 'table';
+
+export const BACKEND_TIER_ORDER: readonly BackendTier[] = ['spread', 'pattern', 'table'];
+
+export function isBackendTier(value: unknown): value is BackendTier {
+  return value === 'spread' || value === 'pattern' || value === 'table';
+}
+
+export interface BackendTierListing {
+  /** What Stripe shows her for this rung. */
+  label: string;
+  /** ⭐ 07-C5: how many of HER questions this rung answers. 1, 2 or 3. */
+  questions: number;
+  priceCents: number;
+}
 
 export type BackendPricing =
   | { model: 'fixed'; priceCents: number }
-  | { model: 'pwyw'; minCents: number; maxCents: number };
+  | { model: 'pwyw'; minCents: number; maxCents: number }
+  /**
+   * ⭐ One offer, several prices, chosen by a NAMED RUNG.
+   *
+   * 🔴 This exists so the browser can pick a price WITHOUT sending one. It posts
+   * `tier: 'pattern'`; the cents are looked up here, server-side, exactly as a fixed
+   * offer's are. ⛔ Never widen this to accept an amount — that is the one security rule
+   * this file has, and a tiered offer is the easiest place to lose it.
+   */
+  | { model: 'tiered'; tiers: Record<BackendTier, BackendTierListing> };
 
 export interface BackendOfferBump {
   /** ⛔ n8n exact-matches this. Add keys; never rename one. */
@@ -96,7 +144,7 @@ export interface BackendOfferBump {
 export interface BackendOffer {
   key: BackendOfferKey;
   /** The deck's number, as every doc cites it. */
-  number: '02' | '03' | '06';
+  number: '02' | '03' | '06' | '07';
   /** What Stripe shows her at checkout. */
   stripeName: string;
   stripeDescription: string;
@@ -247,6 +295,50 @@ export const BACKEND_OFFER_CATALOG: Record<BackendOfferKey, BackendOffer> = {
     // deliberately separate so it can be dropped from the prod PR.
     readyForMoney: true,
   },
+
+  // ⭐ 07 — Marcus Daily Tarot. The deck's first RECURRING offer: what she buys is not
+  // "the offer", it is ONE MORNING'S CUT at one rung, against a question she typed.
+  // That is why `be_orders` carries spread_key / draw_date / tier / topic / question.
+  'marcus-daily': {
+    key: 'marcus-daily',
+    number: '07',
+    stripeName: 'Marcus Daily Tarot',
+    stripeDescription: "Your question, read against this morning's cut.",
+    stripeProduct: 'be_marcus_daily',
+    pricing: {
+      model: 'tiered',
+      tiers: {
+        spread: { label: 'The Spread', questions: 1, priceCents: MARCUS_DAILY_TIER_CENTS.spread },
+        pattern: { label: 'The Second Question', questions: 2, priceCents: MARCUS_DAILY_TIER_CENTS.pattern },
+        table: { label: 'The Third Question', questions: 3, priceCents: MARCUS_DAILY_TIER_CENTS.table },
+      },
+    },
+    bump: {
+      productKey: MARCUS_DAILY_BUMP_PRODUCT_KEY,
+      cents: MARCUS_DAILY_BUMP_CENTS,
+      stripeName: '+ Read first, same morning',
+    },
+    // ⚠ Placeholder. The 07 booking page is still a static mockup in
+    // copy/07-marcus/07-C1-booking-page-h2.html whose CTA ends in alert("[mockup] →
+    // Stripe"); there is no route in client/ yet. `readyForMoney: false` is what
+    // actually stops a sale, so these paths cannot strand a buyer today.
+    bookingPath: {
+      page: '/marcus/daily',
+      chat: '/marcus/daily/chat',
+    },
+    successPath: '/marcus/daily/success',
+    //
+    // 🔴 FALSE, and it is not close. Three separate reasons, any one sufficient:
+    //   1. No booking page exists as a route — the chosen design is a mockup.
+    //   2. NOTHING WRITES THE INTAKE COLUMNS. Without spread_key / draw_date / tier /
+    //      question on the order, fulfilment cannot know which cards she bought or what
+    //      she asked, and the fulfilment endpoint answers 409 rather than guessing. A
+    //      guessed tier is a reading she did not buy; a guessed spread is the wrong cards.
+    //   3. n8n has never been proved against a spread in the current registry — the
+    //      dry-run fixture names all seven RETIRED spreads. See check-07-registry.mjs.
+    // ⛔ Flip this in the same commit that closes all three, never before.
+    readyForMoney: false,
+  },
 };
 
 /** ⛔ Every backend Stripe product starts with this, and nothing else in the repo does. */
@@ -333,6 +425,14 @@ export interface BackendChargeRequest {
   bump?: boolean;
   /** Pay-what-you-want offers only. Ignored entirely on a fixed-price offer. */
   amountCents?: number | null;
+  /**
+   * Tiered offers only — the RUNG she picked, by name.
+   *
+   * ⛔ A tier KEY from the browser is fine; a tier PRICE is not. The cents are looked
+   * up from the catalog, so the worst a tampered request can do is buy a different
+   * rung at that rung's real price.
+   */
+  tier?: unknown;
 }
 
 export interface BackendChargeLine {
@@ -345,6 +445,12 @@ export type BackendChargeResult =
   | {
       ok: true;
       offer: BackendOffer;
+      /**
+       * Tiered offers only — the rung that was actually priced.
+       * ⭐ Returned so the checkout writes `be_orders.tier` from what the SERVER decided,
+       * never from what the browser said. Undefined on fixed and pay-what-you-want.
+       */
+      tier?: BackendTier;
       /** What the reading itself costs — the fixed price, or what she chose to give. */
       readingCents: number;
       /** 0 when she did not take the bump. */
@@ -360,7 +466,9 @@ export type BackendChargeResult =
         | 'not_ready'
         | 'amount_missing'
         | 'amount_below_floor'
-        | 'amount_too_large';
+        | 'amount_too_large'
+        | 'tier_missing'
+        | 'tier_unknown';
       message: string;
     };
 
@@ -403,9 +511,30 @@ export function priceBackendOffer(
   req: Omit<BackendChargeRequest, 'offer'>,
 ): BackendChargeResult {
   let readingCents: number;
+  let tier: BackendTier | undefined;
 
   if (offer.pricing.model === 'fixed') {
     readingCents = offer.pricing.priceCents;
+  } else if (offer.pricing.model === 'tiered') {
+    // ⛔ THE ONE SECURITY RULE, on the model most likely to lose it. The request may
+    //    name a rung; the price comes from the catalog. `req.tier` is typed `unknown`
+    //    on purpose so it cannot be used without being validated first.
+    if (req.tier === null || req.tier === undefined || req.tier === '') {
+      return {
+        ok: false,
+        code: 'tier_missing',
+        message: 'Please choose how many questions you would like answered.',
+      };
+    }
+    if (!isBackendTier(req.tier)) {
+      return {
+        ok: false,
+        code: 'tier_unknown',
+        message: 'Please choose how many questions you would like answered.',
+      };
+    }
+    tier = req.tier;
+    readingCents = offer.pricing.tiers[tier].priceCents;
   } else {
     const given = req.amountCents;
     if (given === null || given === undefined || !Number.isFinite(given)) {
@@ -448,7 +577,11 @@ export function priceBackendOffer(
 
   const lines: BackendChargeLine[] = [
     {
-      name: offer.stripeName,
+      // ⭐ On a tiered offer the rung IS the product she chose, so it goes on the
+      //    receipt. "Marcus Daily Tarot" alone would make $35 and $87 look identical.
+      name: tier
+        ? `${offer.stripeName} — ${(offer.pricing as { tiers: Record<BackendTier, BackendTierListing> }).tiers[tier].label}`
+        : offer.stripeName,
       description: offer.stripeDescription,
       amountCents: readingCents,
     },
@@ -460,6 +593,7 @@ export function priceBackendOffer(
   return {
     ok: true,
     offer,
+    ...(tier ? { tier } : {}),
     readingCents,
     bumpCents,
     totalCents: readingCents + bumpCents,

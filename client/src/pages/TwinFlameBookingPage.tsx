@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { CosmicBackground } from '@/components/CosmicBackground'
-import { bookingFirstName } from '@/lib/funnel'
+import { bookingFirstName, bookingLetterCode } from '@/lib/funnel'
 import { track as trackPH } from '@/lib/posthog'
 import { beginBackendCheckout } from '@/lib/backendCheckout'
 import {
@@ -59,6 +59,8 @@ export default function TwinFlameBookingPage() {
   // is HER voice and never addresses her — but checkout carries it into Stripe metadata
   // so every screen after the money greets her properly.
   const firstName = useMemo(() => bookingFirstName(), [])
+  // The letter's ?c= — which sales letter she came from. Rides to Stripe beside the name.
+  const letterCode = useMemo(() => bookingLetterCode(), [])
 
   // The order bump is inline on this treatment, so it is "offered" the moment the
   // page renders. Mirrors fb-read's `bump_offered` exposure so the two funnels line
@@ -96,6 +98,7 @@ export default function TwinFlameBookingPage() {
       treatment: 'page',
       bump: bumpTaken,
       firstName,
+      letterCode,
     })
     if (result.status === 'error') setCheckoutError(result.message)
     // 'redirecting' deliberately leaves the button disabled — the tab is on its way out,

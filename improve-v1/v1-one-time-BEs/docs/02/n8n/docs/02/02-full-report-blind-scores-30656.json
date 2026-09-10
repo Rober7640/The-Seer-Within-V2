@@ -1,0 +1,12 @@
+{
+  "scores": {
+    "readability": 6,
+    "trust": 7,
+    "humanness": 5,
+    "relevance": 6,
+    "continue": 5,
+    "recommend": 5
+  },
+  "decision": "revise",
+  "limitations": "Simulated blind editorial review of all 37 buyer-PDF pages, not customer feedback or NPS. All-page rendered contact sheet and selected individual pages inspected. Cannot verify draw, predictions, buyer circumstances, or demographic response."
+}

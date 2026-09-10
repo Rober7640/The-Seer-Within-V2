@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useRef } from 'react'
 import { CosmicBackground } from '@/components/CosmicBackground'
-import { bookingFirstName } from '@/lib/funnel'
+import { bookingFirstName, bookingLetterCode } from '@/lib/funnel'
 import { track as trackPH } from '@/lib/posthog'
 import { beginBackendCheckout } from '@/lib/backendCheckout'
 import {
@@ -106,6 +106,8 @@ export default function TwinFlameBookingChat() {
   // The letter's ?fn=, read once. Carried into Stripe metadata so every screen after
   // the money can greet her by name.
   const firstName = useMemo(() => bookingFirstName(), [])
+  // The letter's ?c= — which sales letter she came from. Rides to Stripe beside the name.
+  const letterCode = useMemo(() => bookingLetterCode(), [])
 
   const allChecked = checked.every(Boolean)
 
@@ -205,6 +207,7 @@ export default function TwinFlameBookingChat() {
       treatment: 'chat',
       bump: taken,
       firstName,
+      letterCode,
     })
     if (result.status === 'error') setCheckoutError(result.message)
     // 'redirecting' leaves it disabled — the tab is on its way to Stripe, and a

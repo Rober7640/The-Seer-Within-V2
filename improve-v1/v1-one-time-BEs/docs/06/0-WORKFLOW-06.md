@@ -397,3 +397,32 @@ stripping a one-line H2 like this — it fell through to the generic paragraph c
 behaves. This is a shared-script fix, not offer-06-specific — confirmed present in and fixed across
 all 4 letters that carry this line (`close-c`, the Aiden variant, `kaucim`, `iching`); re-rendered
 all 4 and verified zero `##` leaks remain, with the real P.S. paragraph still rendering correctly.
+
+**Image hosting check, 2026-09-04.** Confirmed every image the Aiden letter references (12 shared
+pixiu crops/materials + `aiden/aiden-avatar.png`) is already live on S3 — nothing needed uploading.
+While checking, found close-c's two full-bleed images (`06-pixiu-gen-pencil.jpg` at 1080×864,
+`06-pixiu-product-angle-fixed.jpg` at 1080×1080 — the anatomy reference and the product-angle shot,
+both displayed at `max-width:540px` so 1080px is correct for retina) were sitting at 314 KB and 179
+KB — `sips`'s own quality flag doesn't meaningfully recompress a JPEG, so used Python
+PIL (`quality=80, optimize=True, progressive=True`) instead: 314→197 KB and 179→105 KB, no visible
+quality loss at review size. Re-uploaded to the same S3 keys via `host-be-asset.cjs file`. Both
+close-c and the Aiden variant reference these same keys, so both letters picked up the smaller
+files automatically. The other 10 images (the small crops, already 19–25 KB at 240px) were already
+sized correctly and left alone.
+
+**`-SEND.html` siblings, 2026-09-04.** `render-be-esl-preview.mjs` always bakes a purple "PREVIEW
+ONLY" banner + a `PREVIEW — ` title prefix into its output, by design (see the script's own
+header) — so `*-PREVIEW.html` must never be pasted into AWeber as-is. Made `06-E2-esl-AIDEN-close-
+c-SEND.html` and `06-E2-esl-product-creature-a-close-c-SEND.html`: the same PREVIEW output with
+only those two things stripped (banner div + unused `.previewbar` CSS + title prefix), diffed
+against the PREVIEW files to confirm nothing else moved. These are hand-stripped, not
+script-generated — re-run the strip (or regenerate) if either letter's copy changes again.
+
+**Real booking URL wired in, 2026-09-04.** `{{BOOKING_URL}}` → `https://theseerwithin.com/offers
+/wiccan/pixiu-bracelet` in both `close-c` and the Aiden variant's `.md` source (the actual links,
+`?c=1..3`, plus each file's frontmatter Links row) — left the one historical mention inside
+close-c's Build notes (line ~411) as `{{BOOKING_URL}}` since it's describing past state, not a live
+link, and Build notes never reach rendered output anyway. Re-ran `render-be-esl-preview.mjs` on
+both (source is the source of truth) and re-stripped fresh `-SEND.html` siblings from the new
+output. `kaucim` and `iching` still carry the `{{BOOKING_URL}}` placeholder — not in scope this
+round, same real URL applies whenever those go next.

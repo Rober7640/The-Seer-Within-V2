@@ -1,0 +1,113 @@
+<!DOCTYPE html><html><head><meta charset="utf-8">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600&display=swap">
+<style>
+  @page { size: Letter; margin: 0; }
+  * { -webkit-print-color-adjust: exact; print-color-adjust: exact; box-sizing: border-box; }
+  body { font-family: Georgia, 'Times New Roman', serif; color:#24262E; margin:0;
+         font-size:11.5pt; line-height:1.62; }
+  h1, h2, .display { font-family: Fraunces, Georgia, serif; font-weight:600; }
+
+  /* ── page 1 · the cover ─────────────────────────────────────────────────── */
+  .cover { position:relative; width:8.5in; height:11in; overflow:hidden;
+           page-break-after:always; background:#1B1D22; }
+  .cover img { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; }
+  .cover .scrim { position:absolute; left:0; right:0; bottom:0; height:5.2in;
+    background:linear-gradient(to bottom, rgba(20,18,15,0) 0%, rgba(20,18,15,.72) 42%,
+                                          rgba(20,18,15,.93) 100%); }
+  .cover .type { position:absolute; left:0.85in; right:0.85in; bottom:0.9in; color:#FBF8F1; }
+  .cover .eyebrow { font-family:Helvetica,Arial,sans-serif; font-size:8.5pt;
+    letter-spacing:.24em; text-transform:uppercase; color:#E4D4B0; margin:0 0 10pt; }
+  .cover h1 { font-size:40pt; line-height:1.02; margin:0 0 12pt; letter-spacing:-.01em; }
+  .cover .sub { font-size:12pt; margin:0; color:#E8E2D6; }
+  .cover .sub b { font-weight:400; color:#FBF8F1; }
+
+  /* ── page 2 · what she asked, then the opening ──────────────────────────── */
+  .inner { padding: 0.85in 0.9in 0.9in; }
+  .intake { border:1pt solid #DED4BE; background:#FAF7F0; padding:16pt 18pt;
+            margin:0 0 24pt; page-break-inside:avoid; }
+  .intake .k { font-family:Helvetica,Arial,sans-serif; font-size:7.5pt; letter-spacing:.18em;
+    text-transform:uppercase; color:#8A8377; margin:0 0 7pt; }
+  .intake blockquote { margin:0 0 14pt; font-size:12.5pt; line-height:1.5; font-style:italic;
+    border-left:2pt solid #A8721C; padding-left:12pt; }
+  .facts { display:table; width:100%; border-top:1pt solid #E8DFCB; padding-top:11pt; }
+  .facts div { display:table-cell; font-family:Helvetica,Arial,sans-serif; font-size:8.5pt;
+    color:#6E6A62; line-height:1.45; }
+  .facts b { display:block; font-size:7.5pt; letter-spacing:.16em; text-transform:uppercase;
+    color:#A8721C; font-weight:bold; margin-bottom:3pt; }
+
+  .opening { margin-bottom:26pt; }
+  .opening p:first-child { font-size:13.5pt; line-height:1.5; }
+  .opening p:first-child::first-letter { float:left; font-family:Fraunces, Georgia, serif;
+    font-size:44pt; line-height:.84; padding:4pt 7pt 0 0; color:#A8721C; font-weight:600; }
+
+  /* ── the positions ──────────────────────────────────────────────────────── */
+  section { page-break-inside:avoid; margin-bottom:30pt; overflow:hidden; }
+  section h2 { font-size:15pt; line-height:1.25; margin:0 0 12pt; color:#1B1D22;
+               letter-spacing:-.005em; }
+  section h2 .n { font-family:Helvetica,Arial,sans-serif; font-size:8.5pt; font-weight:bold;
+    letter-spacing:.14em; color:#A8721C; vertical-align:.32em; margin-right:10pt; }
+  section figure { float:left; width:1.6in; margin:2pt 18pt 8pt 0; }
+  section figure img { width:100%; display:block; border:1pt solid #DDD6C6; }
+  section figcaption { font-family:Helvetica,Arial,sans-serif; font-size:7pt;
+    letter-spacing:.13em; text-transform:uppercase; color:#8A8377; margin-top:5pt;
+    text-align:center; line-height:1.4; }
+  p { margin:0 0 9pt; }
+
+  /* ── the last page ──────────────────────────────────────────────────────── */
+  .colophon { page-break-inside:avoid; page-break-before:avoid; margin-top:22pt;
+              border-top:1pt solid #DED4BE; padding-top:12pt; }
+  .colophon p { font-size:9pt; line-height:1.55; color:#7C776D; margin:0 0 7pt; }
+  .colophon .sig { font-family:Fraunces, Georgia, serif; font-size:11pt; color:#24262E; }
+</style></head><body>
+  <div class="cover">
+    <img src="https://luna-assets-tsw.s3.ap-southeast-2.amazonaws.com/marcus/07-cover-the-two-doors.jpg" alt="">
+    <div class="scrim"></div>
+    <div class="type">
+      <p class="eyebrow">Marcus Stone &middot; The Seer Within</p>
+      <h1>The Two Doors</h1>
+      <p class="sub">Cut on 3 September 2026 &nbsp;&middot;&nbsp; read for <b>Sarah</b></p>
+    </div>
+  </div>
+  <div class="inner">
+    <div class="intake">
+      <p class="k">What Sarah asked</p>
+      <blockquote>Have I already met my soulmate?</blockquote>
+      <div class="facts">
+        <div><b>The spread</b>The Two Doors</div>
+        <div><b>Cards in it</b>8 &mdash; 2 you saw, 6 you didn't</div>
+        <div><b>You bought</b>The Spread</div>
+      </div>
+    </div>
+    <div class="opening"><p>Sarah. You asked whether you've already met your soulmate. I'll answer it before I explain it, because you paid for an answer and not for suspense.</p><p>The spread says no.</p><p>Soulmate is a word that usually means *the one*, assigned, singular, already in the room. I don't read it that way and these six cards don't either. What they read is doors. Door one is the four years you're standing inside. Door two is the one where you're not. Behind each door I laid three cards — what it costs, what it gives, who you are on the far side of it.</p><p>Maybe you'd call those four years patience. Maybe you'd call it not the right time yet. Maybe you'd call it loving somebody through a rough patch that's now most of a decade long. I'm not picking the word for you. The cards don't need it to do their work.</p><p>Door one first. The bill before the goods.</p></div><section>
+    <h2><span class="n">3</span>Behind door one — what it costs</h2>
+    <figure><img src="https://luna-assets-tsw.s3.ap-southeast-2.amazonaws.com/evelyn/tarot-rws/four-of-swords.jpg" alt="Four of Swords">
+      <figcaption>Four of Swords</figcaption></figure>
+    <div class="prose"><p>A stone knight lying flat on a tomb, hands pressed together. Three swords hang on the wall above him. The fourth is carved into the slab underneath. Nothing in that picture moves.</p><p>Rest is what this card gets called. Here it's the bill. Door one costs you motion. Not the relationship, not the good Sundays — those stay. What goes is you deciding anything. You lie still and let the situation do the deciding, and the situation is in no hurry.</p><p>Four swords. One for each year you've already put down.</p><p>The price of staying is another stretch of exactly this, and the card doesn't show anyone coming to wake him.</p><p>That's what it takes. Here's what it hands back, and I want you to see that it's real before you hear the rest of it.</p></div></section><section>
+    <h2><span class="n">4</span>Behind door one — what it gives</h2>
+    <figure><img src="https://luna-assets-tsw.s3.ap-southeast-2.amazonaws.com/evelyn/tarot-rws/six-of-cups.jpg" alt="Six of Cups">
+      <figcaption>Six of Cups</figcaption></figure>
+    <div class="prose"><p>Two children in a garden. The taller one hands the smaller one a cup with white flowers growing out of it. Five more cups stand around them, filled the same way. There's a house behind, and a figure walking off past the gate.</p><p>Nostalgia is what this card gets called, which makes the gift sound like a trick played on you. It isn't. Door one hands you something real: being known. Six cups of it. The shorthand. Somebody who remembers your father's voice. No catching anybody up, ever again.</p><p>That's the gift and it's not small.</p><p>But everything in that picture has already happened. Staying gives you the past, kept in good condition. The card shows no seventh cup being filled.</p><p>Cost and gift are both on the table now. The third card is the one that asks who's carrying them a year from here.</p></div></section><section>
+    <h2><span class="n">5</span>Behind door one — who she becomes</h2>
+    <figure><img src="https://luna-assets-tsw.s3.ap-southeast-2.amazonaws.com/evelyn/tarot-rws/nine-of-swords.jpg" alt="Nine of Swords">
+      <figcaption>Nine of Swords</figcaption></figure>
+    <div class="prose"><p>Someone sitting up in bed with their face in their hands. Nine swords on the wall behind, stacked flat, one above the other. The blanket's got roses on it. The bed is fine. The room is fine.</p><p>Grief is what this gets called. It isn't. Nobody in that picture has been told anything. This is the mind doing at three in the morning the work you wouldn't let it do at noon.</p><p>That's who door one makes you. Awake at the wrong hour, running the same count.</p><p>Four swords was the price. Nine is what's on the wall by the end. You already know what the extra five are made of, and they're made of nights, not years.</p><p>Door two now. Same three questions, asked colder. And I'll say up front that the first card behind it is not a kind one.</p></div></section><section>
+    <h2><span class="n">6</span>Behind door two — what it costs</h2>
+    <figure><img src="https://luna-assets-tsw.s3.ap-southeast-2.amazonaws.com/evelyn/tarot-rws/five-of-pentacles.jpg" alt="Five of Pentacles">
+      <figcaption>Five of Pentacles</figcaption></figure>
+    <div class="prose"><p>Two figures in snow. One on crutches, one wrapped in a shawl with holes in it. Above them a lit window, five pentacles set in the glass, warm inside. Neither one looks up at it.</p><p>Poverty is what this gets called. Not here. Here it's the walking past. Door two costs you the warm room you can still see — the flat, the two incomes, the people who were his before they were yours and go back to being his. You'll pass all of it lit up and keep walking.</p><p>And the card puts somebody else in the snow beside you. Leaving doesn't make you the only one out there.</p><p>Cold, and specific, and survivable. That's the bill.</p><p>Snow doesn't sound like a gift. But the next card is what's held out in the middle of it, and it's the one that speaks straight to what you asked me.</p></div></section><section>
+    <h2><span class="n">7</span>Behind door two — what it gives</h2>
+    <figure><img src="https://luna-assets-tsw.s3.ap-southeast-2.amazonaws.com/evelyn/tarot-rws/ace-of-wands.jpg" alt="Ace of Wands">
+      <figcaption>Ace of Wands</figcaption></figure>
+    <div class="prose"><p>A hand comes out of a cloud holding a branch. Green leaves still on it, one or two falling. Far off there's a castle on a hill, and nothing at all between the hand and the hill.</p><p>New beginnings is what this card gets called, which tells you nothing. It's narrower. The Ace of Wands is one live thing held out, once, and it only counts if you close your fingers on it.</p><p>That's the gift behind door two. Not a person waiting. The wanting itself, back in your hands — the appetite that moves before you've argued yourself into anything.</p><p>Nobody in that picture is holding the other end of the branch.</p><p>On your question, this card says the meeting is not behind you.</p><p>And the last card is the one that says what you'd be, standing there, when it happens.</p></div></section><section>
+    <h2><span class="n">8</span>Behind door two — who she becomes</h2>
+    <figure><img src="https://luna-assets-tsw.s3.ap-southeast-2.amazonaws.com/evelyn/tarot-rws/the-star.jpg" alt="The Star">
+      <figcaption>The Star</figcaption></figure>
+    <div class="prose"><p>A woman kneeling at the edge of a pool, no clothes on her at all. One foot in the water, one on the ground. Two jugs — she's pouring one back into the pool, the other out onto the earth. Eight stars over her head. One large, seven small. A bird in the tree behind.</p><p>Hope is what this card gets called. Look at her instead. Nothing covered, nothing held back, both jugs tipped.</p><p>That's who door two makes you. Unarmoured. Pouring out again in front of somebody without first working out what it'll cost.</p><p>Five pentacles was the cold. This is after.</p><p>The Star sits in the position that answers you, and it says the meeting is ahead of you, not behind.</p><p>So: six cards, two doors. One door ends with nine swords on the wall and a woman awake at three. The other ends with a woman kneeling by water with both jugs tipped over. Neither of them shows a man's face, because I don't read men, I read cards.</p><p>The Star isn't a promise that somebody arrives. It's a description of who's standing there when they do — open, unguarded, out of the habit of counting. You don't have to hate the four years to be finished with them. You don't have to make him wrong to walk.</p><p>Doors don't move because somebody wanted them to. You open one.</p></div></section>
+    <div class="colophon">
+      <p>The cards in this reading are the cut I laid on 3 September 2026. The writing is
+      assisted &mdash; I use a machine to help me put the reading into words. The draw is real
+      and it is yours.</p>
+      <p class="sig">Marcus</p>
+    </div>
+  </div>
+</body></html>

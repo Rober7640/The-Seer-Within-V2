@@ -1,90 +1,51 @@
-# 07 Marcus Daily Tarot — copy
+# 07 Marcus Daily Tarot — the art
 
-**Read this first.** The deck's seventh offer and its **first recurring one** — 02–06 are one-off
-event letters, 07 is a daily email programme. Everything here serves one mechanic.
+Two things: the headshot, and how a day's photographs get into an email.
 
-> ⭐ **The email lays the opening of a spread. Her question turns the rest over.**
+## The masthead headshot
 
-| Want to… | Go to |
-|---|---|
-| Understand the whole offer | [`spec`](../../../docs/superpowers/specs/2026-09-02-marcus-daily-tarot-design.md) — funnel, list, warm-up ramp, n8n, risks |
-| Write a daily email | **This file**, then [`07-P1`](./07-P1-the-seven-spreads.md), then the day's slot below |
-| See the spreads at a glance | [`07-P1-preview.html`](./07-P1-preview.html) · [published](https://claude.ai/code/artifact/e9cf4176-0069-48b3-bb3f-d19bef380310) |
-| See what the market does | [`docs/07-marcus/market-research.md`](../../docs/07-marcus/market-research.md) — competitors, pricing, intake, disclosure |
-| Write a sentence | [`07-P2`](./07-P2-the-device-set.md) — the device set |
-| Check a draft | `node scripts/copy-check.cjs copy/07-marcus` |
+`marcus/07-headshot-v1.jpg`. Four candidates were cut, `plain` was chosen —
+[`assets/07-headshot-candidates.png`](../../assets/07-headshot-candidates.png), sources at
+`assets/07-headshot-{plain,hands,table}.png`.
 
-## State
+Re-cut with `scripts/make-07-headshot.py`.
 
-| Asset | State |
-|---|---|
-| [`07-P1`](./07-P1-the-seven-spreads.md) the seven spreads | ✅ written — **every position is a contract** |
-| [`daily/07-D-tue-two-doors`](./daily/07-D-tue-two-doors.md) | ✅ **the conformant worked example.** Copy its shape |
-| [`daily/07-D7-hard-sunday`](./daily/07-D7-hard-sunday.md) | ⚠ pre-roster. Voice/recap/precedent/P.S. good, cards need relaying to houses |
-| Mon · Wed · Thu · Fri · Sat dailies | ☐ not started |
-| Booking page · bump · thank-you · confirmation · delivery | ☐ not started |
-| `docs/07-marcus/0-WORKFLOW-07.md` | ☐ not copied from the master yet |
+## How the photographs are wired
 
-## The rules a daily email must not break
+**Two images per email, both cut from the same picture.** That is the point — the old
+`marcus/07-hero-*` and `07-down-*` were a separate shoot on a different table with a different
+deck, so one email showed two decks.
 
-1. **Read only your own face-up positions.** The paid ones are not yours to describe. `07-P1` says
-   which are which, per day.
-2. **Every email pitches.** No exceptions, no give-day. She reads Tuesday, not the week — at ~25%
-   opens most people never see Sunday, so a product named only on Sunday is one most of the list
-   never hears about.
-3. **The pitch is written out of that day's cards.** ⛔ Never boilerplate. Constant: how many are
-   down, how many aren't, and that the rest need her question. Everything else is fresh.
-4. ⛔ **No price, no delivery promise, ever.** 02's letter carries neither — they live on the
-   booking page, statements 5 and 6. `copy-check` now enforces this on any `-D-` file.
-5. ⛔ **The first CTA comes after the WHOLE free read**, not after the first card. `00e` beat 11.
-6. **Written to [`02-E2`](../02/02-E2-esl-v1.md), not to the framework.** Face-down hero · a
-   withhold on *each* card naming what it can't say and the count that resolves it · a stated big
-   idea · a precedent · flat claims · CTAs as sentences with permission verbs.
-4. **The ask is card-specific.** *"What would you put to the Devil?"* — never *"what's your
-   question?"*
-5. **She reads at 6am ET** (6pm SGT send). Narrating a night-time read is a 12-hour miss.
-   Card art described as painted, and quoted speech, are exempt.
-6. **Strip-the-CTA test.** Remove the invitation — is it still worth having read? On a daily to
-   76k this is the bar that keeps the list alive.
-7. ⛔ **Every image shows the act as already done.** The hero is a PHOTOGRAPH of cards lying on a
-   real table — evidence that the cut happened. A flat graphic proves nothing. Card *artwork* is
-   the RWS scan; a card *on a table* is a photograph. See [`07-P2`](./07-P2-the-device-set.md).
-8. **Picture before meaning.** Say what is *on* the card, then what it means. She is looking at it.
-9. **Marcus's voice.** First person, direct, archetypal, plain-spoken. Contractions. No "dear" —
-   that is Evelyn's. No aphorisms, no balanced clauses, no appositive tails.
-10. **CTA is a text link** (*"Send Marcus your question"*); the line above it is not.
-11. **Link carries `&s=<spread>`.** ⛔ Never derive the spread from the clock — she may click
-    Tuesday 11pm ET, which is Wednesday in SGT.
+| Beat | Image | Caption it has to satisfy |
+|---|---|---|
+| 1 · hero | `marcus/07-spread-<day>.jpg` | *The cut, this morning — N turned, M not* |
+| 10 · withhold | `marcus/07-down-<day>.jpg`, a crop of the face-down cards only | *These N are still in my hand* |
 
-## ⛔ Two decisions the market research reopened *(2026-09-02)*
+⛔ **The caption states what the picture actually shows.** The hero once read *"One off the cut —
+not yet turned"*, written for art showing only face-down cards. The photograph shows the free card
+already turned, so the line contradicted its own picture. The replacement states the two counts the
+pitch runs on.
 
-1. **The question box sits before payment.** Market research says *"pay first, ask second,
-   universally"* — a buyer who stalls at the intake having paid can be emailed back; one who stalls
-   before paying is gone. A two-step page (Agree, then Give) keeps the CTA's promise and still takes
-   the money first. Awaiting an operator call.
-2. **"No sugarcoating" is a crowded position**, used by a third of ~150 profiles sampled. Marcus's
-   register leans on it. Not wrong, but no longer a differentiator.
+⛔ **Every image shows the act as already done.** The hero is a photograph of cards on a real table
+— evidence the cut happened. A flat graphic proves nothing. Card *artwork* is the RWS scan; a card
+*on a table* is a photograph.
 
-## Settled — do not re-open
+⛔ **Only Rider-Waite.** A reversed minor has no scan and 404s.
 
-- **Sunday reuses BE-02's Zodiac Spread, by name.** Audiences don't overlap. ⚠ The spread is shared,
-  **the sentences are not** — 02's house assignments are a contract with 02's letters.
-- **The bump is an expansion**, ~1,000 → ~3,000 words, $12.77. Differs by **scope, not withholding**:
-  the long one reads what the same draw touched that she didn't think to ask. ⛔ Never "full",
-  "complete" or "unabridged" — nothing may make $35 sound partial.
-- **No upsells. No chat handoff.** `/marcus` is not linked from the daily or the report.
-- **Floor of 6** on any paid spread, because the price is flat.
-- **n8n regenerates once on a failed grade, then sends anyway.** Operator's call, with the grader
-  log as the mitigation.
+Rebuild and rewire with:
 
-## Before anything sends
+```
+python3 scripts/optimize-07-art.py                       # photographs -> assets/email/
+node improve-v1/v1-one-time-BEs/scripts/host-be-asset.cjs file <src> marcus/<key>
+python3 scripts/wire-07-art.py                           # point the .html at them (idempotent)
+python3 scripts/preview-07-daily.py                      # rebuild the -preview.html twins
+```
 
-⛔ **One blocker, invisible when reading the HTML: the from-name and from-address** are set on
-AWeber list `6960130`, not in any file. Both prior sends to these people went out as **Evelyn**.
+⚠ Steps 3 and 4 have no targets right now — `copy/07-marcus/daily/` was cleared, so there are no
+`.html` letters to wire art into until new ones are built.
 
-✅ *Not* a blocker: `aweber.com/z/r/?ThisIsATestEmail` is AWeber's own placeholder, rewritten per
-subscriber at send — Evelyn's live sends carry the identical markup. Don't "fix" it.
-
-And the list is **dormant, not warm** — two sends ever, ~87 days ago, ~41k of the 76,718 never
-mailed at all. Spec §9 has the four-phase ramp and the complaint stop rule. It shares a sending
-domain with Evelyn's live thirteen-list programme.
+💰 **The card scans are the heaviest thing left**, not the photographs. Live at
+`evelyn/tarot-rws/` they run 93–132KB each for a 350×600 image shown at 200px; the same source
+re-encoded is ~59KB. That is an encoder difference, not a resolution one — ⛔ do not upscale, they
+are only 350px native. Worth ~670KB across a week, but that prefix may be referenced by mail
+already sent, so it is an operator call, not a build step.

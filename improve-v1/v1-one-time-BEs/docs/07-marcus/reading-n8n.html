@@ -1,0 +1,113 @@
+<!DOCTYPE html><html><head><meta charset="utf-8">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600&display=swap">
+<style>
+  @page { size: Letter; margin: 0; }
+  * { -webkit-print-color-adjust: exact; print-color-adjust: exact; box-sizing: border-box; }
+  body { font-family: Georgia, 'Times New Roman', serif; color:#24262E; margin:0;
+         font-size:11.5pt; line-height:1.62; }
+  h1, h2, .display { font-family: Fraunces, Georgia, serif; font-weight:600; }
+
+  /* ── page 1 · the cover ─────────────────────────────────────────────────── */
+  .cover { position:relative; width:8.5in; height:11in; overflow:hidden;
+           page-break-after:always; background:#1B1D22; }
+  .cover img { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; }
+  .cover .scrim { position:absolute; left:0; right:0; bottom:0; height:5.2in;
+    background:linear-gradient(to bottom, rgba(20,18,15,0) 0%, rgba(20,18,15,.72) 42%,
+                                          rgba(20,18,15,.93) 100%); }
+  .cover .type { position:absolute; left:0.85in; right:0.85in; bottom:0.9in; color:#FBF8F1; }
+  .cover .eyebrow { font-family:Helvetica,Arial,sans-serif; font-size:8.5pt;
+    letter-spacing:.24em; text-transform:uppercase; color:#E4D4B0; margin:0 0 10pt; }
+  .cover h1 { font-size:40pt; line-height:1.02; margin:0 0 12pt; letter-spacing:-.01em; }
+  .cover .sub { font-size:12pt; margin:0; color:#E8E2D6; }
+  .cover .sub b { font-weight:400; color:#FBF8F1; }
+
+  /* ── page 2 · what she asked, then the opening ──────────────────────────── */
+  .inner { padding: 0.85in 0.9in 0.9in; }
+  .intake { border:1pt solid #DED4BE; background:#FAF7F0; padding:16pt 18pt;
+            margin:0 0 24pt; page-break-inside:avoid; }
+  .intake .k { font-family:Helvetica,Arial,sans-serif; font-size:7.5pt; letter-spacing:.18em;
+    text-transform:uppercase; color:#8A8377; margin:0 0 7pt; }
+  .intake blockquote { margin:0 0 14pt; font-size:12.5pt; line-height:1.5; font-style:italic;
+    border-left:2pt solid #A8721C; padding-left:12pt; }
+  .facts { display:table; width:100%; border-top:1pt solid #E8DFCB; padding-top:11pt; }
+  .facts div { display:table-cell; font-family:Helvetica,Arial,sans-serif; font-size:8.5pt;
+    color:#6E6A62; line-height:1.45; }
+  .facts b { display:block; font-size:7.5pt; letter-spacing:.16em; text-transform:uppercase;
+    color:#A8721C; font-weight:bold; margin-bottom:3pt; }
+
+  .opening { margin-bottom:26pt; }
+  .opening p:first-child { font-size:13.5pt; line-height:1.5; }
+  .opening p:first-child::first-letter { float:left; font-family:Fraunces, Georgia, serif;
+    font-size:44pt; line-height:.84; padding:4pt 7pt 0 0; color:#A8721C; font-weight:600; }
+
+  /* ── the positions ──────────────────────────────────────────────────────── */
+  section { page-break-inside:avoid; margin-bottom:30pt; overflow:hidden; }
+  section h2 { font-size:15pt; line-height:1.25; margin:0 0 12pt; color:#1B1D22;
+               letter-spacing:-.005em; }
+  section h2 .n { font-family:Helvetica,Arial,sans-serif; font-size:8.5pt; font-weight:bold;
+    letter-spacing:.14em; color:#A8721C; vertical-align:.32em; margin-right:10pt; }
+  section figure { float:left; width:1.6in; margin:2pt 18pt 8pt 0; }
+  section figure img { width:100%; display:block; border:1pt solid #DDD6C6; }
+  section figcaption { font-family:Helvetica,Arial,sans-serif; font-size:7pt;
+    letter-spacing:.13em; text-transform:uppercase; color:#8A8377; margin-top:5pt;
+    text-align:center; line-height:1.4; }
+  p { margin:0 0 9pt; }
+
+  /* ── the last page ──────────────────────────────────────────────────────── */
+  .colophon { page-break-inside:avoid; page-break-before:avoid; margin-top:22pt;
+              border-top:1pt solid #DED4BE; padding-top:12pt; }
+  .colophon p { font-size:9pt; line-height:1.55; color:#7C776D; margin:0 0 7pt; }
+  .colophon .sig { font-family:Fraunces, Georgia, serif; font-size:11pt; color:#24262E; }
+</style></head><body>
+  <div class="cover">
+    <img src="https://luna-assets-tsw.s3.ap-southeast-2.amazonaws.com/marcus/07-cover-the-two-doors.jpg" alt="">
+    <div class="scrim"></div>
+    <div class="type">
+      <p class="eyebrow">Marcus Stone &middot; The Seer Within</p>
+      <h1>The Two Doors</h1>
+      <p class="sub">Cut on 3 September 2026 &nbsp;&middot;&nbsp; read for <b>Sarah</b></p>
+    </div>
+  </div>
+  <div class="inner">
+    <div class="intake">
+      <p class="k">What Sarah asked</p>
+      <blockquote>I've been with him six years and we're not engaged, not living together, nothing has moved since 2023. He says he wants it all eventually. Do I keep waiting for him to be ready or do I go now while I still have the energy to start again?</blockquote>
+      <div class="facts">
+        <div><b>The spread</b>The Two Doors</div>
+        <div><b>Cards in it</b>8 &mdash; 2 you saw, 6 you didn't</div>
+        <div><b>You bought</b>The Spread</div>
+      </div>
+    </div>
+    <div class="opening"><p>You asked me whether to keep waiting or go now. I laid the two doors out side by side, three cards under each, and I'm going to tell you what they say before I show you the pictures.</p><p>The spread says go.</p><p>Not because door one is a disaster. It isn't, and I'm not going to pretend it is to make this easier for you. Door one is warm and it is real and the cards under it are not cruel cards. It says go because of what's stacked under each one — what it costs, what it gives, and who you are at the end of it. Door one gives you safety and takes the thing you came here worried about losing. Door two takes the safety and hands that thing back.</p><p>I read the cards. I don't read him. I've never met the man and the spread makes no claim about what he'll do in March or next year or ever. What it maps is two versions of your next stretch and who's standing at the end of each. One of them is holding jugs. One of them is lying down.</p><p>Here's the first door.</p></div><section>
+    <h2><span class="n">3</span>Behind door one — what it costs</h2>
+    <figure><img src="https://luna-assets-tsw.s3.ap-southeast-2.amazonaws.com/evelyn/tarot-rws/four-of-swords.jpg" alt="Four of Swords">
+      <figcaption>Four of Swords</figcaption></figure>
+    <div class="prose"><p>A stone figure laid out flat on a tomb, hands pressed together, eyes shut. Three swords hang on the wall above him. One lies under the slab. Nothing in the picture is moving.</p><p>The Four of Swords gets read as rest. Here it isn't rest, because rest ends and this doesn't. The effigy is carved. That's the price behind door one — not pain, not a fight, not a bad year. Stillness that keeps its shape while the calendar runs. Two years and eight months since anything changed, and the card says the next stretch looks like the last one.</p><p>You asked about the energy to start again. That's the thing the slab is holding down.</p><p>That's the cost. Now here's what you'd be buying with it, and I want you to weigh it properly, because it isn't nothing.</p></div></section><section>
+    <h2><span class="n">4</span>Behind door one — what it gives</h2>
+    <figure><img src="https://luna-assets-tsw.s3.ap-southeast-2.amazonaws.com/evelyn/tarot-rws/six-of-cups.jpg" alt="Six of Cups">
+      <figcaption>Six of Cups</figcaption></figure>
+    <div class="prose"><p>Two children in a walled yard, one handing the other a cup with white flowers growing out of it. Six cups altogether, all of them filled. A guard walking away up the path.</p><p>The Six of Cups gets called nostalgia, and that makes it sound like a trick memory plays on you. It isn't. It's the card of the known thing, and the known thing is real. Six years of it. He knows how you take your coffee, which of your friends you can't stand, what to say when your father calls. Nobody else on earth has that file. Starting again means somebody learning it from nothing, and that's four years of work minimum.</p><p>That's what door one hands you. Safety, and it's genuine.</p><p>Two cards in and door one is holding. A cost you can survive, a comfort you'd miss. So the question is what it makes of you over the length of it. That's the third card, and it's the one that decided this reading.</p></div></section><section>
+    <h2><span class="n">5</span>Behind door one — who she becomes</h2>
+    <figure><img src="https://luna-assets-tsw.s3.ap-southeast-2.amazonaws.com/evelyn/tarot-rws/nine-of-swords.jpg" alt="Nine of Swords">
+      <figcaption>Nine of Swords</figcaption></figure>
+    <div class="prose"><p>A woman sitting up in bed, face in her hands. Nine swords mounted on the wall behind her, all of them hanging, none of them touching her. The blanket over her legs has roses on it.</p><p>The Nine of Swords gets read as anguish. It isn't. It's the card of the hour between three and four, and the woman in it is not being harmed — she's counting. Behind door one you become someone who does her arithmetic at night and puts it away by morning. Nothing in the daylight changes. The safety holds. He still knows how you take your coffee.</p><p>You just wake up early, and the sum comes out the same every time.</p><p>Now the other door. Same three questions, same order. And I'll start where it hurts, because door two hurts first and I'm not going to sell it to you back to front.</p></div></section><section>
+    <h2><span class="n">6</span>Behind door two — what it costs</h2>
+    <figure><img src="https://luna-assets-tsw.s3.ap-southeast-2.amazonaws.com/evelyn/tarot-rws/five-of-pentacles.jpg" alt="Five of Pentacles">
+      <figcaption>Five of Pentacles</figcaption></figure>
+    <div class="prose"><p>Two figures in the snow. One on crutches, the other with her head down, both passing under a window with five pentacles set in the glass and a light burning behind it. Neither of them looks up.</p><p>The Five of Pentacles gets read as poverty. It isn't. It's the card of standing outside something that's still lit and still running. That's what door two takes — not a hard year in the abstract. His birthday in March. The couple you saw every other Saturday, who'll pick him. Rent on your own, at 2026 prices. Six years of a file nobody's holding anymore.</p><p>The window stays warm. You know exactly what's inside it. And the card has you walking anyway.</p><p>That's the real price and I'm not going to soften it. What comes back for it is smaller than people expect and worth more than they think.</p></div></section><section>
+    <h2><span class="n">7</span>Behind door two — what it gives</h2>
+    <figure><img src="https://luna-assets-tsw.s3.ap-southeast-2.amazonaws.com/evelyn/tarot-rws/ace-of-wands.jpg" alt="Ace of Wands">
+      <figcaption>Ace of Wands</figcaption></figure>
+    <div class="prose"><p>A hand pushes out of a cloud holding a branch with leaves still sprouting off it. Green wood. Far off, a castle on a hill, and nobody anywhere near it.</p><p>The Ace of Wands gets read as a new romance. It isn't. Nothing on this card is built — there's no house, no partner, no plan. It's a stick and a fist. The raw start, before there's a thing to show anyone.</p><p>So that's what door two gives back: what the slab was pinning down. Appetite. Wanting something on a Tuesday for no reason. Booking a thing in October and going.</p><p>Not a man. Not a wedding. The energy you asked about, handed straight back, with nothing yet made of it.</p><p>And here's who's holding it, a year or two down.</p></div></section><section>
+    <h2><span class="n">8</span>Behind door two — who she becomes</h2>
+    <figure><img src="https://luna-assets-tsw.s3.ap-southeast-2.amazonaws.com/evelyn/tarot-rws/the-star.jpg" alt="The Star">
+      <figcaption>The Star</figcaption></figure>
+    <div class="prose"><p>A woman kneeling at the edge of a pool with nothing on. One foot on the ground, one in the water. Two jugs in her hands, both pouring — one into the pool, one onto the soil. Seven small stars above her and one large one.</p><p>The Star gets read as hope. It isn't. Look at what she's doing: emptying jugs in the open, with no house behind her and nobody watching. That's who door two makes you. Uncovered. No six-year story to keep consistent, nothing to explain at Christmas, no waiting built into the week.</p><p>She's calm and she's got nothing yet. Those are the same picture.</p><p>The pouring is the point. It doesn't stop.</p><p>Put the last two cards next to each other. A woman sitting up in a bed doing sums in the dark, and a woman kneeling in the open with both hands working. That's the whole reading. Everything above it is just how each one gets there.</p><p>You don't have to decide he wasted your time. You don't have to hate a thing to be finished with it. Six years happened, the file is real, and none of that has to be reframed as a mistake for you to walk out under that window in the snow.</p><p>Doors don't open because somebody said eventually. They open because somebody walks through.</p></div></section>
+    <div class="colophon">
+      <p>The cards in this reading are the cut I laid on 3 September 2026. The writing is
+      assisted &mdash; I use a machine to help me put the reading into words. The draw is real
+      and it is yours.</p>
+      <p class="sig">Marcus</p>
+    </div>
+  </div>
+</body></html>

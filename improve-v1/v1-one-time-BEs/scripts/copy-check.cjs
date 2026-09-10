@@ -70,7 +70,14 @@ const SLA_ANY = /(?<![+\d])\b(24 ?h(ours?)?|(three|3) (days|nights)|(sixteen|16|
 // 07's dailies (`07-D-<day>-<spread>`) are letters too: same rule, price and delivery
 // promise live on the booking page, never in the send. Without `-D-` here the check
 // silently skipped every daily — which is how a price reached one.
-const isLetter = (id) => /-E[236]\b/.test(id) || /nudge/i.test(id) || /-D-/.test(id);
+// ⛔ `-D\d*-`, not `-D-` and not `-D2?-`. The daily-v2 rewrites are named
+//    `07-D2-<day>-<spread>` and `-D-` skipped every one of them SILENTLY — a letter with a
+//    price in it would have passed. Found 2026-09-05 while writing the first D2 letter.
+//    Widened again 2026-09-05: `-D2?-` would have skipped the 30-day test's own generation
+//    (`07-D3-…`) exactly the same way. The generation number must never be able to turn the
+//    gate off, so match ANY digits. This gate is the only thing standing between a price
+//    and a 76k send.
+const isLetter = (id) => /-E[236]\b/.test(id) || /nudge/i.test(id) || /-D\d*-/.test(id);
 const isBookingPage = (id) => /-C1\b/.test(id);
 
 // Only these assets PROMISE a delivery time, so only these can state a wrong SLA. Inside a
@@ -113,6 +120,10 @@ function walk(dir, out = []) {
 
 const files = fs.statSync(target).isDirectory() ? walk(target) : [target];
 const findings = [];
+// ⭐ WARNINGS REPORT BUT DO NOT FAIL. Length is a tolerance, not a contract — a letter 40 words
+//    over is a judgement call, and a gate that fails on judgement calls teaches everyone to
+//    pass `|| true`. ⛔ Anything that would put a price in front of a buyer stays a FAILURE.
+const warnings = [];
 const sentencesByOffer = new Map();   // normalised sentence -> Set(offer)
 const sentenceSource = new Map();     // normalised sentence -> "offer file"
 
@@ -168,6 +179,22 @@ for (const file of files) {
     const promise = body.match(new RegExp(
       `\\b(?:within|inside)\\s+${D}\\b|\\b${D}\\b[^.]{0,40}?\\b(?:to reach you|reaches you|arrives?|delivered|in your inbox)\\b`, 'i'));
     if (promise) findings.push({ file: rel, line: lineOf(body, promise.index), rule: 'DELIVERY PROMISE IN A LETTER', detail: promise[0].trim() });
+
+    // 4b — LENGTH. Operator, 2026-09-06: target ~1,000 words, warn over 1,200.
+    // ⚠ There was never a house length. The first six came out at 1,700–2,100 and that number
+    //    hardened into a "standard" nobody had set — which is how a writer gets told 1,028 words
+    //    is thin. The target is the target; this warns, it does not fail.
+    const prose = body
+      .replace(/^\|.*\|\s*$/gm, '')                    // the metadata table is not the letter
+      .replace(/^\*\*(Subject|Preheader)\*\*.*$/gm, '')
+      .replace(/\{\{[^}]*\}\}/g, '')                   // merge tags are one word to her, not five
+      .replace(/`\[IMG-[^\]]*\]`/g, '')
+      .replace(/[#*|`>]/g, ' ');
+    const n = prose.split(/\s+/).filter(Boolean).length;
+    if (n > 1200) {
+      warnings.push({ file: rel, rule: 'LONG LETTER',
+        detail: `${n.toLocaleString()} words — target is ~1,000, tolerance 1,200` });
+    }
   }
 
   // 5 — a booking page must state both, or the ladder has no top rung.
@@ -210,14 +237,21 @@ for (const [norm, offers] of sentencesByOffer) {
 const offersSeen = [...new Set(files.map((f) => (path.relative(ROOT, f).match(/copy\/(\d{2})(?:-[a-z-]+)?\//) || [])[1]).filter(Boolean))];
 console.log(`copy-check — ${files.length} file(s), offers ${offersSeen.sort().join(', ') || '—'}\n`);
 
+const showWarnings = () => {
+  for (const w of warnings) console.log(`  ⚠ ${w.rule} — ${w.file}  ${w.detail}`);
+  if (warnings.length) console.log('');
+};
+
 if (!findings.length) {
-  console.log('  ✅ PASS — no findings');
+  console.log(`  ✅ PASS — no findings${warnings.length ? ` (${warnings.length} warning(s))` : ''}\n`);
+  showWarnings();
   if (offersSeen.length < 4) {
     console.log(`\n  ⚠ device variance is only meaningful with all four offers in view (have ${offersSeen.length}).`);
   }
   process.exit(0);
 }
 
+showWarnings();
 const byRule = findings.reduce((m, f) => ((m[f.rule] = m[f.rule] || []).push(f), m), {});
 for (const [rule, list] of Object.entries(byRule)) {
   console.log(`  ❌ ${rule} — ${list.length}`);

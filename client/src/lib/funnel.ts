@@ -169,6 +169,36 @@ export function bookingFirstName(search?: string): string | null {
   }
 }
 
+// The letter code — the sales letter's ?c=. Each backend letter's CTAs use their own
+// range (02-E2/v1 sends c=1..6, 02-E3/v2 sends c=21..26), so this single number says
+// WHICH letter she bought from, and fulfilment reads it to decide which promises the
+// paid reading owes. Same lifecycle as the first name: read once per visit, kept in
+// sessionStorage so the page↔chat treatment switch and the back-from-Stripe round-trip
+// (neither of which carries the query string) do not lose it.
+const LETTER_CODE_KEY = "seer_c";
+const MAX_LETTER_CODE = 4;
+
+export function bookingLetterCode(search?: string): string | null {
+  if (typeof window === "undefined") return null;
+  const raw = new URLSearchParams(search ?? window.location.search).get("c");
+  if (raw !== null) {
+    // Digits only — anything else is somebody playing with the query string.
+    const code = /^\d{1,4}$/.test(raw.trim()) ? raw.trim().slice(0, MAX_LETTER_CODE) : "";
+    try {
+      if (code) window.sessionStorage.setItem(LETTER_CODE_KEY, code);
+      else window.sessionStorage.removeItem(LETTER_CODE_KEY);
+    } catch {
+      /* sessionStorage unavailable (private mode) — fall back to URL only */
+    }
+    return code || null;
+  }
+  try {
+    return window.sessionStorage.getItem(LETTER_CODE_KEY) || null;
+  } catch {
+    return null;
+  }
+}
+
 // Prefix a V1 path with the active funnel's prefix when the user is in an ad
 // funnel, otherwise leave it alone. Use for in-funnel navigation so the user
 // stays inside their own funnel for the entire flow.

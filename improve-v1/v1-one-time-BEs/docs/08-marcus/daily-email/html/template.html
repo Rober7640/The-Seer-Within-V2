@@ -1,0 +1,300 @@
+<!-- 08 · MARCUS DAILY — HTML TEMPLATE · EDITORIAL BROADSHEET
+     ============================================================================
+     THE template for every Marcus daily. Adopted 2026-09-09 after the five-design
+     bake-off in html/designs/ — 01-broadsheet won. The other four stay as the record.
+
+     ⭐ THIS FILE IS GENERATED. The design lives in the BUILDER, not here. Four fixes
+        were once hand-patched into the output and destroyed by the next rebuild; if
+        you edit this file by hand the next copy change will eat it. Change the
+        generator.
+
+     THE LOOK · a columnist's page in a morning paper. Ink on newsprint.
+       ground  #dbd1b9 (the desk)      paper #f4f1e6 (newsprint)
+       ink     #14120f  headline #0d0c0a  muted #5b5343  hairline #c4b9a1
+       accent  #8f2b1f (oxidised press red) — used TWICE only: the one link, and the
+               NOTICE TO READERS label. Nothing else is coloured.
+     Typography · display = Bodoni Moda (nameplate, headlines, deck, crosshead, sign-off),
+       falling back to Bodoni MT / Didot / Hoefler Text / Times — all newspaper faces.
+       Body = Spectral, falling back to Georgia. THE FALLBACK IS THE DESIGN; the webfont
+       is a bonus, because it will not load in Outlook and often not in Gmail.
+
+     THE ORDER, top to bottom:
+       masthead (portrait, nameplate, role, Scotch rule) → dateline → intro (greeting,
+       DECK, optional editor's note) → hero → one block per TURNED card (double rule,
+       headline, framed cut, FIG. caption, reading) → the reveal (crosshead + ruled
+       sidebar of the positions still down) → validate → turn → the ask box → the
+       closing sequence (the job, then the act) → sign-off → P.S. → folio → imprint
+
+     ── PLACEHOLDERS ───────────────────────────────────────────────────────────
+     Asset + link tokens, substituted before the send:
+
+     {{HEADSHOT_URL}}   S3 prefix, NO trailing slash. Live:
+                          https://luna-assets-tsw.s3.ap-southeast-2.amazonaws.com/marcus/08
+     {{HEADSHOT_FILE}}  ⛔ 08-headshot.jpg — the SQUARE original, NOT
+                        08-headshot-round.jpg. The round asset is masked onto WHITE, and
+                        this masthead is newsprint, so it would ship four white corners.
+                        The round one is only ever correct on a #ffffff ground.
+     {{HERO_URL}}       S3 prefix, NO trailing slash. Same prefix as the headshot.
+     {{HERO_FILE}}      ⛔ 08-hero-<slug>.jpg — .jpg, NOT .png. The source art is PNG but
+                        what is HOSTED is JPEG; the .png key returns 403 and the reader
+                        gets alt text where the spread should be. This bit once already.
+     {{HERO_ALT}}       What is on the table, and how many of the six are turned.
+     {{CARD_URL}}       S3 prefix for the Rider-Waite art, NO trailing slash. Live:
+                          https://luna-assets-tsw.s3.ap-southeast-2.amazonaws.com/evelyn/tarot-rws
+     {{CARD_FILE}}      One card, e.g. four-of-cups.jpg. Source art is 350x600.
+     {{CARD_ALT}}       The card's name and what is painted on it.
+     {{BOOKING_URL}}    The booking page. EVERY href in the body is this literal string —
+                        there is exactly one link in a letter, inside the ask box.
+     {{PREHEADER}}      Inbox preview line. Plain text, ~90 chars.
+     {{SUBJECT}}        Comment only — this file never renders the subject.
+
+     Copy slots (repeat the row as often as the letter needs):
+
+     {{SALUTATION}}       "%FIRSTNAME%,"
+     {{DECK}}             ⭐ the framing line — "Marcus. Six cards on one question this
+                          morning: <question>. <N> up, <N> face down. Rider–Waite." It is
+                          the standfirst, set large in the display face. ⛔ It must never
+                          go back to being a small muted caption: it carries the question
+                          the whole spread answers, and caption styling is what an eye skips.
+     {{EDITORS_NOTE}}     an aside before the first card, ruled top and bottom. OMIT THE
+                          WHOLE BLOCK when the letter has none (what-is-my-higher-calling
+                          has none — it goes straight from the deck to the hero).
+     {{CARDS_UP_WORD}}    "Three" / "Two" — how many are turned, in the hero caption.
+     {{CARDS_DOWN_WORD}}  "Three" / "Four" — how many are not.
+     {{CARD_HEADING}}     the card's line, e.g. "One — what the quiet actually is. The
+                          Four of Cups."
+     {{FIG_ROMAN}}        I, II, III …    {{POSITION_WORD}}  ONE, TWO, THREE …
+     {{CARD_NAME}}        "The Four of Cups" — the FIG. caption's second line.
+     {{BODY_PARAGRAPH}}   one paragraph of the reading, or of the validate/turn beat.
+     {{CROSSHEAD}}        the hinge lines before the sidebar ("That's the three I can
+                          turn." / "The other three are the ones you want."), set in the
+                          display face between two rules.
+     {{STILL_DOWN_ITEM}}  one face-down position in the ruled sidebar.
+                          ⛔ These open on a BOLD FRAGMENT inside a body paragraph. They
+                             are inline emphasis, NOT headings, and they never get card
+                             art — there is no art for a card that is still face down.
+     {{ASK_PARAGRAPH}}    one paragraph in the NOTICE TO READERS box. The link lives in
+                          the last one, inline in the sentence — never a button.
+     {{CLOSING_ACT}}      the closing sequence AFTER the ask box — repeat the row per
+                          paragraph. Currently two: the job (the thing she writes down)
+                          and then the act. ⛔ There is always at least one: the letter
+                          never closes on the link.
+     {{SIGNATURE}}        "Marcus" — no title, no credentials, no second photograph.
+     {{PS}}               the P.S., after the dinkus.
+
+     ── HARD RULES ─────────────────────────────────────────────────────────────
+     ⛔ Copy is VERBATIM from letters-02/<slug>.md. Not one word is rewritten. Only the
+        newspaper furniture (dateline, FIG. captions, NOTICE, folio, imprint) is written
+        here, and it is the only thing ever set in capitals — letter copy keeps its own.
+     ⛔ text-transform and font-variant:small-caps do NOT work in Outlook's Word engine.
+        Every capitalised label is TYPED in capitals.
+     ⛔ %FIRSTNAME% is the ESP merge tag and must reach AWeber INTACT. It is NOT a build
+        token: any brace sweep must match {{...}} literally and leave % alone.
+     ⛔ Every cell carries bgcolor + background-color + an explicit color. That is the
+        dark-mode defence; a cell setting only one of the pair is what goes white-on-white.
+     ⛔ A picture is width:100% + max-width in PX, never a hard px width. A hard width
+        sets the table's min-content and pins the email open past 600px, which .container
+        cannot override, and every line of copy clips on a phone.
+     ⛔ The sign-off rule and the name are SEPARATE rows. Nested in one table the 46px
+        rule sets the width and the name wraps to "Ma / rcu / s". It did that once.
+     ⛔ No price, no clock, no deadline anywhere (08 SHAPE.md).
+     ============================================================================
+     Subject: {{SUBJECT}} -->
+<!DOCTYPE html>
+<html xmlns:v="urn:schemas-microsoft-com:vml" lang="en"><head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="x-apple-disable-message-reformatting">
+<meta name="color-scheme" content="light">
+<meta name="supported-color-schemes" content="light">
+<title>The Seer Within &mdash; Marcus</title>
+<!--[if !mso]><!-->
+<link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400;0,6..96,700;1,6..96,400&family=Spectral:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<!--<![endif]-->
+<style type="text/css">
+  body{-webkit-font-smoothing:antialiased;margin:0;padding:0;width:100%;background-color:#dbd1b9;}
+  img{border:0;height:auto;line-height:100%;max-width:100%;outline:none;text-decoration:none;-ms-interpolation-mode:bicubic;}
+  table,td{border-collapse:collapse;border-spacing:0;border:0;}
+  body,a{word-break:break-word;}   /* a word too long for the column breaks instead
+                                        of widening the table */
+  @media only screen and (max-width:600px){
+    .container{width:100%!important;max-width:100%!important;}
+    .px{padding-left:20px!important;padding-right:20px!important;}
+    .pxp{padding-left:18px!important;padding-right:18px!important;}
+    .nameplate{font-size:31px!important;line-height:36px!important;letter-spacing:2px!important;}
+    .deck{font-size:19px!important;line-height:29px!important;}
+    .head{font-size:21px!important;line-height:27px!important;}
+    .pull{font-size:19px!important;line-height:28px!important;}
+    .signoff{font-size:22px!important;line-height:28px!important;}
+    .dline{font-size:9px!important;letter-spacing:.8px!important;}
+  }
+</style>
+</head>
+<body style="margin:0;padding:0;background-color:#dbd1b9;">
+<div style="display:none;max-height:0;overflow:hidden;mso-hide:all;font-size:1px;line-height:1px;color:#dbd1b9;opacity:0;">{{PREHEADER}}</div>
+<div style="display:none;max-height:0;overflow:hidden;">&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;</div>
+<center>
+<!-- THE DESK · the darker newsprint ground the sheet lies on. The colour change IS the
+     edge of the paper: no border, nothing for Outlook to drop. -->
+<table align="center" cellpadding="0" cellspacing="0" border="0" width="100%" bgcolor="#dbd1b9" role="presentation" style="background-color:#dbd1b9;">
+<tr><td align="center" bgcolor="#dbd1b9" style="padding:30px 12px 36px;background-color:#dbd1b9;">
+<table class="container" align="center" cellpadding="0" cellspacing="0" border="0" width="600" bgcolor="#f4f1e6" role="presentation" style="max-width:600px;width:100%;background-color:#f4f1e6;">
+
+  <!-- MASTHEAD · a nameplate, not a logo lockup: portrait, name set large and
+       tracked wide, the role between two short rules, then the Scotch double rule
+       (thick over thin) that says newspaper before a single word is read.
+       ⛔ THE PORTRAIT IS 08-headshot.jpg, the SQUARE original. The round variant is
+          masked onto WHITE and this masthead is newsprint, so the circle would ship
+          with four white corners. A framed square mugshot is the right form anyway. -->
+  <tr><td align="center" bgcolor="#f4f1e6" style="padding:34px 30px 0;background-color:#f4f1e6;">
+    <table cellpadding="0" cellspacing="0" border="0" role="presentation" align="center"><tr>
+      <td bgcolor="#14120f" style="background-color:#14120f;padding:1px;font-size:0;line-height:0;"><img src="{{HEADSHOT_URL}}/{{HEADSHOT_FILE}}" alt="Marcus Stone" width="90" height="90" style="display:block;width:90px;height:auto;border:0;outline:none;text-decoration:none;-ms-interpolation-mode:bicubic;font-family:Georgia,'Times New Roman',Times,serif;font-size:12px;line-height:16px;color:#f4f1e6;"></td>
+    </tr></table></td></tr>
+  <tr><td class="nameplate px" align="center" bgcolor="#f4f1e6" style="padding:16px 52px 0;background-color:#f4f1e6;font-family:'Bodoni Moda','Bodoni MT',Didot,'Didot LT STD','Hoefler Text',Garamond,'Times New Roman',Times,serif;font-size:43px;line-height:48px;mso-line-height-rule:exactly;color:#0d0c0a;letter-spacing:4px;">Marcus Stone</td></tr>
+  <tr><td align="center" bgcolor="#f4f1e6" style="padding:12px 30px 0;background-color:#f4f1e6;">
+    <table cellpadding="0" cellspacing="0" border="0" role="presentation" align="center"><tr>
+      <td width="34" valign="middle" bgcolor="#f4f1e6" style="background-color:#f4f1e6;width:34px;font-size:0;line-height:0;"><table width="34" cellpadding="0" cellspacing="0" border="0" role="presentation"><tr><td height="1" bgcolor="#14120f" style="background-color:#14120f;height:1px;font-size:0;line-height:0;">&nbsp;</td></tr></table></td>
+      <td valign="middle" bgcolor="#f4f1e6" style="background-color:#f4f1e6;padding:0 12px;font-family:'Spectral',Georgia,Cambria,'Times New Roman',Times,serif;font-size:13px;line-height:16px;mso-line-height-rule:exactly;color:#5b5343;font-style:italic;letter-spacing:1.6px;white-space:nowrap;">Daily Tarot Reader</td>
+      <td width="34" valign="middle" bgcolor="#f4f1e6" style="background-color:#f4f1e6;width:34px;font-size:0;line-height:0;"><table width="34" cellpadding="0" cellspacing="0" border="0" role="presentation"><tr><td height="1" bgcolor="#14120f" style="background-color:#14120f;height:1px;font-size:0;line-height:0;">&nbsp;</td></tr></table></td>
+    </tr></table></td></tr>
+  <tr><td class="px" bgcolor="#f4f1e6" style="padding:20px 52px 0;background-color:#f4f1e6;">
+    <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation">
+      <tr><td height="5" bgcolor="#14120f" style="background-color:#14120f;height:5px;font-size:0;line-height:0;">&nbsp;</td></tr>
+      <tr><td height="3" bgcolor="#f4f1e6" style="background-color:#f4f1e6;height:3px;font-size:0;line-height:0;">&nbsp;</td></tr>
+      <tr><td height="1" bgcolor="#14120f" style="background-color:#14120f;height:1px;font-size:0;line-height:0;">&nbsp;</td></tr>
+    </table></td></tr>
+
+  <!-- DATELINE · two cells, allowed to wrap, so nothing can push the table wide.
+       ⛔ text-transform does not work in Outlook's Word engine — every
+          capitalised label in this file is TYPED in capitals. -->
+  <tr><td class="px" bgcolor="#f4f1e6" style="padding:8px 52px 0;background-color:#f4f1e6;">
+    <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation"><tr>
+      <td class="dline" align="left" valign="top" bgcolor="#f4f1e6" style="background-color:#f4f1e6;font-family:'Spectral',Georgia,Cambria,'Times New Roman',Times,serif;font-size:10px;line-height:15px;mso-line-height-rule:exactly;color:#5b5343;letter-spacing:1.4px;">MORNING EDITION</td>
+      <td class="dline" align="right" valign="top" bgcolor="#f4f1e6" style="background-color:#f4f1e6;font-family:'Spectral',Georgia,Cambria,'Times New Roman',Times,serif;font-size:10px;line-height:15px;mso-line-height-rule:exactly;color:#5b5343;letter-spacing:1.4px;">{{CARDS_TOTAL_CAPS}} CARDS &middot; ONE QUESTION</td>
+    </tr></table></td></tr>
+  <tr><td class="px" bgcolor="#f4f1e6" style="padding:8px 52px 0;background-color:#f4f1e6;">
+    <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation">
+      <tr><td height="1" bgcolor="#c4b9a1" style="background-color:#c4b9a1;height:1px;font-size:0;line-height:0;">&nbsp;</td></tr>
+    </table></td></tr>
+
+  <!-- ══ INTRO ══ greeting in body copy, the framing line as the DECK,
+       then the optional editor's note. -->
+  <tr><td class="px" bgcolor="#f4f1e6" style="padding:26px 52px 0;background-color:#f4f1e6;font-family:'Spectral',Georgia,Cambria,'Times New Roman',Times,serif;font-size:17px;line-height:29px;mso-line-height-rule:exactly;color:#14120f;text-align:left;"><p style="margin:0;">{{SALUTATION}}</p></td></tr>
+  <tr><td class="deck px" bgcolor="#f4f1e6" style="padding:14px 52px 0;background-color:#f4f1e6;font-family:'Bodoni Moda','Bodoni MT',Didot,'Didot LT STD','Hoefler Text',Garamond,'Times New Roman',Times,serif;font-size:22px;line-height:33px;mso-line-height-rule:exactly;color:#0d0c0a;text-align:left;"><p style="margin:0;">{{DECK}}</p></td></tr>
+  <!-- EDITOR'S NOTE · ⛔ DELETE THIS WHOLE ROW when the letter has no aside
+       before the first card. Do not leave it empty. -->
+  <tr><td class="px" bgcolor="#f4f1e6" style="padding:24px 52px 0;background-color:#f4f1e6;">
+    <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation">
+      <tr><td height="1" bgcolor="#c4b9a1" style="background-color:#c4b9a1;height:1px;font-size:0;line-height:0;">&nbsp;</td></tr>
+      <tr><td bgcolor="#f4f1e6" style="background-color:#f4f1e6;padding:11px 0 12px;font-family:'Spectral',Georgia,Cambria,'Times New Roman',Times,serif;font-size:14.5px;line-height:23px;mso-line-height-rule:exactly;color:#5b5343;font-style:italic;text-align:left;"><p style="margin:0;">{{EDITORS_NOTE}}</p></td></tr>
+      <tr><td height="1" bgcolor="#c4b9a1" style="background-color:#c4b9a1;height:1px;font-size:0;line-height:0;">&nbsp;</td></tr>
+    </table></td></tr>
+
+  <!-- HERO · the press photograph. Inset to the text measure, not full-bleed:
+       a photograph in a newspaper sits inside the column, framed by a hairline,
+       and carries a caption under a rule.
+       ⛔ THE HERO IS .jpg, NOT .png. The .png key on S3 returns 403 and the
+          reader gets alt text where the spread should be. This bit once. -->
+  <tr><td class="px" bgcolor="#f4f1e6" style="padding:28px 52px 0;background-color:#f4f1e6;">
+    <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" style="max-width:496px;">
+      <tr><td bgcolor="#14120f" style="background-color:#14120f;padding:1px;font-size:0;line-height:0;"><img src="{{HERO_URL}}/{{HERO_FILE}}" alt="{{HERO_ALT}}" width="494" height="329" style="display:block;width:100%;max-width:494px;height:auto;border:0;outline:none;text-decoration:none;-ms-interpolation-mode:bicubic;font-family:Georgia,'Times New Roman',Times,serif;font-size:13px;line-height:20px;color:#f4f1e6;"></td></tr>
+      <tr><td height="1" bgcolor="#c4b9a1" style="background-color:#c4b9a1;height:1px;font-size:0;line-height:0;">&nbsp;</td></tr>
+      <tr><td bgcolor="#f4f1e6" style="background-color:#f4f1e6;padding:9px 0 0;font-family:'Spectral',Georgia,Cambria,'Times New Roman',Times,serif;font-size:11px;line-height:18px;mso-line-height-rule:exactly;color:#5b5343;text-align:left;"><span style="color:#14120f;letter-spacing:1.3px;">THE TABLE THIS MORNING</span> &mdash; <em style="font-style:italic;">{{CARDS_TOTAL_WORD}} cards on one question. {{CARDS_UP_WORD}} of them are looking back at you. {{CARDS_DOWN_WORD}} of them are not. Rider&ndash;Waite&ndash;Smith deck, 1909.</em></td></tr>
+    </table></td></tr>
+
+  <!-- ⬇ REPEAT THIS WHOLE GROUP ONCE PER TURNED CARD, in the order they
+       fell. Three of them in why-they-go-quiet, TWO in
+       what-is-my-higher-calling. ⛔ Face-down positions get no picture. -->
+
+  <!-- ══ CARD — repeat per turned card ══ -->
+  <tr><td class="px" bgcolor="#f4f1e6" style="padding:34px 52px 0;background-color:#f4f1e6;">
+    <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation">
+      <tr><td height="3" bgcolor="#14120f" style="background-color:#14120f;height:3px;font-size:0;line-height:0;">&nbsp;</td></tr>
+      <tr><td height="3" bgcolor="#f4f1e6" style="background-color:#f4f1e6;height:3px;font-size:0;line-height:0;">&nbsp;</td></tr>
+      <tr><td height="1" bgcolor="#14120f" style="background-color:#14120f;height:1px;font-size:0;line-height:0;">&nbsp;</td></tr>
+    </table></td></tr>
+  <tr><td class="head px" bgcolor="#f4f1e6" style="padding:18px 52px 0;background-color:#f4f1e6;font-family:'Bodoni Moda','Bodoni MT',Didot,'Didot LT STD','Hoefler Text',Garamond,'Times New Roman',Times,serif;font-size:26px;line-height:33px;mso-line-height-rule:exactly;color:#0d0c0a;font-weight:bold;text-align:left;">{{CARD_HEADING}}</td></tr>
+  <tr><td class="px" bgcolor="#f4f1e6" style="padding:20px 52px 0;background-color:#f4f1e6;">
+    <table width="250" cellpadding="0" cellspacing="0" border="0" role="presentation" align="left" style="width:100%;max-width:250px;">
+      <tr><td bgcolor="#14120f" style="background-color:#14120f;padding:1px;font-size:0;line-height:0;"><img src="{{CARD_URL}}/{{CARD_FILE}}" alt="{{CARD_ALT}}" width="248" height="425" style="display:block;width:100%;max-width:248px;height:auto;border:0;outline:none;text-decoration:none;-ms-interpolation-mode:bicubic;font-family:Georgia,'Times New Roman',Times,serif;font-size:13px;line-height:20px;color:#f4f1e6;"></td></tr>
+      <tr><td height="1" bgcolor="#c4b9a1" style="background-color:#c4b9a1;height:1px;font-size:0;line-height:0;">&nbsp;</td></tr>
+      <tr><td bgcolor="#f4f1e6" style="background-color:#f4f1e6;padding:8px 0 0;font-family:'Spectral',Georgia,Cambria,'Times New Roman',Times,serif;font-size:10.5px;line-height:17px;mso-line-height-rule:exactly;color:#5b5343;text-align:left;"><span style="color:#14120f;letter-spacing:1.3px;">FIG. {{FIG_ROMAN}} &middot; POSITION {{POSITION_WORD}}</span><br><em style="font-style:italic;">Turned. {{CARD_NAME}}.</em></td></tr>
+    </table></td></tr>
+  <tr><td class="px" bgcolor="#f4f1e6" style="padding:22px 52px 0;background-color:#f4f1e6;font-family:'Spectral',Georgia,Cambria,'Times New Roman',Times,serif;font-size:17px;line-height:29px;mso-line-height-rule:exactly;color:#14120f;text-align:left;"><p style="margin:0;">{{BODY_PARAGRAPH}}</p></td></tr>
+
+  <!-- ══ THE REVEAL ══ -->
+  <tr><td class="px" bgcolor="#f4f1e6" style="padding:30px 52px 0;background-color:#f4f1e6;">
+    <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation">
+      <tr><td height="1" bgcolor="#14120f" style="background-color:#14120f;height:1px;font-size:0;line-height:0;">&nbsp;</td></tr>
+      <tr><td class="pull" bgcolor="#f4f1e6" style="background-color:#f4f1e6;padding:18px 0 4px;font-family:'Bodoni Moda','Bodoni MT',Didot,'Didot LT STD','Hoefler Text',Garamond,'Times New Roman',Times,serif;font-size:21px;line-height:31px;mso-line-height-rule:exactly;color:#0d0c0a;text-align:left;"><p style="margin:0;">{{CROSSHEAD}}</p></td></tr>
+      <tr><td height="1" bgcolor="#14120f" style="background-color:#14120f;height:1px;font-size:0;line-height:0;">&nbsp;</td></tr>
+    </table></td></tr>
+
+  <!-- THE POSITIONS STILL DOWN · a ruled sidebar, the same hairline device
+       the P.S. uses at the foot. Two cells, fixed 2px gutter: Outlook-proof. -->
+  <tr><td class="px" bgcolor="#f4f1e6" style="padding:22px 52px 0;background-color:#f4f1e6;">
+    <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation"><tr>
+      <td width="2" bgcolor="#c4b9a1" valign="top" style="background-color:#c4b9a1;width:2px;font-size:0;line-height:0;">&nbsp;</td>
+      <td bgcolor="#f4f1e6" style="background-color:#f4f1e6;padding:0 0 0 18px;">
+        <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation">
+          <tr><td bgcolor="#f4f1e6" style="background-color:#f4f1e6;padding:0;font-family:'Spectral',Georgia,Cambria,'Times New Roman',Times,serif;font-size:16.5px;line-height:28px;mso-line-height-rule:exactly;color:#14120f;text-align:left;"><p style="margin:0;">{{STILL_DOWN_ITEM}}</p></td></tr>
+        </table></td>
+    </tr></table></td></tr>
+
+  <!-- ══ VALIDATE · then the turn ══ -->
+  <tr><td class="px" bgcolor="#f4f1e6" style="padding:24px 52px 0;background-color:#f4f1e6;font-family:'Spectral',Georgia,Cambria,'Times New Roman',Times,serif;font-size:17px;line-height:29px;mso-line-height-rule:exactly;color:#14120f;text-align:left;"><p style="margin:0;">{{BODY_PARAGRAPH}}</p></td></tr>
+
+  <!-- The one link, inline in the LAST ask paragraph, never a button:
+       <a href="{{BOOKING_URL}}" target="_blank" rel="noopener noreferrer"
+          style="color:#8f2b1f;text-decoration:underline;font-weight:bold;">LINK TEXT</a>
+  -->
+
+  <!-- ══ THE ASK ══ -->
+  <tr><td class="px" bgcolor="#f4f1e6" style="padding:30px 52px 0;background-color:#f4f1e6;">
+    <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" bgcolor="#eae4d2" style="background-color:#eae4d2;border:1px solid #14120f;">
+      <tr><td class="pxp" bgcolor="#eae4d2" style="background-color:#eae4d2;padding:20px 24px 0;font-family:'Spectral',Georgia,Cambria,'Times New Roman',Times,serif;font-size:10.5px;line-height:16px;mso-line-height-rule:exactly;color:#8f2b1f;letter-spacing:2.2px;text-align:left;">NOTICE TO READERS</td></tr>
+      <tr><td class="pxp" bgcolor="#eae4d2" style="background-color:#eae4d2;padding:6px 24px 0;"><table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation"><tr><td height="1" bgcolor="#b8ab8e" style="background-color:#b8ab8e;height:1px;font-size:0;line-height:0;">&nbsp;</td></tr></table></td></tr>
+      <tr><td class="pxp" bgcolor="#eae4d2" style="background-color:#eae4d2;padding:16px 24px 22px;font-family:'Spectral',Georgia,Cambria,'Times New Roman',Times,serif;font-size:17px;line-height:29px;mso-line-height-rule:exactly;color:#14120f;text-align:left;"><p style="margin:0;">{{ASK_PARAGRAPH}}</p></td></tr>
+    </table></td></tr>
+
+  <!-- ══ THE CLOSING ACT · hers. ⛔ the letter never closes on the link.
+       ⛔ REAL TOP PADDING. It once had padding:0 and butted the ask panel. -->
+  <tr><td class="px" bgcolor="#f4f1e6" style="padding:26px 52px 0;background-color:#f4f1e6;font-family:'Spectral',Georgia,Cambria,'Times New Roman',Times,serif;font-size:17px;line-height:29px;mso-line-height-rule:exactly;color:#14120f;text-align:left;"><p style="margin:0;">{{CLOSING_ACT}}</p></td></tr>
+
+  <!-- SIGN-OFF · a columnist's name, set in the nameplate face over a short
+       rule. ⛔ the portrait is at the TOP: two photographs of one man is one
+       too many.
+       ⛔ the rule and the name are SEPARATE rows of the 600px container. Nested
+          in one little table together, the 46px rule cell sets the table width
+          and the name wraps to "Ma / rcu / s". It did exactly that once. -->
+  <tr><td class="px" bgcolor="#f4f1e6" style="padding:26px 52px 0;background-color:#f4f1e6;">
+    <table width="46" cellpadding="0" cellspacing="0" border="0" role="presentation" align="left"><tr><td height="2" bgcolor="#14120f" style="background-color:#14120f;height:2px;font-size:0;line-height:0;">&nbsp;</td></tr></table></td></tr>
+  <tr><td class="px" bgcolor="#f4f1e6" style="padding:10px 52px 0;background-color:#f4f1e6;"><img src="{{SIG_URL}}/{{SIG_FILE}}" alt="Marcus Stone" width="280" height="93" style="display:block;width:280px;max-width:70%;height:auto;border:0;outline:none;text-decoration:none;-ms-interpolation-mode:bicubic;font-family:'Bodoni Moda','Bodoni MT',Didot,'Didot LT STD','Hoefler Text',Garamond,'Times New Roman',Times,serif;font-size:22px;line-height:30px;color:#0d0c0a;"></td></tr>
+  <tr><td align="center" bgcolor="#f4f1e6" style="padding:26px 52px 0;background-color:#f4f1e6;font-family:'Spectral',Georgia,Cambria,'Times New Roman',Times,serif;font-size:13px;line-height:16px;mso-line-height-rule:exactly;color:#5b5343;">&#42;&nbsp;&nbsp;&nbsp;&#42;&nbsp;&nbsp;&nbsp;&#42;</td></tr>
+  <tr><td class="px" bgcolor="#f4f1e6" style="padding:16px 52px 0;background-color:#f4f1e6;font-family:'Spectral',Georgia,Cambria,'Times New Roman',Times,serif;font-size:15.5px;line-height:26px;mso-line-height-rule:exactly;color:#5b5343;font-style:italic;text-align:left;"><p style="margin:0;">{{PS}}</p></td></tr>
+
+  <!-- ══ FOLIO · the foot of the page ══ -->
+  <tr><td class="px" bgcolor="#f4f1e6" style="padding:36px 52px 0;background-color:#f4f1e6;">
+    <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation">
+      <tr><td height="1" bgcolor="#14120f" style="background-color:#14120f;height:1px;font-size:0;line-height:0;">&nbsp;</td></tr>
+      <tr><td height="2" bgcolor="#f4f1e6" style="background-color:#f4f1e6;height:2px;font-size:0;line-height:0;">&nbsp;</td></tr>
+      <tr><td height="3" bgcolor="#14120f" style="background-color:#14120f;height:3px;font-size:0;line-height:0;">&nbsp;</td></tr>
+    </table></td></tr>
+  <tr><td class="px" bgcolor="#f4f1e6" style="padding:9px 52px 0;background-color:#f4f1e6;">
+    <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation"><tr>
+      <td class="dline" align="left" valign="top" bgcolor="#f4f1e6" style="background-color:#f4f1e6;font-family:'Spectral',Georgia,Cambria,'Times New Roman',Times,serif;font-size:10px;line-height:15px;mso-line-height-rule:exactly;color:#5b5343;letter-spacing:1.4px;">THE SEER WITHIN</td>
+      <td class="dline" align="right" valign="top" bgcolor="#f4f1e6" style="background-color:#f4f1e6;font-family:'Spectral',Georgia,Cambria,'Times New Roman',Times,serif;font-size:10px;line-height:15px;mso-line-height-rule:exactly;color:#5b5343;letter-spacing:1.4px;">PAGE ONE</td>
+    </tr></table></td></tr>
+
+  <!-- FOOTER · the printer's imprint. Physical address + both AWeber links are
+       what keeps the send CAN-SPAM clean; do not trim either. Set in the text
+       serif at legal-notice size, because nothing in a newspaper is Helvetica. -->
+  <tr><td class="px" align="left" bgcolor="#f4f1e6" style="padding:22px 52px 40px;background-color:#f4f1e6;font-family:'Spectral',Georgia,Cambria,'Times New Roman',Times,serif;font-size:11.5px;line-height:19px;mso-line-height-rule:exactly;color:#5b5343;text-align:left;">
+    Marcus Stone &middot; The Seer Within<br>
+    140 Broadway, Manhattan, New York New York 10005, USA<br>
+    <a href="https://www.aweber.com/z/r/?ThisIsATestEmail" target="_blank" rel="noopener noreferrer" style="color:#5b5343;text-decoration:underline;">Unsubscribe</a>
+    &nbsp;&middot;&nbsp;
+    <a href="https://www.aweber.com/z/r/?ThisIsATestEmail" target="_blank" rel="noopener noreferrer" style="color:#5b5343;text-decoration:underline;">Change Subscriber Options</a></td></tr>
+
+</table></td></tr></table></center></body></html>

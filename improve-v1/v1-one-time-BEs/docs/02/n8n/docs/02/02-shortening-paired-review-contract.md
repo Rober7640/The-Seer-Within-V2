@@ -1,0 +1,9 @@
+# Blind paired full-report review
+
+Read only this contract, 02-n8n-full-report-review-contract.md, 02-phase3-operator-scorecard.md, and the two supplied candidate PDFs. Read every page of both. Do not read generators, specs, original reports, filenames outside these candidates, prior scores/reviews, identity keys, execution records or edit manifests. Neither candidate is presumed better. No minimum or target score is supplied.
+
+Apply exactly the same six dimensions and whole-number 0–10 anchors to each candidate: readability, trust, humanness, personal relevance, desire to continue, recommendation. Five is adequate but disappointing; eight is strong enough to recommend; ten is exceptional. Root will compute the equal-weight six-dimension mean. Distinguish promised genre forecasts from unsupported surrounding claims. Do not penalize genre promises merely because they are predictions. Use the full-report contract for coverage and the operator scorecard for the reading checkpoints; full-report review requires finishing both PDFs before settling scores.
+
+Give six final scores per candidate, preference or tie, key tradeoffs, exact quotes with page locations, and any promised answer that is missing or made unclear in one candidate. Evaluate whether teaching earns personal application, cumulative repetition, naturalness, reader agency and layout. Inspect rendered pages as well as extracting all text. A shorter document does not automatically deserve a higher score: verify whether cuts remove useful explanation or leave abrupt transitions. Score from the actual PDFs, not presumed revision history.
+
+Send settled rows promptly, then save a concise review (around 900 words) and JSON. No replacement prose. This is one simulated paired editorial assessment, not customer testing, NPS or a statistically reliable effect estimate.

@@ -14,7 +14,7 @@ and the rest of the stuff flows."
 | **Device** | **none.** Same as `close-c` — no divination event |
 | **Structure** | Beat 0 (new, Aiden) → Beats 2–8 + P.S. (unchanged, Evelyn) — Beat 1 (Evelyn's own self-introduction) is dropped entirely; Aiden's handoff already does that job |
 | **Merge token** | `%FIRSTNAME%` → `{{ subscriber.first_name \| capitalize }}` on AWeber, same as every letter in this deck |
-| **Links** | three point to the booking page — `{{BOOKING_URL}}?c=1` (the close), `?c=2` (the P.S.), `?c=3` (the P.P.S., added 2026-09-03) — same numbering as `close-c`. Campaign-specific tracking params (to attribute conversions to this variant specifically) aren't added yet — a Phase A/analytics decision, not a copy one |
+| **Links** | three point to the booking page — `https://theseerwithin.com/offers/wiccan/pixiu-bracelet?c=1` (the close), `?c=2` (the P.S.), `?c=3` (the P.P.S., added 2026-09-03) — same numbering as `close-c`. Campaign-specific tracking params (to attribute conversions to this variant specifically) aren't added yet — a Phase A/analytics decision, not a copy one |
 | **Price** | never appears here — lives on the booking page |
 | **Base letter** | `06-E2-esl-product-creature-a-close-c.md` — read that file's own frontmatter + Build notes for the full history of everything from Beat 2 onward. This file's own Build notes only cover what's new: Beat 0 |
 
@@ -269,7 +269,7 @@ I'm not going to tell you this fixes money in general. It's not going to conjure
 never realistically yours. What it does do: it pulls what's already somewhere in reach a little
 closer, and once it arrives, it doesn't let go again.
 
-[Let me send it]({{BOOKING_URL}}?c=1), and I'll walk you through the rest — where to send it, what
+[Let me send it](https://theseerwithin.com/offers/wiccan/pixiu-bracelet?c=1), and I'll walk you through the rest — where to send it, what
 to write on your one sentence, how to seal it in. Nothing complicated.
 
 I hope this holds for you the way it was built to, dear.
@@ -281,10 +281,10 @@ I hope this holds for you the way it was built to, dear.
 ## P.S. *(ships on every letter — settled 2026-08-10, no A/B)*
 
 P.S. If you remember one thing from tonight, let it be this: he has no way out. That's not a
-detail, that's the whole mechanism. [It's ready to send whenever you are.]({{BOOKING_URL}}?c=2)
+detail, that's the whole mechanism. [It's ready to send whenever you are.](https://theseerwithin.com/offers/wiccan/pixiu-bracelet?c=2)
 
 P.P.S. Left wrist, %FIRSTNAME%, never the right — it's the one that receives.
-[Send it to me.]({{BOOKING_URL}}?c=3)
+[Send it to me.](https://theseerwithin.com/offers/wiccan/pixiu-bracelet?c=3)
 
 ---
 

@@ -54,18 +54,24 @@ export function upsell2Copy(pathname?: string): Upsell2Copy {
  * resolve the offer from the booking session (not the URL). The pathname-based
  * upsell1Copy/upsell2Copy above stay for 02's own prefix-mounted pages.
  */
-export const BACKEND_UPSELL_PITCH: Record<BackendOfferKey, { upsell1: Upsell1Copy; upsell2: Upsell2Copy }> = {
+// Offers still in development (07) have no upsell copy or route yet.
+// Keep them absent rather than borrowing another purchased product's pitch.
+export const BACKEND_UPSELL_PITCH: Partial<Record<BackendOfferKey, BackendOfferCopy>> = {
   'twin-flame': { upsell1: TWIN_FLAME_UPSELL1, upsell2: TWIN_FLAME_UPSELL2 },
   'judgement-day': { upsell1: JUDGEMENT_UPSELL1, upsell2: JUDGEMENT_UPSELL2 },
   'pixiu-bracelet': { upsell1: PIXIU_UPSELL1, upsell2: PIXIU_UPSELL2 },
 };
 
 export function upsell1CopyForOffer(offer: BackendOfferKey): Upsell1Copy {
-  return BACKEND_UPSELL_PITCH[offer].upsell1;
+  const pitch = BACKEND_UPSELL_PITCH[offer];
+  if (!pitch) throw new Error(`No upsell pitch configured for ${offer}`);
+  return pitch.upsell1;
 }
 
 export function upsell2CopyForOffer(offer: BackendOfferKey): Upsell2Copy {
-  return BACKEND_UPSELL_PITCH[offer].upsell2;
+  const pitch = BACKEND_UPSELL_PITCH[offer];
+  if (!pitch) throw new Error(`No upsell pitch configured for ${offer}`);
+  return pitch.upsell2;
 }
 
 export { displayName } from "./upsellCopy/types";

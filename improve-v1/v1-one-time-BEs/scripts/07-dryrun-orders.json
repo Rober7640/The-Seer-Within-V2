@@ -1,0 +1,1056 @@
+{
+  "mon": {
+    "order_id": "dryrun-mon-0001",
+    "email": "dryrun@example.com",
+    "first_name": "Diane",
+    "paid_at": "2026-08-31T08:41:12Z",
+    "topic": "money",
+    "tier": "spread",
+    "bump_product_key": null,
+    "question": "Since my dad died four years ago I've been the one who covers everything at home — my mum's council tax and her boiler, my brother's rent whenever he's short, the whole of Christmas at my house. I'm on decent money and I have £300 saved. Nobody ever asked me to take it on, I just started doing it and now I can't see a way to stop that doesn't make me the one who let everybody down. What am I actually carrying here, and how much of it was ever mine?",
+    "email_free_read": "What’s on you: the Ten of Wands A figure bent almost double, carrying ten heavy staves in both arms. The bundle is so wide it covers his face. And in the distance, a small town with the lights on. Two things in that picture. He is nearly there. The town is close. And the load is blocking his view of it — the only reason the last part of the walk is hard is what he insisted on bringing. Maybe you’d call it being the reliable one. Maybe you’d call it easier to do it myself than ask twice. Maybe you’d call it what happens when you’re the one who notices things — the birthdays, the tone of a room, whether anybody has eaten. And none of that is a complaint about you. The staves in that card are good things — wands are the suit of fire and drive, and every one of them was something you wanted at some point. This isn’t a card about being used. It’s a card about not setting anything down once you were done needing it. So here’s what the Ten of Wands won’t tell me. It shows me you’re carrying. It doesn’t show me which of the ten isn’t yours — and there is always at least one that got handed over so quietly that neither of you noticed the transfer. The five behind this card find it. One card can’t.",
+    "draw": {
+      "spread_name": "The Weight",
+      "spread_key": "the-weight",
+      "draw_date": "2026-08-31",
+      "day": [
+        {
+          "number": 1,
+          "name": "What's on you",
+          "job": "What she is carrying, as the cut shows it — the whole load before it is broken up",
+          "card_name": "Ten of Wands",
+          "reversed": false,
+          "free": true
+        },
+        {
+          "number": 2,
+          "name": "Whose hands it was in before yours",
+          "job": "Who carried this before she did, and how it came across to her",
+          "card_name": "King of Pentacles",
+          "reversed": false,
+          "free": false
+        },
+        {
+          "number": 3,
+          "name": "What it was for — it protected somebody, once",
+          "job": "What the weight was originally for. The person it kept safe, back when it worked",
+          "card_name": "Six of Pentacles",
+          "reversed": false,
+          "free": false
+        },
+        {
+          "number": 4,
+          "name": "What it costs you now",
+          "job": "What carrying it takes out of her now — a specific price, not a mood",
+          "card_name": "Four of Swords",
+          "reversed": false,
+          "free": false
+        },
+        {
+          "number": 5,
+          "name": "What it's still protecting — why you haven't put it down",
+          "job": "What is still standing behind it. What putting it down would expose, and who that would cost",
+          "card_name": "The Empress",
+          "reversed": true,
+          "free": false
+        },
+        {
+          "number": 6,
+          "name": "What puts it down",
+          "job": "The one thing that actually sets it down. Not permission — the act",
+          "card_name": "Judgement",
+          "reversed": false,
+          "free": false
+        }
+      ],
+      "undertow": [],
+      "other_chair": [],
+      "open": [
+        {
+          "number": 1,
+          "card_name": "Three of Wands",
+          "reversed": false
+        },
+        {
+          "number": 2,
+          "card_name": "The Chariot",
+          "reversed": true
+        },
+        {
+          "number": 3,
+          "card_name": "Two of Cups",
+          "reversed": false
+        },
+        {
+          "number": 4,
+          "card_name": "Seven of Swords",
+          "reversed": false
+        },
+        {
+          "number": 5,
+          "card_name": "Queen of Cups",
+          "reversed": false
+        },
+        {
+          "number": 6,
+          "card_name": "Nine of Wands",
+          "reversed": false
+        }
+      ]
+    },
+    "question_2": "I've got a partner who has never said a word about any of it but has started going quiet on a Sunday when my mum rings. Am I about to lose him over this?",
+    "question_3": "If I do stop paying for some of it, which one do I stop first? I keep going round in circles on whether it's my brother's rent or Christmas."
+  },
+  "tue": {
+    "order_id": "dryrun-tue-0001",
+    "email": "dryrun@example.com",
+    "first_name": "Sarah",
+    "paid_at": "2026-09-03T22:14:07Z",
+    "topic": "love",
+    "tier": "spread",
+    "bump_product_key": null,
+    "question": "I've been with him six years and we're not engaged, not living together, nothing has moved since 2023. He says he wants it all eventually. Do I keep waiting for him to be ready or do I go now while I still have the energy to start again?",
+    "email_free_read": "Door one: the Devil A horned figure squatting on a block. Two people chained at the neck below it. And the chains are loose — wide loops that would lift straight off over their heads if either of them stood up. Nobody in that picture is trapped. They’re staying. Maybe you’d call it patience. Maybe you’d call it not the right time, not while his mother’s ill, not before the lease is up. Maybe you’d call it loving somebody through a rough patch that is now four years long. The card doesn’t argue with any of those. It just counts the mornings. And look again, because there are two of them chained to that block. Somebody is down there beside you, and you knew their name before I said there was one. Here’s what the Devil won’t tell me. It shows me you’re staying. It doesn’t show me which of the two of you stands up first — and that decides everything. If it’s you, this ends one way. If it’s them, it ends another, and you find out by being left. The three behind this door tell me which. One card can’t. Door two: the Eight of Cups A figure with a stick, walking uphill into rocky ground, away from eight cups stacked neat behind them. Not looking back. The moon’s out. This isn’t impulsive leaving. The Eight of Cups is the leaving that comes after you’ve already tried — properly tried, more than once, in ways nobody else saw. Eight cups is not nothing. They’re upright, they’re arranged, they took years. This is the door where you go, and it costs you every one of them. The cups are the specifics, and they’re never dramatic. The friends who came with him. The Sunday routine. The version of the story you’ve told your mother for six years. Whatever you’d have to start explaining. And none of it has to have been terrible. That’s what makes this card hard rather than sad. There can still be love in it. There are usually good years in it. You don’t have to hate a thing to be finished with it , and you don’t need somebody to blame before you’re allowed to go. What the Eight of Cups won’t tell me is what’s at the top of that hill. The figure walks into the dark and the card does not show the other side, so I can’t say from here whether the walk buys you a year or costs you one. From the bottom of the hill those look identical. Three cards behind this door say which. Two can’t.",
+    "draw": {
+      "spread_name": "The Two Doors",
+      "spread_key": "the-two-doors",
+      "draw_date": "2026-09-03",
+      "day": [
+        {
+          "number": 1,
+          "name": "Door one, as it looks from here",
+          "job": "What staying looks like from where she is standing now, before anything is turned",
+          "card_name": "The Devil",
+          "reversed": false,
+          "free": true
+        },
+        {
+          "number": 2,
+          "name": "Door two, as it looks from here",
+          "job": "What leaving looks like from where she is standing now, before anything is turned",
+          "card_name": "Eight of Cups",
+          "reversed": false,
+          "free": true
+        },
+        {
+          "number": 3,
+          "name": "Behind door one — what it costs",
+          "job": "What staying takes from her. The price of door one, named specifically",
+          "card_name": "Four of Swords",
+          "reversed": false,
+          "free": false
+        },
+        {
+          "number": 4,
+          "name": "Behind door one — what it gives",
+          "job": "What staying actually hands her. Not consolation — the real thing it gives",
+          "card_name": "Six of Cups",
+          "reversed": false,
+          "free": false
+        },
+        {
+          "number": 5,
+          "name": "Behind door one — who she becomes",
+          "job": "Who she is on the other side of door one, after the cost and the gift have both landed",
+          "card_name": "Nine of Swords",
+          "reversed": false,
+          "free": false
+        },
+        {
+          "number": 6,
+          "name": "Behind door two — what it costs",
+          "job": "What leaving takes from her. The price of door two, named specifically",
+          "card_name": "Five of Pentacles",
+          "reversed": false,
+          "free": false
+        },
+        {
+          "number": 7,
+          "name": "Behind door two — what it gives",
+          "job": "What leaving actually hands her. Not freedom in the abstract — the real thing it gives",
+          "card_name": "Ace of Wands",
+          "reversed": false,
+          "free": false
+        },
+        {
+          "number": 8,
+          "name": "Behind door two — who she becomes",
+          "job": "Who she is on the other side of door two, after the cost and the gift have both landed",
+          "card_name": "The Star",
+          "reversed": false,
+          "free": false
+        }
+      ],
+      "undertow": [],
+      "other_chair": [],
+      "open": [
+        {
+          "number": 1,
+          "card_name": "The Tower",
+          "reversed": true
+        },
+        {
+          "number": 2,
+          "card_name": "Three of Cups",
+          "reversed": false
+        },
+        {
+          "number": 3,
+          "card_name": "King of Swords",
+          "reversed": false
+        },
+        {
+          "number": 4,
+          "card_name": "Two of Pentacles",
+          "reversed": false
+        },
+        {
+          "number": 5,
+          "card_name": "Knight of Wands",
+          "reversed": false
+        },
+        {
+          "number": 6,
+          "card_name": "The Sun",
+          "reversed": false
+        }
+      ]
+    },
+    "question_2": "My mum keeps telling me to give him a deadline and I've never done it. Would saying an actual date out loud change anything or would I just be starting the ending?",
+    "question_3": "If I do go, is there anything real waiting or am I only leaving? I'm 34 and that's the bit I can't say out loud to anyone."
+  },
+  "wed": {
+    "order_id": "dryrun-wed-0001",
+    "email": "dryrun@example.com",
+    "first_name": "Priya",
+    "paid_at": "2026-09-02T13:05:33Z",
+    "topic": "love",
+    "tier": "spread",
+    "bump_product_key": null,
+    "question": "There's a man at work who has asked me twice now to go for a drink and both times I said I was busy. I wasn't busy. I came out of a nine-year thing eighteen months ago and I have said no to every single person since without even thinking about it. I don't want to be doing this at 40. What do I actually do today — not eventually, today?",
+    "email_free_read": "Where you are: the Four of Cups A young man sitting under a tree with his arms crossed. Three cups on the grass in front of him, upright, doing nothing. And out of a small cloud at his shoulder, a hand is holding out a fourth. He isn’t looking at it. He’s looking at the three. That’s the whole card and it’s more uncomfortable than it first seems. Nothing has been taken from him. Nobody is against him. He has three cups. The fourth is being handed over, free, at arm’s length, and he’s got his eyes on the ones he already knows. This is the card of the offer you’ve decided isn’t for you before you’ve properly looked at it. And it is almost always something small. A message you’ve left unanswered for a fortnight. An invitation you keep meaning to say yes to. Somebody who has been perfectly clear and who you’ve decided is being polite. Look at his arms, though. Folded. That’s a decision. Sitting there is a thing he’s doing, not a thing being done to him. Now — what the Four of Cups won’t tell me. It shows me the cup is out. It doesn’t tell me why your arms are folded , and there are only ever a few reasons: you’ve been handed something like it before and it cost you; you don’t think you’re owed it; or taking it would mean the three you’ve got weren’t enough, and you’d rather they were. Those are three completely different readings with three completely different instructions. The five cards behind this one say which is yours. One card can’t. So let me lay the five behind it , and I’ll tell you which of the three is holding your arms shut.",
+    "draw": {
+      "spread_name": "The Small Instruction",
+      "spread_key": "the-small-instruction",
+      "draw_date": "2026-09-02",
+      "day": [
+        {
+          "number": 1,
+          "name": "Where you are",
+          "job": "Where she is standing today, before anything is asked of her",
+          "card_name": "Four of Cups",
+          "reversed": false,
+          "free": true
+        },
+        {
+          "number": 2,
+          "name": "The step — the one thing",
+          "job": "The single action the cut points at. One thing, small enough to be done today",
+          "card_name": "Page of Cups",
+          "reversed": false,
+          "free": false
+        },
+        {
+          "number": 3,
+          "name": "What's in the way",
+          "job": "What actually stops her taking it — the real obstacle, not the stated reason",
+          "card_name": "Eight of Swords",
+          "reversed": false,
+          "free": false
+        },
+        {
+          "number": 4,
+          "name": "What it asks of you",
+          "job": "What taking the step costs her in the moment of taking it",
+          "card_name": "Strength",
+          "reversed": false,
+          "free": false
+        },
+        {
+          "number": 5,
+          "name": "What changes if you take it",
+          "job": "What is different afterwards. The concrete change, not the mood lift",
+          "card_name": "Ace of Cups",
+          "reversed": false,
+          "free": false
+        },
+        {
+          "number": 6,
+          "name": "What it costs to keep not taking it",
+          "job": "The price of another year of not doing it, named plainly",
+          "card_name": "Nine of Swords",
+          "reversed": false,
+          "free": false
+        }
+      ],
+      "undertow": [],
+      "other_chair": [],
+      "open": [
+        {
+          "number": 1,
+          "card_name": "The Hermit",
+          "reversed": true
+        },
+        {
+          "number": 2,
+          "card_name": "Ten of Cups",
+          "reversed": false
+        },
+        {
+          "number": 3,
+          "card_name": "Five of Wands",
+          "reversed": false
+        },
+        {
+          "number": 4,
+          "card_name": "Queen of Pentacles",
+          "reversed": false
+        },
+        {
+          "number": 5,
+          "card_name": "Six of Swords",
+          "reversed": false
+        },
+        {
+          "number": 6,
+          "card_name": "Three of Pentacles",
+          "reversed": false
+        }
+      ]
+    },
+    "question_2": "The nine-year thing ended because he left, not because I did. Am I still waiting for him to come back without admitting it?",
+    "question_3": "There's also a friend I've known since school who I think has been waiting years for me to notice. Is that a real thing or am I inventing it to have somewhere safe to look?"
+  },
+  "thu": {
+    "order_id": "dryrun-thu-0001",
+    "email": "dryrun@example.com",
+    "first_name": "Nadia",
+    "paid_at": "2026-09-03T07:58:20Z",
+    "topic": "love",
+    "tier": "spread",
+    "bump_product_key": null,
+    "question": "I have ended three relationships now and every single time I did it at the same point — the month they started talking about moving in together. I liked all three of them. The last one I still think about. I can't tell any more whether I keep choosing badly or whether I'm the one doing something here. What is actually driving this?",
+    "email_free_read": "What you think it’s about: the Five of Cups A figure in a long black cloak, head down, looking at three cups tipped over on the ground with the wine run out of them. Behind him, two cups are still standing. He hasn’t turned round. And past all of it there’s a bridge, and a house on the far bank with lights in it. That’s the picture, and every part of it is doing work. Three spilled, two standing, one bridge. The card is not about loss. The card is about where a person is standing in relation to a loss — head down, back turned to what’s left, with a way across already built and in view. So this is the story you’ve been telling. That something went wrong, and it did, and the going-wrong is the thing you’re dealing with. I’m not going to argue with you about the three cups. They’re on the floor and the wine’s gone into the grass. What I’d have you notice is that this card has never once been about the spilling. It’s about the facing . He’s chosen a direction to look in, and he’s held it long enough that the two upright cups have stopped counting as cups. What’s under it: the Moon A path running from the bottom of the card up between two grey towers and off into hills. A dog and a wolf either side of it, both howling. And down in the pool at the front, a crayfish half out of the water. The moon above has a face in it, and the face is not looking at you. It’s looking down and to the side, the way somebody does when they’re not going to say the thing. This is the card for what you can’t see straight, and stacked under the Five of Cups it says something quite specific. The thing keeping you turned away from those two cups is not the loss. It’s that you can’t currently tell which of your fears about it are real. Look at the dog and the wolf. Same animal, roughly. One is safe and one isn’t and in that light you cannot tell them apart — and that is the actual condition you’re in. Not sad. Unable to sort. Every option looks like it might be the wolf, so you keep your head down and look at the wine, because at least the wine is a fact. And the crayfish is the part people miss. It’s coming up out of the water. Whatever this is, it’s already surfacing on its own schedule. You’re not deciding whether to look at it. You’re deciding whether you look at it now or when it’s fully out. Now, what these two won’t tell me. They show me the current is there and roughly what it’s made of. They don’t show me when it started — and a thing like this always has a date. There’s a first time. It sits years before whatever you’d point at, and it is not the event you’d name. Five cards behind these give me the date, what’s been feeding it since, and what actually cuts it. Two can’t. So let me lay the five underneath , and I’ll tell you when this started.",
+    "draw": {
+      "spread_name": "The Undertow",
+      "spread_key": "the-undertow",
+      "draw_date": "2026-09-03",
+      "day": [
+        {
+          "number": 1,
+          "name": "What you think it's about",
+          "job": "The story she is telling about it — what she believes the problem is",
+          "card_name": "Five of Cups",
+          "reversed": false,
+          "free": true
+        },
+        {
+          "number": 2,
+          "name": "What's under it",
+          "job": "What is running underneath the story, showing on the surface as something else",
+          "card_name": "The Moon",
+          "reversed": false,
+          "free": true
+        },
+        {
+          "number": 3,
+          "name": "When it started — the first time",
+          "job": "The first time the current ran. Where it began, before it had anything to do with him",
+          "card_name": "Six of Cups",
+          "reversed": false,
+          "free": false
+        },
+        {
+          "number": 4,
+          "name": "What has kept it alive",
+          "job": "What has fed it since. What she has been doing, without meaning to, that keeps it running",
+          "card_name": "The Hierophant",
+          "reversed": false,
+          "free": false
+        },
+        {
+          "number": 5,
+          "name": "Who it still serves",
+          "job": "⚑ the shadow-work bite. Who this arrangement is still working for, and what it spares her",
+          "card_name": "Four of Pentacles",
+          "reversed": false,
+          "free": false
+        },
+        {
+          "number": 6,
+          "name": "How you'd know it when it surfaces",
+          "job": "The tell. How she would recognise the current in the moment it takes hold, not months later",
+          "card_name": "Knight of Swords",
+          "reversed": false,
+          "free": false
+        },
+        {
+          "number": 7,
+          "name": "What breaks the current",
+          "job": "What actually stops the pull. The thing that ends it rather than riding it out",
+          "card_name": "The Star",
+          "reversed": false,
+          "free": false
+        }
+      ],
+      "undertow": [],
+      "other_chair": [],
+      "open": [
+        {
+          "number": 1,
+          "card_name": "Death",
+          "reversed": true
+        },
+        {
+          "number": 2,
+          "card_name": "Two of Wands",
+          "reversed": false
+        },
+        {
+          "number": 3,
+          "card_name": "Seven of Cups",
+          "reversed": false
+        },
+        {
+          "number": 4,
+          "card_name": "Page of Pentacles",
+          "reversed": false
+        },
+        {
+          "number": 5,
+          "card_name": "Ten of Swords",
+          "reversed": false
+        },
+        {
+          "number": 6,
+          "card_name": "The Empress",
+          "reversed": false
+        }
+      ]
+    },
+    "question_2": "The last one still texts me at Christmas. Should I answer it properly this year or is that me starting it again?",
+    "question_3": "My mother left my father at almost exactly the age I am now. Is that mine or hers?"
+  },
+  "fri": {
+    "order_id": "dryrun-fri-0001",
+    "email": "dryrun@example.com",
+    "first_name": "Helen",
+    "paid_at": "2026-09-04T19:22:47Z",
+    "topic": "money",
+    "tier": "spread",
+    "bump_product_key": "marcus_same_day",
+    "question": "I have run my own business for eleven years. It pays the mortgage and it has never once let me take a proper holiday. My husband stopped asking how it was going about four years ago. I'm 52 and a friend has just offered me a salaried job for eight thousand less. What has this business actually cost me, and what has it actually paid me — because I genuinely can't tell any more which column is bigger.",
+    "email_free_read": "The thing itself: the Four of Pentacles A figure sitting on a stool with a coin clutched to the chest with both arms. One balanced on his head. Two more under his feet. And a whole town behind him that he has his back to. Look at the arms. He isn’t counting the coin, or spending it, or even looking at it. He is gripping it. And with both arms occupied there is nothing left to do anything else with. This is the card of holding on after the danger has passed. Something happened once — a bad year, a bill that arrived at the wrong time, a person who let you down over money — and the grip made complete sense then. The grip is still on. What it won’t tell me is which year the grip started . Every Four of Pentacles has a date behind it and that date is what the card is actually about. Two of the six find it. This one can’t. One thing it has cost: the Five of Pentacles Two figures out in the snow. One on a crutch, one wrapped in a shawl. And beside them, close enough to touch, a lit stained-glass window with five gold coins worked into it. They are not looking at the window. That is the entire card and it has been the entire card for five hundred years. The help is right there , lit, at head height, and the two people passing it have their eyes on the ground. Maybe you’d call it not wanting to be a burden. Maybe you’d call it we’ll manage. Maybe you’d call it not telling anyone how bad the month actually was, which most people would rather do in the snow than in a lit room. And nothing in that card says either of them did anything wrong. Nobody in the Five of Pentacles is being punished. It is a card about a habit of the eyes , not a verdict on your judgement — and people who have never once been careless end up in it. One thing it has paid: the Nine of Pentacles A woman standing alone in a walled garden thick with vines. Nine coins around her. A hooded falcon sitting on her gloved hand, and a small snail down by her hem. This is the payment column, and I want you to see it properly. She built that garden. The wall is hers, the vines are hers, the bird is trained and hooded and sits where she puts it. Whatever the grip has cost you, it also bought something, and this card says what: you do not have to ask anyone. That is not nothing. It is most of what people mean by security, and you paid for it. But look again, because she is on her own in there, and the falcon is hooded — a hunting bird, kept blind, on her hand. The card will not tell me what she stopped letting off the glove . Four of the six answer that. Three can’t.",
+    "draw": {
+      "spread_name": "The Ledger",
+      "spread_key": "the-ledger",
+      "draw_date": "2026-09-04",
+      "day": [
+        {
+          "number": 1,
+          "name": "The thing itself",
+          "job": "The thing being weighed, as the cut shows it, before either column is filled in",
+          "card_name": "Four of Pentacles",
+          "reversed": false,
+          "free": true
+        },
+        {
+          "number": 2,
+          "name": "One thing it has cost",
+          "job": "The first cost, the one she can already see",
+          "card_name": "Five of Pentacles",
+          "reversed": false,
+          "free": true
+        },
+        {
+          "number": 3,
+          "name": "One thing it has paid",
+          "job": "The first payment, the one she can already see",
+          "card_name": "Nine of Pentacles",
+          "reversed": false,
+          "free": true
+        },
+        {
+          "number": 4,
+          "name": "The second cost",
+          "job": "A cost she has been counting as normal. The one she would not put on a list",
+          "card_name": "Ten of Wands",
+          "reversed": false,
+          "free": false
+        },
+        {
+          "number": 5,
+          "name": "The third cost",
+          "job": "The cost she has not been counting at all, because it landed on somebody else",
+          "card_name": "Three of Swords",
+          "reversed": false,
+          "free": false
+        },
+        {
+          "number": 6,
+          "name": "The second payment",
+          "job": "What it has paid her that has nothing to do with money",
+          "card_name": "Eight of Pentacles",
+          "reversed": false,
+          "free": false
+        },
+        {
+          "number": 7,
+          "name": "The third payment",
+          "job": "What it has paid her that she would lose the day she stopped",
+          "card_name": "Queen of Wands",
+          "reversed": false,
+          "free": false
+        },
+        {
+          "number": 8,
+          "name": "The balance — which column is heavier",
+          "job": "The reckoning. Which side of the ledger actually weighs more, stated straight",
+          "card_name": "Justice",
+          "reversed": false,
+          "free": false
+        },
+        {
+          "number": 9,
+          "name": "What leaving would cost",
+          "job": "The exit price. What walking away takes from her, on top of everything already spent",
+          "card_name": "Ten of Pentacles",
+          "reversed": false,
+          "free": false
+        }
+      ],
+      "undertow": [],
+      "other_chair": [],
+      "open": [
+        {
+          "number": 1,
+          "card_name": "Wheel of Fortune",
+          "reversed": true
+        },
+        {
+          "number": 2,
+          "card_name": "Six of Cups",
+          "reversed": false
+        },
+        {
+          "number": 3,
+          "card_name": "King of Cups",
+          "reversed": false
+        },
+        {
+          "number": 4,
+          "card_name": "Two of Swords",
+          "reversed": false
+        },
+        {
+          "number": 5,
+          "card_name": "Page of Wands",
+          "reversed": false
+        },
+        {
+          "number": 6,
+          "card_name": "The Magician",
+          "reversed": false
+        }
+      ]
+    },
+    "question_2": "If I take the salaried job, what happens to my marriage? He stopped asking about the business four years ago and I've never worked out what that meant.",
+    "question_3": "There is one client who is a third of my income and I dread every email. Do I keep them through this or is that the thing I'm actually being asked to put down?"
+  },
+  "sat": {
+    "order_id": "dryrun-sat-0001",
+    "email": "dryrun@example.com",
+    "first_name": "Chloe",
+    "paid_at": "2026-09-05T11:36:04Z",
+    "topic": "love",
+    "tier": "spread",
+    "bump_product_key": null,
+    "question": "Fourteen months in and he still introduces me by my first name and nothing after it. He's warm, he texts every morning, he has never once said what this is. I stopped asking because the answer is always that I know how he feels. I'm not asking you to read his mind. I'm asking what the cards say he is actually doing here.",
+    "email_free_read": "What you see: the Knight of Cups A rider in armour on a white horse, holding a single cup out in front of him. Wings on the helmet. A river running behind. And the horse is walking — not cantering, not charging. Walking. This is the loveliest-looking card in the suit and I want to be precise about what it shows. He is holding the cup out. He is not handing it over. The arm is extended and it stays extended, and the picture never resolves. Maybe you’d call it slow. Maybe you’d call it he’s been hurt before. Maybe you’d call it the nicest anyone has been to you in a long time, which is true and is also why it’s hard to look at squarely. What this card won’t tell me is whether the arm ever comes down . A held-out cup and a given cup look identical in a photograph, and the difference is the whole of your next two years. Two of the five behind this settle it. One card can’t. What’s going on: the Seven of Cups A figure in dark silhouette with his back to us, facing seven cups floating in a cloud. Each one has something different in it — a face, a wreath, a tower, jewels, a snake, a shrouded shape. Every one of them is still in the cloud. Nothing has been taken down. This is the card for the state of standing in front of several futures and finding the standing itself comfortable — which it is, because in the cloud they all still work. And this is not a card about a liar. That’s the read people jump to and it is usually wrong. Nobody in that picture is deceiving anybody; a man can mean every word of it while the arm stays out. You have not been stupid. You were shown a true thing that was never going to be a decision, and you responded to it the way a person with any warmth responds. And what the Seven of Cups won’t tell me is which of the seven you are — the wreath, the tower, or the shrouded one. That is not cruelty, it’s just outside what two cards can reach. Three of the five say which. Two can’t.",
+    "draw": {
+      "spread_name": "The Other Chair",
+      "spread_key": "the-other-chair",
+      "draw_date": "2026-09-05",
+      "day": [
+        {
+          "number": 1,
+          "name": "What you see",
+          "job": "What the situation looks like from her chair — the version she has been living in",
+          "card_name": "Knight of Cups",
+          "reversed": false,
+          "free": true
+        },
+        {
+          "number": 2,
+          "name": "What he's doing",
+          "job": "What the cards show is being done, laid out plainly, without motive attached yet",
+          "card_name": "Seven of Cups",
+          "reversed": false,
+          "free": true
+        },
+        {
+          "number": 3,
+          "name": "What he thinks he's doing — his story about it",
+          "job": "The account he gives himself. What this looks like from the other chair, on his own terms",
+          "card_name": "The Hermit",
+          "reversed": true,
+          "free": false
+        },
+        {
+          "number": 4,
+          "name": "What he's protecting",
+          "job": "What the behaviour keeps safe. The thing that would be at risk if it stopped",
+          "card_name": "The Emperor",
+          "reversed": false,
+          "free": false
+        },
+        {
+          "number": 5,
+          "name": "What he'd have to admit",
+          "job": "The thing the cards say goes unsaid — what naming it would force him to concede",
+          "card_name": "Two of Swords",
+          "reversed": false,
+          "free": false
+        },
+        {
+          "number": 6,
+          "name": "What he's waiting on from you",
+          "job": "What the arrangement needs from her to keep running, and what he is waiting for her to do",
+          "card_name": "Eight of Cups",
+          "reversed": false,
+          "free": false
+        },
+        {
+          "number": 7,
+          "name": "What he does if nothing changes",
+          "job": "Where this goes if neither of them moves. The cards' reading of a year of the same",
+          "card_name": "The Hanged Man",
+          "reversed": false,
+          "free": false
+        }
+      ],
+      "undertow": [],
+      "other_chair": [],
+      "open": [
+        {
+          "number": 1,
+          "card_name": "The Moon",
+          "reversed": true
+        },
+        {
+          "number": 2,
+          "card_name": "Four of Wands",
+          "reversed": false
+        },
+        {
+          "number": 3,
+          "card_name": "Nine of Cups",
+          "reversed": false
+        },
+        {
+          "number": 4,
+          "card_name": "Three of Pentacles",
+          "reversed": false
+        },
+        {
+          "number": 5,
+          "card_name": "King of Wands",
+          "reversed": false
+        },
+        {
+          "number": 6,
+          "card_name": "Five of Swords",
+          "reversed": false
+        }
+      ]
+    },
+    "question_2": "His sister got married in June and I wasn't invited. I've told myself it was a small wedding. Was it?",
+    "question_3": "If I ask him outright what this is, what am I actually risking? I'd rather know the cost before I do it."
+  },
+  "sun": {
+    "order_id": "dryrun-sun-0001",
+    "email": "dryrun@example.com",
+    "first_name": "Marianne",
+    "paid_at": "2026-09-06T20:47:19Z",
+    "topic": "love",
+    "tier": "spread",
+    "bump_product_key": "marcus_same_day",
+    "question": "I'm 47, six years divorced, and I have been with a man for two years who is kind, generous and completely shut. Everyone tells me how lucky I am. I keep thinking about somebody I let go of in my thirties. I don't know whether I want out of this or whether I want him to open, and I can't ask my friends because they all adore him. Show me all of it.",
+    "email_free_read": "The first house — you: the Queen of Swords A crowned woman on a stone throne above the cloud line. An upright sword in her right hand. And her left hand raised, open, palm out — the oldest gesture there is for stop, and tell me the truth . She is the most misread card in the deck. People call her cold. She is somebody who has already paid for what she knows , and the sword is upright because she is holding it, not swinging it. Maybe you’d call it being realistic about money. Maybe you’d call it having learned the hard way. Maybe you’d call it the fact that you now read the whole contract, because there was a year when you didn’t. The seventh house — the one you’re tied to: the King of Pentacles A king on a throne carved with bulls’ heads, robe covered in grapevines, one hand resting on a coin and a castle behind him. Solid, settled, and entirely still. The seventh house is partnership — a spouse, a business partner, whoever your money is actually entangled with. And what has landed in it is the card of the person who holds the position . Not a villain. A king in that house is somebody with the standing, the history and the last word on how things are done. And I read the cards, not the man. That is what the spread says about the shape of the arrangement, not a claim about anybody’s intentions. The twelfth house — what’s hidden: the High Priestess A seated figure between one black pillar and one white one. A crescent moon at her feet. And a scroll in her lap, half covered by her robe , so you can read part of the word on it and not the rest. The twelfth is the room of what has not been said out loud yet, and the card that landed in it is the card of information that exists and is not being shown . Note carefully: that is not the same as a lie. The scroll is right there in the open. It is simply not unrolled. And plenty of what sits in a twelfth house was put there by the person it belongs to, for good reasons, years ago. There is often nothing to expose and nobody to catch. Now, what these three won’t tell me. Individually they’re legible. What I cannot read is the traffic between them — whether what’s in the twelfth belongs to the seventh house or to the first, and which direction it’s travelling. That’s not evasion. It is genuinely what the other nine houses are for: the second says what you actually hold, the eighth what is shared and what is ending, the tenth how it looks from outside. Nine rooms decide the meaning of these three.",
+    "draw": {
+      "spread_name": "The Zodiac Spread",
+      "spread_key": "the-zodiac-spread",
+      "draw_date": "2026-09-06",
+      "day": [
+        {
+          "number": 1,
+          "name": "Her",
+          "job": "The first house. Who she is in this, as she comes to the table today",
+          "card_name": "Queen of Swords",
+          "reversed": false,
+          "free": true
+        },
+        {
+          "number": 2,
+          "name": "What she holds",
+          "job": "The second house. What is actually hers — what she has built, earned and can count on",
+          "card_name": "Seven of Pentacles",
+          "reversed": false,
+          "free": false
+        },
+        {
+          "number": 3,
+          "name": "How she's been speaking",
+          "job": "The third house. How she has been saying it, and what her way of saying it keeps out",
+          "card_name": "Page of Swords",
+          "reversed": false,
+          "free": false
+        },
+        {
+          "number": 4,
+          "name": "Where she's from",
+          "job": "The fourth house. The home she came out of, and what it taught her to expect from a man",
+          "card_name": "Ten of Cups",
+          "reversed": false,
+          "free": false
+        },
+        {
+          "number": 5,
+          "name": "What she loves",
+          "job": "The fifth house. What she actually wants, as distinct from what she is settling for",
+          "card_name": "The Lovers",
+          "reversed": false,
+          "free": false
+        },
+        {
+          "number": 6,
+          "name": "Her days",
+          "job": "The sixth house. The shape of her ordinary week, and what living it costs her",
+          "card_name": "Eight of Pentacles",
+          "reversed": false,
+          "free": false
+        },
+        {
+          "number": 7,
+          "name": "The other person",
+          "job": "The seventh house. The man across from her, as the cut shows him",
+          "card_name": "King of Pentacles",
+          "reversed": false,
+          "free": true
+        },
+        {
+          "number": 8,
+          "name": "What's shared, and what's ending",
+          "job": "The eighth house. What is genuinely held in common, and what has already finished",
+          "card_name": "Death",
+          "reversed": false,
+          "free": false
+        },
+        {
+          "number": 9,
+          "name": "What she believes about it",
+          "job": "The ninth house. The rule she is judging this by, and whether she still believes it",
+          "card_name": "The Hierophant",
+          "reversed": true,
+          "free": false
+        },
+        {
+          "number": 10,
+          "name": "How she's seen",
+          "job": "The tenth house. How the pair of them look from outside, and what that costs her to keep up",
+          "card_name": "Six of Wands",
+          "reversed": false,
+          "free": false
+        },
+        {
+          "number": 11,
+          "name": "Who's around her",
+          "job": "The eleventh house. The people at the edges of this, and what they are pushing her toward",
+          "card_name": "Three of Cups",
+          "reversed": false,
+          "free": false
+        },
+        {
+          "number": 12,
+          "name": "What's hidden",
+          "job": "The twelfth house. What is running out of sight, in her and in it",
+          "card_name": "The High Priestess",
+          "reversed": false,
+          "free": true
+        }
+      ],
+      "undertow": [],
+      "other_chair": [],
+      "open": [
+        {
+          "number": 1,
+          "card_name": "Temperance",
+          "reversed": true
+        },
+        {
+          "number": 2,
+          "card_name": "Two of Wands",
+          "reversed": false
+        },
+        {
+          "number": 3,
+          "card_name": "Nine of Swords",
+          "reversed": false
+        },
+        {
+          "number": 4,
+          "card_name": "Ace of Pentacles",
+          "reversed": false
+        },
+        {
+          "number": 5,
+          "card_name": "Knight of Pentacles",
+          "reversed": false
+        },
+        {
+          "number": 6,
+          "card_name": "Five of Cups",
+          "reversed": false
+        }
+      ]
+    },
+    "question_2": "Do I tell him about the one from my thirties, or is that mine to keep?",
+    "question_3": "My friends all adore him and I have nobody to say any of this to. Who in my life can I actually take this to?"
+  },
+  "n8n": {
+    "order_id": "n8n-exec-30128",
+    "email": "dryrun@example.com",
+    "first_name": "Sarah",
+    "paid_at": "2026-09-03T22:14:07Z",
+    "topic": "love",
+    "tier": "spread",
+    "bump_product_key": null,
+    "question": "I've been with him six years and we're not engaged, not living together, nothing has moved since 2023. He says he wants it all eventually. Do I keep waiting for him to be ready or do I go now while I still have the energy to start again?",
+    "email_free_read": "Door one: the Devil A horned figure squatting on a block. Two people chained at the neck below it. And the chains are loose — wide loops that would lift straight off over their heads if either of them stood up. Nobody in that picture is trapped. They’re staying. Maybe you’d call it patience. Maybe you’d call it not the right time, not while his mother’s ill, not before the lease is up. Maybe you’d call it loving somebody through a rough patch that is now four years long. The card doesn’t argue with any of those. It just counts the mornings. And look again, because there are two of them chained to that block. Somebody is down there beside you, and you knew their name before I said there was one. Here’s what the Devil won’t tell me. It shows me you’re staying. It doesn’t show me which of the two of you stands up first — and that decides everything. If it’s you, this ends one way. If it’s them, it ends another, and you find out by being left. The three behind this door tell me which. One card can’t. Door two: the Eight of Cups A figure with a stick, walking uphill into rocky ground, away from eight cups stacked neat behind them. Not looking back. The moon’s out. This isn’t impulsive leaving. The Eight of Cups is the leaving that comes after you’ve already tried — properly tried, more than once, in ways nobody else saw. Eight cups is not nothing. They’re upright, they’re arranged, they took years. This is the door where you go, and it costs you every one of them. The cups are the specifics, and they’re never dramatic. The friends who came with him. The Sunday routine. The version of the story you’ve told your mother for six years. Whatever you’d have to start explaining. And none of it has to have been terrible. That’s what makes this card hard rather than sad. There can still be love in it. There are usually good years in it. You don’t have to hate a thing to be finished with it , and you don’t need somebody to blame before you’re allowed to go. What the Eight of Cups won’t tell me is what’s at the top of that hill. The figure walks into the dark and the card does not show the other side, so I can’t say from here whether the walk buys you a year or costs you one. From the bottom of the hill those look identical. Three cards behind this door say which. Two can’t.",
+    "draw": {
+      "spread_name": "The Two Doors",
+      "spread_key": "the-two-doors",
+      "draw_date": "2026-09-03",
+      "day": [
+        {
+          "number": 1,
+          "name": "Door one, as it looks from here",
+          "job": "What staying looks like from where she is standing now, before anything is turned",
+          "card_name": "The Devil",
+          "reversed": false,
+          "free": true
+        },
+        {
+          "number": 2,
+          "name": "Door two, as it looks from here",
+          "job": "What leaving looks like from where she is standing now, before anything is turned",
+          "card_name": "Eight of Cups",
+          "reversed": false,
+          "free": true
+        },
+        {
+          "number": 3,
+          "name": "Behind door one — what it costs",
+          "job": "What staying takes from her. The price of door one, named specifically",
+          "card_name": "Four of Swords",
+          "reversed": false,
+          "free": false
+        },
+        {
+          "number": 4,
+          "name": "Behind door one — what it gives",
+          "job": "What staying actually hands her. Not consolation — the real thing it gives",
+          "card_name": "Six of Cups",
+          "reversed": false,
+          "free": false
+        },
+        {
+          "number": 5,
+          "name": "Behind door one — who she becomes",
+          "job": "Who she is on the other side of door one, after the cost and the gift have both landed",
+          "card_name": "Nine of Swords",
+          "reversed": false,
+          "free": false
+        },
+        {
+          "number": 6,
+          "name": "Behind door two — what it costs",
+          "job": "What leaving takes from her. The price of door two, named specifically",
+          "card_name": "Five of Pentacles",
+          "reversed": false,
+          "free": false
+        },
+        {
+          "number": 7,
+          "name": "Behind door two — what it gives",
+          "job": "What leaving actually hands her. Not freedom in the abstract — the real thing it gives",
+          "card_name": "Ace of Wands",
+          "reversed": false,
+          "free": false
+        },
+        {
+          "number": 8,
+          "name": "Behind door two — who she becomes",
+          "job": "Who she is on the other side of door two, after the cost and the gift have both landed",
+          "card_name": "The Star",
+          "reversed": false,
+          "free": false
+        }
+      ],
+      "undertow": [],
+      "other_chair": [],
+      "open": [
+        {
+          "number": 1,
+          "card_name": "The Tower",
+          "reversed": true
+        },
+        {
+          "number": 2,
+          "card_name": "Three of Cups",
+          "reversed": false
+        },
+        {
+          "number": 3,
+          "card_name": "King of Swords",
+          "reversed": false
+        },
+        {
+          "number": 4,
+          "card_name": "Two of Pentacles",
+          "reversed": false
+        },
+        {
+          "number": 5,
+          "card_name": "Knight of Wands",
+          "reversed": false
+        },
+        {
+          "number": 6,
+          "card_name": "The Sun",
+          "reversed": false
+        }
+      ]
+    },
+    "question_2": "My mum keeps telling me to give him a deadline and I've never done it. Would saying an actual date out loud change anything or would I just be starting the ending?",
+    "question_3": "If I do go, is there anything real waiting or am I only leaving? I'm 34 and that's the bit I can't say out loud to anyone."
+  },
+  "soulmate": {
+    "order_id": "n8n-exec-30131",
+    "email": "dryrun@example.com",
+    "first_name": "Sarah",
+    "paid_at": "2026-09-03T22:14:07Z",
+    "topic": "love",
+    "tier": "spread",
+    "bump_product_key": null,
+    "question": "Have I already met my soulmate?",
+    "email_free_read": "Door one: the Devil A horned figure squatting on a block. Two people chained at the neck below it. And the chains are loose — wide loops that would lift straight off over their heads if either of them stood up. Nobody in that picture is trapped. They’re staying. Maybe you’d call it patience. Maybe you’d call it not the right time, not while his mother’s ill, not before the lease is up. Maybe you’d call it loving somebody through a rough patch that is now four years long. The card doesn’t argue with any of those. It just counts the mornings. And look again, because there are two of them chained to that block. Somebody is down there beside you, and you knew their name before I said there was one. Here’s what the Devil won’t tell me. It shows me you’re staying. It doesn’t show me which of the two of you stands up first — and that decides everything. If it’s you, this ends one way. If it’s them, it ends another, and you find out by being left. The three behind this door tell me which. One card can’t. Door two: the Eight of Cups A figure with a stick, walking uphill into rocky ground, away from eight cups stacked neat behind them. Not looking back. The moon’s out. This isn’t impulsive leaving. The Eight of Cups is the leaving that comes after you’ve already tried — properly tried, more than once, in ways nobody else saw. Eight cups is not nothing. They’re upright, they’re arranged, they took years. This is the door where you go, and it costs you every one of them. The cups are the specifics, and they’re never dramatic. The friends who came with him. The Sunday routine. The version of the story you’ve told your mother for six years. Whatever you’d have to start explaining. And none of it has to have been terrible. That’s what makes this card hard rather than sad. There can still be love in it. There are usually good years in it. You don’t have to hate a thing to be finished with it , and you don’t need somebody to blame before you’re allowed to go. What the Eight of Cups won’t tell me is what’s at the top of that hill. The figure walks into the dark and the card does not show the other side, so I can’t say from here whether the walk buys you a year or costs you one. From the bottom of the hill those look identical. Three cards behind this door say which. Two can’t.",
+    "draw": {
+      "spread_name": "The Two Doors",
+      "spread_key": "the-two-doors",
+      "draw_date": "2026-09-03",
+      "day": [
+        {
+          "number": 1,
+          "name": "Door one, as it looks from here",
+          "job": "What staying looks like from where she is standing now, before anything is turned",
+          "card_name": "The Devil",
+          "reversed": false,
+          "free": true
+        },
+        {
+          "number": 2,
+          "name": "Door two, as it looks from here",
+          "job": "What leaving looks like from where she is standing now, before anything is turned",
+          "card_name": "Eight of Cups",
+          "reversed": false,
+          "free": true
+        },
+        {
+          "number": 3,
+          "name": "Behind door one — what it costs",
+          "job": "What staying takes from her. The price of door one, named specifically",
+          "card_name": "Four of Swords",
+          "reversed": false,
+          "free": false
+        },
+        {
+          "number": 4,
+          "name": "Behind door one — what it gives",
+          "job": "What staying actually hands her. Not consolation — the real thing it gives",
+          "card_name": "Six of Cups",
+          "reversed": false,
+          "free": false
+        },
+        {
+          "number": 5,
+          "name": "Behind door one — who she becomes",
+          "job": "Who she is on the other side of door one, after the cost and the gift have both landed",
+          "card_name": "Nine of Swords",
+          "reversed": false,
+          "free": false
+        },
+        {
+          "number": 6,
+          "name": "Behind door two — what it costs",
+          "job": "What leaving takes from her. The price of door two, named specifically",
+          "card_name": "Five of Pentacles",
+          "reversed": false,
+          "free": false
+        },
+        {
+          "number": 7,
+          "name": "Behind door two — what it gives",
+          "job": "What leaving actually hands her. Not freedom in the abstract — the real thing it gives",
+          "card_name": "Ace of Wands",
+          "reversed": false,
+          "free": false
+        },
+        {
+          "number": 8,
+          "name": "Behind door two — who she becomes",
+          "job": "Who she is on the other side of door two, after the cost and the gift have both landed",
+          "card_name": "The Star",
+          "reversed": false,
+          "free": false
+        }
+      ],
+      "undertow": [],
+      "other_chair": [],
+      "open": [
+        {
+          "number": 1,
+          "card_name": "The Tower",
+          "reversed": true
+        },
+        {
+          "number": 2,
+          "card_name": "Three of Cups",
+          "reversed": false
+        },
+        {
+          "number": 3,
+          "card_name": "King of Swords",
+          "reversed": false
+        },
+        {
+          "number": 4,
+          "card_name": "Two of Pentacles",
+          "reversed": false
+        },
+        {
+          "number": 5,
+          "card_name": "Knight of Wands",
+          "reversed": false
+        },
+        {
+          "number": 6,
+          "card_name": "The Sun",
+          "reversed": false
+        }
+      ]
+    },
+    "question_2": "If I have already met him, is he someone I'm still in touch with?",
+    "question_3": "What have I been doing that keeps me from seeing it?"
+  }
+}

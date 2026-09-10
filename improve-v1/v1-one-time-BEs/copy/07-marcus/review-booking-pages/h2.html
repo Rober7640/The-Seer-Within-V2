@@ -1,0 +1,1136 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Marcus Stone — h2 · Reversible</title>
+<!--
+  07-C1 · h2 — REVERSIBLE.  g1's page with the rungs moved above the boxes, and the number
+  she picks treated as a DRAFT: she writes, the page reads what she wrote, and Marcus offers to
+  move her up or down before she pays.
+
+  THE ORDER OF EVENTS
+    1  "{N} cards. You've seen {N} of them."       the headline that counts   — g1
+    2  the strip — turned, and still face down                                — g1
+    3  "How many things are you asking me?"        the three rungs            — g1's own words
+    4  a rung opens EVERY box it bought, in place  ← the demonstration, box one included
+    5  she types, and the page answers her count:
+         · UP    a fork in box one → "Give the second half its own box — $57", one tap
+         · DOWN  bought two or three and only wrote one → "Then just the one — $35", one tap
+    6  the bump, the disclosure, the CTA                                       — g1
+
+  ⭐ THE MECHANISM IS UNCHANGED: the box appearing IS the demonstration. Under h2 it happens
+     twice — once when she picks, and again when she accepts a correction, which is the most
+     legible version of the argument there is: she taps, a box appears, that is the product.
+
+  🔴 THE RISK THIS VERSION ANSWERS. Rungs first asks her to count things she has not written
+     down. h2's answer is that the count is REVERSIBLE and the page says so out loud before she
+     picks — nothing typed is ever lost, in either direction — and then the page does the
+     counting for her from her own sentence. Guessing wrong costs one tap.
+
+  ⛔ MARCUS TALKING HER DOWN SURVIVES AND GAINS A TAP. Rung one's receipt and the italic line
+     under the row are g1's, unmoved. The down offer is the same argument made at the moment it
+     is provably true — she has written one thing and left the box she paid for empty.
+     ⛔ It is the only offer on the page that can lower what she is about to spend, and it is
+     shown BEFORE the pay button ever lights, never after.
+
+  DIFFERENT FROM THE ARCHIVED F-SERIES: F1–F5 all made the router offer an upgrade. None of
+  them could move her down, and none of them told her a change was free. h2 is that half.
+
+  ⛔ NO CONSENT TICKS. One checkbox on the page and it is the bump.
+  ⛔ NEVER HARDCODE A COUNT. Every number is a token off the GENERATED island.
+     node scripts/build-07-booking-data.mjs · --check fails on drift.
+
+  Review:  ?c=1&s=the-weight   ?c=2&s=the-two-doors   ?c=3&s=the-zodiac-spread
+           &d=2026-09-01 pins the cut date (its weekday must match) · &recover=1 is the come-back state
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap">
+<style>
+:root{--paper:#FBF8F1;--card:#FFF;--sunk:#F3EEE3;--ink:#1E1F23;--ink-2:#54565E;--ink-3:#8B8C92;
+ --rule:#E0D7C4;--rule-2:#EFE8D9;--gold:#9C6A16;--green:#3F6B4A;--red:#9A3A26;
+ --frame:#E7DEC7;
+ --shadow:0 1px 2px rgba(30,31,35,.05),0 8px 26px rgba(30,31,35,.07)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#14161A;--card:#1C1F25;
+ --sunk:#191C21;--ink:#EDE7DA;--ink-2:#A6A8B0;--ink-3:#787A82;--rule:#31353D;--rule-2:#262A31;
+ --gold:#D29A45;--green:#6FB283;--red:#E0705A;--frame:#CFC4A8;
+ --shadow:0 1px 2px rgba(0,0,0,.5),0 10px 30px rgba(0,0,0,.45)}}
+:root[data-theme="dark"]{--paper:#14161A;--card:#1C1F25;--sunk:#191C21;--ink:#EDE7DA;--ink-2:#A6A8B0;
+ --ink-3:#787A82;--rule:#31353D;--rule-2:#262A31;--gold:#D29A45;--green:#6FB283;--red:#E0705A;
+ --frame:#CFC4A8;--shadow:0 1px 2px rgba(0,0,0,.5),0 10px 30px rgba(0,0,0,.45)}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--paper);color:var(--ink);font-size:16px;line-height:1.6;
+ font-family:"IBM Plex Sans",-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;
+ -webkit-font-smoothing:antialiased}
+h1,h2,h3{font-family:Fraunces,Georgia,serif;font-variation-settings:"WONK" 1;font-weight:600;margin:0}
+img{max-width:100%;display:block}
+[hidden]{display:none!important}
+a{color:var(--gold)}
+.mono{font-family:"IBM Plex Mono",ui-monospace,monospace;font-variant-numeric:tabular-nums}
+.lost{max-width:640px;margin:0 auto;padding:70px 22px;text-align:center}
+.lost h1{font-size:26px;line-height:1.25;margin-bottom:14px}
+.lost p{color:var(--ink-2)}
+.lost .keys{margin-top:24px;font-size:13px;color:var(--ink-3);line-height:2}
+
+.band{margin-top:16px}
+.band:first-child{margin-top:0}
+.dl{font-family:"IBM Plex Mono",monospace;font-size:9.5px;letter-spacing:.14em;
+ text-transform:uppercase;color:var(--gold);margin:0 0 7px}
+.cards{display:grid;gap:7px}
+.cards.up{grid-template-columns:repeat(3,minmax(0,1fr));gap:9px}
+.cards.up .k{max-width:106px;justify-self:start}
+/* ⛔ six columns on a phone, nine from 560px. Six keeps Sunday's nine backs to two rows and
+   never lets a back grow to the size of a turned card. */
+.cards.dn{grid-template-columns:repeat(6,minmax(0,1fr))}
+.k{display:block;width:100%;min-width:0;margin:0;padding:0;border:none;background:none;
+ font:inherit;color:inherit;text-align:left}
+button.k{cursor:pointer}
+.k .face{width:100%;height:auto;aspect-ratio:350/600;object-fit:cover;border-radius:3px;
+ border:1px solid var(--rule);background:var(--sunk)}
+/* the back is a real photographed rose-trellis, framed straight: the photo is shot at an angle,
+   so the frame is CSS and the surface is the genuine deck. ⛔ Photographs, never a flat graphic. */
+.k .back{display:block;width:100%;aspect-ratio:350/600;border-radius:3px;position:relative;
+ border:4px solid var(--frame);background-color:#2E4B6E;
+ background-image:var(--down);background-repeat:no-repeat;
+ background-size:var(--bsize) auto;background-position:var(--bx) var(--by);
+ box-shadow:0 0 0 1px rgba(120,105,75,.45),inset 0 0 0 1px rgba(255,255,255,.28)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .k .back{
+ box-shadow:0 0 0 1px rgba(0,0,0,.5),inset 0 0 0 1px rgba(255,255,255,.2)}}
+.cards.dn .k .back{border-width:3px}
+.k .num{position:absolute;left:2px;top:2px;font-family:"IBM Plex Mono",monospace;font-size:9px;
+ color:#fff;background:rgba(10,13,18,.72);padding:1px 4px;border-radius:2px;line-height:1.35}
+.k .cap{display:block;font-family:"IBM Plex Mono",monospace;font-size:9.5px;letter-spacing:.1em;
+ text-transform:uppercase;color:var(--ink-3);margin-top:7px;line-height:1.35}
+button.k[aria-pressed="true"] .face,button.k[aria-pressed="true"] .back{
+ outline:2px solid var(--gold);outline-offset:2px}
+.tally{font-family:"IBM Plex Mono",monospace;font-size:9.5px;letter-spacing:.1em;
+ text-transform:uppercase;color:var(--ink-3);margin:14px 0 0}
+@media(min-width:560px){
+ .cards.dn{grid-template-columns:repeat(9,minmax(0,1fr))}
+ .cards.up .k{max-width:124px}
+}
+
+/* ── g1 · The Page only ── */
+.page{max-width:760px;margin:0 auto 70px;padding:0 18px}
+.mast{text-align:center;padding:24px 0 18px;border-bottom:1px solid var(--rule)}
+.mast .n{font-size:16px;letter-spacing:.24em;text-transform:uppercase;font-weight:600}
+.mast .s{font-size:10px;letter-spacing:.24em;text-transform:uppercase;color:var(--ink-3);margin-top:6px}
+.mast .d{font-family:"IBM Plex Mono",monospace;font-size:10px;letter-spacing:.16em;
+ text-transform:uppercase;color:var(--gold);margin-top:9px}
+h1{font-size:30px;line-height:1.08;margin:26px 0 13px;letter-spacing:-.015em;text-wrap:balance}
+.lede{font-size:17px;color:var(--ink-2);margin:0 0 24px}
+.strip{background:var(--card);border:1px solid var(--rule);border-radius:3px;padding:16px;margin:0 0 26px}
+.strip h2{font-size:19px;margin:0 0 4px}
+.strip>p{margin:0 0 14px;color:var(--ink-2);font-size:15px}
+.q{background:var(--card);border:1px solid var(--rule);border-radius:3px;padding:18px;margin:0 0 14px}
+.q label{display:block;font-family:Fraunces,serif;font-size:21px;font-weight:600;margin-bottom:6px}
+.q .hint{font-size:14px;color:var(--ink-2);margin:0 0 12px}
+textarea{width:100%;min-height:92px;padding:13px 14px;font:inherit;font-size:16px;
+ background:var(--sunk);color:var(--ink);border:1px solid var(--rule);border-radius:3px;resize:vertical}
+textarea::placeholder{color:var(--ink-3)}
+textarea:focus{outline:2px solid var(--gold);outline-offset:1px}
+.router{margin-top:11px;padding:11px 13px;border-left:2px solid var(--gold);background:var(--sunk);
+ font-size:14.5px;color:var(--ink-2)}
+.router b{color:var(--gold)}
+.frame{margin:30px 0 14px}
+.frame h2{font-size:24px;margin:0 0 10px}
+.frame p{margin:0 0 10px;color:var(--ink-2)}
+.rungs{display:flex;flex-direction:column;gap:12px;margin:0 0 8px}
+.rung{text-align:left;font:inherit;color:inherit;background:var(--card);border:1px solid var(--rule);
+ border-radius:3px;padding:17px 18px;cursor:pointer;transition:border-color .12s,box-shadow .12s;width:100%}
+.rung:hover{border-color:var(--gold)}
+.rung.on{border-color:var(--gold);box-shadow:0 0 0 1px var(--gold)}
+.rung:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.rung .top{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:8px}
+.rung h3{margin:0;font-size:20px;line-height:1.2}
+.rung .price{font-family:Fraunces,serif;font-size:21px;font-weight:600;color:var(--gold);flex:none}
+.rung p{margin:0 0 9px;font-size:15px;color:var(--ink-2);line-height:1.55}
+.rung .count{font-size:14px;color:var(--ink);font-weight:500;margin:0}
+.down{margin:2px 0 24px;font-size:15px;color:var(--ink-2);font-style:italic}
+.extra{animation:in .22s ease-out}
+@keyframes in{from{opacity:0;transform:translateY(-5px)}to{opacity:1;transform:none}}
+.bump{background:var(--sunk);border:1px solid var(--rule);border-radius:3px;
+ padding:14px 16px;margin:0 0 18px;display:flex;align-items:flex-start;gap:12px}
+.bump input{margin-top:4px;width:17px;height:17px;flex:none;accent-color:var(--gold)}
+.bump .t{font-size:15px}
+.bump b{display:block;margin-bottom:3px}
+.disc{background:var(--card);border:1px solid var(--rule);border-radius:3px;padding:15px 16px;
+ margin:0 0 18px;font-size:14px;color:var(--ink-2);line-height:1.55}
+.disc p{margin:0}
+.disc p+p{margin-top:10px;padding-top:10px;border-top:1px solid var(--rule-2)}
+.cta{width:100%;font:inherit;font-family:Fraunces,serif;font-size:18px;font-weight:600;
+ background:var(--gold);color:#FFF;border:0;border-radius:3px;padding:16px;cursor:pointer;
+ box-shadow:var(--shadow)}
+.cta[disabled]{opacity:.42;cursor:not-allowed;box-shadow:none}
+.under{margin:11px 0 0;font-size:13.5px;color:var(--ink-3);text-align:center}
+.left{margin:9px 0 0;font-size:13.5px;color:var(--red);text-align:center;min-height:20px}
+.recover{background:var(--sunk);border-bottom:1px solid var(--gold);padding:11px 18px;
+ font-size:14.5px;color:var(--gold);text-align:center}
+@media(max-width:359px){
+ .page{padding:0 14px}
+ h1{font-size:26px}
+ .rung h3{font-size:18px}
+ .cta{font-size:16px;padding:14px}
+}
+@media(min-width:560px){
+ .page{padding:0 22px}
+ h1{font-size:38px}
+ .strip{padding:20px}
+ .q{padding:22px}
+}
+@media(min-width:820px){h1{font-size:42px}}
+@media(prefers-reduced-motion:reduce){.extra{animation:none}}
+/* ── h2 · Reversible only ──
+   Two controls that do not exist on g1: the router's offer to move her up, and the standing
+   offer to move her down. Both are the page's own furniture — sunk panel, gold rule, no new
+   colour, no new type. ⛔ Full-width and text-left so a long label wraps instead of overflowing
+   a 320px phone. */
+.act{display:block;width:100%;margin-top:10px;font:inherit;font-size:15px;text-align:left;
+ background:var(--card);color:var(--ink);border:1px solid var(--gold);border-radius:3px;
+ padding:11px 13px;cursor:pointer;line-height:1.4}
+.act:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.offer{background:var(--sunk);border-left:2px solid var(--gold);padding:13px 15px;margin:0 0 18px;
+ font-size:14.5px;color:var(--ink-2);animation:in .22s ease-out}
+.offer p{margin:0}
+.keep{margin:0 0 22px;font-size:13.5px;color:var(--ink-3)}
+@media(prefers-reduced-motion:reduce){.offer{animation:none}}
+</style>
+</head>
+<body>
+
+<!-- ═══ GENERATED — do not hand-edit between the markers.
+     node scripts/build-07-booking-data.mjs ═══ -->
+<script id="registry" type="application/json">
+/*BEGIN-REGISTRY*/
+{
+ "_": "GENERATED by scripts/build-07-booking-data.mjs from scripts/07-spreads.json. Do not hand-edit.",
+ "generated_at": "2026-09-04",
+ "tier_model": {
+  "id": "questions-asked",
+  "order": [
+   "spread",
+   "pattern",
+   "table"
+  ],
+  "open_per_question": 3,
+  "open_draw_size": 6,
+  "closing_passage_tier": "table",
+  "tiers": {
+   "spread": {
+    "label": "The Spread",
+    "questions": 1,
+    "price_usd": 35
+   },
+   "pattern": {
+    "label": "The Second Question",
+    "questions": 2,
+    "price_usd": 57
+   },
+   "table": {
+    "label": "The Third Question",
+    "questions": 3,
+    "price_usd": 87
+   }
+  }
+ },
+ "bump": {
+  "product_key": "marcus_same_day",
+  "label": "Back before tonight",
+  "price_usd": 12.77
+ },
+ "spreads": {
+  "the-weight": {
+   "day": "mon",
+   "day_name": "Monday",
+   "name": "The Weight",
+   "question": "What am I carrying that was never mine?",
+   "hero": "marcus/07-spread-mon.jpg",
+   "down": "marcus/07-down-mon.jpg",
+   "cover": "marcus/07-cover-the-weight.jpg",
+   "free": [
+    {
+     "n": 1,
+     "name": "What's on you",
+     "card": "Ten of Wands",
+     "slug": "ten-of-wands"
+    }
+   ],
+   "paid": [
+    {
+     "n": 2,
+     "name": "Whose hands it was in before yours"
+    },
+    {
+     "n": 3,
+     "name": "What it was for — it protected somebody, once"
+    },
+    {
+     "n": 4,
+     "name": "What it costs you now"
+    },
+    {
+     "n": 5,
+     "name": "What it's still protecting — why you haven't put it down"
+    },
+    {
+     "n": 6,
+     "name": "What puts it down"
+    }
+   ],
+   "counts": {
+    "free": 1,
+    "paid": 5,
+    "spread": 6,
+    "pattern": 9,
+    "table": 12
+   }
+  },
+  "the-two-doors": {
+   "day": "tue",
+   "day_name": "Tuesday",
+   "name": "The Two Doors",
+   "question": "Which of these two?",
+   "hero": "marcus/07-spread-tue.jpg",
+   "down": "marcus/07-down-tue.jpg",
+   "cover": "marcus/07-cover-the-two-doors.jpg",
+   "free": [
+    {
+     "n": 1,
+     "name": "Door one, as it looks from here",
+     "card": "The Devil",
+     "slug": "the-devil"
+    },
+    {
+     "n": 2,
+     "name": "Door two, as it looks from here",
+     "card": "Eight of Cups",
+     "slug": "eight-of-cups"
+    }
+   ],
+   "paid": [
+    {
+     "n": 3,
+     "name": "Behind door one — what it costs"
+    },
+    {
+     "n": 4,
+     "name": "Behind door one — what it gives"
+    },
+    {
+     "n": 5,
+     "name": "Behind door one — who she becomes"
+    },
+    {
+     "n": 6,
+     "name": "Behind door two — what it costs"
+    },
+    {
+     "n": 7,
+     "name": "Behind door two — what it gives"
+    },
+    {
+     "n": 8,
+     "name": "Behind door two — who she becomes"
+    }
+   ],
+   "counts": {
+    "free": 2,
+    "paid": 6,
+    "spread": 8,
+    "pattern": 11,
+    "table": 14
+   }
+  },
+  "the-small-instruction": {
+   "day": "wed",
+   "day_name": "Wednesday",
+   "name": "The Small Instruction",
+   "question": "What do I actually do today?",
+   "hero": "marcus/07-spread-wed.jpg",
+   "down": "marcus/07-down-wed.jpg",
+   "cover": "marcus/07-cover-the-small-instruction.jpg",
+   "free": [
+    {
+     "n": 1,
+     "name": "Where you are",
+     "card": "Four of Cups",
+     "slug": "four-of-cups"
+    }
+   ],
+   "paid": [
+    {
+     "n": 2,
+     "name": "The step — the one thing"
+    },
+    {
+     "n": 3,
+     "name": "What's in the way"
+    },
+    {
+     "n": 4,
+     "name": "What it asks of you"
+    },
+    {
+     "n": 5,
+     "name": "What changes if you take it"
+    },
+    {
+     "n": 6,
+     "name": "What it costs to keep not taking it"
+    }
+   ],
+   "counts": {
+    "free": 1,
+    "paid": 5,
+    "spread": 6,
+    "pattern": 9,
+    "table": 12
+   }
+  },
+  "the-undertow": {
+   "day": "thu",
+   "day_name": "Thursday",
+   "name": "The Undertow",
+   "question": "What is really driving this?",
+   "hero": "marcus/07-spread-thu.jpg",
+   "down": "marcus/07-down-thu.jpg",
+   "cover": "marcus/07-cover-the-undertow.jpg",
+   "free": [
+    {
+     "n": 1,
+     "name": "What you think it's about",
+     "card": "Five of Cups",
+     "slug": "five-of-cups"
+    },
+    {
+     "n": 2,
+     "name": "What's under it",
+     "card": "The Moon",
+     "slug": "the-moon"
+    }
+   ],
+   "paid": [
+    {
+     "n": 3,
+     "name": "When it started — the first time"
+    },
+    {
+     "n": 4,
+     "name": "What has kept it alive"
+    },
+    {
+     "n": 5,
+     "name": "Who it still serves"
+    },
+    {
+     "n": 6,
+     "name": "How you'd know it when it surfaces"
+    },
+    {
+     "n": 7,
+     "name": "What breaks the current"
+    }
+   ],
+   "counts": {
+    "free": 2,
+    "paid": 5,
+    "spread": 7,
+    "pattern": 10,
+    "table": 13
+   }
+  },
+  "the-ledger": {
+   "day": "fri",
+   "day_name": "Friday",
+   "name": "The Ledger",
+   "question": "What has it cost me, and what has it paid?",
+   "hero": "marcus/07-spread-fri.jpg",
+   "down": "marcus/07-down-fri.jpg",
+   "cover": "marcus/07-cover-the-ledger.jpg",
+   "free": [
+    {
+     "n": 1,
+     "name": "The thing itself",
+     "card": "Four of Pentacles",
+     "slug": "four-of-pentacles"
+    },
+    {
+     "n": 2,
+     "name": "One thing it has cost",
+     "card": "Five of Pentacles",
+     "slug": "five-of-pentacles"
+    },
+    {
+     "n": 3,
+     "name": "One thing it has paid",
+     "card": "Nine of Pentacles",
+     "slug": "nine-of-pentacles"
+    }
+   ],
+   "paid": [
+    {
+     "n": 4,
+     "name": "The second cost"
+    },
+    {
+     "n": 5,
+     "name": "The third cost"
+    },
+    {
+     "n": 6,
+     "name": "The second payment"
+    },
+    {
+     "n": 7,
+     "name": "The third payment"
+    },
+    {
+     "n": 8,
+     "name": "The balance — which column is heavier"
+    },
+    {
+     "n": 9,
+     "name": "What leaving would cost"
+    }
+   ],
+   "counts": {
+    "free": 3,
+    "paid": 6,
+    "spread": 9,
+    "pattern": 12,
+    "table": 15
+   }
+  },
+  "the-other-chair": {
+   "day": "sat",
+   "day_name": "Saturday",
+   "name": "The Other Chair",
+   "question": "What is he actually doing?",
+   "hero": "marcus/07-spread-sat.jpg",
+   "down": "marcus/07-down-sat.jpg",
+   "cover": "marcus/07-cover-the-other-chair.jpg",
+   "free": [
+    {
+     "n": 1,
+     "name": "What you see",
+     "card": "Knight of Cups",
+     "slug": "knight-of-cups"
+    },
+    {
+     "n": 2,
+     "name": "What he's doing",
+     "card": "Seven of Cups",
+     "slug": "seven-of-cups"
+    }
+   ],
+   "paid": [
+    {
+     "n": 3,
+     "name": "What he thinks he's doing — his story about it"
+    },
+    {
+     "n": 4,
+     "name": "What he's protecting"
+    },
+    {
+     "n": 5,
+     "name": "What he'd have to admit"
+    },
+    {
+     "n": 6,
+     "name": "What he's waiting on from you"
+    },
+    {
+     "n": 7,
+     "name": "What he does if nothing changes"
+    }
+   ],
+   "counts": {
+    "free": 2,
+    "paid": 5,
+    "spread": 7,
+    "pattern": 10,
+    "table": 13
+   }
+  },
+  "the-zodiac-spread": {
+   "day": "sun",
+   "day_name": "Sunday",
+   "name": "The Zodiac Spread",
+   "question": "All of it",
+   "hero": "marcus/07-spread-sun.jpg",
+   "down": "marcus/07-down-sun.jpg",
+   "cover": "marcus/07-cover-the-zodiac-spread.jpg",
+   "free": [
+    {
+     "n": 1,
+     "name": "Her",
+     "card": "Queen of Swords",
+     "slug": "queen-of-swords"
+    },
+    {
+     "n": 7,
+     "name": "The other person",
+     "card": "King of Pentacles",
+     "slug": "king-of-pentacles"
+    },
+    {
+     "n": 12,
+     "name": "What's hidden",
+     "card": "The High Priestess",
+     "slug": "the-high-priestess"
+    }
+   ],
+   "paid": [
+    {
+     "n": 2,
+     "name": "What she holds"
+    },
+    {
+     "n": 3,
+     "name": "How she's been speaking"
+    },
+    {
+     "n": 4,
+     "name": "Where she's from"
+    },
+    {
+     "n": 5,
+     "name": "What she loves"
+    },
+    {
+     "n": 6,
+     "name": "Her days"
+    },
+    {
+     "n": 8,
+     "name": "What's shared, and what's ending"
+    },
+    {
+     "n": 9,
+     "name": "What she believes about it"
+    },
+    {
+     "n": 10,
+     "name": "How she's seen"
+    },
+    {
+     "n": 11,
+     "name": "Who's around her"
+    }
+   ],
+   "counts": {
+    "free": 3,
+    "paid": 9,
+    "spread": 12,
+    "pattern": 15,
+    "table": 18
+   }
+  }
+ }
+}
+/*END-REGISTRY*/
+</script>
+
+<div id="app"></div>
+
+<script>
+/* ══ THE COPY. Hand-edited. ⛔ Nothing here states a card count — every number is a token. ══ */
+
+const COPY = {
+  /* ⛔ every count is a token. The target hardcodes "Eight" and "six"; a Monday page that said
+     eight would be selling two cards that do not exist. */
+  h1: "{N_TOTAL_WORD_CAP} cards. You’ve seen {N_FREE_WORD} of them.",
+  lede: "I cut once this morning, before it got light. {N_FREE_WORD_CAP} came up face up and you read {THOSE} in the email. The other {N_DOWN_WORD} are still face down on my table.",
+
+  stripH: "The {N_TOTAL_WORD}, as they lie",
+  stripP: "You saw {FREE_NAMES} this morning. These {N_DOWN_WORD} haven’t been turned.",
+  bandUp: "Turned this morning",
+  bandDown: "Still face down",
+  tally: "{N_FREE_WORD} turned &middot; {N_DOWN_WORD} not",
+
+  askH: "What are you asking me?",
+  askHint: "One thing, in your own words. It doesn’t have to be tidy and it doesn’t have to be fair to anybody.",
+
+  frameH: "How many things are you asking me?",
+  frameP1: "Most women write one question in that box and have a second one they didn’t write down. I’d rather have both than have you pick.",
+  frameP2: "I cut once this morning and the cut is bigger than the {N_TOTAL_WORD} you saw. What the price decides is how many of your questions I lay it on.",
+
+  rungs: {
+    spread: {
+      h: "One question.",
+      body: ["The {N_DOWN_WORD} that went face down in this morning’s email, turned over on the thing you typed above. What it actually is, what it’s costing you, and what would move it."],
+      count: "{N_TOTAL_WORD_CAP} cards, every one of them on that one question. If you came with one thing, stop here. This is the one and you don’t need the other two.",
+      short: "Every card on this table, turned over on the one thing you ask."
+    },
+    pattern: {
+      h: "Two questions.",
+      body: [
+        "A second box opens under the first. Write the one you were going to leave out.",
+        "Every card already on this table gets looked at again with your second question in front of it, and one or two of them say something different when it is. Then I lay three more that belong to that question and nothing else, off the same cut, cards nobody has seen yet."
+      ],
+      count: "{N_TOTAL_WORD_CAP} cards on the first question. All of them again on the second, and three that are only its own.",
+      short: "All of that, then the whole table read again against a second question, and three more cards off the same cut laid on that one alone."
+    },
+    table: {
+      h: "Three questions, and three is where I stop.",
+      body: [
+        "Three boxes, three answers, three more cards on each of the last two, and the whole table read again each time.",
+        "There’s one passage that only exists on this one. At the end I put your three answers next to each other and say what they add up to, which is the thing you can’t see from inside it."
+      ],
+      count: "{N_TOTAL_WORD_CAP} on the first, three on the second, three on the third.",
+      short: "The same again for a third, and a last passage that reads your three answers against each other."
+    }
+  },
+  down: "If there’s only one thing, buy one. I’d rather send you one answer you actually wanted than three you had to invent on the spot.",
+
+  box: {
+    2: { h: "The second one.", hint: "Same rule as the first. One thing, in your own words. It doesn’t have to be about the same person and it doesn’t have to be fair to anybody." },
+    3: { h: "The third.", hint: "Last one. If you’re about to write the first question again in different words, don’t. That’s one question and I’d only be charging you twice for it. Write the one you keep not asking." }
+  },
+  qName: { 1: "Question one", 2: "Question two", 3: "Question three" },
+
+  router: {
+    fork: "You’ve asked me two things in one sentence — whether to stay, and whether to go now. Both can be laid. <b>Say the word and I’ll put the second half in its own box.</b>",
+    marks: "That’s {N} questions in one box. <b>They can have a box each.</b>",
+    hat: "A second question with a polite hat on. <b>Give it its own box.</b>",
+    one: "One thing, asked plainly. One question is what this morning’s cut is for."
+  },
+
+  bumpT: "Back before tonight — {PRICE}",
+  bumpD: "I write these in the order they land on me. This puts you at the front of that queue, if it’s in before 2pm my time.",
+
+  /* ⛔ PROSE, NOT A CONTROL. The target has no consent ticks and neither does any of these five.
+     ⭐ THE GUARDRAIL SENTENCE WAS DELETED 2026-09-06, by the operator. It read "I read the cards,
+     not the man…" and it refused, on the screen where she decides to pay, the third-biggest
+     category on the Etsy page — his thoughts, his feelings, what he'd have to admit — while 07
+     ran a spread built to answer exactly that. ⛔ Do not restore it. What survives is the
+     no-date rule, and that belongs in the copy, not in a disclaimer. */
+  disc: "The cards in your reading are the cut I laid this morning, and they are the same cards everybody got in the email. The writing is assisted — I use a machine to help me put the reading into words. The draw is real and it is yours.",
+
+  ctaWait: "Pick how many questions",
+  ctaGo: { 1: "Send Marcus my question", 2: "Send Marcus both questions", 3: "Send Marcus all three" },
+  left: "{N} box{S} still empty",
+  under: "One payment for the reading. Nothing recurring.",
+
+  recover: "Your question’s still here and nothing’s been charged. The cards are still face down.",
+  lostH: "This link’s lost the day it came from.",
+  lostP: "Open today’s email again and use one of the three links inside it — they carry the cut with them.",
+
+  /* what a tapped card says, on the versions where the board is the interface */
+  tapped: "Position {N} · {NAME}",
+  tappedSub: "Face down. It turns over on what you ask, and not before.",
+  tappedUp: "{CARD}, position {N}",
+  tappedUpSub: "{NAME}. You saw this one in the email this morning.",
+  tapHint: "Tap any card to see what it’s already set on.",
+
+  /* ⚠ ART, not copy. Measured off the photographs by hand — re-measure if one is re-shot. */
+  backCrop: {
+    "the-weight":            { size: "712%", x: "48.8%", y: "40.0%" },
+    "the-two-doors":         { size: "613%", x: "61.4%", y: "8.5%"  },
+    "the-small-instruction": { size: "917%", x: "53.9%", y: "44.0%" },
+    "the-undertow":          { size: "551%", x: "55.5%", y: "28.3%" },
+    "the-ledger":            { size: "523%", x: "87.1%", y: "44.1%" },
+    "the-other-chair":       { size: "597%", x: "49.4%", y: "47.6%" },
+    "the-zodiac-spread":     { size: "776%", x: "46.0%", y: "3.8%"  }
+  },
+
+  examples: {
+    "the-weight": [
+      "e.g. My mother’s been dead two years and I’m still running her house rules — whose is this?",
+      "e.g. Why do I apologise before I’ve done anything wrong",
+      "e.g. What am I carrying for my sister that was never mine"
+    ],
+    "the-two-doors": [
+      "e.g. Should I stay or should I go — he says he wants it all eventually and nothing has moved in three years",
+      "e.g. Why do I keep ending up the one who waits",
+      "e.g. What am I actually afraid of here"
+    ],
+    "the-small-instruction": [
+      "e.g. I know what’s wrong and I’ve known for months — what do I actually do today",
+      "e.g. What’s stopping me sending the message I’ve deleted four times",
+      "e.g. What’s the one thing I do about my father"
+    ],
+    "the-undertow": [
+      "e.g. Every time it’s going well I pick a fight — why do I keep doing that",
+      "e.g. What’s under the fact I can’t sleep before I see my mother",
+      "e.g. What keeps pulling me back to work that made me ill"
+    ],
+    "the-ledger": [
+      "e.g. I gave up my job and my city for this — has it paid me back or have I just stayed",
+      "e.g. Ten years in this house, what has it actually given me",
+      "e.g. What would leaving cost me that I’m not counting"
+    ],
+    "the-other-chair": [
+      "e.g. He texts every day and won’t make a plan — what’s he actually doing",
+      "e.g. What am I doing that keeps this comfortable for him",
+      "e.g. My boss praises me in the room and blocks me outside it — what’s that"
+    ],
+    "the-zodiac-spread": [
+      "e.g. I’ve been holding on a year waiting for something to change — where is this going",
+      "e.g. What’s actually going on with money since the split",
+      "e.g. There’s nobody I’d ring at two in the morning — what’s that about"
+    ]
+  }
+};
+
+Object.assign(COPY, {
+  ctaWait: "Pick how many questions",
+  ctaWaitBox: "There’s still an empty box"
+});
+
+/* ══ H · what the reorder forced, and nothing else ══════════════════════════════════════════
+   ⛔ Every other string above is g1's, untouched. These three had to change because they name
+      a box that, under this flow, has not appeared yet. */
+
+/* she has not typed when she reads this rung */
+COPY.rungs.spread.body[0] =
+  "The {N_DOWN_WORD} that went face down in this morning’s email, turned over on the one thing " +
+  "you ask me. What it actually is, what it’s costing you, and what would move it.";
+
+/* the promise at the end of a fork reading depends on whether a second box exists yet, so it is
+   a token. ⭐ promiseRung is 07-C1-FLOWS.md's own approved line for exactly this case: under
+   package-first the router cannot point at a box, it can only offer to buy one. */
+COPY.router.fork = "You’ve asked me two things in one sentence — whether to stay, and whether to go now. " +
+  "Both can be laid. {PROMISE}";
+COPY.router.marks = "That’s {N} questions in one box. {PROMISE}";
+COPY.router.hat = "A second question with a polite hat on. {PROMISE}";
+COPY.promiseOpen = "<b>The second box is already open — put the other half in it.</b>";
+COPY.promiseRung = "<b>Give the second half its own box — {PRICE}.</b>";
+/* ══ h2 · REVERSIBLE — its own copy. ⚠ NEW, needs sign-off. ═══════════════════════════════ */
+
+/* frameH is g1's, untouched. frameP1 said "in that box" and there is no box yet. */
+COPY.frameP1 = "You don’t have to get this right first go. Tell me the number you came with, and " +
+  "if what you write says something different I’ll say so before you pay.";
+/* frameP2 is g1's, untouched. */
+
+/* the sentence that makes the count a draft, under the row of rungs */
+COPY.keep = "Change the number as often as you like. Nothing you’ve typed goes anywhere.";
+
+/* UP — 07-C1-FLOWS.md's approved wording, now that it is a control and not a sentence */
+COPY.upAct = "Give the second half its own box — {PRICE}";
+
+/* DOWN — Marcus’s own argument, made at the one moment it is provably true */
+COPY.downOffer = "You’ve written the one thing and left the box you paid for empty. If there’s " +
+  "only the one, don’t pay me for two.";
+COPY.downAct = "Then just the one — {PRICE}";
+
+</script>
+
+<script>
+/* ══ THE PLUMBING — registry, tokens, the board, the router. Shared by all five. ══ */
+
+const S3 = "https://luna-assets-tsw.s3.ap-southeast-2.amazonaws.com/";
+const REG = JSON.parse(document.getElementById("registry").textContent
+  .replace("/*BEGIN-REGISTRY*/", "").replace("/*END-REGISTRY*/", "").trim());
+
+const WORDS = ["zero","one","two","three","four","five","six","seven","eight","nine","ten",
+  "eleven","twelve","thirteen","fourteen","fifteen","sixteen","seventeen","eighteen","nineteen","twenty"];
+const w = n => WORDS[n] || String(n);
+const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
+const esc = s => String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+const money = n => "$" + (Number(n) % 1 ? Number(n).toFixed(2) : Number(n));
+const $ = id => document.getElementById(id);
+
+const qs = new URLSearchParams(location.search);
+const sKey = qs.get("s") || "the-two-doors";
+const c = ({"1":1,"2":2,"3":3})[qs.get("c")] || 3;
+const SP = REG.spreads[sKey] || null;
+const recovering = qs.get("recover") === "1";
+const app = document.getElementById("app");
+
+if (!SP) {
+  app.innerHTML = '<div class="lost"><h1>' + esc(COPY.lostH) + '</h1><p>' + esc(COPY.lostP) + '</p>' +
+    '<div class="keys">for review only &mdash; the seven days:<br>' +
+    Object.keys(REG.spreads).map(k => '<a href="?c=1&amp;s=' + k + '">' + esc(k) + '</a>').join(" &middot; ") +
+    '</div></div>';
+  throw new Error("no spread");
+}
+
+const N_FREE = SP.counts.free, N_DOWN = SP.counts.paid, N_TOTAL = SP.counts.spread;
+const TIER_TOTAL = { spread: SP.counts.spread, pattern: SP.counts.pattern, table: SP.counts.table };
+const OPEN_PER = REG.tier_model.open_per_question;
+const ORDER = REG.tier_model.order;
+const PRICE = k => REG.tier_model.tiers[k].price_usd;
+const NQ = { spread: 1, pattern: 2, table: 3 };
+const TIER_OF = { 1: "spread", 2: "pattern", 3: "table" };
+const FREE_NAMES = SP.free.map(p => p.card)
+  .reduce((a, x, i, arr) => i === 0 ? x : (i === arr.length - 1 ? a + " and " + x : a + ", " + x), "");
+
+const fill = s => String(s)
+  .replace(/\{N_FREE_WORD_CAP\}/g, cap(w(N_FREE))).replace(/\{N_DOWN_WORD_CAP\}/g, cap(w(N_DOWN)))
+  .replace(/\{N_TOTAL_WORD_CAP\}/g, cap(w(N_TOTAL))).replace(/\{OPEN_PER_WORD_CAP\}/g, cap(w(OPEN_PER)))
+  .replace(/\{N_FREE_WORD\}/g, w(N_FREE)).replace(/\{N_DOWN_WORD\}/g, w(N_DOWN))
+  .replace(/\{N_TOTAL_WORD\}/g, w(N_TOTAL)).replace(/\{OPEN_PER_WORD\}/g, w(OPEN_PER))
+  .replace(/\{OPEN_PER\}/g, OPEN_PER)
+  .replace(/\{N_FREE\}/g, N_FREE).replace(/\{N_DOWN\}/g, N_DOWN).replace(/\{N_TOTAL\}/g, N_TOTAL)
+  .replace(/\{FREE_NAMES\}/g, FREE_NAMES)
+  .replace(/\{THOSE\}/g, N_FREE > 1 ? "those" : "it");
+
+function drawDate() {
+  const want = ["sun","mon","tue","wed","thu","fri","sat"].indexOf(SP.day);
+  const pin = qs.get("d");
+  /* ⛔ &d only pins a date that IS this spread's weekday, or the masthead prints a lie. */
+  if (pin && /^\d{4}-\d{2}-\d{2}$/.test(pin)) {
+    const d = new Date(pin + "T06:00:00");
+    if (d.getDay() === want) return d;
+  }
+  const d = new Date(); d.setHours(6,0,0,0);
+  while (d.getDay() !== want) d.setDate(d.getDate() - 1);
+  return d;
+}
+const DD = drawDate();
+const DATE_STR = DD.toLocaleDateString("en-GB", { day:"numeric", month:"long" });
+const DAY_STR = cap(DD.toLocaleDateString("en-GB", { weekday:"long" }));
+const EX = COPY.examples[sKey] || ["","",""];
+const CROP = COPY.backCrop[sKey] || { size:"600%", x:"50%", y:"50%" };
+const BOARD_VARS = "--down:url('" + S3 + SP.down + "');--bsize:" + CROP.size +
+  ";--bx:" + CROP.x + ";--by:" + CROP.y;
+
+/* ── THE BOARD. The whole day spread — every card turned this morning AND every card still face
+   down, straight off the registry: 6 on Monday, 8 on Tuesday, 12 on Sunday, which is the most
+   there is.
+   ⛔ THE OPEN CARDS ARE NOT ON IT and are not named until she picks a rung that includes them.
+      Everything the day spread holds is bought at every rung, so drawing all of it is honest;
+      the open cards are not bought at $35, so they are not on the table she is looking at. */
+function boardHTML(tappable) {
+  const upHTML = SP.free.map((p, i) => (tappable
+      ? '<button class="k" type="button" aria-pressed="false" data-kind="up" data-i="' + i + '">'
+      : '<figure class="k">') +
+    '<img class="face" src="' + S3 + 'evelyn/tarot-rws/' + p.slug + '.jpg" alt="' + esc(p.card) +
+    '" width="350" height="600" decoding="async" loading="lazy">' +
+    '<span class="cap">' + esc(p.card) + '</span>' +
+    (tappable ? '</button>' : '</figure>')).join("");
+  const dnHTML = SP.paid.map((p, i) => (tappable
+      ? '<button class="k" type="button" aria-pressed="false" data-kind="down" data-i="' + i +
+        '" aria-label="Position ' + p.n + ', ' + esc(p.name) + ' — face down">'
+      : '<span class="k" role="img" aria-label="Position ' + p.n + ', ' + esc(p.name) + ' — face down">') +
+    '<span class="back"><span class="num">' + p.n + '</span></span>' +
+    (tappable ? '</button>' : '</span>')).join("");
+  return '<div class="board" style="' + BOARD_VARS + '">' +
+    '<div class="band"><p class="dl">' + esc(COPY.bandUp) + '</p>' +
+      '<div class="cards up">' + upHTML + '</div></div>' +
+    '<div class="band"><p class="dl">' + esc(COPY.bandDown) + '</p>' +
+      '<div class="cards dn">' + dnHTML + '</div></div>' +
+    '<p class="tally">' + fill(COPY.tally) + '</p></div>';
+}
+
+function wireBoard(readoutId) {
+  const out = $(readoutId);
+  const idle = () => { out.innerHTML = '<span class="rs">' + esc(COPY.tapHint) + '</span>'; };
+  document.querySelectorAll("button.k").forEach(b => b.addEventListener("click", () => {
+    const on = b.getAttribute("aria-pressed") === "true";
+    document.querySelectorAll("button.k").forEach(x => x.setAttribute("aria-pressed", "false"));
+    if (on) return idle();
+    b.setAttribute("aria-pressed", "true");
+    const i = +b.dataset.i;
+    const p = b.dataset.kind === "up" ? SP.free[i] : SP.paid[i];
+    const t = b.dataset.kind === "up"
+      ? [COPY.tappedUp.replace("{CARD}", p.card).replace("{N}", p.n),
+         COPY.tappedUpSub.replace("{NAME}", p.name)]
+      : [COPY.tapped.replace("{N}", p.n).replace("{NAME}", p.name), COPY.tappedSub];
+    out.innerHTML = '<span class="rt">' + esc(t[0]) + '</span><span class="rs">' + esc(t[1]) + '</span>';
+  }));
+  idle();
+}
+
+/* ⛔ The router reports what she TYPED — a fact about her own sentence she can check by reading
+   it back — never what she needs. It cannot open a box; only a rung can. */
+function routerRead(v) {
+  const t = String(v || ""), l = t.toLowerCase();
+  const marks = (t.match(/\?/g) || []).length;
+  if (/\bshould i (stay|go|leave)\b/.test(l) || /\bstay or\b/.test(l) || /\bor should i\b/.test(l))
+    return { fork: true, html: COPY.router.fork };
+  if (/\s+or\s+/.test(l)) return { fork: true, html: COPY.router.fork };
+  if (marks > 1) return { fork: true, html: COPY.router.marks.replace("{N}", w(marks)) };
+  if (/\b(and what about|also|the other thing|one more thing)\b/.test(l))
+    return { fork: true, html: COPY.router.hat };
+  if (t.trim().length > 12) return { fork: false, html: COPY.router.one };
+  return null;
+}
+/* the target pre-fills box two off the "or" she already typed — the second half she was losing */
+function splitOr(a, b) {
+  const m = a.value.split(/\s+or\s+/i);
+  if (m.length > 1 && !b.value.trim()) {
+    b.value = cap(m.slice(1).join(" or ").trim());
+    a.value = m[0].trim().replace(/[,\s]+$/, "") + "?";
+  }
+}
+function payload(tier, arr, bumpOn) {
+  return JSON.stringify({
+    spread_key: sKey, tier, bump: bumpOn ? REG.bump.product_key : null,
+    questions: arr, cards_sold: TIER_TOTAL[tier], c }, null, 2);
+}
+/* the target's own fullness rule: more than three characters counts as answered */
+const answered = el => (el.value || "").trim().length > 3;
+function ctaLabel(n, price) { return COPY.ctaGo[n] + " — " + money(price); }
+function leftLabel(k) { return COPY.left.replace("{N}", k).replace("{S}", k > 1 ? "es" : ""); }
+function saver(key, get) {
+  return () => { try { localStorage.setItem(key + ":" + sKey, JSON.stringify(get())); } catch (e) {} };
+}
+function restore(key) {
+  try { return JSON.parse(localStorage.getItem(key + ":" + sKey) || "{}"); } catch (e) { return {}; }
+}
+
+
+function rungProse(key) {
+  const cp = COPY.rungs[key];
+  return cp.body.map(p => '<p>' + fill(esc(p)) + '</p>').join("") +
+    '<p class="count">' + fill(esc(cp.count)) + '</p>';
+}
+</script>
+
+<script>
+/* ══ H2 · REVERSIBLE — THE FORMAT. Everything below is this version's alone. ══ */
+
+const KEY = "07-booking-h2";
+
+let tier = null;
+
+function boxHTML(i) {
+  /* ⭐ box one is now a revealed box like the other two. Its label and hint are g1's askH/askHint
+     word for word — what changed is when it appears, not what it says. */
+  const b = i === 1 ? { h: COPY.askH, hint: COPY.askHint } : COPY.box[i];
+  return '<div class="q extra" id="box' + i + '" hidden>' +
+    '<label for="q' + i + '">' + esc(b.h) + '</label>' +
+    '<p class="hint">' + esc(b.hint) + '</p>' +
+    '<textarea id="q' + i + '" placeholder="' + esc(EX[i - 1]) + '"></textarea>' +
+    (i === 1 ? '<div class="router" id="router" hidden></div>' : '') +
+    '</div>';
+}
+
+/* 🔴 THE BOX THAT OPENS MUST BE WHERE SHE IS LOOKING. Under the H flow every box is revealed
+   below the control she just used, so it can be off the bottom of a 390px phone. The page goes
+   there and puts the caret in it. ⛔ focus() must not scroll on its own or it fights this. */
+function carry(el) {
+  if (!el) return;
+  el.closest(".q, .ask").scrollIntoView({ behavior: "smooth", block: "center" });
+  setTimeout(function () { el.focus({ preventScroll: true }); }, 340);
+}
+
+function rungHTML(key) {
+  const t = REG.tier_model.tiers[key], cp = COPY.rungs[key];
+  return '<button class="rung" type="button" data-t="' + key + '">' +
+    '<div class="top"><h3>' + esc(cp.h) + '</h3><span class="price">' + money(t.price_usd) + '</span></div>' +
+    rungProse(key) + '</button>';
+}
+
+app.innerHTML =
+  (recovering ? '<div class="recover">' + esc(COPY.recover) + '</div>' : '') +
+  '<div class="page">' +
+  '<div class="mast"><div class="n">Marcus Stone</div>' +
+    '<div class="s">Daily Tarot &middot; The Seer Within</div>' +
+    '<div class="d">' + esc(DAY_STR) + ' &middot; ' + esc(SP.name) + ' &middot; cut ' + esc(DATE_STR) + '</div></div>' +
+
+  '<h1>' + fill(esc(COPY.h1)) + '</h1>' +
+  '<p class="lede">' + fill(esc(COPY.lede)) + '</p>' +
+
+  '<div class="strip"><h2>' + fill(esc(COPY.stripH)) + '</h2>' +
+    '<p>' + fill(esc(COPY.stripP)) + '</p>' + boardHTML(false) + '</div>' +
+
+  '<div class="frame"><h2>' + esc(COPY.frameH) + '</h2>' +
+    '<p>' + esc(COPY.frameP1) + '</p><p>' + fill(esc(COPY.frameP2)) + '</p></div>' +
+  '<div class="rungs" id="rungs">' + ORDER.map(rungHTML).join("") + '</div>' +
+  '<p class="down">' + esc(COPY.down) + '</p>' +
+  /* ⭐ the count is a draft, and the page says so before she has to make it */
+  '<p class="keep">' + esc(COPY.keep) + '</p>' +
+
+  /* ⭐ THE MECHANISM. Every box she bought, box one included, is born under the rung she just
+     tapped, and the page carries her to the first empty one. */
+  boxHTML(1) + boxHTML(2) + boxHTML(3) +
+
+  /* ⛔ THE ONE OFFER ON THIS PAGE THAT LOWERS THE PRICE. It is shown while the pay button is
+     still dark, never after it lights. */
+  '<div class="offer" id="offerDown" hidden><p>' + esc(COPY.downOffer) + '</p>' +
+    '<button class="act" type="button" id="downBtn"></button></div>' +
+
+  '<label class="bump" id="bumpRow" hidden><input type="checkbox" id="bump">' +
+    '<span class="t"><b id="bumpT"></b>' + esc(COPY.bumpD) + '</span></label>' +
+
+  '<div class="disc"><p>' + esc(COPY.disc) + '</p></div>' +
+
+  '<button class="cta" id="cta" disabled></button>' +
+  '<p class="left" id="left"></p>' +
+  '<p class="under">' + esc(COPY.under) + '</p>' +
+  '</div>';
+
+const q1 = $("q1"), q2 = $("q2"), q3 = $("q3"), QQ = [q1, q2, q3];
+$("bumpT").textContent = COPY.bumpT.replace("{PRICE}", money(REG.bump.price_usd));
+$("downBtn").textContent = COPY.downAct.replace("{PRICE}", money(PRICE("spread")));
+const save = saver(KEY, () => ({ q1:q1.value, q2:q2.value, q3:q3.value, tier, bump:$("bump").checked }));
+
+/* ⛔ The router still only REPORTS what she typed — it cannot open a box. What it can do here
+   is offer a RUNG, and the rung opens the box. That is the same rule, not an exception to it. */
+function route() {
+  const r = routerRead(q1.value), el = $("router");
+  el.hidden = !r;
+  if (!r) return;
+  const n = tier ? NQ[tier] : 1;
+  const promise = (n >= 2 ? COPY.promiseOpen : COPY.promiseRung).replace("{PRICE}", money(PRICE("pattern")));
+  el.innerHTML = '<p>' + fill(r.html).replace("{PROMISE}", promise) + '</p>' +
+    (r.fork && n < 2
+      ? '<button class="act" type="button" id="upBtn">' +
+        esc(COPY.upAct.replace("{PRICE}", money(PRICE("pattern")))) + '</button>'
+      : '');
+  const up = $("upBtn");
+  /* ⛔ the split is never silent here: she asked for it, and the label said what it would do */
+  if (up) up.addEventListener("click", function () { splitOr(q1, q2); setTier("pattern", true); });
+}
+
+/* the down offer is true only when she has answered the first box and left every box she PAID
+   for empty. The moment she types into one of them it is no longer true, and it goes. */
+function offers() {
+  const n = tier ? NQ[tier] : 0;
+  const show = n >= 2 && answered(q1) && QQ.slice(1, n).every(function (el) { return !answered(el); });
+  $("offerDown").hidden = !show;
+}
+$("downBtn").addEventListener("click", function () { setTier("spread", false); });
+
+function firstEmpty(n) { return QQ.slice(0, n).filter(function (el) { return !answered(el); })[0] || null; }
+
+function setTier(key, moveTo) {
+  tier = key;
+  document.querySelectorAll("#rungs .rung").forEach(function (b) { b.classList.toggle("on", b.dataset.t === key); });
+  const n = NQ[key];
+  $("box1").hidden = false;
+  $("box2").hidden = n < 2;
+  $("box3").hidden = n < 3;
+  $("bumpRow").hidden = false;
+  /* ⛔ NOTHING TYPED IS EVER CLEARED. A box she has left behind is hidden, and its text is
+     still in it if she comes back up. That is what makes COPY.keep true. */
+  route(); offers(); sync();
+  if (moveTo) carry(firstEmpty(n) || q1);
+}
+document.querySelectorAll("#rungs .rung").forEach(function (b) {
+  b.addEventListener("click", function () { setTier(b.dataset.t, true); });
+});
+
+function sync() {
+  save();
+  const cta = $("cta"), left = $("left");
+  if (!tier) { cta.disabled = true; cta.textContent = COPY.ctaWait; left.textContent = ""; return; }
+  const n = NQ[tier], price = PRICE(tier) + ($("bump").checked ? REG.bump.price_usd : 0);
+  const empty = QQ.slice(0, n).filter(function (el) { return !answered(el); }).length;
+  cta.disabled = empty > 0;
+  cta.textContent = empty ? COPY.ctaWaitBox : ctaLabel(n, price);
+  left.textContent = empty ? leftLabel(empty) : "";
+}
+QQ.forEach(function (el) {
+  el.addEventListener("input", function () { if (el === q1) route(); offers(); sync(); });
+});
+$("bump").addEventListener("change", sync);
+$("cta").addEventListener("click", function () { alert("[mockup] → Stripe\n\n" +
+  payload(tier, QQ.slice(0, NQ[tier]).map(function (el) { return el.value; }), $("bump").checked)); });
+
+if (recovering) {
+  const s = restore(KEY);
+  q1.value = s.q1 || ""; q2.value = s.q2 || ""; q3.value = s.q3 || "";
+  if (s.bump) $("bump").checked = true;
+  if (s.tier) setTier(s.tier, false);
+}
+route(); offers(); sync();
+</script>
+</body>
+</html>

@@ -1,0 +1,12 @@
+{
+  "A": {
+    "source": "n8n-02-reading-30656.pdf",
+    "candidate": "02-length-candidate-A.pdf",
+    "sha256": "5c239f01dc239b54aa82bac291406b0e5a17b3b35b80341e95bbc34af2f3da43"
+  },
+  "B": {
+    "source": "n8n-02-reading-30656-short.pdf",
+    "candidate": "02-length-candidate-B.pdf",
+    "sha256": "7c1a005c32155223114ab21da4183691ce43d61c9b83d5ee748e133e1b95ab2e"
+  }
+}

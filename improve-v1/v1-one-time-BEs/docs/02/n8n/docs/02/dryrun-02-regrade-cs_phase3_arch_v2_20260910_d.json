@@ -1,0 +1,223 @@
+{
+  "build_revision": "8e9a2106086cb1fc",
+  "reading": "/Users/joel/Library/CloudStorage/OneDrive-altius/Fun Projects/The-Seer-Within-V2-Production-joel-chue/The-Seer-Within-V2-Production/improve-v1/v1-one-time-BEs/docs/02/dryrun-02-reading-cs_phase3_arch_v2_20260910_d.md",
+  "draw": "/Users/joel/Library/CloudStorage/OneDrive-altius/Fun Projects/The-Seer-Within-V2-Production-joel-chue/The-Seer-Within-V2-Production/improve-v1/v1-one-time-BEs/docs/02/dryrun-02-draw-cs_phase3_arch_v2_20260910_d.json",
+  "metrics": {
+    "words": 8617,
+    "house_words": [
+      {
+        "house": 1,
+        "words": 644
+      },
+      {
+        "house": 2,
+        "words": 654
+      },
+      {
+        "house": 3,
+        "words": 589
+      },
+      {
+        "house": 4,
+        "words": 657
+      },
+      {
+        "house": 5,
+        "words": 725
+      },
+      {
+        "house": 6,
+        "words": 597
+      },
+      {
+        "house": 7,
+        "words": 602
+      },
+      {
+        "house": 8,
+        "words": 650
+      },
+      {
+        "house": 9,
+        "words": 611
+      },
+      {
+        "house": 10,
+        "words": 606
+      },
+      {
+        "house": 11,
+        "words": 604
+      },
+      {
+        "house": 12,
+        "words": 738
+      }
+    ],
+    "close_marker": true,
+    "conditional_words": 28,
+    "i_wont": 1,
+    "withholds": [],
+    "sentence_mean": 17.87759336099585,
+    "sentence_sd": 11.178834662680975,
+    "paragraph_mean": 87.02020202020202,
+    "dear": 0,
+    "generic_women": [],
+    "repeated_8grams": [],
+    "method_announcements": [
+      {
+        "house": 2,
+        "phrase": "That is the whole argument of this card in the second house, the house of what you own."
+      },
+      {
+        "house": 6,
+        "phrase": "Think of a building kept to code."
+      },
+      {
+        "house": 10,
+        "phrase": "It goes like this: the work is good, the work is known to be good, and yet the sentence that names who did it never quite gets said in the room where it would matter."
+      }
+    ],
+    "biography_candidates": [
+      {
+        "house": 1,
+        "phrase": "You have done this recently."
+      },
+      {
+        "house": 4,
+        "phrase": "Someone might discover, for instance, that a domestic arrangement she calls impossible to change was in fact settled years ago by a single practical compromise nobody has revisited since — and the discovery alone alters what she does next."
+      },
+      {
+        "house": 8,
+        "phrase": "A payment owed from an arrangement she wrote off years ago and stopped counting on."
+      },
+      {
+        "house": 9,
+        "phrase": "You ask for opinions you have already decided not to take."
+      },
+      {
+        "house": 9,
+        "phrase": "Not out of manipulation — you ask sincerely, you listen properly, you thank the person — and then you do the thing you had settled on before you opened your mouth."
+      }
+    ],
+    "consequential_candidates": [
+      {
+        "house": 3,
+        "phrase": "Cut the front off."
+      },
+      {
+        "house": 4,
+        "phrase": "Take one standing arrangement in your home — a division of a cost, a recurring duty, a room used a certain way — and find out when it was decided and by whom."
+      }
+    ],
+    "keynotes_missing": [],
+    "fog": 24,
+    "voice_i": 16,
+    "voice_i_in_rooms": 8,
+    "dated_room": 5,
+    "dated": [
+      {
+        "house": 1,
+        "phrase": "the first day",
+        "kind": "action",
+        "sentence": "Do not speak the withheld half on the first day you feel the itch to be done with the silence."
+      },
+      {
+        "house": 5,
+        "phrase": "the fourth week",
+        "kind": "prediction",
+        "sentence": "Recognition falls in the fourth week from the day you read this — not the third, not the fifth."
+      },
+      {
+        "house": 5,
+        "phrase": "the fourth week",
+        "kind": "prediction",
+        "sentence": "Which means: do not chase the fourth week."
+      },
+      {
+        "house": -1,
+        "phrase": "the fourth week",
+        "kind": "prediction",
+        "sentence": "House 5 is the only room here with a window on it, and the window belongs to an event rather than an atmosphere: recognition happens in company, in an evening, and so it can be placed — the fourth week from the day you read this."
+      }
+    ],
+    "first_sign": 1,
+    "crossrefs": [
+      {
+        "house": 1,
+        "names": []
+      },
+      {
+        "house": 2,
+        "names": [
+          "Justice"
+        ]
+      },
+      {
+        "house": 3,
+        "names": []
+      },
+      {
+        "house": 4,
+        "names": []
+      },
+      {
+        "house": 5,
+        "names": [
+          "Temperance"
+        ]
+      },
+      {
+        "house": 6,
+        "names": []
+      },
+      {
+        "house": 7,
+        "names": [
+          "the Wheel of Fortune"
+        ]
+      },
+      {
+        "house": 8,
+        "names": [
+          "the Wheel of Fortune",
+          "the Nameless One"
+        ]
+      },
+      {
+        "house": 9,
+        "names": []
+      },
+      {
+        "house": 10,
+        "names": []
+      },
+      {
+        "house": 11,
+        "names": []
+      },
+      {
+        "house": 12,
+        "names": [
+          "the Nameless One"
+        ]
+      }
+    ],
+    "majors_marvel": false
+  },
+  "verdict": {
+    "pass": true,
+    "failed": [],
+    "why": "No rubric line fails; the three debts are paid flat in their own rooms, one date stands in house 5 with the honest event-versus-weather justification, and the reversal-free spread reads as an arrangement.",
+    "recommend": 8,
+    "scores": {
+      "continuation": 8,
+      "trust": 8,
+      "variation": 8,
+      "teaching": 8,
+      "relevance": 8,
+      "tarot": 8
+    },
+    "weighted_score": 8
+  }
+}

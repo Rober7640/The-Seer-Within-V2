@@ -1,0 +1,24 @@
+{
+  "A": {
+    "readability": 6,
+    "trust": 7,
+    "humanness": 6,
+    "relevance": 7,
+    "continue": 6,
+    "recommend": 6
+  },
+  "B": {
+    "readability": 7,
+    "trust": 7,
+    "humanness": 7,
+    "relevance": 7,
+    "continue": 7,
+    "recommend": 7
+  },
+  "winner": "B",
+  "contract_omissions": {
+    "A": [],
+    "B": []
+  },
+  "limitations": "One blind simulated editorial assessment after reading all 37 A pages and 33 B pages and inspecting rendered contact sheets of every page. Not customer testing, NPS, demographic prediction, draw verification, or a statistically reliable effect estimate. Layout inspection was not print-size or mobile usability testing."
+}

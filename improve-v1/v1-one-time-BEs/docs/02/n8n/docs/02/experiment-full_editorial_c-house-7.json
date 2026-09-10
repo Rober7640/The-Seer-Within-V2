@@ -1,0 +1,62 @@
+{
+  "order": "cs_phase3_v2_20260910_d",
+  "build": "6ec12d2e0cb34649",
+  "drawHash": "041f1bc3ccd784c3",
+  "position": {
+    "house": 7,
+    "house_name": "who you are bound to",
+    "job": "The binding one — partner, or the person she is tied to whether or not it is called that. ⭐ Read against house 5, this is where 'renewal or arrival' gets decided.",
+    "card": "the-hierophant",
+    "card_name": "the Hierophant",
+    "reversed": false,
+    "agency": "Your choice has fallen on",
+    "obligation": null,
+    "owes": false,
+    "architecture": {
+      "entry": "enter through the source evidence",
+      "customer_entry": "late",
+      "development": [
+        "how the house changes the card",
+        "conditional consequences",
+        "personal application"
+      ],
+      "ending": "finish by resolving the room's central tension",
+      "target_words": 565,
+      "may_use_address": true,
+      "may_name_waite": false,
+      "cross_room": "permitted only if it changes the interpretation",
+      "emphasis_position": "early"
+    },
+    "claim_ledger": {
+      "permitted_sources": [
+        "the buyer material summarized in the sales-letter context",
+        "the question belonging to house 7",
+        "the traditional meaning and supplied lore of the Hierophant",
+        "named evidence from another dealt card only when the architecture permits it"
+      ],
+      "obligation": null,
+      "forecast_scope": "state the card-and-house interpretation firmly in the present while leaving her past actions, private motives and unseen events unclaimed",
+      "unsupported_private_fields": [
+        "duration",
+        "profession",
+        "possession",
+        "diagnosis",
+        "private ritual",
+        "relationship history",
+        "count or tally",
+        "specific location",
+        "existing paperwork",
+        "private conversation",
+        "payment mechanics",
+        "customer motive",
+        "third-party intention"
+      ],
+      "illustration_rule": "an illustrative situation remains a possibility and never becomes her history",
+      "history_rule": "do not assert a specific past event, frequency or recency for her unless the buyer context or obligation establishes it",
+      "action_scope": "direct advice may concern only observation, reflection or a reversible change inside her own environment; never make a forecast depend on contacting, documenting, confronting, negotiating with or changing terms for another person or institution"
+    }
+  },
+  "keynote": "the bond with a public shape",
+  "prose": "The two pillars he sits between are not the ones that guard the inner temple. The source makes that distinction deliberately, and it decides most of what this house has to say. He is not in the sanctuary where the concealed doctrine is kept; he sits in the outer place, the room with a door, where things are said where they can be heard. Two ministers kneel below him with their backs to us, facing him — and they are two, not one. Whatever is happening in this picture has witnesses standing in it.\n\nThat shifts the card when it falls in the seventh house. Elsewhere the Hierophant is a card about doctrine and how doctrine is properly handed on. Here the doctrine is the bond itself: the tie in question has a form, and the form is the part that other people can see. The keys crossed at his feet, one gold and one silver, are a matched pair — not one person's key, but a set that belongs to an office. Admission comes through a shape that exists before either party arrives at it. That is the card's whole subject: the established way of doing a thing, and what belonging to that way asks of you.\n\nIt is worth separating two things this house can mean, because they are easily collapsed. One is shared understanding: the private conventions two people build between themselves, the agreements about money and time and loyalty that neither would need to explain to the other. The other is external approval: the recognition of family, law, institution, the category strangers can name without your help. The Hierophant sits in the second of those rooms. It speaks about the sanctioned form, and it cannot tell you whether the sanctioned form is right. Nor does it decide worth. A bond can be entirely unconventional, invisible to the people who imagine they know your life, and still be the load-bearing one. Visibility is not the same as reality.\n\nWhat the card does clarify is which register your central tie is currently being read in. If the person you are bound to occupies an acknowledged place — assumed by others, spoken of, factored into arrangements that were never private — then this house says the live questions there are questions of form rather than feeling: how the thing is conducted, on whose terms, at whose pace. Institutions and families keep their own clock, and a slowness of that kind is not the same as reluctance. If instead the strongest attachment in your life has weight without any public category, the card marks the gap plainly. It does not condemn the attachment; it declines to describe it, because the outer room is the only room it can see. Noticing which of those two situations you recognize is the useful work here.\n\nHouse five holds the Chariot, and the comparison earns its place. That card is direction and drive — a course taken, momentum committed. The Hierophant is what happens to momentum when it has to be described to someone else. Motion can be entirely yours; a form is always partly borrowed. The pair together suggests that the decisive question in your bonds is not whether you want them but what shape you are willing to let them be known in.\n\nTwo fingers raised, two folded: something shown, something kept. That is the resolution of this house rather than its price. You are bound in a way that has an outward face and an inward one, and clarity comes from knowing which of your understandings are genuinely shared between you, and which merely have the approval of onlookers.",
+  "takeaway": "Distinguish what you two actually agree from what others merely recognize"
+}

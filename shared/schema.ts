@@ -1613,6 +1613,33 @@ export const beOrders = pgTable("be_orders", {
   readingUrl: text("reading_url"),
   deliveredAt: timestamp("delivered_at"),
 
+  // ── 07 · Marcus Daily Tarot only ──────────────────────────────────────────────
+  // 07 is the deck's first RECURRING offer: what she bought is not "the offer", it is
+  // one day's spread at one tier, against a question she typed. Nothing on this table
+  // could say which. All seven are NULL on 02/03 orders and on every offer that follows
+  // that sells one fixed thing.
+  //
+  // 🔴 Nothing writes these yet — see 07-server-spec.md §6.3. The fulfilment endpoint
+  // refuses (409) rather than guessing, because a guessed tier is a reading she did not
+  // buy and a guessed spread is the wrong cards.
+  /** Joins to be_07_draws. The day's spread, e.g. 'the-two-doors'. */
+  spreadKey: text("spread_key"),
+  /** 'YYYY-MM-DD'. Text, not date — it is handed to n8n as a string. */
+  drawDate: text("draw_date"),
+  /** spread ($35) | pattern ($57) | table ($87). ⭐ 07-C5: the rung is HOW MANY OF HER
+   *  QUESTIONS get answered — 1, 2, 3. The keys are unchanged; only the meaning is. */
+  tier: text("tier"),
+  /** love | money. Steers the prompt, not the price. */
+  topic: text("topic"),
+  /** ⛔ Her words, any length. This is why it is a column and not Stripe metadata,
+   *  which caps values at 500 characters and would silently truncate a real question. */
+  question: text("question"),
+  /** ⭐ 07-C5. Box two, typed before Stripe, required at tier 'pattern' and 'table'. */
+  question2: text("question_2"),
+  /** ⭐ 07-C5. Box three, required at tier 'table'. ⛔ A paid box with no text is a refund,
+   *  not a reading — n8n throws rather than inventing a question she did not ask. */
+  question3: text("question_3"),
+
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 }, (table) => [
@@ -1663,3 +1690,172 @@ export const beUpsellOrders = pgTable("be_upsell_orders", {
 
 export type BeUpsellOrder = typeof beUpsellOrders.$inferSelect;
 export type InsertBeUpsellOrder = typeof beUpsellOrders.$inferInsert;
+
+// ============================================================
+// 07 · THE DAILY DRAW (be_07_draws)
+// ============================================================
+// One cut per spread per day — the record the daily email, the booking page and the
+// paid reading ALL render from.
+//
+// 🔴 ONE ROW PER (spread_key, draw_date), enforced by a unique index. That constraint IS
+// the product promise: the email names cards 1 and 2 to the whole list, so every buyer
+// that day must be dealt the same cards. Storing the draw per-order would make two
+// buyers of one email receiving different cards a representable state.
+//
+// ⛔ A row is written when the day's email is built and is NEVER updated after that email
+// sends. An edited draw would rewrite a reading somebody has already read.
+//
+// `blocks` holds two keys: 'day' — the day's spread, every position — and 'open' — the six
+// cards cut with NO position on them, which is what each question after the first is laid on.
+// One JSONB rather than columns because the shape is the operator's to change and it should
+// not cost a migration. ⛔ 'undertow' / 'other_chair' died with the 07-C2 block ladder.
+//
+// ⚠️ Create it with migrations/2026-09-03-be-07-daily.sql. Do NOT `npm run db:push` — dev
+// and prod share ONE database, and push diffs the WHOLE schema.
+// ============================================================
+
+/** One position of a spread. ⛔ `job` goes VERBATIM into the model prompt. */
+export interface Be07Position {
+  number: number;
+  name: string;
+  job: string;
+  card_name: string;
+  reversed: boolean;
+  /** Free = the email already read it. ⛔ The paid PDF must not re-explain it. */
+  free: boolean;
+}
+
+/**
+ * 'day' is always present. 'open' is the morning's six unplaced cards.
+ * ⛔ An open card has NO `name` and NO `job` — those are written by n8n from the tier model,
+ *    in the order the cards came off the cut. A writer picking which open card suits which
+ *    position is not a draw, and one exception makes every reading a fake.
+ */
+export type Be07Blocks = {
+  day: Be07Position[];
+  open: Pick<Be07Position, 'number' | 'card_name' | 'reversed'>[];
+};
+
+export const be07Draws = pgTable("be_07_draws", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+
+  /** e.g. 'the-two-doors'. Half the key of a draw, with draw_date. ⛔ n8n does NOT branch
+   *  on it under 07-C5 — no rung adds a named spread, so nothing can be the day's own cut. */
+  spreadKey: text("spread_key").notNull(),
+  /** e.g. 'The Two Doors'. Printed on the PDF cover. */
+  spreadName: text("spread_name").notNull(),
+  /** 'YYYY-MM-DD'. Text — see 07-server-spec.md §2. */
+  drawDate: text("draw_date").notNull(),
+
+  blocks: jsonb("blocks").$type<Be07Blocks>().notNull(),
+
+  /** ⭐ What the email ALREADY said about the free cards. She has read this prose;
+   *  saying it back to her is the fastest way for the paid reading to look automated. */
+  emailFreeRead: text("email_free_read"),
+
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => [
+  uniqueIndex("uq_be_07_draws_spread_date").on(table.spreadKey, table.drawDate),
+  index("idx_be_07_draws_date").on(table.drawDate),
+]);
+
+export type Be07Draw = typeof be07Draws.$inferSelect;
+export type InsertBe07Draw = typeof be07Draws.$inferInsert;
+
+// ============================================================
+// 07 · THE GRADE LOG (be_07_reading_grades)
+// ============================================================
+// 🔴 THIS TABLE IS A MITIGATION, NOT BOOKKEEPING. The workflow's rule is: on a failed
+// grade, regenerate ONCE, then send anyway. So a reading that failed its rubric twice is
+// delivered to a paying customer, and this row is the only place that fact exists.
+// Nobody is alerted. It only works if somebody READS it — daily, for the first fortnight.
+//
+// The audit query, which is the entire point of the table:
+//   SELECT g.created_at, g.attempt, g.failed, g.why, o.email, o.tier, o.delivered_at
+//   FROM be_07_reading_grades g JOIN be_orders o ON o.id = g.order_id
+//   WHERE g.pass = false ORDER BY g.created_at DESC;
+//
+// ONE ROW PER ATTEMPT, unique on (order_id, attempt), so a retried POST cannot double-log
+// and a second attempt cannot overwrite the first.
+//
+// ⚠ `reading` stores the full prose that was graded — up to ~2,600 words. It is here so a
+// bad send can be READ, not just counted. A verdict with no text is unauditable.
+// ============================================================
+
+export const be07ReadingGrades = pgTable("be_07_reading_grades", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  orderId: varchar("order_id")
+    .notNull()
+    .references(() => beOrders.id, { onDelete: "cascade" }),
+
+  /** 1 = first pass. 2 = the one regeneration. There is never a 3. */
+  attempt: integer("attempt").notNull(),
+  pass: boolean("pass").notNull(),
+  /** Rubric line numbers that failed, e.g. [3,6,8]. */
+  failed: jsonb("failed").$type<number[]>().notNull().default(sql`'[]'::jsonb`),
+  /** The grader's own words. */
+  why: text("why"),
+  /** The graded prose itself. See the header. */
+  reading: text("reading"),
+
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => [
+  uniqueIndex("uq_be_07_grades_order_attempt").on(table.orderId, table.attempt),
+  // The only query that matters: find the bad sends.
+  index("idx_be_07_grades_pass").on(table.pass, table.createdAt),
+]);
+
+export type Be07ReadingGrade = typeof be07ReadingGrades.$inferSelect;
+export type InsertBe07ReadingGrade = typeof be07ReadingGrades.$inferInsert;
+
+// ============================================================
+// 07 · WHAT SHE TYPED BEFORE STRIPE (be_order_intake)
+// ============================================================
+// 🔴 WHY THIS TABLE EXISTS AT ALL, when be_orders already has the same seven columns.
+//
+// `be_orders` has one invariant that everything downstream leans on: **a row means she
+// paid.** `getBeOrderBySession` and `/api/backend/order/:sessionId` do not filter on
+// status, so a row written at checkout time would render a thank-you page — and start a
+// fulfilment — for a woman who abandoned the payment. That is 07-server-spec.md §6.3
+// option C, and it is the dangerous one.
+//
+// So her intake lands HERE, keyed on the Stripe Checkout session, and `recordBackendOrder`
+// copies it onto the order on the PAID webhook. The invariant survives; the question does
+// not have to ride Stripe metadata, which caps a value at 500 characters and would
+// silently truncate a real one.
+//
+// ⛔ A row here is NOT a sale and must never be read as one. Most rows will be abandoned
+//    checkouts. Nothing bills, emails or fulfils from this table.
+//
+// ⚠ It grows forever on its own. Abandoned rows are only useful for as long as she might
+//    still come back and pay, so they want a sweep — nothing deletes them yet.
+//
+// ⚠️ Create it with migrations/2026-09-03-be-07-daily.sql, never `npm run db:push`.
+// ============================================================
+
+export const beOrderIntake = pgTable("be_order_intake", {
+  /** The Stripe Checkout session. One intake per checkout, so it is the key. */
+  stripeSessionId: text("stripe_session_id").primaryKey(),
+
+  /** Which offer's checkout this was, so a stray row is attributable. */
+  offer: text("offer").notNull(),
+
+  // ── The five that 07 cannot fulfil without. Mirrors beOrders exactly. ──
+  spreadKey: text("spread_key"),
+  drawDate: text("draw_date"),
+  tier: text("tier"),
+  topic: text("topic"),
+  /** ⛔ Her words, any length. The whole reason this is a column and not metadata. */
+  question: text("question"),
+  question2: text("question_2"),
+  question3: text("question_3"),
+
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => [
+  // The sweep's query: find abandoned intake older than N days.
+  index("idx_be_order_intake_created").on(table.createdAt),
+]);
+
+export type BeOrderIntake = typeof beOrderIntake.$inferSelect;
+export type InsertBeOrderIntake = typeof beOrderIntake.$inferInsert;

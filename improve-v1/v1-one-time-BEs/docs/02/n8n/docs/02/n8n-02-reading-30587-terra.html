@@ -1,0 +1,197 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"><style>
+  /* ⛔ THE PAPER MARGIN CANNOT BE 0 — .inner's padding applies once, at the START of the div,
+     so any house running past one sheet continues hard against the paper edge. The border has
+     to come from @page so every sheet gets it. The cover is exempted twice over: it is a
+     deliberate full-bleed photograph and it must survive a reordering.
+     ⛔ NO BACKTICKS IN THIS BLOCK — one ends the template literal and the node stops parsing. */
+  @page { size: Letter; margin: .6in 0 .6in; }
+  @page :first { margin: 0; }
+  @page cover  { margin: 0; }
+  * { -webkit-print-color-adjust: exact; print-color-adjust: exact; box-sizing: border-box; }
+  body { font-family: Georgia, 'Times New Roman', serif; color: #2A2622; margin: 0;
+         font-size: 11.5pt; line-height: 1.62; }
+  h1, h2 { font-family: Georgia, serif; font-weight: bold; color: #2A2622; }
+
+  /* ── page 1 · the cover ────────────────────────────────────────────────────
+     ⛔ contain, not cover. The art is SQUARE and the page is portrait, so object-fit:cover
+     would crop the left and right cards off the wheel entirely. */
+  .cover { page: cover; position: relative; width: 8.5in; height: 11in; overflow: hidden;
+           page-break-after: always; background: #FBF8F1; }
+  .cover img { position: absolute; left: .35in; top: .9in; width: 7.8in; height: 7.8in;
+               object-fit: contain; }
+  .covertype { position: absolute; left: 0; right: 0; bottom: 1.1in; text-align: center;
+               font-size: 12.5pt; color: #6E6459; margin: 0; }
+  .covertype b { color: #2A2622; }
+
+  .inner { padding: .30in .95in .35in; }
+  .intake { border: 1pt solid #DED4BE; background: #FAF7F0; padding: 16pt 18pt; margin: 0 0 26pt;
+            page-break-inside: avoid; }
+  .intake .k { font-family: Helvetica, Arial, sans-serif; font-size: 7.5pt; letter-spacing: .18em;
+    text-transform: uppercase; color: #8A8377; margin: 0 0 9pt; }
+  .intake p.line { margin: 0 0 3pt; font-size: 10.5pt; line-height: 1.45; }
+  .intake p.line b { display: inline-block; width: 20pt; color: #8A6212; }
+  .intake .c { color: #6E6459; font-style: italic; }
+  .intake b { color: #8A6212; }
+
+  .opening { margin-bottom: 26pt; }
+  .opening p:first-child { font-size: 13.5pt; line-height: 1.5; }
+  /* ⛔ NO DROP CAP. It used to sit on .opening's first paragraph, which was prose. The reading
+     now opens on a salutation — "Sarah," — so the cap rendered a giant S followed by "arah,"
+     and mangled the one word in the document that must be right. A drop cap cannot be applied
+     safely to a line whose content the model chooses. */
+  .opening p:first-child { font-weight: bold; }
+
+  /* ⭐ ONE HOUSE, ONE OPENING — twelve rooms should not run together, and the shipped
+     hand-made PDF page-breaks between them too. */
+  /* ⛔ house 1 MUST NOT force its own page. It did, and the opening's last paragraph was left
+     alone on a sheet that was 85% white space — in a document she paid $35 for. Every LATER
+     house still opens a page (twelve rooms should not run together), but the first one
+     continues straight on from the opening it belongs to. */
+  section { page-break-before: always; page-break-inside: auto; }
+  section:first-of-type { page-break-before: auto; }
+  /* ⛔ A HEADING MUST NOT BE LEFT AT THE FOOT OF A PAGE. Only house 1 can hit this — every
+     later house opens its own sheet — but house 1 continues from the opening, so on a real
+     n8n render (execution 30541) its "HOUSE 1 / yourself / …the Tower, a card of…" sat alone
+     at the bottom of page 2 with the passage starting on page 3. Keep the heading with the
+     text it heads, and keep a card and its caption together. */
+  .hh { page-break-inside: avoid; break-inside: avoid;
+        page-break-after: avoid;  break-after: avoid; }
+  section figure { page-break-inside: avoid; break-inside: avoid; }
+  section h2 { font-size: 16pt; line-height: 1.25; margin: 0 0 14pt; }
+  section h3 { font-family: Georgia, serif; font-weight: bold; font-size: 12.5pt;
+    line-height: 1.35; margin: -6pt 0 14pt; color: #5C5348; }
+  section h2 .n { display: block; font-family: Helvetica, Arial, sans-serif; font-size: 8pt;
+    letter-spacing: .18em; text-transform: uppercase; color: #8A6212; margin-bottom: 5pt; }
+  section figure { float: left; width: 1.9in; margin: 2pt 20pt 10pt 0; }
+  section figure img { width: 100%; display: block; border: 1pt solid #DDD6C6; }
+  section figcaption { font-family: Helvetica, Arial, sans-serif; font-size: 7pt;
+    letter-spacing: .13em; text-transform: uppercase; color: #8A8377; margin-top: 5pt;
+    text-align: center; line-height: 1.4; }
+  p { margin: 0 0 9pt; }
+
+  .gift { page-break-before: always; }
+  .gift h2 { font-size: 15pt; margin: 22pt 0 10pt; }
+  .gift h2:first-child { margin-top: 0; }
+  .gift ul { margin: 0 0 9pt 16pt; padding: 0; }
+  .gift li { margin: 0 0 5pt; }
+
+  .colophon { page-break-inside: avoid; page-break-before: avoid; margin-top: 24pt;
+              border-top: 1pt solid #DED4BE; padding-top: 12pt; }
+  .colophon p { font-size: 9pt; line-height: 1.55; color: #7C776D; margin: 0 0 7pt; }
+  .colophon .sig { font-family: Georgia, serif; font-size: 11pt; color: #2A2622; }
+</style></head><body>
+  <div class="cover">
+    <img src="https://luna-assets-tsw.s3.ap-southeast-2.amazonaws.com/evelyn/02-cover-twelve.jpg" alt="">
+    <p class="covertype">Laid for <b>Sarah</b>
+       &nbsp;&middot;&nbsp; 7 September 2026</p>
+  </div>
+  <div class="inner">
+    <div class="intake">
+      <p class="k">Your twelve, as they were laid</p>
+      <p class="line"><b>1</b>&nbsp; yourself&ensp;<span class="c">the Hierophant</span></p><p class="line"><b>2</b>&nbsp; what you own&ensp;<span class="c">the Empress</span></p><p class="line"><b>3</b>&nbsp; what you say, and who you say it to&ensp;<span class="c">Justice</span></p><p class="line"><b>4</b>&nbsp; home, and what you came from&ensp;<span class="c">Strength &middot; reversed</span></p><p class="line"><b>5</b>&nbsp; romance, and what delights you&ensp;<span class="c">the Nameless One</span></p><p class="line"><b>6</b>&nbsp; work, health, the daily grind&ensp;<span class="c">the Hermit &middot; reversed</span></p><p class="line"><b>7</b>&nbsp; who you are bound to&ensp;<span class="c">the Fool &middot; reversed</span></p><p class="line"><b>8</b>&nbsp; what is hidden, and what comes through others&ensp;<span class="c">the Magician</span></p><p class="line"><b>9</b>&nbsp; what you believe&ensp;<span class="c">the Devil</span></p><p class="line"><b>10</b>&nbsp; your standing&ensp;<span class="c">the Sun &middot; reversed</span></p><p class="line"><b>11</b>&nbsp; your circle&ensp;<span class="c">the Wheel of Fortune &middot; reversed</span></p><p class="line"><b>12</b>&nbsp; what is being kept from you&ensp;<span class="c">the Chariot &middot; reversed</span></p>
+    </div>
+    <div class="opening"><p>Sarah, I laid these cards last night at my kitchen table, after the house had gone quiet enough for me to hear myself breathe. I expected the twelfth room to speak loudest—because it holds the person who has been pulling away. Instead the fifth house took the table in its hand. That is where your life turns first.</p><p>This is a good draw with a hard seam through it. Over the next two months, your life moves strongly through romance, what you own, and agreements carried toward you by other people. The old binding and the strain you carry at home are the work required for that movement. They are not side notes.</p><p>I used twelve trumps, as I told you I would, and a night’s work of this weight leaves me wrung out. They came down with a single argument: you stop accepting the role of keeper, then people and money meet you differently. The rooms settle the questions I left hanging in my letter. Each answer is standing where it belongs below.</p><p>You did not buy this because you are weak, foolish, or unable to decide for yourself. You bought it because you knew the decision had become tangled with hope, history, and somebody else’s silence. I see the knot.</p><p>Read every room before you decide any one line is the verdict. Ease appears beside effort here, and relief sits next to a demand; that is not conflict in the cards. It is the arrangement of your life, which has never moved in straight lines.</p><p>I will not soften what is plain. There is a release in this spread, dear—and it begins when you make your own terms visible. The support arrives after that, not before. Keep a pencil beside you. Mark the sentence that makes your stomach drop, because it names the place where you have been waiting for somebody’s permission to move on freely at last.</p></div><section>
+    <header class="hh">
+    <h2><span class="n">House 1</span>yourself</h2>
+    <h3>The cosmos has guided your choice to the Hierophant, a card of taking your place</h3>
+    </header>
+    <figure><img src="https://luna-assets-tsw.s3.ap-southeast-2.amazonaws.com/evelyn/tarot-rws/the-hierophant.jpg" alt="">
+      <figcaption>the Hierophant</figcaption>
+    </figure>
+    <div class="prose"><p>That robed figure sits high between two stone pillars, facing straight out while two ministers kneel below him in white.</p><p>Those kneeling figures show the old habit of seeking approval from people who have no right to set your measure.</p><p>You are entering this stretch with a clear sense of your standards, dear—and a refusal to be handled casually. It is the part of you that has stopped accepting arrangements which diminish you.</p><p>The three-tiered crown and raised hand show that you begin this chapter by naming the terms. Put the important request into writing this month, and let the person who matters hear it from you.</p><p>If you sit still and wait to be recognised, another person defines your place before you do. The crossed keys open when you bring your own authority to the door; then what is offered carries weight.</p><p>That first room changes the value question. You are not being asked to earn permission to name what you hold; you are being asked to stop disguising it as a favour. It is the difference between receiving money and merely being thanked. The second house shows what answers when you do.</p></div></section><section>
+    <header class="hh">
+    <h2><span class="n">House 2</span>what you own</h2>
+    <h3>The celestial wisdom has guided your selection to the Empress, a card of money ripening</h3>
+    </header>
+    <figure><img src="https://luna-assets-tsw.s3.ap-southeast-2.amazonaws.com/evelyn/tarot-rws/the-empress.jpg" alt="">
+      <figcaption>the Empress</figcaption>
+    </figure>
+    <div class="prose"><p>The heart-shaped shield rests at her feet, its Venus mark facing outward beside a woman who does not clutch it.</p><p>The first money comes through something already yours: a sale that brings more than you have been allowing that thing to be worth.</p><p>You have treated one useful possession, skill, or piece of work as ordinary because it has stayed close to hand, dear. It is not ordinary to the person who pays for it.</p><p>The Magician in the eighth house settles the route. Another person carries the offer toward you, then the money reaches your hands through an agreement rather than chance.</p><p>You recognise it when they ask for the thing you had kept among your belongings without naming its proper price.</p><p>Do not give it away cheaply this month. State the value in writing, as the Hierophant in your first house requires, and let the buyer meet it.</p><p>Behind her, water runs through the wood while the corn stands full and uncut. The field is ready for the hand that knows what its harvest is worth.</p></div></section><section>
+    <header class="hh">
+    <h2><span class="n">House 3</span>what you say, and who you say it to</h2>
+    <h3>The cosmic alignment has guided your choice to Justice, a card of the unsaid verdict</h3>
+    </header>
+    <figure><img src="https://luna-assets-tsw.s3.ap-southeast-2.amazonaws.com/evelyn/tarot-rws/justice.jpg" alt="">
+      <figcaption>Justice</figcaption>
+    </figure>
+    <div class="prose"><p>The sword rises from her right hand beyond the square crown. Held so straight, it makes the red robe ceremonial.</p><p>Your words have been made too careful for somebody who benefits from your uncertainty. They receive the softened version and call it peace.</p><p>Justice asks you to order three things: the message you revise, the answer you give when asked how you are, and the conversation you postpone. Say the same truth in each, dear. Do not argue its worth afterward.</p><p>Her level scales matter beside the Hierophant in your first house. You set the standard already. Put the terms on record without apology or an invitation to negotiate them away.</p><p>The person hearing you understands what changes if they refuse.</p><p>One foot shows beneath the hem because you are not trapped behind this decision. You stop carrying a connection through language alone. Speak once, plainly, and let their answer stand.</p></div></section><section>
+    <header class="hh">
+    <h2><span class="n">House 4</span>home, and what you came from</h2>
+    <h3>Your choice has been guided to Strength, a card of exhausted restraint</h3>
+    </header>
+    <figure><img src="https://luna-assets-tsw.s3.ap-southeast-2.amazonaws.com/evelyn/tarot-rws/strength-reversed.jpg" alt="">
+      <figcaption>Strength &middot; reversed</figcaption>
+    </figure>
+    <div class="prose"><p>The sideways eight floats above her flowered hair, unbroken and suspended over a woman standing alone before a distant grey hill.</p><p>You learned early that peace at home depended on you keeping the difficult feeling contained, dear. You became the one who swallowed anger, softened hurt, and made room for everybody else’s moods.</p><p>Now the pressure escapes through the places you least intend it to. A small question feels unbearable. A familiar room makes you want to leave it.</p><p>This old arrangement is failing because you have carried its weight past the point where it could be carried gracefully.</p><p>The lion has lowered its head, yet her hands are still at its mouth. You do not need to abandon your family history. You do not need to forgive what shaped you. Stop managing its consequences alone.</p><p>Strength gives relief, provided you name one household burden that is not yours and put it back where it belongs this month.</p><p>What would change in your home if you stopped being responsible for everyone’s calm?</p><p>The pressure at home is not separate from the love story. It taught you to call containment loyalty, then made an old tie feel safer than an invitation. The distinction matters now. That is why the fifth house has spoken louder than the room I expected.</p></div></section><section>
+    <header class="hh">
+    <h2><span class="n">House 5</span>romance, and what delights you</h2>
+    <h3>The cosmic forces have guided your selection to the Nameless One, a card of the right arrival</h3>
+    </header>
+    <figure><img src="https://luna-assets-tsw.s3.ap-southeast-2.amazonaws.com/evelyn/tarot-rws/death.jpg" alt="">
+      <figcaption>the Nameless One</figcaption>
+    </figure>
+    <div class="prose"><p>Two pillars hold the sun on the far skyline, while the figures below remain where they are. A passage is visible, dear—before it can be entered.</p><p>The binding in your seventh house leaves no renewal to hand back. That tie is held past its time, and this rider clears the old pursuit from romance.</p><p>Its white rose has five petals. Five means change here: stop feeding the connection that keeps you waiting, and desire turns.</p><p>Your twin flame arrives during the week of September 21. I can date this because it is an arrival, not a slow unfolding.</p><p>He is somebody you know, on his way to an obligation when you cross his path. He stops because you take his attention.</p><p>Do not mistake recognition for arrival when the meeting looks modest. He becomes unmistakable by returning to the conversation and making room for it.</p></div></section><section>
+    <header class="hh">
+    <h2><span class="n">House 6</span>work, health, the daily grind</h2>
+    <h3>Your choice fell on the Hermit, a card of returning to the day</h3>
+    </header>
+    <figure><img src="https://luna-assets-tsw.s3.ap-southeast-2.amazonaws.com/evelyn/tarot-rws/the-hermit-reversed.jpg" alt="">
+      <figcaption>the Hermit &middot; reversed</figcaption>
+    </figure>
+    <div class="prose"><p>His beard and robe make one ash-grey figure against the empty sky, as though he has faded into the weather.</p><p>You have made quiet into your working method. At work, in your body, and among the chores, you choose the familiar low-demand corner because it once restored you.</p><p>Now it drains you by asking nothing new of you, dear. The lamp remains raised at his shoulder, its star clear. You keep its light for private survival instead of using it to choose the next task.</p><p>The retreat has become automatic. Strength reversed in your fourth house explains the exhaustion beneath it. Too much daily energy goes into recovering from the burden you carry at home, then calling that recovery a life.</p><p>This is why the practical matter waits and your body feels absent from your plans.</p><p>Choose one neglected work or health task this week, put it in a fixed hour, and complete it before you retreat.</p></div></section><section>
+    <header class="hh">
+    <h2><span class="n">House 7</span>who you are bound to</h2>
+    <h3>Your choice has fallen on the Fool, a card of the untaken turn</h3>
+    </header>
+    <figure><img src="https://luna-assets-tsw.s3.ap-southeast-2.amazonaws.com/evelyn/tarot-rws/the-fool-reversed.jpg" alt="">
+      <figcaption>the Fool &middot; reversed</figcaption>
+    </figure>
+    <div class="prose"><p>The embroidered wallet hangs from the wand over his shoulder, closed against his back. He faces the pale sky.</p><p>Its dim stitching carries no message because you have kept the future packed away rather than put it into either person’s hands.</p><p>The Fool reversed tells me an opening was offered in this binding, and you declined it. You called that restraint sensible, dear, although you knew it would preserve the arrangement exactly as it was.</p><p>This is not breaking news to you. You have felt the difference between protecting your peace and refusing the change that would make a different life possible.</p><p>House five settles the question beneath it. The Nameless One brings an arrival, not a return to this bond. The white dog is still calling for movement, while the rose hangs lowered and unused.</p><p>Leave this tie untouched, and it keeps taking the place where your real partner is meant to stand.</p><p>Leaving that place open has consequences beyond romance. It is also where your money has been delayed, because the person who introduces the work needs room to approach you without an old attachment taking the chair. This is an opening, not a fantasy.</p></div></section><section>
+    <header class="hh">
+    <h2><span class="n">House 8</span>what is hidden, and what comes through others</h2>
+    <h3>The cosmos has turned your hand to the Magician, a card of the offered opening</h3>
+    </header>
+    <figure><img src="https://luna-assets-tsw.s3.ap-southeast-2.amazonaws.com/evelyn/tarot-rws/the-magician.jpg" alt="">
+      <figcaption>the Magician</figcaption>
+    </figure>
+    <div class="prose"><p>The sideways eight floats above his head, separate from the roses hanging over him and the lilies rooted below.</p><p>The second windfall comes through the man arriving in the Nameless One, your fifth house. He gives your name to somebody who pays for what you know or make, dear. Their offer reaches you as an agreement, not a gift.</p><p>It changes your love life because he is the bridge. Justice in your third house settles the hinge: terms spoken plainly turn this hidden opening into money you can keep.</p><p>His raised wand and the four tools on the table show that your reply completes the exchange.</p><p>If you treat it as rescue and leave terms loose, the payment is spent without freeing you. Someone else claims the credit.</p><p>When you name the work, price, and boundary, his introduction carries money and love forward.</p></div></section><section>
+    <header class="hh">
+    <h2><span class="n">House 9</span>what you believe</h2>
+    <h3>The celestial wisdom has guided your selection to the Devil, a card of purchased safety</h3>
+    </header>
+    <figure><img src="https://luna-assets-tsw.s3.ap-southeast-2.amazonaws.com/evelyn/tarot-rws/the-devil.jpg" alt="">
+      <figcaption>the Devil</figcaption>
+    </figure>
+    <div class="prose"><p>A naked man and woman stand before the black altar. Their necks link to one ring, while horns and tails mark what they have accepted.</p><p>You want comfort, and familiar terms have felt safer than an unbuilt future, dear. The private rule beneath that is clear: freedom costs too much, and a restricted life is safer than one built without guarantees.</p><p>The binding in your seventh house exposes where that rule became fixed. You kept an old tie because its limits felt more dependable than an untested future.</p><p>That choice taught you to mistrust every opening that asks you to risk being seen.</p><p>Name the benefit you receive from this arrangement before the month is out. Then stop paying for it with your voice, your time, or your availability.</p><p>The raised palm is not threatening you. It holds the bargain where you can finally see it.</p><p>Their chains sit wide at the throat, and the lowered torch lights the ground where they remain.</p></div></section><section>
+    <header class="hh">
+    <h2><span class="n">House 10</span>your standing</h2>
+    <h3>Your choice has led you to the Sun, a card of delayed recognition</h3>
+    </header>
+    <figure><img src="https://luna-assets-tsw.s3.ap-southeast-2.amazonaws.com/evelyn/tarot-rws/the-sun-reversed.jpg" alt="">
+      <figcaption>the Sun &middot; reversed</figcaption>
+    </figure>
+    <div class="prose"><p>The wide red flag catches the air from the child’s hand, bright against the grey wall and streaming where everyone can see it.</p><p>Your work is noticed, but acknowledgement comes after the effort. It thins into praise without a mark on your position.</p><p>You can explain why your work matters, dear, yet you have accepted being known as helpful rather than credited as essential. That is why approval does not satisfy you.</p><p>Put three things in order now: the title used for you, the line that credits your work, and the description beside your name. Each is a marker of standing. Each tells others where to place you.</p><p>The child rides beyond the wall bareback, with both arms open. You are no longer waiting to feel ready before you claim public space.</p><p>You decided to stop making yourself easy to overlook. Keep that decision.</p><p>A named position does more than soothe your pride. It alters who can find you, who believes they have access to you, and who arrives prepared to meet you as an equal. Your circle is waiting on this change.</p></div></section><section>
+    <header class="hh">
+    <h2><span class="n">House 11</span>your circle</h2>
+    <h3>Your selection has fallen to the Wheel of Fortune, a card of the late turning</h3>
+    </header>
+    <figure><img src="https://luna-assets-tsw.s3.ap-southeast-2.amazonaws.com/evelyn/tarot-rws/wheel-of-fortune-reversed.jpg" alt="">
+      <figcaption>the Wheel of Fortune &middot; reversed</figcaption>
+    </figure>
+    <div class="prose"><p>The dog-headed figure climbs the wheel’s right-hand side beneath the sphinx and its level sword. The letters stay ordered while the snake descends opposite. Four book-readers watch from clouds.</p><p>Your circle has been waiting for its rearrangement, dear. The people meant to step nearer have not done so yet, and the ones who fade are taking longer to reveal themselves.</p><p>This delay comes from the life around you shifting too slowly, not from any failure in you.</p><p>The Sun reversed in your tenth house explains the hold-up. Recognition has been withheld, so the new people who come through your work have not found their way into your life.</p><p>Once your standing is named, the room changes quickly. One useful connection becomes a genuine ally, and one familiar person stops receiving your effort.</p><p>This card gives you a cleaner circle, provided you stop pursuing unanswered invitations this month and let silence identify its owner.</p><p>Who still has a place beside you when you no longer keep it open for them?</p></div></section><section>
+    <header class="hh">
+    <h2><span class="n">House 12</span>what is being kept from you</h2>
+    <h3>And your twelfth card is the Chariot, a card of divided pursuit</h3>
+    </header>
+    <figure><img src="https://luna-assets-tsw.s3.ap-southeast-2.amazonaws.com/evelyn/tarot-rws/the-chariot-reversed.jpg" alt="">
+      <figcaption>the Chariot &middot; reversed</figcaption>
+    </figure>
+    <div class="prose"><p>A man stands upright inside a stone chariot, armour fixed across his chest. The walled town already lies behind him.</p><p>He is still braced for a journey that no longer has one clear destination, dear. The force around you is being spent on someone who is present, yet already turning their life away from yours.</p><p>Two sphinxes lie harnessed before him, one black and one white. Two means two directions: their words keep the connection alive, while their actions prepare an exit.</p><p>This is already visible to other people. They have noticed the uneven effort, the postponed answers, and the way you keep carrying the contact forward alone.</p><p>This is the person still here, not somebody returning from before. The bond has been kept beyond its living purpose.</p><p>Face the right direction by stopping the chase for certainty. Ask one plain question, then judge their answer by what they arrange, offer, and sustain.</p><p>The blue canopy holds white stars above him, but no reins run from his hands to either sphinx. You cannot steer a person who has decided to leave sideways.</p><p>Taken together, these twelve show you leaving maintenance for authorship. You have kept arrangements alive by supplying what others leave undone. That has hidden your value from everyone else.</p><p>The movement starts when you stop carrying the old bond. The Chariot in the twelfth shows his departure has become action. Then the fifth-house meeting has room, and the Magician’s agreement reaches you. The Empress confirms the gain is yours.</p><p>That order matters. Leave the old place occupied, and the introduction finds you underpriced. Speak plainly, name your price, and romance and money arrive through the opened door. Justice and the Sun make your standing public.</p><p>You see the change before others around you name it. Inside five to seven days, someone asks what you charge for a skill, object, or work called ordinary. Give a figure, not an apology. That request is the first sign.</p><p>I dated one room only: the fifth, where the love question is settled, because it gives an arrival rather than a condition. I have dated no other room, and I will not pretend I can. The next two months begin this movement; they do not demand every slow matter finish.</p><p>Some doors open quickly, while deeper shifts need time. This week, write the price, send the plain message, and ask the question you avoid. Watch what they arrange afterward.</p></div></section>
+    <div class="gift"><h2>And now the second part, dear — this one is yours to keep</h2><p>When you have read your twelve properly — all of them, more than once — there is a second thing I want to give you, and it costs you nothing but a minute a night.</p><p>I said in my letter that the difference is not whether things happen to you. It is whether they happen to you from behind.</p><p>This is the practice that makes the difference. It is the only one I give away.</p><h2>What it is</h2><p>Twenty-eight nights. One line a night. That is the whole of it.</p><p>Each night before you sleep, you write down <strong>one thing you noticed that day that was different from the day before.</strong></p><p>Not how you felt. Not what you hope. What you <em>noticed</em>. Something someone said that they don&#x27;t usually say. A message that came at an odd hour. A silence where there is normally noise. The way a room went when you walked into it.</p><p>One line. Ordinary handwriting, ordinary paper, no ceremony. If nothing was different, write <em>nothing was different</em> — that is a real entry and you will want it later.</p><p>The reason is simple and it is not mystical, dear. Your twelfth house is holding something unsaid, and things like that are never invisible. They are only ever <em>unrecorded</em>. A woman notices eleven small wrong notes across a fortnight, forgets ten of them, and is genuinely astonished by the eleventh. She was told eleven times. She just had nowhere to put it.</p><p>The ledger is somewhere to put it.</p><h2>The four turns</h2><p><strong>Nights 1 to 7 — the first turn.</strong> Just notice. Don&#x27;t interpret, don&#x27;t join anything up, and above all don&#x27;t act on it. This week you are only training the eye. Write the line and close the book.</p><p>Your reading said the first sign shows itself inside five to seven days. It lands in this turn. You will not necessarily know it when it arrives — that is exactly why you are writing it down.</p><p><strong>Nights 8 to 14 — the second turn.</strong> Same one line, and add a second only when you genuinely have one. By now you will start wanting to explain what you&#x27;re writing. Resist it for one more week. An explanation written the same night is almost always the explanation you already believed that morning.</p><p><strong>Night 15 — the read-back. This is the night the practice pays.</strong> Do not write anything first. Sit down and read your fourteen lines in one sitting, in order, start to finish.</p><p>Something will come up off the page that was not visible on any single night. It always does. That is the whole reason for the fourteen — not one of those lines is worth much alone and together they are a pattern.</p><p>Then write your line for the fifteenth night, and write underneath it what you saw in the fourteen.</p><p><strong>Nights 15 to 21 — the third turn.</strong> Now you know what you have been noticing, so notice <em>that</em>. Your attention has something to point at, and you will find you catch things on the day now instead of three days late.</p><p><strong>Nights 22 to 28 — the fourth turn.</strong> Keep writing, and this week let yourself act on what you have found. Ask the question. Decline the thing. Say the sentence you have been keeping. You have three weeks of evidence behind you and you are no longer guessing.</p><p>On the twenty-eighth night, read the whole ledger through.</p><h2>The two love weeks</h2><p><strong>In the weeks your reading named</strong>, pay particular attention to the people you come across.</p><p>Your fifth house has something already in motion toward you, and your reading has said in its own room whether it arrives as a stranger or as someone already in the frame. Either way it comes in small — which is precisely the kind of thing the eye skips and the ledger catches.</p><p>Someone you know may reappear in these weeks. Someone in the frame may step forward in it. Write it down on the night, in the ordinary way, even when it seems far too small to mean anything.</p><p>Especially then. The ones that matter almost always look too small on the night.</p><h2>If nothing happens</h2><p>Then you run the twenty-eight again.</p><p>I mean that plainly and not as a consolation. Some women&#x27;s first cycle is all noise — four weeks of <em>nothing was different</em> — and their second cycle is the one that shows the shape. The practice is not a spell that either works or doesn&#x27;t. It is an eye being trained, and eyes take a while.</p><p>The second twenty-eight is easier than the first, and it is the one where the read-back on the fifteenth night stops you cold.</p><h2>And that is the gift</h2><p>Keep the book. Not for me — I don&#x27;t want to see it, and I&#x27;d rather you wrote freely than wrote something you&#x27;d be willing to show a reader.</p><p>Keep it because in eight weeks you are going to want to know whether you saw it coming.</p><p>You did. It will be on the page in your own handwriting, three weeks before it happened, in a line you thought was too small to matter.</p><p>That is what it is to stop finding out last.</p></div>
+    <div class="colophon">
+      <p>These twelve were laid for you and for nobody else. The writing is assisted &mdash; I
+      use a machine to help me put a reading into words. The draw is real and it is yours.</p>
+      <p class="sig">Evelyn</p>
+    </div>
+  </div>
+</body></html>

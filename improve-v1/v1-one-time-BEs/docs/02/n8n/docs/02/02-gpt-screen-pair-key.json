@@ -1,0 +1,17 @@
+[
+  {
+    "house": 3,
+    "A": "claude-opus-5",
+    "B": "gpt-5.6-sol"
+  },
+  {
+    "house": 5,
+    "A": "gpt-5.6-sol",
+    "B": "claude-opus-5"
+  },
+  {
+    "house": 12,
+    "A": "gpt-5.6-sol",
+    "B": "claude-opus-5"
+  }
+]

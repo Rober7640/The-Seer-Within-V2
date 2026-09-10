@@ -1,0 +1,66 @@
+{
+  "houses": [
+    {
+      "house": 3,
+      "A": {
+        "readability": 7,
+        "trust": 8,
+        "humanness": 6,
+        "relevance": 7,
+        "continue": 7,
+        "recommend": 7
+      },
+      "B": {
+        "readability": 8,
+        "trust": 7,
+        "humanness": 8,
+        "relevance": 7,
+        "continue": 8,
+        "recommend": 7
+      },
+      "winner": "B"
+    },
+    {
+      "house": 5,
+      "A": {
+        "readability": 7,
+        "trust": 7,
+        "humanness": 7,
+        "relevance": 7,
+        "continue": 7,
+        "recommend": 7
+      },
+      "B": {
+        "readability": 7,
+        "trust": 6,
+        "humanness": 7,
+        "relevance": 7,
+        "continue": 7,
+        "recommend": 6
+      },
+      "winner": "A"
+    },
+    {
+      "house": 12,
+      "A": {
+        "readability": 6,
+        "trust": 5,
+        "humanness": 6,
+        "relevance": 6,
+        "continue": 6,
+        "recommend": 5
+      },
+      "B": {
+        "readability": 7,
+        "trust": 6,
+        "humanness": 7,
+        "relevance": 7,
+        "continue": 7,
+        "recommend": 6
+      },
+      "winner": "B"
+    }
+  ],
+  "verdict": "House 3 B narrowly wins for natural, usable teaching despite unsupported image details and an insinuation of indecision; House 5 A wins for proportionate agency and clearer recognition timing; House 12 B wins for clearer separation of direction from motive, though both overstate what ambiguous evidence establishes. Candidate labels are local to each house; no overall writer verdict is inferred.",
+  "limitations": "Moderate confidence from six complete excerpts and the supplied contract only. House 3 is close. House 5 B explicitly separates recognition from arrival but dates only arrival. Scores assess writing within required predictive commitments, not independently verified predictions. This bounded three-house screen is not customer NPS, measured recommendation behavior, or proof of full-report quality."
+}

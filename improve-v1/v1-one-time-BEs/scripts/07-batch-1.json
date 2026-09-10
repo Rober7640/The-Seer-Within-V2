@@ -1,0 +1,316 @@
+{
+  "_": "07 — BATCH 1, calendar days 1-6. Designed to docs/07-marcus/07-spread-design-rules.md. ⛔ Merge into scripts/07-spreads.json once, later — five agents wrote five of these in parallel and concurrent writes to the registry corrupt it. No built_email (Phase 3 shoots the art, Phase 4 writes the letter) and no guards (the operator withdrew the disclaimer 2026-09-06).",
+  "_check": "node scripts/check-07-batch.mjs scripts/07-batch-1.json",
+
+  "am-i-asking-for-too-much": {
+    "name": "Am I Asking For Too Much?",
+    "day": "mon",
+    "day_number": 1,
+    "slug_in_link": "am-i-asking-for-too-much",
+    "question": "Am I asking for too much?",
+    "shape": "An ask has a real size before she trims it, so the cut measures the ask, finds the trim, who taught her to trim, what the trimming buys her, what it saves him and what it takes — and the last card is the ask made whole.",
+    "positions": [
+      {
+        "n": 1,
+        "name": "What you actually asked for",
+        "job": "What she has actually been asking for, at full size. The request before she trimmed it down",
+        "free": true
+      },
+      {
+        "n": 2,
+        "name": "What you take off it first",
+        "job": "What she takes off the request before it leaves her mouth. The part she cuts to make it acceptable",
+        "free": false
+      },
+      {
+        "n": 3,
+        "name": "Who taught you it was expensive",
+        "job": "Where she learned that an ordinary ask is expensive. The first person who made her pay for wanting something",
+        "free": false
+      },
+      {
+        "n": 4,
+        "name": "What the apology buys you",
+        "job": "What apologising first still buys her. What being the easy one protects her from ever having to hear",
+        "free": false
+      },
+      {
+        "n": 5,
+        "name": "What the small ask saves him",
+        "job": "What the shrunken ask saves him. What he no longer has to decide, once she stopped asking whole",
+        "free": false
+      },
+      {
+        "n": 6,
+        "name": "What another year of asking small takes",
+        "job": "What another year of asking small takes from her. The thing she stops asking for altogether",
+        "free": false
+      },
+      {
+        "n": 7,
+        "name": "The ask, unshrunk",
+        "job": "The ask made once at full size, and what making it that way costs her. The act, not the rehearsal",
+        "free": false
+      }
+    ]
+  },
+
+  "is-he-who-he-says-he-is": {
+    "name": "Is He Who He Says He Is?",
+    "day": "tue",
+    "day_number": 2,
+    "slug_in_link": "is-he-who-he-says-he-is",
+    "question": "Is he who he says he is?",
+    "shape": "She cannot check him, so the cut works outward from the material she does have: what she holds, how it began, what has never once happened, what the distance buys him, what it has cost her, what believing it still hands her, and the one request that is hers to make.",
+    "positions": [
+      {
+        "n": 1,
+        "name": "What you have of him",
+        "job": "What she actually has of him, laid out plain. The messages, the photographs, the promises, not the feeling",
+        "free": true
+      },
+      {
+        "n": 2,
+        "name": "How it started, and who moved first",
+        "job": "How this began, and which of them moved first. The approach as it actually ran, not as it is remembered",
+        "free": false
+      },
+      {
+        "n": 3,
+        "name": "The thing that has never once happened",
+        "job": "The thing that has never once happened, however many times it was nearly arranged. The gap the story needs",
+        "free": false
+      },
+      {
+        "n": 4,
+        "name": "What the distance is doing for him",
+        "job": "What the distance is doing for him. What would stop working the day he had to stand in front of her",
+        "free": false
+      },
+      {
+        "n": 5,
+        "name": "What it has already taken from you",
+        "job": "What this has already taken from her. Not money, but the year and the people she stopped answering",
+        "free": false
+      },
+      {
+        "n": 6,
+        "name": "What you'd lose if he turned out to be nothing",
+        "job": "What believing him still hands her. What she would lose on the morning it turned out to be nothing",
+        "free": false
+      },
+      {
+        "n": 7,
+        "name": "The one thing you can ask for",
+        "job": "The one thing she can ask him for that costs him nothing if he is real. The request, not an ultimatum",
+        "free": false
+      }
+    ]
+  },
+
+  "just-tell-me-what-i-need-to-know": {
+    "name": "Just Tell Me What I Need to Know",
+    "day": "wed",
+    "day_number": 3,
+    "slug_in_link": "just-tell-me-what-i-need-to-know",
+    "question": "Just tell me what I need to know",
+    "shape": "A blind cut has to earn the right to change the subject, so the first card names the question she arrived with and the five after it belong to the one that came up instead.",
+    "positions": [
+      {
+        "n": 1,
+        "name": "What you've already asked everyone else",
+        "job": "The question she has already put to other people this year, and did not like any of the answers to",
+        "free": true
+      },
+      {
+        "n": 2,
+        "name": "What came up instead",
+        "job": "What the cut put in front of that question. The thing she did not bring, and would not have chosen",
+        "free": false
+      },
+      {
+        "n": 3,
+        "name": "How long it's been sitting there",
+        "job": "How long this has been sitting there unlooked at. The point at which she started treating it as furniture",
+        "free": false
+      },
+      {
+        "n": 4,
+        "name": "What not looking at it keeps comfortable",
+        "job": "What refusing to look at it keeps comfortable, and who else is comfortable. Not fear, but convenience",
+        "free": false
+      },
+      {
+        "n": 5,
+        "name": "What it's costing while you look elsewhere",
+        "job": "What it takes from her every week it stays in the background. A specific bill, not a general drag",
+        "free": false
+      },
+      {
+        "n": 6,
+        "name": "The one thing that can't wait",
+        "job": "The one thing about it that cannot wait, and what doing it costs her. The small one, not the decision underneath",
+        "free": false
+      }
+    ]
+  },
+
+  "what-hed-have-to-admit": {
+    "name": "What He'd Have to Admit",
+    "day": "thu",
+    "day_number": 4,
+    "slug_in_link": "what-hed-have-to-admit",
+    "question": "He says one thing and does another — what would he actually have to admit?",
+    "shape": "The contradiction is the product, so two cards set down the warm half and the half that never moves, and the six after them find what each half is for, what it spares them both, and the one sentence that would close it.",
+    "positions": [
+      {
+        "n": 1,
+        "name": "The half that's warm",
+        "job": "What he does that reads as wanting her. The attention as it actually arrives, counted rather than felt",
+        "free": true
+      },
+      {
+        "n": 2,
+        "name": "The half that doesn't move",
+        "job": "What has not happened in all that time. The thing that would have to change for it to count",
+        "free": true
+      },
+      {
+        "n": 3,
+        "name": "What the warm half is for",
+        "job": "What the attention gets him exactly as it stands. What he would go without if he stopped sending it",
+        "free": false
+      },
+      {
+        "n": 4,
+        "name": "What closing the gap would cost him",
+        "job": "What moving would take from him. The thing he keeps by leaving it open, not a fear of commitment",
+        "free": false
+      },
+      {
+        "n": 5,
+        "name": "The reason he gives himself",
+        "job": "The account he uses for the gap, and the words it comes out in. His version, not hers",
+        "free": false
+      },
+      {
+        "n": 6,
+        "name": "What the gap saves you from",
+        "job": "What the unfinished shape spares her. What she has not had to find out while it stays open",
+        "free": false
+      },
+      {
+        "n": 7,
+        "name": "What two more years of both leaves you with",
+        "job": "What two more years of both being true leaves her holding. One thing she can count, not a feeling",
+        "free": false
+      },
+      {
+        "n": 8,
+        "name": "What he'd have to say out loud",
+        "job": "The sentence he would have to say for the gap to close, and what stays safe while it goes unsaid",
+        "free": false
+      }
+    ]
+  },
+
+  "what-is-blocking-my-money": {
+    "name": "What Is Blocking My Money",
+    "day": "fri",
+    "day_number": 5,
+    "slug_in_link": "what-is-blocking-my-money",
+    "question": "What's actually blocking my money?",
+    "shape": "Where the money goes is the free card, then the block is given a shape, a start, a payoff and a price, and the sixth is the first move against it.",
+    "positions": [
+      {
+        "n": 1,
+        "name": "Where the money actually goes",
+        "job": "Where the money actually goes. Not the line she would name out loud, but the one she stopped counting years ago",
+        "free": true
+      },
+      {
+        "n": 2,
+        "name": "What the block actually is",
+        "job": "What the block actually is, named as a thing she does. Not scarcity, not luck, not a condition she is under",
+        "free": false
+      },
+      {
+        "n": 3,
+        "name": "The year it started",
+        "job": "The year it started. What she was in the middle of when carrying it stopped being a choice",
+        "free": false
+      },
+      {
+        "n": 4,
+        "name": "What it earns you",
+        "job": "What the block still earns her. The standing it buys, or the thing she never has to try and fail at",
+        "free": false
+      },
+      {
+        "n": 5,
+        "name": "What keeping it costs you",
+        "job": "What keeping it costs her. The hours and the turned-down things, not a sum of money she can quote",
+        "free": false
+      },
+      {
+        "n": 6,
+        "name": "The first move against it",
+        "job": "The first move against it, and what making it costs her. An act she has been calling rude",
+        "free": false
+      }
+    ]
+  },
+
+  "the-marriage-ended-years-ago-and-im-still-in-it": {
+    "name": "The Marriage Ended Years Ago and I'm Still In It",
+    "day": "sat",
+    "day_number": 6,
+    "slug_in_link": "the-marriage-ended-years-ago-and-im-still-in-it",
+    "question": "It ended years ago. Why am I still in it?",
+    "shape": "It ended on a day, so the cut starts with how the days run now, finds the day it finished, then what the arrangement pays each of them, what it has worn away, what the same again costs, and the one true thing she could do without leaving.",
+    "positions": [
+      {
+        "n": 1,
+        "name": "The shape of the days",
+        "job": "The shape of the days as they actually run. The rooms, the meals, the hours they keep apart",
+        "free": true
+      },
+      {
+        "n": 2,
+        "name": "The day it ended",
+        "job": "The day it actually ended. An ordinary one she can still name, not the row everybody remembers",
+        "free": false
+      },
+      {
+        "n": 3,
+        "name": "What it does for him",
+        "job": "What the arrangement does for him. What he would have to face on the first morning it stopped",
+        "free": false
+      },
+      {
+        "n": 4,
+        "name": "What you'd have to hand back",
+        "job": "What staying still pays her. The thing she would have to hand back the day she called it over",
+        "free": false
+      },
+      {
+        "n": 5,
+        "name": "What it has worn away",
+        "job": "What living in it takes out of her. Something she has stopped doing entirely, not a general tiredness",
+        "free": false
+      },
+      {
+        "n": 6,
+        "name": "What the same again costs you",
+        "job": "What the same again costs her. The thing that will have gone for good by then, not her patience",
+        "free": false
+      },
+      {
+        "n": 7,
+        "name": "The smallest true thing",
+        "job": "The smallest true thing she could say or do inside the house. The sentence, not the decision to leave",
+        "free": false
+      }
+    ]
+  }
+}

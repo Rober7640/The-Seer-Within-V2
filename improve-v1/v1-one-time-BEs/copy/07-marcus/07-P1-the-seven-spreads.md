@@ -97,8 +97,25 @@ read positions in its own free block, and the paid reading must deliver every pa
 | 6 | What he's waiting on from you | paid |
 | 7 | What he does if nothing changes | paid |
 
-⚠ Marcus reads **the cards**, not the man. Every position is what the spread says, never a claim to
-know a real person's mind.
+⭐ **RELAXED 2026-09-05, by the operator.** The old rule read *"Marcus reads the cards, not the
+man — never a claim to know a real person's mind."* It is withdrawn.
+
+**Marcus reads him.** What the spread shows about the man across the table gets said flat, with no
+hedging and no disclaimer: what he thinks he's doing, what he's protecting, what he'd have to
+admit, what he's waiting on. ⭐ Saturday's positions 3–7 were always written to do exactly this;
+the disclaimer was a wrapper on top, and the wrapper is what came off.
+
+⚠ **Why this changes very little about the product and a lot about the copy.** The third-biggest
+category on Etsy is his inner life — *Exact Thoughts · True Feelings · Hidden Intentions · What
+They Wish They Could Say* — and 07 was refusing all of it while running a spread built to answer
+it. Now it can be sold as what it is.
+
+⛔ **The one thing worth keeping, and it is a commercial argument, not a squeamish one.** Do not
+put a **date** on another person's decision. `docs/07-marcus/voc/04-marketplace.md` found *"the
+date moved"* is the single most repeated complaint in the entire buyer pull — *"they will give you
+a time line and then keep changing it"* — and it is the scam signature she actively scans for. A
+recurring daily programme is structurally a rolling prediction, so it is the one place 07 is most
+exposed. Say what he is doing; don't say which month he stops. The operator may overrule this too.
 
 ## Sunday · The Zodiac Spread — 12
 

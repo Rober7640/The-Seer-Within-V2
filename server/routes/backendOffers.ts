@@ -10,7 +10,7 @@ import {
   upsellChargeFields,
   type BookingTreatment,
 } from '@shared/backendOffers';
-import { getBeOrderBySession, recordBackendOrder, writeToCustomerList } from '../lib/beOrders';
+import { getBeOrderBySession, recordBackendOrder, saveOrderIntake, writeToCustomerList } from '../lib/beOrders';
 import { resolveBeBookingTreatment } from '../lib/experiments';
 import { BACKEND_UPSELLS } from '../lib/backendCustomerList';
 import logger from '../lib/logger';
@@ -517,6 +517,9 @@ router.post('/checkout', async (req: Request, res: Response) => {
       offer: offerKey,
       bump: req.body?.bump === true,
       amountCents: amountCents !== null && Number.isFinite(amountCents) ? amountCents : null,
+      // ⛔ A tier KEY, never a tier price. `resolveBackendCharge` validates it against the
+      //    catalog and looks the cents up server-side; an unknown rung is refused outright.
+      tier: req.body?.tier,
     });
 
     if (!charge.ok) {
@@ -536,6 +539,34 @@ router.post('/checkout', async (req: Request, res: Response) => {
 
     const rawName = typeof req.body?.firstName === 'string' ? req.body.firstName : '';
     const firstName = rawName.trim().slice(0, MAX_FIRST_NAME);
+
+    // The sales letter's ?c=, as the booking screen read it. Each backend letter's CTAs use
+    // their own range (02-E2/v1: 1..6, 02-E3/v2: 21..26), so fulfilment can tell WHICH letter
+    // she bought from and pay that letter's promises. ⛔ Digits only, and absent stays absent —
+    // n8n treats a missing `c` as letter 1, which every buyer has read.
+    const rawCode = typeof req.body?.letterCode === 'string' ? req.body.letterCode.trim() : '';
+    const letterCode = /^\d{1,4}$/.test(rawCode) ? rawCode : '';
+
+    // ── 07's intake ────────────────────────────────────────────────────────────────
+    // ⛔ HER QUESTIONS CANNOT RIDE STRIPE METADATA. A metadata value caps at 500
+    //    characters and Stripe truncates silently, so a long question would arrive cut in
+    //    half and be read out as if it were what she asked. They go to `be_order_intake`
+    //    below; only the short, fixed-shape fields go on the session.
+    const str = (v: unknown, max: number) =>
+      typeof v === 'string' && v.trim() ? v.trim().slice(0, max) : null;
+    // ⛔ Must be a FULL registry key. A short slug (`undertow` for `the-undertow`) makes
+    //    the fulfilment guard fail silently, which is why the shape is checked here.
+    //    ⚠ Membership in the registry is NOT checked — the registry is a build-script
+    //    JSON outside the server's tree. Add that check before `readyForMoney` is flipped.
+    const rawSpread = str(req.body?.spreadKey, 100);
+    const spreadKey = rawSpread && /^[a-z0-9][a-z0-9-]*$/.test(rawSpread) ? rawSpread : null;
+    const rawDate = str(req.body?.drawDate, 10);
+    const drawDate = rawDate && /^\d{4}-\d{2}-\d{2}$/.test(rawDate) ? rawDate : null;
+    const topic = ['love', 'money'].includes(String(req.body?.topic)) ? String(req.body.topic) : null;
+    // ⛔ No cap she can hit. This is the column's entire reason for existing.
+    const question = str(req.body?.question, 4000);
+    const question2 = str(req.body?.question2, 4000);
+    const question3 = str(req.body?.question3, 4000);
 
     const origin = baseUrl(req);
     const session = await stripe.checkout.sessions.create({
@@ -590,6 +621,8 @@ router.post('/checkout', async (req: Request, res: Response) => {
         // reused code sends her the wrong thing. Absent entirely when she declined.
         ...(charge.bumpPurchased ? { bumpProduct: offer.bump.productKey } : {}),
         ...(firstName ? { firstName } : {}),
+        // Which sales letter she bought from — read by the fulfilment workflow's draw node.
+        ...(letterCode ? { c: letterCode } : {}),
         // The booking-treatment A/B visitor subject, echoed back on the webhook so the
         // purchase can be attributed to the arm she saw. ⚠ Not a funnel product key —
         // nothing keys behaviour on it; it is read only by logBeBookingConversion.
@@ -599,6 +632,13 @@ router.post('/checkout', async (req: Request, res: Response) => {
         // PostHog attribution — distinct id + link UTM, read back by the webhook's
         // BE revenue event. NOT a product/behaviour key; nothing branches on these.
         ...posthogMetaFromBody(req.body),
+
+        // ⭐ Short and fixed-shape, so they are safe on metadata and give the webhook a
+        //    backstop if the intake table write failed. ⛔ The questions are NOT here.
+        ...(charge.tier ? { tier: charge.tier } : {}),
+        ...(spreadKey ? { spreadKey } : {}),
+        ...(drawDate ? { drawDate } : {}),
+        ...(topic ? { topic } : {}),
       },
       payment_intent_data: {
         // The Stripe Dashboard's Description column, prefixed `BE <nn>` so a backend
@@ -625,6 +665,23 @@ router.post('/checkout', async (req: Request, res: Response) => {
       return res.status(502).json({ error: 'Checkout could not be started. Please try again.' });
     }
 
+    // ⛔ AFTER the session, because the session id is the key. Non-fatal: a failure here
+    //    must not deny a checkout to a woman who is ready to pay — it costs a 409 at
+    //    fulfilment, which a human can fix, instead of a lost sale, which nobody can.
+    if (question || spreadKey || charge.tier) {
+      await saveOrderIntake({
+        stripeSessionId: session.id,
+        offer: offer.key,
+        spreadKey,
+        drawDate,
+        tier: charge.tier ?? null,
+        topic,
+        question,
+        question2,
+        question3,
+      });
+    }
+
     logger.info('backend/checkout: session created', {
       offer: offer.key,
       treatment,
@@ -632,6 +689,7 @@ router.post('/checkout', async (req: Request, res: Response) => {
       bump: charge.bumpPurchased,
       totalCents: charge.totalCents,
       session: session.id,
+      ...(charge.tier ? { tier: charge.tier, spreadKey, drawDate } : {}),
     });
 
     return res.json({ url: session.url });

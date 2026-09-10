@@ -1,0 +1,163 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"><style>
+  /* ⛔ THE PAPER MARGIN CANNOT BE 0 — .inner's padding applies once, at the START of the div,
+     so any house running past one sheet continues hard against the paper edge. The border has
+     to come from @page so every sheet gets it. The cover is exempted twice over: it is a
+     deliberate full-bleed photograph and it must survive a reordering.
+     ⛔ NO BACKTICKS IN THIS BLOCK — one ends the template literal and the node stops parsing. */
+  @page { size: Letter; margin: .6in 0 .6in; }
+  @page :first { margin: 0; }
+  @page cover  { margin: 0; }
+  * { -webkit-print-color-adjust: exact; print-color-adjust: exact; box-sizing: border-box; }
+  body { font-family: Georgia, 'Times New Roman', serif; color: #2A2622; margin: 0;
+         font-size: 11.5pt; line-height: 1.62; }
+  h1, h2 { font-family: Georgia, serif; font-weight: bold; color: #2A2622; }
+
+  /* ── page 1 · the cover ────────────────────────────────────────────────────
+     ⛔ contain, not cover. The art is SQUARE and the page is portrait, so object-fit:cover
+     would crop the left and right cards off the wheel entirely. */
+  .cover { page: cover; position: relative; width: 8.5in; height: 11in; overflow: hidden;
+           page-break-after: always; background: #FBF8F1; }
+  .cover img { position: absolute; left: .35in; top: .9in; width: 7.8in; height: 7.8in;
+               object-fit: contain; }
+  .covertype { position: absolute; left: 0; right: 0; bottom: 1.1in; text-align: center;
+               font-size: 12.5pt; color: #6E6459; margin: 0; }
+  .covertype b { color: #2A2622; }
+
+  .inner { padding: .30in .95in .35in; }
+  .intake { border: 1pt solid #DED4BE; background: #FAF7F0; padding: 16pt 18pt; margin: 0 0 26pt;
+            page-break-inside: avoid; }
+  .intake .k { font-family: Helvetica, Arial, sans-serif; font-size: 7.5pt; letter-spacing: .18em;
+    text-transform: uppercase; color: #8A8377; margin: 0 0 9pt; }
+  .intake p.line { margin: 0 0 6pt; font-size: 12pt; }
+  .intake b { color: #8A6212; }
+
+  .opening { margin-bottom: 26pt; }
+  .opening p:first-child { font-size: 13.5pt; line-height: 1.5; }
+  /* ⛔ NO DROP CAP. It used to sit on .opening's first paragraph, which was prose. The reading
+     now opens on a salutation — "Sarah," — so the cap rendered a giant S followed by "arah,"
+     and mangled the one word in the document that must be right. A drop cap cannot be applied
+     safely to a line whose content the model chooses. */
+  .opening p:first-child { font-weight: bold; }
+
+  /* ⭐ ONE HOUSE, ONE OPENING — twelve rooms should not run together, and the shipped
+     hand-made PDF page-breaks between them too. */
+  /* ⛔ house 1 MUST NOT force its own page. It did, and the opening's last paragraph was left
+     alone on a sheet that was 85% white space — in a document she paid $35 for. Every LATER
+     house still opens a page (twelve rooms should not run together), but the first one
+     continues straight on from the opening it belongs to. */
+  section { page-break-before: always; page-break-inside: auto; }
+  section:first-of-type { page-break-before: auto; }
+  section h2 { font-size: 16pt; line-height: 1.25; margin: 0 0 14pt; }
+  section h3 { font-family: Georgia, serif; font-weight: bold; font-size: 12.5pt;
+    line-height: 1.35; margin: -6pt 0 14pt; color: #5C5348; }
+  section h2 .n { display: block; font-family: Helvetica, Arial, sans-serif; font-size: 8pt;
+    letter-spacing: .18em; text-transform: uppercase; color: #8A6212; margin-bottom: 5pt; }
+  section figure { float: left; width: 1.9in; margin: 2pt 20pt 10pt 0; }
+  section figure img { width: 100%; display: block; border: 1pt solid #DDD6C6; }
+  section figcaption { font-family: Helvetica, Arial, sans-serif; font-size: 7pt;
+    letter-spacing: .13em; text-transform: uppercase; color: #8A8377; margin-top: 5pt;
+    text-align: center; line-height: 1.4; }
+  p { margin: 0 0 9pt; }
+
+  .gift { page-break-before: always; }
+  .gift h2 { font-size: 15pt; margin: 22pt 0 10pt; }
+  .gift h2:first-child { margin-top: 0; }
+  .gift ul { margin: 0 0 9pt 16pt; padding: 0; }
+  .gift li { margin: 0 0 5pt; }
+
+  .colophon { page-break-inside: avoid; page-break-before: avoid; margin-top: 24pt;
+              border-top: 1pt solid #DED4BE; padding-top: 12pt; }
+  .colophon p { font-size: 9pt; line-height: 1.55; color: #7C776D; margin: 0 0 7pt; }
+  .colophon .sig { font-family: Georgia, serif; font-size: 11pt; color: #2A2622; }
+</style></head><body>
+  <div class="cover">
+    <img src="https://luna-assets-tsw.s3.ap-southeast-2.amazonaws.com/evelyn/02-zodiac-spread.jpg" alt="">
+    <p class="covertype">Laid for <b>Sarah</b>
+       &nbsp;&middot;&nbsp; 7 September 2026</p>
+  </div>
+  <div class="inner">
+    <div class="intake">
+      <p class="k">The three you were shown, and where they fell</p>
+      <p class="line">The World &mdash; <b>house 4, home, and what you came from</b></p><p class="line">The Tower &mdash; <b>house 8, what is hidden, and what comes through others</b></p><p class="line">The Lovers &mdash; <b>house 11, your circle</b></p>
+    </div>
+    <div class="opening"><p>I laid your twelve last night, at my own table, with the door shut and the deck already cut.</p><p>Here is what I noticed while I did it. Four of your cards came up reversed, and they came up in a bunch — the first house, the second, the seventh, the twelfth. Those are the four rooms you are standing inside. Everything that arrives from somewhere other than you came up the right way round.</p><p>So I will give you the shape flat, because you have paid for it. This is a good draw. What is stalled in it is all in your own hands: your pace, your money, your bond, your door. Everything else is moving toward you. The next stretch of your life happens in three rooms — the fourth, the eighth, the eleventh.</p><p>The window is the next two months. Every one of these twelve speaks inside it, so nothing here is telling you about next year.</p><p>All twelve are Major Arcana. I pulled them that way for you.</p><p>Your own three fell in three of those rooms. The World in your fourth house, which is home and what you came from. The Tower in your eighth, what is hidden and what reaches you through other people. The Lovers in your eleventh, your circle.</p><p>That is the answer my letter owed you, dear. Each one is settled in the room it fell in, below. I am not answering them up here, where it would cost you nothing to read.</p><p>You had to admit something to yourself before you bought this — that you cannot see your own life from inside it. That is not a weakness in you. A woman reads everybody's weather but her own.</p><p>One thing before you begin. Some of what follows will look as though it argues with itself, a card promising you ease in one room and asking you for work in the next. Read all twelve before you decide what they say. The meaning is in the arrangement, and a life is not consistent either.</p></div><section>
+    <h2><span class="n">House 1</span>yourself</h2>
+    <h3>The cosmos has guided your choice to Temperance, a card of right proportions, hurried</h3>
+    <figure><img src="https://luna-assets-tsw.s3.ap-southeast-2.amazonaws.com/evelyn/tarot-rws/temperance-reversed.jpg" alt="">
+      <figcaption>Temperance &middot; reversed</figcaption>
+    </figure>
+    <div class="prose"><p>On her forehead there is a gold circle, and on her breast a square with a triangle set inside it. Those are measures — the marks of a woman who works to a plan and not to a mood. Below them the water crosses from the higher cup to the lower one in a stream that does not fall straight, and it takes exactly as long as it takes.</p><p>That is you, dear, and the plan itself is sound. What has gone wrong is the speed. You are trying to fit two halves of a life inside one month, so it comes out too much of the one, then too much of the other, then back again.</p><p>The World stands in your fourth house, in home and what you came from. The luck is already moving there, and it will arrive, provided you stop shoving at it.</p><p>So slow the pouring this month. Pick the one part of your life you hold steady, and let the other come by degrees.</p></div></section><section>
+    <h2><span class="n">House 2</span>what you own</h2>
+    <h3>The celestial wisdom has guided your selection to the Wheel of Fortune, a card of a turn that is late</h3>
+    <figure><img src="https://luna-assets-tsw.s3.ap-southeast-2.amazonaws.com/evelyn/tarot-rws/wheel-of-fortune-reversed.jpg" alt="">
+      <figcaption>the Wheel of Fortune &middot; reversed</figcaption>
+    </figure>
+    <div class="prose"><p>On the right-hand side of the wheel a dog-headed figure is climbing, up out of the dark toward the rim, and it has not reached the top yet. Above it the sphinx sits still with a sword laid flat across its knees. Round the rim are letters, cut and spaced, going the whole way round.</p><p>That climb is your money, and it is late. You have been standing in the same month since spring, dear, doing everything correctly and watching nothing move.</p><p>You already know this. You noticed it, you counted it up one evening, and then you told yourself you were being impatient — you were not.</p><p>What arrives is money you are already owed. It comes through paperwork sitting on somebody else's desk, and it comes through the household — the World in your fourth marks that door.</p><p>So ask once, plainly, this week. Then stop asking, and let it come.</p></div></section><section>
+    <h2><span class="n">House 3</span>what you say, and who you say it to</h2>
+    <h3>The cosmic alignment has guided your choice to the Empress, a card of what is already growing</h3>
+    <figure><img src="https://luna-assets-tsw.s3.ap-southeast-2.amazonaws.com/evelyn/tarot-rws/the-empress.jpg" alt="">
+      <figcaption>the Empress</figcaption>
+    </figure>
+    <div class="prose"><p>Behind her the wood stands dark and close, and water comes down through the trees in a fall, running out to feed the field she lies in. That water is not hers. It comes from somewhere behind her and arrives anyway — and the wheat in front of her stands ripe, high enough to cut.</p><p>Something you already said is doing that work. A kind thing, said a while back, to someone who has not forgotten it.</p><p>But there is one message you rehearse and do not send, dear. You have edited it so long in your head that it has gone stiff.</p><p>Here is what this card costs if you read it as good news and stop. The Empress feeds what is planted; she will not plant for you. Sit still and the ripe thing stands in the field until it spoils.</p><p>So send it before the month is out. Plain, unpolished, in your own words.</p><p>Everything so far has turned on your own speed — your pouring, your asking, your unsent message. The next room does not turn on you at all. It is the one my letter left standing open.</p></div></section><section>
+    <h2><span class="n">House 4</span>home, and what you came from</h2>
+    <h3>Your choice has been guided to the World, a card of luck arriving where you were made</h3>
+    <figure><img src="https://luna-assets-tsw.s3.ap-southeast-2.amazonaws.com/evelyn/tarot-rws/the-world.jpg" alt="">
+      <figcaption>the World</figcaption>
+    </figure>
+    <div class="prose"><p>She is dancing, and the violet cloth is not tied on — wound loose, coming away as she turns. One leg is crossed behind the other at the knee, caught mid-step. Nothing under her feet but sky, and four heads watching from the corners of the card.</p><p>It fell in your fourth house. So there is your door, dear. The luck comes through home, and through the people you came from.</p><p>The first windfall is money out of the household — something owed, released by a relative or by paperwork carrying the family's name.</p><p>The second comes behind it, and the Lovers in your eleventh house tells me how it travels. It reaches you through the circle around that home. Someone already known to your people, brought into the room by the first piece of good news.</p><p>That house is about to pay you back.</p><p>So open your door this month. Say yes to the gathering you would ordinarily excuse yourself from.</p></div></section><section>
+    <h2><span class="n">House 5</span>romance, and what delights you</h2>
+    <h3>The cosmic forces have guided your selection to the Magician, a card of the first move being yours</h3>
+    <figure><img src="https://luna-assets-tsw.s3.ap-southeast-2.amazonaws.com/evelyn/tarot-rws/the-magician.jpg" alt="">
+      <figcaption>the Magician</figcaption>
+    </figure>
+    <div class="prose"><p>His left hand points at the ground, straight down, so the raised wand and that finger make one line running through his body. It is a man aiming something upward into something solid. On the table sit four things laid ready — a cup, a coin, a sword, a wand. Nothing there is waiting to be delivered.</p><p>That is romance for you, dear. Everything the beginning needs is already within your reach.</p><p>Three things you can point at. The dress that has hung unworn all year. The invitation you answered warmly and never followed up. The name of the place you have said twice you would like to be taken to.</p><p>The Chariot lies reversed in your seventh, so the binding is stalled — but this room is not that room. Pursuit still moves, and it moves at your pace.</p><p>So make the first move now. Speak first, and name the place yourself.</p></div></section><section>
+    <h2><span class="n">House 6</span>work, health, the daily grind</h2>
+    <h3>Your choice fell on the High Priestess, a card of knowing before you say it</h3>
+    <figure><img src="https://luna-assets-tsw.s3.ap-southeast-2.amazonaws.com/evelyn/tarot-rws/the-high-priestess.jpg" alt="">
+      <figcaption>the High Priestess</figcaption>
+    </figure>
+    <div class="prose"><p>The scroll lies across her lap, rolled, and her hand covers most of it. Only a strip of the writing shows. She is not unrolling it, and she is not reading it either — she has read it already.</p><p>That is your working week, dear. You know precisely what is wrong with it, and you have not said so out loud to anybody.</p><p>It is the body, and it is one particular arrangement of your days. You have been carrying that answer about with you half shown, and you have never unrolled it for anyone.</p><p>Temperance reversed in your first house is why it stays rolled. The fast weeks leave you no hour quiet enough to hear your own verdict.</p><p>This card will give you the answer whole, provided you write it down. One page this month, in plain words: what you already suspect about your health, and what your hours are doing to it.</p><p>Then say it once, to someone who can act. Your doctor, or whoever sets your week.</p></div></section><section>
+    <h2><span class="n">House 7</span>who you are bound to</h2>
+    <h3>Your choice has fallen on the Chariot, a card of full effort and no steering</h3>
+    <figure><img src="https://luna-assets-tsw.s3.ap-southeast-2.amazonaws.com/evelyn/tarot-rws/the-chariot-reversed.jpg" alt="">
+      <figcaption>the Chariot &middot; reversed</figcaption>
+    </figure>
+    <div class="prose"><p>Over him a blue canopy is stretched, held up on four posts and printed with white stars — a piece of sky carried along above a man who is already out past the walled town behind him.</p><p>Count what is doubled on that card. Two sphinxes. Two moons, one on each shoulder, a face set in each. Nothing on it comes singly, and that is your bond exactly: two of everything, pulling opposite ways, and no reins in anybody's hands.</p><p>The force is all there, dear. You work harder at this tie than anyone you know, and you end each week standing where you started.</p><p>So the question your fifth house raises — whether this is renewed or replaced — is not answered by more effort. It is answered by steering.</p><p>Say the plain thing this month. Name one change you want in how you two live, out loud, and let the answer stand.</p><p>I wrote that room before I turned the eighth over, and the eighth changed it. Seen from the front it looks like two people pulling opposite ways. Seen from behind, only one of them is still pulling.</p></div></section><section>
+    <h2><span class="n">House 8</span>what is hidden, and what comes through others</h2>
+    <h3>The cosmos has turned your hand to the Tower, a card of the fall already begun</h3>
+    <figure><img src="https://luna-assets-tsw.s3.ap-southeast-2.amazonaws.com/evelyn/tarot-rws/the-tower.jpg" alt="">
+      <figcaption>the Tower</figcaption>
+    </figure>
+    <div class="prose"><p>Two figures are falling head-first, arms out, and neither of them has landed. Around them the loose flame shapes fall too, at the same speed. Nobody in that picture is being pushed — they are already in the air, past the edge, mid-drop.</p><p>It fell in your eighth, the house of what nobody has said aloud yet. So the letter's two shapes are settled now. It is not somebody from before. It is somebody still here who has already started leaving.</p><p>It has begun, dear, and other people can see it. The Chariot reversed in your seventh shows the same thing from the front — all that effort, and the pair of you steering nothing.</p><p>The eighth means you hear it sideways first. A remark from a third person, said lightly.</p><p>Believe the remark. Do not argue it down, and do not go looking for proof.</p></div></section><section>
+    <h2><span class="n">House 9</span>what you believe</h2>
+    <h3>The celestial wisdom has guided your selection to the Nameless One</h3>
+    <figure><img src="https://luna-assets-tsw.s3.ap-southeast-2.amazonaws.com/evelyn/tarot-rws/death.jpg" alt="">
+      <figcaption>the Nameless One</figcaption>
+    </figure>
+    <div class="prose"><p>Far behind the rider there are two towers, and between them the sun is coming up. Not setting — rising, in the gap, with everything in the foreground still in shadow. The light is behind the whole scene and does not reach it yet.</p><p>Nearer, a bishop stands in the horse's way in his tall hat, hands together, not moving. That is your belief, dear. That if you stand still in front of a thing and refuse it properly, it will turn aside.</p><p>It does not. The horse is at a walk — you have watched this coming for months and told yourself you were imagining it.</p><p>You were not imagining it. You already know which thing in your life is finished; you have known it a long while and argued yourself out of it twice.</p><p>Stop arguing. Say it plainly to yourself this week, in one sentence, and start planning as though it is true.</p></div></section><section>
+    <h2><span class="n">House 10</span>your standing</h2>
+    <h3>Your choice has led you to Justice</h3>
+    <figure><img src="https://luna-assets-tsw.s3.ap-southeast-2.amazonaws.com/evelyn/tarot-rws/justice.jpg" alt="">
+      <figcaption>Justice</figcaption>
+    </figure>
+    <div class="prose"><p>She is seated between two pillars, and behind her hangs a purple cloth with no window cut into it. Nothing of the world beyond gets in. Whatever is decided about you in the next while gets decided in that closed room, from what is written down — not from what anyone remembers of you.</p><p>Her eyes are open and looking straight out. Not down at the scales, dear. She is watching the person in front of her, and the pans hang level.</p><p>The Wheel reversed in your second names the same desk. That money sitting in somebody's paperwork is weighed here, formally, with a date on it.</p><p>Here is the caution. This card credits what is on the record and nothing else — so if you take it as good news and sit back, the work you did quietly goes to whoever wrote theirs down.</p><p>So put yours on the record this month. Plainly, in an email, with the date on it.</p><p>Justice decides in a shut room, off the paperwork. The eleventh is the other kind of room entirely — the one with people standing in it. It is also the only room in your twelve I can put a day on.</p></div></section><section>
+    <h2><span class="n">House 11</span>your circle</h2>
+    <h3>Your selection has fallen to the Lovers, a card of a meeting made in the open</h3>
+    <figure><img src="https://luna-assets-tsw.s3.ap-southeast-2.amazonaws.com/evelyn/tarot-rws/the-lovers.jpg" alt="">
+      <figcaption>the Lovers</figcaption>
+    </figure>
+    <div class="prose"><p>The winged figure stands over them with both arms out, hair like flame, and the wide sun sits higher still, directly above her. She joins nobody. She presides — a witness, so that what happens under her happens where people can see it.</p><p>It fell in your eleventh, dear. Your circle. That settles which tree: not the serpent tree, but the one behind the man, twelve small flames burning where leaves should be. The lasting thing.</p><p>So it is arrival, and he is your twin flame. He comes through the room — the World in your fourth already showed the second piece of luck travelling by way of the people around your home.</p><p>The third week of next month. I can date this room because a meeting is an event with a day on it; every other card here is weather.</p><p>Ordinary clothes, an ordinary afternoon, no thunder in it. Arriving and being recognised are two separate events, and women miss theirs while braced for the loud one.</p><p>You are not being charged with wasting years. You are being handed a door.</p><p>So go, provided you actually go — and do not wait to be spoken to.</p><p>One caution before you start watching for him. The room he arrives through is thinner than you think it is, and the last card tells you why.</p></div></section><section>
+    <h2><span class="n">House 12</span>what is being kept from you</h2>
+    <h3>And your twelfth card is the Hermit, a card of quiet kept too long</h3>
+    <figure><img src="https://luna-assets-tsw.s3.ap-southeast-2.amazonaws.com/evelyn/tarot-rws/the-hermit-reversed.jpg" alt="">
+      <figcaption>the Hermit &middot; reversed</figcaption>
+    </figure>
+    <div class="prose"><p>The lamp is held out at shoulder height, away from his body, and the star inside the glass throws light on one step of snow at a time. He is not lifting it to see the view. Behind him there is only sky — no path drawn up to that peak, and none drawn down.</p><p>He climbed there on purpose. That was right, and it has quietly become your address.</p><p>Here is what you cannot see from where you stand. The invitations did not stop being accepted, dear. They stopped being issued. People decided some months ago that you prefer to be left, and they are being kind about it.</p><p>Three things in your own rooms say it. The phone lying face down. The coat on its hook since spring. The second cup at the back of the cupboard.</p><p>So make the call yourself this week. You ask first, and it comes back.</p><p>Together the twelve say one thing that no single card said. Everything good travels toward you from outside — the household, the circle, another person's desk. Your part is speed and plain speech.</p><p>Your three, settled. The World in your fourth: home is the door, and the first money is family money loosed by paperwork, with the Wheel reversed in your second naming the desk it lies on. The Tower in your eighth: not the one from before, but the one still here who has already begun going, and the Chariot reversed in your seventh has been saying so from the front. The Lovers in your eleventh: arrival through your circle, not renewal of what you hold.</p><p>You have spent a long time finding out last. That stops now. This stretch stops arriving as things you have to recover from and starts arriving as things you were already standing ready for.</p><p>The first sign comes inside five to seven days. Someone connected to your family mentions money in passing — a paper, a name, a figure — and it will not be aimed at you. Mark the day it happens.</p><p>I have dated one room and one only, dear: the eleventh, because a meeting has a day on it and everything else here is weather. The other eleven I have not dated, and I will not pretend I can.</p><p>This week, turn the phone face up and ring the person you last let go quiet.</p></div></section>
+    <div class="gift"><h2>And now the second part, dear — this one is yours to keep</h2><p>When you have read your twelve properly — all of them, more than once — there is a second thing I want to give you, and it costs you nothing but a minute a night.</p><p>I said in my letter that the difference is not whether things happen to you. It is whether they happen to you from behind.</p><p>This is the practice that makes the difference. It is the only one I give away.</p><h2>What it is</h2><p>Twenty-eight nights. One line a night. That is the whole of it.</p><p>Each night before you sleep, you write down <strong>one thing you noticed that day that was different from the day before.</strong></p><p>Not how you felt. Not what you hope. What you <em>noticed</em>. Something someone said that they don&#x27;t usually say. A message that came at an odd hour. A silence where there is normally noise. The way a room went when you walked into it.</p><p>One line. Ordinary handwriting, ordinary paper, no ceremony. If nothing was different, write <em>nothing was different</em> — that is a real entry and you will want it later.</p><p>The reason is simple and it is not mystical, dear. Your twelfth house is holding something unsaid, and things like that are never invisible. They are only ever <em>unrecorded</em>. A woman notices eleven small wrong notes across a fortnight, forgets ten of them, and is genuinely astonished by the eleventh. She was told eleven times. She just had nowhere to put it.</p><p>The ledger is somewhere to put it.</p><h2>The four turns</h2><p><strong>Nights 1 to 7 — the first turn.</strong> Just notice. Don&#x27;t interpret, don&#x27;t join anything up, and above all don&#x27;t act on it. This week you are only training the eye. Write the line and close the book.</p><p>Your reading said the first sign shows itself inside five to seven days. It lands in this turn. You will not necessarily know it when it arrives — that is exactly why you are writing it down.</p><p><strong>Nights 8 to 14 — the second turn.</strong> Same one line, and add a second only when you genuinely have one. By now you will start wanting to explain what you&#x27;re writing. Resist it for one more week. An explanation written the same night is almost always the explanation you already believed that morning.</p><p><strong>Night 15 — the read-back. This is the night the practice pays.</strong> Do not write anything first. Sit down and read your fourteen lines in one sitting, in order, start to finish.</p><p>Something will come up off the page that was not visible on any single night. It always does. That is the whole reason for the fourteen — not one of those lines is worth much alone and together they are a pattern.</p><p>Then write your line for the fifteenth night, and write underneath it what you saw in the fourteen.</p><p><strong>Nights 15 to 21 — the third turn.</strong> Now you know what you have been noticing, so notice <em>that</em>. Your attention has something to point at, and you will find you catch things on the day now instead of three days late.</p><p><strong>Nights 22 to 28 — the fourth turn.</strong> Keep writing, and this week let yourself act on what you have found. Ask the question. Decline the thing. Say the sentence you have been keeping. You have three weeks of evidence behind you and you are no longer guessing.</p><p>On the twenty-eighth night, read the whole ledger through.</p><h2>The two love weeks</h2><p><strong>In the weeks your reading named</strong>, pay particular attention to the people you come across.</p><p>Your fifth house has something already in motion toward you, and your reading has said in its own room whether it arrives as a stranger or as someone already in the frame. Either way it comes in small — which is precisely the kind of thing the eye skips and the ledger catches.</p><p>Someone you know may reappear in these weeks. Someone in the frame may step forward in it. Write it down on the night, in the ordinary way, even when it seems far too small to mean anything.</p><p>Especially then. The ones that matter almost always look too small on the night.</p><h2>If nothing happens</h2><p>Then you run the twenty-eight again.</p><p>I mean that plainly and not as a consolation. Some women&#x27;s first cycle is all noise — four weeks of <em>nothing was different</em> — and their second cycle is the one that shows the shape. The practice is not a spell that either works or doesn&#x27;t. It is an eye being trained, and eyes take a while.</p><p>The second twenty-eight is easier than the first, and it is the one where the read-back on the fifteenth night stops you cold.</p><h2>And that is the gift</h2><p>Keep the book. Not for me — I don&#x27;t want to see it, and I&#x27;d rather you wrote freely than wrote something you&#x27;d be willing to show a reader.</p><p>Keep it because in eight weeks you are going to want to know whether you saw it coming.</p><p>You did. It will be on the page in your own handwriting, three weeks before it happened, in a line you thought was too small to matter.</p><p>That is what it is to stop finding out last.</p></div>
+    <div class="colophon">
+      <p>These twelve were laid for you and for nobody else. The writing is assisted &mdash; I
+      use a machine to help me put a reading into words. The draw is real and it is yours.</p>
+      <p class="sig">Evelyn</p>
+    </div>
+  </div>
+</body></html>

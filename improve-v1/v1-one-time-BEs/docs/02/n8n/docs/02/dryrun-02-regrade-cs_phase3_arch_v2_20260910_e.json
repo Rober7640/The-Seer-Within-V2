@@ -1,0 +1,220 @@
+{
+  "build_revision": "08e0a070014c3030",
+  "reading": "/Users/joel/Library/CloudStorage/OneDrive-altius/Fun Projects/The-Seer-Within-V2-Production-joel-chue/The-Seer-Within-V2-Production/improve-v1/v1-one-time-BEs/docs/02/dryrun-02-reading-cs_phase3_arch_v2_20260910_e.md",
+  "draw": "/Users/joel/Library/CloudStorage/OneDrive-altius/Fun Projects/The-Seer-Within-V2-Production-joel-chue/The-Seer-Within-V2-Production/improve-v1/v1-one-time-BEs/docs/02/dryrun-02-draw-cs_phase3_arch_v2_20260910_e.json",
+  "metrics": {
+    "words": 8502,
+    "house_words": [
+      {
+        "house": 1,
+        "words": 642
+      },
+      {
+        "house": 2,
+        "words": 639
+      },
+      {
+        "house": 3,
+        "words": 605
+      },
+      {
+        "house": 4,
+        "words": 653
+      },
+      {
+        "house": 5,
+        "words": 752
+      },
+      {
+        "house": 6,
+        "words": 607
+      },
+      {
+        "house": 7,
+        "words": 616
+      },
+      {
+        "house": 8,
+        "words": 637
+      },
+      {
+        "house": 9,
+        "words": 593
+      },
+      {
+        "house": 10,
+        "words": 602
+      },
+      {
+        "house": 11,
+        "words": 590
+      },
+      {
+        "house": 12,
+        "words": 702
+      }
+    ],
+    "close_marker": true,
+    "conditional_words": 31,
+    "i_wont": 2,
+    "withholds": [],
+    "sentence_mean": 17.38445807770961,
+    "sentence_sd": 11.155869261529952,
+    "paragraph_mean": 86.73469387755102,
+    "dear": 0,
+    "generic_women": [],
+    "repeated_8grams": [
+      {
+        "phrase": "a room you did not plan to be",
+        "houses": [
+          5,
+          8
+        ]
+      },
+      {
+        "phrase": "room you did not plan to be in",
+        "houses": [
+          5,
+          8
+        ]
+      },
+      {
+        "phrase": "you did not plan to be in and",
+        "houses": [
+          5,
+          8
+        ]
+      }
+    ],
+    "method_announcements": [],
+    "biography_candidates": [
+      {
+        "house": 1,
+        "phrase": "It is the moment the covered half of the scroll comes out from under the mantle — a decision to speak what you have already concluded."
+      },
+      {
+        "house": 9,
+        "phrase": "Take one conclusion you have already reached and would ordinarily hold until it was armoured, and say it, unarmoured, to one person whose judgment you rate."
+      },
+      {
+        "house": 12,
+        "phrase": "You have already got all of it."
+      }
+    ],
+    "consequential_candidates": [
+      {
+        "house": 3,
+        "phrase": "Leave out what you believe was meant by it."
+      },
+      {
+        "house": 4,
+        "phrase": "Move the chair; you can move it back."
+      }
+    ],
+    "keynotes_missing": [],
+    "fog": 29,
+    "voice_i": 18,
+    "voice_i_in_rooms": 13,
+    "dated_room": 5,
+    "dated": [
+      {
+        "house": 5,
+        "phrase": "the fourth week",
+        "kind": "prediction",
+        "sentence": "Expect it in the fourth week from now."
+      },
+      {
+        "house": 5,
+        "phrase": "the fourth week",
+        "kind": "prediction",
+        "sentence": "Take that decision back before the fourth week."
+      },
+      {
+        "house": -1,
+        "phrase": "the fourth week",
+        "kind": "prediction",
+        "sentence": "Recognition in the fourth week from now — timed from the turn in your circumstances, the shift in who is in which room, and from nothing decorative in the picture."
+      }
+    ],
+    "first_sign": 1,
+    "crossrefs": [
+      {
+        "house": 1,
+        "names": []
+      },
+      {
+        "house": 2,
+        "names": [
+          "Justice"
+        ]
+      },
+      {
+        "house": 3,
+        "names": []
+      },
+      {
+        "house": 4,
+        "names": []
+      },
+      {
+        "house": 5,
+        "names": [
+          "the Hanged Man",
+          "the Hierophant",
+          "the Nameless One"
+        ]
+      },
+      {
+        "house": 6,
+        "names": []
+      },
+      {
+        "house": 7,
+        "names": []
+      },
+      {
+        "house": 8,
+        "names": [
+          "Justice"
+        ]
+      },
+      {
+        "house": 9,
+        "names": []
+      },
+      {
+        "house": 10,
+        "names": []
+      },
+      {
+        "house": 11,
+        "names": []
+      },
+      {
+        "house": 12,
+        "names": [
+          "the Nameless One"
+        ]
+      }
+    ],
+    "majors_marvel": false
+  },
+  "verdict": {
+    "pass": false,
+    "failed": [
+      13
+    ],
+    "why": "No rubric line fails; the weakest spot is that five rooms close on the same 'small reversible action' move, which makes their final paragraphs somewhat predictable. Measured: repeated cross-room eight-grams: 3. Automated score ignored — invalid recommendation score: 88.",
+    "recommend": null,
+    "scores": {
+      "continuation": 9,
+      "trust": 9,
+      "variation": 7,
+      "teaching": 9,
+      "relevance": 8,
+      "tarot": 9
+    },
+    "score_error": "invalid recommendation score: 88",
+    "weighted_score": 8.5
+  }
+}

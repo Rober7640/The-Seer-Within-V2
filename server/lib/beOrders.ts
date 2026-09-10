@@ -1,7 +1,7 @@
 import type Stripe from 'stripe';
 import { eq } from 'drizzle-orm';
 import { db } from './db';
-import { beOrders, type BeOrder } from '@shared/schema';
+import { beOrders, beOrderIntake, type BeOrder, type InsertBeOrderIntake } from '@shared/schema';
 import {
   BACKEND_OFFER_CATALOG,
   backendOfferForStripeProduct,
@@ -50,6 +50,69 @@ interface BackendSessionMeta {
   expSubject?: string;
 }
 
+/**
+ * Park what she typed, keyed on the Stripe Checkout session, BEFORE she pays.
+ *
+ * 🔴 Why not straight onto `be_orders`: a be_orders row means she PAID, and nothing
+ * downstream filters on status — an abandoned checkout with a row would render a
+ * thank-you page and start a fulfilment. See shared/schema.ts on `be_order_intake`.
+ *
+ * ⚠ NON-FATAL BY DESIGN, and this is a real trade-off, not an oversight. If this write
+ * fails she can still pay, and the order simply arrives without its intake: the
+ * fulfilment endpoint then answers 409 with the missing field list rather than guessing,
+ * which is recoverable by hand. Throwing here would instead deny a checkout to a woman
+ * who is ready to buy, over a table nobody has read yet. Loud in the log either way.
+ */
+export async function saveOrderIntake(intake: InsertBeOrderIntake): Promise<boolean> {
+  try {
+    await db
+      .insert(beOrderIntake)
+      .values(intake)
+      // Idempotent: a retried checkout POST for the same session overwrites its own
+      // intake. She is still on the booking page, so the LAST thing she typed wins.
+      .onConflictDoUpdate({
+        target: beOrderIntake.stripeSessionId,
+        set: {
+          spreadKey: intake.spreadKey ?? null,
+          drawDate: intake.drawDate ?? null,
+          tier: intake.tier ?? null,
+          topic: intake.topic ?? null,
+          question: intake.question ?? null,
+          question2: intake.question2 ?? null,
+          question3: intake.question3 ?? null,
+        },
+      });
+    return true;
+  } catch (err) {
+    logger.error('be_order_intake: WRITE FAILED — she can still pay, but the order will ' +
+      'arrive with no question and fulfilment will 409', {
+      session: intake.stripeSessionId,
+      offer: intake.offer,
+      error: err instanceof Error ? err.message : String(err),
+    });
+    return false;
+  }
+}
+
+/** Read back what she typed. Null when there is none — every 02/03 order, and any 07
+ *  order whose intake write failed. */
+async function intakeFor(sessionId: string) {
+  try {
+    const [row] = await db
+      .select()
+      .from(beOrderIntake)
+      .where(eq(beOrderIntake.stripeSessionId, sessionId))
+      .limit(1);
+    return row ?? null;
+  } catch (err) {
+    logger.error('be_order_intake: READ FAILED — order will be recorded without it', {
+      session: sessionId,
+      error: err instanceof Error ? err.message : String(err),
+    });
+    return null;
+  }
+}
+
 function centsFrom(value: string | undefined): number | null {
   if (!value) return null;
   const n = Number(value);
@@ -96,6 +159,11 @@ export async function recordBackendOrder(
       ? session.payment_intent
       : session.payment_intent?.id ?? null;
 
+  // ⭐ What she typed on the booking page, parked at checkout. Read BEFORE the insert so
+  //    the order lands complete in one write — an order that exists for a moment without
+  //    its question is an order the fulfilment poller can pick up and 409 on.
+  const intake = await intakeFor(session.id);
+
   let row: BeOrder | undefined;
   try {
     [row] = await db
@@ -115,12 +183,29 @@ export async function recordBackendOrder(
         email,
         firstName,
         status: 'paid',
+        // ⛔ 07 only. NULL on every offer that sells one fixed thing, which is all of
+        //    them except this one. `tier` is what the SERVER priced, not what the
+        //    browser asked for — see resolveBackendCharge.
+        ...(intake
+          ? {
+              spreadKey: intake.spreadKey,
+              drawDate: intake.drawDate,
+              tier: intake.tier,
+              topic: intake.topic,
+              question: intake.question,
+              question2: intake.question2,
+              question3: intake.question3,
+            }
+          : {}),
       })
       // Idempotent: a Stripe retry, or the thank-you page arriving first, updates the
       // same row. ⛔ Deliberately does NOT touch the fulfilment or customer-list columns
       // — a second write must never un-stamp work that already happened.
       .onConflictDoUpdate({
         target: beOrders.stripeSessionId,
+        // ⛔ Deliberately does NOT touch the intake columns. They were written on the
+        //    first insert from the same intake row, so a retry has nothing new to say —
+        //    and re-setting them from a failed intake read would blank her question.
         set: {
           stripePaymentIntentId: paymentIntentId,
           email,

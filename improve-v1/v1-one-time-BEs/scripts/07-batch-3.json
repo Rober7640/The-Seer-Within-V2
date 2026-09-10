@@ -1,0 +1,298 @@
+{
+  "_": "07 · BATCH 3 — calendar days 13–18 of docs/07-marcus/voc/09-thirty-named-things.md. Designed to docs/07-marcus/07-spread-design-rules.md. ⛔ Do NOT merge by hand into scripts/07-spreads.json while other batches are open — Phase 2.4 merges all five at once.",
+  "_check": "node scripts/check-07-batch.mjs scripts/07-batch-3.json",
+
+  "two-men": {
+    "name": "Two Men",
+    "day": "sat",
+    "day_number": 13,
+    "slug_in_link": "two-men",
+    "question": "I'm caught between two men and I don't know which one is right for me",
+    "shape": "Two men need one card each before anything can be weighed. Then what put her between them, what the waiting pays, which one she is already living as though she chose, what the other costs to keep, and what ends it.",
+    "positions": [
+      {
+        "n": 1,
+        "name": "The one you'd name first",
+        "job": "What the first of them is actually offering, measured in what he does. Not what he has said he will do",
+        "free": true
+      },
+      {
+        "n": 2,
+        "name": "The other one",
+        "job": "What the second man is actually offering, in what he does. What he gives her that the first one does not",
+        "free": true
+      },
+      {
+        "n": 3,
+        "name": "What was true before either of them",
+        "job": "What was already true before either man arrived. The thing that made room for a second one in the first place",
+        "free": false
+      },
+      {
+        "n": 4,
+        "name": "What having two of them saves you",
+        "job": "What staying between them spares her. What she does not have to find out while there are still two",
+        "free": false
+      },
+      {
+        "n": 5,
+        "name": "The one you've already chosen",
+        "job": "Which one she has already chosen with her time, whatever she says when asked. The evidence, not the answer she gives",
+        "free": false
+      },
+      {
+        "n": 6,
+        "name": "What keeping the other one costs",
+        "job": "What holding the second one in reserve takes out of her, and what it takes out of him",
+        "free": false
+      },
+      {
+        "n": 7,
+        "name": "What ends it",
+        "job": "The one thing that closes the question, and which of the two conversations she has been avoiding longer",
+        "free": false
+      }
+    ]
+  },
+
+  "the-thing-you-keep-seeing": {
+    "name": "The Thing You Keep Seeing",
+    "day": "sun",
+    "day_number": 14,
+    "slug_in_link": "the-thing-you-keep-seeing",
+    "question": "I keep seeing the same thing over and over. What is it trying to tell me?",
+    "shape": "The repeat itself first, then the week it started, the hour it shows up, what it is standing in front of, what she would lose if it stopped, what the watching has cost, and what settles it.",
+    "positions": [
+      {
+        "n": 1,
+        "name": "What keeps arriving",
+        "job": "The plain shape of the thing that keeps turning up, and how long it has been doing it",
+        "free": true
+      },
+      {
+        "n": 2,
+        "name": "The week you started looking",
+        "job": "What changed in her life the same week the repeats began. Not the first one she saw — the first one she counted",
+        "free": false
+      },
+      {
+        "n": 3,
+        "name": "When it shows up",
+        "job": "The pattern in the timing. What she is doing, or about to do, in the hour before each one arrives",
+        "free": false
+      },
+      {
+        "n": 4,
+        "name": "What it's holding a place for",
+        "job": "The person or the decision the repeat keeps a place open for. Not what the sign means — what it stands in front of",
+        "free": false
+      },
+      {
+        "n": 5,
+        "name": "What you'd lose if it stopped",
+        "job": "What she would miss the week they stopped coming. What the watching gives her that nothing else does",
+        "free": false
+      },
+      {
+        "n": 6,
+        "name": "What waiting on the next one has taken",
+        "job": "What the watching has already cost her. The thing she has put off until the next one arrives",
+        "free": false
+      },
+      {
+        "n": 7,
+        "name": "What settles it",
+        "job": "The one thing that would settle what the repeat has been marking. Not another sign — an act she takes",
+        "free": false
+      }
+    ]
+  },
+
+  "everything-i-have-goes-to-other-people": {
+    "name": "Everything I Have Goes To Other People",
+    "day": "mon",
+    "day_number": 15,
+    "slug_in_link": "everything-i-have-goes-to-other-people",
+    "question": "I give everything to everybody. Why does none of it come back to me?",
+    "shape": "Where it goes, which of them never asked for it, the year she became the one who copes, what that still pays her, what five more years of it takes for good, and the one thing she stops doing.",
+    "positions": [
+      {
+        "n": 1,
+        "name": "Where it all goes",
+        "job": "Where her week actually goes, hour by hour. Not the person she would name first — the one that takes most",
+        "free": true
+      },
+      {
+        "n": 2,
+        "name": "The one who never asked",
+        "job": "Which of them took it without ever asking, and which one she handed over before she was asked",
+        "free": false
+      },
+      {
+        "n": 3,
+        "name": "The year you became the one who copes",
+        "job": "The year she became the one who copes, and what was happening in the house that year",
+        "free": false
+      },
+      {
+        "n": 4,
+        "name": "What being needed pays you",
+        "job": "What being the one they all come to still pays her. The standing she would lose if she stopped",
+        "free": false
+      },
+      {
+        "n": 5,
+        "name": "What five more years of it takes",
+        "job": "What another five years of it takes for good. The thing that stops being possible, not the thing that gets harder",
+        "free": false
+      },
+      {
+        "n": 6,
+        "name": "The thing you stop doing",
+        "job": "The one thing she stops doing for somebody else, and what it costs her when they notice",
+        "free": false
+      }
+    ]
+  },
+
+  "the-years-with-no-title": {
+    "name": "The Years With No Title",
+    "day": "tue",
+    "day_number": 16,
+    "slug_in_link": "the-years-with-no-title",
+    "question": "We've been together years and it still has no name. Where do I actually stand?",
+    "shape": "The years as they actually are, then the line she has never been over, what the missing word keeps for him, the day she stopped asking, what a name would take from her, and the asking.",
+    "positions": [
+      {
+        "n": 1,
+        "name": "What you actually have",
+        "job": "What the years have actually contained. The plain inventory, before the missing word is counted",
+        "free": true
+      },
+      {
+        "n": 2,
+        "name": "Where the line is",
+        "job": "Which parts of his life she has been inside and which she has never once been in. The boundary, drawn from facts",
+        "free": false
+      },
+      {
+        "n": 3,
+        "name": "What the missing word keeps for him",
+        "job": "What he keeps by never naming it, and what naming it would take away from him",
+        "free": false
+      },
+      {
+        "n": 4,
+        "name": "The day you stopped asking",
+        "job": "The last time she raised it, what happened, and what she decided about asking again",
+        "free": false
+      },
+      {
+        "n": 5,
+        "name": "What a name would take from you",
+        "job": "What she would lose the day it became definite. What staying unnamed has been protecting her from hearing",
+        "free": false
+      },
+      {
+        "n": 6,
+        "name": "What asking once costs",
+        "job": "The one plain question that ends the not-knowing, and what she is agreeing to hear when she asks it",
+        "free": false
+      }
+    ]
+  },
+
+  "the-honest-answer-not-the-one-you-want": {
+    "name": "The Honest Answer, Not The One You Want",
+    "day": "wed",
+    "day_number": 17,
+    "slug_in_link": "the-honest-answer-not-the-one-you-want",
+    "question": "Give it to me straight — what is everybody being too nice to tell me?",
+    "shape": "What she already knows, then the sentence nobody says, why they stopped saying it, what the soft version has been paying her, what being spared it has cost her, and what is different once it is said.",
+    "positions": [
+      {
+        "n": 1,
+        "name": "What you already know",
+        "job": "What she has already worked out and keeps asking about anyway. Not what she fears — what she has quietly concluded",
+        "free": true
+      },
+      {
+        "n": 2,
+        "name": "The sentence nobody will say to you",
+        "job": "The one sentence the people around her have stopped saying out loud. Not the soft version they use instead",
+        "free": false
+      },
+      {
+        "n": 3,
+        "name": "Why they stopped saying it",
+        "job": "What happened the last time somebody told her, and what it taught everybody around her to do instead",
+        "free": false
+      },
+      {
+        "n": 4,
+        "name": "What the kind version has been paying you",
+        "job": "What the softened version has been buying her. What she would have had to do the day somebody said it plainly",
+        "free": false
+      },
+      {
+        "n": 5,
+        "name": "What it has cost you to be spared it",
+        "job": "What being handled gently has already taken from her. The part she has been blaming herself for that was never hers",
+        "free": false
+      },
+      {
+        "n": 6,
+        "name": "What you do with it once it's said",
+        "job": "The first thing that is different once the sentence is out. One act, not a decision she can keep turning over",
+        "free": false
+      }
+    ]
+  },
+
+  "how-long-can-this-go-on": {
+    "name": "How Long Can This Go On",
+    "day": "thu",
+    "day_number": 18,
+    "slug_in_link": "how-long-can-this-go-on",
+    "question": "How long can this actually go on?",
+    "shape": "The arrangement in its own numbers, the half that has never moved, what one contact does to the question, what this size costs him, what it has already cost her, and the one thing that would have to change.",
+    "positions": [
+      {
+        "n": 1,
+        "name": "What it actually is, in numbers",
+        "job": "The arrangement as it stands, counted. How often, how long, and what is in the gaps",
+        "free": true
+      },
+      {
+        "n": 2,
+        "name": "The half that has never moved",
+        "job": "Which side of it has not changed in all this time, and which side keeps her reading it as movement",
+        "free": false
+      },
+      {
+        "n": 3,
+        "name": "What each visit buys",
+        "job": "What one contact does to the question she was about to ask. What she counts as progress that changes nothing",
+        "free": false
+      },
+      {
+        "n": 4,
+        "name": "What this size costs him",
+        "job": "What he keeps by leaving it exactly this size, and what he would have to give up to change it",
+        "free": false
+      },
+      {
+        "n": 5,
+        "name": "What the years have taken",
+        "job": "What she has spent on it that she cannot get back. Not the tiredness — the thing she stopped doing",
+        "free": false
+      },
+      {
+        "n": 6,
+        "name": "What would have to change",
+        "job": "The one thing that would have to become inconvenient for it to stop holding. Not a length of time — a change",
+        "free": false
+      }
+    ]
+  }
+}

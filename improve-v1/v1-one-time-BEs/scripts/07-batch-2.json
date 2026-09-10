@@ -1,0 +1,313 @@
+{
+  "what-did-that-message-mean": {
+    "name": "What Did That Message Mean",
+    "day": "sun",
+    "day_number": 7,
+    "slug_in_link": "what-did-that-message-mean",
+    "question": "He messaged me out of nowhere. What did that actually mean?",
+    "shape": "The message first, then the week behind it, then its price and its use, then the part of the meaning she supplied — and only after those five can the reply and the cost of a year of them be named.",
+    "positions": [
+      {
+        "n": 1,
+        "name": "What actually landed",
+        "job": "What actually arrived. The message itself, stripped of the week she has spent reading it",
+        "free": true
+      },
+      {
+        "n": 2,
+        "name": "What moved on his side first",
+        "job": "What had already moved on his side before he sent it. Not her, and not a decision — the thing that shifted first",
+        "free": false
+      },
+      {
+        "n": 3,
+        "name": "What it cost him to send",
+        "job": "What sending it cost him. The effort actually spent on it — not what it meant to her, what it took from him",
+        "free": false
+      },
+      {
+        "n": 4,
+        "name": "What it keeps in play",
+        "job": "What the message keeps open for him. The thing he can still have without having to ask for it",
+        "free": false
+      },
+      {
+        "n": 5,
+        "name": "What you filled in",
+        "job": "The gap between what he sent and what she has been carrying since. The part of the meaning she supplied",
+        "free": false
+      },
+      {
+        "n": 6,
+        "name": "What answering sets up",
+        "job": "The reply that is actually hers to make, and what each size of it sets up. Not whether to answer — what answering commits",
+        "free": false
+      },
+      {
+        "n": 7,
+        "name": "What a year of these takes",
+        "job": "What a year of messages this size costs her. The specific thing it takes, not the general ache",
+        "free": false
+      }
+    ]
+  },
+
+  "he-came-back-after-all-this-time": {
+    "name": "He Came Back After All This Time",
+    "day": "mon",
+    "day_number": 8,
+    "slug_in_link": "he-came-back-after-all-this-time",
+    "question": "He came back after all this time. What is he here for?",
+    "shape": "Five findings about the return — what resumed, why now, what it does for him, which woman he thinks he is talking to, and the years he is skipping — and only then the thing she has not said and what his terms cost.",
+    "positions": [
+      {
+        "n": 1,
+        "name": "What's started again",
+        "job": "What has actually started again between them, and what has not come back with him",
+        "free": true
+      },
+      {
+        "n": 2,
+        "name": "What ran out on his side",
+        "job": "What ran out on his side just before he came back. Not a realisation — the thing that ended",
+        "free": false
+      },
+      {
+        "n": 3,
+        "name": "What having you back solves for him",
+        "job": "What having her back solves for him. The problem in his own week that she fixes by existing",
+        "free": false
+      },
+      {
+        "n": 4,
+        "name": "The woman he thinks he's talking to",
+        "job": "Which version of her he is talking to. The woman from then, and where the two stop matching",
+        "free": false
+      },
+      {
+        "n": 5,
+        "name": "The years nobody has accounted for",
+        "job": "The years in between, and what he is asking her to leave unaccounted for. The specific thing never explained",
+        "free": false
+      },
+      {
+        "n": 6,
+        "name": "What you haven't said out loud",
+        "job": "The thing she has not said out loud about those years, and what saying it would cost her",
+        "free": false
+      },
+      {
+        "n": 7,
+        "name": "What his terms cost you",
+        "job": "What taking him back on his terms costs her across the next stretch of it. The price paid in her ordinary week",
+        "free": false
+      }
+    ]
+  },
+
+  "hes-gone-quiet": {
+    "name": "He's Gone Quiet",
+    "day": "tue",
+    "day_number": 9,
+    "slug_in_link": "hes-gone-quiet",
+    "question": "He's gone quiet on me. What is actually going on?",
+    "shape": "Five findings before the end she controls — how long it has run, the week before it, what it keeps for him, the sentence he cannot send, and what the waiting has become — then her limit, then what another stretch takes.",
+    "positions": [
+      {
+        "n": 1,
+        "name": "How long it's really been",
+        "job": "The plain shape of the silence. What stopped, what did not stop, and how long it has actually run",
+        "free": true
+      },
+      {
+        "n": 2,
+        "name": "The week before he stopped",
+        "job": "What landed on his side in the days before he stopped. Not a row — the thing he could not answer",
+        "free": false
+      },
+      {
+        "n": 3,
+        "name": "What the quiet lets him keep",
+        "job": "What the quiet keeps available to him. The version of himself that stays true as long as nothing is said",
+        "free": false
+      },
+      {
+        "n": 4,
+        "name": "The sentence he can't start",
+        "job": "The first sentence he would have to send to end it, and why that is the one he cannot start",
+        "free": false
+      },
+      {
+        "n": 5,
+        "name": "What the waiting has become",
+        "job": "What the waiting has turned into a habit for her. The checking, and what it has replaced in her day",
+        "free": false
+      },
+      {
+        "n": 6,
+        "name": "Your end of the silence",
+        "job": "Her own end of the silence, and the terms that are hers to set. Not a message to him — a limit",
+        "free": false
+      },
+      {
+        "n": 7,
+        "name": "What another stretch takes",
+        "job": "What another stretch of this takes from her. The specific thing lost, not the general wearing down",
+        "free": false
+      }
+    ]
+  },
+
+  "whats-coming-in-the-next-seven-days": {
+    "name": "What's Coming In The Next Seven Days",
+    "day": "wed",
+    "day_number": 10,
+    "slug_in_link": "whats-coming-in-the-next-seven-days",
+    "question": "What's coming in the next seven days?",
+    "shape": "A week is not a list of dates — it is one thing already moving, where it came from, the form it takes when it surfaces, the loud thing that is not hers, what it asks of her, and what waiting it out takes; that is the six.",
+    "positions": [
+      {
+        "n": 1,
+        "name": "What's already moving",
+        "job": "What is already in motion. The thing that started before this morning and is still moving, not something due to arrive",
+        "free": true
+      },
+      {
+        "n": 2,
+        "name": "Where it really started",
+        "job": "Where the thing in motion actually began. Further back than this week, and not where she has been dating it from",
+        "free": false
+      },
+      {
+        "n": 3,
+        "name": "How it shows up",
+        "job": "The small ordinary form it takes when it reaches the surface. What it will look like, not when it lands",
+        "free": false
+      },
+      {
+        "n": 4,
+        "name": "The loud one that isn't yours",
+        "job": "The loud thing she is braced for, and whose problem it actually is. The one not hers to handle this week",
+        "free": false
+      },
+      {
+        "n": 5,
+        "name": "What the week asks of you",
+        "job": "The one thing the week asks of her, and what it costs. An act she can start, not a decision to wait for",
+        "free": false
+      },
+      {
+        "n": 6,
+        "name": "What waiting it out takes",
+        "job": "What a week spent waiting for the other thing takes from her. What she does not get back",
+        "free": false
+      }
+    ]
+  },
+
+  "on-and-off": {
+    "name": "On And Off",
+    "day": "thu",
+    "day_number": 11,
+    "slug_in_link": "on-and-off",
+    "question": "He goes, then he comes back, then he goes. Why does this keep going round?",
+    "shape": "One full lap first, then what switches it, what each of them gets out of it, and the half she runs — and only then what ends a lap and what one more costs.",
+    "positions": [
+      {
+        "n": 1,
+        "name": "One full lap",
+        "job": "The loop as one thing. What a full lap contains, and how many times it has already gone round",
+        "free": true
+      },
+      {
+        "n": 2,
+        "name": "What switches it back on",
+        "job": "What has been true on his side every time it switched back on. The condition that was already there, never a next time",
+        "free": false
+      },
+      {
+        "n": 3,
+        "name": "What going gets him",
+        "job": "What going gets him that staying would not. What the off stretch protects, in his life, not in hers",
+        "free": false
+      },
+      {
+        "n": 4,
+        "name": "What the loop pays you",
+        "job": "What the loop pays her. What the good stretch gives, and what the empty one spares her having to decide",
+        "free": false
+      },
+      {
+        "n": 5,
+        "name": "The half you run",
+        "job": "The half of it she runs. What she does, every lap, that keeps her end of the loop open",
+        "free": false
+      },
+      {
+        "n": 6,
+        "name": "What ends a lap early",
+        "job": "The one thing that ends a lap early, and what doing it costs her. An act, not a rule she sets herself",
+        "free": false
+      },
+      {
+        "n": 7,
+        "name": "What the next lap takes",
+        "job": "What one more lap takes from her. The thing that does not come back on the next good stretch",
+        "free": false
+      }
+    ]
+  },
+
+  "will-he-come-back": {
+    "name": "Will He Come Back",
+    "day": "fri",
+    "day_number": 12,
+    "slug_in_link": "will-he-come-back",
+    "question": "Will he come back?",
+    "shape": "Nobody puts a month on another man's decision, so the seven read her side of it — what still stands, what she is still doing, what he gets for it, what a return would cost him, what she would actually be getting back, and only then what is hers either way and what being available has already taken.",
+    "positions": [
+      {
+        "n": 1,
+        "name": "What's still standing",
+        "job": "What is still standing between them. What has not been taken down, and what already has",
+        "free": true
+      },
+      {
+        "n": 2,
+        "name": "What you're still doing for him",
+        "job": "The specific thing she still does that leaves the way back clear for him. One act, repeated, not a feeling",
+        "free": false
+      },
+      {
+        "n": 3,
+        "name": "What he gets for nothing",
+        "job": "What he gets from her while nothing is settled. The standing offer he has not had to accept or turn down",
+        "free": false
+      },
+      {
+        "n": 4,
+        "name": "What coming back would cost him",
+        "job": "What coming back would cost him. The thing he would have to give up or say first — not whether he pays it",
+        "free": false
+      },
+      {
+        "n": 5,
+        "name": "What you'd actually be getting back",
+        "job": "What she would actually be getting back. Which version of him, and which version of the arrangement that ended",
+        "free": false
+      },
+      {
+        "n": 6,
+        "name": "The one that's yours either way",
+        "job": "The one thing that is hers whichever way he goes, and what it costs her. An act, not a decision about him",
+        "free": false
+      },
+      {
+        "n": 7,
+        "name": "What being available has cost",
+        "job": "What keeping herself available has already taken from her, and what it takes next. A count, not a warning",
+        "free": false
+      }
+    ]
+  }
+}

@@ -1,0 +1,353 @@
+{
+  "schemaVersion": 1,
+  "publicationScope": "local-fixture-only",
+  "notice": "Published status enables local routing only. Historical drafts are not approved for live publication. No publish, send, upload, or production database writes are performed.",
+  "generatedBy": "scripts/export-08-editions.py",
+  "sources": [
+    {
+      "editionId": "healing-v1",
+      "source": "docs/08-marcus/daily-email/letters-02/what-part-of-me-needs-healing.md",
+      "sha256": "d7e2de9cc89819839b91808b8bb5e195ce85e93ab829b0ead108c4e7f277d5d7"
+    },
+    {
+      "editionId": "commitment-v1",
+      "source": "docs/08-marcus/daily-email/letters-02/why-wont-he-commit.md",
+      "sha256": "d565e5bb9b10ecc24868a341b013afa9ff9c517b48baa76992fb6c27a0784347"
+    },
+    {
+      "editionId": "quiet-v1",
+      "source": "docs/08-marcus/daily-email/letters-02/why-they-go-quiet.md",
+      "sha256": "9496cd3915ba55f3a38571b24982a67661d20ab0575e374a901b84e0c699e8da"
+    },
+    {
+      "editionId": "higher-calling-v1",
+      "source": "docs/08-marcus/daily-email/letters-02/what-is-my-higher-calling.md",
+      "sha256": "028b0e76cdf76a403f4e617537d8b0b38d557683eb5f9935460db0c2d6817cfc"
+    },
+    {
+      "editionId": "higher-calling-v2",
+      "source": "docs/08-marcus/daily-email/letters-02/what-is-my-higher-calling-test-flow.md",
+      "sha256": "56d3d6f3be78d5a49db3ec98b21bb7e9e94917374b5bf343e8332b3f4eca394e"
+    }
+  ],
+  "editions": [
+    {
+      "id": "healing-v1",
+      "version": 1,
+      "slug": "what-part-of-me-needs-healing",
+      "question": "What part of myself needs the most healing right now?",
+      "theme": "What needs healing now and where support can begin",
+      "spread": {
+        "id": "six-questions",
+        "name": "The Six Questions",
+        "version": 1
+      },
+      "positions": [
+        {
+          "id": "p1",
+          "number": 1,
+          "label": "What still hurts",
+          "visibility": "free",
+          "fixedCard": {
+            "cardId": "five-of-cups",
+            "reversed": false
+          }
+        },
+        {
+          "id": "p2",
+          "number": 2,
+          "label": "What that hurt needs",
+          "visibility": "free",
+          "fixedCard": {
+            "cardId": "strength",
+            "reversed": false
+          }
+        },
+        {
+          "id": "p3",
+          "number": 3,
+          "label": "What you’ve been holding back",
+          "visibility": "paid"
+        },
+        {
+          "id": "p4",
+          "number": 4,
+          "label": "What you blame yourself for",
+          "visibility": "paid"
+        },
+        {
+          "id": "p5",
+          "number": 5,
+          "label": "What support you can accept",
+          "visibility": "paid"
+        },
+        {
+          "id": "p6",
+          "number": 6,
+          "label": "Where you can begin",
+          "visibility": "paid"
+        }
+      ],
+      "freeEmailText": "Subject: 🕯️ %FIRSTNAME%, you don't have to be past this yet\n\n%FIRSTNAME%,\n\nYou can be grateful for what you have and still hurt over what you lost. This morning's reading begins there—with feelings you keep telling yourself you should be past by now.\n\nI've laid six Rider–Waite cards on \"what part of myself needs the most healing right now?\" Two are face up. Let's begin with the Five of Cups.\n\nOne — what still hurts. The Five of Cups.\n\nA figure in a dark cloak looks down at three fallen cups. Behind him, two cups are still standing.\n\nIt's tempting to point straight at those two. Look at what you still have. Look at what hasn't gone wrong.\n\nBut the fallen cups are there too. Turning around won't put them upright.\n\nI read this card as the hurt you keep trying to talk yourself out of. Perhaps a relationship ended, a friendship changed, or something you worked toward didn't happen. You can name the good things in your life and still miss what you wanted to keep.\n\nWhen a memory catches you, do you let yourself admit that it hurts? Or does the next thought sound like, \"I should be over this\"?\n\nThat second thought gives you another thing to feel bad about. Now you're hurting, and judging yourself for hurting.\n\nTwo — what that hurt needs. Strength.\n\nA woman in a white dress stands beside a lion. Her hands rest at its jaws. She isn't holding a weapon. She leans toward the animal, handling its mouth gently.\n\nNotice how different that is from trying to frighten the lion into obedience.\n\nBeside the Five of Cups, Strength asks you to reconsider what being strong requires. You may have become very good at getting through the day without letting anyone see how much something still matters.\n\nBut there's another kind of strength in saying, \"I'm having a difficult day,\" and letting someone stay with you in that conversation.\n\nThe Five of Cups gives the loss its place. Strength changes how you respond when you feel it. Together, I read them as an invitation to stop making recovery another test you can fail.\n\nThe question now is what you've found hardest to admit you need.\n\nMaybe you don't want to bring the subject up again. Maybe you're quick to reassure someone who asks how you are. You can protect the person listening so carefully that they never get a chance to care for you.\n\nThat is where I'd like to continue with you, %FIRSTNAME%. What have you been holding back? What do you still blame yourself for? The other four cards give us room to look at those questions, the support you could accept, and a place to begin.\n\nI'll need your first and last name to identify your personal tarot card. Your personal card represents the strengths you rely on and habits you return to. I'll use its meaning to help read those four: what could help you accept care, and what might make you hide your hurt when someone offers it.\n\nLet's look at what you need now.\n\nMarcus\n\nP.S. The woman beside the lion uses gentle hands. You can be strong without being hard on yourself.",
+      "status": "published",
+      "bookingCopy": {
+        "headline": "Let’s look at what you need now.",
+        "intro": "Continue your reading on what needs healing—and where you can begin.",
+        "bridge": "The Five of Cups and Strength brought us to the hurt you’ve been trying to put aside. The next cards explore what you’ve found hardest to ask for, and what accepting support could look like.",
+        "offer": "In your full reading, I’ll bring these cards together around your question: what still needs your attention, what you may be blaming yourself for, and a first step you can consider.",
+        "name": "I’ll use the strengths and habits your personal card represents as another way to explore how you ask for support—and how you respond when someone offers it."
+      }
+    },
+    {
+      "id": "commitment-v1",
+      "version": 1,
+      "slug": "why-wont-he-commit",
+      "question": "Why won't he commit?",
+      "theme": "The gap between affection and commitment, and the buyer’s next step",
+      "spread": {
+        "id": "six-questions",
+        "name": "The Six Questions",
+        "version": 1
+      },
+      "positions": [
+        {
+          "id": "p1",
+          "number": 1,
+          "label": "What he's offering",
+          "visibility": "free",
+          "fixedCard": {
+            "cardId": "knight-of-cups",
+            "reversed": false
+          }
+        },
+        {
+          "id": "p2",
+          "number": 2,
+          "label": "What remains undecided",
+          "visibility": "free",
+          "fixedCard": {
+            "cardId": "two-of-wands",
+            "reversed": false
+          }
+        },
+        {
+          "id": "p3",
+          "number": 3,
+          "label": "What waiting costs you",
+          "visibility": "paid"
+        },
+        {
+          "id": "p4",
+          "number": 4,
+          "label": "What you need from him",
+          "visibility": "paid"
+        },
+        {
+          "id": "p5",
+          "number": 5,
+          "label": "What you’ve been accepting",
+          "visibility": "paid"
+        },
+        {
+          "id": "p6",
+          "number": 6,
+          "label": "What your next step is",
+          "visibility": "paid"
+        }
+      ],
+      "freeEmailText": "Subject: 🕯️ %FIRSTNAME%, he talks about a future together\n\n%FIRSTNAME%,\n\nHe talks about the things you'll do together. But when you ask where the relationship is going, the answer gets less definite. If that sounds familiar, you know how hard it is to make sense of the difference.\n\nThis morning's cards look at that gap. I've laid six Rider–Waite cards on \"why won't he commit?\" Two are face up. The first is the Knight of Cups.\n\nOne — what he's offering. The Knight of Cups.\n\nA knight sits on a white horse, holding a cup out in front of him. His horse moves quietly. There's no charge, no raised weapon. He approaches with something to offer.\n\nThe cup is the detail I want you to notice. He's presenting it openly. This is a card of romantic attention: the invitation, the affectionate message, the evening when you feel close again.\n\nThose moments can matter. You don't have to dismiss them as an act to admit that you're still unsure where you stand.\n\nBut the knight's gesture tells us about his approach. It doesn't tell us what he will sustain. An affectionate evening can answer \"does he enjoy being with me?\" while leaving \"are we building a relationship?\" unresolved.\n\nTwo — what remains undecided. The Two of Wands.\n\nA man stands high on a battlement, looking out over the land and water. He holds a small globe in one hand and a staff in the other.\n\nHe can see a wide world from where he's standing. He can consider where he might go. But he's still on the battlement.\n\nThat is the difference this card brings to the reading: imagining a future and deciding to pursue it are separate things. He might talk warmly about a trip together, yet leave the dates unsettled. He might picture you in his life without agreeing on what being together means now.\n\nBeside the Knight of Cups, this card points to a relationship that can keep feeling promising while its direction stays undecided. It doesn't settle his private reasons. It does give you something clearer to examine: what happens after the affectionate words?\n\nDoes he help make a plan? Does he answer the question you actually asked? Does an agreement become something you can rely on?\n\nThe question now is what you need to do with that uncertainty.\n\nYou may have been patient because the closeness feels worth giving a chance. That's understandable. But you also get to ask whether the relationship, as it stands today, gives you enough.\n\nThe remaining four cards explore what waiting costs you, what you need from him, what you've been accepting, and what your next step is.\n\nClick below and enter your first and last name. I'll use your name to identify your personal tarot card. Its meaning describes strengths and familiar habits. I'll use those themes to interpret the remaining four: how your strengths can help you express what you need, and which habits may make it harder to ask.\n\nTurn the other four.\n\nMarcus\n\nP.S. The man with the globe can imagine going anywhere. Before you keep waiting, look for a plan you can actually make together.",
+      "status": "published",
+      "bookingCopy": {
+        "headline": "Let’s look at where you go from here.",
+        "intro": "Continue your reading on why he won’t commit, what you need from him, and what you want to do next.",
+        "bridge": "The Knight of Cups and Two of Wands showed affection alongside hesitation. The next cards bring the focus back to you: what waiting costs you, what you need from him, and how you want to respond.",
+        "offer": "In your full reading, I’ll bring these cards together to help you consider what you want to ask him for, what you’re willing to accept, and your next step if his answer stays uncertain.",
+        "name": "I’ll use the strengths and habits your personal card represents as another way to explore how you express what you need—and what makes it difficult to ask him for a clear answer."
+      }
+    },
+    {
+      "id": "quiet-v1",
+      "version": 1,
+      "slug": "why-they-go-quiet",
+      "question": "Why he goes quiet?",
+      "theme": "What another person’s silence means and how the buyer can respond",
+      "spread": {
+        "id": "six-questions",
+        "name": "The Six Questions",
+        "version": 1
+      },
+      "positions": [
+        {
+          "id": "p1",
+          "number": 1,
+          "label": "What the quiet actually is",
+          "visibility": "free",
+          "fixedCard": {
+            "cardId": "four-of-cups",
+            "reversed": false
+          }
+        },
+        {
+          "id": "p2",
+          "number": 2,
+          "label": "What it is not",
+          "visibility": "free",
+          "fixedCard": {
+            "cardId": "three-of-swords",
+            "reversed": false
+          }
+        },
+        {
+          "id": "p3",
+          "number": 3,
+          "label": "What it costs you while it lasts",
+          "visibility": "free",
+          "fixedCard": {
+            "cardId": "eight-of-swords",
+            "reversed": false
+          }
+        },
+        {
+          "id": "p4",
+          "number": 4,
+          "label": "What he's protecting",
+          "visibility": "paid"
+        },
+        {
+          "id": "p5",
+          "number": 5,
+          "label": "What you've been doing inside his quiet",
+          "visibility": "paid"
+        },
+        {
+          "id": "p6",
+          "number": 6,
+          "label": "What ends it",
+          "visibility": "paid"
+        }
+      ],
+      "freeEmailText": "Subject: 🕯️ %FIRSTNAME%, his quiet isn't what you think it is\n\n%FIRSTNAME%,\n\nMarcus. Six cards on one question this morning: why he goes quiet. Three up, three face down. Rider–Waite.\n\nI'll say him. If yours is a her, swap it as you read — the cards don't care and neither do I.\n\nOne — what the quiet actually is. The Four of Cups.\n\nA young man sitting on the ground under a tree, knees up, arms folded across his chest. Three gold cups on the grass in front of him. And out of a cloud beside him, a hand, holding out a fourth.\n\nHe isn't looking at it. He's looking at the three he's already got.\n\nThat's the quiet. He hasn't left and he hasn't stopped caring. He's sat down inside himself and he's staring at what's already in front of him. The hand is out. He isn't seeing it.\n\nTwo — what it is not. The Three of Swords.\n\nA red heart with three swords straight through it. Grey cloud, rain coming down.\n\nHere's the thing about that card, and it's why it's in position two. Nobody is holding those swords. They're just in it.\n\nThe quiet is not a wound. It isn't something he did to you. It feels exactly like this card and it is not this card — and if you've been reading his silence as an injury with your name on it, that's the first thing to put down this morning.\n\nThree — what it costs you while it lasts. The Eight of Swords.\n\nA woman standing in wet ground, wrapped and bound, a cloth over her eyes. Eight swords stuck upright in the earth around her. A castle up on the rock behind.\n\nLook at the swords. They don't join up. There's a clear gap in front of her, and her feet aren't tied.\n\nThat's the cost. Not heartbreak — stillness. While he's sitting under his tree, you've stopped moving, and nothing in the picture is actually holding you.\n\nThat's the three I can turn.\n\nThe other three are the ones you want.\n\nThe fourth is what he's protecting. A man who sits down inside himself is always guarding something, and it's almost never the thing you'd guess.\n\nThe fifth is you — what you've been doing inside his quiet. That's a different question from what you've been feeling about it.\n\nThe sixth is what ends it. Not whether. What.\n\nAnd you've been decent about it. You've given him room. You haven't chased him, you haven't made him explain himself, you've let him have whatever this is. That's a generous way to treat someone and it's the right instinct.\n\nYou've just been standing still to do it.\n\nI can't turn those three yet.\n\nOn their own they don't say much. They only mean something once I know which card is yours.\n\nEveryone has one. Your name gives it to me — first and last, nothing else.\n\nAnd it never changes. Same name, same card, every time I lay them.\n\nTell me your name here. That's all that page asks you for.\n\nSo here's this morning's job. Write down what he did on the day it changed. Not how you felt about it — what he did. One line, no more. Look at how little of it was aimed at you.\n\nThen, today: name one thing you've been holding until he comes back, and do it anyway.\n\nMarcus\n\nP.S. Her feet aren't tied. That's the whole card.",
+      "status": "published"
+    },
+    {
+      "id": "higher-calling-v1",
+      "version": 1,
+      "slug": "what-is-my-higher-calling",
+      "question": "What is my higher calling?",
+      "theme": "Recognizing a calling and deciding what deserves more room",
+      "spread": {
+        "id": "six-questions",
+        "name": "The Six Questions",
+        "version": 1
+      },
+      "positions": [
+        {
+          "id": "p1",
+          "number": 1,
+          "label": "What you keep coming back to",
+          "visibility": "free",
+          "fixedCard": {
+            "cardId": "star",
+            "reversed": false
+          }
+        },
+        {
+          "id": "p2",
+          "number": 2,
+          "label": "What you've been calling it instead",
+          "visibility": "free",
+          "fixedCard": {
+            "cardId": "seven-of-pentacles",
+            "reversed": false
+          }
+        },
+        {
+          "id": "p3",
+          "number": 3,
+          "label": "What this has already cost you",
+          "visibility": "paid"
+        },
+        {
+          "id": "p4",
+          "number": 4,
+          "label": "What you'd have to put down",
+          "visibility": "paid"
+        },
+        {
+          "id": "p5",
+          "number": 5,
+          "label": "Who you'd have to stop being",
+          "visibility": "paid"
+        },
+        {
+          "id": "p6",
+          "number": 6,
+          "label": "Where it starts",
+          "visibility": "paid"
+        }
+      ],
+      "freeEmailText": "Subject: 🕯️ %FIRSTNAME%, the thing you keep going back to isn't a hobby\n\n%FIRSTNAME%,\n\nMarcus. Six cards on one question this morning: what is my higher calling. Two up, four face down. Rider–Waite.\n\nOne — what you keep coming back to. The Star.\n\nA woman kneeling at the edge of a pool with nothing on. Two jugs. She's pouring one into the water and one onto the ground beside it. Above her, one big eight-pointed star and seven smaller ones. A bird in a tree behind her shoulder.\n\nNow look at how she's kneeling. One foot is in the water. The other knee is on the land. She hasn't got in.\n\nLook at the top of it. THE STAR, spelled out. Some cards in this deck have a name on them instead of a number, and those are the heavy ones. Whatever you keep going back to isn't a passing interest. It's a source. You go, and you kneel at it, and you put one foot in.\n\nYou've been doing that for years.\n\nTwo — what you've been calling it instead. The Seven of Pentacles.\n\nA man leaning on a long-handled hoe, both hands folded over the top of it, looking at a bush. Seven gold discs growing on it. He's stopped working to look at them.\n\nHe's calling it patience.\n\nThat's what you've called it too. Not ready yet. Needs more time. Wrong year, wrong money, wrong everything — and every one of those has been true, and not one of them is why.\n\nNow look at the two together. Position one has a name on it. Position two is a seven. The thing you keep returning to is bigger than the reason you keep giving it.\n\nThat's the two I can turn.\n\nThe other four carry the weight.\n\nThe third is what this has already cost you. It has. Whether or not you've added it up.\n\nThe fourth is what you'd have to put down — and it sits further in than it looks.\n\nThe fifth is who you'd have to stop being. That's the real one.\n\nThe sixth is where it starts. Not someday. Where.\n\nAnd you've been responsible, %FIRSTNAME%. You've kept it alive by not risking it. You've protected it from failing by never letting it be tested, and that is how a sensible person looks after something precious.\n\nKeeping it alive isn't the same as living it.\n\nI can't turn those four yet.\n\nOn their own they don't say much. They only mean something once I know which card is yours.\n\nEveryone has one. Your name gives it to me — first and last, nothing else.\n\nAnd it never changes. Same name, same card, every time I lay them.\n\nTell me your name here. That's all that page asks you for.\n\nSo this morning, one line: write down what you'd do with one free Tuesday. Not a free year. A Tuesday.\n\nThen read your line back and see whether you'd need anyone's permission to do it.\n\nMarcus\n\nP.S. One foot in the water for years is still one foot in the water.",
+      "status": "published"
+    },
+    {
+      "id": "higher-calling-v2",
+      "version": 2,
+      "slug": "what-is-my-higher-calling",
+      "question": "What is my higher calling?",
+      "theme": "Moving from waiting toward a concrete first step in a calling",
+      "spread": {
+        "id": "six-questions",
+        "name": "The Six Questions",
+        "version": 1
+      },
+      "positions": [
+        {
+          "id": "p1",
+          "number": 1,
+          "label": "What you keep coming back to",
+          "visibility": "free",
+          "fixedCard": {
+            "cardId": "star",
+            "reversed": false
+          }
+        },
+        {
+          "id": "p2",
+          "number": 2,
+          "label": "Why you've put it off",
+          "visibility": "free",
+          "fixedCard": {
+            "cardId": "seven-of-pentacles",
+            "reversed": false
+          }
+        },
+        {
+          "id": "p3",
+          "number": 3,
+          "label": "What waiting has cost you",
+          "visibility": "paid"
+        },
+        {
+          "id": "p4",
+          "number": 4,
+          "label": "What you may need to let go of",
+          "visibility": "paid"
+        },
+        {
+          "id": "p5",
+          "number": 5,
+          "label": "What needs to change",
+          "visibility": "paid"
+        },
+        {
+          "id": "p6",
+          "number": 6,
+          "label": "Where you can begin",
+          "visibility": "paid"
+        }
+      ],
+      "freeEmailText": "Subject: 🕯️ %FIRSTNAME%, the thing you keep coming back to\n\n%FIRSTNAME%,\n\nThe thing you keep coming back to—could that be your calling?\n\nThat's what I'm looking at this morning. Six Rider–Waite cards are on the table. Two are face up, beginning with The Star.\n\nOne — what you keep coming back to. The Star.\n\nA woman kneels beside a pool, pouring water from two jugs. One pours into the pool, the other onto the land. A large star shines above her.\n\nLook at her foot. It's in the water, while her other knee rests on the ground. She's touching the pool without getting all the way in.\n\nI read that as staying close to something that matters to you, while keeping your involvement small. You read about it. You notice someone doing it and want to hear how they began. Then life gets busy, and you put it aside.\n\nBut your interest returns.\n\nThat doesn't make it your life's work. It does make it worth trying seriously enough to find out. A class you attend. Something you make. An hour spent doing the thing you've been reading about.\n\nTwo — why you've put it off. The Seven of Pentacles.\n\nA man leans on the handle of his hoe, looking down at the plant in front of him. Gold discs sit among its leaves and near his feet. He's stopped working to inspect what his effort has produced.\n\nThere is something sensible about that pause. You want to know that the time you give will be worthwhile.\n\nBut notice: he has something to inspect. He's already done the work.\n\nYou may be asking for that reassurance before you've had a proper chance to try. Will you be good at it? Will it lead somewhere? Is it worth making room for?\n\nSome answers only become available once you've begun.\n\nBeside The Star, this card changes the question. Instead of asking whether this interest is important enough to deserve your time, ask what giving it some time would help you discover.\n\nYou don't have to decide the rest of your life before you begin.\n\nThe question now is where to begin without neglecting the life you've already built.\n\nYou have responsibilities, %FIRSTNAME%. Making room for something you care about means deciding what can change, and what needs to stay. That's where a personal reading can help you consider your next step.\n\nThe remaining four cards explore what waiting has cost you, what you may need to let go of, what needs to change, and where you can begin.\n\nClick below and enter your first and last name. I'll use your name to identify your personal tarot card. That card represents strengths you can draw on and familiar habits you can get caught in. I'll use those meanings to interpret the remaining four: what could help you pursue this calling, and what could hold you back.\n\nTurn the other four.\n\nMarcus\n\nP.S. The man with the hoe has something to judge because he's given it a chance to grow.",
+      "status": "published"
+    }
+  ]
+}

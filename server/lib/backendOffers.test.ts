@@ -275,3 +275,97 @@ describe('upsell offer resolution + description', () => {
       .toEqual({ offer: 'twin-flame', description: 'BE 02 · Protection Ritual' });
   });
 });
+
+// ─── 07 · the TIERED model ─────────────────────────────────────────────────────
+//
+// 🔴 A tiered offer is the easiest place in this file to lose the one security rule,
+// because unlike a fixed offer it genuinely does let the browser change the price —
+// by naming a rung. These pin down that naming a rung is ALL it can do.
+describe('tiered pricing (07 · Marcus Daily Tarot)', () => {
+  const priced = (req: Parameters<typeof priceBackendOffer>[1]) =>
+    priceBackendOffer(BACKEND_OFFER_CATALOG['marcus-daily'], req);
+
+  it('prices each rung from the catalog', () => {
+    for (const [tier, cents] of [
+      ['spread', 3500],
+      ['pattern', 5700],
+      ['table', 8700],
+    ] as const) {
+      const r = priced({ tier });
+      expect(r.ok, `${tier} should price`).toBe(true);
+      if (r.ok) {
+        expect(r.readingCents).toBe(cents);
+        expect(r.tier).toBe(tier);
+      }
+    }
+  });
+
+  // ⛔ THE ONE THAT MATTERS. A browser posting its own number must not be able to
+  //    move the price of a rung by a single cent.
+  it('IGNORES amountCents entirely — a rung is priced by name, never by the request', () => {
+    const r = priced({ tier: 'table', amountCents: 1 });
+    expect(r.ok).toBe(true);
+    if (r.ok) expect(r.readingCents).toBe(8700);
+  });
+
+  it('refuses a request with no rung rather than defaulting to the cheapest', () => {
+    for (const tier of [undefined, null, '']) {
+      const r = priced({ tier });
+      expect(r.ok).toBe(false);
+      if (!r.ok) expect(r.code).toBe('tier_missing');
+    }
+  });
+
+  it('refuses a rung that is not in the catalog', () => {
+    for (const tier of ['premium', 'SPREAD', 'spread ', 7, {}]) {
+      const r = priced({ tier });
+      expect(r.ok, `${JSON.stringify(tier)} must not price`).toBe(false);
+      if (!r.ok) expect(r.code).toBe('tier_unknown');
+    }
+  });
+
+  it('puts the rung on the receipt, so $35 and $87 do not read as the same product', () => {
+    const a = priced({ tier: 'spread' });
+    const b = priced({ tier: 'table' });
+    expect(a.ok && b.ok).toBe(true);
+    if (a.ok && b.ok) {
+      expect(a.lines[0].name).not.toBe(b.lines[0].name);
+      expect(a.lines[0].name).toContain('The Spread');
+      expect(b.lines[0].name).toContain('The Third Question');
+    }
+  });
+
+  it('adds the bump at the catalog price, on top of any rung', () => {
+    const r = priced({ tier: 'pattern', bump: true });
+    expect(r.ok).toBe(true);
+    if (r.ok) {
+      expect(r.bumpCents).toBe(1277);
+      expect(r.totalCents).toBe(5700 + 1277);
+      // ⛔ n8n exact-matches this string to decide what to fulfil.
+      expect(BACKEND_OFFER_CATALOG['marcus-daily'].bump.productKey).toBe('marcus_same_day');
+    }
+  });
+
+  it('⛔ is NOT open for money — three things are unbuilt, see the catalog note', () => {
+    expect(BACKEND_OFFER_CATALOG['marcus-daily'].readyForMoney).toBe(false);
+    const r = resolveBackendCharge({ offer: 'marcus-daily', tier: 'spread' });
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.code).toBe('not_ready');
+  });
+
+  it('keeps the be_ prefix, so no V1 webhook branch can claim it', () => {
+    expect(BACKEND_OFFER_CATALOG['marcus-daily'].stripeProduct).toBe('be_marcus_daily');
+    expect(BACKEND_OFFER_CATALOG['marcus-daily'].stripeProduct.startsWith('be_')).toBe(true);
+  });
+
+  it('rungs rise, and each step buys exactly one more of her questions', () => {
+    const { tiers } = BACKEND_OFFER_CATALOG['marcus-daily'].pricing as {
+      tiers: Record<'spread' | 'pattern' | 'table', { questions: number; priceCents: number }>;
+    };
+    expect(tiers.spread.questions).toBe(1);
+    expect(tiers.pattern.questions).toBe(2);
+    expect(tiers.table.questions).toBe(3);
+    expect(tiers.pattern.priceCents).toBeGreaterThan(tiers.spread.priceCents);
+    expect(tiers.table.priceCents).toBeGreaterThan(tiers.pattern.priceCents);
+  });
+});

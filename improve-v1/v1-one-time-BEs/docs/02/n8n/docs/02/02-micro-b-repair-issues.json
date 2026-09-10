@@ -1,0 +1,30 @@
+{
+  "houses": {
+    "3": {
+      "draft": "docs/02/experiment-prose_micro_b-house-3.json",
+      "issues": [
+        "The opening asserts an actual past event coming into the open. No such event is supplied. Make it an illustrative application of the communication principle, and preserve that status throughout.",
+        "The conclusion pressures a once-only public answer. Explain the difference between types of speech without predicting an expiring personal opportunity or requiring the buyer to speak. Keep the useful, respectful account of legitimate reasons for silence.",
+        "Condense redundant taxonomy and spend that space explaining how the distinction changes what a listener understands; remain in general everyday situations rather than inventing her history."
+      ]
+    },
+    "5": {
+      "draft": "docs/02/experiment-prose_micro_b-house-5.json",
+      "issues": [
+        "Keep the fifth relative week as the week of recognition of the already-known man. His prior presence is already established; distinguish it from the later romantic recognition. Remove permission for recognition to drift beyond that week.",
+        "Keep the required time prediction but do not pretend that an event occupying a day logically proves why week five is selected. Remove the false proof; explain the difference between an identifiable encounter and a gradual emotional process without using it to certify a particular week.",
+        "Preserve the improved respect for her choice. Remove any assertion about other people's unprovided intentions or mental state around the required manner/activity."
+      ]
+    },
+    "12": {
+      "draft": "docs/02/experiment-prose_micro_b-house-12.json",
+      "issues": [
+        "Delete the invented separate formal bond, its protected status, an informal departing relationship, and any distinction between two men. The required departure verdict does not identify the connection or establish another relationship.",
+        "Use one other dealt card solely to clarify an interpretive distinction, such as the difference between formal evidence and ambiguous behavior. Its presence cannot establish a real relationship's status or identity.",
+        "Explain that rereading unchanged evidence adds no information, while new observations can add information. Suspension does not prove that no events or evidence can occur.",
+        "Remove asserted pressure applied by the buyer, her particular fears, her supposed timetable or past vigil. Discuss understandable reactions generally, with room for her own experience. Preserve the definite required departure, stage, and observation-versus-explanation answer.",
+        "Preserve the useful analogy of rereading a short message and explain its limits without diagnosing the buyer. Remove self-announcing argumentative transitions and scolding commands; let the explanation carry the lesson."
+      ]
+    }
+  }
+}
