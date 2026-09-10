@@ -31,6 +31,60 @@ Paths below are relative to this README.
 | [Original writing review](n8n/docs/02/02-writing-review-2026-09-09.md) | Prose faults, causes and planned corrections. |
 | [Workspace commands](n8n/README.md) | Compact build, verification and deployment reference. |
 
+## Two promo emails — keep these distinct
+
+**02 has two sequential promotional letters, not interchangeable versions of one send.** Both sell the same paid reading, but the second adds promises that fulfilment must pay.
+
+| Promo | Source | Audience / free cards | Required `c` codes | Paid-reading arc |
+| --- | --- | --- | --- | --- |
+| Email 1: **02-E2 / v1** | [02-E2-esl-v1.md](../../copy/02/02-E2-esl-v1.md) | Prior V1 buyers, women-only gate (`S7`). World, Lovers, Tower. | `1`–`6`, one per CTA | v1; fulfil first-letter obligations |
+| Email 2: **02-E3 / v2** | [02-E3-esl-v2.md](../../copy/02/02-E3-esl-v2.md) | Recipients of Email 1 who have not booked; suppress buyers. Star, Emperor, Moon. | `21`–`26`, one per CTA | v2; fulfil **both letters’** obligations |
+
+Email 1 also contains an **optional, unshipped P.S. challenger** using `c=7`. It is outside the six-CTA specimen; do not accidentally include it in a normal send. If explicitly tested later, give it its own `utm_content=e2_v1_ps_test`.
+
+### Suggested UTM convention
+
+This is a proposed naming convention, **not a change to the email links or send configuration**. Use lowercase consistently. Keep one campaign across the two-letter sequence so total revenue can be grouped together, and distinguish email and CTA in `utm_content`.
+
+| Parameter | Recommended value | What it identifies |
+| --- | --- | --- |
+| `utm_source` | `aweber` | Sending platform; use the actual platform if different |
+| `utm_medium` | `email` | Channel |
+| `utm_campaign` | `twinflame_02_promo` | This two-letter promotion; for repeated waves, append the same agreed wave suffix to both letters |
+| `utm_content` | `e2_v1_cta01` … `e2_v1_cta06`, or `e3_v2_cta01` … `e3_v2_cta06` | Email identity and clicked placement |
+| `utm_term` | Omit for this convention | No keyword dimension needed |
+| `c` (not a UTM) | Preserve `1`–`6` / `21`–`26` | **Fulfilment selector**, carried to Stripe metadata; UTMs do not replace it |
+
+These roles follow [Google’s campaign-tagging guidance](https://support.google.com/analytics/answer/10917952?hl=en), including using content to distinguish links within an email. The exact values above are our proposed project convention.
+
+| CTA placement, in source order | Email 1 `c` / `utm_content` | Email 2 `c` / `utm_content` |
+| --- | --- | --- |
+| 1 | `1` / `e2_v1_cta01` | `21` / `e3_v2_cta01` |
+| 2 | `2` / `e2_v1_cta02` | `22` / `e3_v2_cta02` |
+| 3 | `3` / `e2_v1_cta03` | `23` / `e3_v2_cta03` |
+| 4 | `4` / `e2_v1_cta04` | `24` / `e3_v2_cta04` |
+| 5 | `5` / `e2_v1_cta05` | `25` / `e3_v2_cta05` |
+| 6 | `6` / `e2_v1_cta06` | `26` / `e3_v2_cta06` |
+
+Example URL templates for each letter’s first CTA:
+
+```text
+{{BOOKING_URL}}?c=1&utm_source=aweber&utm_medium=email&utm_campaign=twinflame_02_promo&utm_content=e2_v1_cta01
+{{BOOKING_URL}}?c=21&utm_source=aweber&utm_medium=email&utm_campaign=twinflame_02_promo&utm_content=e3_v2_cta01
+```
+
+These templates assume the booking URL has no query string. If it already contains personalisation or another parameter, append with `&` or construct it with a URL builder; preserve the existing `fn` and other required parameters. Do not use a second `?` or duplicate `c`. Do not put customer names or emails into UTM values.
+
+The app already registers the five standard UTMs in [PostHog](../../../../client/src/lib/posthog.ts), reads them in [checkout](../../../../client/src/lib/backendCheckout.ts), copies them to [Stripe session metadata](../../../../server/routes/backendOffers.ts), and exposes them in [backend purchase analytics](../../../../server/lib/backendPurchaseAnalytics.ts). This is source-code verification, not an end-to-end tracking test. Capture depends on PostHog being initialized; the current persistence retains earlier attribution on an untagged visit, so these tags are not proof of incremental lift.
+
+Before scheduling either letter:
+
+- [ ] Apply the agreed tags to all six CTA links and retain each original `c` value.
+- [ ] Verify Email 2’s audience excludes buyers and includes only Email 1 recipients.
+- [ ] Click a delivered test email, confirm `c` and UTMs reach the booking page, and verify a sandbox purchase carries them into metadata and the purchase event.
+- [ ] Check both letters in separate browser sessions, including switching booking treatment, so stale first-letter attribution cannot mask a second-letter issue.
+- [ ] Report clicks, purchases and revenue by `utm_content`, grouped under the common campaign. The audiences differ, so do not call v1 versus v2 conversion rates a randomized A/B result.
+
 ## Sales promises and house style
 
 These remain outside the n8n workspace:
