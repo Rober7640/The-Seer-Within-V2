@@ -306,7 +306,13 @@ function grepFiles(pattern, pathspecs) {
 //   · a BE offer fires page-level events with a LITERAL funnel: '<name>', so the event must be
 //     co-located with that literal — this is what catches Pixiu's missing checkout_initiated.
 const CENTRAL = new Set(['lander_view', '$pageview', 'purchase_completed']);
-const BE_FUNNELS = new Set(['twinflame', 'judgement', 'pixiu']);
+// DERIVED from EXPECTED_EVENTS above, so adding a BE offer is ONE edit, not two. This was
+// hardcoded as ['twinflame','judgement','pixiu'], which made a second roster to keep in sync:
+// a funnel added to EXPECTED_EVENTS but missed here fell through to the tree-wide check and
+// PASSED an event it never fires — the exact false pass the event contract exists to catch.
+const BE_FUNNELS = new Set(
+  Object.keys(EXPECTED_EVENTS).filter((f) => EXPECTED_EVENTS[f] === BE_EVENTS),
+);
 const isBE = BE_FUNNELS.has(funnel) || Boolean(offer);
 
 function checkEvent(ev) {

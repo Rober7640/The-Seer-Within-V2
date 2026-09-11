@@ -53,7 +53,9 @@ registry and checks the source for each one (override with `--events=a,b`):
 | **BE booking offers** (`twinflame`, `judgement`, `pixiu`) | `lander_view`, `checkout_initiated`, `purchase_completed` (upsell views/purchases reuse the same two event names, keyed by `step`) |
 
 The V1 lead is spelled **`lead_captured`**, fired from `useConversation.ts` at email capture —
-not `lead`. If you add a funnel, add its row to `EXPECTED_EVENTS` in `audit-wiring.mjs`.
+not `lead`. If you add a funnel, add its row to `EXPECTED_EVENTS` in `audit-wiring.mjs` —
+that ONE edit is enough: `BE_FUNNELS` is derived from this registry, so a row whose value is
+`BE_EVENTS` is funnel-scoped automatically (§2).
 
 ### 2 · Audit the wiring
 
@@ -161,17 +163,60 @@ Two practical notes:
 Hand the operator the exact PostHog setup, because a correct pipeline still reads as zero
 through a wrong query.
 
-**Funnel** — one step per business event, all filtered `funnel = <name>`:
+**Funnel** — one step per business event, all filtered `funnel = <name>`.
+
+🔴🔴 **Filter `step` ONLY on `purchase_completed` and `upsell_accepted`.** Those two share one
+vocabulary across every funnel (`sales` / `upsell1` / `upsell2`, from `purchaseAnalytics.ts` and
+`backendPurchaseAnalytics.ts`). `lead_captured` and `checkout_initiated` do NOT — their step
+differs per funnel and one of them carries no step at all, so a step filter there silently
+empties the row and every row under it. The `funnel` filter already scopes them.
+
+| event | step value |
+|---|---|
+| `lead_captured` | `chat` (v1 + ad funnels, `useConversation.ts`) · `landing_form` (soulmate) · `gate` (evelyn, aiden) |
+| `checkout_initiated` | `sales` everywhere EXCEPT `rescue` (aiden) and **no step at all** (soulmate) |
+| `lander_view` | from `getPostHogStep(path)` — `landing` for every FE funnel, `booking` for BE |
+
+**BE booking offers** (`twinflame`, `judgement`, `pixiu`) — she arrives from a mailed link
+already identified, so there is no lead step:
 
 ```
-1  lander_view
-2  checkout_initiated
+1  lander_view          step = booking
+2  checkout_initiated                    (no step filter)
 3  purchase_completed   step = sales
 4  upsell_accepted      step = upsell1
 5  purchase_completed   step = upsell1
 6  upsell_accepted      step = upsell2
 7  purchase_completed   step = upsell2
 ```
+
+**V1 + ad funnels** (`v1`, `fb`, `fb2`, `gdn`, `palm`, `tarot`, `read`, `soulmate`) — the same
+chain with the email capture inserted, the step this family turns on:
+
+```
+1  lander_view          step = landing
+2  lead_captured                         (no step filter — see the table)
+3  checkout_initiated                    (no step filter)
+4  purchase_completed   step = sales
+5  upsell_accepted      step = upsell1
+6  purchase_completed   step = upsell1
+7  upsell_accepted      step = upsell2
+8  purchase_completed   step = upsell2
+```
+
+⭐⭐ **`upsell_accepted` is fired by BOTH families** — do not drop it from the BE funnel. It
+looks absent because `OffersUpsell1.tsx` / `OffersUpsell2.tsx` contain no `upsell_accepted`
+call: they fire it through the SHARED hooks they render (`useUpsellChat` / `useUpsell2Chat`),
+which are passed `offer` precisely so the event carries `funnel = <the BE offer>` rather than
+the URL path. Grepping the page file is a false negative — grep the hook.
+
+🔴 **`evelyn` and `aiden` are NOT on either list.** They are lead-gen funnels into the V2 chat
+service, not purchase funnels: evelyn fires `lead_captured`, `quiz_*`, `lander_cta_clicked` and
+`lander_link_handoff` and **no `checkout_initiated` at all**; aiden adds `checkout_initiated`
+with `step: 'rescue'`. Build them as a lead funnel (`lander_view` → `quiz_completed` →
+`lead_captured`), never off the purchase chain above. ⚠️ `EXPECTED_EVENTS` still asserts
+`checkout_initiated` for `evelyn`; the audit cannot catch it because a non-BE funnel is checked
+tree-wide and the event exists elsewhere. Raise it before trusting that row.
 
 **Trends (revenue per link)** — `purchase_completed`, *Property value sum* of `amount_cents`,
 filtered `funnel = <name>`, broken down by the UTM param the operator used.
@@ -220,6 +265,7 @@ expected exit codes are part of the contract:
 | `audit-wiring --ref=origin/Production` twin-flame | 11 wired (incl. the 3 event checks), 0 critical, **exit 0** |
 | `audit-wiring` Pixiu at the commit before `checkout_initiated` shipped | event contract flags `checkout_initiated fires but NOT for "pixiu"` (**warn**), everything else clean |
 | `audit-wiring --route=/ --funnel=v1` | event contract confirms `lead_captured` fires for V1, **exit 0** |
+| a BE funnel added to `EXPECTED_EVENTS` only, audited WITHOUT `--offer` | still funnel-scoped, **warns** on the event it does not fire (`BE_FUNNELS` is derived, not a second roster) |
 | `audit-wiring` on `/fb-tarot`, `/fb-palm`, `/fb-read`, `/soulmate` | all clean, **exit 0** |
 | `audit-wiring --route=/fb-tarot --funnel=palm` (deliberate mismatch) | catches it, **exit 1** |
 | `audit-wiring --route=/tarot/…` under Git Bash without `MSYS_NO_PATHCONV=1` | refuses, **exit 2** |
