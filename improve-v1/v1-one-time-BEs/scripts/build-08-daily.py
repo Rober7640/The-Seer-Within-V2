@@ -213,6 +213,26 @@ LETTERS["what-part-of-me-needs-healing"] = dict(
 )
 
 
+LETTERS["what-are-my-blind-spots"] = dict(
+    question="what are my blind spots?",
+    up=3, down=7, n_cards=10, opening_paragraphs=1, close_style="letter",
+    display_deck=True,
+    cards=[("the-moon", "The Moon",
+            "The Moon — a full moon above two stone towers, a dog and wolf looking upward, a "
+            "winding path, and a small crayfish emerging from the pool below"),
+           ("two-of-swords", "The Two of Swords",
+            "The Two of Swords — a blindfolded woman beside the sea holding two swords across "
+            "her chest, with a crescent moon and rocks behind her"),
+           ("three-of-pentacles", "The Three of Pentacles",
+            "The Three of Pentacles — a craftsman on a bench faces two people inside a stone "
+            "building; one of the other people holds the plan")],
+    hero_alt="Ten Rider–Waite cards arranged as a Tree of Life — The Moon, Two of Swords, and Three of Pentacles face up; seven cards face down",
+    panel_start="To continue,",
+    crosshead_start="Three of the ten cards are face up.",
+    backs="tree-of-life",
+)
+
+
 
 # Local funnel fixtures only. These historical drafts are NOT approved live editions.
 # Free cards/labels and complete email copy are parsed from the letter above/on disk.
@@ -831,7 +851,7 @@ def build(slug, tok=False):
                  if cfg.get("question") and not tok else inline(d["deck"]))
     # A conversational opening continues in body type; the legacy standalone deck
     # keeps its display treatment. Do not let the mobile .deck rule enlarge this copy.
-    if d["opening"]:
+    if d["opening"] and not cfg.get("display_deck"):
         out.append(para(deck_copy, "14px 52px 0"))
     else:
         out.append(para(deck_copy, "14px 52px 0", cls="deck px", font=DISPLAY,

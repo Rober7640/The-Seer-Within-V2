@@ -5,6 +5,7 @@ This script cannot create, activate, deactivate, or delete a workflow. It checks
 the exact workflow ID and its current 08 Marcus name before replacing the canvas.
 """
 
+import datetime
 import json
 import os
 import re
@@ -16,7 +17,7 @@ from pathlib import Path
 
 WORKFLOW_ID = "Lksy14rvjB5Z7aYg"
 HERE = Path(__file__).resolve().parent
-SOURCE = HERE / "08-marcus-staged.n8n.json"
+SOURCE = HERE / "08-marcus-numerology-stage1.n8n.json"
 ENV_PATH = HERE.parents[4] / ".env"
 SAFE_SETTINGS = (
     "executionOrder",
@@ -96,8 +97,8 @@ def main():
         execution = executions[0]
         run_data = (execution.get("data") or {}).get("resultData", {})
         node_runs = run_data.get("runData", {})
-        final_runs = node_runs.get("9 · REPORT READY — DOWNLOAD PDF", [])
-        writer_runs = node_runs.get("5 · OpenAI writes the reading", [])
+        final_runs = node_runs.get("26 · REPORT READY — DOWNLOAD PDF", []) or node_runs.get("QA HOLD · NO PDF", []) or node_runs.get("22 · REPORT READY — DOWNLOAD PDF", []) or node_runs.get("9 · REPORT READY — DOWNLOAD PDF", [])
+        writer_runs = node_runs.get("8 · Write complete Marcus report", []) or node_runs.get("5 · OpenAI writes the reading", [])
         final_item = {}
         if final_runs:
             output = final_runs[-1].get("data", {}).get("main", [[]])
@@ -114,8 +115,128 @@ def main():
                     "finishReason": choice.get("finish_reason"),
                     "contentChars": len(content) if isinstance(content, str) else None,
                     "contentTail": content[-500:] if isinstance(content, str) else None,
+                    "privateTermContexts": [
+                        content[max(0, match.start() - 120):match.end() + 160]
+                        for match in re.finditer(
+                            r"numerology|life path|expression number|birthday number|soul urge|personality number|maturity number",
+                            content or "",
+                            flags=re.IGNORECASE,
+                        )
+                    ][:12] if isinstance(content, str) else [],
                 }
         error = run_data.get("error") or {}
+        final_grade_summary = {}
+        final_grade_runs = node_runs.get("18 · Grade rewritten report", [])
+        if final_grade_runs:
+            grade_output = final_grade_runs[-1].get("data", {}).get("main", [[]])
+            if grade_output and grade_output[0]:
+                grade_json = (grade_output[0][0] or {}).get("json", {})
+                grade_content = (((grade_json.get("choices") or [{}])[0].get("message") or {}).get("content"))
+                if isinstance(grade_content, str):
+                    try:
+                        final_grade_summary = json.loads(grade_content)
+                    except json.JSONDecodeError:
+                        final_grade_summary = {"rawTail": grade_content[-1000:]}
+        customer_grade_summary = {}
+        customer_grade_runs = node_runs.get("21 · Grade as a paying reader", [])
+        if customer_grade_runs:
+            grade_output = customer_grade_runs[-1].get("data", {}).get("main", [[]])
+            if grade_output and grade_output[0]:
+                grade_json = (grade_output[0][0] or {}).get("json", {})
+                grade_content = (((grade_json.get("choices") or [{}])[0].get("message") or {}).get("content"))
+                if isinstance(grade_content, str):
+                    try:
+                        customer_grade_summary = json.loads(grade_content)
+                    except json.JSONDecodeError:
+                        customer_grade_summary = {"rawTail": grade_content[-1000:]}
+        rewritten_summary = {}
+        rewritten_runs = node_runs.get("16 · Validate rewritten report", [])
+        if rewritten_runs:
+            rewritten_output = rewritten_runs[-1].get("data", {}).get("main", [[]])
+            if rewritten_output and rewritten_output[0]:
+                rewritten_json = (rewritten_output[0][0] or {}).get("json", {})
+                rewritten_summary = {
+                    "draw": [(p.get("number"), p.get("label"), p.get("cardName")) for p in rewritten_json.get("buyerFaceDown", [])],
+                    "sections": [
+                        {
+                            "positionNumber": section.get("positionNumber"),
+                            "positionLabel": section.get("positionLabel"),
+                            "cardName": section.get("cardName"),
+                            "heading": section.get("heading"),
+                            "bodyStart": str(section.get("body", ""))[:220],
+                        }
+                        for section in (rewritten_json.get("report") or {}).get("sections", [])
+                    ],
+                }
+        accepted_summary = {}
+        accepted_runs = node_runs.get("19 · Enforce final grade", []) or node_runs.get("12 · Enforce first grade", [])
+        if accepted_runs:
+            accepted_output = accepted_runs[-1].get("data", {}).get("main", [[]])
+            if accepted_output and accepted_output[0]:
+                accepted_json = (accepted_output[0][0] or {}).get("json", {})
+                accepted_report = accepted_json.get("report") or {}
+                accepted_summary = {
+                    "title": accepted_report.get("title"),
+                    "theme": accepted_report.get("theme"),
+                    "openingStart": str(accepted_report.get("opening", ""))[:450],
+                    "lifePathApplication": accepted_report.get("lifePathApplication"),
+                    "personalCardHeading": accepted_report.get("personalCardHeading"),
+                    "personalCardReadingStart": str(accepted_report.get("personalCardReading", ""))[:600],
+                    "sections": [
+                        {
+                            "position": section.get("positionNumber"),
+                            "card": section.get("cardName"),
+                            "heading": section.get("heading"),
+                            "bodyStart": str(section.get("body", ""))[:450],
+                            "practicalMeaning": section.get("practicalMeaning"),
+                        }
+                        for section in accepted_report.get("sections", [])
+                    ],
+                    "synthesisStart": str(accepted_report.get("synthesis", ""))[:600],
+                    "conclusion": accepted_report.get("conclusion"),
+                }
+        final_json = final_item.get("json") or {}
+        if "--brief" in sys.argv:
+            print({
+                "id": execution.get("id"),
+                "status": execution.get("status"),
+                "finished": execution.get("finished"),
+                "durationSeconds": (
+                    round((
+                        datetime.datetime.fromisoformat(execution["stoppedAt"].replace("Z", "+00:00"))
+                        - datetime.datetime.fromisoformat(execution["startedAt"].replace("Z", "+00:00"))
+                    ).total_seconds(), 3)
+                    if execution.get("startedAt") and execution.get("stoppedAt") else None
+                ),
+                "lastNodeExecuted": run_data.get("lastNodeExecuted"),
+                "error": error.get("message"),
+                "canonVersion": final_json.get("canonVersion"),
+                "canonKeys": final_json.get("canonKeys"),
+                "lifePathProfile": final_json.get("lifePathProfile"),
+                "lifePathApplication": accepted_summary.get("lifePathApplication"),
+                "personalCardHeading": accepted_summary.get("personalCardHeading"),
+                "personalCardReadingStart": accepted_summary.get("personalCardReadingStart"),
+                "synthesisGrade": final_json.get("synthesisGrade"),
+                "privateScores": (final_json.get("privateGrade") or {}).get("scores"),
+                "customerScores": (final_json.get("customerGrade") or {}).get("scores"),
+                "customerCounts": (final_json.get("customerGrade") or {}).get("counts"),
+                "unsupportedClaims": (final_json.get("customerGrade") or {}).get("unsupportedClaims"),
+                "gradeAttempt": final_json.get("gradeAttempt"),
+                "cards": [
+                    (item.get("number"), item.get("cardName"), item.get("visibility"))
+                    for item in final_json.get("positions", [])
+                ],
+                "fileName": final_json.get("fileName"),
+                "resultStatus": final_json.get("status"),
+                "qaHoldReason": final_json.get("reason"),
+                "pdfCreated": final_json.get("pdfCreated", bool((final_item.get("binary") or {}).get("data"))),
+                "binaryMetadata": {
+                    key: value
+                    for key, value in ((final_item.get("binary") or {}).get("data") or {}).items()
+                    if key != "data"
+                },
+            })
+            return
         print({
             "id": execution.get("id"),
             "status": execution.get("status"),
@@ -125,8 +246,17 @@ def main():
             "lastNodeExecuted": run_data.get("lastNodeExecuted"),
             "error": error.get("message"),
             "writer": writer_summary,
-            "finalJson": final_item.get("json"),
+            "finalGrade": final_grade_summary,
+            "customerGrade": customer_grade_summary,
+            "rewrittenReport": rewritten_summary,
+            "acceptedReport": accepted_summary,
+            "finalJson": final_json,
             "binaryProperties": sorted((final_item.get("binary") or {}).keys()),
+            "binaryMetadata": {
+                key: value
+                for key, value in ((final_item.get("binary") or {}).get("data") or {}).items()
+                if key != "data"
+            },
         })
         return
 

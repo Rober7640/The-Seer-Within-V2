@@ -229,6 +229,19 @@ TOPICS["what-part-of-me-needs-healing"] = ("What part of myself needs the most h
     "the red lion's jaws, infinity symbol above her head, VIII above, STRENGTH below.",
 ], "The TOP-RIGHT and all THREE BOTTOM ROW cards lie FACE DOWN.")
 
+TOPICS["what-are-my-blind-spots"] = ("What are my blind spots?", "tree-of-life", 3, [
+    "THE MOON lies FACE UP as the SINGLE CARD AT THE TOP of the tree: a full moon above two "
+    "stone towers, a dog and a wolf facing upward, a winding path between them, and a small "
+    "crayfish emerging from a pool at the bottom, numbered XVIII with THE MOON printed below.",
+    "The TWO OF SWORDS lies FACE UP as the LEFT card of the FIRST PAIR below the top: a "
+    "blindfolded woman seated before the sea, holding two long swords crossed over her chest, "
+    "a crescent moon above and rocks rising from the water behind, TWO OF SWORDS printed below.",
+    "The THREE OF PENTACLES lies FACE UP as the RIGHT card of the FIRST PAIR below the top: a "
+    "craftsman standing on a bench inside a stone building while two other people face him, one "
+    "of those two holding the building plan, with three pentacles in the arch above, THREE OF "
+    "PENTACLES printed below.",
+], "The remaining SEVEN cards of the tree all lie FACE DOWN.")
+
 ORDER = list(TOPICS)
 
 

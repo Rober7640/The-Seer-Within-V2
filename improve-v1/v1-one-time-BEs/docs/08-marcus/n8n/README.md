@@ -1,6 +1,6 @@
 # 08 Marcus — staged n8n fulfillment workflow
 
-**Dedicated inactive workflow:** [08 Marcus — Stage 1 Manual PDF Test / Stage 2 Parked](https://ezyabsorb.app.n8n.cloud/workflow/Lksy14rvjB5Z7aYg).
+**Dedicated inactive workflow:** [08 Marcus — Numerology-Anchored Stage 1 / Stage 2 Parked](https://ezyabsorb.app.n8n.cloud/workflow/Lksy14rvjB5Z7aYg).
 
 No other workflow is updated, activated, deactivated or executed. The scoped update script can replace only this exact inactive Marcus workflow and has no create/delete/activate operation.
 
@@ -9,14 +9,25 @@ No other workflow is updated, activated, deactivated or executed. The scoped upd
 The first lane is deliberately small enough to test from the n8n editor:
 
 1. Open `2 · TEST INPUTS — EDIT ME`.
-2. Enter `question`, `spreadType`, `firstName`, and `lastName`.
+2. Enter `question`, `spreadType`, `displayFirstName`, `fullBirthName`, and `dateOfBirth`.
 3. Click **Execute workflow**.
-4. Open `9 · REPORT READY — DOWNLOAD PDF`, select **Binary**, and download `data`.
+4. Open `26 · REPORT READY — DOWNLOAD PDF`, select **Binary**, and download `data`.
 
 Supported test spread types are `three`, `six_questions`, `adaptive_eight`, `tree_of_life`, and
 `twelve_houses`. The question and spread fix the face-up cards. Each execution draws the face-down
-cards separately for the entered buyer. The same first and last name always identifies the same
-personal card through the existing Expression-number method.
+cards separately for the entered buyer. The shared calculation method derives the private profile;
+the Expression Number identifies the personal tarot card.
+
+The tested generation core retrieves exactly three entries from the
+[reusable numerology canon](numerology-canon/README.md), produces a question-specific synthesis with
+passage-ID citations, grades that evidence, and only then maps the approved synthesis to the cards.
+The customer writer receives the resulting plan without raw birth data, canon text, evidence IDs,
+or the private Expression and Personality labels. Life Path is deliberately customer-visible and
+appears before the personal-card section. It is the primary recognition anchor; the personal card
+only explains how that Life Path may approach choice and commitment. A private-support grader and the exact customer-view comparison rubric independently
+check the finished report. A failed first grade may receive one bounded rewrite using the same facts,
+plan, and cards. The final customer gate rejects any report for which its grader still lists an
+unsupported personal claim. Saved structure in n8n controls the card names, position labels, and count.
 
 Stage 1 uses n8n's stored OpenAI and PDFShift credentials. It does not access Supabase, accept a
 payment, store a customer record, send an email, or activate a webhook. A successful execution ends
@@ -25,7 +36,7 @@ with a downloadable PDF in the final node's binary output.
 Regenerate the staged source with:
 
 ```sh
-python3 improve-v1/v1-one-time-BEs/docs/08-marcus/n8n/build-staged-workflow.py
+python3 improve-v1/v1-one-time-BEs/docs/08-marcus/n8n/build-numerology-workflow.py
 ```
 
 Review the exact cloud update without sending it:
@@ -44,20 +55,24 @@ draw atomically per paid order, persist the personal card, generate and store th
 ## What exists
 
 - [Main flow plan](MAIN-FLOW.md)
+- [Numerology-anchored report design](NUMEROLOGY-ANCHORED-READING.md)
+- [Reusable numerology canon](numerology-canon/README.md)
 - [Audio branch plan](AUDIO-BRANCH.md)
 - [Confirmed 24h / 12h delivery policy](DELIVERY-POLICY.md)
 - [Replicate Chatterbox setup](CHATTERBOX.md)
-- [Stage 1 source builder](build-staged-workflow.py)
+- [Current numerology Stage 1 source builder](build-numerology-workflow.py)
 - [Scoped Stage 1 cloud updater](update-staged-workflow.py)
 - [Original production scaffold builder](build-workflow.py)
-- [Runnable staged workflow JSON](08-marcus-staged.n8n.json)
+- [Current runnable workflow JSON](08-marcus-numerology-stage1.n8n.json)
+- [Previous simple Stage 1 builder](build-staged-workflow.py)
+- [Previous simple Stage 1 JSON](08-marcus-staged.n8n.json)
 - [Passing Stage 1 cloud execution evidence](STAGE-1-TEST-EVIDENCE.md)
 - [47-node local inactive workflow JSON](08-marcus-fulfillment.n8n.json)
 - [Create-only API script](create-new-workflow.py)
 - [Creation receipt](created-workflow.json)
 - [Adaptive local n8n execution evidence](LOCAL-EXECUTION-EVIDENCE.md)
 
-The live cloud canvas now contains the runnable nine-node Stage 1 lane and a parked Stage 2 note. The
+The cloud canvas now contains the inactive 37-node canon-backed Stage 1 lane and a parked Stage 2 note. The
 original 47-node production scaffold remains in the repository as an architecture reference; it is
 not the live canvas and is not runnable until the Stage 2 backend exists.
 
@@ -67,7 +82,7 @@ Stage 1 is working for manual PDF tests. It is not a customer fulfillment system
 must remain inactive until these Stage 2 dependencies are built and tested:
 
 - [ ] Authenticated backend operations below, durable job storage, idempotency and lease handling.
-- [x] Stage 1 report writer, structural gate, and PDF renderer are credentialed and passed one cloud execution.
+- [x] Stage 1 numerology planner, report writer, independent grader, structural gate, and PDF renderer are credentialed and passed a cloud execution.
 - [ ] Production report grading, private storage, durable retry state, and customer delivery.
 - [ ] Dedicated backend header-auth credential on service nodes.
 - [ ] Replicate header-auth credential on the two Chatterbox HTTP nodes.
@@ -77,6 +92,11 @@ must remain inactive until these Stage 2 dependencies are built and tested:
 - [ ] Service authentication on the new webhook; backend verification of event, product, paid order and entitlements.
 - [x] One isolated local n8n main-reading run completed with an eight-card 4-up/4-down fixture and produced a PDF. Production integration checks and the audio branch remain pending.
 - [x] One cloud Stage 1 manual run completed with a six-card 2-up/4-down test and returned a downloadable 135 kB PDF.
+- [x] Post-repair execution `30691` selected `LP4`, `EX6`, and `PE1`, passed citation/synthesis QA and both report graders on its first candidate, and returned a 1.18 MB PDF with zero unsupported customer claims. Failed final QA now ends at `QA HOLD · NO PDF` instead of appearing stuck at node 22.
+- [x] Builder-first execution `30694` visibly identified Life Path 4 as **The Builder**, preserved its plain strengths and growth edges, kept The Lovers subordinate as a choice-and-commitment lens, passed both graders on its first candidate, and returned a 1.21 MB PDF with zero unsupported claims.
+- [x] Second-profile execution `30695` calculated `LP7`/`EX6`/`PE1` for Hng Ye Ying, visibly identified **The Seeker**, passed both graders on its first candidate with zero unsupported claims, and returned a 1.19 MB PDF.
+- [x] Ten-card continuity execution `30700` preserved the daily email's Moon, Two of Swords, and Three of Pentacles; drew seven buyer cards; passed both graders on its first candidate; and returned a 1.92 MB Tree of Life PDF. Writer and rewrite output budgets now scale with spread size after execution `30699` exposed truncation at ten cards.
+- [x] The compiled 33-entry canon is embedded as a versioned runtime artifact and the workflow retrieves exactly three entries with passage-ID evidence. Editorial approval of the prose library remains a separate review item.
 
 ## Backend stage envelope
 
@@ -109,10 +129,10 @@ A stopped execution may leave an active lease. Recovery must detect its expiry. 
 
 ## Maintaining this new workflow
 
-Run `python3 improve-v1/v1-one-time-BEs/docs/08-marcus/n8n/build-staged-workflow.py` from the repo
+Run `python3 improve-v1/v1-one-time-BEs/docs/08-marcus/n8n/build-numerology-workflow.py` from the repo
 root to regenerate the current cloud source. This does not push changes. Use
 `update-staged-workflow.py --dry-run` to review an update; the updater refuses any workflow other
 than `Lksy14rvjB5Z7aYg`, refuses an active workflow, and never activates it.
 
-The Stage 1 cloud execution used fictional buyer data. No audio generation, payment, Supabase write,
-email, or customer delivery was executed.
+The Stage 1 cloud execution used the manually supplied test profile. No audio generation, payment,
+Supabase write, email, or customer delivery was executed.

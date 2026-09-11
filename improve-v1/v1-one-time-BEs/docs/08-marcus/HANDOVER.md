@@ -1,6 +1,6 @@
 # 08 Marcus funnel — project handover
 
-Last updated: 2026-09-10
+Last updated: 2026-09-11
 
 This document records the work completed during the current Marcus build, the decisions Joel made,
 the local proof that exists, and the work still required before the funnel can take real orders.
@@ -277,15 +277,15 @@ Existing n8n workflows were not changed or activated.
 
 | Item | Value |
 | --- | --- |
-| Name | `08 Marcus — Stage 1 Manual PDF Test / Stage 2 Parked` |
+| Name | `08 Marcus — Numerology-Anchored Stage 1 / Stage 2 Parked` |
 | Workflow ID | `Lksy14rvjB5Z7aYg` |
 | URL | <https://ezyabsorb.app.n8n.cloud/workflow/Lksy14rvjB5Z7aYg> |
 | State | Inactive |
-| Stage 1 | Manual trigger; working OpenAI report writer; structural gate; PDFShift output |
+| Stage 1 | Birth-profile calculation; exact three-entry canon lookup; cited synthesis and evidence grade; private tarot planner; report writer; two report graders; structural gate; PDFShift output |
 | Stage 2 | Parked; Supabase/payment/storage/delivery/audio are not wired |
 
-The current cloud source is [n8n/08-marcus-staged.n8n.json](n8n/08-marcus-staged.n8n.json), built by
-[n8n/build-staged-workflow.py](n8n/build-staged-workflow.py). The scoped updater refuses to touch
+The current cloud source is [n8n/08-marcus-numerology-stage1.n8n.json](n8n/08-marcus-numerology-stage1.n8n.json), built by
+[n8n/build-numerology-workflow.py](n8n/build-numerology-workflow.py). The scoped updater refuses to touch
 any other workflow and never activates this one. The original production scaffold and its builder
 remain as Stage 2 architecture references.
 
@@ -309,10 +309,39 @@ Two problems found after creation were fixed in the **local source**:
 The remote workflow was updated only at `Lksy14rvjB5Z7aYg`. Do not modify an existing 07, 02, 03,
 or other production workflow.
 
-The cloud workflow remains inactive, but its Manual Trigger was executed. Execution `30661` passed
-all nine Stage 1 nodes and returned a downloadable 135 kB PDF for a fictional six-card test. The
-structural gate binds writer prose to n8n's saved cards and positions. See
+The cloud workflow remains inactive, but its Manual Trigger was executed after the canon integration.
+The current 37-node canvas calculates Life Path 4, Expression 6, Personality 1, selects exactly
+`LP4`, `EX6`, and `PE1`, and gives those entries to a dedicated question-synthesis step. Its claims
+must cite approved passage IDs and pass a separate evidence grader before tarot planning.
+
+Joel's execution `30688` stopped at node 22 because the final customer grader found unsupported
+biographical claims and internal wording such as “saved message.” The flow was functioning as a
+fail-closed gate, but the red error made it look stuck. The writer handoff now renames the prior
+email interpretation, forbids process labels and unsupported time spans, and leads hypotheses with
+the supporting card. Citation confidence is derived deterministically from citation count and role,
+so a harmless model label cannot stop the flow. A failed second customer grade now terminates at
+`QA HOLD · NO PDF` with its reason and rewrite instructions.
+
+Post-repair execution `30691` passed the cited synthesis and both report graders on its first report,
+with zero unsupported claims. It preserved The Star and Seven of Pentacles, drew The Emperor, Four
+of Swords, Eight of Wands, and Nine of Cups, used The Lovers as the separate personal-card lens, and
+returned a 1.18 MB PDF containing all six positions and images. Raw birth name and date stayed out
+of every OpenAI request. See
 [n8n/STAGE-1-TEST-EVIDENCE.md](n8n/STAGE-1-TEST-EVIDENCE.md).
+
+The later Builder-first repair adds a fixed customer-visible Life Path section before the personal
+card. Life Path is now the identity anchor; Expression and Personality remain private inputs, while
+the personal card only qualifies how the Life Path approaches choices and commitments. For the
+4/6/1 test profile, the copy must plainly recognize **The Builder** and may use The Lovers for choice,
+alignment, and shared responsibility without replacing the Builder with a romance or caregiving
+theme. Execution `30694` passed both graders on its first candidate, with Life Path recognition at
+10/10, every applicable customer score at 5/5, zero unsupported claims, and a 1.21 MB PDF.
+
+Base Life Path, Expression, and Personality meanings now come from the versioned, reusable 33-entry
+canon instead of being recreated per order. The source readings, compiler, runtime JSON, evidence
+rules, worked 4/6/1 example, and workflow contract tests are in
+[n8n/numerology-canon/README.md](n8n/numerology-canon/README.md). Editorial approval of the prose
+library remains open even though its compilation, retrieval, and workflow wiring are complete.
 
 Separately, an ephemeral local n8n container passed an eight-card 4-up/4-down fixture through the
 local backend and PDF renderer. See [n8n/LOCAL-EXECUTION-EVIDENCE.md](n8n/LOCAL-EXECUTION-EVIDENCE.md).
@@ -351,6 +380,8 @@ The completed local checks are:
 | Ephemeral local n8n | Main route passed with eight cards, 4-up/4-down, edition theme, personal card, PDF render, delivery queue, and clean no-audio exit |
 | Executable browser journey | Passed at 1100, 390, and 320px across all five editions |
 | Standalone booking mockup | Passed at desktop/mobile widths with bump on booking and no separate review/bump page |
+| Canon workflow contract | 4 tests passed: exact 4/6/1 lookup, birth-data exclusion, unsupported 33 rejection, foreign-citation rejection, and scrubbed writer handoff |
+| Canon-backed cloud n8n | Builder-first execution `30694` passed cited-synthesis QA and both report graders on its first report; visible Life Path 4 Builder foundation; zero unsupported customer claims; 1.21 MB PDF |
 
 The browser journey tested:
 
@@ -453,7 +484,7 @@ Nothing in the current build can safely take or fulfill a real customer order ye
 - Build the private audio player/access link.
 - Configure the written and audio delivery provider/templates.
 - Implement recovery scheduling, alerts, support resend, bounce/failure handling, and monitoring.
-- Update only the new Marcus workflow with the locally fixed JSON, then execute it in an isolated test environment.
+- Keep production Stage 2 isolated from the tested manual lane; add and test its backend/payment/storage/delivery nodes only against the new Marcus workflow.
 - Run the full staging purchase and replay matrix before requesting launch approval.
 
 ## 14. Recommended next sequence

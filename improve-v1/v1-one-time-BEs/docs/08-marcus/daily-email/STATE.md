@@ -16,6 +16,7 @@ writes to it only **after** the operator says go at the review gate.
 | 3 | 2026-09-09 | the risk I won't regret | The Cross · 5 · traditional, Wirth 1927 | 5 | 2 of 5 · pos 1,2 | The Fool · The Hermit | `the-risk-i-wont-regret` | `08-hero-the-risk-i-wont-regret.jpg` | no |
 | 4 | 2026-09-09 | what that relationship taught me about myself | The Cross and Triangle · 7 · traditional, Papus 1889 | 7 | 2 of 7 · pos 1,2 | Ace of Cups · Two of Cups | `what-it-taught-me` | `08-hero-what-it-taught-me.jpg` | no |
 | 5 | 2026-09-09 | what's blocking love | The Tree of Life · 10 · traditional, Zain 1936 | 10 | 3 of 10 · pos 1,2,3 | Five of Pentacles · Seven of Swords · Eight of Pentacles | `whats-blocking-love` | `08-hero-whats-blocking-love.jpg` | no |
+| 6 | 2026-09-11 | what are my blind spots | The Tree of Life · traditional, Zain 1936 | 10 | 3 of 10 · pos 1,2,3 | The Moon · Two of Swords · Three of Pentacles | `what-are-my-blind-spots` | `08-hero-what-are-my-blind-spots.jpg` | no |
 
 **Close variants**, same cards and same hero as their parent — these test the close, not the reading:
 
@@ -46,6 +47,9 @@ One per turned card. ⛔ Never reuse one — it is the whole letter and the P.S.
 | her feet aren't tied | Eight of Swords | 1 |
 | one foot in the water, one knee on the land | The Star | 2 |
 | he's stopped working to look at them | Seven of Pentacles | 2 |
+| the small creature nearest the viewer is at the bottom while the dog and wolf look upward | The Moon | 6 |
+| keeping both swords balanced requires her arms to stay crossed | Two of Swords | 6 |
+| the person doing the work is not the person holding the architectural drawing | Three of Pentacles | 6 |
 
 ## Assets live on S3 · `marcus/08/`
 

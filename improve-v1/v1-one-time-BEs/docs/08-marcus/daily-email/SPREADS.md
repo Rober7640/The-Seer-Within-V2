@@ -387,7 +387,7 @@ but Zain uses none at all and is the cleaner source.
 | 2 | Chokmah — Wisdom is the cause | what you already know |
 | 3 | Binah — Intelligence is behind it | what you've worked out |
 | 4 | Chesed — Mercy has an influence | what you keep excusing |
-| 5 | Geburah — a desire for Justice | what you want owed back |
+| 5 | Geburah — a desire for Justice | what you feel you are owed |
 | 6 | Tiphareth — love of Beauty; life and love | what's left of the love |
 | 7 | Netzach — desire for Victory | what you want to win |
 | 8 | Hod — Splendour and show | what you show people |
