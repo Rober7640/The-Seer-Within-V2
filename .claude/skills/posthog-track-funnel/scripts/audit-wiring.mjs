@@ -35,6 +35,7 @@ const FILES = {
   webhooks: 'server/routes/webhooks.ts',
   app: 'client/src/App.tsx',
   funnelConfig: 'shared/funnelConfig.ts',
+  backendOffers: 'shared/backendOffers.ts',
 };
 
 // Per-funnel EVENT CONTRACT. The rest of this audit proves the funnel NAME is wired; it does
@@ -43,12 +44,21 @@ const FILES = {
 //   V1 + ad funnels: the LEAD is the email capture (lead_captured), then checkout, then the
 //     server-side purchase. BE booking offers: a lander_view from the emailed link, then
 //     checkout, then the server purchase (upsell views/purchases reuse the same event NAMES).
-const V1_EVENTS = ['lead_captured', 'checkout_initiated', 'purchase_completed'];
-const BE_EVENTS = ['lander_view', 'checkout_initiated', 'purchase_completed'];
+// These lists must cover EVERY event the Stage-5 insight recipes ask for. They did not:
+// `upsell_accepted` was in both recipes and audited for neither, and `lander_view` was in the
+// FE recipe only. A funnel whose upsells never fire would pass clean while insight steps 4-7
+// read zero forever — the same silent hole the contract exists to close.
+const V1_EVENTS = ['lander_view', 'lead_captured', 'checkout_initiated', 'purchase_completed', 'upsell_accepted'];
+const BE_EVENTS = ['lander_view', 'checkout_initiated', 'purchase_completed', 'upsell_accepted'];
 const EXPECTED_EVENTS = {
   v1: V1_EVENTS, fb: V1_EVENTS, fb2: V1_EVENTS, gdn: V1_EVENTS,
   palm: V1_EVENTS, tarot: V1_EVENTS, read: V1_EVENTS,
-  evelyn: V1_EVENTS, aiden: V1_EVENTS, soulmate: V1_EVENTS,
+  soulmate: V1_EVENTS,
+  // Lead-gen funnels into the V2 chat service, NOT purchase funnels. evelyn fires no
+  // checkout_initiated at all; aiden's is step:'rescue'. Neither emits purchase_completed
+  // with a funnel — their money runs through credits (credit_purchase_completed).
+  evelyn: ['lander_view', 'lead_captured'],
+  aiden:  ['lander_view', 'lead_captured', 'checkout_initiated'],
   twinflame: BE_EVENTS, judgement: BE_EVENTS, pixiu: BE_EVENTS,
 };
 // Where each event is fired, so a missing one points at the right file. purchase_completed is
@@ -305,14 +315,36 @@ function grepFiles(pattern, pathspecs) {
 //     is the correct signal (the literal "v1" never appears in a track call).
 //   · a BE offer fires page-level events with a LITERAL funnel: '<name>', so the event must be
 //     co-located with that literal — this is what catches Pixiu's missing checkout_initiated.
-const CENTRAL = new Set(['lander_view', '$pageview', 'purchase_completed']);
-// DERIVED from EXPECTED_EVENTS above, so adding a BE offer is ONE edit, not two. This was
-// hardcoded as ['twinflame','judgement','pixiu'], which made a second roster to keep in sync:
-// a funnel added to EXPECTED_EVENTS but missed here fell through to the tree-wide check and
-// PASSED an event it never fires — the exact false pass the event contract exists to catch.
-const BE_FUNNELS = new Set(
-  Object.keys(EXPECTED_EVENTS).filter((f) => EXPECTED_EVENTS[f] === BE_EVENTS),
-);
+// Fired by SHARED code that derives the funnel from a roster already checked above, so
+// presence is the right test and the BE co-location test would false-fail them:
+// lander_view from App.tsx, purchase_completed server-side, upsell_accepted from
+// useUpsellChat/useUpsell2Chat via backendOfferFunnel(offer) / getPostHogFunnel().
+const CENTRAL = new Set(['lander_view', '$pageview', 'purchase_completed', 'upsell_accepted']);
+
+// Which funnels are BE booking offers? Read it from the SERVER map that already decides exactly
+// this for revenue — BACKEND_FUNNEL in backendPurchaseAnalytics.ts — rather than keeping a list
+// here. A BE offer MUST appear in that map to record revenue at all, so a new offer classifies
+// itself and there is no second roster to forget. Falls back to the registry if it cannot be read.
+function backendFunnelsFromServer() {
+  const src = read('beAnalytics') ?? '';
+  const at = src.indexOf('const BACKEND_FUNNEL');
+  if (at === -1) return new Set();
+  const end = src.indexOf('};', at);
+  const body = src.slice(at, end === -1 ? undefined : end);
+  return new Set([...body.matchAll(/:\s*['"]([a-z0-9-]+)['"]/gi)].map((m) => m[1]));
+}
+// UNION, never a replacement. The server map auto-detects a new offer; the registry rows keep
+// a known BE funnel scoped even at a ref where the server side had not landed yet. Using the
+// map ALONE let the two disagree: pixiu at c54dcf7 drew its BE contract from the registry but
+// FE scoping from the absent map, so checkout_initiated passed TREE-WIDE — a false pass on the
+// exact event that was missing.
+const BE_FUNNELS = (() => {
+  const set = backendFunnelsFromServer();
+  for (const f of Object.keys(EXPECTED_EVENTS)) {
+    if (EXPECTED_EVENTS[f] === BE_EVENTS) set.add(f);
+  }
+  return set;
+})();
 const isBE = BE_FUNNELS.has(funnel) || Boolean(offer);
 
 function checkEvent(ev) {
@@ -320,49 +352,109 @@ function checkEvent(ev) {
   const eventFiles = grepFiles(`["']${ev}["']`, pathspecs);
   if (!eventFiles.length) return { verdict: 'missing' };
   if (CENTRAL.has(ev)) return { verdict: 'central', file: eventFiles[0] };
-  if (!isBE) return { verdict: 'present', file: eventFiles[0] };
+  // Non-BE: V1 + ad funnels fire from ONE shared hook with a COMPUTED funnel, so the literal
+  // name never appears and a tree-wide hit is the only signal available. Say so rather than
+  // claim proof — for a funnel NOT wired to that hook this is exactly where a false pass hides.
+  if (!isBE) return { verdict: 'treewide', file: eventFiles[0] };
   const funnelFiles = grepFiles(`funnel:[[:space:]]*["']${funnel}["']`, ['client/src']);
   const both = eventFiles.filter((f) => funnelFiles.includes(f));
   return both.length ? { verdict: 'present', file: both[0] } : { verdict: 'wrongfunnel', file: eventFiles[0] };
 }
 
-const expectedEvents = args.events
-  ? String(args.events).split(',').map((s) => s.trim()).filter(Boolean)
-  : EXPECTED_EVENTS[funnel] ?? null;
-
-if (expectedEvents) {
-  for (const ev of expectedEvents) {
-    const r = checkEvent(ev);
-    if (r.verdict === 'present') {
-      pass(`event: "${ev}" fires for "${funnel}"`, r.file);
-    } else if (r.verdict === 'central') {
-      pass(`event: "${ev}" present (funnel binding checked above)`, r.file);
-    } else if (r.verdict === 'wrongfunnel') {
-      fail(
-        'warn',
-        `event: "${ev}" fires in the app but NOT for "${funnel}"`,
-        FILES.app,
-        `No track("${ev}", { funnel: "${funnel}" }) exists — it fires for other funnels only. ` +
-          (EVENT_HINTS[ev] ?? ''),
-      );
-    } else {
-      fail(
-        'warn',
-        `event: "${ev}" is never fired anywhere`,
-        ev === 'purchase_completed' ? FILES.webhooks : FILES.app,
-        (EVENT_HINTS[ev] ?? `Add a track("${ev}", …) call.`) +
-          ' Without it the funnel/insight step for this event stays empty.',
-      );
-    }
+// Does this offer carry an order BUMP? Read from the catalog, so a new offer needs no edit here.
+// A bump that never announces itself leaves the take-rate without a denominator: you can count
+// who TOOK it, never who SAW it.
+function offerHasBump() {
+  if (!offer) return false;
+  const src = read('backendOffers') ?? '';
+  const at = src.indexOf("'" + offer + "':");
+  if (at === -1) return false;
+  const open = src.indexOf('{', at);
+  if (open === -1) return false;
+  let i = open + 1, depth = 1;
+  while (i < src.length && depth > 0) {
+    if (src[i] === '{') depth++;
+    else if (src[i] === '}') depth--;
+    i++;
   }
-} else {
-  fail(
-    'info',
-    `no expected-events profile for funnel "${funnel}"`,
-    FILES.clientFunnel,
-    'Pass --events=a,b,c to audit specific events. Profiles exist for: ' +
-      Object.keys(EXPECTED_EVENTS).join(', ') + '.',
+  return /\bbump\s*:\s*\{/.test(src.slice(open, i));
+}
+
+// THE CONTRACT. EXPECTED_EVENTS is an OVERRIDE list, not the whole world: any funnel not named
+// there falls back to its FAMILY's events, so a brand-new funnel is audited from its very first
+// run. Before this, an unknown funnel checked ZERO events and still printed "0 critical" — a
+// clean-looking pass that proves nothing, which is the exact failure this section exists to stop.
+const CORE_EVENTS = args.events
+  ? String(args.events).split(',').map((s) => s.trim()).filter(Boolean)
+  : (EXPECTED_EVENTS[funnel] ?? (isBE ? BE_EVENTS : V1_EVENTS));
+
+// Advisory events are worth having but never blocking — a missing one costs a denominator,
+// not revenue. Skipped entirely when the caller names the events explicitly.
+const ADVISORY_EVENTS = args.events ? [] : offerHasBump() ? ['bump_offered'] : [];
+
+const ADVICE = {
+  bump_offered:
+    'fire trackPH("bump_offered", { funnel, step }) where the bump renders — see ' +
+    'TwinFlameBookingPage.tsx. Without it you can measure bump TAKE but not bump EXPOSURE.',
+};
+
+function reportEvent(ev, severity) {
+  const r = checkEvent(ev);
+  if (r.verdict === 'present') return pass(`event: "${ev}" fires for "${funnel}"`, r.file);
+  if (r.verdict === 'central') return pass(`event: "${ev}" present (funnel binding checked above)`, r.file);
+  if (r.verdict === 'treewide')
+    return pass(`event: "${ev}" present tree-wide, not proven for "${funnel}"`, r.file);
+  const hint = EVENT_HINTS[ev] ?? ADVICE[ev] ?? `Add a track("${ev}", …) call.`;
+  if (r.verdict === 'wrongfunnel') {
+    return fail(
+      severity,
+      `event: "${ev}" fires in the app but NOT for "${funnel}"`,
+      FILES.app,
+      `No track("${ev}", { funnel: "${funnel}" }) exists — it fires for other funnels only. ` + hint,
+    );
+  }
+  return fail(
+    severity,
+    `event: "${ev}" is never fired anywhere`,
+    ev === 'purchase_completed' ? FILES.webhooks : FILES.app,
+    hint + ' Without it the funnel/insight step for this event stays empty.',
   );
+}
+
+// The family decides WHICH contract is applied, so say so when it was a guess rather than a
+// lookup. Certain only when the SERVER map names it, --offer names it, it resolves through the
+// shared ad-funnel table, or it has an explicit registry row. A half-registered funnel — client
+// side done, server side not — is precisely how backend offer 03 shipped, and it would other-
+// wise be audited as a V1 funnel and checked for a lead_captured a BE offer never fires.
+const familyCertain =
+  Boolean(offer) ||
+  BE_FUNNELS.has(funnel) ||
+  viaConfig ||
+  Object.prototype.hasOwnProperty.call(EXPECTED_EVENTS, funnel);
+if (!args.events && !familyCertain) {
+  fail(
+    'warn',
+    `event contract: family ASSUMED for "${funnel}", not looked up`,
+    FILES.clientFunnel,
+    `Audited as ${isBE ? 'a BE booking offer' : 'a V1/ad funnel'} because this funnel is in ` +
+      'neither roster, so the events checked below may be the wrong contract entirely. ' +
+      'If it IS a backend offer, re-run with --offer=<key>; otherwise state the contract ' +
+      'outright with --events=a,b,c. Treat the event findings as provisional until you do.',
+  );
+}
+
+if (!CORE_EVENTS.length) {
+  // Belt and braces: the family could not be worked out. BLOCKING on purpose — a pass with zero
+  // event checks looks identical to a healthy funnel and is worse than no answer at all.
+  fail(
+    'critical',
+    `could not determine the event contract for funnel "${funnel}"`,
+    FILES.clientFunnel,
+    'Pass --events=a,b,c, or add a row to EXPECTED_EVENTS in audit-wiring.mjs.',
+  );
+} else {
+  for (const ev of CORE_EVENTS) reportEvent(ev, 'critical');
+  for (const ev of ADVISORY_EVENTS) reportEvent(ev, 'warn');
 }
 
 // ---------------------------------------------------------------- 3. the silent killers

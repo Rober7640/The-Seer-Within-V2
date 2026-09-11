@@ -43,19 +43,54 @@ looks: the UTM tag is captured on her first pageload, so tagging a mid-funnel li
 nothing.
 
 ⭐⭐ **The event contract — which events a funnel MUST fire.** Wiring the funnel *name* is not
-the same as firing the *events* an insight needs: Pixiu passed "0 critical" while
-`checkout_initiated` was missing entirely. `audit-wiring.mjs` now carries a per-funnel event
-registry and checks the source for each one (override with `--events=a,b`):
+the same as firing the *events* an insight needs: Pixiu once passed "0 critical" while
+`checkout_initiated` was missing entirely. `audit-wiring.mjs` checks the source for each one.
 
 | family | expected events |
 |---|---|
-| **V1 + ad funnels** (`v1`, `fb`, `fb2`, `gdn`, `palm`, `tarot`, `read`, `evelyn`, `aiden`, `soulmate`) | `lead_captured` (the email capture — this is the V1 "lead"), `checkout_initiated`, `purchase_completed` |
-| **BE booking offers** (`twinflame`, `judgement`, `pixiu`) | `lander_view`, `checkout_initiated`, `purchase_completed` (upsell views/purchases reuse the same two event names, keyed by `step`) |
+| **V1 + ad funnels** (`v1`, `fb`, `fb2`, `gdn`, `palm`, `tarot`, `read`, `soulmate`) | `lander_view`, `lead_captured` (the email capture — the V1 "lead", not `lead`), `checkout_initiated`, `purchase_completed`, `upsell_accepted` |
+| **BE booking offers** (`twinflame`, `judgement`, `pixiu`) | `lander_view`, `checkout_initiated`, `purchase_completed`, `upsell_accepted` — **no lead step**: she arrives from a mailed link already identified. Upsell views/purchases reuse the same names, keyed by `step` |
+| **Lead-gen into the V2 chat** (`evelyn`, `aiden`) | `lander_view`, `lead_captured` — plus `checkout_initiated` for aiden only. 🔴 **evelyn fires no `checkout_initiated` at all**, and neither emits `purchase_completed`: their money runs through credits |
+| **anything else** | inherits its family automatically — see below |
 
-The V1 lead is spelled **`lead_captured`**, fired from `useConversation.ts` at email capture —
-not `lead`. If you add a funnel, add its row to `EXPECTED_EVENTS` in `audit-wiring.mjs` —
-that ONE edit is enough: `BE_FUNNELS` is derived from this registry, so a row whose value is
-`BE_EVENTS` is funnel-scoped automatically (§2).
+⭐⭐ **These lists must cover EVERY event the Stage-5 insight recipes ask for — keep the two in
+lockstep.** They once did not: `upsell_accepted` sat in both recipes and was audited for
+neither, and `lander_view` was in the FE recipe only. A funnel whose upsells never fired would
+have passed clean while insight steps 4-7 read zero forever. The difference between the
+families is exactly one event: the FE lead capture.
+
+Four rules make this hold for a funnel the skill has never seen, which is the case that
+matters when someone ships a new one:
+
+1. ⭐⭐ **`EXPECTED_EVENTS` is an OVERRIDE list, not the whole world.** A funnel not named there
+   falls back to its **family's** contract, so a brand-new funnel is audited on its first run.
+   Previously an unknown funnel checked **zero events** and still printed `0 critical` — a
+   clean-looking pass that proved nothing. Family is decided from the SERVER's own
+   `BACKEND_FUNNEL` map, which a BE offer must already be in to record revenue, so there is no
+   roster to forget. Add an explicit row only when a funnel genuinely differs (as evelyn does).
+2. ⭐⭐ **A missing core event is `critical`, so the run exits 1.** It used to be a `warn`, which
+   never changed the exit code and was easy to skim past.
+3. **Advisory events never block.** An offer that declares a `bump` in `shared/backendOffers.ts`
+   is expected to fire `bump_offered`; its absence is a `warn`, because it costs the exposure
+   denominator rather than revenue. 🔴 `judgement` and `pixiu` both have a bump and fire it for
+   neither — only Twin Flame does.
+
+4. ⭐⭐ **When the family was GUESSED, the audit says so.** The family decides which contract
+   is applied, so it is only treated as known when the server's `BACKEND_FUNNEL` names it,
+   `--offer` names it, it resolves through the shared ad-funnel table, or it has an explicit
+   registry row. Otherwise you get `event contract: family ASSUMED for "<funnel>"` as a
+   **warn**, and the event findings are provisional. 🔴 This is aimed squarely at a
+   **half-registered** funnel — client side done, server side not, which is exactly how
+   backend offer 03 shipped. Without it a new BE offer audited without `--offer` is checked
+   as a V1 funnel and quietly passed for a `lead_captured` a BE offer never fires.
+   **Building a backend offer? Always pass `--offer=<key>`.**
+
+🔴 **A pass on a V1/ad funnel reads "present tree-wide, not proven"** and means it. Those
+funnels fire from ONE shared hook with a computed funnel, so the literal name never appears in
+the call and a tree-wide hit is the only available signal. For a funnel that is NOT wired to
+that hook, this is where a false pass can still hide — treat it as "nothing contradicts it",
+not proof, and settle it with stage 4. **BE offers are genuinely funnel-scoped** and carry no
+such caveat.
 
 ### 2 · Audit the wiring
 
@@ -74,7 +109,8 @@ contract (§1). One subtlety in the event check worth knowing: a bare event name
 tree-wide (`checkout_initiated` lives in V1's shared hook and Twin Flame's page), so for a **BE
 offer** it only counts an event that is co-located with a literal `funnel: '<name>'` — that is
 what catches "the page never fires it for THIS offer". **V1** funnels fire from one shared hook
-with a computed funnel, so there a tree-wide presence check is the correct signal.
+with a computed funnel, so there a tree-wide check is the only signal available — which is
+why such a pass prints "not proven for <funnel>". See §1.
 
 🔴 **Two Windows traps, both of which produce a confident wrong answer:**
 
@@ -214,9 +250,8 @@ the URL path. Grepping the page file is a false negative — grep the hook.
 service, not purchase funnels: evelyn fires `lead_captured`, `quiz_*`, `lander_cta_clicked` and
 `lander_link_handoff` and **no `checkout_initiated` at all**; aiden adds `checkout_initiated`
 with `step: 'rescue'`. Build them as a lead funnel (`lander_view` → `quiz_completed` →
-`lead_captured`), never off the purchase chain above. ⚠️ `EXPECTED_EVENTS` still asserts
-`checkout_initiated` for `evelyn`; the audit cannot catch it because a non-BE funnel is checked
-tree-wide and the event exists elsewhere. Raise it before trusting that row.
+`lead_captured`), never off the purchase chain above. ✅ `EXPECTED_EVENTS` now carries their real
+contracts, so the audit no longer asserts a `checkout_initiated` evelyn never fires.
 
 **Trends (revenue per link)** — `purchase_completed`, *Property value sum* of `amount_cents`,
 filtered `funnel = <name>`, broken down by the UTM param the operator used.
@@ -262,10 +297,14 @@ expected exit codes are part of the contract:
 
 | case | expected |
 |---|---|
-| `audit-wiring --ref=origin/Production` twin-flame | 11 wired (incl. the 3 event checks), 0 critical, **exit 0** |
-| `audit-wiring` Pixiu at the commit before `checkout_initiated` shipped | event contract flags `checkout_initiated fires but NOT for "pixiu"` (**warn**), everything else clean |
+| `audit-wiring --ref=origin/Production` twin-flame | 13 wired (4 core events + `bump_offered`), 0 critical, **exit 0** |
+| `audit-wiring` any funnel at a ref BEFORE PostHog was instrumented | all core events **critical**, **exit 1** |
+| `audit-wiring` Pixiu at the commit before `checkout_initiated` shipped | `checkout_initiated fires but NOT for "pixiu"` as **critical**, **exit 1** |
 | `audit-wiring --route=/ --funnel=v1` | event contract confirms `lead_captured` fires for V1, **exit 0** |
-| a BE funnel added to `EXPECTED_EVENTS` only, audited WITHOUT `--offer` | still funnel-scoped, **warns** on the event it does not fire (`BE_FUNNELS` is derived, not a second roster) |
+| a BE funnel added to `EXPECTED_EVENTS` only, audited WITHOUT `--offer` | still funnel-scoped (BE-ness comes from the server's `BACKEND_FUNNEL`, not a second roster) |
+| a funnel with NO registry row at all, e.g. `--route=/7-7 --funnel=seven-seven` | inherits its family and checks 3 events. Before: `no expected-events profile`, **zero events checked, exit 0** |
+| a funnel in NEITHER roster, audited without `--offer` | `family ASSUMED for "<funnel>"` (**warn**) — fires for a new BE offer, marcus and seven-seven; silent for pixiu, v1, tarot, and whenever `--offer` or `--events` is given |
+| `audit-wiring` judgement or pixiu WITH `--offer` | `bump_offered fires but NOT for "<funnel>"` (**warn**, non-blocking), **exit 0** |
 | `audit-wiring` on `/fb-tarot`, `/fb-palm`, `/fb-read`, `/soulmate` | all clean, **exit 0** |
 | `audit-wiring --route=/fb-tarot --funnel=palm` (deliberate mismatch) | catches it, **exit 1** |
 | `audit-wiring --route=/tarot/…` under Git Bash without `MSYS_NO_PATHCONV=1` | refuses, **exit 2** |
