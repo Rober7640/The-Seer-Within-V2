@@ -348,9 +348,12 @@ local backend and PDF renderer. See [n8n/LOCAL-EXECUTION-EVIDENCE.md](n8n/LOCAL-
 
 ## 9. Replicate Chatterbox audio plan
 
-The separate 47-node inactive fulfillment draft is available in n8n at
+The separate 48-node inactive fulfillment draft is available in n8n at
 <https://ezyabsorb.app.n8n.cloud/workflow/UJamB32MGlNKdoEW>. Its guard remains disabled; it is a
-reviewable production scaffold rather than an executable customer flow.
+reviewable production scaffold rather than an executable customer flow. It now contains an explicit
+fail-closed numerology gate: Life Path is required as the visible foundation, Expression and
+Personality are required as pinned private canon evidence, and the personal card must match
+Expression before report writing can begin.
 
 The selected provider is Replicate's maintained `resemble-ai/chatterbox-turbo` model with Marcus
 voice v2. The standard deployment failed with the same hosted CUDA error with and without reference

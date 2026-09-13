@@ -11,7 +11,7 @@ import type {Edition} from './contracts';
 function setup(){
  const store=new LocalStore();let time=Date.parse('2026-09-10T00:00:00Z');
  const artifactRoot=mkdtempSync(join(tmpdir(),'marcus-pdf-'));
- const edition=editions[0];const order={id:'test',paymentReference:'local_paid_test',editionSnapshot:edition,draw:drawForOrder('test',edition,personalLens('Jane','Smith'),deck),deliveryEmail:'fixture@example.test',paidAt:new Date(time).toISOString(),dueAt:new Date(time+12*3600000).toISOString(),deliveryHours:12,bumpCents:1277,writtenStatus:'queued',firstName:'Jane',lastName:'Smith',audio:{purchased:true}};
+ const edition=editions[0];const order={id:'test',paymentReference:'local_paid_test',editionSnapshot:edition,draw:drawForOrder('test',edition,personalLens('Chue Yan','Wei'),deck),deliveryEmail:'fixture@example.test',displayFirstName:'Yan Wei',fullBirthName:'Chue Yan Wei',dateOfBirth:'1985-04-13',paidAt:new Date(time).toISOString(),dueAt:new Date(time+12*3600000).toISOString(),deliveryHours:12,bumpCents:1277,writtenStatus:'queued',firstName:'Chue Yan',lastName:'Wei',audio:{purchased:true}};
  store.put('orders','test',order);return {store,order,f:new LocalFulfillment(store,()=>time,artifactRoot),advance:()=>time+=120001,close:()=>{store.close();rmSync(artifactRoot,{recursive:true,force:true});}};
 }
 function written(f:LocalFulfillment){let e=f.run('reconcile',{id:'main-event',orderId:'test',type:'main.paid'});for(const stage of ['claim-main','build-brief','write-report','grade-report','render-written','queue-written-delivery'])e=f.run(stage,e);return e;}
@@ -20,6 +20,9 @@ test('saved paid cards, independent written delivery, duplicate capture and audi
  let e=f.run('reconcile',{id:'audio-event',orderId:'test',type:'audio.paid'});assert.equal(f.run('claim-audio',e).audioStatus,'waiting-report');
  e=written(f);assert.equal(e.order.writtenStatus,'ready');assert.deepEqual(e.order.draw,order.draw);
  const report=store.get<any>('reports','report:test');assert.equal(report.sections.length,4);assert.equal(report.approvedFor,'local-structure-test-only');
+ assert.equal(report.numerologyFoundation.number,4);assert.equal(report.numerologyFoundation.archetype,'The Builder');
+ assert.deepEqual(report.numerologyFoundation.privateEvidence.keys,['LP4','EX6','PE1']);
+ assert.equal(report.numerologyFoundation.privateEvidence.expressionNumber,6);assert.equal(report.numerologyFoundation.privateEvidence.personalityNumber,1);
  const writtenArtifact=store.get<any>('artifacts','written:test');assert.equal(writtenArtifact.kind,'written-pdf-fixture');assert.ok(existsSync(writtenArtifact.pdf.path));assert.equal(readFileSync(writtenArtifact.pdf.path).subarray(0,4).toString(),'%PDF');
  let d=f.run('claim-delivery',e);d=f.run('deliver',d);d=f.run('record-delivery',d);assert.equal(d.deliveryOutcome,'captured');assert.equal(store.get<any>('outbox','outbox:written:test').sent,false);assert.equal(f.run('claim-delivery',e).deliveryStatus,'already-claimed-or-complete');
  assert.equal(f.run('claim-main',e).jobState,'ready');
@@ -57,7 +60,7 @@ test('eight-card edition adapts its theme, 4/4 split, report sections and PDF wi
    {id:'p8',number:8,label:'The grounded next step',visibility:'paid'},
   ]};
  const lens=personalLens('Jane','Smith');const order:any={id:'eight',paymentReference:'local_paid_eight',editionSnapshot:edition,
-  draw:drawForOrder('eight',edition,lens,deck,()=>0),deliveryEmail:'eight@example.test',paidAt:'2026-09-10T00:00:00Z',
+  draw:drawForOrder('eight',edition,lens,deck,()=>0),deliveryEmail:'eight@example.test',displayFirstName:'Jane',fullBirthName:'Jane Smith',dateOfBirth:'1985-04-13',paidAt:'2026-09-10T00:00:00Z',
   dueAt:'2026-09-11T00:00:00Z',deliveryHours:24,bumpCents:0,writtenStatus:'queued',firstName:'Jane',lastName:'Smith'};
  store.put('orders','eight',order);
  const fulfillment=new LocalFulfillment(store,()=>Date.parse('2026-09-10T00:00:00Z'),artifactRoot);

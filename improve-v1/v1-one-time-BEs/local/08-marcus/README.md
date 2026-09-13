@@ -83,7 +83,8 @@ Orders expose the `PaidOrder` contract plus `displayFirstName`, `fullBirthName`,
 - An intake has one simulated paid order. Payment replays return the original order, draw and job.
 - Each paid order gets its own saved hidden draw. Face-up cards stay fixed. Retry uses that draw.
 - Edition records carry an explicit theme and any ordered free/paid position split. The same brief, grade and PDF stages handle the existing six-card editions and a tested eight-card 4-up/4-down edition without hardcoded counts.
-- Personal-card lens is saved separately and included in the fixture report brief. The current engine accepts ASCII names with spaces/apostrophes/hyphens; other names return an explicit error until normalization is agreed.
+- Each fulfillment brief calculates Life Path, Expression, and Personality from the saved birth inputs and pins exactly three versioned canon entries. The PDF states Life Path and archetype plainly before the personal card; Expression and Personality remain private evidence.
+- The personal-card lens is saved separately, must match the calculated Expression number, and remains secondary to the Life Path foundation. The current engine accepts ASCII names with spaces/apostrophes/hyphens; other names return an explicit error until normalization is agreed.
 - Audio is **$17 (1700 cents), approved by Joel on 2026-09-13**. Duplicate acceptance does not charge again. Declining after accepted purchase does not undo it or imply a refund.
 - Main fulfillment can run before the audio decision. A late audio acceptance preserves the written report and PDF; the audio branch can resume independently from that approved report.
 - A written "ready" status means the local PDF fixture is available. The PDF and artifact metadata explicitly say it is not a customer reading. Captured outbox records say `sent: false`.
@@ -91,7 +92,7 @@ Orders expose the `PaidOrder` contract plus `displayFirstName`, `fullBirthName`,
 
 ## Proof still needed
 
-The passing tests prove local API behavior, saved-draw continuity and adaptive PDF generation. A separate ephemeral n8n run also proved the main workflow route with an eight-card fixture; see [execution evidence](../../docs/08-marcus/n8n/LOCAL-EXECUTION-EVIDENCE.md). Neither proves Supabase transactions/RLS, real Stripe payments/webhooks (including the custom fields), AI writing quality, audio creation, provider delivery, production authentication or durable recovery. Those need separate integration checks. Production activation remains outside this harness.
+The passing tests prove local API behavior, saved-draw continuity, exact 4/6/1 canon selection, fail-closed anchor checks, and adaptive PDF generation. A separate ephemeral n8n run also proved the earlier main workflow route with an eight-card fixture; see [execution evidence](../../docs/08-marcus/n8n/LOCAL-EXECUTION-EVIDENCE.md). Neither proves Supabase transactions/RLS, real Stripe payments/webhooks (including the custom fields), AI writing quality, full audio creation, provider delivery, production authentication or durable recovery. Those need separate integration checks. Production activation remains outside this harness.
 
 ## Tests
 

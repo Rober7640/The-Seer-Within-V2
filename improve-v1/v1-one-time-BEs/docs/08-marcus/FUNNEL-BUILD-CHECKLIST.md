@@ -53,7 +53,7 @@ Run/review: [local harness README](../../local/08-marcus/README.md). The CLI sav
 - Persistence/API: 4 tests covering restart, concurrent purchase replay, rollback, internal service authentication and full-envelope fulfillment.
 - Store: 1 transaction/reopen test. Draw engine: 6 focused tests.
 - Fulfillment: 3 stage tests covering audio-before-report, saved card parity, independent written delivery, duplicate capture, conflicting predictions, expired leases, and an eight-card 4-up/4-down themed PDF.
-- The remote Marcus canvas now has a working 37-node canon-backed Stage 1 lane and a clearly parked Stage 2 production lane. The 47-node local scaffold remains an architecture reference.
+- Two remote Marcus canvases are kept inactive: the working 37-node canon-backed Stage 1 test lane and the 48-node numerology-anchored production fulfillment draft. The production draft has an explicit anchor gate but still requires its Stage 2 backend.
 - Ephemeral local n8n execution completed the main route for an eight-card 4-up/4-down themed fixture, rendered a three-page PDF, queued written delivery, and exited cleanly with no audio entitlement.
 - Browser journey passed: all five editions’ images, booking-page bump and payment, bridge refresh, audio accept/decline, name-error recovery, 24/12-hour receipts and 320/390/1100px layouts; no external requests or JavaScript errors. Booking and audio pages were visually reviewed at desktop and mobile widths.
 - One isolated n8n main-reading execution passed with an eight-card 4-up/4-down fixture. Model writing, audio execution, media assembly and provider delivery remain unchecked. Recovery adapter currently identifies work; it does not schedule it.

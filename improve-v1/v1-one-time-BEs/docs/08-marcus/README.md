@@ -2,7 +2,7 @@
 
 Last updated: 2026-09-13
 
-This folder contains the current design, copy, local application, and n8n work for the Marcus daily-reading funnel. The manual 37-node n8n Stage 1 can produce a complete, numerology-anchored PDF from test inputs. A separate 47-node written-and-audio fulfillment draft is now available in n8n for review, inactive and guarded. A real Chatterbox Turbo smoke test generated Marcus voice-v2 audio, and 0.90× pitch-preserving playback is the approved default. The production handoff between the funnel, Supabase, payment, fulfillment, storage, and delivery is not connected yet.
+This folder contains the current design, copy, local application, and n8n work for the Marcus daily-reading funnel. The manual 37-node n8n Stage 1 can produce a complete, numerology-anchored PDF from test inputs. A separate 48-node numerology-anchored written-and-audio fulfillment draft is now available in n8n for review, inactive and guarded. A real Chatterbox Turbo smoke test generated Marcus voice-v2 audio, and 0.90× pitch-preserving playback is the approved default. The production handoff between the funnel, Supabase, payment, fulfillment, storage, and delivery is not connected yet.
 
 For the current completion ledger, use [FUNNEL-STATUS-AUDIT.md](FUNNEL-STATUS-AUDIT.md). For the full project history, read [HANDOVER.md](HANDOVER.md). [FUNNEL-BUILD-CHECKLIST.md](FUNNEL-BUILD-CHECKLIST.md) preserves the original implementation tracker.
 
@@ -32,7 +32,7 @@ Each daily edition fixes the question, spread, theme, face-up cards, and hidden 
 | Thank-you | [Receipt and delivery scope](thank-you/SCOPE.md) plus a local receipt route showing saved products, totals, status, and deadline | No production receipt, private download, or listening link |
 | Local application | Loopback-only funnel, SQLite persistence, edition export, simulated payment, saved buyer draw, personal-card logic, adaptive report fixtures, and local PDF rendering | Uses fake payments and captured deliveries; makes no Supabase, Stripe, OpenAI, PDFShift, Replicate, email, or analytics call |
 | n8n Stage 1 | Dedicated inactive 37-node workflow with numerology calculation, fixed canon selection, evidence synthesis, tarot planning, report writing, two graders, one bounded rewrite, fail-closed QA, and PDFShift rendering | Manual test lane only; does not load an order or deliver a customer report |
-| n8n Stage 2 | Production flow architecture, delivery policy, operation envelopes, retry/lease design, audio branch plan, and a separate [47-node inactive cloud draft](https://ezyabsorb.app.n8n.cloud/workflow/UJamB32MGlNKdoEW) using Chatterbox Turbo fields | Reviewable scaffold only; its guard is disabled and its backend operations remain placeholders until the production data and verified-payment contracts are implemented |
+| n8n Stage 2 | Production flow architecture, delivery policy, operation envelopes, retry/lease design, audio branch plan, and a separate [48-node inactive cloud draft](https://ezyabsorb.app.n8n.cloud/workflow/UJamB32MGlNKdoEW) with an explicit numerology gate and Chatterbox Turbo fields | Reviewable scaffold only; its guard is disabled and its backend operations remain placeholders until the production data and verified-payment contracts are implemented |
 | Numerology canon | Versioned 33-entry canon covering Life Path, Expression, and Personality numbers 1–9, 11, and 22, with combination rules and compiled runtime JSON | Prose library still needs final editorial approval; unsupported master number 33 fails explicitly |
 
 The executable local application is under [local/08-marcus](../../local/08-marcus/README.md). Its routes are `/email`, `/booking`, `/bridge`, `/upsell`, and `/thank-you` on `127.0.0.1:5088`.
@@ -90,9 +90,9 @@ Full run details are recorded in [STAGE-1-TEST-EVIDENCE.md](n8n/STAGE-1-TEST-EVI
 
 The separate fulfillment draft is available here:
 
-**[Open the 47-node written-and-audio fulfillment draft](https://ezyabsorb.app.n8n.cloud/workflow/UJamB32MGlNKdoEW)**
+**[Open the 48-node numerology-anchored written-and-audio fulfillment draft](https://ezyabsorb.app.n8n.cloud/workflow/UJamB32MGlNKdoEW)**
 
-It was created as a separate inactive workflow. A read-back from n8n confirmed 47 nodes, inactive state, and `enabled: false` in its configuration guard. The existing 37-node Stage 1 workflow was not modified.
+It was created as a separate inactive workflow. After the [numerology-anchor audit](n8n/NUMEROLOGY-ANCHOR-AUDIT.md), an explicit fail-closed anchor gate was added. A read-back from n8n confirmed 48 nodes, inactive state, `enabled: false`, and the anchor gate. The existing 37-node Stage 1 workflow was not modified.
 
 The original `resemble-ai/chatterbox` deployment returned the same provider-side CUDA assertion with the 28-second voice reference, a 10-second reference, and no reference audio. The maintained `resemble-ai/chatterbox-turbo` endpoint then succeeded through a temporary n8n test lane:
 
@@ -192,7 +192,7 @@ Life Path cannot be calculated without date of birth, and Expression and Persona
 - [ ] Create the dedicated Supabase tables, private storage, access rules, and atomic saved-draw operation.
 - [ ] Build Stage 2 service endpoints for verified payment, idempotency, leases, retries, grading, storage, and delivery.
 - [ ] Connect Stage 2 to the existing Stage 1 generation core and test it with test-mode orders.
-- [x] Push the separate 47-node written-and-audio fulfillment draft to n8n as an inactive guarded workflow.
+- [x] Push the separate 48-node numerology-anchored written-and-audio fulfillment draft to n8n as an inactive guarded workflow.
 - [ ] Decide PDF attachment versus restricted-link delivery and implement the selected provider/template.
 - [ ] Approve the audio price and narration promise.
 - [x] Receive two Marcus voice sources, create versioned local reference WAVs, and select voice v2.

@@ -1,0 +1,106 @@
+{
+  "startedAt": "2026-09-13T15:10:51.257Z",
+  "model": "resemble-ai/chatterbox-turbo",
+  "voiceVersion": "marcus-voice-v2-10s",
+  "voiceSha256": "7475c80452f865a2ec08638fca8b8fa1f421e1b72ddfd9f9cdb19c3cb89a88bb",
+  "segments": [
+    {
+      "id": "01-opening",
+      "predictionId": "8tm0mh1w3hrmr0d0kd99qshb18",
+      "status": "succeeded",
+      "chars": 483,
+      "seed": 1,
+      "file": "/Users/joel/Library/CloudStorage/OneDrive-altius/Fun Projects/The-Seer-Within-V2-Production-joel-chue/The-Seer-Within-V2-Production/output/audio/segments/01-8tm0mh1w3hrmr0d0kd99qshb18.wav",
+      "bytes": 2874298,
+      "sha256": "85c115e49eb45df5ec0b82a09c340d8a60abb94efb90b761232e8b505e5e51da",
+      "durationSeconds": 29.94,
+      "sampleRate": 24000,
+      "codec": "pcm_f32le",
+      "predictTimeSeconds": 7.335435023,
+      "createdAt": "2026-09-13T15:10:52.956Z",
+      "completedAt": "2026-09-13T15:11:00.32185873Z",
+      "outputUrlHost": "replicate.delivery"
+    },
+    {
+      "id": "02-life-path",
+      "predictionId": "tat66tbebsrmw0d0kd99nxq6cc",
+      "status": "succeeded",
+      "chars": 814,
+      "seed": 2,
+      "file": "/Users/joel/Library/CloudStorage/OneDrive-altius/Fun Projects/The-Seer-Within-V2-Production-joel-chue/The-Seer-Within-V2-Production/output/audio/segments/02-tat66tbebsrmw0d0kd99nxq6cc.wav",
+      "bytes": 3089338,
+      "sha256": "b5d199b9fa7aed1ef3fc01253d5fc7e173ff81e74d13543ec32924ad718acb13",
+      "durationSeconds": 32.18,
+      "sampleRate": 24000,
+      "codec": "pcm_f32le",
+      "predictTimeSeconds": 7.459105735,
+      "createdAt": "2026-09-13T15:11:05.822Z",
+      "completedAt": "2026-09-13T15:11:13.291690927Z",
+      "outputUrlHost": "replicate.delivery"
+    },
+    {
+      "id": "03-seven-of-pentacles",
+      "predictionId": "hhyn7mx2gnrmy0d0kd98bq4w7g",
+      "status": "succeeded",
+      "chars": 770,
+      "seed": 3,
+      "file": "/Users/joel/Library/CloudStorage/OneDrive-altius/Fun Projects/The-Seer-Within-V2-Production-joel-chue/The-Seer-Within-V2-Production/output/audio/segments/03-hhyn7mx2gnrmy0d0kd98bq4w7g.wav",
+      "bytes": 3031738,
+      "sha256": "888691341f260b58ddce50a32183bbdf1e299991ab843e35c2eb43b59f4a243e",
+      "durationSeconds": 31.58,
+      "sampleRate": 24000,
+      "codec": "pcm_f32le",
+      "predictTimeSeconds": 7.754271356,
+      "createdAt": "2026-09-13T15:11:19.173Z",
+      "completedAt": "2026-09-13T15:11:26.936361801Z",
+      "outputUrlHost": "replicate.delivery"
+    },
+    {
+      "id": "04-closing",
+      "predictionId": "amk779pq2drmr0d0kd9a5wq070",
+      "status": "succeeded",
+      "chars": 721,
+      "seed": 4,
+      "file": "/Users/joel/Library/CloudStorage/OneDrive-altius/Fun Projects/The-Seer-Within-V2-Production-joel-chue/The-Seer-Within-V2-Production/output/audio/segments/04-amk779pq2drmr0d0kd9a5wq070.wav",
+      "bytes": 2809018,
+      "sha256": "74fa9c0ab2607c1ba51364a4397c9d6e6eccd020021c688d60e36d3df09abe58",
+      "durationSeconds": 29.26,
+      "sampleRate": 24000,
+      "codec": "pcm_f32le",
+      "predictTimeSeconds": 7.154718643,
+      "createdAt": "2026-09-13T15:11:32.627Z",
+      "completedAt": "2026-09-13T15:11:39.791626542Z",
+      "outputUrlHost": "replicate.delivery"
+    }
+  ],
+  "assembled": {
+    "wav": {
+      "path": "/Users/joel/Library/CloudStorage/OneDrive-altius/Fun Projects/The-Seer-Within-V2-Production-joel-chue/The-Seer-Within-V2-Production/output/audio/marcus-real-voice-sample.wav",
+      "bytes": 6656950,
+      "sha256": "3b57bccccf76aaec69a2f6684c78b5e4a5cf746345aa59ef606c2ceb8314433b",
+      "durationSeconds": 138.684833
+    },
+    "mp3": {
+      "path": "/Users/joel/Library/CloudStorage/OneDrive-altius/Fun Projects/The-Seer-Within-V2-Production-joel-chue/The-Seer-Within-V2-Production/output/audio/marcus-real-voice-sample.mp3",
+      "bytes": 1124901,
+      "sha256": "ee282028c45574bdd32ce36c993a2024eff7b9e8d9ce70dd1f20afa25fb713a2",
+      "durationSeconds": 138.684833
+    },
+    "expectedDurationSeconds": 138.722,
+    "pacing": {
+      "configVersion": "marcus-audio-v1",
+      "timeStretchRatio": 0.9,
+      "pausesMs": [
+        0,
+        600,
+        600,
+        900
+      ],
+      "sampleRate": 24000
+    }
+  },
+  "rawSpeechSeconds": 122.96,
+  "totalPredictTimeSeconds": 29.704,
+  "costNote": "Replicate does not return a price in the prediction object; only metrics.predict_time. Check the Replicate billing page for the charge.",
+  "finishedAt": "2026-09-13T15:11:45.752Z"
+}

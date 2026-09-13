@@ -22,7 +22,7 @@ if sys.argv[1:]==['--status']:
  req=urllib.request.Request(base+'/api/v1/workflows/'+urllib.parse.quote(str(record['id'])),headers={'X-N8N-API-KEY':key,'Accept':'application/json'},method='GET')
  with urllib.request.urlopen(req,timeout=45) as response:current=json.load(response)
  guard=next(n for n in current['nodes'] if n['name']=='Configuration and guard')['parameters']['jsCode']
- print(json.dumps({'id':current['id'],'name':current['name'],'active':current.get('active'),'nodes':len(current['nodes']),'guardEnabled':'enabled: true' in guard,'url':base+'/workflow/'+str(current['id'])}));raise SystemExit(0)
+ print(json.dumps({'id':current['id'],'name':current['name'],'active':current.get('active'),'nodes':len(current['nodes']),'guardEnabled':'enabled: true' in guard,'numerologyGate':any(node.get('name')=='Require numerology anchors' for node in current['nodes']),'url':base+'/workflow/'+str(current['id'])}));raise SystemExit(0)
 if sys.argv[1:]!=['--create']:
  print(json.dumps({'mode':'dry-run','name':w['name'],'nodes':len(w['nodes']),'active':False,'guardEnabled':False,'operation':'POST new workflow only'}));raise SystemExit(0)
 if receipt.exists():raise SystemExit('Creation receipt already exists. Refusing to create a duplicate or modify that workflow.')

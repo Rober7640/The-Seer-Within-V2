@@ -5,9 +5,9 @@
 | Workflow | ID | Role |
 |---|---|---|
 | [08 Marcus — Numerology-Anchored Stage 1 / Stage 2 Parked](https://ezyabsorb.app.n8n.cloud/workflow/Lksy14rvjB5Z7aYg) | `Lksy14rvjB5Z7aYg` | **Test lane.** Manual inputs → canon → synthesis → plan → write → grade → PDF. Used to iterate the report. |
-| [08 Marcus — Written + Audio Fulfillment — 47-NODE INACTIVE DRAFT](https://ezyabsorb.app.n8n.cloud/workflow/UJamB32MGlNKdoEW) | `UJamB32MGlNKdoEW` | **The real production workflow.** Stripe-triggered, Supabase-backed, written + audio branches. Not runnable until Stage 2 backend exists. |
+| [08 Marcus — Numerology-Anchored Written + Audio — 48-NODE INACTIVE DRAFT](https://ezyabsorb.app.n8n.cloud/workflow/UJamB32MGlNKdoEW) | `UJamB32MGlNKdoEW` | **The real production workflow.** Verified order → pinned LP/Expression/Personality canon → written + audio branches. Not runnable until Stage 2 backend exists. |
 
-**Separate inactive fulfillment draft:** [08 Marcus — Written + Audio Fulfillment — 47-NODE INACTIVE DRAFT](https://ezyabsorb.app.n8n.cloud/workflow/UJamB32MGlNKdoEW). Its configuration guard is disabled and its production backend operations are still placeholders.
+The fulfillment draft has an explicit `Require numerology anchors` gate before report writing. Its configuration guard is disabled and its production backend operations are still placeholders.
 
 No other workflow is updated, activated, deactivated or executed. The scoped update script can replace only this exact inactive Marcus workflow and has no create/delete/activate operation.
 
@@ -79,15 +79,16 @@ draw atomically per paid order, persist the personal card, generate and store th
 - [Previous simple Stage 1 JSON](08-marcus-staged.n8n.json)
 - [Passing Stage 1 cloud execution evidence](STAGE-1-TEST-EVIDENCE.md)
 - [Compare-grade of execution 30667](STAGE-1-COMPARE-GRADE-30667.md)
-- [47-node local inactive workflow JSON](08-marcus-fulfillment.n8n.json)
+- [48-node local inactive workflow JSON](08-marcus-fulfillment.n8n.json)
 - [Create-only API script](create-new-workflow.py)
 - [Original Stage 1 workflow creation receipt](created-workflow.json)
-- [47-node fulfillment draft creation receipt](created-fulfillment-workflow.json)
+- [48-node fulfillment draft creation/update receipt](created-fulfillment-workflow.json)
+- [Numerology-anchor audit and correction evidence](NUMEROLOGY-ANCHOR-AUDIT.md)
 - [Adaptive local n8n execution evidence](LOCAL-EXECUTION-EVIDENCE.md)
 
-The cloud canvas now contains the inactive 37-node canon-backed Stage 1 lane and a parked Stage 2 note. The
-original 47-node production scaffold remains in the repository as an architecture reference; it is
-not the live canvas and is not runnable until the Stage 2 backend exists.
+The two cloud workflows remain separate: the inactive 37-node canon-backed Stage 1 test lane and the
+inactive 48-node production fulfillment draft. The latter is reviewable in n8n but is not runnable
+until its Stage 2 backend operations exist.
 
 ## What is NOT connected yet
 

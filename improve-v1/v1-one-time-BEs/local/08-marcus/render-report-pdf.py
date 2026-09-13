@@ -53,7 +53,7 @@ def clean(value: object) -> str:
 
 
 def require_payload(payload: dict) -> None:
-    for key in ('readerName', 'question', 'theme', 'spread', 'positions', 'personalCard', 'sections', 'closing'):
+    for key in ('readerName', 'question', 'theme', 'spread', 'positions', 'numerologyFoundation', 'personalCard', 'sections', 'closing'):
         if key not in payload:
             raise ValueError(f'missing PDF field: {key}')
     if not payload['theme'].strip():
@@ -136,6 +136,8 @@ def render(payload: dict, output: Path) -> dict:
             f"{len(payload['positions'])} cards - {sum(p['visibility']=='free' for p in payload['positions'])} already read, "
             f"{sum(p['visibility']=='paid' for p in payload['positions'])} completed here", style['smallBold'])],
         [Paragraph('Personal card', style['small']), Paragraph(clean(payload['personalCard']['name']), style['smallBold'])],
+        [Paragraph('Life Path', style['small']), Paragraph(
+            f"{clean(payload['numerologyFoundation']['number'])} - {clean(payload['numerologyFoundation']['archetype'])}", style['smallBold'])],
     ]
     meta_table = Table(meta, colWidths=[34 * mm, 91 * mm], hAlign='CENTER')
     meta_table.setStyle(TableStyle([
@@ -167,7 +169,16 @@ def render(payload: dict, output: Path) -> dict:
         ('LEFTPADDING', (0, 0), (-1, -1), 7), ('RIGHTPADDING', (0, 0), (-1, -1), 7),
         ('TOPPADDING', (0, 0), (-1, -1), 6), ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
     ]))
-    story.extend([spread_table, Spacer(1, 7 * mm), Paragraph('Your personal card', style['h1']),
+    foundation = payload['numerologyFoundation']
+    strengths = ', '.join(foundation.get('strengths') or [])
+    challenges = ', '.join(foundation.get('challenges') or [])
+    story.extend([spread_table, Spacer(1, 7 * mm), Paragraph('Your numerology foundation', style['h1']),
+                  Paragraph(f"Life Path {clean(foundation['number'])} - {clean(foundation['archetype'])}", style['h2']),
+                  Paragraph(clean(foundation.get('core')), style['body']),
+                  Paragraph(f"<b>Strengths:</b> {clean(strengths)}", style['body']),
+                  Paragraph(f"<b>Growth edges:</b> {clean(challenges)}", style['body']),
+                  Paragraph(f"<b>How it shapes this reading:</b> {clean(foundation.get('application'))}", style['body']),
+                  Spacer(1, 4 * mm), Paragraph('Your personal card', style['h1']),
                   Paragraph(f"<b>{clean(payload['personalCard']['name'])}</b>", style['h2']),
                   Paragraph(clean(payload['personalCard']['text']), style['body']), Spacer(1, 7 * mm),
                   Paragraph('The cards that were face down', style['h1'])])

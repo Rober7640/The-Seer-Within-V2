@@ -31,34 +31,45 @@ const paidAt=Date.parse($json.order.paidAt);
 if (!Number.isFinite(paidAt) || ![0,c.bumpCents].includes($json.order.bumpCents)) throw new Error('Missing trusted payment time or bump entitlement');
 const hours=$json.order.bumpCents===c.bumpCents?c.expeditedHours:c.standardHours;
 return [{json:{...$json,deliveryHours:hours,dueAt:new Date(paidAt+hours*3600000).toISOString()}}];""",560,-100,'Backend must pin dueAt once. Duration-based SLA, no calendar-day cutoff. Audio inherits this order deadline; overdue late purchases go to review, never silent new promises.')
-brief=service('Build adaptive themed reading brief','build-brief',790,-100)
-write=service('Write paid positions and connections','write-report',1020,-100)
-grade=service('Grade report and save verdict','grade-report',1250,-100)
-passed=cond('Report approved?','={{ $json.reportStatus }}','approved',1480,-100)
-render=service('Render and store written report','render-written',1720,-180)
-queue=service('Queue written delivery independently','queue-written-delivery',1950,-180,)
-audioload=service('Reconcile and claim audio job','claim-audio',2200,60)
-elig=cond('Audio eligible now?','={{ $json.audioStatus }}','claimed',2440,60)
-script=service('Prepare narration and check parity','prepare-audio-script',2680,-60)
-nextseg=service('Next saved audio segment','next-audio-segment',2910,-60)
-has=cond('Segment remaining?','={{ $json.segmentState }}','pending',3150,-60)
-known=cond('Provider request already saved?','={{ $json.predictionId ? "yes" : "no" }}','yes',3390,-180)
+brief=service('Build canon-backed numerology brief','build-brief',790,-100)
+anchors=code('Require numerology anchors',"""const b=$json.brief;
+const n=b?.numerology;
+const lp=n?.lifePath;
+const privateAnchors=n?.privateAnchors;
+const selected=privateAnchors?.selectedCanon;
+const requiredRoles=['lifePath','expression','personality'];
+if(!Number.isInteger(lp?.number)||!lp?.archetype||!lp?.core||!Array.isArray(lp?.strengths)||!Array.isArray(lp?.challenges)) throw new Error('Missing customer-visible Life Path number, archetype, strengths or growth edges.');
+if(!Number.isInteger(privateAnchors?.expressionNumber)||!Number.isInteger(privateAnchors?.personalityNumber)||!Array.isArray(selected)) throw new Error('Missing private Expression or Personality anchors.');
+if(!requiredRoles.every(role=>selected.some(entry=>entry?.role===role&&Number.isInteger(entry?.number)&&entry?.key&&entry?.version&&entry?.contentHash&&entry?.sections))) throw new Error('The brief must contain one pinned canon entry for Life Path, Expression and Personality.');
+if(b?.personalCard?.expressionNumber!==privateAnchors.expressionNumber) throw new Error('Personal card is not tied to the saved Expression number.');
+return [{json:$json}];""",1020,-100,'Fail closed before any report-writing call. Life Path is customer-visible; Expression and Personality remain private evidence. Raw name and birth date never enter model requests.')
+write=service('Write paid positions and connections','write-report',1250,-100)
+grade=service('Grade anchors, specificity and save verdict','grade-report',1480,-100)
+passed=cond('Report approved?','={{ $json.reportStatus }}','approved',1720,-100)
+render=service('Render and store written report','render-written',1950,-180)
+queue=service('Queue written delivery independently','queue-written-delivery',2180,-180,)
+audioload=service('Reconcile and claim audio job','claim-audio',2430,60)
+elig=cond('Audio eligible now?','={{ $json.audioStatus }}','claimed',2670,60)
+script=service('Prepare narration and check parity','prepare-audio-script',2910,-60)
+nextseg=service('Next saved audio segment','next-audio-segment',3140,-60)
+has=cond('Segment remaining?','={{ $json.segmentState }}','pending',3380,-60)
+known=cond('Provider request already saved?','={{ $json.predictionId ? "yes" : "no" }}','yes',3620,-180)
 voice=code('Validate Chatterbox request',"""if (!$json.segment?.text || !$json.voice?.signedUrl || !$json.voice?.version) throw new Error('Missing approved script segment or supplied Marcus voice');
-return [{json:{...$json,replicateInput:{text:$json.segment.text,reference_audio:$json.voice.signedUrl,top_p:0.95,top_k:1000,temperature:0.8,repetition_penalty:1.2,seed:$json.segment.seed??0}}}];""",3620,-280)
-tts=node('Chatterbox create prediction','httpRequest',{'method':'POST','url':'https://api.replicate.com/v1/models/resemble-ai/chatterbox-turbo/predictions','authentication':'genericCredentialType','genericAuthType':'httpHeaderAuth','sendBody':True,'specifyBody':'json','jsonBody':'={{ JSON.stringify({input:$json.replicateInput}) }}','options':{'timeout':30000}},3860,-280,4.2,'Assign Replicate Authorization: Bearer credential. No auto-retry on ambiguous POST timeout: reconcile provider job or review before resubmitting. Marcus voice v2 is supplied through reference_audio. Copy results immediately to durable storage. Backend assembly applies marcus-audio-v1 pacing: pitch-preserving 0.90 atempo plus versioned pauses.')
-saved=service('Save prediction ID immediately','record-prediction',4090,-280,"={{ JSON.stringify({context:$('Validate Chatterbox request').item.json,prediction:$json}) }}")
-wait=node('Wait before provider poll','wait',{'amount':10,'unit':'seconds'},4320,-180,1.1)
-pollbudget=service('Check poll budget and renew lease','poll-budget',4550,-180)
-pollok=cond('Continue polling?','={{ $json.pollStatus }}','allowed',4780,-180)
-poll=node('Get Chatterbox prediction','httpRequest',{'method':'GET','url':"={{ 'https://api.replicate.com/v1/predictions/' + encodeURIComponent($json.predictionId) }}",'authentication':'genericCredentialType','genericAuthType':'httpHeaderAuth','options':{'timeout':30000}},5010,-280,4.2,'Authenticate with same Replicate credential. Backend poll-budget operation validates prediction belongs to this saved segment.')
-record=service('Persist provider result','record-prediction-status',5240,-280,"={{ JSON.stringify({context:$('Check poll budget and renew lease').item.json,prediction:$json}) }}")
-success=cond('Prediction succeeded?','={{ $json.predictionStatus }}','succeeded',5470,-280)
-copy=service('Copy audio segment to private storage','store-audio-segment',5700,-400)
-progress=cond('Prediction still running?','={{ ["starting","processing"].includes($json.predictionStatus) ? "yes" : "no" }}','yes',5700,-100)
-assemble=service('Assemble and QA recording','assemble-audio',3390,170)
-audioapproved=cond('Recording passed QA?','={{ $json.audioQa }}','passed',3620,170)
-store=service('Publish private audio artifact','complete-audio',3860,100)
-qAudio=service('Queue audio listening-link delivery','queue-audio-delivery',4090,100)
+return [{json:{...$json,replicateInput:{text:$json.segment.text,reference_audio:$json.voice.signedUrl,top_p:0.95,top_k:1000,temperature:0.8,repetition_penalty:1.2,seed:$json.segment.seed??0}}}];""",3850,-280)
+tts=node('Chatterbox create prediction','httpRequest',{'method':'POST','url':'https://api.replicate.com/v1/models/resemble-ai/chatterbox-turbo/predictions','authentication':'genericCredentialType','genericAuthType':'httpHeaderAuth','sendBody':True,'specifyBody':'json','jsonBody':'={{ JSON.stringify({input:$json.replicateInput}) }}','options':{'timeout':30000}},4090,-280,4.2,'Assign Replicate Authorization: Bearer credential. No auto-retry on ambiguous POST timeout: reconcile provider job or review before resubmitting. Marcus voice v2 is supplied through reference_audio. Copy results immediately to durable storage. Backend assembly applies marcus-audio-v1 pacing: pitch-preserving 0.90 atempo plus versioned pauses.')
+saved=service('Save prediction ID immediately','record-prediction',4320,-280,"={{ JSON.stringify({context:$('Validate Chatterbox request').item.json,prediction:$json}) }}")
+wait=node('Wait before provider poll','wait',{'amount':10,'unit':'seconds'},4550,-180,1.1)
+pollbudget=service('Check poll budget and renew lease','poll-budget',4780,-180)
+pollok=cond('Continue polling?','={{ $json.pollStatus }}','allowed',5010,-180)
+poll=node('Get Chatterbox prediction','httpRequest',{'method':'GET','url':"={{ 'https://api.replicate.com/v1/predictions/' + encodeURIComponent($json.predictionId) }}",'authentication':'genericCredentialType','genericAuthType':'httpHeaderAuth','options':{'timeout':30000}},5240,-280,4.2,'Authenticate with same Replicate credential. Backend poll-budget operation validates prediction belongs to this saved segment.')
+record=service('Persist provider result','record-prediction-status',5470,-280,"={{ JSON.stringify({context:$('Check poll budget and renew lease').item.json,prediction:$json}) }}")
+success=cond('Prediction succeeded?','={{ $json.predictionStatus }}','succeeded',5700,-280)
+copy=service('Copy audio segment to private storage','store-audio-segment',5930,-400)
+progress=cond('Prediction still running?','={{ ["starting","processing"].includes($json.predictionStatus) ? "yes" : "no" }}','yes',5930,-100)
+assemble=service('Assemble and QA recording','assemble-audio',3620,170)
+audioapproved=cond('Recording passed QA?','={{ $json.audioQa }}','passed',3850,170)
+store=service('Publish private audio artifact','complete-audio',4090,100)
+qAudio=service('Queue audio listening-link delivery','queue-audio-delivery',4320,100)
 routeAudio=cond('Audio resume event?','={{ $json.action }}','audio',330,240)
 routeDelivery=cond('Delivery job?','={{ $json.action }}','delivery',560,390)
 claimD=service('Claim due delivery task','claim-delivery',800,390)
@@ -69,10 +80,10 @@ recovery=cond('Recovery request?','={{ $json.action }}','recovery',800,610)
 sweep=service('Recover missed events and expired leases','recover',1030,610,'={{ JSON.stringify($json) }}')
 end=code('Waiting or complete — no new work','return [{json:{...$json,workflowResult:"persisted; no further work in this execution"}}];',2200,650)
 review=service('Save review or retry state','fail-or-review',1950,450)
-for a,b in [(manual,guard),(webhook,guard),(guard,reconcile),(reconcile,ack),(ack,main),(main,draw),(draw,claimed),(claimed,deadline),(deadline,brief),(brief,write),(write,grade),(grade,passed),(passed,render),(render,queue),(queue,audioload),(audioload,elig),(elig,script),(script,nextseg),(nextseg,has),(has,known),(known,wait),(voice,tts),(tts,saved),(saved,wait),(wait,pollbudget),(pollbudget,pollok),(pollok,poll),(poll,record),(record,success),(success,copy),(copy,nextseg),(progress,wait),(assemble,audioapproved),(audioapproved,store),(store,qAudio),(qAudio,end),(routeAudio,audioload),(routeDelivery,claimD),(claimD,readyD),(readyD,send),(send,recordD),(recordD,end),(recovery,sweep),(sweep,end),(review,end)]:edge(a,b)
+for a,b in [(manual,guard),(webhook,guard),(guard,reconcile),(reconcile,ack),(ack,main),(main,draw),(draw,claimed),(claimed,deadline),(deadline,brief),(brief,anchors),(anchors,write),(write,grade),(grade,passed),(passed,render),(render,queue),(queue,audioload),(audioload,elig),(elig,script),(script,nextseg),(nextseg,has),(has,known),(known,wait),(voice,tts),(tts,saved),(saved,wait),(wait,pollbudget),(pollbudget,pollok),(pollok,poll),(poll,record),(record,success),(success,copy),(copy,nextseg),(progress,wait),(assemble,audioapproved),(audioapproved,store),(store,qAudio),(qAudio,end),(routeAudio,audioload),(routeDelivery,claimD),(claimD,readyD),(readyD,send),(send,recordD),(recordD,end),(recovery,sweep),(sweep,end),(review,end)]:edge(a,b)
 for a,b in [(claimed,end),(main,routeAudio),(passed,review),(elig,end),(has,assemble),(known,voice),(pollok,review),(success,progress),(progress,review),(audioapproved,review),(routeAudio,routeDelivery),(routeDelivery,recovery),(readyD,end),(recovery,end)]:edge(a,b,1)
 # Normalize coordinates (n8n expects numbers).
 for n in nodes:n['position']=[int(x) for x in n['position']]
-w={'name':'08 Marcus — Written + Audio Fulfillment — 47-NODE INACTIVE DRAFT','nodes':nodes,'connections':links,'active':False,'settings':{'executionOrder':'v1','saveManualExecutions':True,'saveDataErrorExecution':'all','saveDataSuccessExecution':'none'}}
+w={'name':'08 Marcus — Numerology-Anchored Written + Audio — 48-NODE INACTIVE DRAFT','nodes':nodes,'connections':links,'active':False,'settings':{'executionOrder':'v1','saveManualExecutions':True,'saveDataErrorExecution':'all','saveDataSuccessExecution':'none'}}
 (HERE/'08-marcus-fulfillment.n8n.json').write_text(json.dumps(w,indent=2,ensure_ascii=False)+'\n')
 print('Built new inactive workflow:',len(nodes),'nodes; configuration guard disabled.')
