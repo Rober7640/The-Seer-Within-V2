@@ -4,7 +4,7 @@ Last updated: 2026-09-11
 
 This folder contains the current design, copy, local application, and n8n work for the Marcus daily-reading funnel. The manual n8n Stage 1 can produce a complete, numerology-anchored PDF from test inputs. The local application can simulate the customer journey and preserve the order, draw, deadline, and PDF fixture. The production handoff between those pieces is not connected yet.
 
-For the full project history, read [HANDOVER.md](HANDOVER.md). Use [FUNNEL-BUILD-CHECKLIST.md](FUNNEL-BUILD-CHECKLIST.md) as the implementation tracker.
+For the current completion ledger, use [FUNNEL-STATUS-AUDIT.md](FUNNEL-STATUS-AUDIT.md). For the full project history, read [HANDOVER.md](HANDOVER.md). [FUNNEL-BUILD-CHECKLIST.md](FUNNEL-BUILD-CHECKLIST.md) preserves the original implementation tracker.
 
 ## Agreed funnel
 
