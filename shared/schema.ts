@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { pgTable, text, varchar, boolean, integer, timestamp, real, jsonb, index, uniqueIndex } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, boolean, integer, timestamp, date, real, jsonb, index, uniqueIndex } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -1640,6 +1640,21 @@ export const beOrders = pgTable("be_orders", {
    *  not a reading — n8n throws rather than inventing a question she did not ask. */
   question3: text("question_3"),
 
+  // ── 08 · Marcus Stone's personal reading only ─────────────────────────────────
+  // ONE fixed reading per order, of a named EDITION (spread) against her birth name and
+  // date of birth. All five are NULL on every non-08 order. 🔴 Nothing writes these yet
+  // (wave 2, T9). ⚠️ Add them with migrations/2026-09-13-be-08-marcus.sql, never db:push.
+  /** The edition (spread) she booked from, e.g. 'what-are-my-blind-spots'. */
+  editionId: text("edition_id"),
+  /** Pinned with the id — a re-cut edition must not change a reading already paid for. */
+  editionVersion: integer("edition_version"),
+  /** paid_at + 24h, or + 12h with the 'marcus_speed' bump. The SLA clock, stamped by the webhook. */
+  dueAt: timestamp("due_at", { withTimezone: true }),
+  /** The one card her name + birth date resolve to. */
+  lensCard: text("lens_card"),
+  /** Which version of the lens rules cut it — a later rule change cannot re-read an old order. */
+  lensMethodVersion: text("lens_method_version"),
+
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 }, (table) => [
@@ -1851,6 +1866,21 @@ export const beOrderIntake = pgTable("be_order_intake", {
   question2: text("question_2"),
   question3: text("question_3"),
 
+  // ── 08 · what Marcus needs before he can read her. NULL on every non-08 row. ──
+  // ⚠️ Add with migrations/2026-09-13-be-08-marcus.sql, never db:push. 🔴 Nothing writes
+  // these yet (wave 2, T6). ⚠ PII — full_birth_name and date_of_birth never go in a log or a URL.
+  /** The edition (spread) the booking page was opened on. Copied to be_orders when paid. */
+  editionId: text("edition_id"),
+  editionVersion: integer("edition_version"),
+  /** What Marcus calls her on every screen and in every letter. */
+  displayFirstName: text("display_first_name"),
+  /** The name the numerology is cut from (D1, 2026-09-13). */
+  fullBirthName: text("full_birth_name"),
+  /** Nullable by design (D1): the column exists whichever way the booking form goes. */
+  dateOfBirth: date("date_of_birth"),
+  /** Took the '+ 12-hour delivery' bump at booking. Restores her choice on a Stripe cancel. */
+  speedBump: boolean("speed_bump").notNull().default(false),
+
   createdAt: timestamp("created_at").defaultNow().notNull(),
 }, (table) => [
   // The sweep's query: find abandoned intake older than N days.
@@ -1859,3 +1889,89 @@ export const beOrderIntake = pgTable("be_order_intake", {
 
 export type BeOrderIntake = typeof beOrderIntake.$inferSelect;
 export type InsertBeOrderIntake = typeof beOrderIntake.$inferInsert;
+
+// ============================================================
+// 08 · THE PER-ORDER DRAW (be_08_draws)
+// ============================================================
+// 07 draws once per (spread, day) for the whole list — be_07_draws. 08 draws once per
+// ORDER, for one woman, from the edition she booked and the lens her name resolves to.
+//
+// 🔴 ONE ROW PER ORDER, enforced by a unique index on order_id. That constraint is the
+// product promise: a webhook retry, a re-run of fulfilment or a second n8n pass must find
+// the cards already dealt, never deal again. ⛔ A row is NEVER updated after it is written.
+//
+// `draw_json` is one JSONB rather than columns because its shape belongs to
+// local/08-marcus/contracts.ts and a change there should not cost a migration.
+//
+// ⚠️ Create it with migrations/2026-09-13-be-08-marcus.sql. Do NOT `npm run db:push`.
+// ============================================================
+
+export const be08Draws = pgTable("be_08_draws", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  /** The paid order it was dealt for. Same reference shape as be07ReadingGrades.orderId. */
+  orderId: varchar("order_id")
+    .notNull()
+    .references(() => beOrders.id, { onDelete: "cascade" }),
+
+  /** The full dealt spread — positions, cards, reversals, free/paid flags. Shape: contracts.ts. */
+  drawJson: jsonb("draw_json").notNull(),
+  /** Which version of draw.ts dealt it. A reading is only reproducible against its method. */
+  drawMethodVersion: text("draw_method_version"),
+  /** Hash of the inputs the draw was seeded from, so fulfilment can prove the stored draw
+   *  matches the order without re-reading her PII. */
+  contextHash: text("context_hash"),
+
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => [
+  uniqueIndex("uq_be_08_draws_order").on(table.orderId),
+]);
+
+export type Be08Draw = typeof be08Draws.$inferSelect;
+export type InsertBe08Draw = typeof be08Draws.$inferInsert;
+
+// ============================================================
+// BACKEND DECK SEND LOG (be_send_attempts)
+// ============================================================
+// No BE offer has ever recorded a transactional send: the AWeber tag write IS the
+// thank-you, and a failed write is a woman who paid and got nothing. 08 sends four
+// messages per order through a provider that returns a message id, and this is the
+// record. Offer-generic on purpose — 02/03/06 can log here later.
+//
+// 🔴 UNIQUE (stripe_session_id, message_type): one row per message per order. A retry
+//    UPDATES that row; it never inserts a second. That is what stops a webhook replay
+//    sending her the same confirmation twice.
+//
+// ⚠️ Create it with migrations/2026-09-13-be-08-marcus.sql. Do NOT `npm run db:push`.
+// ============================================================
+
+/** The four 08 messages. Text in the column; the union is documentation for callers. */
+export type BeSendMessageType =
+  | 'order_confirmation'
+  | 'audio_confirmation'
+  | 'written_delivery'
+  | 'audio_delivery';
+
+export const beSendAttempts = pgTable("be_send_attempts", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  /** The offer key (shared/backendOffers.ts), e.g. 'marcus-reading'. */
+  offer: text("offer").notNull(),
+  /** The booking Checkout session — the order, in the key every BE table shares. */
+  stripeSessionId: text("stripe_session_id").notNull(),
+  messageType: text("message_type").$type<BeSendMessageType>().notNull(),
+  /** 'resend' | 'aweber' | … */
+  provider: text("provider").notNull(),
+  /** What the provider returned. NULL on failure. */
+  providerMessageId: text("provider_message_id"),
+  /** 'sent' | 'failed' | 'skipped' */
+  status: text("status").notNull(),
+  /** The provider's own words on failure. */
+  error: text("error"),
+  attemptedAt: timestamp("attempted_at", { withTimezone: true }).defaultNow().notNull(),
+}, (table) => [
+  uniqueIndex("uq_be_send_attempts_session_type").on(table.stripeSessionId, table.messageType),
+  // The "who paid and was never emailed" query, by offer and outcome.
+  index("idx_be_send_attempts_offer_status").on(table.offer, table.status, table.attemptedAt),
+]);
+
+export type BeSendAttempt = typeof beSendAttempts.$inferSelect;
+export type InsertBeSendAttempt = typeof beSendAttempts.$inferInsert;

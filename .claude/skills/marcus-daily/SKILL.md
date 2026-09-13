@@ -1,6 +1,6 @@
 ---
 name: marcus-daily
-description: "Run one Marcus Stone daily tarot letter end to end — take a named thing she worries about, match it to a spread from the library, cut which cards turn free, write the letter to SHAPE.md, put it through a voice pass and a cold read by people who were never told what it means, generate the hero photograph and the face-down strip, build the broadsheet HTML, and stop at a human review packet. Use when the user says: write the next Marcus daily, run a Marcus letter on X, draft the 08 daily for a named topic, build Marcus's morning letter. One named thing = one run. This RUNS the already-built 08 programme — it does NOT send: AWeber is deliberately not wired, because the booking page, price and delivery are undecided."
+description: "Run one Marcus Stone daily tarot letter end to end — take a named thing she worries about, match it to a spread from the library, cut which cards turn free, write the letter to SHAPE.md, put it through a voice pass and a cold read by people who were never told what it means, generate the hero photograph and the face-down strip, build the broadsheet HTML, and stop at a human review packet. Use when the user says: write the next Marcus daily, run a Marcus letter on X, draft the 08 daily for a named topic, build Marcus's morning letter. One named thing = one run. This RUNS the already-built 08 programme — it builds the AWeber payload and stops at the review packet; it never schedules or sends."
 ---
 
 # Marcus daily — run one morning
@@ -10,9 +10,16 @@ standards in `improve-v1/v1-one-time-BEs/docs/08-marcus/` plus the Python builde
 generator in that folder's sibling `scripts/`. This skill orchestrates the human-in-the-loop run —
 **match → cut → write → voice → cold read → art → build → (human review)** — and reimplements nothing.
 
-⛔ **It stops at the review packet.** There is no send stage and that is on purpose: the booking
-page is unbuilt and price, delivery format and SLA are all undecided (`paid-reading/SCOPE.md` §6), so no
-letter may promise timing and nothing can honestly go out.
+⛔ **Production boundary.** This skill builds the AWeber payload — the letter markdown, the hero,
+the broadsheet HTML — and stops at the review packet. It never schedules or sends; that is a
+separate operator-run step outside this skill.
+
+**The offer the letter points at (confirmed; stated here once, do not repeat it in the steps):**
+main reading **$35**; optional speed bump **+$12.77** on the booking page, unselected by default;
+standard written delivery within **24 elapsed hours** of confirmed main payment, **12 hours** with
+the bump; audio inherits that deadline; the written deliverable is a **PDF behind a signed link**.
+The booking page collects display first name, full birth name, date of birth and delivery email
+(decision D1, Joel, 2026-09-13). Sources: `paid-reading/SCOPE.md` §6, `booking-page/SCOPE.md`.
 
 **Knowledge base (read, never rewrite):** `improve-v1/v1-one-time-BEs/docs/08-marcus/`
 - `daily-email/SHAPE.md` — the reading structure, card-block guidance, voice preferences, and review questions. **The sole
@@ -37,21 +44,21 @@ whether a sentence means anything.** Step 4 is the gate.
 
 ---
 
-## ⛔ Before the first run — four things do not exist yet
+## Before the first run — what the pipeline now has (verified 2026-09-13)
 
-| # | What | Why it blocks |
+| # | What | Status |
 |---|---|---|
-| 1 | `daily-email/SPREADS.md` and the rewritten `daily-email/SHAPE.md` | Steps 1 and 2 read them |
-| 2 | `build-08-daily.py` generalised past six cards | `WORD`/`ROMAN`/`ORD` stop at 6; the dateline says `SIX CARDS · ONE QUESTION`; the hero caption says "six cards on one question". Five hardcodings |
-| 3 | `make-08-heroes.py` given a `LAYOUTS` dict | Its prompt hardcodes *"SIX tarot cards… TWO NEAT ROWS OF THREE"*. One layout block per spread, written once, reused every morning that spread runs |
+| 1 | `daily-email/SPREADS.md` (six spreads, 3–12 cards) and the rewritten `daily-email/SHAPE.md` | ✅ Both exist; steps 1 and 2 read them |
+| 2 | `build-08-daily.py` generalised past six cards | ✅ `WORD`/`ROMAN`/`ORD` run to twelve; the dateline and hero caption take the count from the letter |
+| 3 | `make-08-heroes.py` with a `LAYOUTS` dict | ✅ One layout block per spread key, reused every morning that spread runs |
 | 4 | ~~`check-08-letter.mjs`~~ | ⚠ **Not a blocker, and not the quality gate.** A script checks bars; bars cannot ask whether a sentence means anything. Step 4 is the gate. Write the linter later if you want the countable bars automated |
 
 ⚠ Also worth doing before volume: the builder's per-letter facts live in a Python `LETTERS` dict,
 so every morning is a code edit. Moving them into the markdown's own frontmatter removes the build
 step's only fragile move.
 
-⚠ `docs/08-marcus/` is **untracked**. Nothing in it has ever been committed. Fix that first or a
-bad rebuild has no floor.
+⚠ `docs/08-marcus/` is tracked in git (92 files as of 2026-09-13), but new letters and rebuilt
+`html/` show up untracked until committed. Check `git status` before a rebuild so a bad one has a floor.
 
 ---
 
@@ -117,11 +124,16 @@ previous send. Give it the slate as a locked brief plus:
 > Write the connection to this topic fresh. Clarity takes priority over compression and voice
 > counts; retain explanatory sentences and conditional wording where appropriate. End the body
 > on the link, followed only by Marcus and the P.S.
+> ⛔ When the close explains what the paid reading is built on, it asks for her **first and last
+> name AND her date of birth** — both, every time (D1, 2026-09-13). A close that says the name is
+> "the only thing I need" is wrong and goes back to you.
 
 ### 3. Voice pass
 One editor checks the draft against SHAPE.md's voice preferences and review questions. Preserve
 clear explanations; vary the emotional movement when appropriate. Check comprehension and desire
 separately: what has she learned, and what specific answer does she now want? Do not edit to quotas.
+Also check the close asks for name **and** date of birth (D1); an old sibling letter's name-only
+close is not a model.
 
 ### 4. **COLD READ — this is the gate**
 Invoke the **`cold-read`** skill on the letter.
@@ -173,6 +185,9 @@ Give the operator:
 - the built `docs/08-marcus/daily-email/html/<slug>.html`, opened,
 - the slate table from step 1,
 - the `daily-email/STATE.md` line you are about to write,
+- the **pre-send gate**: the booking URL in the letter must resolve to the exact immutable edition
+  (edition id + version) this letter was built from — never a topic slug or today's date. If it does
+  not resolve, or resolves to a different edition, the packet is not ready to hand off,
 - and anything you could not verify.
 
 ⛔ **Do not log STATE or commit without an explicit in-turn "go".**
@@ -185,8 +200,9 @@ and `daily-email/STATE.md`. ⛔ Never commit `html/` by hand-edit; commit it onl
 ---
 
 ## Rules
-- **Nothing here sends.** There is no AWeber stage. If the operator asks to schedule one, say the
-  booking page, price, delivery format and SLA are undecided, and that no letter may promise timing.
+- **Nothing here sends.** The skill ends at the AWeber payload. If the operator asks to schedule
+  one, point at the step 7 pre-send gate (booking URL → exact immutable edition) and hand off;
+  scheduling is outside this skill.
 - **⛔ Never edit `docs/08-marcus/daily-email/html/`.** Edit the markdown, run the builder.
 - **Avoid repeating the face-down inventory.** Let the transition name the next question and the
   close explain the remaining reading's scope. Preserve parser anchors or update the letter's
@@ -199,7 +215,9 @@ and `daily-email/STATE.md`. ⛔ Never commit `html/` by hand-edit; commit it onl
   not a reader-facing explanation. Do not use "your name gives me your lens", "read through it",
   or comparisons with a stranger's reading to explain the offer. No calculation lesson is needed.
   Describe only what the paid reading actually does; do not invent personal facts from a name.
-  Follow SHAPE.md's current close rather than copying the old numbered close from sibling letters.
+  The close asks for her first and last name **and** her date of birth (D1, 2026-09-13); the name
+  alone is no longer enough. Follow SHAPE.md's current close rather than copying the old numbered
+  close from sibling letters.
 - **⛔ No plural reader, ever.** "for a list", "everyone", "for one woman… for another" all break the
   spell the same way.
 - **⛔ The square headshot** (`08-headshot.jpg`). The round one is masked onto white and would ship

@@ -323,7 +323,46 @@ LOCAL_FUNNEL_EDITIONS = {'what-part-of-me-needs-healing': {'id': 'healing-v1',
                                                          'Where you can begin'],
                                          'spread': {'id': 'six-questions',
                                                     'name': 'The Six Questions',
-                                                    'version': 1}}}
+                                                    'version': 1}},
+ 'what-are-my-blind-spots': {'id': 'blind-spots-v1',
+                             'version': 1,
+                             'theme': 'Where a blind spot is reaching into her life and what it is costing there',
+                             'paid_labels': ['What you keep excusing',
+                                             'What you feel you are owed',
+                                             "What's left of the love",
+                                             'What you want to win',
+                                             'What you show people',
+                                             'What home feels like',
+                                             'What it costs in money'],
+                             'spread': {'id': 'tree-of-life',
+                                        'name': 'The Tree of Life',
+                                        'version': 1},
+                             'booking_copy': {'headline': 'Let’s look at where it’s costing you most.',
+                                              'intro': 'Continue your reading on your blind spots—and '
+                                                       'which part of your life they are reaching '
+                                                       'into.',
+                                              'bridge': 'The Moon, the Two of Swords and the Three '
+                                                        'of Pentacles showed the pattern: attention '
+                                                        'pulled into the distance, a decision held '
+                                                        'between the same two options, and a '
+                                                        'conclusion nobody else has checked. The '
+                                                        'next seven cards show where that pattern '
+                                                        'is reaching—what you keep excusing, what '
+                                                        'you feel you are owed, your love, your '
+                                                        'home and your money.',
+                                              'offer': 'In your full reading, I’ll bring these '
+                                                       'cards together around your question: which '
+                                                       'part of your life is carrying the blind '
+                                                       'spot, what it has already cost you there, '
+                                                       'and the one question or fact that would '
+                                                       'settle it.',
+                                              'name': 'I’ll use the strengths and habits your '
+                                                      'personal card represents as another way to '
+                                                      'explore where your attention drifts and '
+                                                      'which facts you tend to leave unchecked—so '
+                                                      'along with your first name, I’ll need your '
+                                                      'full name as it was given at birth and your '
+                                                      'date of birth.'}}}
 for _slug, _metadata in LOCAL_FUNNEL_EDITIONS.items():
     LETTERS[_slug]["funnel"] = _metadata
 

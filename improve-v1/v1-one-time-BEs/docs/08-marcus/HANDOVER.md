@@ -348,23 +348,29 @@ local backend and PDF renderer. See [n8n/LOCAL-EXECUTION-EVIDENCE.md](n8n/LOCAL-
 
 ## 9. Replicate Chatterbox audio plan
 
-The approved direction is Replicate’s standard `resemble-ai/chatterbox` model with a Marcus voice
-sample Joel will supply. Details and source links are in [n8n/CHATTERBOX.md](n8n/CHATTERBOX.md).
+The separate 47-node inactive fulfillment draft is available in n8n at
+<https://ezyabsorb.app.n8n.cloud/workflow/UJamB32MGlNKdoEW>. Its guard remains disabled; it is a
+reviewable production scaffold rather than an executable customer flow.
 
-The correct standard-model fields are:
+The selected provider is Replicate's maintained `resemble-ai/chatterbox-turbo` model with Marcus
+voice v2. The standard deployment failed with the same hosted CUDA error with and without reference
+audio; Turbo produced a valid saved WAV through n8n. Details are in
+[n8n/CHATTERBOX.md](n8n/CHATTERBOX.md).
 
-- `prompt`: narration segment text;
-- `audio_prompt`: fresh signed URI for the Marcus reference recording.
-
-The draft starts with `exaggeration: 0.5`, `cfg_weight: 0.5`, `temperature: 0.8`, and a saved seed.
-These settings have not been approved by listening tests.
+Turbo uses `text` for the narration segment and `reference_audio` for the fresh signed Marcus voice
+URI. The pinned synthesis settings are `temperature: 0.8`, `top_p: 0.95`, `top_k: 1000`,
+`repetition_penalty: 1.2`, and a saved seed. Joel approved pitch-preserving 0.90× tempo as the
+default on 2026-09-13, with 300 ms between paragraphs, 600 ms between card sections, and 900 ms
+before the closing synthesis. The machine-readable settings are in
+[n8n/config/marcus-audio-v1.json](n8n/config/marcus-audio-v1.json).
 
 Predictions are asynchronous. The intended flow saves the prediction ID, polls with a bounded
 budget, and immediately copies successful output into private storage. Replicate-hosted output is
 temporary and cannot be used as the permanent customer URL.
 
-No Marcus voice sample has been supplied. No Replicate credential was found/configured for this
-flow, and no synthesis test has been run.
+Two Marcus voice sources have been supplied and prepared locally; voice v2 is selected and privately
+uploaded. The Replicate credential and a one-hour signed test URL were verified. The permanent
+signed-URL operation and production audio branch remain unbuilt.
 
 ## 10. Test evidence
 

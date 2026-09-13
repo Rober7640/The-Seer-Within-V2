@@ -1,6 +1,13 @@
 # 08 Marcus — staged n8n fulfillment workflow
 
-**Dedicated inactive workflow:** [08 Marcus — Numerology-Anchored Stage 1 / Stage 2 Parked](https://ezyabsorb.app.n8n.cloud/workflow/Lksy14rvjB5Z7aYg).
+**Two dedicated inactive workflows (Joel, 2026-09-13: keep both):**
+
+| Workflow | ID | Role |
+|---|---|---|
+| [08 Marcus — Numerology-Anchored Stage 1 / Stage 2 Parked](https://ezyabsorb.app.n8n.cloud/workflow/Lksy14rvjB5Z7aYg) | `Lksy14rvjB5Z7aYg` | **Test lane.** Manual inputs → canon → synthesis → plan → write → grade → PDF. Used to iterate the report. |
+| [08 Marcus — Written + Audio Fulfillment — 47-NODE INACTIVE DRAFT](https://ezyabsorb.app.n8n.cloud/workflow/UJamB32MGlNKdoEW) | `UJamB32MGlNKdoEW` | **The real production workflow.** Stripe-triggered, Supabase-backed, written + audio branches. Not runnable until Stage 2 backend exists. |
+
+**Separate inactive fulfillment draft:** [08 Marcus — Written + Audio Fulfillment — 47-NODE INACTIVE DRAFT](https://ezyabsorb.app.n8n.cloud/workflow/UJamB32MGlNKdoEW). Its configuration guard is disabled and its production backend operations are still placeholders.
 
 No other workflow is updated, activated, deactivated or executed. The scoped update script can replace only this exact inactive Marcus workflow and has no create/delete/activate operation.
 
@@ -9,7 +16,10 @@ No other workflow is updated, activated, deactivated or executed. The scoped upd
 The first lane is deliberately small enough to test from the n8n editor:
 
 1. Open `2 · TEST INPUTS — EDIT ME`.
-2. Enter `question`, `spreadType`, `displayFirstName`, `fullBirthName`, and `dateOfBirth`.
+2. Enter all eight inputs: `question`, `spreadType`, `displayFirstName`, `fullBirthName`,
+   `dateOfBirth`, `editionId`, `heroImageUrl`, `positionsJson`. The code node throws if any is
+   blank. The `question` comes from the edition (the named thing the morning letter was written
+   on), not from the buyer.
 3. Click **Execute workflow**.
 4. Open `26 · REPORT READY — DOWNLOAD PDF`, select **Binary**, and download `data`.
 
@@ -60,6 +70,7 @@ draw atomically per paid order, persist the personal card, generate and store th
 - [Audio branch plan](AUDIO-BRANCH.md)
 - [Confirmed 24h / 12h delivery policy](DELIVERY-POLICY.md)
 - [Replicate Chatterbox setup](CHATTERBOX.md)
+- [Audio provider test evidence](AUDIO-TEST-EVIDENCE.md)
 - [Current numerology Stage 1 source builder](build-numerology-workflow.py)
 - [Scoped Stage 1 cloud updater](update-staged-workflow.py)
 - [Original production scaffold builder](build-workflow.py)
@@ -67,9 +78,11 @@ draw atomically per paid order, persist the personal card, generate and store th
 - [Previous simple Stage 1 builder](build-staged-workflow.py)
 - [Previous simple Stage 1 JSON](08-marcus-staged.n8n.json)
 - [Passing Stage 1 cloud execution evidence](STAGE-1-TEST-EVIDENCE.md)
+- [Compare-grade of execution 30667](STAGE-1-COMPARE-GRADE-30667.md)
 - [47-node local inactive workflow JSON](08-marcus-fulfillment.n8n.json)
 - [Create-only API script](create-new-workflow.py)
-- [Creation receipt](created-workflow.json)
+- [Original Stage 1 workflow creation receipt](created-workflow.json)
+- [47-node fulfillment draft creation receipt](created-fulfillment-workflow.json)
 - [Adaptive local n8n execution evidence](LOCAL-EXECUTION-EVIDENCE.md)
 
 The cloud canvas now contains the inactive 37-node canon-backed Stage 1 lane and a parked Stage 2 note. The
@@ -82,21 +95,35 @@ Stage 1 is working for manual PDF tests. It is not a customer fulfillment system
 must remain inactive until these Stage 2 dependencies are built and tested:
 
 - [ ] Authenticated backend operations below, durable job storage, idempotency and lease handling.
-- [x] Stage 1 numerology planner, report writer, independent grader, structural gate, and PDF renderer are credentialed and passed a cloud execution.
 - [ ] Production report grading, private storage, durable retry state, and customer delivery.
 - [ ] Dedicated backend header-auth credential on service nodes.
-- [ ] Replicate header-auth credential on the two Chatterbox HTTP nodes.
-- [ ] Marcus reference voice file from Joel, stored privately with fresh signed input URLs.
+- [x] Replicate header-auth credential verified in a temporary Chatterbox Turbo n8n smoke-test lane; production audio nodes remain unbuilt.
+- [x] Two Marcus voice sources downloaded locally; v2 is selected, v1 is retained as an alternate, and hashes are recorded in [the voice asset manifest](assets/marcus-voice/README.md).
+- [x] Selected voice v2 uploaded to private object storage with a pinned key and hash.
+- [ ] Production fresh signed voice-input URL operation for n8n. A one-hour test URL was generated and verified successfully.
 - [ ] Speech segment sizing, pronunciation test, media assembly/QA and private player.
 - [ ] Delivery provider/template and scheduled dispatch of persisted delivery/recovery tasks.
 - [ ] Service authentication on the new webhook; backend verification of event, product, paid order and entitlements.
-- [x] One isolated local n8n main-reading run completed with an eight-card 4-up/4-down fixture and produced a PDF. Production integration checks and the audio branch remain pending.
-- [x] One cloud Stage 1 manual run completed with a six-card 2-up/4-down test and returned a downloadable 135 kB PDF.
-- [x] Post-repair execution `30691` selected `LP4`, `EX6`, and `PE1`, passed citation/synthesis QA and both report graders on its first candidate, and returned a 1.18 MB PDF with zero unsupported customer claims. Failed final QA now ends at `QA HOLD · NO PDF` instead of appearing stuck at node 22.
-- [x] Builder-first execution `30694` visibly identified Life Path 4 as **The Builder**, preserved its plain strengths and growth edges, kept The Lovers subordinate as a choice-and-commitment lens, passed both graders on its first candidate, and returned a 1.21 MB PDF with zero unsupported claims.
-- [x] Second-profile execution `30695` calculated `LP7`/`EX6`/`PE1` for Hng Ye Ying, visibly identified **The Seeker**, passed both graders on its first candidate with zero unsupported claims, and returned a 1.19 MB PDF.
-- [x] Ten-card continuity execution `30700` preserved the daily email's Moon, Two of Swords, and Three of Pentacles; drew seven buyer cards; passed both graders on its first candidate; and returned a 1.92 MB Tree of Life PDF. Writer and rewrite output budgets now scale with spread size after execution `30699` exposed truncation at ten cards.
-- [x] The compiled 33-entry canon is embedded as a versioned runtime artifact and the workflow retrieves exactly three entries with passage-ID evidence. Editorial approval of the prose library remains a separate review item.
+
+### Evidence so far
+
+Full detail, node by node, is in [STAGE-1-TEST-EVIDENCE.md](STAGE-1-TEST-EVIDENCE.md). In short:
+
+- Stage 1 planner, writer, independent grader, structural gate and PDF renderer are credentialed and passed a cloud execution.
+- One isolated local n8n main-reading run (eight-card 4-up/4-down fixture) produced a PDF; production checks and the audio branch stay pending.
+- One cloud Stage 1 manual run (six-card 2-up/4-down) returned a downloadable 135 kB PDF.
+- `30691` (post-repair): `LP4`/`EX6`/`PE1`, passed citation/synthesis QA and both graders first time, 1.18 MB PDF, zero unsupported claims; failed QA now ends at `QA HOLD · NO PDF`.
+- `30694`: Life Path 4 shown as **The Builder**, The Lovers kept subordinate as the lens, both graders first time, 1.21 MB PDF.
+- `30695`: `LP7`/`EX6`/`PE1` for Hng Ye Ying, shown as **The Seeker**, both graders first time, 1.19 MB PDF.
+- `30700`: ten-card Tree of Life kept the email's Moon, Two of Swords and Three of Pentacles, drew seven buyer cards, both graders first time, 1.92 MB PDF; writer/rewrite budgets now scale with spread size after `30699` truncated at ten cards.
+- `31276`: temporary n8n audio lane created Chatterbox Turbo prediction `s9g4pxdgh5rmy0d0kbyrd42rew`; the saved 14.14-second voice-v2 WAV passed format and hash checks. The temporary lane was removed and the cloud canvas restored to its inactive 37-node state.
+- The 33-entry canon is embedded as a versioned runtime artifact; the workflow retrieves exactly three entries with passage-ID evidence. Editorial approval of the prose is a separate review item.
+
+### Known gaps (2026-09-13)
+
+- **Spread list mismatch.** The canvas supports `three`, `six_questions`, `adaptive_eight`, `tree_of_life`, `twelve_houses`. The letter library ([SPREADS.md](../daily-email/SPREADS.md)) has The Three (3), The Cross (5), The Six Questions (6), The Cross and Triangle (7), The Tree of Life (10), The Twelve Houses (12). So a letter laid on **The Cross** or **The Cross and Triangle** cannot be fulfilled yet — neither has a spread key on the canvas.
+- **`adaptive_eight` is not in the library.** It turns 4 of 8 free, which breaks the ⅓-rounded-down rule (8 → 2). Drop it or re-cut it before Stage 2 (PARALLEL-PLAN T11).
+- **Date of birth is required.** Stage 1 throws without `dateOfBirth`, so the booking page must collect it. Decided D1 (Joel, 2026-09-13): booking collects display first name, full birth name, date of birth, delivery email.
 
 ## Backend stage envelope
 
@@ -126,6 +153,8 @@ Every stage response preserves an envelope with `eventId`, `orderId`, `jobId`, `
 | `fail-or-review` | Persist bounded retry/review state and visible error context. |
 
 A stopped execution may leave an active lease. Recovery must detect its expiry. Provider create timeouts are ambiguous; the canvas deliberately has no automatic POST retry. Reconcile provider work or review before creating another chargeable prediction.
+
+The approved default audio settings are pinned in [`config/marcus-audio-v1.json`](config/marcus-audio-v1.json): Chatterbox Turbo with Marcus voice v2, pitch-preserving 0.90× tempo, 300 ms paragraph pauses, 600 ms card-section pauses, and 900 ms before the closing synthesis. Store the config version on every job and artifact.
 
 ## Maintaining this new workflow
 

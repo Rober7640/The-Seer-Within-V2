@@ -9,33 +9,80 @@ import { personalLens, drawForOrder, validateEdition } from './draw';
 import { deck, editions } from './fixtures';
 import { LocalStore } from './store';
 import { LocalFulfillment, FulfillmentError, LOCAL_SERVICE_TOKEN } from './fulfillment';
-export const AUDIO_TEST_CENTS = 1700;
+export const AUDIO_TEST_CENTS = 1700; // approved audio price $17 (Joel, 2026-09-13); no longer provisional
 const notice = 'Local simulation only. No payment taken, reading generated, audio recorded or email sent. Fixture state is saved locally when launched from the CLI.';
 interface Artifact {
   id:string; orderId:string; kind:'written-pdf-fixture'; notice:string; reportHash:string;
   pdf:{path:string;mediaType:'application/pdf';bytes:number;sha256:string};
 }
 export interface LocalOrder extends PaidOrder {
+  /** Birth-name split (first / rest-before-last-space / last) kept for the fulfillment brief and lens. */
   firstName:string; lastName:string; totalCents:number; localOnly:true; simulationNotice:string;
   audioPriceProvisional:true; audioDecision:'pending'|'declined'|'accepted';
   fulfillment:{writtenJobId:string;audioJobId?:string;artifact?:Artifact};
 }
 class ApiError extends Error { constructor(public status:number,message:string){super(message);} }
 const fail=(status:number,message:string):never=>{throw new ApiError(status,message);};
-const name=(value:unknown):string=> typeof value==='string' && value.trim().length>0 && value.trim().length<=100 ? value.trim() : fail(400,'Enter a first and last name, each no more than 100 characters.');
+const text=(value:unknown,what:string,max=100):string=> typeof value==='string' && value.trim().length>0 && value.trim().length<=max ? value.trim() : fail(400,`Enter ${what}, no more than ${max} characters.`);
+/** Split a birth name on its LAST space: "Mary Anne Smith" -> first "Mary Anne", last "Smith". */
+function splitBirthName(full:string):{first:string;last:string}{
+  const at=full.lastIndexOf(' ');
+  if(at<1)fail(400,'Enter your full name at birth — a first name and a last name.');
+  return {first:full.slice(0,at).trim(),last:full.slice(at+1).trim()};
+}
+/**
+ * Date of birth arrives from the checkout as `YYYY-MM-DD`. Locally a bad value is rejected with a clear
+ * message so the sim stays honest. ⚠ PRODUCTION RULE (ruling 3): the value comes from a Stripe custom
+ * field AFTER payment, with no format validation inside Stripe — a paid order must NEVER be blocked or
+ * failed on it. The server validates post-payment and routes a bad value to support for correction.
+ * Never log the value.
+ */
+function dateOfBirth(value:unknown,now:Date):string{
+  if(typeof value!=='string' || !/^\d{4}-\d{2}-\d{2}$/.test(value))fail(400,'Enter your date of birth as month, day and a four-digit year.');
+  const [y,m,d]=value.split('-').map(Number);
+  const date=new Date(Date.UTC(y,m-1,d));
+  if(date.getUTCFullYear()!==y || date.getUTCMonth()!==m-1 || date.getUTCDate()!==d)fail(400,'That date of birth is not a real calendar date. Check the month and day.');
+  let age=now.getUTCFullYear()-y; const before=now.getUTCMonth()+1<m || (now.getUTCMonth()+1===m && now.getUTCDate()<d); if(before)age--;
+  if(age<16 || age>110)fail(400,'Check the year of your date of birth — it should have four digits, for example 1961.');
+  return value;
+}
 async function body(req:IncomingMessage,limit=16000):Promise<Record<string,unknown>> {
   let source=''; for await(const chunk of req){source+=chunk; if(source.length>limit)fail(413,'Request is too large.');}
   let data:unknown;try{data=JSON.parse(source);}catch{fail(400,'Send valid JSON.');}
   if(!data || typeof data!=='object' || Array.isArray(data))fail(400,'Send a JSON object.');
   return data as Record<string,unknown>;
 }
+/** The split client: one shell, one stylesheet, one shared script, one script per page. No bundler. */
+const CLIENT_FILES:Record<string,string>={
+  '/client/styles.css':'text/css; charset=utf-8',
+  '/client/shared.js':'text/javascript; charset=utf-8',
+  '/client/pages/email.js':'text/javascript; charset=utf-8',
+  '/client/pages/booking.js':'text/javascript; charset=utf-8',
+  '/client/pages/checkout-sim.js':'text/javascript; charset=utf-8',
+  '/client/pages/bridge.js':'text/javascript; charset=utf-8',
+  '/client/pages/upsell.js':'text/javascript; charset=utf-8',
+  '/client/pages/thank-you.js':'text/javascript; charset=utf-8',
+  '/client/pages/booking.css':'text/css; charset=utf-8',
+  '/client/pages/bridge.css':'text/css; charset=utf-8',
+  '/client/pages/upsell.css':'text/css; charset=utf-8',
+  '/client/pages/thank-you.css':'text/css; charset=utf-8',
+};
+const PAGE_ROUTES=['/','/email','/booking','/checkout-sim','/bridge','/upsell','/thank-you'];
+/** Mockup images live as plain files in ./assets; exported edition faces in ../../assets/email/cards. */
+const LOCAL_ASSETS:Record<string,string>={
+  'portrait':'./assets/portrait.jpg','back':'./assets/back.jpg','five-of-cups':'./assets/five-of-cups.png',
+  'strength':'./assets/strength.png','knight-of-cups':'./assets/knight-of-cups.png','two-of-wands':'./assets/two-of-wands.png',
+  'four-of-cups':'../../assets/email/cards/four-of-cups.jpg','three-of-swords':'../../assets/email/cards/three-of-swords.jpg',
+  'eight-of-swords':'../../assets/email/cards/eight-of-swords.jpg','star':'../../assets/email/cards/the-star.jpg',
+  'seven-of-pentacles':'../../assets/email/cards/seven-of-pentacles.jpg','moon':'../../assets/email/cards/the-moon.jpg',
+  'two-of-swords':'../../assets/email/cards/two-of-swords.jpg','three-of-pentacles':'../../assets/email/cards/three-of-pentacles.jpg',
+};
 /** Tests default to memory. CLI explicitly opts into /tmp fake-data persistence. */
 export function createLocalServer(options: {dataPath?: string; store?: LocalStore; now?: () => Date; artifactRoot?:string; pdfPython?:string} = {}) {
   editions.forEach(e=>validateEdition(e,deck));
   const store=options.store ?? new LocalStore(options.dataPath);
   const now=options.now ?? (()=>new Date());
   const fulfillment=new LocalFulfillment(store,()=>now().getTime(),options.artifactRoot,options.pdfPython);
-  let assets:Record<string,string>|undefined;
   const server=createServer(async(req,res)=>{
     const json=(status:number,data:unknown)=>{res.writeHead(status,{'Content-Type':'application/json; charset=utf-8','Cache-Control':'no-store'});res.end(JSON.stringify(data));};
     try {
@@ -48,16 +95,16 @@ export function createLocalServer(options: {dataPath?: string; store?: LocalStor
         if(req.headers.authorization!==`Bearer ${LOCAL_SERVICE_TOKEN}`)fail(401,'Local fixture service token required.');
         json(200,fulfillment.run(path.slice('/internal/marcus08/'.length),await body(req,262144)));return;
       }
-      if(method==='GET' && ['/','/email','/booking','/bridge','/upsell','/thank-you'].includes(path)){
-        const html=await readFile(new URL('./index.html',import.meta.url));res.writeHead(200,{'Content-Type':'text/html; charset=utf-8','Cache-Control':'no-store'});res.end(html);return;
+      if(method==='GET' && PAGE_ROUTES.includes(path)){
+        const html=await readFile(new URL('./client/index.html',import.meta.url));res.writeHead(200,{'Content-Type':'text/html; charset=utf-8','Cache-Control':'no-store'});res.end(html);return;
+      }
+      if(method==='GET' && CLIENT_FILES[path]){
+        const file=await readFile(new URL('.'+path,import.meta.url));res.writeHead(200,{'Content-Type':CLIENT_FILES[path],'Cache-Control':'no-store'});res.end(file);return;
       }
       if(method==='GET' && path.startsWith('/api/assets/')){
-        if(!assets){const html=await readFile(new URL('../../docs/08-marcus/booking-page/mockup.html',import.meta.url),'utf8');const match=html.match(/const ASSETS=(\{.*?\});/);if(!match)fail(500,'Local assets unavailable.');assets=JSON.parse(match![1]);}
-        const assetId=path.slice('/api/assets/'.length);
-        const extra:Record<string,string>={'four-of-cups':'four-of-cups','three-of-swords':'three-of-swords','eight-of-swords':'eight-of-swords','star':'the-star','seven-of-pentacles':'seven-of-pentacles'};
-        if(extra[assetId]){const bytes=await readFile(new URL(`../../assets/email/cards/${extra[assetId]}.jpg`,import.meta.url));res.writeHead(200,{'Content-Type':'image/jpeg'});res.end(bytes);return;}
-        const data=assets![assetId];if(!data)fail(404,'Asset not found.');
-        const match=data.match(/^data:(image\/[\w+.-]+);base64,(.+)$/);if(!match)fail(500,'Invalid local asset.');res.writeHead(200,{'Content-Type':match![1],'Cache-Control':'public, max-age=3600'});res.end(Buffer.from(match![2],'base64'));return;
+        const assetId=path.slice('/api/assets/'.length);const file=LOCAL_ASSETS[assetId];if(!file)fail(404,'Asset not found.');
+        const bytes=await readFile(new URL(file!,import.meta.url));
+        res.writeHead(200,{'Content-Type':file!.endsWith('.png')?'image/png':'image/jpeg','Cache-Control':'public, max-age=3600'});res.end(bytes);return;
       }
       const reportMatch=path.match(/^\/api\/orders\/([^/]+)\/report\.pdf$/);
       if(method==='GET' && reportMatch){
@@ -69,23 +116,29 @@ export function createLocalServer(options: {dataPath?: string; store?: LocalStor
       if(method==='POST' && path==='/api/intake'){
         const data=await body(req);const edition=editions.find(e=>e.id===data.editionId);if(!edition)fail(400,'Choose a valid edition.');
         if(typeof data.sameDay!=='boolean')fail(400,'Choose whether to add same-day delivery.');
-        const intake:Intake={id:randomUUID(),editionId:edition!.id,editionVersion:edition!.version,firstName:name(data.firstName),lastName:name(data.lastName),sameDay:data.sameDay as boolean};store.insert('intakes',intake.id,intake);json(201,{intake});return;
+        const intake:Intake={id:randomUUID(),editionId:edition!.id,editionVersion:edition!.version,sameDay:data.sameDay as boolean};store.insert('intakes',intake.id,intake);json(201,{intake});return;
+      }
+      if(method==='GET' && path.startsWith('/api/intake/')){
+        const intake=store.get<Intake>('intakes',path.slice('/api/intake/'.length));if(!intake)fail(404,'Intake not found.');json(200,{intake});return;
       }
       if(method==='POST' && path==='/api/local-pay'){
         const data=await body(req);const intake=store.get<Intake>('intakes',String(data.intakeId));if(!intake)fail(404,'Intake not found.');
-        
         if(typeof data.email!=='string' || data.email.length>254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email.trim()))fail(400,'Enter a valid test email address.');
+        const displayFirstName=text(data.displayFirstName,'the name on the card');
+        const fullBirthName=text(data.fullBirthName,'your full name at birth',200);
+        const birth=splitBirthName(fullBirthName);
+        const dob=dateOfBirth(data.dateOfBirth,now());
         const result=store.transaction(()=>{
         const prior=store.get<string>('paidByIntake',intake!.id);if(prior)return {status:200,order:store.get<LocalOrder>('orders',prior)!};
         const edition=editions.find(e=>e.id===intake!.editionId)!;const id=randomUUID();
         const paidAt=now().toISOString();const deliveryHours=intake!.sameDay?12:24;const dueAt=new Date(Date.parse(paidAt)+deliveryHours*3600000).toISOString();
-        let lens;try{lens=personalLens(intake!.firstName,intake!.lastName);}catch{fail(400,'This name needs a supported personal-card method. Try a test name using Latin letters.');}
-        const order:LocalOrder={id,intakeId:intake!.id,editionSnapshot:structuredClone(edition),draw:drawForOrder(id,edition,lens!,deck),deliveryEmail:(data.email as string).trim(),baseCents:MAIN_CENTS,bumpCents:intake!.sameDay?SAME_DAY_CENTS:0,currency:'usd',paymentReference:`local_paid_${id}`,paidAt,dueAt,deliveryHours,writtenStatus:'queued',firstName:intake!.firstName,lastName:intake!.lastName,totalCents:MAIN_CENTS+(intake!.sameDay?SAME_DAY_CENTS:0),localOnly:true,simulationNotice:notice,audioPriceProvisional:true,audioDecision:'pending',fulfillment:{writtenJobId:`written_${id}`}};
+        let lens;try{lens=personalLens(birth.first,birth.last);}catch{fail(400,'This name needs a supported personal-card method. Try a test name using Latin letters.');}
+        const order:LocalOrder={id,intakeId:intake!.id,editionSnapshot:structuredClone(edition),draw:drawForOrder(id,edition,lens!,deck),deliveryEmail:(data.email as string).trim(),displayFirstName,fullBirthName,dateOfBirth:dob,baseCents:MAIN_CENTS,bumpCents:intake!.sameDay?SAME_DAY_CENTS:0,currency:'usd',paymentReference:`local_paid_${id}`,paidAt,dueAt,deliveryHours,writtenStatus:'queued',firstName:birth.first,lastName:birth.last,totalCents:MAIN_CENTS+(intake!.sameDay?SAME_DAY_CENTS:0),localOnly:true,simulationNotice:notice,audioPriceProvisional:true,audioDecision:'pending',fulfillment:{writtenJobId:`written_${id}`}};
         store.insert('orders',id,order);store.insert('paidByIntake',intake!.id,id);return {status:201,order};});json(result.status,{order:result.order});return;
       }
       const orderMatch=path.match(/^\/api\/orders\/([^/]+)(?:\/(audio|fulfill))?$/);
       if(orderMatch){let order=store.get<LocalOrder>('orders',orderMatch[1]);if(!order)fail(404,'Order not found.');
-        if(method==='GET' && !orderMatch[2]){json(200,{order});return;}
+        if(method==='GET' && !orderMatch[2]){json(200,{order:{...order,audioPriceCents:AUDIO_TEST_CENTS,audioPriceProvisional:false}});return;}
         if(method==='POST' && orderMatch[2]==='audio'){
           const data=await body(req);if(typeof data.accept!=='boolean')fail(400,'Choose accept or decline.');
           order=store.update<LocalOrder>('orders',order!.id,(order)=>{

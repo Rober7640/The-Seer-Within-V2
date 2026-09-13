@@ -41,12 +41,15 @@ export interface OrderDraw {
   /** Separate lens; can coincide with a spread card, never consumes a position. */
   personalLens: PersonalLens;
 }
+/**
+ * The booking page collects NO personal data (operator ruling 3, 2026-09-13). An intake is only
+ * the edition and the speed-bump choice; name, email, birth name and date of birth are collected
+ * by the hosted checkout (Stripe custom fields in production, `/checkout-sim` locally).
+ */
 export interface Intake {
   id: string;
   editionId: string;
   editionVersion: number;
-  firstName: string;
-  lastName: string;
   sameDay: boolean;
 }
 export interface PaidOrder {
@@ -55,6 +58,12 @@ export interface PaidOrder {
   editionSnapshot: Edition;
   draw: OrderDraw;
   deliveryEmail: string;
+  /** What the pages call her. Derived from the "name on card" field at checkout. */
+  displayFirstName: string;
+  /** The name given at birth, as typed — the personal-card lens is computed from it. Never log it. */
+  fullBirthName: string;
+  /** `YYYY-MM-DD` as combined from the checkout's three numeric boxes. Never log it. */
+  dateOfBirth: string;
   baseCents: typeof MAIN_CENTS;
   bumpCents: number;
   currency: 'usd';

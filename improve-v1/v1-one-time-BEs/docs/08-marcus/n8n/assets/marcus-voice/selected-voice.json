@@ -1,0 +1,51 @@
+{
+  "schemaVersion": 1,
+  "selectedVoiceVersion": "marcus-voice-v2",
+  "selectedAt": "2026-09-13",
+  "approvalState": "sample_approved_by_joel_2026-09-13",
+  "reference": {
+    "localPath": "reference/marcus-voice-v2.wav",
+    "sha256": "142e611d82c7ce92e23aa2837b7b453f642f31747db9052dad3321fa953c2700",
+    "durationSeconds": 28,
+    "sampleRateHz": 48000,
+    "channels": 1,
+    "codec": "pcm_s16le"
+  },
+  "source": {
+    "url": "https://www.youtube.com/watch?v=ArpQoAWy6M4",
+    "youtubeId": "ArpQoAWy6M4",
+    "clipStartSeconds": 94.38,
+    "clipEndSeconds": 122.38
+  },
+  "privateStorage": {
+    "objectKey": "marcus/08/audio/voices/marcus-voice-v2-142e611d.wav",
+    "uploadedAt": "2026-09-13",
+    "signedUrlConfigured": false
+  },
+  "providerReference": {
+    "localPath": "reference/marcus-voice-v2-10s.wav",
+    "sha256": "7475c80452f865a2ec08638fca8b8fa1f421e1b72ddfd9f9cdb19c3cb89a88bb",
+    "durationSeconds": 9.99,
+    "sampleRateHz": 48000,
+    "channels": 1,
+    "codec": "pcm_s16le",
+    "sourceClipStartSeconds": 241.36,
+    "sourceClipEndSeconds": 251.35,
+    "privateObjectKey": "marcus/08/audio/voices/marcus-voice-v2-10s-7475c804.wav",
+    "uploadedAt": "2026-09-13",
+    "providerModel": "resemble-ai/chatterbox-turbo",
+    "smokeTestState": "succeeded_listening_approved",
+    "smokeTestPredictionId": "s9g4pxdgh5rmy0d0kbyrd42rew",
+    "smokeTestOutputSha256": "70986b34f84d77e2a00d32d04664b37cb839d485aa8479c4056eecb0e18b270c"
+  },
+  "listeningApproval": {
+    "by": "Joel",
+    "on": "2026-09-13",
+    "sampleSha256": "70986b34f84d77e2a00d32d04664b37cb839d485aa8479c4056eecb0e18b270c",
+    "note": "its good"
+  },
+  "rightsReview": {
+    "state": "pending",
+    "note": "real person from YouTube; consent not obtained; see README rights note"
+  }
+}

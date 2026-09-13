@@ -1,7 +1,7 @@
 # 08 Marcus — audio upsell scope
 
 
-> **Latest confirmed decisions:** standard delivery within 24 hours; +$12.77 bump within 12 hours, both measured from confirmed main payment. Audio shares that order deadline. Use Replicate Chatterbox with the Marcus voice Joel will supply. Create a NEW Marcus n8n workflow; existing workflows must remain untouched. See the delivery policy and Chatterbox setup in the n8n folder. These decisions supersede older open-timing/provider notes below.
+> **Latest confirmed decisions:** standard delivery within 24 hours; +$12.77 bump within 12 hours, both measured from confirmed main payment. Audio shares that order deadline. Use Replicate Chatterbox with Marcus voice v2 selected by Joel. Create a NEW Marcus n8n workflow; existing workflows must remain untouched. See the delivery policy and Chatterbox setup in the n8n folder. These decisions supersede older open-timing/provider notes below.
 
 Status: proposed product and copy for review, 2026-09-10. Joel approved the audio direction and a local-first build. Price, delivery terms, and narration method remain open. This brief does not authorize live payments, publishing, or customer delivery.
 

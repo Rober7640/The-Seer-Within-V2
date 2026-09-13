@@ -28,6 +28,11 @@
       "editionId": "higher-calling-v2",
       "source": "docs/08-marcus/daily-email/letters-02/what-is-my-higher-calling-test-flow.md",
       "sha256": "56d3d6f3be78d5a49db3ec98b21bb7e9e94917374b5bf343e8332b3f4eca394e"
+    },
+    {
+      "editionId": "blind-spots-v1",
+      "source": "docs/08-marcus/daily-email/letters-02/what-are-my-blind-spots.md",
+      "sha256": "344048a8eaca520d1b31e60640b18e909d37efa7f67d6a042c25b7a08b2abdb4"
     }
   ],
   "editions": [
@@ -348,6 +353,101 @@
       ],
       "freeEmailText": "Subject: 🕯️ %FIRSTNAME%, the thing you keep coming back to\n\n%FIRSTNAME%,\n\nThe thing you keep coming back to—could that be your calling?\n\nThat's what I'm looking at this morning. Six Rider–Waite cards are on the table. Two are face up, beginning with The Star.\n\nOne — what you keep coming back to. The Star.\n\nA woman kneels beside a pool, pouring water from two jugs. One pours into the pool, the other onto the land. A large star shines above her.\n\nLook at her foot. It's in the water, while her other knee rests on the ground. She's touching the pool without getting all the way in.\n\nI read that as staying close to something that matters to you, while keeping your involvement small. You read about it. You notice someone doing it and want to hear how they began. Then life gets busy, and you put it aside.\n\nBut your interest returns.\n\nThat doesn't make it your life's work. It does make it worth trying seriously enough to find out. A class you attend. Something you make. An hour spent doing the thing you've been reading about.\n\nTwo — why you've put it off. The Seven of Pentacles.\n\nA man leans on the handle of his hoe, looking down at the plant in front of him. Gold discs sit among its leaves and near his feet. He's stopped working to inspect what his effort has produced.\n\nThere is something sensible about that pause. You want to know that the time you give will be worthwhile.\n\nBut notice: he has something to inspect. He's already done the work.\n\nYou may be asking for that reassurance before you've had a proper chance to try. Will you be good at it? Will it lead somewhere? Is it worth making room for?\n\nSome answers only become available once you've begun.\n\nBeside The Star, this card changes the question. Instead of asking whether this interest is important enough to deserve your time, ask what giving it some time would help you discover.\n\nYou don't have to decide the rest of your life before you begin.\n\nThe question now is where to begin without neglecting the life you've already built.\n\nYou have responsibilities, %FIRSTNAME%. Making room for something you care about means deciding what can change, and what needs to stay. That's where a personal reading can help you consider your next step.\n\nThe remaining four cards explore what waiting has cost you, what you may need to let go of, what needs to change, and where you can begin.\n\nClick below and enter your first and last name. I'll use your name to identify your personal tarot card. That card represents strengths you can draw on and familiar habits you can get caught in. I'll use those meanings to interpret the remaining four: what could help you pursue this calling, and what could hold you back.\n\nTurn the other four.\n\nMarcus\n\nP.S. The man with the hoe has something to judge because he's given it a chance to grow.",
       "status": "published"
+    },
+    {
+      "id": "blind-spots-v1",
+      "version": 1,
+      "slug": "what-are-my-blind-spots",
+      "question": "What are my blind spots?",
+      "theme": "Where a blind spot is reaching into her life and what it is costing there",
+      "spread": {
+        "id": "tree-of-life",
+        "name": "The Tree of Life",
+        "version": 1
+      },
+      "positions": [
+        {
+          "id": "p1",
+          "number": 1,
+          "label": "How a blind spot affects you",
+          "visibility": "free",
+          "fixedCard": {
+            "cardId": "moon",
+            "reversed": false
+          }
+        },
+        {
+          "id": "p2",
+          "number": 2,
+          "label": "What you already understand",
+          "visibility": "free",
+          "fixedCard": {
+            "cardId": "two-of-swords",
+            "reversed": false
+          }
+        },
+        {
+          "id": "p3",
+          "number": 3,
+          "label": "What you have concluded",
+          "visibility": "free",
+          "fixedCard": {
+            "cardId": "three-of-pentacles",
+            "reversed": false
+          }
+        },
+        {
+          "id": "p4",
+          "number": 4,
+          "label": "What you keep excusing",
+          "visibility": "paid"
+        },
+        {
+          "id": "p5",
+          "number": 5,
+          "label": "What you feel you are owed",
+          "visibility": "paid"
+        },
+        {
+          "id": "p6",
+          "number": 6,
+          "label": "What's left of the love",
+          "visibility": "paid"
+        },
+        {
+          "id": "p7",
+          "number": 7,
+          "label": "What you want to win",
+          "visibility": "paid"
+        },
+        {
+          "id": "p8",
+          "number": 8,
+          "label": "What you show people",
+          "visibility": "paid"
+        },
+        {
+          "id": "p9",
+          "number": 9,
+          "label": "What home feels like",
+          "visibility": "paid"
+        },
+        {
+          "id": "p10",
+          "number": 10,
+          "label": "What it costs in money",
+          "visibility": "paid"
+        }
+      ],
+      "freeEmailText": "Subject: 🌙 %FIRSTNAME%, the clue you’re missing may be right in front of you\n\n%FIRSTNAME%,\n\nYou can replay a conversation until you remember every word and still miss what an outside observer would notice immediately.\n\nThat is the question behind this morning’s Tree of Life spread. I laid ten cards from the 1909 Rider–Waite deck to ask what you may be missing even after careful thought. The first clue appears in a small detail at the bottom of The Moon card.\n\nOne — how a blind spot affects you. The Moon.\n\nThe moon hangs high between two stone towers. A dog and a wolf look up at it. A long path winds away into the distance.\n\nBut look at the bottom of the card. A small creature is climbing out of the water. It is the nearest thing in the picture, yet everything else draws your eyes upward and away from it.\n\nThat is what a blind spot can do. When something feels uncertain, your attention moves away from what is in front of you. You think about what may happen later or what somebody could have meant. Meanwhile, a less dramatic clue may already be there: your first reaction, a contradiction between words and actions, or a direct question you have not asked.\n\nThe Moon doesn’t mean that whatever made you uncertain is imaginary. It warns that possible explanations can begin to feel more important than the evidence you already have.\n\nTwo — what you already understand. The Two of Swords.\n\nA blindfolded woman sits beside the sea. She holds a sword in each hand, the blades raised evenly over her shoulders.\n\nNotice what keeping them balanced requires. Her arms must remain crossed in front of her body.\n\nYou may already understand the two choices before you very well. You can explain the case for one, then the case for the other. You can keep them so evenly matched that waiting begins to feel like control: no mistake has been made, no door has been closed, and nothing has been lost.\n\nBut she cannot keep that perfect balance and reach for anything new at the same time.\n\nRead with The Moon, this card shows how a blind spot can survive careful thought. The problem isn’t always that you haven’t thought about the decision enough. Sometimes comparing the same two options again simply keeps you stuck.\n\nThree — what you have concluded. The Three of Pentacles.\n\nA craftsman stands on a bench, working on the stone arch of a building. Two other people face him. One of them holds an architectural drawing.\n\nThe person doing the work is not the person holding the drawing.\n\nThat separation is the key to this card. The craftsman has skill. He has put in the effort. But his view from the bench cannot show him everything about the building. He needs to compare what he is making with the plan someone else is holding.\n\nYou may have thought carefully and reached a sensible conclusion. The card doesn’t ask you to distrust your judgment. The Three of Pentacles asks whether someone with different information has challenged that conclusion. An answer to a direct question, an inconvenient fact, or honest feedback from someone you trust may reveal more than another hour spent thinking by yourself.\n\nTogether, the three cards give a plain answer. Your blind spot may be this: you expect more thinking to reveal information that only a new point of view can provide. The Moon pulls your attention into the distance. The Two of Swords keeps the decision locked between the same two options. The Three of Pentacles brings in another point of view.\n\nThree of the ten cards are face up. They describe a blind-spot pattern that many people can recognize. The remaining seven show where that pattern may be affecting your own life.\n\nThe first three cards cannot tell us which part of your life is most affected. Each remaining position examines one area: what you keep excusing; what you feel you are owed; the love you give and receive; the result you want; what you let other people see; your life at home; and your financial choices. Read together, those seven cards can show where trying to solve everything inside your own head may be hurting you most.\n\nTo continue, I’ll need your first and last name. I convert the letters in your name into a number that identifies your personal tarot card. That card describes strengths you tend to rely on and habits that may be harder for you to notice. I’ll use that personal lens to interpret the remaining seven cards: where a strength helps you recognize what is happening, and where a familiar habit may hide a fact or another person’s point of view.\n\nContinue the blind-spot reading\n\nMarcus\n\nP.S. The creature at the bottom is easy to miss while the dog and wolf stare at the moon.",
+      "status": "published",
+      "bookingCopy": {
+        "headline": "Let’s look at where it’s costing you most.",
+        "intro": "Continue your reading on your blind spots—and which part of your life they are reaching into.",
+        "bridge": "The Moon, the Two of Swords and the Three of Pentacles showed the pattern: attention pulled into the distance, a decision held between the same two options, and a conclusion nobody else has checked. The next seven cards show where that pattern is reaching—what you keep excusing, what you feel you are owed, your love, your home and your money.",
+        "offer": "In your full reading, I’ll bring these cards together around your question: which part of your life is carrying the blind spot, what it has already cost you there, and the one question or fact that would settle it.",
+        "name": "I’ll use the strengths and habits your personal card represents as another way to explore where your attention drifts and which facts you tend to leave unchecked—so along with your first name, I’ll need your full name as it was given at birth and your date of birth."
+      }
     }
   ]
 }

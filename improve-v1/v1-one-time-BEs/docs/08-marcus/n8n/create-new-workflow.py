@@ -14,9 +14,17 @@ w=json.loads((HERE/'08-marcus-fulfillment.n8n.json').read_text())
 assert w['active'] is False
 assert 'enabled: false' in next(n for n in w['nodes'] if n['name']=='Configuration and guard')['parameters']['jsCode']
 body={k:w[k] for k in ['name','nodes','connections','settings']}
+receipt=HERE/'created-fulfillment-workflow.json'
+if sys.argv[1:]==['--status']:
+ if not receipt.exists():raise SystemExit('No fulfillment workflow receipt exists.')
+ record=json.loads(receipt.read_text())
+ base=value('N8N_BASE_URL').rstrip('/');key=value('N8N_API_KEY')
+ req=urllib.request.Request(base+'/api/v1/workflows/'+urllib.parse.quote(str(record['id'])),headers={'X-N8N-API-KEY':key,'Accept':'application/json'},method='GET')
+ with urllib.request.urlopen(req,timeout=45) as response:current=json.load(response)
+ guard=next(n for n in current['nodes'] if n['name']=='Configuration and guard')['parameters']['jsCode']
+ print(json.dumps({'id':current['id'],'name':current['name'],'active':current.get('active'),'nodes':len(current['nodes']),'guardEnabled':'enabled: true' in guard,'url':base+'/workflow/'+str(current['id'])}));raise SystemExit(0)
 if sys.argv[1:]!=['--create']:
  print(json.dumps({'mode':'dry-run','name':w['name'],'nodes':len(w['nodes']),'active':False,'guardEnabled':False,'operation':'POST new workflow only'}));raise SystemExit(0)
-receipt=HERE/'created-workflow.json'
 if receipt.exists():raise SystemExit('Creation receipt already exists. Refusing to create a duplicate or modify that workflow.')
 base=value('N8N_BASE_URL').rstrip('/');key=value('N8N_API_KEY')
 if not key or not base:raise SystemExit('Missing N8N_BASE_URL or N8N_API_KEY; no request made.')

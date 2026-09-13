@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Marcus Stone — order confirmed (bridge mock)</title>
+<style>
+/* 08 Marcus · bridge page · design mock (review 02). Static, no JS, no network.
+   Direction: a letter set down and a line drawn under it. One load motion, once. */
+:root{--desk:#dbd1b9;--paper:#f4f1e6;--ink:#201c16;--muted:#665d4e;--rule:#bcb29e;--red:#8f2b1f;--font:Georgia,'Times New Roman',serif}
+*{box-sizing:border-box}
+html{background:var(--desk)}
+body{margin:0;background:var(--desk);color:var(--ink);font:18px/1.6 var(--font);padding:30px 20px 46px;-webkit-font-smoothing:antialiased}
+button{font:inherit;cursor:pointer;-webkit-tap-highlight-color:transparent}
+button:focus-visible{outline:3px solid #a36b31;outline-offset:4px}
+
+.paper{max-width:880px;margin:auto;background:var(--paper);padding:30px 52px 24px;box-shadow:0 2px 10px #42382616;border:1px solid #c8bda8}
+
+/* masthead — unchanged from the letter (portrait is a monogram stand-in in this mock) */
+.masthead{display:flex;align-items:center;gap:15px;border-bottom:4px double var(--ink);padding-bottom:20px}
+.portrait{width:52px;height:52px;flex:0 0 52px;display:grid;place-items:center;background:#8a7b64;color:#f4f1e6;font-size:20px;letter-spacing:1px;filter:sepia(.2)}
+.mast-name{font-size:25px;line-height:1.15;letter-spacing:1px}
+.role{font-size:15px;color:var(--muted);font-style:italic}
+.brand{margin-left:auto;font-size:15px;font-style:italic;color:var(--muted)}
+
+/* the page */
+.bridge{max-width:600px;margin:40px auto 10px}
+.eyebrow{display:flex;align-items:center;justify-content:center;gap:12px;font-size:15px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted)}
+.eyebrow::before,.eyebrow::after{content:"";width:22px;height:2px;background:var(--red)}
+h1{margin:18px 0 0;font-weight:normal;font-size:44px;line-height:1.1;letter-spacing:-1.2px;text-align:center;text-wrap:balance}
+.nowrap{white-space:nowrap}
+p{margin:0}
+.thanks{margin:24px auto 0;max-width:34em}
+
+/* the order facts — ruled paper, not a grey box */
+.facts{margin:28px 0 0;padding:22px 0 0;border-top:4px double var(--ink);position:relative}
+.facts>p{max-width:34em}
+.facts dl{display:grid;grid-template-columns:1fr 1fr;gap:20px 32px;margin:20px 0 0}
+.facts dt{font-size:13px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-bottom:4px}
+.facts dd{margin:0;font-size:21px;line-height:1.35;font-weight:bold;overflow-wrap:anywhere}
+.facts dd small{display:block;font-size:16px;font-weight:normal;color:var(--muted);margin-top:2px}
+.drawn{height:1px;background:var(--ink);margin-top:22px;transform-origin:left center}
+
+.next{margin:26px auto 0;max-width:34em}
+
+.primary{display:block;width:100%;margin-top:22px;border:1px solid var(--red);border-radius:0;background:var(--red);color:#fffaf0;padding:16px 18px;min-height:60px;font-size:20px;line-height:1.3;transition:background .15s}
+.primary:hover{background:#742318}
+.under{text-align:center;font-size:16px;color:var(--ink);margin-top:14px}
+
+.footer{margin-top:38px;padding-top:15px;border-top:1px solid var(--rule);display:flex;justify-content:space-between;gap:15px;font-size:12px;letter-spacing:.3px;color:var(--muted)}
+
+/* the one motion: three quiet rises, then the line draws itself. Once. */
+@media(prefers-reduced-motion:no-preference){
+  .rise{opacity:0;animation:rise .55s ease-out both}
+  .r1{animation-delay:.05s}.r2{animation-delay:.18s}.r3{animation-delay:.32s}
+  .drawn{transform:scaleX(0);animation:draw .7s .5s cubic-bezier(.2,.7,.2,1) both}
+  @keyframes rise{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+  @keyframes draw{to{transform:scaleX(1)}}
+}
+
+@media(max-width:620px){
+  body{padding:12px 10px 24px;font-size:17px}
+  .paper{padding:22px 21px 20px}
+  .masthead{gap:11px;padding-bottom:14px}
+  .portrait{width:44px;height:44px;flex-basis:44px;font-size:17px}
+  .mast-name{font-size:21px}.role{font-size:13px}.brand{display:none}
+  .bridge{margin-top:16px}
+  .eyebrow{font-size:14px}
+  h1{font-size:34px;line-height:1.08;letter-spacing:-.8px;margin-top:14px}
+  .nowrap{white-space:normal}
+  .thanks{margin-top:14px}
+  .facts{margin-top:18px;padding-top:14px}
+  .facts dl{grid-template-columns:1fr;gap:14px;margin-top:14px}
+  .facts dd{font-size:19px}
+  .drawn{margin-top:16px}
+  .next{margin-top:16px}
+  .under{margin-top:10px;font-size:15px}
+  .primary{margin-top:16px;font-size:19px}
+  .footer{display:block;font-size:11px}.footer span{display:block;margin:3px 0}
+}
+</style>
+</head>
+<body>
+<main class="paper">
+  <header class="masthead">
+    <div class="portrait" aria-hidden="true">MS</div>
+    <div><div class="mast-name">MARCUS STONE</div><div class="role">Daily Tarot Reader</div></div>
+    <div class="brand">The Seer Within</div>
+  </header>
+
+  <section class="bridge" aria-labelledby="h">
+    <div class="rise r1">
+      <p class="eyebrow">Order confirmed</p>
+      <h1 id="h">Your personal reading <span class="nowrap">is now being prepared.</span></h1>
+      <p class="thanks">Thank you, Karen. I have your question, your saved cards, and the personal card connected to your name.</p>
+    </div>
+
+    <div class="facts rise r2">
+      <p><strong>Your written reading is secured.</strong> It will be prepared for the address below and delivered within 12 hours of payment.</p>
+      <dl>
+        <div><dt>Delivery email</dt><dd>karen.m@example.test</dd></div>
+        <div><dt>Arrives</dt><dd>Within 12 hours <small>of payment</small></dd></div>
+      </dl>
+      <div class="drawn" aria-hidden="true"></div>
+    </div>
+
+    <div class="rise r3">
+      <p class="next">Before you view your receipt, I want to show you one optional way to receive the same reading.</p>
+      <button class="primary" type="button">Continue</button>
+      <p class="under">Nothing on the next page changes or delays that order.</p>
+    </div>
+  </section>
+
+  <footer class="footer"><span>MARCUS STONE · THE SEER WITHIN</span><span>Design mock · review 02</span></footer>
+</main>
+<!--
+  Mock notes (not customer copy):
+  - Sentences are the scope's approved copy, moved not rewritten, with one exception flagged for the
+    comprehension audit: "prepared for [email]" became "prepared for the address below" so the email
+    could sit on its own display line. The labels "Delivery email" / "Arrives" are proposed and gated.
+  - The headshot is a monogram stand-in; the real portrait is 25 KB of base64 and would breach the
+    40 KB budget. In the harness it is the existing <img class="portrait">.
+  - No JS on purpose. Name, email and hours are server-rendered from the verified order in production.
+-->
+</body>
+</html>

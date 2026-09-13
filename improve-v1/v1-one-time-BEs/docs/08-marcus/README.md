@@ -1,8 +1,8 @@
 # 08 Marcus — build and test record
 
-Last updated: 2026-09-11
+Last updated: 2026-09-13
 
-This folder contains the current design, copy, local application, and n8n work for the Marcus daily-reading funnel. The manual n8n Stage 1 can produce a complete, numerology-anchored PDF from test inputs. The local application can simulate the customer journey and preserve the order, draw, deadline, and PDF fixture. The production handoff between those pieces is not connected yet.
+This folder contains the current design, copy, local application, and n8n work for the Marcus daily-reading funnel. The manual 37-node n8n Stage 1 can produce a complete, numerology-anchored PDF from test inputs. A separate 47-node written-and-audio fulfillment draft is now available in n8n for review, inactive and guarded. A real Chatterbox Turbo smoke test generated Marcus voice-v2 audio, and 0.90× pitch-preserving playback is the approved default. The production handoff between the funnel, Supabase, payment, fulfillment, storage, and delivery is not connected yet.
 
 For the current completion ledger, use [FUNNEL-STATUS-AUDIT.md](FUNNEL-STATUS-AUDIT.md). For the full project history, read [HANDOVER.md](HANDOVER.md). [FUNNEL-BUILD-CHECKLIST.md](FUNNEL-BUILD-CHECKLIST.md) preserves the original implementation tracker.
 
@@ -28,11 +28,11 @@ Each daily edition fixes the question, spread, theme, face-up cards, and hidden 
 | Latest daily | [What are my blind spots? letter](daily-email/letters-02/what-are-my-blind-spots.md), [HTML](daily-email/html/what-are-my-blind-spots.html), and [cold-read audit](daily-email/reviews/what-are-my-blind-spots-cold-read.md) | CTA still contains `{{BOOKING_URL}}` until edition routing is deployed |
 | Booking page | [Approved scope](booking-page/SCOPE.md), standalone [HTML mockup](booking-page/mockup.html), and executable local route with $35 offer and optional +$12.77 speed bump | No live payment session or production form submission |
 | Bridge page | [Scope](bridge-page/SCOPE.md) and executable local route that confirms the saved order and deadline before the audio offer | No deployed route or real order lookup |
-| Audio Upsell 1 | Reusable [copy shape](upsell-1-audio/SHAPE.md), selected [sales copy](upsell-1-audio/COPY.md), [product scope](upsell-1-audio/SCOPE.md), three comparison drafts, and local accept/decline route | Price, Marcus voice file, Replicate calls, audio assembly, storage, and delivery remain pending |
+| Audio Upsell 1 | Reusable [copy shape](upsell-1-audio/SHAPE.md), selected [sales copy](upsell-1-audio/COPY.md), [product scope](upsell-1-audio/SCOPE.md), local accept/decline route, selected voice v2 stored [locally and privately](n8n/assets/marcus-voice/README.md), verified Replicate credential, successful Chatterbox Turbo sample, and approved 0.90× pacing default | Price, production signed-URL operation, segmentation, assembly, private player, and delivery remain pending |
 | Thank-you | [Receipt and delivery scope](thank-you/SCOPE.md) plus a local receipt route showing saved products, totals, status, and deadline | No production receipt, private download, or listening link |
 | Local application | Loopback-only funnel, SQLite persistence, edition export, simulated payment, saved buyer draw, personal-card logic, adaptive report fixtures, and local PDF rendering | Uses fake payments and captured deliveries; makes no Supabase, Stripe, OpenAI, PDFShift, Replicate, email, or analytics call |
 | n8n Stage 1 | Dedicated inactive 37-node workflow with numerology calculation, fixed canon selection, evidence synthesis, tarot planning, report writing, two graders, one bounded rewrite, fail-closed QA, and PDFShift rendering | Manual test lane only; does not load an order or deliver a customer report |
-| n8n Stage 2 | Production flow architecture, delivery policy, operation envelopes, retry/lease design, and an audio branch plan | Parked until the production data and verified-payment contracts are implemented |
+| n8n Stage 2 | Production flow architecture, delivery policy, operation envelopes, retry/lease design, audio branch plan, and a separate [47-node inactive cloud draft](https://ezyabsorb.app.n8n.cloud/workflow/UJamB32MGlNKdoEW) using Chatterbox Turbo fields | Reviewable scaffold only; its guard is disabled and its backend operations remain placeholders until the production data and verified-payment contracts are implemented |
 | Numerology canon | Versioned 33-entry canon covering Life Path, Expression, and Personality numbers 1–9, 11, and 22, with combination rules and compiled runtime JSON | Prose library still needs final editorial approval; unsupported master number 33 fails explicitly |
 
 The executable local application is under [local/08-marcus](../../local/08-marcus/README.md). Its routes are `/email`, `/booking`, `/bridge`, `/upsell`, and `/thank-you` on `127.0.0.1:5088`.
@@ -86,6 +86,27 @@ Earlier passing runs also proved:
 
 Full run details are recorded in [STAGE-1-TEST-EVIDENCE.md](n8n/STAGE-1-TEST-EVIDENCE.md). The workflow contract suite contains seven tests for code validity, exact canon selection, privacy boundaries, citation enforcement, adaptive token budgets, and fail-closed routing; all seven pass.
 
+### Cloud n8n audio smoke test
+
+The separate fulfillment draft is available here:
+
+**[Open the 47-node written-and-audio fulfillment draft](https://ezyabsorb.app.n8n.cloud/workflow/UJamB32MGlNKdoEW)**
+
+It was created as a separate inactive workflow. A read-back from n8n confirmed 47 nodes, inactive state, and `enabled: false` in its configuration guard. The existing 37-node Stage 1 workflow was not modified.
+
+The original `resemble-ai/chatterbox` deployment returned the same provider-side CUDA assertion with the 28-second voice reference, a 10-second reference, and no reference audio. The maintained `resemble-ai/chatterbox-turbo` endpoint then succeeded through a temporary n8n test lane:
+
+| Check | Result |
+| --- | --- |
+| n8n execution | `31276` |
+| Replicate prediction | `s9g4pxdgh5rmy0d0kbyrd42rew` |
+| Reference | Marcus voice v2, normalized 9.99-second private WAV |
+| Provider generation | Succeeded in 4.4 seconds |
+| Saved output | 14.14-second mono 24 kHz WAV |
+| Approved pacing default | Pitch-preserving 0.90× tempo; 300 ms paragraph pauses; 600 ms card-section pauses; 900 ms before the closing synthesis |
+
+Listen to the [provider output](n8n/assets/marcus-voice/tests/marcus-voice-v2-chatterbox-turbo-s9g4pxdgh5rmy0d0kbyrd42rew.wav) or the [approved 0.90× pacing sample](n8n/assets/marcus-voice/tests/marcus-voice-v2-chatterbox-turbo-s9g4pxdgh5rmy0d0kbyrd42rew-90pct.wav). The machine-readable default is [marcus-audio-v1.json](n8n/config/marcus-audio-v1.json), and the full provider record is in [AUDIO-TEST-EVIDENCE.md](n8n/AUDIO-TEST-EVIDENCE.md).
+
 ### Local funnel and fulfillment
 
 The isolated local harness has tested:
@@ -101,7 +122,7 @@ The isolated local harness has tested:
 - local-only authenticated fulfillment operations, leases, rollback, and captured unsent deliveries;
 - desktop and mobile browser journeys with no external requests.
 
-These tests prove the local contracts and page flow. They do not prove live Stripe, Supabase, model, audio, delivery, or production authentication behavior.
+These tests prove the local contracts and page flow. The separate provider smoke test proves Replicate authentication, signed reference access, and one short Turbo synthesis. It does not prove full-report narration, production Stripe/Supabase handling, private player delivery, or recovery behavior.
 
 ## How to test what works today
 
@@ -171,10 +192,14 @@ Life Path cannot be calculated without date of birth, and Expression and Persona
 - [ ] Create the dedicated Supabase tables, private storage, access rules, and atomic saved-draw operation.
 - [ ] Build Stage 2 service endpoints for verified payment, idempotency, leases, retries, grading, storage, and delivery.
 - [ ] Connect Stage 2 to the existing Stage 1 generation core and test it with test-mode orders.
+- [x] Push the separate 47-node written-and-audio fulfillment draft to n8n as an inactive guarded workflow.
 - [ ] Decide PDF attachment versus restricted-link delivery and implement the selected provider/template.
 - [ ] Approve the audio price and narration promise.
-- [ ] Receive and privately store Marcus's authorized reference voice.
-- [ ] Wire Replicate Chatterbox, segment narration, assemble and QA the audio, and issue a private listening link.
+- [x] Receive two Marcus voice sources, create versioned local reference WAVs, and select voice v2.
+- [x] Store selected voice v2 privately with a pinned object key and hash.
+- [x] Verify the n8n Replicate credential, a temporary signed voice URL, and one real Chatterbox Turbo synthesis with voice v2.
+- [x] Approve and pin 0.90× pitch-preserving tempo with versioned paragraph, card-section, and closing pauses.
+- [ ] Build the production signed-URL operation; segment narration, persist predictions, assemble and QA audio, and issue a private listening link.
 - [ ] Test late audio purchases, provider failures, missed deadlines, retries, duplicate webhooks, and customer-safe recovery.
 - [ ] Complete privacy, retention, support, refund, and deadline-remedy decisions before accepting real orders.
 - [ ] Activate the new Marcus workflow only after the full production path passes test-mode checks.

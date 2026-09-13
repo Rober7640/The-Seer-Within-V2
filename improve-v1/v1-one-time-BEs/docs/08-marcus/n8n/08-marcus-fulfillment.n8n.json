@@ -1,5 +1,5 @@
 {
-  "name": "08 Marcus — Written + Audio Fulfillment — INACTIVE DRAFT",
+  "name": "08 Marcus — Written + Audio Fulfillment — 47-NODE INACTIVE DRAFT",
   "nodes": [
     {
       "id": "002b65e2-a3c6-571a-88b7-deb2b8480fa0",
@@ -56,7 +56,7 @@
         60
       ],
       "parameters": {
-        "jsCode": "const config = { enabled: false, backendBaseUrl: '', standardHours: 24, expeditedHours: 12, bumpCents: 1277, replicateModel: 'resemble-ai/chatterbox', voiceReferenceUrl: '', voiceVersion: '', audioSharesOrderDeadline: true };\nif (!config.enabled || !config.backendBaseUrl) throw new Error('08 DRAFT DISABLED: wire and test the documented backend operations and credentials before enabling.');\nconst event = $json.body ?? $json;\nreturn [{json:{config,event}}];"
+        "jsCode": "const config = { enabled: false, backendBaseUrl: '', standardHours: 24, expeditedHours: 12, bumpCents: 1277, replicateModel: 'resemble-ai/chatterbox-turbo', voiceReferenceUrl: '', voiceVersion: 'marcus-voice-v2-10s', audioConfigVersion: 'marcus-audio-v1', audioTimeStretchRatio: 0.90, paragraphPauseMs: 300, cardSectionPauseMs: 600, closingPauseMs: 900, audioSharesOrderDeadline: true };\nif (!config.enabled || !config.backendBaseUrl) throw new Error('08 DRAFT DISABLED: wire and test the documented backend operations and credentials before enabling.');\nconst event = $json.body ?? $json;\nreturn [{json:{config,event}}];"
       },
       "notes": ""
     },
@@ -533,7 +533,7 @@
         -280
       ],
       "parameters": {
-        "jsCode": "if (!$json.segment?.text || !$json.voice?.signedUrl || !$json.voice?.version) throw new Error('Missing approved script segment or supplied Marcus voice');\nreturn [{json:{...$json,replicateInput:{prompt:$json.segment.text,audio_prompt:$json.voice.signedUrl,exaggeration:0.5,cfg_weight:0.5,temperature:0.8,seed:$json.segment.seed||0}}}];"
+        "jsCode": "if (!$json.segment?.text || !$json.voice?.signedUrl || !$json.voice?.version) throw new Error('Missing approved script segment or supplied Marcus voice');\nreturn [{json:{...$json,replicateInput:{text:$json.segment.text,reference_audio:$json.voice.signedUrl,top_p:0.95,top_k:1000,temperature:0.8,repetition_penalty:1.2,seed:$json.segment.seed??0}}}];"
       },
       "notes": ""
     },
@@ -548,7 +548,7 @@
       ],
       "parameters": {
         "method": "POST",
-        "url": "https://api.replicate.com/v1/models/resemble-ai/chatterbox/predictions",
+        "url": "https://api.replicate.com/v1/models/resemble-ai/chatterbox-turbo/predictions",
         "authentication": "genericCredentialType",
         "genericAuthType": "httpHeaderAuth",
         "sendBody": true,
@@ -558,7 +558,7 @@
           "timeout": 30000
         }
       },
-      "notes": "Assign Replicate Authorization: Bearer credential. No auto-retry on ambiguous POST timeout: reconcile provider job or review before resubmitting. User-supplied Marcus voice via audio_prompt. Copy results immediately to durable storage."
+      "notes": "Assign Replicate Authorization: Bearer credential. No auto-retry on ambiguous POST timeout: reconcile provider job or review before resubmitting. Marcus voice v2 is supplied through reference_audio. Copy results immediately to durable storage. Backend assembly applies marcus-audio-v1 pacing: pitch-preserving 0.90 atempo plus versioned pauses."
     },
     {
       "id": "d4862e30-3484-5b92-8e4c-51ee8ec419e0",

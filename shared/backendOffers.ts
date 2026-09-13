@@ -27,7 +27,12 @@
 // Trackdesk branch defaults an unrecognised product to conversionType 'sale', which
 // would book a backend reading as a main-funnel affiliate sale.
 
-export type BackendOfferKey = 'twin-flame' | 'judgement-day' | 'pixiu-bracelet' | 'marcus-daily';
+export type BackendOfferKey =
+  | 'twin-flame'
+  | 'judgement-day'
+  | 'pixiu-bracelet'
+  | 'marcus-daily'
+  | 'marcus-reading';
 
 /** Which of the two booking treatments sold it — decides where a cancel returns to. */
 export type BookingTreatment = 'page' | 'chat';
@@ -101,6 +106,20 @@ export const MARCUS_DAILY_TIER_CENTS = {
 export const MARCUS_DAILY_BUMP_PRODUCT_KEY = 'marcus_same_day';
 export const MARCUS_DAILY_BUMP_CENTS = 1277;
 
+// 08 — Marcus Stone's personal tarot reading. ONE fixed thing, unlike 07: an edition
+// (a named spread, exported by scripts/export-08-editions.py) read against her full
+// birth name and date of birth, written and sent within 24 hours.
+//
+// 🔴 08 is NOT 07. Same persona, different product, different Stripe product key,
+//    different bump key, different tables. Nothing here may reuse a 07 string —
+//    n8n exact-matches `be_marcus_daily` / `marcus_same_day` for the daily's fulfilment.
+export const MARCUS_READING_PRICE_CENTS = 3500;
+
+// 08's bump — "+ 12-hour delivery". Halves the 24h SLA; the price is the same $12.77
+// the deck's other instructional bumps carry (02/03/07). ⛔ Own key, never 07's.
+export const MARCUS_READING_BUMP_PRODUCT_KEY = 'marcus_speed';
+export const MARCUS_READING_BUMP_CENTS = 1277;
+
 // ─── The catalog ───────────────────────────────────────────────────────────────
 
 /** 07's rungs. ⛔ The key is what the browser may send; the price is looked up here. */
@@ -144,7 +163,7 @@ export interface BackendOfferBump {
 export interface BackendOffer {
   key: BackendOfferKey;
   /** The deck's number, as every doc cites it. */
-  number: '02' | '03' | '06' | '07';
+  number: '02' | '03' | '06' | '07' | '08';
   /** What Stripe shows her at checkout. */
   stripeName: string;
   stripeDescription: string;
@@ -336,6 +355,53 @@ export const BACKEND_OFFER_CATALOG: Record<BackendOfferKey, BackendOffer> = {
     //      guessed tier is a reading she did not buy; a guessed spread is the wrong cards.
     //   3. n8n has never been proved against a spread in the current registry — the
     //      dry-run fixture names all seven RETIRED spreads. See check-07-registry.mjs.
+    // ⛔ Flip this in the same commit that closes all three, never before.
+    readyForMoney: false,
+  },
+
+  // ⭐ 08 — Marcus Stone's personal tarot reading. A ONE-TIME, fixed-price reading of a
+  // named edition (spread) against her full birth name and date of birth. Same persona
+  // as 07, a different product: 07 sells one morning's cut to the whole list, 08 sells a
+  // reading written for one woman. Plan: improve-v1/v1-one-time-BEs/docs/08-marcus/PARALLEL-PLAN.md.
+  'marcus-reading': {
+    key: 'marcus-reading',
+    number: '08',
+    // Deck-wide rule: the verb is never "buy". Stripe's own label stays a plain noun.
+    stripeName: 'Marcus Stone — your personal tarot reading',
+    stripeDescription: 'A tarot reading, written for you by name and sent within 24 hours.',
+    // ⛔ Not `be_marcus_daily`. The webhook maps this string back to the offer, and n8n's
+    //    07 filter must never see an 08 order.
+    stripeProduct: 'be_marcus_reading',
+    pricing: { model: 'fixed', priceCents: MARCUS_READING_PRICE_CENTS },
+    bump: {
+      productKey: MARCUS_READING_BUMP_PRODUCT_KEY,
+      cents: MARCUS_READING_BUMP_CENTS,
+      stripeName: '+ 12-hour delivery',
+    },
+    // ⚠ Placeholders — none of these routes exist in client/ yet (wave 2, T6/T7). The
+    // booking page is edition-scoped (`/marcus/reading/:editionId`); a Stripe cancel
+    // returns her to the offer root, which T6 makes real. `readyForMoney: false` is what
+    // actually stops a sale, so these paths cannot strand a buyer today.
+    bookingPath: {
+      page: '/marcus/reading',
+      chat: '/marcus/reading',
+    },
+    successPath: '/marcus/reading/success',
+    // After payment she lands on a bridge (T7), then the audio upsell (T8), then the
+    // receipt. Unlike 02/03/06 this is NOT the shared Protection-Ritual chain.
+    upsellEntryPath: '/marcus/reading/bridge',
+    // A digital reading: email only, no mailing address.
+    collectsShipping: false,
+    //
+    // 🔴 FALSE. Three separate reasons, any one sufficient:
+    //   1. NO POST-PAYMENT PATH. `/marcus/reading/bridge` and `/marcus/reading/success`
+    //      are not routes; a paid woman would land on a 404.
+    //   2. NO FULFILMENT. Nothing draws the cards on payment, nothing stamps `due_at`,
+    //      and the n8n Stage 2 workflow is not wired to an order (only Stage 1's writing
+    //      nodes exist, driven by a manual input node).
+    //   3. THE EMAILS ARE UNPROVEN. No transactional send helper exists for any BE offer,
+    //      and the four 08 letters (order confirmation, audio confirmation, written
+    //      delivery, audio delivery) have not been sent to a test inbox.
     // ⛔ Flip this in the same commit that closes all three, never before.
     readyForMoney: false,
   },

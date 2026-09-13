@@ -115,6 +115,23 @@ export const BACKEND_OFFERS: Record<BackendOfferKey, BackendOfferListing> = {
     bumpTag: 'be-07-bump',
     deliveredTag: 'be-07-delivered',
   },
+  // ⭐ 08 — Marcus Stone's one-time personal reading. NOT 07: its own tags, so the 07
+  // Campaigns (filtered on be-07-*) never fire for an 08 buyer.
+  //
+  // Lists: 08 REUSES the shared BE lists exactly as 03 and 06 do — initial 6972552,
+  // bump 6972554 — distinguished only by TAG (be-08-*). ⚠ Copied from 03/06, not
+  // decided for 08: the plan's D4 recommends Resend for the four 08 messages, in which
+  // case the AWeber write is a customer-list record and not the send. If a per-product
+  // list is ever created for 08, replace the two ids here; nothing else reads them.
+  'marcus-reading': {
+    number: '08',
+    name: 'Marcus Personal Reading',
+    tag: 'be-08',
+    bumpTag: 'be-08-speed',
+    deliveredTag: 'be-08-delivered',
+    initialListId: '6972552',
+    bumpListId: '6972554',
+  },
 };
 
 /** Tags to apply at the moment she pays. */

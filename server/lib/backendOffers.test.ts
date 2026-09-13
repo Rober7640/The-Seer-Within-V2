@@ -28,6 +28,8 @@ import {
   TWIN_FLAME_PRICE_CENTS,
   PIXIU_BRACELET_BUMP_CENTS,
   PIXIU_BRACELET_PRICE_CENTS,
+  MARCUS_READING_BUMP_CENTS,
+  MARCUS_READING_PRICE_CENTS,
   backendOfferForStripeProduct,
   backendOrderDescriptor,
   isBackendOfferKey,
@@ -367,5 +369,89 @@ describe('tiered pricing (07 · Marcus Daily Tarot)', () => {
     expect(tiers.table.questions).toBe(3);
     expect(tiers.pattern.priceCents).toBeGreaterThan(tiers.spread.priceCents);
     expect(tiers.table.priceCents).toBeGreaterThan(tiers.pattern.priceCents);
+  });
+});
+
+// ─── 08 · Marcus Stone's personal reading — the FIXED model, gated shut ────────
+//
+// Same shape as 02: one price, one bump, the browser's number ignored. Priced through
+// priceBackendOffer (past the gate) so the arithmetic is provable now; the gate itself
+// is pinned shut in its own case. ⛔ 08 shares a persona with 07 and NOTHING else —
+// the collision cases are the ones that matter.
+describe('a fixed-price offer (08 · Marcus Stone personal reading)', () => {
+  const READING = BACKEND_OFFER_CATALOG['marcus-reading'];
+  const priceReading = (req: { amountCents?: number | null; bump?: boolean }) =>
+    priceBackendOffer(READING, req);
+
+  it('charges $35.00 without the bump', () => {
+    const r = charged(priceReading({}));
+    expect(r.readingCents).toBe(MARCUS_READING_PRICE_CENTS);
+    expect(r.readingCents).toBe(3500);
+    expect(r.bumpCents).toBe(0);
+    expect(r.totalCents).toBe(3500);
+    expect(r.bumpPurchased).toBe(false);
+    expect(r.lines).toHaveLength(1);
+  });
+
+  it('charges $47.77 with the 12-hour bump, at the catalog price', () => {
+    const r = charged(priceReading({ bump: true }));
+    expect(r.readingCents).toBe(3500);
+    expect(r.bumpCents).toBe(MARCUS_READING_BUMP_CENTS);
+    expect(r.bumpCents).toBe(1277);
+    expect(r.totalCents).toBe(4777);
+    expect(r.bumpPurchased).toBe(true);
+    expect(r.lines).toHaveLength(2);
+    expect(r.lines[1].name).toBe('+ 12-hour delivery');
+  });
+
+  it('IGNORES an amount posted by the browser', () => {
+    expect(charged(priceReading({ amountCents: 1 })).totalCents).toBe(3500);
+    expect(charged(priceReading({ amountCents: 1, bump: true })).totalCents).toBe(4777);
+  });
+
+  it('treats anything other than an explicit true as "no bump"', () => {
+    expect(charged(priceReading({ bump: undefined })).bumpPurchased).toBe(false);
+    expect(charged(priceReading({ bump: false })).bumpPurchased).toBe(false);
+  });
+
+  it('⛔ is NOT open for money — resolveBackendCharge answers not_ready', () => {
+    expect(READING.readyForMoney).toBe(false);
+    for (const req of [
+      { offer: 'marcus-reading' as const },
+      { offer: 'marcus-reading' as const, bump: true },
+      { offer: 'marcus-reading' as const, amountCents: 3500 },
+    ]) {
+      const r = resolveBackendCharge(req);
+      expect(r.ok).toBe(false);
+      if (!r.ok) expect(r.code).toBe('not_ready');
+    }
+  });
+
+  it('is its own product — never 07\'s — on every string n8n or the webhook matches', () => {
+    const DAILY = BACKEND_OFFER_CATALOG['marcus-daily'];
+    expect(READING.number).toBe('08');
+    expect(READING.stripeProduct).toBe('be_marcus_reading');
+    expect(READING.stripeProduct.startsWith(BACKEND_STRIPE_PRODUCT_PREFIX)).toBe(true);
+    expect(READING.stripeProduct).not.toBe(DAILY.stripeProduct);
+    expect(READING.bump.productKey).toBe('marcus_speed');
+    expect(READING.bump.productKey).not.toBe(DAILY.bump.productKey);
+    expect(backendOfferForStripeProduct('be_marcus_reading')?.key).toBe('marcus-reading');
+    expect(backendOfferForStripeProduct('be_marcus_daily')?.key).toBe('marcus-daily');
+  });
+
+  it('is a digital reading with its own post-purchase path, not the shared upsell chain', () => {
+    expect(READING.collectsShipping).toBe(false);
+    expect(READING.successPath).toBe('/marcus/reading/success');
+    expect(READING.upsellEntryPath).toBe('/marcus/reading/bridge');
+    expect(READING.bookingPath).toEqual({ page: '/marcus/reading', chat: '/marcus/reading' });
+  });
+
+  it('labels the Stripe Dashboard row BE 08', () => {
+    expect(backendOrderDescriptor('marcus-reading', false)).toBe(
+      'BE 08 · Marcus Stone — your personal tarot reading',
+    );
+    expect(backendOrderDescriptor('marcus-reading', true)).toBe(
+      'BE 08 · Marcus Stone — your personal tarot reading + 12-hour delivery',
+    );
   });
 });

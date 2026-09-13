@@ -1,9 +1,9 @@
 # 08 Marcus — n8n audio fulfillment build plan
 
 
-> **Latest confirmed decisions:** standard delivery within 24 hours; +$12.77 bump within 12 hours, both measured from confirmed main payment. Audio shares that order deadline. Use Replicate Chatterbox with the Marcus voice Joel will supply. Create a NEW Marcus n8n workflow; existing workflows must remain untouched. See the delivery policy and Chatterbox setup in the n8n folder. These decisions supersede older open-timing/provider notes below.
+> **Latest confirmed decisions:** standard delivery within 24 hours; +$12.77 bump within 12 hours, both measured from confirmed main payment. Audio shares that order deadline. Use Replicate Chatterbox Turbo with Marcus voice v2. The provider smoke test passed on 2026-09-13. Keep audio as a chain inside the dedicated new Marcus workflow; existing workflows remain untouched.
 
-Status: proposed implementation, 2026-09-10. Local-first authorization remains in force. This is a build specification, not an installed workflow. Replicate Chatterbox and 24h/12h shared deadlines are selected; reference voice and final audio price remain pending.
+Status: proposed implementation, updated 2026-09-13. Local-first authorization remains in force. This is a build specification, not an installed production branch. Replicate Chatterbox Turbo, voice v2, and 24h/12h shared deadlines are selected. A real provider sample passed; the production signed-URL operation, persistence, assembly, private player, and final audio price remain pending.
 
 Related: [audio product scope](../upsell-1-audio/SCOPE.md) · [copy shape](../upsell-1-audio/SHAPE.md) · [funnel checklist](../FUNNEL-BUILD-CHECKLIST.md) · [local data contract](../data/CONTRACT.md).
 
@@ -74,7 +74,7 @@ Use only opaque event/order references in trigger payloads. Load the actual name
 | B5 | HTTP Request: save script manifest | Save script version/hash, section IDs, ordered segment text/hash and pronunciation overrides before provider calls. |
 | B6 | Loop Over Items → HTTP Request | Generate pending segments within the chosen provider’s text/rate limits. Save provider job IDs and results per segment. Skip segments already valid and stored. |
 | B7 | Wait/poll or authenticated completion callback, if needed | For asynchronous providers, persist provider job ID and resume by it. Poll with a deadline; validate callbacks and tolerate duplicates. Synchronous providers skip this step. |
-| B8 | HTTP Request: media worker | Assemble ordered segments into one playable file, with consistent codec/sample rate/volume and deliberate pauses. Optional chapter offsets come from segment boundaries. |
+| B8 | HTTP Request: media worker | Apply the versioned `marcus-audio-v1` default to every segment: pitch-preserving 0.90× tempo, then assemble with 300 ms paragraph pauses, 600 ms card-section pauses, and 900 ms before the closing synthesis. Keep codec/sample rate/volume consistent. Optional chapter offsets come from segment boundaries. |
 | B9 | Media checks → IF | Check decode, non-empty duration, segment count/order, missing/truncated speech, volume and unintended silence. Human listening review for initial samples and flagged cases. |
 | B10 | HTTP Request: publish artifact record | Save private audio key, transcript key, hashes, duration, format and source versions; re-check cancellation and lease ownership. Mark ready only after the stored file is accessible and passes QA. |
 | B11 | HTTP Request: queue delivery | Create one delivery task for this artifact. Main written delivery is independent. |
@@ -158,7 +158,12 @@ Production operations require service authentication and ownership checks; local
 - [ ] Build media assembly/check adapter, private player and captured audio-ready email. A synthetic local sound file can test playback but cannot prove spoken content quality.
 - [ ] Extend the main 08 workflow source and generated inactive n8n JSON with stages A–D; add a README of entry routing and every endpoint/credential dependency. Keep the audio branch in the main canvas. Do not repeat 07’s gap of treating missing endpoints as implemented.
 - [ ] Import the main flow into an isolated local n8n instance with fake adapters; prove its report-complete branch and late-purchase resume route create playable fixture output and a captured delivery task.
-- [ ] Once the voice/provider is chosen, separately authorize/configure a real sample generation test. Compare script against the recording and review pronunciation and listening quality.
+- [x] Select [`assets/marcus-voice/reference/marcus-voice-v2.wav`](assets/marcus-voice/reference/marcus-voice-v2.wav); retain voice v1 only as an alternate.
+- [x] Upload the selected voice v2 privately.
+- [ ] Configure the workflow's fresh signed-URL operation.
+- [x] Generate and save one real Chatterbox Turbo sample through a temporary n8n lane.
+- [x] Approve 0.90× pitch-preserving tempo as the default and pin it with the assembly pauses in [`config/marcus-audio-v1.json`](config/marcus-audio-v1.json).
+- [ ] Compare the saved sample against its script and review identity, pronunciation and listening quality.
 - [ ] After local evidence, plan isolated provider/storage/payment integration before production activation.
 
 ## Acceptance matrix

@@ -1,7 +1,7 @@
 # 08 Marcus — complete funnel build checklist
 
 
-> **Latest confirmed decisions:** the main written deliverable is a PDF; standard delivery is within 24 hours; the +$12.77 bump is within 12 hours, both measured from confirmed main payment. Audio shares that order deadline. Use Replicate Chatterbox with the Marcus voice Joel will supply. Create a NEW Marcus n8n workflow; existing workflows must remain untouched. See the delivery policy and Chatterbox setup in the n8n folder. These decisions supersede older open-timing/provider notes below.
+> **Latest confirmed decisions:** the main written deliverable is a PDF; standard delivery is within 24 hours; the +$12.77 bump is within 12 hours, both measured from confirmed main payment. Audio shares that order deadline. Use Replicate Chatterbox with Marcus voice v2 selected by Joel. Create a NEW Marcus n8n workflow; existing workflows must remain untouched. See the delivery policy and Chatterbox setup in the n8n folder. These decisions supersede older open-timing/provider notes below.
 
 Status: plan approved for local-first work, 2026-09-10. Local edition export, durable order storage, page updates, fulfillment adapters and one isolated adaptive n8n/PDF execution are complete; see local evidence below. A new inactive n8n draft was separately authorized and created. Live charges and customer sends remain outside this phase.
 

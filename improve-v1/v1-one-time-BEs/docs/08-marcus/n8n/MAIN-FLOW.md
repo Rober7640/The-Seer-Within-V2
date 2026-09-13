@@ -1,7 +1,7 @@
 # 08 Marcus — main n8n fulfillment plan
 
 
-> **Latest confirmed decisions:** standard delivery within 24 hours; +$12.77 bump within 12 hours, both measured from confirmed main payment. Audio shares that order deadline. Use Replicate Chatterbox with the Marcus voice Joel will supply. Create a NEW Marcus n8n workflow; existing workflows must remain untouched. See the delivery policy and Chatterbox setup in the n8n folder. These decisions supersede older open-timing/provider notes below.
+> **Latest confirmed decisions:** standard delivery within 24 hours; +$12.77 bump within 12 hours, both measured from confirmed main payment. Audio shares that order deadline. Use Replicate Chatterbox with the Marcus voice source Joel supplied on 2026-09-13. Create a NEW Marcus n8n workflow; existing workflows must remain untouched. See the delivery policy and Chatterbox setup in the n8n folder. These decisions supersede older open-timing/provider notes below.
 
 Status: new inactive workflow draft authored; production implementation and activation remain incomplete. The local harness now produces a structurally validated PDF fixture, not a production-written customer reading or recording.
 
@@ -73,7 +73,7 @@ Both paths use the same atomic audio claim. A scheduled recovery entry covers mi
 | Written delivery mechanism | Determines private storage, message template and customer wording | PDF confirmed; attachment versus restricted private link remains open |
 | Standard delivery timing | Sets base deadline | Confirmed: 24 hours after main payment |
 | Speed bump | Sets expedited deadline | Confirmed: 12 hours after main payment; no calendar cutoff |
-| Audio voice/provider | Configures narration | Replicate Chatterbox; Joel will supply Marcus reference voice |
+| Audio voice/provider | Configures narration | Replicate Chatterbox; voice v2 is selected and privately uploaded, v1 is retained as an alternate, and the signed-URL operation remains pending |
 | Audio deadline / bump coverage | Sets audio due time | Same order deadline: 24h standard / 12h with bump |
 | Main generation model and review policy | Determines prompts, cost and response to failed QA | Compare permitted local/sample outputs; no unapproved failure-send policy |
 | Name edge cases | Ensures reproducible personal card for supported names | Master 33 and non-ASCII handling unresolved; local harness fails explicitly |
@@ -89,7 +89,7 @@ These decisions do not block writing workflow source, defining job contracts, fi
 - [x] Fake payment, structural writer, PDF renderer, narrator-manifest, storage and captured delivery adapters; no shared `.env` imports. Production-quality writing and playable audio remain pending.
 - [ ] Test two buyers of one edition, failed QA/rendering, main-only orders, bump orders and both audio timing paths. Repeat events and a separate eight-card 4-up/4-down themed PDF are covered locally.
 - [x] Local n8n main-reading execution produced an adaptive eight-card PDF and queued captured written delivery; see [execution evidence](LOCAL-EXECUTION-EVIDENCE.md). Audio execution remains pending.
-- [ ] Approved real report/voice samples when those services and terms are chosen.
+- [ ] Fresh signed URL for the selected private Marcus voice; approved real Chatterbox sample after the Replicate credential is configured.
 - [ ] Isolated remote integration evidence before production activation.
 
 ## Related implementation contracts

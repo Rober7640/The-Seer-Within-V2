@@ -1,0 +1,316 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   08 Marcus · "Broadsheet & Ledger" — the shared look for every page.
+   Source of truth: docs/08-marcus/design-reviews/04-visual-identity.md §3 (tokens)
+   and 05-over-55-phone.md (measured floors). Palette is copied verbatim from
+   scripts/build-08-daily.py so the email and the page share one set of colours.
+
+   Floors (review 05, applied as tokens — do not go under them anywhere she reads):
+     body 18px on phones · nothing under 13px · eyebrows/labels 14px · footer 13px
+     tap targets ≥ 44px · field border ≥ 3:1 on paper · text column ≤ 680px
+   Bodoni Moda is NEVER used under 20px (its hairlines vanish).
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── 1 · tokens ─────────────────────────────────────────────────────────── */
+:root{
+  /* colour — the broadsheet palette (build-08-daily.py) */
+  --desk:#dbd1b9;        /* the table the paper lies on            (GROUND)  */
+  --paper:#f4f1e6;       /* the sheet                              (PAPER)   */
+  --stock:#eae4d2;       /* inserts, the bump box, status box      (BOXBG)   */
+  --stock-rule:#b8ab8e;  /* 1px rule around inserts                (BOXHAIR) */
+  --ink:#14120f;         /* body text                              (INK)     */
+  --headink:#0d0c0a;     /* display type, nameplate                (HEADINK) */
+  --muted:#5b5343;       /* captions, roles, notes                 (MUTED)   */
+  --hair:#c4b9a1;        /* hairlines, ledger rows, face-down frame(HAIR)    */
+  --edge:#c8bda8;        /* the sheet's outer edge                           */
+  --red:#8f2b1f;         /* the button and the way out — nothing else(ACCENT)*/
+  --red-press:#742318;   /* button hover / press                             */
+  --on-red:#fffaf0;      /* button text                                      */
+  --field:#857b69;       /* input border — 3.7:1 on paper (was #a99f8c, 2.3:1) */
+  --focus:#a36b31;       /* brass focus ring                                 */
+
+  /* type */
+  --display:'Bodoni Moda','Bodoni MT',Didot,'Didot LT STD','Hoefler Text',Garamond,'Times New Roman',serif;
+  --text:'Spectral',Georgia,Cambria,'Times New Roman',Times,serif;
+  --font:var(--text); /* legacy alias */
+
+  /* type scale — desktop values; the phone block below overrides */
+  --t-nameplate:30px; --t-h1:46px; --t-h2:30px; --t-h3:21px;
+  --t-price:42px; --t-total:32px; --t-body:18px; --t-small:16px;
+  --t-label:14px;  /* eyebrows, FIG. captions, dateline, kicker — 05's floor, not 04's 12px */
+  --t-role:13px;   /* "Daily Tarot Reader" — the absolute floor */
+  --t-footer:13px;
+  --lh-body:1.62;
+
+  /* spacing scale */
+  --s1:4px;--s2:8px;--s3:12px;--s4:16px;--s5:24px;--s6:32px;--s7:48px;--s8:64px;
+
+  /* layout */
+  --sheet:880px;      /* the sheet stays 880 (04 §6 leave alone) */
+  --measure:680px;    /* text column on desktop (README ruling: 680) */
+  --tap:44px;         /* minimum tap target */
+}
+
+/* ── 2 · base ───────────────────────────────────────────────────────────── */
+*{box-sizing:border-box}
+html{background:var(--desk)}
+body{
+  margin:0;color:var(--ink);font:var(--t-body)/var(--lh-body) var(--text);padding:30px 16px 46px;
+  /* desk light — a plain no-repeat gradient over the desk colour. ⛔ never background-attachment:fixed (banding + iOS) */
+  background:radial-gradient(120% 60% at 50% 0,#e4dbc6,var(--desk) 55%,#d3c8ad) no-repeat,var(--desk);
+}
+h1,h2,h3,p,figure,ul{margin:0}
+button,input{font:inherit}
+button{cursor:pointer}
+button,a,input{-webkit-tap-highlight-color:transparent}
+button:focus-visible,a:focus-visible,input:focus-visible{outline:3px solid var(--focus);outline-offset:4px}
+[hidden]{display:none!important}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)}
+img{max-width:100%}
+
+/* ── 3 · the sheet ──────────────────────────────────────────────────────── */
+.sheet,.paper{
+  position:relative;max-width:var(--sheet);margin:auto;background:var(--paper);
+  border:1px solid var(--edge);padding:32px 52px 28px;box-shadow:0 2px 10px rgba(66,56,22,.09);
+}
+/* 4% grain — a garnish behind the text, never over it */
+.sheet::before{
+  content:"";position:absolute;inset:0;pointer-events:none;opacity:.04;
+  background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+.sheet>*{position:relative}
+
+/* ── 4 · rules (one-line gradients; replaces every `4px double`) ────────── */
+.rule-scotch{height:9px;background:linear-gradient(var(--ink) 0 5px,var(--paper) 5px 8px,var(--ink) 8px 9px)}   /* 5/3/1 under the masthead, once */
+.rule-double{height:7px;background:linear-gradient(var(--ink) 0 3px,var(--paper) 3px 6px,var(--ink) 6px 7px)}   /* 3/3/1 above a section */
+.rule-folio {height:6px;background:linear-gradient(var(--ink) 0 1px,var(--paper) 1px 3px,var(--ink) 3px 6px)}   /* 1/2/3 above the footer, once */
+.hair{border-bottom:1px solid var(--hair)}                                                                        /* ledger rows, under captions */
+.rule-total{border-top:1px solid var(--ink)}                                                                      /* above the Total row only */
+
+/* ── 5 · type ───────────────────────────────────────────────────────────── */
+h1{font:400 var(--t-h1)/1.08 var(--display);color:var(--headink);letter-spacing:0;text-wrap:balance}
+h2{font:400 var(--t-h2)/1.15 var(--display);color:var(--headink);letter-spacing:0}
+h3{font:600 var(--t-h3)/1.3 var(--text);color:var(--ink)}
+p+p{margin-top:var(--s4)}
+.deck{font:400 22px/1.45 var(--display);color:var(--headink)}
+.lead{font-size:20px}
+.bridge{margin:var(--s5) 0;font-size:var(--t-body)}
+.note,.small{font-size:var(--t-small);line-height:1.5;color:var(--muted)}
+a{color:var(--red)}
+.text-link{color:var(--red);background:none;border:0;padding:0;text-decoration:underline;font:inherit;cursor:pointer}
+.back-link{color:var(--muted);font-size:var(--t-small)}
+.num,.price,.total,.summary-price,.order-line b,.order-line strong,.add{font-variant-numeric:lining-nums tabular-nums}
+
+/* labels — tracked caps at the 14px floor; every eyebrow-like class unified here */
+.label,.eyebrow,.step-label,.position,.review-label,.kicker,.fig-no{
+  font:400 var(--t-label)/1.3 var(--text);letter-spacing:.14em;text-transform:uppercase;color:var(--muted);
+}
+.label.ink,.eyebrow.ink,.fig-no.ink{color:var(--ink)}
+.step-label,.eyebrow{margin:0 0 var(--s2)}
+.review-label{display:inline-block;background:none;padding:0;margin-bottom:var(--s3)}
+
+/* ── 6 · masthead (rendered by shared.js) ───────────────────────────────── */
+.masthead{display:block;text-align:center;padding:var(--s2) 0 0;border:0}
+.masthead .portrait{display:block;width:64px;height:64px;margin:0 auto;border:1px solid var(--ink);object-fit:cover;filter:none;border-radius:0}
+.mast-name{font:400 var(--t-nameplate)/1.1 var(--display);letter-spacing:.14em;padding-left:.14em;color:var(--headink);margin-top:var(--s3)}
+.mast-role,.role{display:flex;align-items:center;justify-content:center;gap:var(--s3);margin-top:var(--s2);font:italic var(--t-role)/1.2 var(--text);letter-spacing:.12em;color:var(--muted)}
+.mast-role::before,.mast-role::after{content:"";width:34px;height:1px;background:var(--ink)}
+.masthead .rule-scotch{margin-top:var(--s4)}
+.dateline{display:flex;justify-content:space-between;gap:var(--s3);padding:var(--s2) 0;border-bottom:1px solid var(--hair);text-align:left}
+.masthead+#app{margin-top:var(--s6)}
+
+/* ── 7 · footer (rendered by shared.js) ─────────────────────────────────── */
+.footer{margin-top:var(--s7);padding:0;border:0;display:block;font-size:var(--t-footer);color:var(--muted)}
+.footer .dateline{border-bottom:0;padding-top:var(--s2);font-size:var(--t-footer)}
+
+/* ── 8 · columns ────────────────────────────────────────────────────────── */
+.col,.intro,.offer,.review,.bridge-page,.upsell-copy,.email-copy,.remaining>h2,.remaining>.bridge,.daily-links{max-width:var(--measure);margin-inline:auto}
+.intro{text-align:left;margin-top:0;margin-bottom:var(--s5)}
+.intro p{margin-top:var(--s4)}
+.review{margin-top:0;margin-bottom:var(--s3)}
+.review>p{margin:var(--s4) 0 var(--s5)}
+.bridge-page{text-align:left}
+.email-copy{white-space:pre-line;margin-block:var(--s5)}
+.upsell-copy{margin-block:var(--s5)}
+.upsell-copy p{margin:0 0 var(--s4)}
+
+/* section breaks: DOUBLE rule via ::before, replacing the old `border-top:4px double` */
+.remaining,.offer,.summary{border-top:0;position:relative;padding-top:var(--s5);margin-top:var(--s7)}
+.remaining::before,.offer::before,.summary::before{content:"";display:block;height:7px;background:linear-gradient(var(--ink) 0 3px,var(--paper) 3px 6px,var(--ink) 6px 7px);margin-bottom:var(--s5)}
+.remaining{text-align:left}
+.remaining>p{color:var(--muted);font-size:var(--t-small);margin:var(--s2) 0 var(--s5)}
+.summary{border-bottom:1px solid var(--hair);padding-bottom:var(--s5)}
+.summary-name{margin-top:var(--s4);color:var(--muted);font-size:var(--t-small)}
+.summary p{font-size:var(--t-small);margin-top:var(--s3)}
+
+/* ── 9 · cards — press cuts, not web cards ──────────────────────────────── */
+.up-cards{display:grid;grid-template-columns:repeat(2,minmax(0,190px));justify-content:center;gap:var(--s7);margin:var(--s6) auto var(--s6)}
+.down-cards{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:var(--s5)}
+figure{margin:0;text-align:left}
+.cut{display:block;width:100%}
+.tarot{display:block;width:100%;height:auto;aspect-ratio:7/12;object-fit:fill;border-radius:0;box-shadow:none;filter:none}
+.up-cards .cut,.up-cards .tarot{max-width:173px;margin:0}
+.down-cards .cut,.down-cards .tarot{max-width:118px;margin:0}
+figure.up .tarot{border:1px solid var(--ink)}       /* face-up: ink frame, FIG. numeral */
+figure.down .tarot{border:1px solid var(--hair)}    /* face-down: hairline frame, no numeral */
+.fig,figcaption{max-width:173px;margin-top:var(--s2);border-top:1px solid var(--hair);padding-top:var(--s2);font-size:17px;line-height:1.35;text-align:left}
+.down-cards .fig,.down-cards figcaption{max-width:155px}
+.fig-pos{font-size:17px;line-height:1.35;margin-top:var(--s1)}
+.fig-name,figcaption .card-name{display:block;font:italic 15px/1.4 var(--text);color:var(--muted);margin-top:3px}
+.position{display:block;margin:0 0 var(--s1)}
+figure.up .position{color:var(--ink)}
+/* CSS stand-in for a card back when no image is available (04's mock) */
+.back-stand{background:radial-gradient(circle at 50% 50%,#cfc4a6 0 3px,transparent 4px) 0 0/28px 28px,repeating-linear-gradient(45deg,transparent 0 12px,#8093a8 12px 13px),repeating-linear-gradient(-45deg,transparent 0 12px,#8093a8 12px 13px),#5b6f8a;border-radius:9px;box-shadow:inset 0 0 0 6px #d9cfb6}
+
+/* ── 10 · ledger, prices, totals ────────────────────────────────────────── */
+.price-row{display:flex;justify-content:space-between;align-items:baseline;gap:var(--s5)}
+.price{font:400 var(--t-price)/1 var(--display);color:var(--headink);letter-spacing:0;white-space:nowrap}
+.summary-price,.add{font:400 26px/1 var(--display);color:var(--headink);white-space:nowrap;align-self:baseline}
+.offer-copy{margin:var(--s4) 0 var(--s5)}
+.name-note{font-size:var(--t-small);line-height:1.6;color:var(--muted);margin-bottom:var(--s5)}
+.row,.order-line,.reading-card{display:flex;justify-content:space-between;gap:var(--s4);padding:10px 0;border-bottom:1px solid var(--hair);font-size:17px;margin:0}
+.order-lines{padding:var(--s5) 0 var(--s3);border-bottom:0;font-size:17px}
+.ledger{margin-top:var(--s5)}
+.total,.booking-total{
+  position:relative;display:flex;justify-content:space-between;gap:var(--s5);padding:var(--s4) 0 0;margin-top:2px;
+  border:0;font:400 var(--t-total)/1 var(--display);color:var(--headink);
+}
+.total::before,.booking-total::before{content:"";position:absolute;top:0;left:0;right:0;height:1px;background:var(--ink)}
+.total strong,.total b{font-weight:400}
+.booking-total{margin-top:var(--s5)}
+
+/* ── 11 · inserts (darker stock, ruled all round) — never red ───────────── */
+.insert,.status-box,.offer-stack,.payment-note,.extra,.booking-bump,.local-artifact{
+  background:var(--stock);border:1px solid var(--stock-rule);padding:20px 22px;max-width:var(--measure);
+}
+.status-box{margin:var(--s5) 0;text-align:left}
+.status-box p+p{margin-top:var(--s3)}
+.booking-bump,.extra{margin:var(--s5) 0 0}
+.extra-desc{color:var(--muted);font-size:var(--t-small);margin:var(--s3) 0}
+.offer-stack{margin:var(--s5) 0}
+.offer-stack ul{padding-left:1.2em;margin:var(--s3) 0 0}
+.offer-stack li{margin:var(--s2) 0}
+.payment-note{font-size:var(--t-small);margin:var(--s5) 0}
+.local-artifact{white-space:pre-wrap;overflow-wrap:anywhere;font:15px/1.6 ui-monospace,Menlo,Consolas,monospace;margin-top:var(--s4)}
+.insert h3{display:flex;justify-content:space-between;gap:var(--s3);margin-top:var(--s2)}
+.insert p{font-size:var(--t-small);color:var(--muted);margin-top:10px}
+/* checkbox row: 28px box in a ≥ 56px row (05 fix 3) */
+.check{display:flex;gap:var(--s3);align-items:center;min-height:56px;margin:var(--s4) 0 0;font-size:17px;line-height:1.4;cursor:pointer}
+.check input{accent-color:var(--red);width:28px;height:28px;flex:0 0 28px;margin:0}
+.check span{font-size:17px}
+
+/* ── 12 · buttons and the way out ───────────────────────────────────────── */
+/* the stamp: square, flat red, an inner hairline in paper at 50% */
+.btn,.primary{
+  display:block;width:100%;max-width:var(--measure);min-height:54px;background:var(--red);color:var(--on-red);border:0;border-radius:0;
+  padding:17px 20px;font:600 18px/1.35 var(--text);letter-spacing:.01em;text-align:center;
+  box-shadow:inset 0 0 0 3px var(--red),inset 0 0 0 4px rgba(244,241,230,.5);transition:background .15s,transform .08s;
+}
+.btn:hover,.primary:hover{background:var(--red-press)}
+.btn:active,.primary:active{transform:translateY(1px);background:var(--red-press);box-shadow:inset 0 0 0 3px var(--red-press),inset 0 0 0 5px rgba(244,241,230,.55)}
+.btn[disabled],.primary[disabled]{opacity:.7;cursor:progress}
+.submit{margin-top:var(--s5)}
+.under{font-size:15px;color:var(--muted);margin-top:10px;text-align:center;max-width:var(--measure)}
+/* decline / the way out: red, 17px, ≥ 44px tall, never grey */
+.decline,.text-button{
+  display:inline-flex;align-items:center;min-height:var(--tap);margin-top:var(--s5);padding:8px 0;
+  background:none;border:0;border-bottom:1px solid currentColor;color:var(--red);font-size:17px;line-height:1.4;text-decoration:none;
+}
+.text-button.back,.back{margin-top:var(--s5)}
+.actions{margin-top:var(--s5)}
+.daily-links{display:grid;gap:var(--s3);margin:var(--s5) 0}
+.daily-links a{display:inline-flex;align-items:center;min-height:var(--tap)}
+
+/* ── 13 · fields ────────────────────────────────────────────────────────── */
+.fields{display:grid;grid-template-columns:1fr 1fr;gap:var(--s5)}
+label{display:block;font-size:17px;margin-bottom:7px}
+.hint{display:block;font-size:var(--t-small);color:var(--muted);margin:-3px 0 7px}
+input[type=text],input[type=email]{
+  width:100%;background:transparent;border:1px solid var(--field);border-radius:0;color:var(--ink);
+  padding:12px 14px;height:54px;font-size:18px;
+}
+input[aria-invalid=true]{border:3px solid var(--red)}
+.field+.field{margin-top:var(--s5)}
+/* per-field error: ABOVE the input, below the label (the keyboard hides what is under) */
+.field-error{display:block;color:var(--red);font-weight:600;font-size:17px;line-height:1.4;margin:0 0 7px}
+.error{color:var(--red);font-size:17px;font-weight:600;line-height:1.5;margin-top:var(--s2)}
+.error:not([hidden]){padding:var(--s3) 0}
+/* memorable-date: three numeric boxes Month · Day · Year (05 §4) */
+.dob{display:flex;gap:var(--s3);align-items:flex-end}
+.dob label{font-size:var(--t-small);margin-bottom:5px}
+.dob input{width:5ch;min-width:76px;text-align:center}
+.dob .year input{width:7ch;min-width:104px}
+.selection-note{font-size:var(--t-small);color:var(--muted);margin-top:10px;min-height:23px}
+.empty{padding:45px 0}
+
+/* ── 14 · harness chrome ────────────────────────────────────────────────── */
+.test-banner{max-width:var(--sheet);margin:0 auto var(--s4);font:14px/1.5 system-ui,sans-serif;color:#423b2f}
+.test-banner a{color:var(--red)}
+.reading-card{padding:14px 0}
+.audio-mark{font-size:48px;text-align:center;margin:22px}
+
+/* ── 15 · the checkout stand-in (imitates a hosted checkout, plain style, NOT the broadsheet) ── */
+body.checkout{background:#f6f8fa;font:16px/1.5 -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#1a1f36}
+body.checkout .sheet{max-width:920px;background:transparent;border:0;box-shadow:none;padding:0}
+body.checkout .sheet::before{display:none}
+body.checkout .masthead,body.checkout .footer,body.checkout .test-banner{display:none}
+body.checkout .masthead+#app{margin-top:0}
+.co-notice{max-width:920px;margin:0 auto var(--s4);padding:10px 14px;background:#fff4d6;border:1px solid #e3c979;color:#5a4400;font-size:14px;line-height:1.5}
+.co{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:var(--s6);align-items:start}
+.co-summary{padding:var(--s5)}
+.co-merchant{font-size:14px;color:#697386;margin-bottom:var(--s3)}
+.co-amount{font-size:34px;font-weight:600;font-variant-numeric:lining-nums tabular-nums}
+.co-items{margin-top:var(--s5);font-size:15px}
+.co-item{display:flex;justify-content:space-between;gap:var(--s3);padding:9px 0;border-bottom:1px solid #e3e8ee}
+.co-item.total{font-family:inherit;font-weight:600;font-size:15px;line-height:1.5;color:inherit;border-bottom:0;padding-top:var(--s3)}
+.co-item.total::before{display:none}
+.co-form{background:#fff;border:1px solid #e3e8ee;border-radius:6px;padding:var(--s5);box-shadow:0 2px 8px rgba(26,31,54,.06)}
+.co-form h2{font-family:inherit;font-weight:600;font-size:18px;line-height:1.3;color:inherit;margin-bottom:var(--s4)}
+.co-form .section{margin-top:var(--s5);padding-top:var(--s4);border-top:1px solid #e3e8ee}
+.co-form label{font-size:14px;font-weight:500;color:#30313d;margin-bottom:5px}
+.co-form .hint{font-size:13px;color:#697386;margin:-2px 0 6px}
+.co-form input[type=text],.co-form input[type=email]{border:1px solid #6b7280;border-radius:5px;background:#fff;height:48px;font-size:16px;padding:10px 12px;color:inherit}
+.co-form input[aria-invalid=true]{border:2px solid #df1b41}
+.co-form .field-error{color:#df1b41;font-size:14px;font-weight:600}
+.co-form .dob input{min-width:64px}
+.co-form .dob .year input{min-width:88px}
+.co-fake-card{display:grid;grid-template-columns:1fr;gap:var(--s3)}
+.co-fake-card .disabled{height:48px;border:1px dashed #c4c9d4;border-radius:5px;background:#f6f8fa;color:#8792a2;display:flex;align-items:center;padding:0 12px;font-size:14px}
+.co-pay{display:block;width:100%;min-height:48px;margin-top:var(--s5);background:#1a1f36;color:#fff;border:0;border-radius:6px;font-family:inherit;font-weight:600;font-size:16px;line-height:1.4;padding:12px}
+.co-pay:hover{background:#0f1327}
+.co-pay[disabled]{opacity:.6;cursor:progress}
+.co-back{display:inline-flex;align-items:center;min-height:var(--tap);margin-top:var(--s3);color:#4f566b;font-size:14px}
+body.checkout .error{color:#df1b41}
+
+/* ── 16 · motion — one paper-like moment per page; keyframes shared, wiring is per page ── */
+@media (prefers-reduced-motion:no-preference){
+  @keyframes deal{from{opacity:0;transform:translateY(14px) rotate(-1.5deg)}to{opacity:1;transform:none}}
+  @keyframes rise{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+  @keyframes draw{to{transform:scaleX(1)}}
+}
+@media (prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important;animation:none!important}}
+
+/* ── 17 · phone ─────────────────────────────────────────────────────────── */
+@media (max-width:620px){
+  :root{--t-nameplate:24px;--t-h1:34px;--t-h2:26px;--t-h3:20px;--t-price:34px;--t-total:28px;--t-body:18px;--t-small:15px;--lh-body:1.65}
+  body{padding:12px 12px 24px}
+  .sheet,.paper{padding:22px 20px 20px}
+  .masthead .portrait{width:52px;height:52px}
+  .dateline{font-size:13px;letter-spacing:.08em}
+  .masthead+#app{margin-top:var(--s5)}
+  .deck{font-size:20px}
+  .lead{font-size:18px}
+  .remaining,.offer,.summary{margin-top:var(--s6)}
+  .up-cards{gap:var(--s5);margin:var(--s5) 0 var(--s6);grid-template-columns:repeat(2,minmax(0,1fr))}
+  .up-cards .cut,.up-cards .tarot,.up-cards .fig,.up-cards figcaption{max-width:145px}
+  .down-cards{grid-template-columns:repeat(3,minmax(0,1fr));gap:var(--s5) var(--s4)}
+  .down-cards .cut,.down-cards .tarot,.down-cards .fig,.down-cards figcaption{max-width:112px}
+  .fields{grid-template-columns:1fr;gap:var(--s4)}
+  .price-row h2{max-width:220px}
+  .btn,.primary{font-size:17px;padding:16px 14px}
+  .insert,.status-box,.offer-stack,.payment-note,.extra,.booking-bump{padding:18px}
+  .summary-price,.add{font-size:22px}
+  .footer .dateline{flex-direction:column;gap:var(--s1)}
+  .co{grid-template-columns:1fr}
+  .co-summary{padding:var(--s3) 0}
+  .co-form{padding:var(--s4)}
+}

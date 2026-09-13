@@ -1,0 +1,84 @@
+/* thank-you page — page-specific rules only; tokens live in ../styles.css
+   Every rule is scoped under .thanks (the RECEIPT sheet). Order on the page:
+   name + question → status rows → delivery email → ledger (total last, quiet) → test control.
+   Floors (review 05): body 18px on phones, nothing under 13px, tap targets ≥ 44px. */
+
+/* ── her question, as a quotation (02 T6) ───────────────────────────────── */
+.thanks .question{
+  margin:var(--s4) 0 var(--s6);padding-left:var(--s4);border-left:3px solid var(--hair);
+  font:italic 20px/1.5 var(--text);color:var(--ink);text-wrap:pretty;
+}
+
+/* ── status rows (02 §4): glyph + piece + state word + one plain line ────── */
+.thanks .status{margin-top:var(--s5)}
+.thanks .status .label{margin:0 0 var(--s2);color:var(--ink)}
+.thanks .status-row{
+  display:grid;grid-template-columns:28px minmax(0,1fr);gap:var(--s4);align-items:start;
+  padding:18px 0;border-top:1px solid var(--hair);
+}
+.thanks .status-row:last-child{border-bottom:1px solid var(--hair)}
+.thanks .glyph{font:400 20px/1.45 var(--text);color:var(--ink);text-align:center}
+.thanks .state-failed .glyph{color:var(--red);font-weight:600}                     /* the one red mark besides the button/links */
+.thanks .status-head{margin:0;font-weight:600;line-height:1.45}
+.thanks .state-word::before{content:"— "}
+.thanks .status-line{margin:var(--s1) 0 0;font-size:var(--t-body);line-height:var(--lh-body)}
+.thanks .status-line+.status-line{margin-top:var(--s2)}
+.thanks .status-line .email,.thanks .status-line .due{overflow-wrap:anywhere}
+
+/* ── delivery email as a display line (same label-over-value as the bridge) ─ */
+.thanks .facts{margin:var(--s5) 0 0;padding:var(--s4) 0;border-bottom:1px solid var(--hair)}
+.thanks .facts div{margin:0}
+.thanks .facts dt{margin:0 0 var(--s1)}
+.thanks .facts dd{margin:0;font-size:21px;font-weight:600;line-height:1.35;overflow-wrap:anywhere;font-variant-numeric:lining-nums}
+
+/* ── the ledger — last and quiet: total at body weight, never display size ── */
+.thanks .ledger-block{margin-top:var(--s6)}
+.thanks .ledger-block .label{margin:0 0 var(--s2)}
+.thanks .ledger-rows{border-top:1px solid var(--hair)}
+.thanks .ledger-row{display:flex;justify-content:space-between;gap:var(--s4);padding:10px 0;border-bottom:1px solid var(--hair);font-size:var(--t-body);margin:0}
+.thanks .ledger-total{
+  position:relative;display:flex;justify-content:space-between;gap:var(--s4);padding:12px 0 0;margin-top:2px;
+  font:600 var(--t-body)/var(--lh-body) var(--text);color:var(--ink);
+}
+.thanks .ledger-total::before{content:"";position:absolute;top:0;left:0;right:0;height:1px;background:var(--ink)}
+.thanks .ledger-block .num{font-variant-numeric:lining-nums tabular-nums;white-space:nowrap}
+.thanks .ledger-note{margin:var(--s3) 0 0;font-size:var(--t-small);line-height:1.55;color:var(--muted)}
+
+/* ── the local-only test control — marked, dashed, outside the receipt ───── */
+.thanks .test-control{
+  margin-top:var(--s7);padding:16px 18px;border:2px dashed var(--muted);background:none;max-width:var(--measure);
+  font:15px/1.5 system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:var(--muted);
+}
+.thanks .test-tag{margin:0 0 var(--s2);font-size:14px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.thanks .test-control p{margin:0}
+.thanks .test-control .text-button{margin-top:var(--s3);font-family:inherit;font-size:17px}
+.thanks .test-control h2{margin-top:var(--s5);font-size:22px}
+.thanks .test-control #artifact p{margin-top:var(--s3)}
+.thanks .test-control .local-artifact{max-width:none}
+
+/* ── motion (04 §4): the receipt prints — rows rise top to bottom, then the ink rule above the
+   total draws, then the total appears. Once, on first load only; `.still` = re-render, no replay. */
+@media (prefers-reduced-motion:no-preference){
+  .thanks:not(.still) .status-row,
+  .thanks:not(.still) .facts,
+  .thanks:not(.still) .ledger-row,
+  .thanks:not(.still) .ledger-total,
+  .thanks:not(.still) .ledger-note{animation:rise .3s ease-out both}
+  .thanks:not(.still) .status .status-row:nth-child(2){animation-delay:.09s}
+  .thanks:not(.still) .status .status-row:nth-child(3){animation-delay:.18s}
+  .thanks:not(.still) .facts{animation-delay:.27s}
+  .thanks:not(.still) .ledger-row:nth-child(1){animation-delay:.36s}
+  .thanks:not(.still) .ledger-row:nth-child(2){animation-delay:.45s}
+  .thanks:not(.still) .ledger-row:nth-child(3){animation-delay:.54s}
+  .thanks:not(.still) .ledger-total{animation-delay:.72s}
+  .thanks:not(.still) .ledger-note{animation-delay:.8s}
+  .thanks:not(.still) .ledger-total::before{transform:scaleX(0);transform-origin:left;animation:draw .45s ease-out .62s forwards}
+}
+
+/* ── phone ──────────────────────────────────────────────────────────────── */
+@media (max-width:620px){
+  .thanks .question{font-size:19px;margin-bottom:var(--s5)}
+  .thanks .status-row{grid-template-columns:24px minmax(0,1fr);gap:var(--s3);padding:16px 0}
+  .thanks .facts dd{font-size:20px}
+  .thanks .test-control{padding:14px 14px}
+}

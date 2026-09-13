@@ -1,7 +1,7 @@
 # 08 Marcus — booking page scope for approval
 
 
-> **Latest confirmed decisions:** standard delivery within 24 hours; +$12.77 bump within 12 hours, both measured from confirmed main payment. Audio shares that order deadline. Use Replicate Chatterbox with the Marcus voice Joel will supply. Create a NEW Marcus n8n workflow; existing workflows must remain untouched. See the delivery policy and Chatterbox setup in the n8n folder. These decisions supersede older open-timing/provider notes below.
+> **Latest confirmed decisions:** standard delivery within 24 hours; +$12.77 bump within 12 hours, both measured from confirmed main payment. Audio shares that order deadline. Use Replicate Chatterbox with Marcus voice v2 selected by Joel. Create a NEW Marcus n8n workflow; existing workflows must remain untouched. See the delivery policy and Chatterbox setup in the n8n folder. These decisions supersede older open-timing/provider notes below.
 
 Status: HTML prototype built; direct-response copy revisions applied for review.
 
@@ -10,7 +10,8 @@ Prototype: [booking page mockup](mockup.html). The optional bump is displayed di
 ## What this page does
 
 Continue the exact reading the visitor clicked from, show what remains to be read, and offer that
-personal reading for **$35**. The same page collects her name and delivery email, displays the
+personal reading for **$35**. The same page collects her display first name, full birth name, date
+of birth and delivery email, displays the
 optional **$12.77 order bump**, updates the total, and hands the selected order to payment.
 
 The page should feel like Marcus continuing his letter. Keep the offer clear without restarting
@@ -22,7 +23,7 @@ the sales argument or explaining the internal tarot system.
 |---|---|
 | Main offer | One personal reading of the positions left face down in the originating email |
 | Main price | $35; no tier selection |
-| Required reading inputs | First name and last name, in separate fields |
+| Required reading inputs | Display first name · full birth name (as on her birth certificate) · date of birth · delivery email (D1, Joel, 2026-09-13) |
 | Order bump price | $12.77 |
 | Total without bump | $35.00 |
 | Total with bump | $47.77 |
@@ -33,8 +34,8 @@ The bump buys delivery within 12 elapsed hours of confirmed payment. Without it,
 
 ## Proposed visitor flow
 
-**Headline → face-up cards → face-down cards → $35 offer → first and last name → Continue →
-optional $12.77 bump and live total → payment.** There is no separate bump or order-review page.
+**Headline → face-up cards → face-down cards → $35 offer → first name, birth name, date of birth,
+email → Continue → optional $12.77 bump and live total → payment.** There is no separate bump or order-review page.
 
 For this first prototype, use the latest healing email as the worked example. The structure must
 also support other topics without changing their card counts or reusing generic sales copy.
@@ -110,33 +111,40 @@ Commitment offer:
 > him for, what you’re willing to accept, and your next step if his answer stays uncertain.
 
 The $35 buys the remaining reading. It must stand on its own; the bump does not supply something
-missing from the main promise. Final format, delivery method, and timing must be stated beside the offer once decided.
-For this mockup, show an explicit review placeholder; do not invent fulfilment promises.
+missing from the main promise. State beside the offer what she gets: a written reading as a PDF,
+sent by link to her email within 24 hours of payment (12 with the bump). Promise nothing beyond that.
 
-### 5. Collect her name and continue
+### 5. Collect her details and continue
 
-Two visible, labelled fields: **First name** and **Last name**. No additional personal-question
-box in this first scope. Do not ask her to retell the story the email already introduced.
+Four visible, labelled fields: **First name** (what Marcus calls her), **Full birth name** (as on
+her birth certificate), **Date of birth**, and **Delivery email** (D1, Joel, 2026-09-13). No
+additional personal-question box in this first scope. Do not ask her to retell the story the email
+already introduced.
+
+Why the page asks for the birth name and date, in two sentences she can read beside the fields:
+your birth name identifies your personal tarot card and your date of birth gives your Life Path,
+and the reading is built on both. They are used for this reading only, kept private, and never
+shown to anyone else or used for marketing.
 
 Keep the reason short and connected to the topic:
 
-> Enter your first and last name so I can identify your personal tarot card. I’ll use the strengths
-> and habits it represents as another way to explore how you ask for support—and how you respond
-> when someone offers it.
+> Enter the name on your birth certificate and your date of birth so I can identify your personal
+> tarot card and your Life Path. I’ll use the strengths and habits they represent as another way
+> to explore how you ask for support—and how you respond when someone offers it.
 
 Commitment name explanation:
 
-> Enter your first and last name so I can identify your personal tarot card. I’ll use the strengths
-> and habits it represents as another way to explore how you express what you need—and what makes
-> it difficult to ask him for a clear answer.
+> Enter the name on your birth certificate and your date of birth so I can identify your personal
+> tarot card and your Life Path. I’ll use the strengths and habits they represent as another way
+> to explore how you express what you need—and what makes it difficult to ask him for a clear answer.
 
 The actual name-to-card method must support this explanation; its calculation is not defined here.
 
-The booking form also collects the delivery email. The payment button displays the selected total.
+The payment button displays the selected total.
 
 ### 6. Offer the optional $12.77 bump on the booking page
 
-Place the bump after the name and delivery-email fields and before the final total and payment action.
+Place the bump after the four fields and before the final total and payment action.
 
 - Show the bump's name, specific additional benefit, and **+$12.77** together.
 - Make it optional and unselected by default.
@@ -150,7 +158,7 @@ Place the bump after the name and delivery-email fields and before the final tot
 ### 7. Payment boundary
 
 The proposed production flow submits the booking page’s selected order to secure payment. Collect
-the delivery email on the booking page; first and last name alone cannot identify an inbox. Do not assume a
+the delivery email on the booking page; a name alone cannot identify an inbox. Do not assume a
 forwarded email link identifies the purchaser.
 
 The standalone HTML will simulate this handoff and clearly say no payment was taken. It will not
@@ -181,7 +189,7 @@ boxes. The old mockup is not a working payment route and is not evidence of conv
 
 - Topic, face-up cards, remaining positions, and counts match the originating email.
 - The price is visible below the cards without entering personal details.
-- Both name fields are required; clear errors appear when missing.
+- All four fields are required; clear errors appear when missing.
 - The bump is visible on the booking page, unselected by default.
 - Selecting or clearing the bump produces the correct total without a page transition.
 - The payment action shows the exact selected total.
@@ -189,16 +197,16 @@ boxes. The old mockup is not a working payment route and is not evidence of conv
 - Desktop and phone layouts have readable labels, consistent body typography, and no overflow.
 - The payment handoff is visibly a prototype. Nothing is sent, charged, or published.
 
-## Decisions still needed
+## Decisions — settled 2026-09-13
 
-1. **Delivery format:** define whether the written reading arrives as email, private page, PDF, or a combination.
-2. **Payment implementation:** select and configure the secure checkout surface while keeping the bump on this page.
+1. **Delivery format:** decided. The written reading is a PDF behind a signed link, sent to the delivery email.
+2. **Payment implementation:** decided. Stripe-hosted Checkout through the existing `POST /api/backend/checkout` endpoint; the bump is selected on this page and passed with the order.
 
 The price, name, email, bump and live total now share one booking page. After verified payment, route to the bridge page before Upsell 1.
 
 This document records the new $35 scope without altering 07's configuration or enabling payment.
-PAID-READING.md's older “price undecided” note should be reconciled when this scope is approved.
+Reconciled with `paid-reading/SCOPE.md` §6 on 2026-09-13; price, format and timing agree.
 
 ## Paid reading continuity — approved 2026-09-10
 
-Face-up cards are fixed per email edition. Paid positions are drawn separately for each buyer and saved once. The personal card comes from first and last name and supplies a separate lens. After main payment, show the bridge page, then offer an audio recording of that same personalized spread, then show thank-you. See the funnel checklist for local build dependencies.
+Face-up cards are fixed per email edition. Paid positions are drawn separately for each buyer and saved once. The personal card comes from her full birth name and supplies a separate lens; her date of birth gives the Life Path (D1). After main payment, show the bridge page, then offer an audio recording of that same personalized spread, then show thank-you. See the funnel checklist for local build dependencies.

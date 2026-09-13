@@ -44,6 +44,15 @@ class EditionExportTests(unittest.TestCase):
         self.assertNotEqual(a['freeEmailText'],b['freeEmailText'])
         self.assertNotEqual(a['positions'][1]['label'],b['positions'][1]['label'])
         self.assertEqual(a['positions'][0]['fixedCard']['cardId'],'star')
+        # Ten-card Tree of Life: n_cards differs from up+down, three free then seven paid in spread order.
+        blind = self.editions['blind-spots-v1']
+        self.assertEqual(blind['spread']['id'],'tree-of-life')
+        self.assertEqual([p['number'] for p in blind['positions']],list(range(1,11)))
+        self.assertEqual([p['fixedCard']['cardId'] for p in blind['positions'] if p['visibility']=='free'],['moon','two-of-swords','three-of-pentacles'])
+        self.assertEqual([p['label'] for p in blind['positions'] if p['visibility']=='paid'],
+                         ['What you keep excusing','What you feel you are owed',"What's left of the love",'What you want to win',
+                          'What you show people','What home feels like','What it costs in money'])
+        self.assertIn('date of birth',blind['bookingCopy']['name'])
 
     def test_paid_cards_are_never_predrawn(self):
         for edition in self.editions.values():

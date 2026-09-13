@@ -471,8 +471,10 @@ Primary files: [audio n8n plan](n8n/AUDIO-BRANCH.md) · [Chatterbox plan](n8n/CH
 
 ### Not done
 
-- [ ] Receive Marcus's authorized reference voice.
-- [ ] Store the reference voice privately.
+- [x] Receive two Marcus voice sources and create versioned local candidate reference WAVs.
+- [x] Select voice v2 for the Marcus product; retain voice v1 as an alternate.
+- [x] Store selected voice v2 privately and record its object key and hash.
+- [ ] Add an authenticated operation that returns a fresh signed voice-input URL to n8n.
 - [ ] Configure a dedicated Replicate credential.
 - [ ] Freeze the report-to-audio narration manifest.
 - [ ] Build narration normalization and pronunciation handling.
