@@ -64,7 +64,10 @@ was changed. Each review carries a claimed-vs-verified note at the end.
    before the upsell page reads order state.
 2. **Upsell 1 keeps the audio player treatment** (03's running-order sleeve) — with the fix that it
    never names her personal card, and the chapter count comes from the edition.
-3. **No order form on the booking page.** Stripe's hosted Checkout collects name, email and card;
+3. **No order form on the booking page.** ⚠ **Superseded 2026-09-14, re-confirmed 2026-09-15 (Joel):
+   birth name and date of birth are collected on OUR booking page (three boxes, MM/DD/YYYY), never as
+   Stripe custom fields — Stripe's docs forbid personal data there. Kept below as the record of the
+   original ruling.** Original: Stripe's hosted Checkout collects name, email and card;
    full birth name and date of birth go in as Stripe custom fields (Checkout allows three). The
    booking page is: cards → price → speed bump → one button to Stripe. 01's form section and the
    whole of 05-form-mock.html are therefore moot; 05's type, tap-target and length findings stand.
@@ -75,7 +78,7 @@ was changed. Each review carries a claimed-vs-verified note at the end.
 
 1. Token sheet from 04 applied to the local SPA (`:root`, fonts, rules, masthead) — one pass, all pages.
 2. Booking: 01's layout (column, left headline, three cards in a row, table photo, price block)
-   with 05's measured floors; no form — bump + one button to Stripe Checkout with custom fields.
+   with 05's measured floors; birth-name/DOB boxes (superseded the no-form rule, 2026-09-14) + bump + one button to Stripe Checkout (no custom fields).
 3. Bridge: 02's mock reworked as a 5–10 s auto-redirect with a "continue now" link.
 4. Upsell: 03's ledger + full-size decline; the sleeve only after the card-name fix and a decision
    on whether an "object" is wanted at all.
