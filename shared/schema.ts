@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { pgTable, text, varchar, boolean, integer, timestamp, date, real, jsonb, index, uniqueIndex } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, boolean, integer, timestamp, date, real, jsonb, index, uniqueIndex, primaryKey } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -1654,6 +1654,13 @@ export const beOrders = pgTable("be_orders", {
   lensCard: text("lens_card"),
   /** Which version of the lens rules cut it — a later rule change cannot re-read an old order. */
   lensMethodVersion: text("lens_method_version"),
+  /** ⭐ 08 (T9). Why the paid webhook could NOT finish her fulfilment — a short reason code
+   *  (`EDITION_NOT_FOUND`, `LENS_UNSUPPORTED_NAME`, `DOB_UNPARSEABLE(raw=…)`, …), joined by
+   *  `; `. NULL = the draw was dealt and nothing needs a human. ⛔ Not `customer_list_error`
+   *  (that column means "the thank-you email did not go") and not `be_send_attempts`
+   *  (that table means a message). Support reads this; a retry that succeeds clears it.
+   *  ⚠️ Add with migrations/2026-09-13-be-08-editions.sql, never db:push. */
+  fulfilmentNote: text("fulfilment_note"),
 
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
@@ -1928,6 +1935,48 @@ export const be08Draws = pgTable("be_08_draws", {
 
 export type Be08Draw = typeof be08Draws.$inferSelect;
 export type InsertBe08Draw = typeof be08Draws.$inferInsert;
+
+// ============================================================
+// 08 · THE EDITIONS (be_08_editions)
+// ============================================================
+// An edition is one named spread Marcus reads against — its question, theme, positions and
+// the two-or-three face-up cards the daily email already showed her. She books an EDITION,
+// and the paid webhook (server/lib/beOrders.ts → be08Draw.ts) deals her paid positions
+// from it. Everything is per-edition (Joel, 2026-09-13): blind spots today, soulmate in
+// two days, each its own row.
+//
+// 🔴 PRIMARY KEY (id, version). A re-cut edition is a NEW version, never an UPDATE of the
+//    old one — be_orders pins (edition_id, edition_version), so an order already paid for
+//    keeps reading the exact positions she was sold.
+//
+// `record` is the whole edition object from local/08-marcus/editions.json, verbatim, so a
+// field added there costs no migration. The four typed columns beside it exist only so the
+// lookup and the admin eye need no JSON path.
+//
+// Written by scripts/publish-08-editions.ts (guarded by BE_08_ALLOW_PUBLISH=1).
+// ⚠️ Create it with migrations/2026-09-13-be-08-editions.sql. Do NOT `npm run db:push`.
+// ============================================================
+
+export const be08Editions = pgTable("be_08_editions", {
+  /** e.g. 'blind-spots-v1'. */
+  id: text("id").notNull(),
+  version: integer("version").notNull(),
+  /** URL-safe question slug, e.g. 'what-are-my-blind-spots'. */
+  slug: text("slug").notNull(),
+  question: text("question").notNull(),
+  /** published | draft | retired. Only 'published' can be booked or drawn. */
+  status: text("status").notNull(),
+  /** The full edition object, verbatim. Shape: server/lib/be08Editions.ts `Be08Edition`. */
+  record: jsonb("record").notNull(),
+  publishedAt: timestamp("published_at", { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+}, (table) => [
+  primaryKey({ columns: [table.id, table.version] }),
+  index("idx_be_08_editions_status").on(table.status),
+]);
+
+export type Be08EditionRow = typeof be08Editions.$inferSelect;
+export type InsertBe08EditionRow = typeof be08Editions.$inferInsert;
 
 // ============================================================
 // BACKEND DECK SEND LOG (be_send_attempts)

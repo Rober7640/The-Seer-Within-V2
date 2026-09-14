@@ -109,6 +109,9 @@ export const MARCUS_DAILY_BUMP_CENTS = 1277;
 // 08 — Marcus Stone's personal tarot reading. ONE fixed thing, unlike 07: an edition
 // (a named spread, exported by scripts/export-08-editions.py) read against her full
 // birth name and date of birth, written and sent within 24 hours.
+// Operator decision 2026-09-14 (amends D5): her first name, full birth name and date of
+// birth are collected on the booking page, not as Stripe custom fields — Stripe forbids
+// personal data in custom fields. Stripe keeps email, card and name on card.
 //
 // 🔴 08 is NOT 07. Same persona, different product, different Stripe product key,
 //    different bump key, different tables. Nothing here may reuse a 07 string —
@@ -216,7 +219,29 @@ export interface BackendOffer {
    * collects only the email (02, 03).
    */
   collectsShipping?: boolean;
+  /**
+   * Extra questions Stripe's hosted Checkout asks on ITS page (`custom_fields`), for an
+   * offer that collects nothing on the booking page (08, decision D5 2026-09-13).
+   *
+   * Plain shape on purpose — this file is bundled into the client, so it must not import
+   * Stripe's types. The checkout endpoint maps each entry onto a required `type: 'text'`
+   * field. ⛔ `key` is what the webhook reads off `session.custom_fields`; add keys, never
+   * rename one. `label` ≤ 50 characters (Stripe's hard limit). Stripe allows at most three.
+   */
+  checkoutCustomFields?: readonly BackendCheckoutCustomField[];
 }
+
+export interface BackendCheckoutCustomField {
+  /** Stripe `custom_fields[].key` — alphanumeric/underscore, ≤ 200 chars. */
+  key: string;
+  /** What she reads on the Checkout page. ≤ 50 characters. */
+  label: string;
+  minLength?: number;
+  maxLength: number;
+}
+
+/** Stripe caps a Checkout custom-field label at this many characters. */
+export const STRIPE_CUSTOM_FIELD_LABEL_MAX = 50;
 
 export const BACKEND_OFFER_CATALOG: Record<BackendOfferKey, BackendOffer> = {
   'twin-flame': {
@@ -392,6 +417,16 @@ export const BACKEND_OFFER_CATALOG: Record<BackendOfferKey, BackendOffer> = {
     upsellEntryPath: '/marcus/reading/bridge',
     // A digital reading: email only, no mailing address.
     collectsShipping: false,
+    // D5 as AMENDED 2026-09-14 by Joel: the three personal fields (first name Marcus uses,
+    // full birth name, date of birth) are collected on OUR booking page, above the pay
+    // button — client/src/pages/marcus/MarcusBooking.tsx, the checkout-sim design — and
+    // parked on be_order_intake by POST /checkout before Stripe. Stripe's docs prohibit
+    // personal data in Checkout `custom_fields` and offer no hint text, so Stripe now
+    // collects only email, card and name on card. No custom fields on this offer; the
+    // generic emission below the catalog stays for a future offer that needs one.
+    // The webhook (server/lib/beOrders.ts) reads the intake first and falls back to
+    // `session.custom_fields` only for sessions created before this change.
+    checkoutCustomFields: [],
     //
     // 🔴 FALSE. Three separate reasons, any one sufficient:
     //   1. NO POST-PAYMENT PATH. `/marcus/reading/bridge` and `/marcus/reading/success`

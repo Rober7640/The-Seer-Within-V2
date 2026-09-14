@@ -439,6 +439,10 @@ describe('a fixed-price offer (08 · Marcus Stone personal reading)', () => {
     expect(backendOfferForStripeProduct('be_marcus_daily')?.key).toBe('marcus-daily');
   });
 
+  it('asks Stripe for NO custom fields — the three personal fields live on the booking page (D5 amended 2026-09-14)', () => {
+    expect(READING.checkoutCustomFields ?? []).toHaveLength(0);
+  });
+
   it('is a digital reading with its own post-purchase path, not the shared upsell chain', () => {
     expect(READING.collectsShipping).toBe(false);
     expect(READING.successPath).toBe('/marcus/reading/success');

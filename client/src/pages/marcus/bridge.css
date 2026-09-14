@@ -1,0 +1,74 @@
+/* bridge page — page-specific rules only; tokens live in ./marcus.css
+   PORT of improve-v1/v1-one-time-BEs/local/08-marcus/client/pages/bridge.css, every
+   selector prefixed with `.m8` (MarcusShell's root) so nothing leaks into the app.
+   Source: design-reviews/02-bridge-thank-you.md §3a (B1–B9) + 04-visual-identity.md §4 (the one
+   motion: the rule draws under ORDER CONFIRMED) + ruling 1 (auto-redirect with a countdown).
+   Floors: body 18px on phones, nothing under 13px, the action and the reassurance inside the
+   first 390×844 screen. */
+
+/* head: eyebrow + headline centred, the rest left-aligned (B5) */
+.m8 .bridge-page{text-align:left}
+.m8 .bridge-head{text-align:center}
+.m8 .bridge-page .eyebrow{display:block;margin:0 auto;letter-spacing:.18em}
+/* the rule the motion draws — full width of the column, ink, one hairline */
+.m8 .bridge-page .eyebrow::after{content:"";display:block;height:1px;background:var(--ink);margin-top:var(--s3)}
+.m8 .bridge-page h1{margin-top:var(--s4)}
+.m8 .bridge-page .nowrap{white-space:nowrap}
+.m8 .bridge-page .thanks{margin:var(--s5) 0 0;max-width:34em}
+
+/* the order facts — ruled paper, not a grey box (B2, B4) */
+.m8 .bridge-page .facts{margin-top:var(--s5)}
+.m8 .bridge-page .facts .rule-double{margin-bottom:var(--s4)}
+.m8 .bridge-page .facts>p{max-width:34em}
+.m8 .bridge-page .facts .email{overflow-wrap:anywhere}
+.m8 .bridge-page .facts dl{display:grid;grid-template-columns:1fr 1fr;gap:var(--s4) var(--s6);margin:var(--s4) 0 0}
+.m8 .bridge-page .facts dt{margin-bottom:var(--s1)}
+.m8 .bridge-page .facts dd{margin:0;font-size:21px;line-height:1.35;font-weight:600;overflow-wrap:anywhere}
+.m8 .bridge-page .facts dd small{display:block;font-size:var(--t-small);font-weight:400;color:var(--muted);margin-top:2px}
+.m8 .bridge-page .facts .hair{height:0;margin-top:var(--s4)}
+
+.m8 .bridge-page .next{margin:var(--s5) 0 0;max-width:34em}
+
+/* the action: countdown in body type, a thin rule that fills, one plain link (ruling 1) */
+.m8 .bridge-page .action{margin-top:var(--s4)}
+.m8 .bridge-page .count-line{font-size:var(--t-body);color:var(--ink)}
+.m8 .bridge-page .count-rule{height:2px;background:var(--hair);margin-top:var(--s3);overflow:hidden}
+.m8 .bridge-page .count-rule i{display:block;height:100%;background:var(--ink);transform:scaleX(0);transform-origin:left center;transition:transform 7s linear}
+.m8 .bridge-page .count-rule i.run{transform:scaleX(1)}
+.m8 .bridge-page #to-upsell{margin-top:var(--s2)}
+
+/* the reassurance: directly under the action, ink not muted, left with the body (B3) */
+.m8 .bridge-page .under{margin-top:var(--s3);font-size:17px;color:var(--ink);text-align:left}
+
+/* the one motion (04 §4): the rule draws under ORDER CONFIRMED, the headline rises behind it.
+   Initial states live inside the same query so reduced-motion readers see everything at once.
+   Keyframes `draw` / `rise` are declared in marcus.css. */
+@media (prefers-reduced-motion:no-preference){
+  .m8 .bridge-page .eyebrow::after{transform:scaleX(0);transform-origin:left;animation:draw .6s ease-out .1s forwards}
+  .m8 .bridge-page h1{animation:rise .4s ease-out .3s both}
+}
+@media (prefers-reduced-motion:reduce){
+  .m8 .bridge-page .count-rule{display:none}
+}
+
+/* phone: the action and the reassurance must sit inside the first 390×844 screen (review 02 B1).
+   The shared masthead alone takes 181px there, so the page trades the label-over-value list
+   (130px) and the fill-rule for the approved sentence with the address inline in bold. */
+@media (max-width:620px){
+  .m8 .bridge-page{--lh-body:1.58}
+  .m8 .bridge-page .eyebrow{letter-spacing:.14em}
+  .m8 .bridge-page .eyebrow::after{margin-top:var(--s2)}
+  .m8 .bridge-page h1{font-size:31px;margin-top:var(--s2)}
+  .m8 .bridge-page .nowrap{white-space:normal}
+  .m8 .bridge-page .thanks{margin-top:var(--s3);line-height:var(--lh-body)}
+  .m8 .bridge-page .facts{margin-top:var(--s3)}
+  .m8 .bridge-page .facts .rule-double{margin-bottom:var(--s2)}
+  .m8 .bridge-page .facts>p{line-height:var(--lh-body)}
+  .m8 .bridge-page .facts dl{display:none}
+  .m8 .bridge-page .facts .hair{margin-top:var(--s2)}
+  .m8 .bridge-page .next{margin-top:var(--s3);line-height:var(--lh-body)}
+  .m8 .bridge-page .action{margin-top:var(--s2)}
+  .m8 .bridge-page .count-rule{display:none}
+  .m8 .bridge-page #to-upsell{margin-top:var(--s1)}
+  .m8 .bridge-page .under{margin-top:var(--s1);line-height:1.5}
+}

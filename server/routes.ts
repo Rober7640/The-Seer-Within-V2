@@ -34,6 +34,7 @@ import quizRouter from "./routes/quiz";
 import evelynLanderRouter from "./routes/evelynLander";
 import productsRouter from "./routes/products";
 import backendOffersRouter from "./routes/backendOffers";
+import beFulfilmentRouter from "./routes/beFulfilment";
 import personaLanderRouter from "./routes/personaLander";
 import {
   runHealthCheck,
@@ -589,6 +590,10 @@ export async function registerRoutes(
   // its `be_*` product names are unknown to every branch of the Stripe webhook.
   // See server/routes/backendOffers.ts.
   app.use("/api/backend", backendOffersRouter);
+  // n8n's Bearer-token door into backend-deck FULFILMENT (order + intake + draw read,
+  // grade log, delivered stamp, send log). Machine-only; a browser never calls it.
+  // Offer-generic: /api/be/:offer/… — see server/routes/beFulfilment.ts.
+  app.use("/api/be", beFulfilmentRouter);
 
   // Public unsubscribe endpoint for partner emails (CAN-SPAM compliance).
   // Mounted at root so the URL is a clean https://www.theseerwithin.com/unsubscribe?email=...&src=...

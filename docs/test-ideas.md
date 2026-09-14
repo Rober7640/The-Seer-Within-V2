@@ -2027,3 +2027,34 @@ Not covered — needs a browser or a live walk:
 - [ ] The Version-A lander (`/fb-read?device=coffee`) result card — same check on the `phase: 'result'` reveal
 - [ ] Regenerated ad creatives from `build-read-ad.mjs` render `A. Tree / B. Road / C. Lake` (the media team's current ads were made by hand)
 - [ ] **A generic version of the rings-vs-labels guard for every `pick: 'symbol'` device** — tea has the identical coupling (`armb` rings vs `optionLabel`) and nothing checks it today
+
+## Backend deck, offer 08 (Marcus Stone's personal reading) — editions + draw-on-payment (T9, 2026-09-13)
+
+The paid webhook (and the thank-you page's backstop) both call `recordBackendOrder`; for
+`marcus-reading` it copies Stripe's three `custom_fields` onto `be_order_intake`, pins the
+edition, stamps `due_at`, cuts the lens from her birth name and deals the cards ONCE into
+`be_08_draws`. Nothing in it may fail a paid order — failures land on
+`be_orders.fulfilment_note`.
+
+Covered by vitest (`server/lib/be08Draw.test.ts`, `be08Editions.test.ts`, `beOrders.test.ts`):
+
+- [x] lens: master 33 → 6 (Lovers), 11/22 stay masters, non-ASCII fails closed with `LENS_UNSUPPORTED_NAME`
+- [x] draw: fixed cards + orientations kept, no repeats over 10 positions on the 78-card deck, lens never consumes a position
+- [x] `insertBe08DrawOnce` returns the FIRST stored deal on a retry
+- [x] `getBe08Edition(id)` = latest published; `(id, version)` = that row whatever its status
+- [x] DOB parser table: `YYYY-MM-DD`, unambiguous `DD/MM` vs `MM/DD`, `D Month YYYY`; `03/07/1971` is `ambiguous`, not guessed
+- [x] `recordBackendOrder` for 08: custom_fields → intake (Stripe overwrites), display name → `first_name`, `due_at` +12h/+24h, draw once across two calls, lens failure → order recorded + customer list still written + note set
+
+Proven against a real Postgres 17 (local throwaway cluster, 2026-09-13; NOT yet a Supabase branch):
+
+- [x] both 08 migrations apply cleanly after the 02/07 ones; 8 and 24 concurrent `insertBe08DrawOnce` callers → exactly one row
+- [x] real `recordBackendOrder` end to end: happy path, no-intake + bad name/DOB, and a support fix that clears the note on retry
+
+Not covered — needs Stripe or a browser:
+
+- [ ] A real Stripe test-mode Checkout with the three `custom_fields` → `checkout.session.completed` → one `be_08_draws` row, `due_at` = `session.created` + 12h with the bump
+- [ ] Stripe webhook REPLAY of the same event → still one draw row, no second AWeber tag
+- [ ] Thank-you page landing BEFORE the webhook → order + draw created by the backstop, webhook then no-ops
+- [ ] A DOB typed as `03/07/1971` at Checkout → order paid, `fulfilment_note = DOB_AMBIGUOUS(raw=03/07/1971)`, draw still dealt, support can see it
+- [ ] `scripts/publish-08-editions.ts --apply` REFUSED without `BE_08_ALLOW_PUBLISH=1` (covered by hand, not by a test)
+- [ ] T5's GET reads `draw_json.edition.positions` + `draw_json.positions` and never needs the editions table for an already-dealt order
