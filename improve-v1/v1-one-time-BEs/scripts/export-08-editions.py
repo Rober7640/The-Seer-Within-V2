@@ -110,7 +110,7 @@ def export(builder=None):
         edition = dict(id=meta['id'], version=meta['version'], slug=meta.get('slug',source_slug),
                        question=question[0].upper()+question[1:]+'?', theme=meta['theme'], spread=meta['spread'],
                        positions=sorted(positions,key=lambda p:p['number']), freeEmailText=plain_text(raw),
-                       status='published')
+                       status=meta.get('status', 'published'))
         if 'booking_copy' in meta:
             edition['bookingCopy'] = meta['booking_copy']
         validate(edition)

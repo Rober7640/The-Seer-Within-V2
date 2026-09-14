@@ -316,6 +316,13 @@ LOCAL_FUNNEL_EDITIONS = {'what-part-of-me-needs-healing': {'id': 'healing-v1',
  'what-is-my-higher-calling-test-flow': {'id': 'higher-calling-v2',
                                            'slug': 'what-is-my-higher-calling',
                                          'version': 2,
+                                         # retired 2026-09-14 (Joel): one higher-calling reading on
+                                         # sale, v1 stays. Using 'draft', not 'retired' — the local
+                                         # sim contract (local/08-marcus/contracts.ts + draw.ts)
+                                         # only allows draft|published; production's be_08_editions
+                                         # already supports 'retired' and should get that value when
+                                         # this edition is next published there.
+                                         'status': 'draft',
                                          'theme': 'Moving from waiting toward a concrete first step in a calling',
                                          'paid_labels': ['What waiting has cost you',
                                                          'What you may need to let go of',
