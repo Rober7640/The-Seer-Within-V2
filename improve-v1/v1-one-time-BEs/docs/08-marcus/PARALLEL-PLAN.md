@@ -1,6 +1,6 @@
 # 08 Marcus — parallel build plan
 
-Date: 2026-09-13 · Ledger: [FUNNEL-STATUS-AUDIT.md](FUNNEL-STATUS-AUDIT.md) · Branch: `02-fulfillment`
+Date: 2026-09-13 · To-dos: [README.md § Remaining to-dos](README.md#remaining-to-dos-updated-2026-09-15) · Branch: `02-fulfillment`
 
 The n8n writing nodes are done (Stage 1, executions 30691–30700). What is left is everything
 between a paid click and an inbox. This plan splits that into tracks that do not touch the same

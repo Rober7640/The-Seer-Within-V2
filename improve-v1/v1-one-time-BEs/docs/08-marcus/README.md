@@ -1,10 +1,18 @@
 # 08 Marcus — build and test record
 
-Last updated: 2026-09-13
+> **Start here.** Twelve readings are selected for launch (five rewrites + seven new): review packets
+> [refresh-five/REVIEW.md](daily-email/reviews/refresh-five/REVIEW.md) and
+> [mixed-batch/REVIEW.md](daily-email/reviews/mixed-batch/REVIEW.md); letters side by side at the
+> [twelve-letter gallery](https://claude.ai/code/artifact/375861ea-7ef2-4bbf-a9db-e176cc7b0164).
+> The to-do list, split by owner, is at the bottom of this file. Decisions live in
+> [PARALLEL-PLAN.md](PARALLEL-PLAN.md) §1. (The former FUNNEL-STATUS-AUDIT.md, HANDOVER.md and
+> HANDOFF-MIXED-DAILIES-2026-09-14.md were folded into this README on 2026-09-15; history is in git.)
 
-This folder contains the current design, copy, local application, and n8n work for the Marcus daily-reading funnel. The manual 37-node n8n Stage 1 can produce a complete, numerology-anchored PDF from test inputs. A separate 48-node numerology-anchored written-and-audio fulfillment draft is now available in n8n for review, inactive and guarded. A real Chatterbox Turbo smoke test generated Marcus voice-v2 audio, and 0.90× pitch-preserving playback is the approved default. The production handoff between the funnel, Supabase, payment, fulfillment, storage, and delivery is not connected yet.
+Last updated: 2026-09-15
 
-For the current completion ledger, use [FUNNEL-STATUS-AUDIT.md](FUNNEL-STATUS-AUDIT.md). For the full project history, read [HANDOVER.md](HANDOVER.md). [FUNNEL-BUILD-CHECKLIST.md](FUNNEL-BUILD-CHECKLIST.md) preserves the original implementation tracker.
+This folder contains the current design, copy, local application, and n8n work for the Marcus daily-reading funnel. The manual 37-node n8n Stage 1 can produce a complete, numerology-anchored PDF from test inputs. A separate 48-node numerology-anchored written-and-audio fulfillment draft is now available in n8n for review, inactive and guarded. A real Chatterbox Turbo smoke test generated Marcus voice-v2 audio, and 0.90× pitch-preserving playback is the approved default. The production routes (booking, bridge, receipt, fulfilment API, draw on payment) are built and committed on branch `08-marcus`; the database migrations, AWeber list, audio upsell, send helper and n8n wiring are not connected yet — see "Remaining to-dos" below.
+
+[FUNNEL-BUILD-CHECKLIST.md](FUNNEL-BUILD-CHECKLIST.md) preserves the original implementation tracker; [PARALLEL-PLAN.md](PARALLEL-PLAN.md) holds every decision and the wave plan.
 
 ## Agreed funnel
 
@@ -16,7 +24,7 @@ After confirmed payment, the fulfillment system generates the written reading in
 | --- | ---: | --- |
 | Personalized written PDF | $35.00 | Within 24 elapsed hours of confirmed payment |
 | Speed bump on booking page | +$12.77 | Changes the written deadline to within 12 elapsed hours |
-| Audio narration upsell | Price pending | Uses the written order's 24-hour or 12-hour deadline |
+| Audio narration upsell | $17.00 (Joel, 2026-09-13) | Uses the written order's 24-hour or 12-hour deadline |
 
 Each daily edition fixes the question, spread, theme, face-up cards, and hidden position labels. Each paid order draws its hidden cards once and saves them for all retries. Numerology is calculated from the customer's full birth name and date of birth. Life Path is the main visible recognition anchor; Expression and Personality guide the private synthesis; the Expression-derived tarot card is a secondary lens.
 
@@ -25,11 +33,11 @@ Each daily edition fixes the question, spread, theme, face-up cards, and hidden 
 | Area | Built now | Current boundary |
 | --- | --- | --- |
 | Daily email | Reusable [writing shape](daily-email/SHAPE.md), [spread library](daily-email/SPREADS.md), [question library](daily-email/QUESTIONS.md), edition [state log](daily-email/STATE.md), Markdown letters, AWeber-ready HTML builder, hero generator, and cold-read review records | Emails are reviewed files; no AWeber campaign was scheduled or sent |
-| Latest daily | [What are my blind spots? letter](daily-email/letters-02/what-are-my-blind-spots.md), [HTML](daily-email/html/what-are-my-blind-spots.html), and [cold-read audit](daily-email/reviews/what-are-my-blind-spots-cold-read.md) | CTA still contains `{{BOOKING_URL}}` until edition routing is deployed |
-| Booking page | [Approved scope](booking-page/SCOPE.md), standalone [HTML mockup](booking-page/mockup.html), and executable local route with $35 offer and optional +$12.77 speed bump | No live payment session or production form submission |
-| Bridge page | [Scope](bridge-page/SCOPE.md) and executable local route that confirms the saved order and deadline before the audio offer | No deployed route or real order lookup |
+| Latest daily batch | [Twelve selected launch candidates](daily-email/reviews/launch-twelve/html/index.html): five rewritten versions plus seven mixed-topic editions; [current handoff](daily-email/reviews/refresh-five/REVIEW.md) | Human review and immutable production booking URLs still required |
+| Booking page | [Approved scope](booking-page/SCOPE.md), standalone [HTML mockup](booking-page/mockup.html), and executable local route with $35 offer and optional +$12.77 speed bump | Production route `/marcus/reading/:editionId` built (committed 751719a): edition list from `be_08_editions`, birth fields on the page, Stripe hosted Checkout for card/email only. Not deployed; `readyForMoney` false |
+| Bridge page | [Scope](bridge-page/SCOPE.md) and executable local route that confirms the saved order and deadline before the audio offer | Production route `/marcus/reading/bridge` built: reads the real order, forwards after 7 s only once paid, fails closed. Not deployed |
 | Audio Upsell 1 | Reusable [copy shape](upsell-1-audio/SHAPE.md), selected [sales copy](upsell-1-audio/COPY.md), [product scope](upsell-1-audio/SCOPE.md), local accept/decline route, selected voice v2 stored [locally and privately](n8n/assets/marcus-voice/README.md), verified Replicate credential, successful Chatterbox Turbo sample, and approved 0.90× pacing default | Price, production signed-URL operation, segmentation, assembly, private player, and delivery remain pending |
-| Thank-you | [Receipt and delivery scope](thank-you/SCOPE.md) plus a local receipt route showing saved products, totals, status, and deadline | No production receipt, private download, or listening link |
+| Thank-you | [Receipt and delivery scope](thank-you/SCOPE.md) plus a local receipt route showing saved products, totals, status, and deadline | Production receipt `/marcus/reading/success` built (status rows first, total last). No private download or recording link yet (T8/T11) |
 | Local application | Loopback-only funnel, SQLite persistence, edition export, simulated payment, saved buyer draw, personal-card logic, adaptive report fixtures, and local PDF rendering | Uses fake payments and captured deliveries; makes no Supabase, Stripe, OpenAI, PDFShift, Replicate, email, or analytics call |
 | n8n Stage 1 | Dedicated inactive 37-node workflow with numerology calculation, fixed canon selection, evidence synthesis, tarot planning, report writing, two graders, one bounded rewrite, fail-closed QA, and PDFShift rendering | Manual test lane only; does not load an order or deliver a customer report |
 | n8n Stage 2 | Production flow architecture, delivery policy, operation envelopes, retry/lease design, audio branch plan, and a separate [48-node inactive cloud draft](https://ezyabsorb.app.n8n.cloud/workflow/UJamB32MGlNKdoEW) with an explicit numerology gate and Chatterbox Turbo fields | Reviewable scaffold only; its guard is disabled and its backend operations remain placeholders until the production data and verified-payment contracts are implemented |
@@ -154,6 +162,24 @@ node --import tsx --test improve-v1/v1-one-time-BEs/local/08-marcus/store.test.t
 node improve-v1/v1-one-time-BEs/local/08-marcus/browser.test.cjs
 ```
 
+### Rebuild the twelve editions and their review gallery locally
+
+Run from the repository root. Edit source Markdown (`daily-email/letters-02/`) and the edition
+configs (`daily-email/edition-configs/`), never the generated HTML or `local/08-marcus/editions.json`.
+
+```sh
+python3 improve-v1/v1-one-time-BEs/scripts/export-08-editions.py            # regenerate editions.json
+python3 improve-v1/v1-one-time-BEs/scripts/export-08-editions.py --check    # drift check
+python3 improve-v1/v1-one-time-BEs/scripts/build-08-review-packet.py --booking-origin http://127.0.0.1:5088
+./node_modules/.bin/tsx improve-v1/v1-one-time-BEs/local/08-marcus/server.ts   # local app on 5088
+python3 -m http.server 5092 --bind 127.0.0.1                                  # second terminal, for the gallery
+```
+
+Gallery: `http://127.0.0.1:5092/improve-v1/v1-one-time-BEs/docs/08-marcus/daily-email/reviews/mixed-batch/html/index.html`.
+Restart the local app after exporting editions (it imports fixtures at startup). The launch set is
+`daily-email/edition-configs/launch-selection-2026-09-14.json`; the production publisher
+(`scripts/publish-08-editions.ts`) follows it and retires every other record.
+
 ### Generate a real test PDF in n8n
 
 1. Open the [inactive Marcus workflow](https://ezyabsorb.app.n8n.cloud/workflow/Lksy14rvjB5Z7aYg).
@@ -172,37 +198,50 @@ node --test improve-v1/v1-one-time-BEs/docs/08-marcus/n8n/numerology-canon/workf
 python3 improve-v1/v1-one-time-BEs/docs/08-marcus/n8n/update-staged-workflow.py --dry-run
 ```
 
-## Production gap that must be resolved first
+## Remaining to-dos (updated 2026-09-15)
 
-The current booking scope collects first name, last name, and delivery email. The tested numerology workflow requires:
+Split by who does it. The production routes are built and committed on branch `08-marcus`
+(751719a, fc604cd, 9ffc76f, f615bb5); `readyForMoney` is still `false`, nothing is deployed,
+both n8n workflows are inactive. The old "production gap" (birth name + DOB not collected) is
+closed: the booking page collects display first name, full birth name and date of birth — on
+OUR page, never as Stripe custom fields (Joel, 2026-09-14, re-confirmed 2026-09-15).
 
-- display first name;
-- full birth name;
-- date of birth;
-- delivery email.
+### Joel
 
-Life Path cannot be calculated without date of birth, and Expression and Personality cannot reliably use a shortened or married name when the method expects the full birth name. Before Stage 2 is connected, the booking form, privacy copy, data contract, and Supabase schema must agree on these exact inputs. The daily email only needs to explain enough to earn the click; the booking page should explain why the added birth details improve the reading.
+- [ ] Review the twelve launch letters (five rewrites + seven new): [gallery](https://claude.ai/code/artifact/375861ea-7ef2-4bbf-a9db-e176cc7b0164), [refresh-five packet](daily-email/reviews/refresh-five/REVIEW.md), [mixed-batch packet](daily-email/reviews/mixed-batch/REVIEW.md). Codex's batch is uncommitted until this review is done.
+- [ ] Voice rights: the approved voice is a real YouTube speaker without consent — replace it or accept the risk in writing before any customer audio ([n8n/assets/marcus-voice/README.md](n8n/assets/marcus-voice/README.md)).
+- [ ] Three locked-copy stumbles from the page cold read (bridge "your saved cards" reads as stored bank cards; "one optional way to receive the same reading" hides the $17; the failed-payment screen never says whether money was taken) — decide whether to reword before launch.
+- [ ] Privacy, retention, refund and missed-deadline remedy wording before real orders.
 
-## Remaining production work
+### Dev
 
-- [ ] Add full birth name and date of birth to the approved booking experience and data contract.
-- [ ] Bind each AWeber CTA to an immutable edition/version and replace `{{BOOKING_URL}}`.
-- [ ] Implement the live booking, bridge, upsell, and thank-you routes against saved order state.
-- [ ] Choose and integrate the secure payment surface while keeping the +$12.77 bump on the booking page.
-- [ ] Create the dedicated Supabase tables, private storage, access rules, and atomic saved-draw operation.
-- [ ] Build Stage 2 service endpoints for verified payment, idempotency, leases, retries, grading, storage, and delivery.
-- [ ] Connect Stage 2 to the existing Stage 1 generation core and test it with test-mode orders.
-- [x] Push the separate 48-node numerology-anchored written-and-audio fulfillment draft to n8n as an inactive guarded workflow.
-- [ ] Decide PDF attachment versus restricted-link delivery and implement the selected provider/template.
-- [ ] Approve the audio price and narration promise.
-- [x] Receive two Marcus voice sources, create versioned local reference WAVs, and select voice v2.
-- [x] Store selected voice v2 privately with a pinned object key and hash.
-- [x] Verify the n8n Replicate credential, a temporary signed voice URL, and one real Chatterbox Turbo synthesis with voice v2.
-- [x] Approve and pin 0.90× pitch-preserving tempo with versioned paragraph, card-section, and closing pauses.
-- [ ] Build the production signed-URL operation; segment narration, persist predictions, assemble and QA audio, and issue a private listening link.
-- [ ] Test late audio purchases, provider failures, missed deadlines, retries, duplicate webhooks, and customer-safe recovery.
-- [ ] Complete privacy, retention, support, refund, and deadline-remedy decisions before accepting real orders.
-- [ ] Activate the new Marcus workflow only after the full production path passes test-mode checks.
+- [ ] Apply, in order, on the shared Supabase project — never `npm run db:push` (dev and prod share one database; deploying the branch before this breaks every 02/03/06 receipt): `migrations/2026-09-03-be-07-daily.sql`, `migrations/2026-09-13-be-08-marcus.sql`, `migrations/2026-09-13-be-08-editions.sql`.
+- [ ] Load the readings: `npx tsx scripts/publish-08-editions.ts --check` (expect 12 published, 6 retired), then `BE_08_ALLOW_PUBLISH=1 npx tsx scripts/publish-08-editions.ts --apply`. The publisher follows [launch-selection-2026-09-14.json](daily-email/edition-configs/launch-selection-2026-09-14.json); old versions are retired, not deleted.
+- [ ] Set `BE_FULFILMENT_TOKEN` (long random string) on the server and in n8n's credentials.
+- [ ] AWeber, per [AWEBER-DELIVERY.md](post-purchase-emails/AWEBER-DELIVERY.md): new list "Marcus Stone — buyers" (id → `AWEBER_MARCUS_BUYERS_LIST_ID`), nine `m8_*` custom fields, four campaigns on tags `be-08`, `be-08-audio`, `be-08-delivered`, `be-08-audio-delivered`, internal test send, then the launch gate (one test buyer, two purchases ten minutes apart, both confirmations arrive). Hand the list id to Claude for T10.
+- [ ] Deploy `08-marcus` only after the three migrations are applied; keep `readyForMoney` false until the test-mode matrix passes.
+
+### Claude
+
+- [x] T5 fulfilment API (`/api/be/:offer/fulfilment|grade-log|delivered|send-attempt`).
+- [x] T6 booking page with birth fields, cold-read twice (three readers each).
+- [x] T7 bridge (7 s, paid-only, fail-closed) + receipt.
+- [x] T9 lens + one-time draw on payment, `due_at`, editions table + publisher.
+- [x] Card art for the twelve on S3 `marcus/08/` (41 files).
+- [x] Local simulator + docs aligned to the booking-page rule.
+- [ ] T8 audio upsell: real $17 one-click charge via `/upsell/charge`; `/marcus/reading/welcome1` is a pass-through stub today.
+- [ ] T10 send helper (`server/lib/beMail.ts`): write `m8_*` fields → remove trigger tag → add trigger tag, per subscriber, recorded in `be_send_attempts`. Needs the dev's list id.
+- [ ] T11 wire the real n8n workflow `UJamB32MGlNKdoEW` through `build-workflow.py`: Stripe trigger + `GET /api/be/marcus-reading/fulfilment/:sessionId`, add `the_cross` (5) and `cross_and_triangle` (7) spreads, PDF to `analysis_pdf/08/<order>/`, sign 60 days, `POST /delivered`; keep inactive.
+- [ ] Supabase disposable-branch rehearsal of the three migrations + publisher + concurrency test (MCP was down 2026-09-13/14; proven on local Postgres 17 only).
+- [ ] Written end-to-end test runbook for Joel: Stripe test card → booking → bridge → receipt → n8n → PDF in inbox (after the dev steps and T11).
+- [ ] Bind each AWeber CTA to its edition URL and replace `{{BOOKING_URL}}` once the readings are published.
+- [ ] Test-mode matrix: late audio purchase, provider failure, missed deadline, retries, duplicate webhooks, customer-safe recovery.
+- [ ] Two stale rows in `docs/test-ideas.md` still describe the old "ambiguous" DOB rule.
+
+### Done and not reopened
+
+- Every decision D1–D7 (see [PARALLEL-PLAN.md](PARALLEL-PLAN.md) §1); audio price $17; PDF link 60 days; master 33 → 6; DOB entered month-first (MM/DD/YYYY); two n8n workflows kept (`Lksy14rvjB5Z7aYg` test lane, `UJamB32MGlNKdoEW` production draft).
+- Voice v2 selected, stored, synthesised once with Chatterbox Turbo at 0.90× pitch-preserving tempo.
 
 ## Folder map
 

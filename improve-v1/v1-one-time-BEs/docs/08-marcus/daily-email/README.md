@@ -1,6 +1,10 @@
 # Daily email → local funnel continuity
 
-The source of truth is `scripts/build-08-daily.py` (`LETTERS`) plus the original `letters-02/*.md` email. The local funnel now consumes generated edition records instead of a second hand-written list of cards and email excerpts.
+> **Current launch selection:** [Five rewritten editions + seven new readings](reviews/refresh-five/REVIEW.md). Use the twelve selected versions in this newer packet; older inventory and rewrite TODOs below are historical.
+
+> **Twelve launch readings (2026-09-14):** review packet at [../reviews/refresh-five/REVIEW.md](../reviews/refresh-five/REVIEW.md); rebuild commands and the owner-split to-do list are in [docs/08-marcus/README.md](../README.md).
+
+The source of truth is `scripts/build-08-daily.py` (`LETTERS`, including `edition-configs/mixed-batch-2026-09-14.json` and `edition-configs/refresh-five-2026-09-14.json`) plus the original `letters-02/*.md` email. The local funnel now consumes generated edition records instead of a second hand-written list of cards and email excerpts.
 
 ## Local operator commands
 
@@ -31,13 +35,24 @@ The email Markdown remains editable in `letters-02/`; metadata does not rewrite 
 
 | Edition ID | Version | Face up / buyer drawn | Purpose |
 | --- | --- | --- | --- |
-| `healing-v1` | 1 | 2 / 4 | Preserve the existing local healing route |
-| `commitment-v1` | 1 | 2 / 4 | Preserve the existing local commitment route |
-| `quiet-v1` | 1 | 3 / 3 | Exercise a different visible-card count |
-| `higher-calling-v1` | 1 | 2 / 4 | Historical draft, version-continuity fixture |
-| `higher-calling-v2` | 2 | 2 / 4 | Same topic slug, revised email and labels |
+| `healing-v1`, `commitment-v1`, `higher-calling-v1` | 1 | 2 / 4 | Existing editions; readiness issues in the review packet |
+| `quiet-v1` | 1 | 3 / 3 | Historical edition; replaced in launch selection by quiet-v2 |
+| `blind-spots-v1` | 1 | 3 / 7 | Historical ten-card edition; replaced in launch selection by blind-spots-v2 |
+| `higher-calling-v2` | 2 | 2 / 4 | Separate draft variant, excluded from the twelve-topic gallery |
+| `does-love-have-to-feel-this-hard-v1` | 1 | 2 / 4 | New mixed-batch review edition |
+| `seeing-love-clearly-v1` | 1 | 2 / 4 | New mixed-batch review edition |
+| `heading-in-the-right-direction-v1` | 1 | 2 / 4 | New mixed-batch review edition |
+| `whats-keeping-you-stuck-with-money-v1` | 1 | 2 / 4 | New mixed-batch review edition |
+| `what-deserves-your-attention-v1` | 1 | 2 / 4 | New mixed-batch review edition |
+| `what-gift-are-you-overlooking-v1` | 1 | 2 / 4 | New mixed-batch review edition |
+| `is-it-time-for-a-new-chapter-v1` | 1 | 2 / 4 | New mixed-batch review edition |
+| `healing-v2` | 2 | 2 / 4 | Rewritten launch candidate |
+| `commitment-v2` | 2 | 2 / 4 | Rewritten launch candidate |
+| `higher-calling-v3` | 3 | 2 / 4 | Rewritten launch candidate |
+| `quiet-v2` | 2 | 2 / 4 | Rewritten launch candidate |
+| `blind-spots-v2` | 2 | 3 / 7 | Rewritten launch candidate |
 
-These historical drafts are **not approved for live publication**. The envelope explicitly says `local-fixture-only`; `status: published` merely lets the local demo route to them. Review the original drafts before any real publication. The older copy has statements that do not represent the current writing guidance.
+These local fixtures are **not approved for live publication**. The envelope explicitly says `local-fixture-only`; `status: published` merely lets the local demo route to them. Review the original drafts before any real publication. The older copy has statements that do not represent the current writing guidance.
 
 ## Adding a future edition
 
