@@ -1,0 +1,156 @@
+[
+  {
+    "slug": "does-love-have-to-feel-this-hard",
+    "subject": "Does love always have to feel this hard?",
+    "cards": [
+      "Ten of Wands",
+      "Six of Pentacles"
+    ],
+    "paid_labels": [
+      "What you need back",
+      "What you keep taking on",
+      "What you can ask for",
+      "Where you can begin"
+    ],
+    "spread": "six-questions",
+    "n_cards": 6,
+    "turned": [
+      1,
+      2
+    ],
+    "status": "built; copy and art checked; human review pending",
+    "authorization": "User approved mixed topics, one writer per daily, then said go."
+  },
+  {
+    "slug": "seeing-love-clearly",
+    "subject": "What are you not seeing in love?",
+    "cards": [
+      "Seven of Cups",
+      "Queen of Swords"
+    ],
+    "paid_labels": [
+      "What you keep hoping for",
+      "What needs closer attention",
+      "What you need to ask",
+      "What your next step is"
+    ],
+    "spread": "six-questions",
+    "n_cards": 6,
+    "turned": [
+      1,
+      2
+    ],
+    "status": "built; copy and art checked; human review pending",
+    "authorization": "User approved mixed topics, one writer per daily, then said go."
+  },
+  {
+    "slug": "heading-in-the-right-direction",
+    "subject": "Are you heading in the right direction?",
+    "cards": [
+      "Eight of Pentacles",
+      "Eight of Cups"
+    ],
+    "paid_labels": [
+      "What matters in your work",
+      "What strength you can use",
+      "What deserves reconsideration",
+      "Where you can begin"
+    ],
+    "spread": "six-questions",
+    "n_cards": 6,
+    "turned": [
+      1,
+      2
+    ],
+    "status": "built; copy and art checked; human review pending",
+    "authorization": "User approved mixed topics, one writer per daily, then said go."
+  },
+  {
+    "slug": "whats-keeping-you-stuck-with-money",
+    "subject": "What’s keeping you stuck with money?",
+    "cards": [
+      "Four of Pentacles",
+      "Ace of Pentacles"
+    ],
+    "paid_labels": [
+      "What security means to you",
+      "What deserves a closer look",
+      "What resource you can use",
+      "Where you can begin"
+    ],
+    "spread": "six-questions",
+    "n_cards": 6,
+    "turned": [
+      1,
+      2
+    ],
+    "status": "built; copy and art checked; human review pending",
+    "authorization": "User approved mixed topics, one writer per daily, then said go."
+  },
+  {
+    "slug": "what-deserves-your-attention",
+    "subject": "What deserves your attention right now?",
+    "cards": [
+      "Two of Pentacles",
+      "Four of Swords"
+    ],
+    "paid_labels": [
+      "What matters most now",
+      "What can wait",
+      "What needs your care",
+      "Where to place your attention"
+    ],
+    "spread": "six-questions",
+    "n_cards": 6,
+    "turned": [
+      1,
+      2
+    ],
+    "status": "built; copy and art checked; human review pending",
+    "authorization": "User approved mixed topics, one writer per daily, then said go."
+  },
+  {
+    "slug": "what-gift-are-you-overlooking",
+    "subject": "What gift are you overlooking?",
+    "cards": [
+      "The Magician",
+      "Queen of Pentacles"
+    ],
+    "paid_labels": [
+      "What strength you overlook",
+      "Where it can be useful",
+      "What keeps it small",
+      "What you can try"
+    ],
+    "spread": "six-questions",
+    "n_cards": 6,
+    "turned": [
+      1,
+      2
+    ],
+    "status": "built; copy and art checked; human review pending",
+    "authorization": "User approved mixed topics, one writer per daily, then said go."
+  },
+  {
+    "slug": "is-it-time-for-a-new-chapter",
+    "subject": "Is it time for a new chapter?",
+    "cards": [
+      "Death",
+      "Six of Swords"
+    ],
+    "paid_labels": [
+      "What has run its course",
+      "What you want to carry forward",
+      "What support you can accept",
+      "Where your next step begins"
+    ],
+    "spread": "six-questions",
+    "n_cards": 6,
+    "turned": [
+      1,
+      2
+    ],
+    "status": "built; copy and art checked; human review pending",
+    "authorization": "User approved mixed topics, one writer per daily, then said go."
+  }
+]

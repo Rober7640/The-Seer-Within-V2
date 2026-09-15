@@ -1,0 +1,14 @@
+# Cold comprehension read — closing section B
+
+Read the full frozen letter once for context, imagining a woman aged 55+ reading on her phone in the morning. Audit is limited to the paragraph beginning “I'll need your full birth name” through the CTA. No other material consulted.
+
+| Exact text | Sayback | Pronoun referents | Reread: where and why | Unknown people | Dual words | Alternative meaning | Verdict |
+|---|---|---|---|---|---|---|---|
+| I'll need your full birth name, including your first and last name, and your date of birth. | Marcus needs my name as it was at birth and my birth date. | I = Marcus; your = me, Margaret. | None. | None. | “Birth name” means my name at birth; “full” indicates the complete name. | No competing reading affects my understanding. | CLEAR |
+| I'll begin with the strengths and challenges your birth date represents in the reading. | He will start by looking at the strengths and challenges associated with my birth date in this reading. | I = Marcus; your = me. | None. | None. | “Represents” means symbolizes or stands for here. | No competing reading affects my understanding. | CLEAR |
+| Your name identifies a personal tarot card. | My name is used to identify a tarot card associated with me. | Your = me. | None. I am not told the matching method, but I understand the statement. | None. | “Personal” means associated with me. | No competing reading affects my understanding. | CLEAR |
+| I'll use the strengths and habits represented by that personal card to interpret the remaining four. | He will use what my personal card says about strengths and habits when explaining the four cards still face down. | I = Marcus; that personal card = the card identified by my name; the remaining four = the four face-down cards mentioned immediately before this paragraph. | None. | None. | “Four” omits “cards,” which the preceding context supplies clearly. | No competing reading affects my understanding. | CLEAR |
+| We'll explore how you can ask him to get in touch and tell him how the silence affects you. | Marcus and I will look at how I can ask the man I am waiting for to contact me, and how I can explain the effect his silence has on me. | We = Marcus and me; you = me; him = the man whose reply I am waiting for. | None. | None: the man is unnamed but already established throughout the letter. | “Get in touch” means contact me. | No competing reading affects my understanding. | CLEAR |
+| Explore your next step while he's quiet. | Continue to find out what I can do next while he has not replied. | Your = me; he = the same man whose reply I am waiting for. | None. | None. | “Quiet” means not responding in this context; “step” means an action. | No competing reading affects my understanding. | CLEAR |
+
+All six sentences are clear on this read. No unclear sentences found.

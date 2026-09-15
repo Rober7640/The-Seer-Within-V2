@@ -1,0 +1,47 @@
+Subject: What’s keeping you stuck with money?
+
+%FIRSTNAME%,
+
+When money keeps taking up room in your thoughts, it's hard to know what deserves your attention next. You can spend so much time trying to keep things steady that looking ahead becomes another task you haven't got the energy for.
+
+I've turned two cards on that feeling this morning. The first has both arms occupied.
+
+**One — what you hold tightly. The Four of Pentacles.**
+
+A crowned man sits with a coin clasped against his body. His hands and arms hold it in place. Two more coins lie beneath his feet, and another rests above his crown.
+
+He isn't simply watching over what he has. His arms and feet are involved in keeping it exactly where it is.
+
+There's effort in that picture. When something matters to your security, protecting it can take more of you than an outside observer would guess. Remembering what is due. Thinking ahead. Trying to leave yourself enough room for the unexpected.
+
+That care has a purpose. If resources are stretched, the need to protect them is real. The card gives us no reason to blame your circumstances on your attitude.
+
+What it brings into view is the attention that protection requires. Keeping things steady is work in its own right. If you've felt exhausted without feeling further ahead, those two things can exist together.
+
+**Two — what you could put to use. The Ace of Pentacles.**
+
+A hand reaches out from a cloud, holding one coin above a garden. A path crosses the garden towards an opening in a hedge.
+
+Compare the open hand in the Ace of Pentacles with the man in the Four of Pentacles. The man clasps his coin against his body. In the Ace, the coin rests on an open palm, where it can be seen clearly.
+
+I'm reading that coin as a resource worth noticing. It needn't be money. It could be something you know how to do, useful information you haven't followed up, or support you haven't yet explored.
+
+The open hand changes the question from “How do I keep this safe?” to “What could this help me do?”
+
+You don't have to risk what you need in order to ask that question. Recognizing a skill, finding out what help is available, or clarifying a priority can begin with attention.
+
+Together, the cards separate two tasks that money worries can tangle together: protecting what sustains you, and recognizing what you could use. The first deserves care. The second deserves a look of its own.
+
+Those are the two face-up cards in this morning’s reading.
+
+Neither card tells us what is causing your particular money difficulties. What they offer is a way to look beyond the feeling that nothing is moving: what needs protecting, and what might still be available to you?
+
+I'd like to take that distinction further with you, %FIRSTNAME%. The four remaining cards explore what security means to you, what deserves a closer look, which resource you could use, and where you could begin.
+
+I'll need your first and last name and your date of birth to continue. Your name identifies your personal tarot card. Its meaning helps me interpret the remaining cards with your strengths and familiar patterns in mind—particularly how you seek stability and what you tend to rely on when resources feel limited.
+
+[Explore what you can draw on](BOOKING).
+
+Marcus
+
+P.S. The open palm gives us a moment to look at what's there before deciding what to do with it.

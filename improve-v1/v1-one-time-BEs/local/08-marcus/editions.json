@@ -33,6 +33,66 @@
       "editionId": "blind-spots-v1",
       "source": "docs/08-marcus/daily-email/letters-02/what-are-my-blind-spots.md",
       "sha256": "344048a8eaca520d1b31e60640b18e909d37efa7f67d6a042c25b7a08b2abdb4"
+    },
+    {
+      "editionId": "does-love-have-to-feel-this-hard-v1",
+      "source": "docs/08-marcus/daily-email/letters-02/does-love-have-to-feel-this-hard.md",
+      "sha256": "6e3665f9c76761b9a7dadfcc14e602f9428b09ae440139ce45fbd32392c90bec"
+    },
+    {
+      "editionId": "seeing-love-clearly-v1",
+      "source": "docs/08-marcus/daily-email/letters-02/seeing-love-clearly.md",
+      "sha256": "217fa12aa48fa3d965d73fb2f018cf5d332f7d2a29cfaaddd9d692f336a6ccf7"
+    },
+    {
+      "editionId": "heading-in-the-right-direction-v1",
+      "source": "docs/08-marcus/daily-email/letters-02/heading-in-the-right-direction.md",
+      "sha256": "a29591a4ff54ce70f9d20b126b902e2fcbfc05c302b307a2bc0814596d672ba5"
+    },
+    {
+      "editionId": "whats-keeping-you-stuck-with-money-v1",
+      "source": "docs/08-marcus/daily-email/letters-02/whats-keeping-you-stuck-with-money.md",
+      "sha256": "474f3260cdea27240ff128a19e845d424da2d34a46c8b733d81334ea607667be"
+    },
+    {
+      "editionId": "what-deserves-your-attention-v1",
+      "source": "docs/08-marcus/daily-email/letters-02/what-deserves-your-attention.md",
+      "sha256": "7601b4d54ba73adcc16f3cd325a8e4e75cacbd9d371f84ab3308dfe3ccf8e371"
+    },
+    {
+      "editionId": "what-gift-are-you-overlooking-v1",
+      "source": "docs/08-marcus/daily-email/letters-02/what-gift-are-you-overlooking.md",
+      "sha256": "493a2f9d9f05a2cc8400bf164632ab1a95bd5a16bc35a99ba4da76b57665f67a"
+    },
+    {
+      "editionId": "is-it-time-for-a-new-chapter-v1",
+      "source": "docs/08-marcus/daily-email/letters-02/is-it-time-for-a-new-chapter.md",
+      "sha256": "b7b827c58156eb26bec951a17881a853795a1057df362caef361133cfd00090d"
+    },
+    {
+      "editionId": "healing-v2",
+      "source": "docs/08-marcus/daily-email/letters-02/what-part-of-me-needs-healing-v2.md",
+      "sha256": "b3c0f39f9f8d7e4c3b1ca7acff57acb7e1cb507221858fdf33ee43e5ee96deb8"
+    },
+    {
+      "editionId": "commitment-v2",
+      "source": "docs/08-marcus/daily-email/letters-02/why-wont-he-commit-v2.md",
+      "sha256": "3a79d2a4fd571297266dfb1c9f818a1abd9be569bd9f62fbcccbe7b0c2194898"
+    },
+    {
+      "editionId": "higher-calling-v3",
+      "source": "docs/08-marcus/daily-email/letters-02/what-is-my-higher-calling-v3.md",
+      "sha256": "c372dc92ea881b71b05082474165896ccec4301cfc36869a222cd394ec2bda76"
+    },
+    {
+      "editionId": "quiet-v2",
+      "source": "docs/08-marcus/daily-email/letters-02/why-they-go-quiet-v2.md",
+      "sha256": "98e8ad4bcc94ae715606cf35217c6a162bea9fd8dd636e8e3159652310832fcb"
+    },
+    {
+      "editionId": "blind-spots-v2",
+      "source": "docs/08-marcus/daily-email/letters-02/what-are-my-blind-spots-v2.md",
+      "sha256": "d19d7966ca44b1d2a3ffa3f8277cc797e7ffc4942086e3531af21abffe8bbd82"
     }
   ],
   "editions": [
@@ -447,6 +507,838 @@
         "bridge": "The Moon, the Two of Swords and the Three of Pentacles showed the pattern: attention pulled into the distance, a decision held between the same two options, and a conclusion nobody else has checked. The next seven cards show where that pattern is reaching—what you keep excusing, what you feel you are owed, your love, your home and your money.",
         "offer": "In your full reading, I’ll bring these cards together around your question: which part of your life is carrying the blind spot, what it has already cost you there, and the one question or fact that would settle it.",
         "name": "I’ll use the strengths and habits your personal card represents as another way to explore where your attention drifts and which facts you tend to leave unchecked—so along with your first name, I’ll need your full name as it was given at birth and your date of birth."
+      }
+    },
+    {
+      "id": "does-love-have-to-feel-this-hard-v1",
+      "version": 1,
+      "slug": "does-love-have-to-feel-this-hard",
+      "question": "Does love always have to feel this hard?",
+      "theme": "Effort, reciprocity and personal needs in love",
+      "spread": {
+        "id": "six-questions",
+        "name": "The Six Questions (in-house adaptation)",
+        "version": 1
+      },
+      "positions": [
+        {
+          "id": "p1",
+          "number": 1,
+          "label": "What effort has become",
+          "visibility": "free",
+          "fixedCard": {
+            "cardId": "ten-of-wands",
+            "reversed": false
+          }
+        },
+        {
+          "id": "p2",
+          "number": 2,
+          "label": "What you can afford to give",
+          "visibility": "free",
+          "fixedCard": {
+            "cardId": "six-of-pentacles",
+            "reversed": false
+          }
+        },
+        {
+          "id": "p3",
+          "number": 3,
+          "label": "What you need back",
+          "visibility": "paid"
+        },
+        {
+          "id": "p4",
+          "number": 4,
+          "label": "What you keep taking on",
+          "visibility": "paid"
+        },
+        {
+          "id": "p5",
+          "number": 5,
+          "label": "What you can ask for",
+          "visibility": "paid"
+        },
+        {
+          "id": "p6",
+          "number": 6,
+          "label": "Where you can begin",
+          "visibility": "paid"
+        }
+      ],
+      "freeEmailText": "Subject: Does love always have to feel this hard?\n\n%FIRSTNAME%,\n\nWhen romantic love feels difficult, trying harder can seem like the decent thing to do. Wait a little longer. Try to understand the other person’s feelings. Give the relationship another chance. But how do you know when the effort itself has become too much?\n\nI've turned two of six cards on that question this morning. The first shows a man carrying more than he can comfortably hold.\n\nOne — what effort has become. The Ten of Wands.\n\nTen long wooden staves fill his arms. He bends forward under their weight, gathering the whole bundle against his chest as he walks towards a town.\n\nIt's the whole bundle I want you to notice. Each staff might be manageable on its own. Here, one man is carrying all ten together.\n\nIn love, a little more patience can seem reasonable. So can starting a conversation, adjusting your plans, or being the one who brings a difficult conversation back to kindness. Each can be a loving thing to do.\n\nThe weight changes when you become responsible for doing all of them.\n\nIf that feels familiar, look at the work as a whole. You can understand why you took on each part and still find that the total asks too much of you. Being able to keep carrying it doesn't tell you whether it should all be yours.\n\nTwo — what you can afford to give. The Six of Pentacles.\n\nA standing man gives coins to a kneeling figure. A second figure kneels nearby, waiting. In his other hand, the man holds a pair of scales.\n\nHe gives coins with one hand and holds scales with the other. The scales remain part of the picture while he is being generous.\n\nThat detail matters beside the Ten of Wands. You can care about what you offer and also consider how much time and energy you can offer. You can be generous while considering your own limits.\n\nIn love, that means being willing to ask what comes back to you. Does care reach you when you're tired? Is there room for your needs as well as the sympathy you offer?\n\nYou don't need to keep a tally of every kindness. There will be times when you give more, and times when you need more. But if you respond to receiving too little care by offering still more of your own, your effort can grow while the closeness you want stays out of reach.\n\nThose are the two face-up cards in this morning’s reading.\n\nTogether, these cards separate being devoted from taking responsibility for both sides of love. More effort from you cannot, by itself, make the giving mutual.\n\nThat leaves a more useful question than “How can I try harder?” What would sharing the effort actually look like for you?\n\nYou may be clear that you're tired without being clear about what would help. And asking for something specific can feel harder than quietly doing without it.\n\nI'd like to continue there, %FIRSTNAME%. The remaining four cards explore what you need back, what you keep taking on, what you can ask for, and where you can begin.\n\nI'll need your first and last name and your date of birth. Your name identifies a separate personal tarot card. I use the strengths and habits represented by that personal card to interpret the four remaining cards—especially what they suggest about asking for care in love. We'll look at how you can express a need instead of immediately making room for somebody else's.\n\nLet's look at what you need from love.\n\nMarcus\n\nP.S. The man with the coins hasn't put down his scales. You can be generous and still consider what you're giving.",
+      "status": "published",
+      "bookingCopy": {
+        "headline": "Let’s look at what you need from love.",
+        "intro": "Continue your personal reading: Does love always have to feel this hard?",
+        "bridge": "The Ten of Wands and Six of Pentacles separated effort from mutual care. The remaining reading explores what you need back and what you can ask for.",
+        "offer": "In your personal reading, I’ll explore what you need back, what you keep taking on, what you can ask for, and where you can begin.",
+        "name": "I’ll use the strengths and habits represented by your personal tarot card to explore how you give care and ask for it."
+      }
+    },
+    {
+      "id": "seeing-love-clearly-v1",
+      "version": 1,
+      "slug": "seeing-love-clearly",
+      "question": "What are you not seeing in love?",
+      "theme": "Romantic possibility, present experience and seeking clarity",
+      "spread": {
+        "id": "six-questions",
+        "name": "The Six Questions (in-house adaptation)",
+        "version": 1
+      },
+      "positions": [
+        {
+          "id": "p1",
+          "number": 1,
+          "label": "What hope can obscure",
+          "visibility": "free",
+          "fixedCard": {
+            "cardId": "seven-of-cups",
+            "reversed": false
+          }
+        },
+        {
+          "id": "p2",
+          "number": 2,
+          "label": "What asking can clarify",
+          "visibility": "free",
+          "fixedCard": {
+            "cardId": "queen-of-swords",
+            "reversed": false
+          }
+        },
+        {
+          "id": "p3",
+          "number": 3,
+          "label": "What you keep hoping for",
+          "visibility": "paid"
+        },
+        {
+          "id": "p4",
+          "number": 4,
+          "label": "What needs closer attention",
+          "visibility": "paid"
+        },
+        {
+          "id": "p5",
+          "number": 5,
+          "label": "What you need to ask",
+          "visibility": "paid"
+        },
+        {
+          "id": "p6",
+          "number": 6,
+          "label": "What your next step is",
+          "visibility": "paid"
+        }
+      ],
+      "freeEmailText": "Subject: What are you not seeing in love?\n\n%FIRSTNAME%,\n\nWhen you think about love, how much of what you see is happening now—and how much is what you hope will happen?\n\nThe first of this morning's six Rider–Waite tarot cards gives that question a picture.\n\nOne — what hope can obscure. The Seven of Cups.\n\nA figure faces seven cups suspended in a cloud. Each holds something different: jewels, a castle, a wreath, a creature. There is plenty to catch the eye.\n\nBut these are visions. The castle looks inviting; it isn't somewhere the figure has arrived. The jewels appear within reach, but nothing in the picture shows them being held.\n\nThat's the distinction I want to bring into your love reading. The thought of a relationship can move you before you have much experience of being close to that person.\n\nYou might see a future in someone's kindness. Or picture the relationship you want so vividly that any real beginning seems disappointing beside it. Whether there is someone on your mind or you are hoping to meet someone, imagination can get ahead of experience.\n\nThere is nothing foolish about wanting love. The question is what happens when your imagined relationship becomes your measure of the connection you actually have.\n\nYou can give a promising connection credit for a closeness it hasn't developed yet. You can also overlook a small, genuine kindness because it doesn't resemble the grand beginning you imagined.\n\nNotice whether you are crediting a connection with closeness it has yet to develop, or overlooking a kindness you have actually received.\n\nTwo — what asking can clarify. The Queen of Swords.\n\nThe queen sits with her sword upright in her right hand. Her expression is serious. Yet her left hand reaches outward, open.\n\nThat open hand matters. With the sword alone, the picture could seem like a warning to keep your distance. Her open hand gives me a different way to read her: she can welcome a conversation while keeping her sword upright.\n\nYou don't have to become suspicious to see love clearly. You can stay interested while finding out what is actually being offered.\n\nThat might mean asking about something you have been assuming. It might mean giving a new connection time to reveal itself before deciding what it must become. You can keep hoping while allowing the other person to tell you what they want.\n\nThe Seven of Cups shows how much you can imagine. The queen brings you back to what you can learn. Together, they ask you to leave a little space between a possibility and a conclusion.\n\nThose are the two face-up cards in this morning’s reading.\n\nThere is something useful you can notice today: when you describe your love life to yourself, where does \"this is happening\" become \"this could happen\"?\n\nYou don't need to cross out the second part. Just know where it begins. That distinction can help you appreciate what is real without asking hope to fill every gap.\n\nThe next question is which hope deserves more time, and which uncertainty needs an answer.\n\nI'd like to explore that with you, %FIRSTNAME%: what you keep hoping for, what needs closer attention, what you need to ask, and what your next step is. Those questions belong to the four cards still face down.\n\nI'll need your first and last name and your date of birth to continue. Your name identifies a separate personal tarot card. I’ll use the strengths and habits represented by that personal card when interpreting the remaining four cards. Here, that means exploring how you approach possibility in love and how you could ask for clarity while staying open to closeness.\n\nExplore what needs your attention in love.\n\nMarcus\n\nP.S. The queen's hand is still open. Asking a clear question doesn't have to close the door.",
+      "status": "published",
+      "bookingCopy": {
+        "headline": "Let’s look at love more clearly.",
+        "intro": "Continue your personal reading: What are you not seeing in love?",
+        "bridge": "The Seven of Cups and Queen of Swords distinguished possibility from what you can learn through experience. The remaining reading explores what deserves attention in your approach to love.",
+        "offer": "In your personal reading, I’ll explore what you keep hoping for, what needs closer attention, what you need to ask, and what your next step is.",
+        "name": "I’ll use the strengths and habits represented by your personal tarot card to explore how you approach hope and seek clarity in love."
+      }
+    },
+    {
+      "id": "heading-in-the-right-direction-v1",
+      "version": 1,
+      "slug": "heading-in-the-right-direction",
+      "question": "Are you heading in the right direction?",
+      "theme": "Competence, fulfillment and working direction",
+      "spread": {
+        "id": "six-questions",
+        "name": "The Six Questions (in-house adaptation)",
+        "version": 1
+      },
+      "positions": [
+        {
+          "id": "p1",
+          "number": 1,
+          "label": "What you have learned",
+          "visibility": "free",
+          "fixedCard": {
+            "cardId": "eight-of-pentacles",
+            "reversed": false
+          }
+        },
+        {
+          "id": "p2",
+          "number": 2,
+          "label": "What work leaves out",
+          "visibility": "free",
+          "fixedCard": {
+            "cardId": "eight-of-cups",
+            "reversed": false
+          }
+        },
+        {
+          "id": "p3",
+          "number": 3,
+          "label": "What matters in your work",
+          "visibility": "paid"
+        },
+        {
+          "id": "p4",
+          "number": 4,
+          "label": "What strength you can use",
+          "visibility": "paid"
+        },
+        {
+          "id": "p5",
+          "number": 5,
+          "label": "What deserves reconsideration",
+          "visibility": "paid"
+        },
+        {
+          "id": "p6",
+          "number": 6,
+          "label": "Where you can begin",
+          "visibility": "paid"
+        }
+      ],
+      "freeEmailText": "Subject: Are you heading in the right direction?\n\n%FIRSTNAME%,\n\nYou can know how to do the work and still wonder whether it's the work you want to keep doing.\n\nThat's the question behind the first two cards I've turned this morning. Six Rider–Waite cards on your working direction. Let's look at what the first one gives you credit for.\n\nOne — what you have learned. The Eight of Pentacles.\n\nA man sits on a wooden bench, hammer raised, working a star into a gold disc. Beside him, finished discs hang down a wooden post. Each carries the same five-pointed star.\n\nHe hasn't made one good piece and stopped. The repeated stars show the practice behind the work in his hands.\n\nThis is the card of learning how to do something properly. Knowing which detail needs checking. Finding a way through a problem you once needed help with. Becoming someone who can be relied upon.\n\nThat experience counts, whether you're working now, considering a return, or deciding what comes next. Even work you wouldn't choose again can have taught you something you want to keep.\n\nThe question is where you want to use it.\n\nTwo — what work leaves out. The Eight of Cups.\n\nA figure in a red cloak walks towards rocky ground, leaning on a staff. Behind him, eight cups stand in two rows beneath the moon.\n\nLook at the cups. They're still upright. He isn't walking away from a heap of broken pieces.\n\nI read that detail as a reason to take dissatisfaction seriously before everything goes wrong. Work can be going well by the usual measures and still leave something important out of your day.\n\nPerhaps you want more say in how you work. Perhaps you miss learning, or seeing whom your effort helps. Those are different needs, and each could point towards a different change.\n\nThe departing figure doesn't tell you to leave a job. He raises a question: what do you need that doing the work well hasn't given you?\n\nPut these cards together. The first shows ability built through repetition. The second shows that something can remain intact and still fail to satisfy.\n\nBeing good at work tells you what you're capable of. Feeling fulfilled tells you something about whether you want to keep giving your days to it. When those answers differ, another achievement may not resolve the question.\n\nYou don't have to dismiss what you've built to examine where it's taking you, %FIRSTNAME%. Your experience can be useful even if your next direction changes.\n\nThose are the two face-up cards in this morning’s reading.\n\nThe next question is what would make your working life feel more worth the effort—and where a change could begin.\n\nI'd continue with the four remaining cards: what matters in your work, a strength you can use, what deserves reconsideration, and a place to begin. That gives us a way to explore direction without assuming the answer is to start over.\n\nI'll need your first and last name and your date of birth. Your name identifies your personal tarot card. Its meaning helps me interpret the remaining cards in relation to how you use your abilities and approach responsibility, so we can explore what you want your work to give back to you.\n\nExplore your working direction with me.\n\nMarcus\n\nP.S. The finished stars still count, even when you're deciding what to make next.",
+      "status": "published",
+      "bookingCopy": {
+        "headline": "Let’s explore your working direction.",
+        "intro": "Continue your personal reading: Are you heading in the right direction?",
+        "bridge": "The Eight of Pentacles and Eight of Cups brought together practiced ability and the question of fulfillment. The remaining reading explores where you want your work to take you.",
+        "offer": "In your personal reading, I’ll explore what matters in your work, what strength you can use, what deserves reconsideration, and where you can begin.",
+        "name": "I’ll use the strengths and habits represented by your personal tarot card to explore how you use your abilities and approach responsibility."
+      }
+    },
+    {
+      "id": "whats-keeping-you-stuck-with-money-v1",
+      "version": 1,
+      "slug": "whats-keeping-you-stuck-with-money",
+      "question": "What’s keeping you stuck with money?",
+      "theme": "Security, available resources and a manageable beginning",
+      "spread": {
+        "id": "six-questions",
+        "name": "The Six Questions (in-house adaptation)",
+        "version": 1
+      },
+      "positions": [
+        {
+          "id": "p1",
+          "number": 1,
+          "label": "What you hold tightly",
+          "visibility": "free",
+          "fixedCard": {
+            "cardId": "four-of-pentacles",
+            "reversed": false
+          }
+        },
+        {
+          "id": "p2",
+          "number": 2,
+          "label": "What you could put to use",
+          "visibility": "free",
+          "fixedCard": {
+            "cardId": "ace-of-pentacles",
+            "reversed": false
+          }
+        },
+        {
+          "id": "p3",
+          "number": 3,
+          "label": "What security means to you",
+          "visibility": "paid"
+        },
+        {
+          "id": "p4",
+          "number": 4,
+          "label": "What deserves a closer look",
+          "visibility": "paid"
+        },
+        {
+          "id": "p5",
+          "number": 5,
+          "label": "What resource you can use",
+          "visibility": "paid"
+        },
+        {
+          "id": "p6",
+          "number": 6,
+          "label": "Where you can begin",
+          "visibility": "paid"
+        }
+      ],
+      "freeEmailText": "Subject: What’s keeping you stuck with money?\n\n%FIRSTNAME%,\n\nWhen money keeps taking up room in your thoughts, it's hard to know what deserves your attention next. You can spend so much time trying to keep things steady that looking ahead becomes another task you haven't got the energy for.\n\nI've turned two cards on that feeling this morning. The first has both arms occupied.\n\nOne — what you hold tightly. The Four of Pentacles.\n\nA crowned man sits with a coin clasped against his body. His hands and arms hold it in place. Two more coins lie beneath his feet, and another rests above his crown.\n\nHe isn't simply watching over what he has. His arms and feet are involved in keeping it exactly where it is.\n\nThere's effort in that picture. When something matters to your security, protecting it can take more of you than an outside observer would guess. Remembering what is due. Thinking ahead. Trying to leave yourself enough room for the unexpected.\n\nThat care has a purpose. If resources are stretched, the need to protect them is real. The card gives us no reason to blame your circumstances on your attitude.\n\nWhat it brings into view is the attention that protection requires. Keeping things steady is work in its own right. If you've felt exhausted without feeling further ahead, those two things can exist together.\n\nTwo — what you could put to use. The Ace of Pentacles.\n\nA hand reaches out from a cloud, holding one coin above a garden. A path crosses the garden towards an opening in a hedge.\n\nCompare the open hand in the Ace of Pentacles with the man in the Four of Pentacles. The man clasps his coin against his body. In the Ace, the coin rests on an open palm, where it can be seen clearly.\n\nI'm reading that coin as a resource worth noticing. It needn't be money. It could be something you know how to do, useful information you haven't followed up, or support you haven't yet explored.\n\nThe open hand changes the question from “How do I keep this safe?” to “What could this help me do?”\n\nYou don't have to risk what you need in order to ask that question. Recognizing a skill, finding out what help is available, or clarifying a priority can begin with attention.\n\nTogether, the cards separate two tasks that money worries can tangle together: protecting what sustains you, and recognizing what you could use. The first deserves care. The second deserves a look of its own.\n\nThose are the two face-up cards in this morning’s reading.\n\nNeither card tells us what is causing your particular money difficulties. What they offer is a way to look beyond the feeling that nothing is moving: what needs protecting, and what might still be available to you?\n\nI'd like to take that distinction further with you, %FIRSTNAME%. The four remaining cards explore what security means to you, what deserves a closer look, which resource you could use, and where you could begin.\n\nI'll need your first and last name and your date of birth to continue. Your name identifies your personal tarot card. Its meaning helps me interpret the remaining cards with your strengths and familiar patterns in mind—particularly how you seek stability and what you tend to rely on when resources feel limited.\n\nExplore what you can draw on.\n\nMarcus\n\nP.S. The open palm gives us a moment to look at what's there before deciding what to do with it.",
+      "status": "published",
+      "bookingCopy": {
+        "headline": "Let’s look at what you can draw on.",
+        "intro": "Continue your personal reading: What’s keeping you stuck with money?",
+        "bridge": "The Four of Pentacles and Ace of Pentacles separated protecting resources from considering what you could use. The remaining reading explores security, resourcefulness and a beginning.",
+        "offer": "In your personal reading, I’ll explore what security means to you, what deserves a closer look, what resource you can use, and where you can begin.",
+        "name": "I’ll use the strengths and habits represented by your personal tarot card to explore how you seek stability and recognize available resources."
+      }
+    },
+    {
+      "id": "what-deserves-your-attention-v1",
+      "version": 1,
+      "slug": "what-deserves-your-attention",
+      "question": "What deserves your attention right now?",
+      "theme": "Competing demands, personal priorities and attention",
+      "spread": {
+        "id": "six-questions",
+        "name": "The Six Questions (in-house adaptation)",
+        "version": 1
+      },
+      "positions": [
+        {
+          "id": "p1",
+          "number": 1,
+          "label": "What keeps you occupied",
+          "visibility": "free",
+          "fixedCard": {
+            "cardId": "two-of-pentacles",
+            "reversed": false
+          }
+        },
+        {
+          "id": "p2",
+          "number": 2,
+          "label": "What a pause makes possible",
+          "visibility": "free",
+          "fixedCard": {
+            "cardId": "four-of-swords",
+            "reversed": false
+          }
+        },
+        {
+          "id": "p3",
+          "number": 3,
+          "label": "What matters most now",
+          "visibility": "paid"
+        },
+        {
+          "id": "p4",
+          "number": 4,
+          "label": "What can wait",
+          "visibility": "paid"
+        },
+        {
+          "id": "p5",
+          "number": 5,
+          "label": "What needs your care",
+          "visibility": "paid"
+        },
+        {
+          "id": "p6",
+          "number": 6,
+          "label": "Where to place your attention",
+          "visibility": "paid"
+        }
+      ],
+      "freeEmailText": "Subject: What deserves your attention right now?\n\n%FIRSTNAME%,\n\nYou can spend a whole day getting things done and still wonder whether you gave your attention to what mattered. I've turned two of six Rider–Waite cards on that question this morning. The first is full of movement.\n\nOne — what keeps you occupied. The Two of Pentacles.\n\nA young man dances with a gold coin in each hand. A cord loops around both coins in a sideways figure eight.\n\nFollow that cord with your eye. It joins the two coins in one continuous loop, with no end to reach.\n\nThat's the detail I want to stay with. He can keep moving without coming to a finish.\n\nA day can feel like that. You answer one request, deal with the next thing, and find something else ready for your attention. Each task has a reason for being there. Some really do need you.\n\nBut the fact that something keeps arriving doesn't tell you how much of your life it deserves.\n\nIf you've been measuring a good day by how much you managed to handle, this card offers another question: what did all that handling leave room for?\n\nYou may have been busy enough to postpone asking.\n\nTwo — what a pause makes possible. The Four of Swords.\n\nHere the movement stops. A carved knight lies at full length on a tomb, his hands joined in prayer. This is a stone figure, an effigy. The stillness belongs to the carving.\n\nLook at his hands. They hold that quiet gesture without reaching for anything.\n\nI read this image as an invitation to step back and consider which tasks you keep taking on. When you pause before taking on another task, you have room to ask whether that task needs to be yours.\n\nBeside the dancing figure, this card gives the pause a purpose. You can use a quiet moment to notice which concerns you've chosen and which ones have simply kept you occupied.\n\nThat distinction can be difficult to hear while you're answering the next request. Once you stop for a moment, a quieter concern may come to mind: something important that hasn't been insisting on your attention.\n\nThose are the two face-up cards in this morning’s reading.\n\nTaken together, these cards ask you to look at how your attention gets assigned. A task can be urgent because someone wants an answer. Something you care about can wait patiently and still matter deeply.\n\nNeither card names your priority for you. They give you a way to question the order you've fallen into. You don't have to finish every demand before you're allowed to consider that order.\n\nThe next question is which part of your life deserves more room now.\n\nI'd like to explore that with you, %FIRSTNAME%: what matters most, what can wait, what needs your care, and where to place your attention. The remaining four cards take those questions one at a time.\n\nI'll need your first and last name and your date of birth to continue. Your name identifies your personal tarot card. Its meaning helps me consider how you take responsibility and respond to demands as I interpret the remaining cards. That matters here: a strength you rely on to keep things going may also make it difficult to leave something for later.\n\nExplore what deserves your attention.\n\nMarcus\n\nP.S. The cord around those two coins has no end. You can pause before the tasks run out.",
+      "status": "published",
+      "bookingCopy": {
+        "headline": "Let’s look at what matters now.",
+        "intro": "Continue your personal reading: What deserves your attention right now?",
+        "bridge": "The Two of Pentacles and Four of Swords distinguished keeping busy from choosing what matters. The remaining reading explores where your attention could go next.",
+        "offer": "In your personal reading, I’ll explore what matters most now, what can wait, what needs your care, and where to place your attention.",
+        "name": "I’ll use the strengths and habits represented by your personal tarot card to explore how you take responsibility and respond to demands."
+      }
+    },
+    {
+      "id": "what-gift-are-you-overlooking-v1",
+      "version": 1,
+      "slug": "what-gift-are-you-overlooking",
+      "question": "What gift are you overlooking?",
+      "theme": "Recognizing a familiar ability and putting it to use",
+      "spread": {
+        "id": "six-questions",
+        "name": "The Six Questions (in-house adaptation)",
+        "version": 1
+      },
+      "positions": [
+        {
+          "id": "p1",
+          "number": 1,
+          "label": "What is already available",
+          "visibility": "free",
+          "fixedCard": {
+            "cardId": "magician",
+            "reversed": false
+          }
+        },
+        {
+          "id": "p2",
+          "number": 2,
+          "label": "What attention can develop",
+          "visibility": "free",
+          "fixedCard": {
+            "cardId": "queen-of-pentacles",
+            "reversed": false
+          }
+        },
+        {
+          "id": "p3",
+          "number": 3,
+          "label": "What strength you overlook",
+          "visibility": "paid"
+        },
+        {
+          "id": "p4",
+          "number": 4,
+          "label": "Where it can be useful",
+          "visibility": "paid"
+        },
+        {
+          "id": "p5",
+          "number": 5,
+          "label": "What keeps it small",
+          "visibility": "paid"
+        },
+        {
+          "id": "p6",
+          "number": 6,
+          "label": "What you can try",
+          "visibility": "paid"
+        }
+      ],
+      "freeEmailText": "Subject: What gift are you overlooking?\n\n%FIRSTNAME%,\n\nWhen you think about having a gift, do you picture something impressive enough to announce? A beautiful voice. An extraordinary memory. Something unmistakable.\n\nThe first of this morning's six cards asks you to look somewhere less dramatic: at what's already within reach.\n\nOne — what is already available. The Magician.\n\nA man stands behind a table, one hand raised and the other pointing down. On the table lie a cup, a sword, a wand and a gold disc. The tools of all four suits are there in front of him.\n\nHis raised hand catches the eye. But he also has something to work with, right where he stands.\n\nThat's the detail I want to stay with. A gift doesn't have to arrive as a startling new ability. It may be something you use so often that you barely register what you're doing.\n\nPerhaps you can take a muddled explanation and find the practical question inside it. Or notice which small change would make a difficult task easier. You finish, move on, and give little thought to the skill that helped.\n\nThe Magician offers a way to look: pay attention to what you can already do, especially where it produces a useful result. Familiarity can make a skill easy to miss.\n\nTwo — what attention can develop. The Queen of Pentacles.\n\nThe Queen sits on a carved throne with a gold disc resting in her lap. Her hands hold it, and her face is turned down towards it. Flowers and greenery surround her.\n\nShe is looking closely at what she holds.\n\nBeside The Magician, that attention matters. Having a useful ability is a beginning. Understanding how you use it gives you a chance to develop it deliberately.\n\nIf explaining something comes easily, for instance, notice what makes your explanation work. Do you choose a good example? Put the steps in a helpful order? Spot the exact point of confusion? Once you understand the skill, you can practise it instead of simply hoping it works next time.\n\nThe Magician has the tools available. The Queen gives one thing her attention. Together, they ask you to take an ordinary competence seriously enough to learn more about it.\n\nThose are the two face-up cards in this morning’s reading.\n\nYou don't need to decide that you're exceptional before an ability deserves care. Start with evidence: something you do that helps, solves a problem, or makes a worthwhile difference. Consider what part of that result came from your own judgment or effort.\n\nThe more personal question is which ability deserves that attention from you now. Being capable of something doesn't mean you want to spend more of your life doing it.\n\nI'd like to explore that distinction in the remaining four cards: the strength you may overlook, where it could be useful, what keeps it small, and something you could try to discover how much you want to develop it.\n\nI'll need your first and last name and your date of birth to continue. Your name identifies your personal tarot card. Its meaning helps me consider how you recognise and use your abilities when I interpret the remaining four—particularly where a familiar role may keep you using a strength without giving it much credit.\n\nExplore the gift you may be overlooking\n\nMarcus\n\nP.S. The Queen gives the disc in her hands her full attention. Something familiar can still deserve a closer look.",
+      "status": "published",
+      "bookingCopy": {
+        "headline": "Let’s look at the strength you overlook.",
+        "intro": "Continue your personal reading: What gift are you overlooking?",
+        "bridge": "The Magician and Queen of Pentacles brought together available abilities and deliberate attention. The remaining reading explores a strength you may overlook and where it could be useful.",
+        "offer": "In your personal reading, I’ll explore what strength you overlook, where it can be useful, what keeps it small, and what you can try.",
+        "name": "I’ll use the strengths and habits represented by your personal tarot card to explore how you recognize and develop familiar abilities."
+      }
+    },
+    {
+      "id": "is-it-time-for-a-new-chapter-v1",
+      "version": 1,
+      "slug": "is-it-time-for-a-new-chapter",
+      "question": "Is it time for a new chapter?",
+      "theme": "Endings, continuity, support and a considered transition",
+      "spread": {
+        "id": "six-questions",
+        "name": "The Six Questions (in-house adaptation)",
+        "version": 1
+      },
+      "positions": [
+        {
+          "id": "p1",
+          "number": 1,
+          "label": "What an ending can hold",
+          "visibility": "free",
+          "fixedCard": {
+            "cardId": "death",
+            "reversed": false
+          }
+        },
+        {
+          "id": "p2",
+          "number": 2,
+          "label": "What a crossing requires",
+          "visibility": "free",
+          "fixedCard": {
+            "cardId": "six-of-swords",
+            "reversed": false
+          }
+        },
+        {
+          "id": "p3",
+          "number": 3,
+          "label": "What has run its course",
+          "visibility": "paid"
+        },
+        {
+          "id": "p4",
+          "number": 4,
+          "label": "What you want to carry forward",
+          "visibility": "paid"
+        },
+        {
+          "id": "p5",
+          "number": 5,
+          "label": "What support you can accept",
+          "visibility": "paid"
+        },
+        {
+          "id": "p6",
+          "number": 6,
+          "label": "Where your next step begins",
+          "visibility": "paid"
+        }
+      ],
+      "freeEmailText": "Subject: Is it time for a new chapter?\n\n%FIRSTNAME%,\n\nYou don't have to dislike the life you've built to wonder whether part of it has run its course. That can make the question harder: if something mattered to you, how do you know when it's time to change it?\n\nI've turned two of six Rider–Waite cards on that question this morning. The first carries a name that needs a little care.\n\nOne — what an ending can hold. Death.\n\nA rider in black armour sits on a white horse. He carries a black banner, and on that banner is a rose.\n\nI'm reading this card as a symbol of change, not a prediction of physical death. Look at the flower: Waite described that rose as a sign of life. He put it on the banner of the card called Death.\n\nThat detail matters when you think an ending would cancel everything that came before it.\n\nPerhaps you once wanted exactly what you have now. You chose it carefully. It gave you something you needed. Admitting that your needs have changed can feel like admitting you made a mistake.\n\nBut something can have been right for an earlier part of your life and still have reached its end. You can value what it gave you without promising to keep it forever.\n\nThe rose leaves room for that. What follows an ending can grow from the life you've already lived.\n\nTwo — what a crossing requires. The Six of Swords.\n\nA ferryman stands at the back of a small boat, guiding two seated passengers toward another shore. Six swords travel upright in the boat with them.\n\nNotice that the passengers have someone helping them across. They haven't had to become ferrymen before they can leave.\n\nIf you've been imagining a new chapter as something you must arrange entirely on your own, this picture offers a more workable beginning. You might need advice, practical help, or someone willing to stay beside you while you learn a different way of living.\n\nAnd the boat carries something from the old shore. A transition needn't require you to abandon every responsibility, skill, or relationship you value. Part of making a change is deciding what belongs in the life you're moving toward.\n\nTogether, these cards separate two questions that can become tangled: has something ended, and how do you move from here?\n\nYou could recognize that a familiar arrangement no longer fits and still need time to work out the crossing. Having no complete plan doesn't settle whether change is needed. It tells you which question to consider next.\n\nThose are the two face-up cards in this morning’s reading.\n\nThe remaining reading is where I'd explore what has run its course for you, what you want to carry forward, what support you can accept, and where your next step begins.\n\nI'll need your first and last name and your date of birth to continue. Your name identifies your personal tarot card. Its meaning helps me interpret those four cards with attention to how you approach change: the strengths you can bring with you, and familiar habits that might make a new beginning harder.\n\nYou don't need to turn your whole life upside down to take this question seriously. We can begin by looking at what you want to preserve, and what you may be ready to change.\n\nLet's explore your next chapter.\n\nMarcus\n\nP.S. The passengers don't make the crossing alone. You can accept help with yours.",
+      "status": "published",
+      "bookingCopy": {
+        "headline": "Let’s explore your next chapter.",
+        "intro": "Continue your personal reading: Is it time for a new chapter?",
+        "bridge": "Death and the Six of Swords separated recognizing an ending from making a transition. The remaining reading explores what to carry forward and where to begin.",
+        "offer": "In your personal reading, I’ll explore what has run its course, what you want to carry forward, what support you can accept, and where your next step begins.",
+        "name": "I’ll use the strengths and habits represented by your personal tarot card to explore how you approach change and accept support."
+      }
+    },
+    {
+      "id": "healing-v2",
+      "version": 2,
+      "slug": "what-part-of-me-needs-healing",
+      "question": "What part of myself needs the most healing right now?",
+      "theme": "Recognizing emotional hurt without self-judgment and considering support",
+      "spread": {
+        "id": "six-questions",
+        "name": "The Six Questions (in-house adaptation)",
+        "version": 1
+      },
+      "positions": [
+        {
+          "id": "p1",
+          "number": 1,
+          "label": "What still hurts",
+          "visibility": "free",
+          "fixedCard": {
+            "cardId": "five-of-cups",
+            "reversed": false
+          }
+        },
+        {
+          "id": "p2",
+          "number": 2,
+          "label": "What gentleness can change",
+          "visibility": "free",
+          "fixedCard": {
+            "cardId": "strength",
+            "reversed": false
+          }
+        },
+        {
+          "id": "p3",
+          "number": 3,
+          "label": "What needs acknowledging",
+          "visibility": "paid"
+        },
+        {
+          "id": "p4",
+          "number": 4,
+          "label": "What you blame yourself for",
+          "visibility": "paid"
+        },
+        {
+          "id": "p5",
+          "number": 5,
+          "label": "What support you can accept",
+          "visibility": "paid"
+        },
+        {
+          "id": "p6",
+          "number": 6,
+          "label": "Where you can begin",
+          "visibility": "paid"
+        }
+      ],
+      "freeEmailText": "Subject: Grateful—and still missing what you lost?\n\n%FIRSTNAME%,\n\nIf you've ever followed an honest \"I'm still upset\" with \"but I have so much to be grateful for,\" the first card in this morning's reading deserves a closer look. I've laid six Rider–Waite cards on what needs your care now, with two face up.\n\nOne — what still hurts. The Five of Cups.\n\nA cloaked figure stands over three fallen cups. Their contents have spilled onto the ground. Two more cups stand upright behind him.\n\nThe picture holds both things at once: something has been lost, and something remains.\n\nThose standing cups matter. But their presence doesn't make the other three full again.\n\nI read this as permission to acknowledge a disappointment without having to defend your right to feel it. Something can still hurt even when other parts of your life are good.\n\nPerhaps you hesitate to say what's wrong because you can immediately think of something that's going well. You begin explaining why you shouldn't be upset before you've finished saying why you are.\n\nThe Five of Cups asks you to acknowledge what's upset you before explaining why you shouldn't feel upset. What, exactly, are you sad about? What did you hope would happen that didn't?\n\nAn honest answer doesn't make you ungrateful. It gives the hurt a name instead of turning it into a fault in your character.\n\nTwo — what gentleness can change. Strength.\n\nA woman bends towards a lion, her hands gently at its jaws. Flowers circle her waist. The animal is powerful, yet her hands are careful.\n\nThat care is part of the strength in this picture.\n\nAlongside the Five of Cups, I read it as a different way to meet a difficult feeling. You can acknowledge the feeling without immediately ordering yourself to do better.\n\nIf your first response to sadness is \"I should have moved on,\" try noticing what that demand adds. The original disappointment is still there. Now you also have a standard you feel you've failed to meet.\n\nStrength invites a gentler response: \"This still matters to me. What would help me through today?\"\n\nThat question leaves room for an answer. Perhaps you need to talk without apologising for bringing the subject up. Perhaps you need to accept company without pretending you're cheerful.\n\nThose are the two face-up cards in this morning’s reading.\n\nTogether, they separate feeling hurt from judging yourself for it. Gratitude can stay. So can the admission that something has been difficult. You don't have to stop feeling sad before accepting a little care.\n\nThe next question is what deserves that care now—and what makes support hard to accept.\n\nI’d like to continue with you, %FIRSTNAME%. The remaining four cards explore what needs acknowledging, what you blame yourself for, what support you can accept, and where you can begin. There may be something you've been trying to handle alone that deserves a kinder response.\n\nI'll need your full birth name, including your first and last name, and your date of birth. I'll begin with the strengths and challenges your birth date represents in the reading. Your name identifies a personal tarot card. Its meaning helps me explore how you ask for care and what makes accepting care difficult, as I interpret the remaining four cards.\n\nExplore what needs your care now.\n\nMarcus\n\nP.S. The two standing cups don't refill the three that fell. You can appreciate what remains and still acknowledge what you miss.",
+      "status": "published",
+      "bookingCopy": {
+        "headline": "Let’s look at what needs your care now.",
+        "intro": "Continue your personal reading: What part of myself needs the most healing right now?",
+        "bridge": "The Five of Cups and Strength allow gratitude and hurt to coexist. The remaining reading explores what needs acknowledging and what accepting support could look like.",
+        "offer": "In your personal reading, I’ll explore what needs acknowledging, what you blame yourself for, what support you can accept, and where you can begin.",
+        "name": "I’ll begin with the strengths and challenges your birth date represents in the reading. Your full birth name identifies a personal tarot card. Its meaning helps me explore how you ask for care and respond when support is offered as I interpret your remaining cards."
+      }
+    },
+    {
+      "id": "commitment-v2",
+      "version": 2,
+      "slug": "why-wont-he-commit",
+      "question": "Why won't he commit?",
+      "theme": "Distinguishing affection from commitment and considering what the buyer needs next",
+      "spread": {
+        "id": "six-questions",
+        "name": "The Six Questions (in-house adaptation)",
+        "version": 1
+      },
+      "positions": [
+        {
+          "id": "p1",
+          "number": 1,
+          "label": "What affection can offer",
+          "visibility": "free",
+          "fixedCard": {
+            "cardId": "knight-of-cups",
+            "reversed": false
+          }
+        },
+        {
+          "id": "p2",
+          "number": 2,
+          "label": "What remains undecided",
+          "visibility": "free",
+          "fixedCard": {
+            "cardId": "two-of-wands",
+            "reversed": false
+          }
+        },
+        {
+          "id": "p3",
+          "number": 3,
+          "label": "What waiting costs you",
+          "visibility": "paid"
+        },
+        {
+          "id": "p4",
+          "number": 4,
+          "label": "What you need from him",
+          "visibility": "paid"
+        },
+        {
+          "id": "p5",
+          "number": 5,
+          "label": "What you have been accepting",
+          "visibility": "paid"
+        },
+        {
+          "id": "p6",
+          "number": 6,
+          "label": "What your next step is",
+          "visibility": "paid"
+        }
+      ],
+      "freeEmailText": "Subject: He can care—and still leave you waiting\n\n%FIRSTNAME%,\n\nIf affection were enough to settle the question of commitment, you might not still be wondering where you stand.\n\nThis morning's six Rider–Waite cards begin with that difference. I'm using “he” here; read it as the person whose commitment matters to you.\n\nOne — what affection can offer. The Knight of Cups.\n\nA knight rides a white horse, holding a cup out before him. The horse moves quietly. There is no charge, no weapon raised. The knight approaches with an offering.\n\nLook at the cup he extends. He isn't hiding it against his chest. The gesture is open, and I read it as an invitation to come closer.\n\nAffection can offer real reassurance. Being wanted, listened to, or welcomed can help you feel that a relationship is worth pursuing. You don't have to decide those moments meant nothing because commitment remains uncertain.\n\nYet the knight is showing us an approach. The picture doesn't show an agreement about what happens next.\n\nThat distinction matters if you feel close to someone but still cannot say what you have agreed to build together. Warmth can tell you that you enjoy being together. Commitment also asks what each of you is prepared to do to sustain the relationship.\n\nTwo — what remains undecided. The Two of Wands.\n\nA man stands on a battlement above the land and sea. In one hand he holds a staff; in the other, a small globe.\n\nThe globe puts a whole world before him. But his feet remain on the battlement. Considering where to go has not yet become a departure.\n\nHere, that image helps separate a future you can imagine from a direction you have agreed to take. A possibility can feel very convincing before either person has made a decision.\n\nBeside the knight's outstretched cup, the man with the globe asks you to look beyond the welcome. What follows it? Can you name an agreement you have made together? Is there follow-through you can rely on?\n\nThese cards cannot tell me his private reasons for hesitating. They can give you a more useful question than whether the affection was real: what does the relationship offer you beyond affection?\n\nThose are the two face-up cards in this morning’s reading.\n\nYou may be patient because there is something here you value. You can acknowledge that without treating every uncertainty as yours to endure.\n\nPerhaps you need a clearer agreement. Perhaps you already asked, and now need to consider his response. The next step depends on what you need from this relationship, as well as what he is willing to offer.\n\nI’d like to continue with the four cards still face down, %FIRSTNAME%: what waiting costs you, what you need from him, what you have been accepting, and what your next step is. The aim is to help you consider your own choices while his answer remains uncertain.\n\nI'll need your full birth name, including your first and last name, and your date of birth. I'll begin with the strengths and challenges your birth date represents in the reading. Your name identifies a personal tarot card, which adds another way to consider how you express what you need. I'll use both to interpret the remaining cards around the choices you can make in this relationship.\n\nExplore what you need before you keep waiting.\n\nMarcus\n\nP.S. The globe shows a possibility. The man's feet remind you to ask what has actually begun.",
+      "status": "published",
+      "bookingCopy": {
+        "headline": "Let’s look at what you need from this relationship.",
+        "intro": "Continue your personal reading: Why won't he commit?",
+        "bridge": "The Knight of Cups and Two of Wands distinguish romantic attention from an agreed direction. The remaining reading explores what waiting costs you and what clarity you need.",
+        "offer": "In your personal reading, I’ll explore what waiting costs you, what you need from him, what you have been accepting, and what your next step is.",
+        "name": "I’ll begin with the strengths and challenges your birth date represents in the reading. Your full birth name identifies a personal tarot card. Its meaning helps me explore how you express what you need and consider your choices when commitment is uncertain as I interpret your remaining cards."
+      }
+    },
+    {
+      "id": "higher-calling-v3",
+      "version": 3,
+      "slug": "what-is-my-higher-calling",
+      "question": "What is my higher calling?",
+      "theme": "Giving a recurring interest a fair trial within the buyer’s existing life",
+      "spread": {
+        "id": "six-questions",
+        "name": "The Six Questions (in-house adaptation)",
+        "version": 1
+      },
+      "positions": [
+        {
+          "id": "p1",
+          "number": 1,
+          "label": "What keeps drawing you back",
+          "visibility": "free",
+          "fixedCard": {
+            "cardId": "star",
+            "reversed": false
+          }
+        },
+        {
+          "id": "p2",
+          "number": 2,
+          "label": "What deserves a fair trial",
+          "visibility": "free",
+          "fixedCard": {
+            "cardId": "seven-of-pentacles",
+            "reversed": false
+          }
+        },
+        {
+          "id": "p3",
+          "number": 3,
+          "label": "What gives you meaning",
+          "visibility": "paid"
+        },
+        {
+          "id": "p4",
+          "number": 4,
+          "label": "What needs room in your life",
+          "visibility": "paid"
+        },
+        {
+          "id": "p5",
+          "number": 5,
+          "label": "What makes beginning difficult",
+          "visibility": "paid"
+        },
+        {
+          "id": "p6",
+          "number": 6,
+          "label": "Where you can begin",
+          "visibility": "paid"
+        }
+      ],
+      "freeEmailText": "Subject: Could the thing you return to be your calling?\n\n%FIRSTNAME%,\n\nAn interest can keep drawing you back without telling you where it belongs in your life. Is it something to enjoy when you have time, or something you want to pursue more seriously?\n\nThat's the question behind the first of this morning's six Rider–Waite cards.\n\nOne — what keeps drawing you back. The Star.\n\nA woman kneels beside a pool beneath a sky of stars. She holds two jugs, pouring water from one into the pool and from the other onto the ground. One foot rests in the water; her other knee rests on the land.\n\nBoth the pool and the ground receive water.\n\nI read that detail as an invitation to give inspiration a place in ordinary life. Something that moves you doesn't have to remain an idea you visit when your responsibilities are finished.\n\nIf an interest keeps returning, you can give it a little time in which to become something you actually do. You might practise, learn, or make a first attempt. The important part is having an experience to consider, beyond imagining what the experience might be like.\n\nThe Star offers encouragement to explore. A returning interest still needs that exploration before you can understand its place in your life.\n\nTwo — what deserves a fair trial. The Seven of Pentacles.\n\nA man leans on a long-handled tool and looks at gold coins marked with stars among the greenery before him. He has paused his work. There is already something growing for him to examine.\n\nThat is what changes the reading for me: his effort has given him something to judge.\n\nYou may want to know whether an interest is your calling before making room for it. But some of the answer comes from the doing. Do you want to return after the first excitement fades? Does the work itself mean something to you? What are you willing to learn when it becomes difficult?\n\nThose questions become easier to answer after a fair trial. Give the interest an amount of time and effort your life can accommodate, then look at what you learned.\n\nThe Star makes room for inspiration alongside practical life. The Seven of Pentacles asks you to examine what develops when you do.\n\nThose are the two face-up cards in this morning’s reading.\n\nYou don't have to settle the whole question of your purpose before taking one interest seriously. A trial can help you discover whether you want to continue, change your approach, or leave it as something you enjoy occasionally.\n\nWhat deserves that chance—and how could you give it room without neglecting what already depends on you?\n\nI’d like to continue with those questions in the remaining four cards: what gives you meaning, what needs room in your life, what makes beginning difficult, and where you can begin.\n\nI'll need your full birth name, including your first and last name, and your date of birth. I'll begin with the strengths and challenges your birth date represents in the reading. Your name identifies your personal tarot card. I use its meaning to consider the strengths and habits you bring to making room for an interest—what helps you begin, and what makes you keep postponing a first attempt.\n\nExplore where your calling could begin\n\nMarcus\n\nP.S. The man has something growing to examine. Give an interest a fair trial, and you'll have more than a possibility to consider.",
+      "status": "published",
+      "bookingCopy": {
+        "headline": "Let’s look at where your calling could begin.",
+        "intro": "Continue your personal reading: What is my higher calling?",
+        "bridge": "The Star and Seven of Pentacles connect inspiration with practical effort and reflection. The remaining reading explores what gives you meaning and how to make room for it.",
+        "offer": "In your personal reading, I’ll explore what gives you meaning, what needs room in your life, what makes beginning difficult, and where you can begin.",
+        "name": "I’ll begin with the strengths and challenges your birth date represents in the reading. Your full birth name identifies a personal tarot card. Its meaning helps me explore what helps you make room for a meaningful interest and what makes beginning difficult as I interpret your remaining cards."
+      }
+    },
+    {
+      "id": "quiet-v2",
+      "version": 2,
+      "slug": "why-they-go-quiet",
+      "question": "Why he goes quiet?",
+      "theme": "Responding to silence without assuming hidden motives or suspending personal choices",
+      "spread": {
+        "id": "six-questions",
+        "name": "The Six Questions (in-house adaptation)",
+        "version": 1
+      },
+      "positions": [
+        {
+          "id": "p1",
+          "number": 1,
+          "label": "What silence leaves unanswered",
+          "visibility": "free",
+          "fixedCard": {
+            "cardId": "four-of-cups",
+            "reversed": false
+          }
+        },
+        {
+          "id": "p2",
+          "number": 2,
+          "label": "What waiting can restrict",
+          "visibility": "free",
+          "fixedCard": {
+            "cardId": "eight-of-swords",
+            "reversed": false
+          }
+        },
+        {
+          "id": "p3",
+          "number": 3,
+          "label": "What you need to know",
+          "visibility": "paid"
+        },
+        {
+          "id": "p4",
+          "number": 4,
+          "label": "What waiting is costing you",
+          "visibility": "paid"
+        },
+        {
+          "id": "p5",
+          "number": 5,
+          "label": "What you can ask for",
+          "visibility": "paid"
+        },
+        {
+          "id": "p6",
+          "number": 6,
+          "label": "Where you can begin",
+          "visibility": "paid"
+        }
+      ],
+      "freeEmailText": "Subject: Still waiting to hear from him?\n\n%FIRSTNAME%,\n\nWhen someone you care about goes quiet, an unanswered question can become the thing you think about most.\n\nThis morning's six Rider–Waite cards begin with that silence. What can you understand while you are still waiting to hear from him?\n\nOne — what silence leaves unanswered. The Four of Cups.\n\nA man sits beneath a tree with his arms folded. Three cups stand on the grass in front of him. Beside him, a hand emerges from a cloud and offers a fourth cup.\n\nHe hasn't reached for it. The offered cup is there, but no answering movement meets it.\n\nYou can see that much in the picture. His reasons are another matter.\n\nThat's a useful distinction when you haven't heard from someone. You know a response is missing. You may not know why. Silence can leave room for a hopeful explanation, then a painful one, without giving you evidence for either.\n\nIf you have been turning those explanations over, you may be trying to get an answer from the only thing available: the absence of one.\n\nThe first card lets you stop at what you know. You haven't received a reply. You can acknowledge how the silence affects you without knowing his reason for it.\n\nTwo — what waiting can restrict. The Eight of Swords.\n\nA woman stands blindfolded, with cloth binding her body. Eight swords rise from the ground around her. She cannot see where she could move.\n\nThe bindings are real. But her feet aren't tied, and the swords have gaps between them.\n\nI read both parts of that picture together. She is restricted, yet the picture leaves possibilities she cannot see from where she stands.\n\nWaiting for a reply can make your own choices feel just as difficult to see. You may feel you cannot decide anything until he explains himself. Even a choice about what you need can seem to depend on what he says next.\n\nHis answer could matter a great deal. Still, there are questions you can consider before it comes. What communication do you need? What would you want to say if the silence continues? What part of your own life needs your attention now?\n\nThose are the two face-up cards in this morning’s reading.\n\nThe Four of Cups shows an offer without a response. The Eight of Swords brings the reading to the person left waiting. Together, they shift the question from guessing his reason to considering your needs while the reason is unknown.\n\nYou can miss him and want an explanation. You can also decide that your own needs deserve attention before he supplies one. Caring about the connection doesn't require you to put every other part of your life on hold.\n\nI’d like to continue with what that means for you, %FIRSTNAME%: what you need to know, what waiting is costing you, what you can ask for, and where you can begin. Those are the questions for the four cards still face down.\n\nI'll need your full birth name, including your first and last name, and your date of birth. I'll begin with the strengths and challenges your birth date represents in the reading. Your name identifies a personal tarot card. I'll use the strengths and habits represented by that personal card to interpret the remaining four. We'll explore how you can ask him to get in touch and tell him how the silence affects you.\n\nExplore your next step while he's quiet.\n\nMarcus\n\nP.S. There are gaps between the swords. Even while you wait for an answer, your own needs deserve room.",
+      "status": "published",
+      "bookingCopy": {
+        "headline": "Let’s look at your next step while he’s quiet.",
+        "intro": "Continue your personal reading: Why he goes quiet?",
+        "bridge": "The Four of Cups and Eight of Swords separate an unanswered approach from the restrictions waiting can create. The remaining reading explores what you need to know, what you can ask for and where you can begin.",
+        "offer": "In your personal reading, I’ll explore what you need to know, what waiting is costing you, what you can ask for, and where you can begin.",
+        "name": "I’ll begin with the strengths and challenges your birth date represents in the reading. Your full birth name identifies a personal tarot card. Its meaning helps me explore how you ask for contact and express your needs while a reply is missing as I interpret your remaining cards."
+      }
+    },
+    {
+      "id": "blind-spots-v2",
+      "version": 2,
+      "slug": "what-are-my-blind-spots",
+      "question": "What are my blind spots?",
+      "theme": "Noticing where familiar assumptions limit perspective across relationships, home and money",
+      "spread": {
+        "id": "tree-of-life",
+        "name": "The Tree of Life",
+        "version": 1
+      },
+      "positions": [
+        {
+          "id": "p1",
+          "number": 1,
+          "label": "What uncertainty can hide",
+          "visibility": "free",
+          "fixedCard": {
+            "cardId": "moon",
+            "reversed": false
+          }
+        },
+        {
+          "id": "p2",
+          "number": 2,
+          "label": "What you keep weighing",
+          "visibility": "free",
+          "fixedCard": {
+            "cardId": "two-of-swords",
+            "reversed": false
+          }
+        },
+        {
+          "id": "p3",
+          "number": 3,
+          "label": "What another view can add",
+          "visibility": "free",
+          "fixedCard": {
+            "cardId": "three-of-pentacles",
+            "reversed": false
+          }
+        },
+        {
+          "id": "p4",
+          "number": 4,
+          "label": "What you forgive in others",
+          "visibility": "paid"
+        },
+        {
+          "id": "p5",
+          "number": 5,
+          "label": "What you expect from others",
+          "visibility": "paid"
+        },
+        {
+          "id": "p6",
+          "number": 6,
+          "label": "What your close relationships need",
+          "visibility": "paid"
+        },
+        {
+          "id": "p7",
+          "number": 7,
+          "label": "What you are trying to achieve",
+          "visibility": "paid"
+        },
+        {
+          "id": "p8",
+          "number": 8,
+          "label": "What impression you try to give",
+          "visibility": "paid"
+        },
+        {
+          "id": "p9",
+          "number": 9,
+          "label": "What life at home feels like",
+          "visibility": "paid"
+        },
+        {
+          "id": "p10",
+          "number": 10,
+          "label": "Where assumptions affect financial choices",
+          "visibility": "paid"
+        }
+      ],
+      "freeEmailText": "Subject: %FIRSTNAME%, what are you overlooking?\n\n%FIRSTNAME%,\n\nYou can replay a conversation until you remember every word and still wonder what you missed. This morning I’ve laid ten Rider–Waite cards on blind spots. Three are face up, and the first has a small detail that’s easy to overlook.\n\nOne — what uncertainty can hide. The Moon.\n\nThe moon hangs between two stone towers. Below the moon, a dog and a wolf look upwards. A path winds into the distance. Down at the water’s edge, a crayfish is climbing out.\n\nIt’s close enough to see clearly. Yet the animals’ raised heads draw your attention towards the sky.\n\nWhen something feels uncertain, your attention can go towards what might happen or what somebody might have meant. A quieter clue can get less consideration: a difference between words and actions, or a fact you haven’t checked.\n\nI read the crayfish as a reminder to look at what’s within reach. Before adding another explanation, ask what you’ve actually seen or heard. A possibility can occupy a great deal of thought without becoming evidence.\n\nTwo — what you keep weighing. The Two of Swords.\n\nA blindfolded woman sits beside the sea, holding a sword in each hand. Her arms are crossed across her chest.\n\nLook at what that position requires. To reach for something else, she would have to change the way she holds those swords.\n\nYou may know the arguments for two choices very well. You can go through one, then the other, and find yourself back where you started.\n\nBeside The Moon, this card asks whether you’re giving the same information another hearing when you need something new to consider. A direct question might help more than another attempt to guess the answer.\n\nThat doesn’t mean you should rush your decision. You can pause the comparison long enough to find out what else you need to know.\n\nThree — what another view can add. The Three of Pentacles.\n\nA craftsman stands on a bench beneath a stone arch. Two people face him, and one holds a drawing of the work.\n\nThe worker and the person holding the plan are different people. That matters: they can compare what’s being made with what was intended.\n\nYou don’t have to distrust your own judgment to make room for another view. Someone you trust may notice a detail you’ve overlooked. Someone involved may have information you haven’t heard.\n\nTheir view still needs considering. It doesn’t automatically settle the question. But it gives you something to examine alongside your own conclusion.\n\nThose are the three face-up cards in this morning’s reading.\n\nTogether, they describe how a blind spot can survive careful thought. Your attention goes towards an explanation; you keep comparing the same possibilities; the missing information stays outside that comparison.\n\nThe useful next move may be a question, a check, or an honest conversation. More time thinking cannot supply a fact you haven’t learned yet.\n\nWhere might that matter in your life? An assumption about love can affect what you ask for. An assumption about money can affect a choice before you’ve looked closely at the figures.\n\nI’d like to continue into those parts of your life, %FIRSTNAME%. The seven remaining cards will help us examine the behavior you forgive in others, the treatment you expect from them, and what needs attention in your close relationships. We’ll also explore the goals you’re trying to reach, the impression you try to give, life at home, and the effect your assumptions may have on financial choices. We’ll look for assumptions worth questioning and where another perspective could help.\n\nI’ll need your full birth name, including your first and last name, and your date of birth. I’ll begin with the strengths and challenges your birth date represents in the reading. Your name identifies a personal tarot card, which adds a closer look at strengths and familiar habits—especially how you weigh advice and make room for a view different from your own.\n\nExplore what you may be overlooking.\n\nMarcus\n\nP.S. The crayfish is close enough to see. Check what’s in front of you before following another possibility.",
+      "status": "published",
+      "bookingCopy": {
+        "headline": "Let’s look at what you may be overlooking.",
+        "intro": "Continue your personal reading: What are my blind spots?",
+        "bridge": "The Moon, Two of Swords and Three of Pentacles explore uncertainty, repeated comparisons and the value of another point of view. The remaining reading considers where those habits may affect your relationships, home and financial choices.",
+        "offer": "In your personal reading, I’ll explore the behavior you forgive in others, the treatment you expect, and what your close relationships need. The reading also considers your goals, the impression you try to give, life at home and the effect assumptions may have on financial choices.",
+        "name": "I’ll begin with the strengths and challenges your birth date represents in the reading. Your full birth name identifies a personal tarot card. Its meaning helps me explore how you weigh advice, check assumptions and consider another point of view as I interpret your remaining cards."
       }
     }
   ]

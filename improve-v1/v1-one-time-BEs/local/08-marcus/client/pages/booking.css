@@ -54,6 +54,17 @@
 .sig{display:block;height:44px;width:auto;margin-left:-6px}          /* flattened to paper — never multiply */
 .sig-name{font:italic 400 26px/1.1 var(--display);color:var(--headink)}
 
+/* ── her details (operator rule 2026-09-14/15: birth name and date on the booking page, never on Stripe):
+   the three fields above the button, exactly as production's booking.css places them.
+   .field / .hint / .field-error / .dob and the input box itself come from ../styles.css §13;
+   only the placement and the faint in-box hint (MM · DD · YYYY) are this page's. */
+.intake{margin-top:var(--s6)}
+.intake .field+.field{margin-top:var(--s5)}
+.intake input::placeholder{color:var(--muted);opacity:.55}   /* faint: the label above carries the meaning */
+.intake input:focus::placeholder{opacity:.35}
+.intake .dob{flex-wrap:wrap}                                  /* three boxes stay on one row at 320; wrap is a safety net */
+.offer .submit[disabled]:not([aria-busy="true"]){cursor:not-allowed}  /* waiting on the boxes, not on the network */
+
 /* ── the bump: red off the box and the tick (01 §3.8); the whole row is the tap target ── */
 .booking-bump{margin-top:var(--s6)}
 .booking-bump .review-label{color:var(--muted)}

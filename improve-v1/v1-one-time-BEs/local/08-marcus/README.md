@@ -1,5 +1,9 @@
 # Marcus local funnel simulation
 
+> **Current launch selection:** [Five rewritten editions + seven new readings](../../docs/08-marcus/daily-email/reviews/refresh-five/REVIEW.md). Use the twelve selected versions in this newer packet; older inventory and rewrite TODOs below are historical.
+
+> **Twelve launch readings (2026-09-14):** review packet at [../../docs/08-marcus/daily-email/reviews/refresh-five/REVIEW.md](../../docs/08-marcus/daily-email/reviews/refresh-five/REVIEW.md); rebuild commands and the owner-split to-do list are in [docs/08-marcus/README.md](../../docs/08-marcus/README.md).
+
 This harness tests the customer journey, saved reading context and adaptive PDF rendering without payment, remote database, model, audio or email services. It binds only to `127.0.0.1`. The CLI persists fixture state in `/tmp/08-marcus-local/state.sqlite`; tests use isolated memory or temporary SQLite files. Use made-up customer details.
 
 From the repository root:
@@ -8,7 +12,7 @@ From the repository root:
 ./node_modules/.bin/tsx improve-v1/v1-one-time-BEs/local/08-marcus/server.ts
 ```
 
-Open `http://127.0.0.1:5088`. The tested customer sequence is AWeber email preview → booking (cards, price, speed bump, one button) → checkout stand-in (email, name on card, birth name, date of birth, simulated pay) → post-purchase bridge → audio Upsell 1 → thank-you. No root environment file is loaded. The dedicated launcher does not import the application server, DB, Stripe, analytics or customer-list clients. It uses the pure local draw engine, whose existing numerology calculation has no service calls.
+Open `http://127.0.0.1:5088`. The tested customer sequence is AWeber email preview → booking (cards, price, first name, birth-certificate name, date of birth, speed bump, one button) → checkout stand-in (email, name on card, simulated pay) → post-purchase bridge → audio Upsell 1 → thank-you. No root environment file is loaded. The dedicated launcher does not import the application server, DB, Stripe, analytics or customer-list clients. It uses the pure local draw engine, whose existing numerology calculation has no service calls.
 
 ## Routes
 
@@ -18,13 +22,13 @@ All page routes serve the same shell (`client/index.html`); `shared.js` picks th
 |---|---|---|---|
 | `/` | `shared.js` (`PAGES.start`) | Test entry | — |
 | `/email?edition=<id>` | `pages/email.js` | Daily letter | edition |
-| `/booking?edition=<id>` | `pages/booking.js` | ORDER FORM | edition |
-| `/checkout-sim?intake=<id>` | `pages/checkout-sim.js` | (chrome hidden — imitates a hosted checkout) | intake |
+| `/booking?edition=<id>` | `pages/booking.js` | ORDER FORM | edition — collects her first name, birth-certificate name and date of birth (production's strings, byte for byte) |
+| `/checkout-sim?intake=<id>` | `pages/checkout-sim.js` | (chrome hidden — imitates a hosted checkout) | intake — email and name on card only; reads her details from the intake, never asks again |
 | `/bridge?order=<id>` | `pages/bridge.js` | ORDER CONFIRMED | order |
 | `/upsell?order=<id>` | `pages/upsell.js` | ONE ADDITION | order |
 | `/thank-you?order=<id>` | `pages/thank-you.js` | RECEIPT | order |
 
-**Operator ruling 3 (2026-09-13):** the booking page collects no personal data. In production the one button goes to Stripe's hosted Checkout, which collects email, name and card, with full birth name and date of birth as Checkout custom fields. `/checkout-sim` is the local stand-in for that page: plain style, clearly labelled, no Stripe branding. The bridge still needs a click on `#to-upsell` (ruling 1's 5–10 s auto-redirect is the bridge agent's job).
+**Operator rule (2026-09-14, re-confirmed 2026-09-15): "Birth name and date only on the booking page. Never on Stripe."** The booking page collects her first name, her first and last name on her birth certificate, and her date of birth (Month · Day · Year boxes) above the pay button, exactly as production's `client/src/pages/marcus/MarcusBooking.tsx` does — same labels, hints, placeholders and error sentences (they passed a three-reader cold read; reuse them verbatim, never write new ones here). The one button posts them with the intake, then goes to the checkout. In production that is Stripe's hosted Checkout, which collects email, card and name on card only — no custom fields. `/checkout-sim` is the local stand-in for that page: plain style, clearly labelled, no Stripe branding, email + name on card + simulated pay. *(Supersedes ruling 3 of 2026-09-13, which put the two fields on Stripe as custom fields — Stripe's docs forbid personal data there.)* The bridge still needs a click on `#to-upsell` (ruling 1's 5–10 s auto-redirect is the bridge agent's job).
 
 ## File layout
 
@@ -63,17 +67,17 @@ All JSON errors have `{ "error": "message" }`; no stack traces or customer detai
 | `GET /api/editions/:id` | — | `{ edition, cards }`; cards contains only the fixed face-up cards |
 | `GET /api/assets/:id` | — | Image for `back`, `portrait` or any exported edition's fixed faces (files under `assets/` and `../../assets/email/cards/`) |
 | `GET /client/*` | — | The split client files (allow-listed paths only) |
-| `POST /api/intake` | `{ editionId, sameDay }` | `{ intake }` — no personal data |
-| `GET /api/intake/:id` | — | `{ intake }` (the checkout stand-in reloads its price from this) |
-| `POST /api/local-pay` | `{ intakeId, email, displayFirstName, fullBirthName, dateOfBirth }` | `{ order }`; simulates paid state, no charge. `displayFirstName` is what the pages call her (client derives it from "name on card"); the personal-card lens comes from `fullBirthName` split on its last space (existing ASCII guard and error kept); `dateOfBirth` is `YYYY-MM-DD`, validated as a real date, age 16–110 |
+| `POST /api/intake` | `{ editionId, sameDay, displayFirstName, fullBirthName, dateOfBirth }` | `{ intake }` — the order form's three boxes are validated HERE, before any money: `displayFirstName` 1–60 chars (what the pages call her); `fullBirthName` 1–200 chars, must split on a last space, and must pass the existing ASCII personal-card guard; `dateOfBirth` is `YYYY-MM-DD`, a real calendar date, age 16–110. Same messages as before, now returned at intake time |
+| `GET /api/intake/:id` | — | `{ intake }` (the checkout stand-in reloads its price from this; local fake data only — production never exposes an intake) |
+| `POST /api/local-pay` | `{ intakeId, email }` | `{ order }`; simulates paid state, no charge. Her first name, birth name and date of birth are copied from the INTAKE; any of those keys still posted in this body are ignored (no fallback — no test needs one). The saved values are re-validated, so an intake written before the fields moved is refused with the same 400s |
 | `GET /api/orders/:id` | — | `{ order }` |
 | `POST /api/orders/:id/audio` | `{ accept: true/false }` | `{ order }`; simulates the audio choice |
 | `POST /api/orders/:id/fulfill` | `{}` | `{ order, artifact, pdfUrl }`; runs the saved order through brief, structural writing, grading and PDF rendering |
 | `GET /api/orders/:id/report.pdf` | — | The generated local PDF fixture after fulfillment |
 
-⚠ Date of birth: locally a bad value is rejected with a clear message. In production it arrives from a Stripe custom field after payment with no format validation, so the server must validate it post-payment and route a bad value to support — a paid order is never blocked on it. The birth name and date of birth are never logged.
+⚠ Date of birth: a bad value is refused on the order form, before payment — locally by `POST /api/intake`, in production by `POST /api/backend/checkout` (never in a URL, never on Stripe metadata). The birth name and date of birth are never logged.
 
-Edition IDs: `healing-v1`, `commitment-v1`, `quiet-v1`, `higher-calling-v1`, `higher-calling-v2`. Full email text, free cards and positions are deterministically exported from daily sources; see [export instructions](../../docs/08-marcus/daily-email/README.md). Publication status is local test routing only. The 78-card deck fixture uses standard slug IDs; only fixed-card art is served. Hidden draws should be shown by card name in the local artifact.
+Edition inventory: eighteen local records, with twelve selected launch candidates and six historical/draft versions. Use `docs/08-marcus/daily-email/edition-configs/launch-selection-2026-09-14.json` to select the twelve; local published status alone is not a launch selector. See the [current edition table](../../docs/08-marcus/daily-email/README.md#included-fixtures) for all IDs. Full email text, free cards and positions are deterministically exported from daily sources; see [export instructions](../../docs/08-marcus/daily-email/README.md). Publication status is local test routing only. The 78-card deck fixture uses standard slug IDs; only fixed-card art is served. Hidden draws should be shown by card name in the local artifact.
 
 Orders expose the `PaidOrder` contract plus `displayFirstName`, `fullBirthName`, `dateOfBirth`, the birth-name split (`firstName`/`lastName`, used by the fulfillment brief), total cents, `localOnly: true`, simulation notice, `audioPriceProvisional: true`, audio decision and fulfillment job references. This extra visibility is for review with fake data only. Production public responses must not expose private order context this way.
 
@@ -92,7 +96,7 @@ Orders expose the `PaidOrder` contract plus `displayFirstName`, `fullBirthName`,
 
 ## Proof still needed
 
-The passing tests prove local API behavior, saved-draw continuity, exact 4/6/1 canon selection, fail-closed anchor checks, and adaptive PDF generation. A separate ephemeral n8n run also proved the earlier main workflow route with an eight-card fixture; see [execution evidence](../../docs/08-marcus/n8n/LOCAL-EXECUTION-EVIDENCE.md). Neither proves Supabase transactions/RLS, real Stripe payments/webhooks (including the custom fields), AI writing quality, full audio creation, provider delivery, production authentication or durable recovery. Those need separate integration checks. Production activation remains outside this harness.
+The passing tests prove local API behavior, saved-draw continuity, exact 4/6/1 canon selection, fail-closed anchor checks, and adaptive PDF generation. A separate ephemeral n8n run also proved the earlier main workflow route with an eight-card fixture; see [execution evidence](../../docs/08-marcus/n8n/LOCAL-EXECUTION-EVIDENCE.md). Neither proves Supabase transactions/RLS, real Stripe payments/webhooks, AI writing quality, full audio creation, provider delivery, production authentication or durable recovery. Those need separate integration checks. Production activation remains outside this harness.
 
 ## Tests
 
@@ -116,7 +120,7 @@ With the dedicated local server running, from the repository root:
 node improve-v1/v1-one-time-BEs/local/08-marcus/browser.test.cjs
 ```
 
-This uses installed Playwright, creates fake locally persisted orders, and saves screenshots under `/tmp/marcus-local-*.png`. It walks email → booking → checkout stand-in → bridge → upsell → thank-you, checks the bump and totals, the checkout's per-field errors and the birth-name guard, the masthead datelines, the review-05 floors (body 18px on phones, nothing under 13px, 44px targets), card frames, accept/decline, 12/24-hour deadlines, local PDF retrieval, and 320/390/1100 widths. Every off-origin request is aborted; the only ones the page may attempt are the Google Fonts link (the page must work on the Georgia fallback).
+This uses installed Playwright, creates fake locally persisted orders, and saves screenshots under `/tmp/marcus-local-*.png`. It walks email → booking → checkout stand-in → bridge → upsell → thank-you, checks the bump and totals, the order form's three details (production's strings byte for byte, submit-time error sentences, the ASCII birth-name guard, the button held down until all five boxes are filled, refill after "Back to the order form"), the checkout's email/name-on-card errors, the masthead datelines, the review-05 floors (body 18px on phones, nothing under 13px, 44px targets), card frames, accept/decline, 12/24-hour deadlines, local PDF retrieval, and 320/390/1100 widths. Every off-origin request is aborted; the only ones the page may attempt are the Google Fonts link (the page must work on the Georgia fallback).
 
 ## Local fulfillment stage adapters
 

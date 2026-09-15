@@ -1,0 +1,542 @@
+{
+  "indexCount": 12,
+  "report": [
+    {
+      "slug": "does-love-have-to-feel-this-hard",
+      "width": 1000,
+      "title": "The Seer Within \u2014 Marcus",
+      "body": 4031,
+      "overflow": false,
+      "images": [
+        {
+          "src": "https://luna-assets-tsw.s3.ap-southeast-2.amazonaws.com/marcus/08/08-headshot.jpg",
+          "ok": true
+        },
+        {
+          "src": "https://luna-assets-tsw.s3.ap-southeast-2.amazonaws.com/marcus/08/08-hero-does-love-have-to-feel-this-hard.jpg",
+          "ok": true
+        },
+        {
+          "src": "https://luna-assets-tsw.s3.ap-southeast-2.amazonaws.com/evelyn/tarot-rws/ten-of-wands.jpg",
+          "ok": true
+        },
+        {
+          "src": "https://luna-assets-tsw.s3.ap-southeast-2.amazonaws.com/evelyn/tarot-rws/six-of-pentacles.jpg",
+          "ok": true
+        },
+        {
+          "src": "https://luna-assets-tsw.s3.ap-southeast-2.amazonaws.com/marcus/08/08-backs-4.jpg",
+          "ok": true
+        },
+        {
+          "src": "https://luna-assets-tsw.s3.ap-southeast-2.amazonaws.com/marcus/08/08-signature.jpg",
+          "ok": true
+        }
+      ],
+      "links": [
+        "http://127.0.0.1:5091/booking?edition=does-love-have-to-feel-this-hard-v1&version=1"
+      ],
+      "errors": [],
+      "screenshot": "tmp/marcus-mixed-batch/does-love-have-to-feel-this-hard-1000.png"
+    },
+    {
+      "slug": "seeing-love-clearly",
+      "width": 1000,
+      "title": "The Seer Within \u2014 Marcus",
+      "body": 4307,
+      "overflow": false,
+      "images": [
+        {
+          "src": "https://luna-assets-tsw.s3.ap-southeast-2.amazonaws.com/marcus/08/08-headshot.jpg",
+          "ok": true
+        },
+        {
+          "src": "https://luna-assets-tsw.s3.ap-southeast-2.amazonaws.com/marcus/08/08-hero-seeing-love-clearly.jpg",
+          "ok": true
+        },
+        {
+          "src": "https://luna-assets-tsw.s3.ap-southeast-2.amazonaws.com/evelyn/tarot-rws/seven-of-cups.jpg",
+          "ok": true
+        },
+        {
+          "src": "https://luna-assets-tsw.s3.ap-southeast-2.amazonaws.com/evelyn/tarot-rws/queen-of-swords.jpg",
+          "ok": true
+        },
+        {
+          "src": "https://luna-assets-tsw.s3.ap-southeast-2.amazonaws.com/marcus/08/08-backs-4.jpg",
+          "ok": true
+        },
+        {
+          "src": "https://luna-assets-tsw.s3.ap-southeast-2.amazonaws.com/marcus/08/08-signature.jpg",
+          "ok": true
+        }
+      ],
+      "links": [
+        "http://127.0.0.1:5091/booking?edition=seeing-love-clearly-v1&version=1"
+      ],
+      "errors": [],
+      "screenshot": "tmp/marcus-mixed-batch/seeing-love-clearly-1000.png"
+    },
+    {
+      "slug": "heading-in-the-right-direction",
+      "width": 1000,
+      "title": "The Seer Within \u2014 Marcus",
+      "body": 3829,
+      "overflow": false,
+      "images": [
+        {
+          "src": "https://luna-assets-tsw.s3.ap-southeast-2.amazonaws.com/marcus/08/08-headshot.jpg",
+          "ok": true
+        },
+        {
+          "src": "https://luna-assets-tsw.s3.ap-southeast-2.amazonaws.com/marcus/08/08-hero-heading-in-the-right-direction.jpg",
+          "ok": true
+        },
+        {
+          "src": "https://luna-assets-tsw.s3.ap-southeast-2.amazonaws.com/evelyn/tarot-rws/eight-of-pentacles.jpg",
+          "ok": true
+        },
+        {
+          "src": "https://luna-assets-tsw.s3.ap-southeast-2.amazonaws.com/evelyn/tarot-rws/eight-of-cups.jpg",
+          "ok": true
+        },
+        {
+          "src": "https://luna-assets-tsw.s3.ap-southeast-2.amazonaws.com/marcus/08/08-backs-4.jpg",
+          "ok": true
+        },
+        {
+          "src": "https://luna-assets-tsw.s3.ap-southeast-2.amazonaws.com/marcus/08/08-signature.jpg",
+          "ok": true
+        }
+      ],
+      "links": [
+        "http://127.0.0.1:5091/booking?edition=heading-in-the-right-direction-v1&version=1"
+      ],
+      "errors": [],
+      "screenshot": "tmp/marcus-mixed-batch/heading-in-the-right-direction-1000.png"
+    },
+    {
+      "slug": "whats-keeping-you-stuck-with-money",
+      "width": 1000,
+      "title": "The Seer Within \u2014 Marcus",
+      "body": 3901,
+      "overflow": false,
+      "images": [
+        {
+          "src": "https://luna-assets-tsw.s3.ap-southeast-2.amazonaws.com/marcus/08/08-headshot.jpg",
+          "ok": true
+        },
+        {
+          "src": "https://luna-assets-tsw.s3.ap-southeast-2.amazonaws.com/marcus/08/08-hero-whats-keeping-you-stuck-with-money.jpg",
+          "ok": true
+        },
+        {
+          "src": "https://luna-assets-tsw.s3.ap-southeast-2.amazonaws.com/evelyn/tarot-rws/four-of-pentacles.jpg",
+          "ok": true
+        },
+        {
+          "src": "https://luna-assets-tsw.s3.ap-southeast-2.amazonaws.com/evelyn/tarot-rws/ace-of-pentacles.jpg",
+          "ok": true
+        },
+        {
+          "src": "https://luna-assets-tsw.s3.ap-southeast-2.amazonaws.com/marcus/08/08-backs-4.jpg",
+          "ok": true
+        },
+        {
+          "src": "https://luna-assets-tsw.s3.ap-southeast-2.amazonaws.com/marcus/08/08-signature.jpg",
+          "ok": true
+        }
+      ],
+      "links": [
+        "http://127.0.0.1:5091/booking?edition=whats-keeping-you-stuck-with-money-v1&version=1"
+      ],
+      "errors": [],
+      "screenshot": "tmp/marcus-mixed-batch/whats-keeping-you-stuck-with-money-1000.png"
+    },
+    {
+      "slug": "what-deserves-your-attention",
+      "width": 1000,
+      "title": "The Seer Within \u2014 Marcus",
+      "body": 3801,
+      "overflow": false,
+      "images": [
+        {
+          "src": "https://luna-assets-tsw.s3.ap-southeast-2.amazonaws.com/marcus/08/08-headshot.jpg",
+          "ok": true
+        },
+        {
+          "src": "https://luna-assets-tsw.s3.ap-southeast-2.amazonaws.com/marcus/08/08-hero-what-deserves-your-attention.jpg",
+          "ok": true
+        },
+        {
+          "src": "https://luna-assets-tsw.s3.ap-southeast-2.amazonaws.com/evelyn/tarot-rws/two-of-pentacles.jpg",
+          "ok": true
+        },
+        {
+          "src": "https://luna-assets-tsw.s3.ap-southeast-2.amazonaws.com/evelyn/tarot-rws/four-of-swords.jpg",
+          "ok": true
+        },
+        {
+          "src": "https://luna-assets-tsw.s3.ap-southeast-2.amazonaws.com/marcus/08/08-backs-4.jpg",
+          "ok": true
+        },
+        {
+          "src": "https://luna-assets-tsw.s3.ap-southeast-2.amazonaws.com/marcus/08/08-signature.jpg",
+          "ok": true
+        }
+      ],
+      "links": [
+        "http://127.0.0.1:5091/booking?edition=what-deserves-your-attention-v1&version=1"
+      ],
+      "errors": [],
+      "screenshot": "tmp/marcus-mixed-batch/what-deserves-your-attention-1000.png"
+    },
+    {
+      "slug": "what-gift-are-you-overlooking",
+      "width": 1000,
+      "title": "The Seer Within \u2014 Marcus",
+      "body": 3885,
+      "overflow": false,
+      "images": [
+        {
+          "src": "https://luna-assets-tsw.s3.ap-southeast-2.amazonaws.com/marcus/08/08-headshot.jpg",
+          "ok": true
+        },
+        {
+          "src": "https://luna-assets-tsw.s3.ap-southeast-2.amazonaws.com/marcus/08/08-hero-what-gift-are-you-overlooking.jpg",
+          "ok": true
+        },
+        {
+          "src": "https://luna-assets-tsw.s3.ap-southeast-2.amazonaws.com/evelyn/tarot-rws/the-magician.jpg",
+          "ok": true
+        },
+        {
+          "src": "https://luna-assets-tsw.s3.ap-southeast-2.amazonaws.com/evelyn/tarot-rws/queen-of-pentacles.jpg",
+          "ok": true
+        },
+        {
+          "src": "https://luna-assets-tsw.s3.ap-southeast-2.amazonaws.com/marcus/08/08-backs-4.jpg",
+          "ok": true
+        },
+        {
+          "src": "https://luna-assets-tsw.s3.ap-southeast-2.amazonaws.com/marcus/08/08-signature.jpg",
+          "ok": true
+        }
+      ],
+      "links": [
+        "http://127.0.0.1:5091/booking?edition=what-gift-are-you-overlooking-v1&version=1"
+      ],
+      "errors": [],
+      "screenshot": "tmp/marcus-mixed-batch/what-gift-are-you-overlooking-1000.png"
+    },
+    {
+      "slug": "is-it-time-for-a-new-chapter",
+      "width": 1000,
+      "title": "The Seer Within \u2014 Marcus",
+      "body": 3842,
+      "overflow": false,
+      "images": [
+        {
+          "src": "https://luna-assets-tsw.s3.ap-southeast-2.amazonaws.com/marcus/08/08-headshot.jpg",
+          "ok": true
+        },
+        {
+          "src": "https://luna-assets-tsw.s3.ap-southeast-2.amazonaws.com/marcus/08/08-hero-is-it-time-for-a-new-chapter.jpg",
+          "ok": true
+        },
+        {
+          "src": "https://luna-assets-tsw.s3.ap-southeast-2.amazonaws.com/evelyn/tarot-rws/death.jpg",
+          "ok": true
+        },
+        {
+          "src": "https://luna-assets-tsw.s3.ap-southeast-2.amazonaws.com/evelyn/tarot-rws/six-of-swords.jpg",
+          "ok": true
+        },
+        {
+          "src": "https://luna-assets-tsw.s3.ap-southeast-2.amazonaws.com/marcus/08/08-backs-4.jpg",
+          "ok": true
+        },
+        {
+          "src": "https://luna-assets-tsw.s3.ap-southeast-2.amazonaws.com/marcus/08/08-signature.jpg",
+          "ok": true
+        }
+      ],
+      "links": [
+        "http://127.0.0.1:5091/booking?edition=is-it-time-for-a-new-chapter-v1&version=1"
+      ],
+      "errors": [],
+      "screenshot": "tmp/marcus-mixed-batch/is-it-time-for-a-new-chapter-1000.png"
+    },
+    {
+      "slug": "does-love-have-to-feel-this-hard",
+      "width": 390,
+      "title": "The Seer Within \u2014 Marcus",
+      "body": 4031,
+      "overflow": false,
+      "images": [
+        {
+          "src": "https://luna-assets-tsw.s3.ap-southeast-2.amazonaws.com/marcus/08/08-headshot.jpg",
+          "ok": true
+        },
+        {
+          "src": "https://luna-assets-tsw.s3.ap-southeast-2.amazonaws.com/marcus/08/08-hero-does-love-have-to-feel-this-hard.jpg",
+          "ok": true
+        },
+        {
+          "src": "https://luna-assets-tsw.s3.ap-southeast-2.amazonaws.com/evelyn/tarot-rws/ten-of-wands.jpg",
+          "ok": true
+        },
+        {
+          "src": "https://luna-assets-tsw.s3.ap-southeast-2.amazonaws.com/evelyn/tarot-rws/six-of-pentacles.jpg",
+          "ok": true
+        },
+        {
+          "src": "https://luna-assets-tsw.s3.ap-southeast-2.amazonaws.com/marcus/08/08-backs-4.jpg",
+          "ok": true
+        },
+        {
+          "src": "https://luna-assets-tsw.s3.ap-southeast-2.amazonaws.com/marcus/08/08-signature.jpg",
+          "ok": true
+        }
+      ],
+      "links": [
+        "http://127.0.0.1:5091/booking?edition=does-love-have-to-feel-this-hard-v1&version=1"
+      ],
+      "errors": [],
+      "screenshot": "tmp/marcus-mixed-batch/does-love-have-to-feel-this-hard-390.png"
+    },
+    {
+      "slug": "seeing-love-clearly",
+      "width": 390,
+      "title": "The Seer Within \u2014 Marcus",
+      "body": 4307,
+      "overflow": false,
+      "images": [
+        {
+          "src": "https://luna-assets-tsw.s3.ap-southeast-2.amazonaws.com/marcus/08/08-headshot.jpg",
+          "ok": true
+        },
+        {
+          "src": "https://luna-assets-tsw.s3.ap-southeast-2.amazonaws.com/marcus/08/08-hero-seeing-love-clearly.jpg",
+          "ok": true
+        },
+        {
+          "src": "https://luna-assets-tsw.s3.ap-southeast-2.amazonaws.com/evelyn/tarot-rws/seven-of-cups.jpg",
+          "ok": true
+        },
+        {
+          "src": "https://luna-assets-tsw.s3.ap-southeast-2.amazonaws.com/evelyn/tarot-rws/queen-of-swords.jpg",
+          "ok": true
+        },
+        {
+          "src": "https://luna-assets-tsw.s3.ap-southeast-2.amazonaws.com/marcus/08/08-backs-4.jpg",
+          "ok": true
+        },
+        {
+          "src": "https://luna-assets-tsw.s3.ap-southeast-2.amazonaws.com/marcus/08/08-signature.jpg",
+          "ok": true
+        }
+      ],
+      "links": [
+        "http://127.0.0.1:5091/booking?edition=seeing-love-clearly-v1&version=1"
+      ],
+      "errors": [],
+      "screenshot": "tmp/marcus-mixed-batch/seeing-love-clearly-390.png"
+    },
+    {
+      "slug": "heading-in-the-right-direction",
+      "width": 390,
+      "title": "The Seer Within \u2014 Marcus",
+      "body": 3829,
+      "overflow": false,
+      "images": [
+        {
+          "src": "https://luna-assets-tsw.s3.ap-southeast-2.amazonaws.com/marcus/08/08-headshot.jpg",
+          "ok": true
+        },
+        {
+          "src": "https://luna-assets-tsw.s3.ap-southeast-2.amazonaws.com/marcus/08/08-hero-heading-in-the-right-direction.jpg",
+          "ok": true
+        },
+        {
+          "src": "https://luna-assets-tsw.s3.ap-southeast-2.amazonaws.com/evelyn/tarot-rws/eight-of-pentacles.jpg",
+          "ok": true
+        },
+        {
+          "src": "https://luna-assets-tsw.s3.ap-southeast-2.amazonaws.com/evelyn/tarot-rws/eight-of-cups.jpg",
+          "ok": true
+        },
+        {
+          "src": "https://luna-assets-tsw.s3.ap-southeast-2.amazonaws.com/marcus/08/08-backs-4.jpg",
+          "ok": true
+        },
+        {
+          "src": "https://luna-assets-tsw.s3.ap-southeast-2.amazonaws.com/marcus/08/08-signature.jpg",
+          "ok": true
+        }
+      ],
+      "links": [
+        "http://127.0.0.1:5091/booking?edition=heading-in-the-right-direction-v1&version=1"
+      ],
+      "errors": [],
+      "screenshot": "tmp/marcus-mixed-batch/heading-in-the-right-direction-390.png"
+    },
+    {
+      "slug": "whats-keeping-you-stuck-with-money",
+      "width": 390,
+      "title": "The Seer Within \u2014 Marcus",
+      "body": 3901,
+      "overflow": false,
+      "images": [
+        {
+          "src": "https://luna-assets-tsw.s3.ap-southeast-2.amazonaws.com/marcus/08/08-headshot.jpg",
+          "ok": true
+        },
+        {
+          "src": "https://luna-assets-tsw.s3.ap-southeast-2.amazonaws.com/marcus/08/08-hero-whats-keeping-you-stuck-with-money.jpg",
+          "ok": true
+        },
+        {
+          "src": "https://luna-assets-tsw.s3.ap-southeast-2.amazonaws.com/evelyn/tarot-rws/four-of-pentacles.jpg",
+          "ok": true
+        },
+        {
+          "src": "https://luna-assets-tsw.s3.ap-southeast-2.amazonaws.com/evelyn/tarot-rws/ace-of-pentacles.jpg",
+          "ok": true
+        },
+        {
+          "src": "https://luna-assets-tsw.s3.ap-southeast-2.amazonaws.com/marcus/08/08-backs-4.jpg",
+          "ok": true
+        },
+        {
+          "src": "https://luna-assets-tsw.s3.ap-southeast-2.amazonaws.com/marcus/08/08-signature.jpg",
+          "ok": true
+        }
+      ],
+      "links": [
+        "http://127.0.0.1:5091/booking?edition=whats-keeping-you-stuck-with-money-v1&version=1"
+      ],
+      "errors": [],
+      "screenshot": "tmp/marcus-mixed-batch/whats-keeping-you-stuck-with-money-390.png"
+    },
+    {
+      "slug": "what-deserves-your-attention",
+      "width": 390,
+      "title": "The Seer Within \u2014 Marcus",
+      "body": 3801,
+      "overflow": false,
+      "images": [
+        {
+          "src": "https://luna-assets-tsw.s3.ap-southeast-2.amazonaws.com/marcus/08/08-headshot.jpg",
+          "ok": true
+        },
+        {
+          "src": "https://luna-assets-tsw.s3.ap-southeast-2.amazonaws.com/marcus/08/08-hero-what-deserves-your-attention.jpg",
+          "ok": true
+        },
+        {
+          "src": "https://luna-assets-tsw.s3.ap-southeast-2.amazonaws.com/evelyn/tarot-rws/two-of-pentacles.jpg",
+          "ok": true
+        },
+        {
+          "src": "https://luna-assets-tsw.s3.ap-southeast-2.amazonaws.com/evelyn/tarot-rws/four-of-swords.jpg",
+          "ok": true
+        },
+        {
+          "src": "https://luna-assets-tsw.s3.ap-southeast-2.amazonaws.com/marcus/08/08-backs-4.jpg",
+          "ok": true
+        },
+        {
+          "src": "https://luna-assets-tsw.s3.ap-southeast-2.amazonaws.com/marcus/08/08-signature.jpg",
+          "ok": true
+        }
+      ],
+      "links": [
+        "http://127.0.0.1:5091/booking?edition=what-deserves-your-attention-v1&version=1"
+      ],
+      "errors": [],
+      "screenshot": "tmp/marcus-mixed-batch/what-deserves-your-attention-390.png"
+    },
+    {
+      "slug": "what-gift-are-you-overlooking",
+      "width": 390,
+      "title": "The Seer Within \u2014 Marcus",
+      "body": 3885,
+      "overflow": false,
+      "images": [
+        {
+          "src": "https://luna-assets-tsw.s3.ap-southeast-2.amazonaws.com/marcus/08/08-headshot.jpg",
+          "ok": true
+        },
+        {
+          "src": "https://luna-assets-tsw.s3.ap-southeast-2.amazonaws.com/marcus/08/08-hero-what-gift-are-you-overlooking.jpg",
+          "ok": true
+        },
+        {
+          "src": "https://luna-assets-tsw.s3.ap-southeast-2.amazonaws.com/evelyn/tarot-rws/the-magician.jpg",
+          "ok": true
+        },
+        {
+          "src": "https://luna-assets-tsw.s3.ap-southeast-2.amazonaws.com/evelyn/tarot-rws/queen-of-pentacles.jpg",
+          "ok": true
+        },
+        {
+          "src": "https://luna-assets-tsw.s3.ap-southeast-2.amazonaws.com/marcus/08/08-backs-4.jpg",
+          "ok": true
+        },
+        {
+          "src": "https://luna-assets-tsw.s3.ap-southeast-2.amazonaws.com/marcus/08/08-signature.jpg",
+          "ok": true
+        }
+      ],
+      "links": [
+        "http://127.0.0.1:5091/booking?edition=what-gift-are-you-overlooking-v1&version=1"
+      ],
+      "errors": [],
+      "screenshot": "tmp/marcus-mixed-batch/what-gift-are-you-overlooking-390.png"
+    },
+    {
+      "slug": "is-it-time-for-a-new-chapter",
+      "width": 390,
+      "title": "The Seer Within \u2014 Marcus",
+      "body": 3842,
+      "overflow": false,
+      "images": [
+        {
+          "src": "https://luna-assets-tsw.s3.ap-southeast-2.amazonaws.com/marcus/08/08-headshot.jpg",
+          "ok": true
+        },
+        {
+          "src": "https://luna-assets-tsw.s3.ap-southeast-2.amazonaws.com/marcus/08/08-hero-is-it-time-for-a-new-chapter.jpg",
+          "ok": true
+        },
+        {
+          "src": "https://luna-assets-tsw.s3.ap-southeast-2.amazonaws.com/evelyn/tarot-rws/death.jpg",
+          "ok": true
+        },
+        {
+          "src": "https://luna-assets-tsw.s3.ap-southeast-2.amazonaws.com/evelyn/tarot-rws/six-of-swords.jpg",
+          "ok": true
+        },
+        {
+          "src": "https://luna-assets-tsw.s3.ap-southeast-2.amazonaws.com/marcus/08/08-backs-4.jpg",
+          "ok": true
+        },
+        {
+          "src": "https://luna-assets-tsw.s3.ap-southeast-2.amazonaws.com/marcus/08/08-signature.jpg",
+          "ok": true
+        }
+      ],
+      "links": [
+        "http://127.0.0.1:5091/booking?edition=is-it-time-for-a-new-chapter-v1&version=1"
+      ],
+      "errors": [],
+      "screenshot": "tmp/marcus-mixed-batch/is-it-time-for-a-new-chapter-390.png"
+    }
+  ],
+  "booking": {
+    "url": "http://127.0.0.1:5091/booking?edition=does-love-have-to-feel-this-hard-v1&version=1",
+    "title": "Marcus Stone \u00b7 local funnel test",
+    "text": "LOCAL TEST \u00b7 no charge, no email sent\nPayments and delivery are simulated. Audio price $17 is provisional. Written delivery: within 24 hours, or within 12 hours with the $12.77 upgrade.\nStart a new test\nMarcus Stone\nDaily Tarot Reader\nORDER FORM\nTHE SEER WITHIN\nLet\u2019s look at what you need from love.\n\nContinue your personal reading: Does love always have to feel this hard?\n\nPOSITION ONE\nWhat effort has become\nTen of Wands\nPOSITION TWO\nWhat you can afford to give\nSix of Pentacles\nWhat we\u2019ll look at next\nThe Ten of Wands and Six of Pentacles separated effort from mutual care. The remaining reading explores what you need back and what you can ask for.\nTHE TABLE \u2014 as the cards lie this morning.\nPOSITION THREE\nWhat you need back\nPOSITION FOUR\nWhat you keep taking on\nPOSITION FIVE\nWhat you can ask for\nPOSITION SIX\nWhere you can begin\nYour personal reading\n$35\n\nA written reading, sent as a PDF link to your email within 24 hours of payment.\n\nIn your personal reading, I\u2019ll explore what you need back, what you keep taking on, what you can ask for, and where you can begin.\n\nI\u2019ll use the strengths and habits represented by your personal tarot card to explore how you give care and ask for it.\n\nOPTIONAL SPEED UPGRADE\nReceive it within 12 hours\n+$12.77\n\nYour written reading normally arrives within 24 hours of payment. Add this to receive it within 12 hours.\n\nYes, prepare my reading within 12 hours \u2014 add $12.77\nTotal USD\n$35\n\nPersonal reading $35\n\nContinue to secure payment \u2014 $35\n\nName, email and card details are taken on the secure payment page. Local test only \u2014 no charge.\n\nMARCUS STONE \u00b7 THE SEER WITHIN\nORDER FORM"
+  }
+}

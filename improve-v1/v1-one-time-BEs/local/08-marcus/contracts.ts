@@ -42,15 +42,23 @@ export interface OrderDraw {
   personalLens: PersonalLens;
 }
 /**
- * The booking page collects NO personal data (operator ruling 3, 2026-09-13). An intake is only
- * the edition and the speed-bump choice; name, email, birth name and date of birth are collected
- * by the hosted checkout (Stripe custom fields in production, `/checkout-sim` locally).
+ * Operator rule (2026-09-14, re-confirmed 2026-09-15): "Birth name and date only on the booking
+ * page. Never on Stripe." The booking page collects her first name, full birth name and date of
+ * birth and posts them with the edition and the speed-bump choice; the intake carries all three.
+ * The hosted checkout (Stripe in production, `/checkout-sim` locally) collects email, card and
+ * name on card only, and reads nothing personal back from her. Never log the three values.
  */
 export interface Intake {
   id: string;
   editionId: string;
   editionVersion: number;
   sameDay: boolean;
+  /** What the pages call her. Typed into the booking page's "First name" box. */
+  displayFirstName: string;
+  /** The name on her birth certificate, as typed — the personal-card lens is computed from it. Never log it. */
+  fullBirthName: string;
+  /** `YYYY-MM-DD` as combined from the booking page's three numeric boxes. Never log it. */
+  dateOfBirth: string;
 }
 export interface PaidOrder {
   id: string;
@@ -58,11 +66,11 @@ export interface PaidOrder {
   editionSnapshot: Edition;
   draw: OrderDraw;
   deliveryEmail: string;
-  /** What the pages call her. Derived from the "name on card" field at checkout. */
+  /** What the pages call her. Copied from the intake (the booking page's "First name" box). */
   displayFirstName: string;
   /** The name given at birth, as typed — the personal-card lens is computed from it. Never log it. */
   fullBirthName: string;
-  /** `YYYY-MM-DD` as combined from the checkout's three numeric boxes. Never log it. */
+  /** `YYYY-MM-DD` as combined from the booking page's three numeric boxes. Never log it. */
   dateOfBirth: string;
   baseCents: typeof MAIN_CENTS;
   bumpCents: number;

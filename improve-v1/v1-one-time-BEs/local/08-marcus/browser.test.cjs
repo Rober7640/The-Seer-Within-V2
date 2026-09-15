@@ -28,20 +28,38 @@ const ALLOWED_OFF_ORIGIN=new Set(['https://fonts.googleapis.com','https://fonts.
     const tall=async(selector,min=44)=>{const box=await page.locator(selector).boundingBox();assert(box&&box.height>=min,selector+' must be at least '+min+'px tall, was '+(box&&box.height));};
     const bodyPx=async()=>page.evaluate(()=>parseFloat(getComputedStyle(document.body).fontSize));
     const minFontPx=async()=>page.evaluate(()=>Math.min(...[...document.querySelectorAll('main *')].filter(e=>e.textContent.trim()&&getComputedStyle(e).display!=='none').map(e=>parseFloat(getComputedStyle(e).fontSize))));
-    const fillCheckout=async({email='reader@example.test',name='Joel Chue',birth='Joel Chue',dob=['3','14','1961']}={})=>{
-      await page.locator('#email').fill(email);
-      await page.locator('#name-on-card').fill(name);
+    // Operator rule (2026-09-14/15): birth name and date only on the booking page, never on the checkout.
+    const fillBooking=async({first='Joel',birth='Joel Chue',dob=['3','14','1961']}={})=>{
+      await page.locator('#first-name').fill(first);
       await page.locator('#birth-name').fill(birth);
       await page.locator('#dob-month').fill(dob[0]);await page.locator('#dob-day').fill(dob[1]);await page.locator('#dob-year').fill(dob[2]);
     };
+    const fillCheckout=async({email='reader@example.test',name='Joel Chue'}={})=>{
+      await page.locator('#email').fill(email);
+      await page.locator('#name-on-card').fill(name);
+    };
+    const INTAKE_KEYS=['dateOfBirth','displayFirstName','editionId','editionVersion','fullBirthName','id','sameDay'];
 
-    // AWeber handoff fixture -> booking (cards, price, bump, ONE button; no personal fields).
+    // AWeber handoff fixture -> booking (cards, price, her three details, bump, ONE button).
     await page.goto(origin+'/email?edition=healing-v1');
     await page.locator('#to-booking').click();
     assert.equal(new URL(page.url()).pathname,'/booking');
     assert.equal(await page.locator('#same-day').count(),1,'speed bump belongs on booking page');
     assert.equal(await page.locator('#to-checkout').count(),1,'booking page has one button to secure payment');
-    assert.equal(await page.locator('#app input:not([type=checkbox])').count(),0,'booking page collects no personal data');
+    assert.deepEqual(await page.locator('#app input:not([type=checkbox])').evaluateAll(els=>els.map(e=>e.id)),['first-name','birth-name','dob-month','dob-day','dob-year'],'booking page collects exactly her three details (five boxes)');
+    // Production's strings, byte for byte (MarcusBooking.tsx passed a three-reader cold read).
+    assert.equal(await page.locator('label[for=first-name]').innerText(),'First name');
+    assert.equal(await page.locator('#field-first-name .hint').innerText(),'I’ll use your first name when I write to you.');
+    assert.equal(await page.locator('label[for=birth-name]').innerText(),'Your first and last name on your birth certificate');
+    assert.equal(await page.locator('#field-birth-name .hint').innerText(),'If you married and changed your name, use your maiden name. This is how I find your personal card.');
+    assert.equal(await page.locator('#field-dob > label').innerText(),'Your date of birth');
+    assert.equal(await page.locator('#field-dob .hint').innerText(),'For example, 03 14 1961');
+    assert.deepEqual(await page.locator('.dob input').evaluateAll(els=>els.map(e=>e.placeholder)),['MM','DD','YYYY'],'faint MM/DD/YYYY placeholders');
+    assert.deepEqual(await page.locator('.dob label').allInnerTexts(),['Month','Day','Year']);
+    assert.match(await page.locator('.under').innerText(),/^Name, email and card details are taken on the secure payment page\./);
+    const bookingBox=await page.locator('#intake').boundingBox(),sigBox=await page.locator('.sig-row').boundingBox(),bumpBox=await page.locator('.booking-bump').boundingBox();
+    assert(sigBox.y<bookingBox.y&&bookingBox.y+bookingBox.height<=bumpBox.y,'her details sit between the signature and the speed bump, as in production');
+    assert(await page.locator('#to-checkout').isDisabled(),'button waits until all five boxes are filled');
     assert.match(await page.locator('#masthead').innerText(),/Marcus Stone[\s\S]*Order form/i,'masthead nameplate + dateline');
     assert.equal(await page.locator('#masthead .rule-scotch').count(),1);
     assert.equal(await page.locator('#footer .rule-folio').count(),1);
@@ -55,34 +73,61 @@ const ALLOWED_OFF_ORIGIN=new Set(['https://fonts.googleapis.com','https://fonts.
     assert.equal(await page.locator('#booking-total').innerText(),'$47.77');
     assert.match(await page.locator('#to-checkout').innerText(),/Continue to secure payment — \$47\.77/);
     await tall('#to-checkout');await tall('.check',56);
+    // Submit-time validation with production's error sentences; focus lands on the first bad box.
+    await fillBooking({first:' ',birth:'Cher',dob:['3','14','61']});
+    assert(await page.locator('#to-checkout').isDisabled(),'a space alone is not a first name — the button stays down (production trims too)');
+    await fillBooking({first:'Joel',birth:'Cher',dob:['3','14','61']});
+    assert(await page.locator('#to-checkout').isEnabled());
+    await page.locator('#to-checkout').click();
+    assert(await page.locator('#first-name-error').isHidden());
+    assert.equal(await page.locator('#birth-name-error').innerText(),'Error: please enter your first and last name as it is on your birth certificate.');
+    assert.equal(await page.locator('#dob-error').innerText(),'Error: the year should have four numbers, for example 1961.');
+    assert.equal(await page.evaluate(()=>document.activeElement.id),'birth-name','focus moves to the first bad field');
+    assert.equal(await page.locator('#error:visible').count(),0,'client-side problems do not hit the server');
+    await fillBooking({dob:['2','30','1961']});
+    assert(await page.locator('#birth-name-error').isHidden(),'typing clears that field\'s error');
+    await page.locator('#to-checkout').click();
+    assert.equal(await page.locator('#dob-error').innerText(),'Error: that month does not have that many days — please check the day.');
+    assert.deepEqual(await page.locator('.dob input').evaluateAll(els=>els.map(e=>e.getAttribute('aria-invalid'))),['true','true','true'],'all three date boxes are marked');
+    // The engine's ASCII guard now answers on the order form, not after payment.
+    await fillBooking({first:'Joël',birth:'Joël Chue'});
+    await page.locator('#to-checkout').click();
+    await page.locator('#error:visible').waitFor();
+    assert.match(await page.locator('#error').innerText(),/personal-card method/);
+    assert(await page.locator('#birth-name').isVisible()&&await page.locator('#to-checkout').isEnabled(),'rejected input stays editable');
+    await fillBooking({first:'Joel',birth:'Mary Anne Chue',dob:['3','14','1961']});
     await fits();
     await page.screenshot({path:'/tmp/marcus-local-booking-desktop.png',fullPage:true});
     await page.locator('#to-checkout').click();
 
-    // Checkout stand-in: validation, birth-name guard, then simulated pay.
+    // Checkout stand-in: email + name on card only, then simulated pay. It never asks for her details again.
     await page.locator('#pay').waitFor();
     assert.equal(new URL(page.url()).pathname,'/checkout-sim');
     const intakeId=new URL(page.url()).searchParams.get('intake');
     const intake=(await (await page.request.get(origin+'/api/intake/'+encodeURIComponent(intakeId))).json()).intake;
-    assert.deepEqual(Object.keys(intake).sort(),['editionId','editionVersion','id','sameDay'],'intake carries no personal data');
-    assert.equal(intake.sameDay,true);
+    assert.deepEqual(Object.keys(intake).sort(),INTAKE_KEYS,'intake carries the edition, the bump and her three details');
+    assert.equal(intake.sameDay,true);assert.equal(intake.displayFirstName,'Joel');assert.equal(intake.fullBirthName,'Mary Anne Chue');assert.equal(intake.dateOfBirth,'1961-03-14');
+    assert.deepEqual(await page.locator('#app input').evaluateAll(els=>els.map(e=>e.id)),['email','name-on-card'],'checkout asks for email and name on card only');
+    assert(!/birth|date of birth|custom field/i.test(await page.locator('#checkout-form').innerText()),'no birth name or date of birth on the checkout form');
     assert.match(await page.locator('#app').innerText(),/Local stand-in/,'clearly labelled as a stand-in');
     assert(!/stripe/i.test(await page.evaluate(()=>{const c=document.querySelector('#app').cloneNode(true);c.querySelector('.co-notice').remove();return c.innerText})),'no Stripe wording outside the stand-in notice');
     assert.match(await page.locator('#pay').innerText(),/Pay \$47\.77/);
     assert(await page.locator('#masthead').isHidden()&&await page.locator('#footer').isHidden(),'broadsheet chrome hidden on the checkout stand-in');
-    await fillCheckout({name:'',birth:'Cher',dob:['3','14','61']});
+    await fillCheckout({name:''});
     await page.locator('#pay').click();
     assert(await page.locator('#name-on-card-error').isVisible(),'per-field error for the name on card');
-    assert(await page.locator('#birth-name-error').isVisible(),'per-field error for the birth name');
-    assert.match(await page.locator('#dob-month-error').innerText(),/four numbers/,'year needs four digits');
     assert.equal(await page.evaluate(()=>document.activeElement.id),'name-on-card','focus moves to the first bad field');
     assert.equal(await page.locator('#error:visible').count(),0,'client-side problems do not hit the server');
-    await fillCheckout({name:'Joël Chue',birth:'Joël Chue'});
-    await page.locator('#pay').click();
-    await page.locator('#error:visible').waitFor();
-    assert.match(await page.locator('#error').innerText(),/personal-card method/);
-    assert(await page.locator('#birth-name').isVisible(),'rejected input stays editable');
-    await fillCheckout({name:'Joel Chue',birth:'Mary Anne Chue',dob:['3','14','1961']});
+    // "Back to the order form" brings her three boxes back as she left them.
+    await page.locator('#co-back').click();
+    await page.locator('#to-checkout').waitFor();
+    assert.deepEqual(await page.locator('#app input:not([type=checkbox])').evaluateAll(els=>els.map(e=>e.value)),['Joel','Mary Anne Chue','03','14','1961'],'order form refilled from the intake');
+    assert(await page.locator('#same-day').isChecked()&&await page.locator('#to-checkout').isEnabled());
+    await page.locator('#to-checkout').click();
+    await page.locator('#pay').waitFor();
+    const paidIntakeId=new URL(page.url()).searchParams.get('intake'); // a second submit is a fresh intake
+    assert.notEqual(paidIntakeId,intakeId);
+    await fillCheckout({name:'Joel Chue'});
     await page.screenshot({path:'/tmp/marcus-local-checkout-desktop.png',fullPage:true});
     await page.locator('#pay').click();
 
@@ -95,7 +140,7 @@ const ALLOWED_OFF_ORIGIN=new Set(['https://fonts.googleapis.com','https://fonts.
     assert.match(await page.locator('h1').innerText(),/being prepared/);
     assert.match(await page.locator('#delivery-facts').innerText(),/within 12 hours/);
     assert.equal(await page.locator('.status-box').count(),0,'order facts are ruled paper, not a grey box');
-    assert.match(await page.locator('#app').innerText(),/Thank you, Joel\./,'display first name comes from the name on card');
+    assert.match(await page.locator('#app').innerText(),/Thank you, Joel\./,'display first name comes from the order form\'s First name box');
     assert.match(await page.locator('#countdown-line').innerText(),/The next page opens in [1-7] seconds?\./,'visible, plain countdown');
     assert.equal(await page.locator('#to-upsell').evaluate(a=>a.tagName+' '+a.getAttribute('href')),'A /upsell?order='+orderId,'continue now is a real link to the upsell with the order id');
     assert.match(await page.locator('.under').innerText(),/Nothing on the next page changes or delays that order\./);
@@ -107,6 +152,7 @@ const ALLOWED_OFF_ORIGIN=new Set(['https://fonts.googleapis.com','https://fonts.
     const paid=await readOrder();
     assert(!paid.audio?.purchased);
     assert.equal(paid.displayFirstName,'Joel');assert.equal(paid.fullBirthName,'Mary Anne Chue');assert.equal(paid.dateOfBirth,'1961-03-14');
+    assert.equal(paid.intakeId,paidIntakeId,'the paid order carries the intake that held her details');
     assert.equal(paid.draw.personalLens.firstName,'Mary Anne');assert.equal(paid.draw.personalLens.lastName,'Chue');
     assert.equal(await page.locator('#delivery-email').innerText(),paid.deliveryEmail,'delivery email comes from the saved order');
     await page.reload();
@@ -153,8 +199,11 @@ const ALLOWED_OFF_ORIGIN=new Set(['https://fonts.googleapis.com','https://fonts.
     assert.equal(await page.locator('.down-cards img').count(),4);
     assert.equal(await bodyPx(),18,'body is 18px on phones');
     assert(await minFontPx()>=13,'nothing under 13px on the booking page');
-    await tall('#to-checkout');
+    await tall('#to-checkout');await tall('#first-name');await tall('#dob-year');
+    const dobRow=await page.locator('.dob').boundingBox(),yearBox=await page.locator('#dob-year').boundingBox();
+    assert(yearBox.y<dobRow.y+dobRow.height/2,'the three date boxes stay on one row at 390');
     await fits();
+    await fillBooking();
     await page.screenshot({path:'/tmp/marcus-local-booking-mobile.png',fullPage:true});
     await page.locator('#to-checkout').click();
     await page.locator('#pay').waitFor();
@@ -202,7 +251,7 @@ const ALLOWED_OFF_ORIGIN=new Set(['https://fonts.googleapis.com','https://fonts.
     assert.deepEqual(errors,[]);
     const offOrigin=external.filter(url=>!ALLOWED_OFF_ORIGIN.has(new URL(url).origin));
     assert.deepEqual(offOrigin,[],'no external requests other than the (aborted) Google Fonts and S3 asset links');
-    console.log('PASS local UI: AWeber handoff fixture -> booking (cards/price/bump, one button, no personal fields) -> checkout stand-in (validation, birth name, DOB boxes) -> bridge -> audio upsell -> thank-you -> adaptive PDF; accept/decline, 12/24-hour deadlines, masthead datelines, review-05 floors, all edition images, 320/390/1100 widths, no JavaScript errors; '+external.length+' off-origin request(s) (Google Fonts + S3 assets) attempted and aborted, nothing else off-origin.');
+    console.log('PASS local UI: AWeber handoff fixture -> booking (cards/price, her three details with production\'s strings + submit-time errors + ASCII guard, bump, one button, refill from the intake) -> checkout stand-in (email + name on card only, validation) -> bridge -> audio upsell -> thank-you -> adaptive PDF; accept/decline, 12/24-hour deadlines, masthead datelines, review-05 floors, all edition images, 320/390/1100 widths, no JavaScript errors; '+external.length+' off-origin request(s) (Google Fonts + S3 assets) attempted and aborted, nothing else off-origin.');
   }finally{
     await browser.close();
   }

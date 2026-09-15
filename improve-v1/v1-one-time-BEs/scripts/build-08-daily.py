@@ -26,7 +26,7 @@ Copy is transferred MECHANICALLY from the markdown. Nothing is retyped.
 
   python3 build08.py            # letters (S3 baked) + template.html (tokenised)
 """
-import re, os, sys, html as H
+import re, os, sys, json, html as H
 
 # ROOT is derived from this file's own location: scripts/ sits next to docs/.
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -370,6 +370,16 @@ LOCAL_FUNNEL_EDITIONS = {'what-part-of-me-needs-healing': {'id': 'healing-v1',
                                                       'along with your first name, I’ll need your '
                                                       'full name as it was given at birth and your '
                                                       'date of birth.'}}}
+# Additional authoring batches keep their edition facts together. These feed the
+# same parser, renderer and local-only exporter as the original editions.
+for _batch_name in ("mixed-batch-2026-09-14.json", "refresh-five-2026-09-14.json"):
+    _batch_path = os.path.join(ROOT, "docs/08-marcus/daily-email/edition-configs", _batch_name)
+    with open(_batch_path, encoding="utf-8") as _batch_file:
+        for _slug, _config in json.load(_batch_file).items():
+            assert _slug not in LETTERS, "duplicate edition source: " + _slug
+            LETTERS[_slug] = _config
+            LOCAL_FUNNEL_EDITIONS[_slug] = _config["funnel"]
+
 for _slug, _metadata in LOCAL_FUNNEL_EDITIONS.items():
     LETTERS[_slug]["funnel"] = _metadata
 

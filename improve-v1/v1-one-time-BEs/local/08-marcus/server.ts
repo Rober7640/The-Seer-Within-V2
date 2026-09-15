@@ -31,10 +31,10 @@ function splitBirthName(full:string):{first:string;last:string}{
   return {first:full.slice(0,at).trim(),last:full.slice(at+1).trim()};
 }
 /**
- * Date of birth arrives from the checkout as `YYYY-MM-DD`. Locally a bad value is rejected with a clear
- * message so the sim stays honest. ⚠ PRODUCTION RULE (ruling 3): the value comes from a Stripe custom
- * field AFTER payment, with no format validation inside Stripe — a paid order must NEVER be blocked or
- * failed on it. The server validates post-payment and routes a bad value to support for correction.
+ * Date of birth arrives from the BOOKING PAGE as `YYYY-MM-DD` (three boxes, combined client-side) and is
+ * validated here at intake time — before any money moves. Operator rule (2026-09-14, re-confirmed
+ * 2026-09-15): "Birth name and date only on the booking page. Never on Stripe." Production does the same
+ * in POST /api/backend/checkout (a bad date is refused before Stripe; never in a URL or on Stripe metadata).
  * Never log the value.
  */
 function dateOfBirth(value:unknown,now:Date):string{
@@ -45,6 +45,20 @@ function dateOfBirth(value:unknown,now:Date):string{
   let age=now.getUTCFullYear()-y; const before=now.getUTCMonth()+1<m || (now.getUTCMonth()+1===m && now.getUTCDate()<d); if(before)age--;
   if(age<16 || age>110)fail(400,'Check the year of your date of birth — it should have four digits, for example 1961.');
   return value;
+}
+/**
+ * The three personal values, validated the same way whether they arrive from the booking page (POST /api/intake)
+ * or are re-read off a saved intake at pay time. Reuses `text`, `splitBirthName` and `dateOfBirth`; the
+ * existing ASCII guard (`personalLens`) runs here too so a name the lens cannot read is refused on the order
+ * form, not after payment. Nothing in here is logged.
+ */
+function personalDetails(source:Record<string,unknown>,now:Date):{displayFirstName:string;fullBirthName:string;dateOfBirth:string;birth:{first:string;last:string}}{
+  const displayFirstName=text(source.displayFirstName,'your first name',60);
+  const fullBirthName=text(source.fullBirthName,'your full name at birth',200);
+  const birth=splitBirthName(fullBirthName);
+  const dob=dateOfBirth(source.dateOfBirth,now);
+  try{personalLens(birth.first,birth.last);}catch{fail(400,'This name needs a supported personal-card method. Try a test name using Latin letters.');}
+  return {displayFirstName,fullBirthName,dateOfBirth:dob,birth};
 }
 async function body(req:IncomingMessage,limit=16000):Promise<Record<string,unknown>> {
   let source=''; for await(const chunk of req){source+=chunk; if(source.length>limit)fail(413,'Request is too large.');}
@@ -76,6 +90,13 @@ const LOCAL_ASSETS:Record<string,string>={
   'eight-of-swords':'../../assets/email/cards/eight-of-swords.jpg','star':'../../assets/email/cards/the-star.jpg',
   'seven-of-pentacles':'../../assets/email/cards/seven-of-pentacles.jpg','moon':'../../assets/email/cards/the-moon.jpg',
   'two-of-swords':'../../assets/email/cards/two-of-swords.jpg','three-of-pentacles':'../../assets/email/cards/three-of-pentacles.jpg',
+  'ten-of-wands':'../../assets/email/cards/ten-of-wands.jpg','six-of-pentacles':'../../assets/email/cards/six-of-pentacles.jpg',
+  'seven-of-cups':'../../assets/email/cards/seven-of-cups.jpg','queen-of-swords':'../../assets/email/cards/queen-of-swords.jpg',
+  'eight-of-pentacles':'../../assets/email/cards/eight-of-pentacles.jpg','eight-of-cups':'../../assets/email/cards/eight-of-cups.jpg',
+  'four-of-pentacles':'../../assets/email/cards/four-of-pentacles.jpg','ace-of-pentacles':'../../assets/email/cards/ace-of-pentacles.jpg',
+  'two-of-pentacles':'../../assets/email/cards/two-of-pentacles.jpg','four-of-swords':'../../assets/email/cards/four-of-swords.jpg',
+  'magician':'../../assets/email/cards/the-magician.jpg','queen-of-pentacles':'../../assets/email/cards/queen-of-pentacles.jpg',
+  'death':'../../assets/email/cards/death.jpg','six-of-swords':'../../assets/email/cards/six-of-swords.jpg',
 };
 /** Tests default to memory. CLI explicitly opts into /tmp fake-data persistence. */
 export function createLocalServer(options: {dataPath?: string; store?: LocalStore; now?: () => Date; artifactRoot?:string; pdfPython?:string} = {}) {
@@ -116,7 +137,9 @@ export function createLocalServer(options: {dataPath?: string; store?: LocalStor
       if(method==='POST' && path==='/api/intake'){
         const data=await body(req);const edition=editions.find(e=>e.id===data.editionId);if(!edition)fail(400,'Choose a valid edition.');
         if(typeof data.sameDay!=='boolean')fail(400,'Choose whether to add same-day delivery.');
-        const intake:Intake={id:randomUUID(),editionId:edition!.id,editionVersion:edition!.version,sameDay:data.sameDay as boolean};store.insert('intakes',intake.id,intake);json(201,{intake});return;
+        // Her first name, birth name and date of birth are taken HERE (the order form), never on the checkout.
+        const {displayFirstName,fullBirthName,dateOfBirth:dob}=personalDetails(data,now());
+        const intake:Intake={id:randomUUID(),editionId:edition!.id,editionVersion:edition!.version,sameDay:data.sameDay as boolean,displayFirstName,fullBirthName,dateOfBirth:dob};store.insert('intakes',intake.id,intake);json(201,{intake});return;
       }
       if(method==='GET' && path.startsWith('/api/intake/')){
         const intake=store.get<Intake>('intakes',path.slice('/api/intake/'.length));if(!intake)fail(404,'Intake not found.');json(200,{intake});return;
@@ -124,16 +147,16 @@ export function createLocalServer(options: {dataPath?: string; store?: LocalStor
       if(method==='POST' && path==='/api/local-pay'){
         const data=await body(req);const intake=store.get<Intake>('intakes',String(data.intakeId));if(!intake)fail(404,'Intake not found.');
         if(typeof data.email!=='string' || data.email.length>254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email.trim()))fail(400,'Enter a valid test email address.');
-        const displayFirstName=text(data.displayFirstName,'the name on the card');
-        const fullBirthName=text(data.fullBirthName,'your full name at birth',200);
-        const birth=splitBirthName(fullBirthName);
-        const dob=dateOfBirth(data.dateOfBirth,now());
+        // The personal details come from the INTAKE (the order form), never from this body. Any
+        // displayFirstName / fullBirthName / dateOfBirth a stale client still posts here is ignored.
+        // Re-validating the saved values also refuses an intake written before the fields moved.
+        const {displayFirstName,fullBirthName,dateOfBirth:dob,birth}=personalDetails(intake as unknown as Record<string,unknown>,now());
         const result=store.transaction(()=>{
         const prior=store.get<string>('paidByIntake',intake!.id);if(prior)return {status:200,order:store.get<LocalOrder>('orders',prior)!};
         const edition=editions.find(e=>e.id===intake!.editionId)!;const id=randomUUID();
         const paidAt=now().toISOString();const deliveryHours=intake!.sameDay?12:24;const dueAt=new Date(Date.parse(paidAt)+deliveryHours*3600000).toISOString();
-        let lens;try{lens=personalLens(birth.first,birth.last);}catch{fail(400,'This name needs a supported personal-card method. Try a test name using Latin letters.');}
-        const order:LocalOrder={id,intakeId:intake!.id,editionSnapshot:structuredClone(edition),draw:drawForOrder(id,edition,lens!,deck),deliveryEmail:(data.email as string).trim(),displayFirstName,fullBirthName,dateOfBirth:dob,baseCents:MAIN_CENTS,bumpCents:intake!.sameDay?SAME_DAY_CENTS:0,currency:'usd',paymentReference:`local_paid_${id}`,paidAt,dueAt,deliveryHours,writtenStatus:'queued',firstName:birth.first,lastName:birth.last,totalCents:MAIN_CENTS+(intake!.sameDay?SAME_DAY_CENTS:0),localOnly:true,simulationNotice:notice,audioPriceProvisional:true,audioDecision:'pending',fulfillment:{writtenJobId:`written_${id}`}};
+        const lens=personalLens(birth.first,birth.last); // already proven readable by personalDetails()
+        const order:LocalOrder={id,intakeId:intake!.id,editionSnapshot:structuredClone(edition),draw:drawForOrder(id,edition,lens,deck),deliveryEmail:(data.email as string).trim(),displayFirstName,fullBirthName,dateOfBirth:dob,baseCents:MAIN_CENTS,bumpCents:intake!.sameDay?SAME_DAY_CENTS:0,currency:'usd',paymentReference:`local_paid_${id}`,paidAt,dueAt,deliveryHours,writtenStatus:'queued',firstName:birth.first,lastName:birth.last,totalCents:MAIN_CENTS+(intake!.sameDay?SAME_DAY_CENTS:0),localOnly:true,simulationNotice:notice,audioPriceProvisional:true,audioDecision:'pending',fulfillment:{writtenJobId:`written_${id}`}};
         store.insert('orders',id,order);store.insert('paidByIntake',intake!.id,id);return {status:201,order};});json(result.status,{order:result.order});return;
       }
       const orderMatch=path.match(/^\/api\/orders\/([^/]+)(?:\/(audio|fulfill))?$/);
