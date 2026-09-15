@@ -114,9 +114,8 @@ export default function MarcusThankYou() {
         <section className="review thanks still">
           <h1>No payment has reached Marcus’s team yet.</h1>
           <p className="bridge">
-            Most of the time this means your card was not charged. Please check your bank. If
-            there is no $35 charge, choose a reading and pay for it. Opening the readings costs
-            nothing. Nothing is charged until you press Pay.
+            Most of the time this means your card was not charged. Please check your bank. If there
+            is no $35 charge, choose a reading. Opening the readings costs nothing.
           </p>
           <p className="bridge">
             If your bank does show a $35 charge, email{' '}
