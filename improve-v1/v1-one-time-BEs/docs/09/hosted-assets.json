@@ -1,0 +1,17 @@
+{
+  "rosequartz2-email.jpg": {
+    "url": "https://luna-assets-tsw.s3.ap-southeast-2.amazonaws.com/evelyn/backend-09/d514fe9f15-rosequartz2-email.jpg",
+    "bytes": 31487,
+    "contentType": "image/jpeg"
+  },
+  "rosequartz3-email.jpg": {
+    "url": "https://luna-assets-tsw.s3.ap-southeast-2.amazonaws.com/evelyn/backend-09/7a373fb6bb-rosequartz3-email.jpg",
+    "bytes": 16360,
+    "contentType": "image/jpeg"
+  },
+  "black_lava_steps-email.gif": {
+    "url": "https://luna-assets-tsw.s3.ap-southeast-2.amazonaws.com/evelyn/backend-09/debd65ca70-black_lava_steps-email.gif",
+    "bytes": 1424620,
+    "contentType": "image/gif"
+  }
+}
