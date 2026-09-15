@@ -67,12 +67,12 @@ Answers can be recorded here before dependent work begins. Independent scaffoldi
 - [x] **D3 — Bump product:** +$12.77 for delivery within 12 hours (Joel, 2026-09-10).
 - [x] **D3a — Delivery rule:** 24 hours standard, 12 hours with the +$12.77 bump, measured from confirmed main payment. Audio shares that deadline.
 - [x] **D4 — Upsell 1 direction:** audio recording of the buyer’s personalized spread.
-- [ ] **D4a — Audio refinement:** review [audio offer scope](upsell-1-audio/SCOPE.md), price, voice, format, delivery timing, and sample narration. Explain listening through the connected reading and replaying it; do not claim audio guarantees attention or that most buyers skim without evidence.
+- [ ] **D4a — Audio refinement:** review [audio offer scope](upsell-1-audio/SCOPE.md), price, voice, format, delivery timing, and sample narration. Explain listening through the connected reading and replaying it; do not claim audio guarantees attention or that most buyers skim without evidence. **Voice resolved 2026-09-15 (Joel): rights secured, approved for customer audio** (price $17 and format already decided 2026-09-13). Still open: delivery timing edge cases and sample-narration sign-off.
 - [x] **D5 — Paid draw:** face-up cards remain fixed per daily edition; draw the remaining positions separately for each buyer/order. Save once and reuse for report generation, audio, retries, and resends. Independent draws do not promise every buyer a globally unique combination.
 - [x] **D5a — Personal card:** issue an additional card from first + last name. It supplies the interpretive lens for the report; it is not another spread position or a replacement for any drawn card.
 - [x] **D6 — Build environment:** test locally first. Use local fixtures/adapters and captured deliveries; do not connect the main app to its configured shared database. Remote staging integration is a later phase after local evidence.
 - [ ] **D7 — Personal card:** resolve master number 33, supported name scripts/normalization, empty calculated results, and deck numbering. Reuse the numerology engine without changing Aiden’s behavior.
-- [ ] **D8 — Operations:** define support contact, delivery failure handling, refund handling, and whether failed reading QA should pause for review. Do not inherit 07’s “send after two failures” rule silently.
+- [ ] **D8 — Operations:** define support contact, delivery failure handling, refund handling, and whether failed reading QA should pause for review. Do not inherit 07’s “send after two failures” rule silently. **Email delivery-failure handling resolved 2026-09-15 (Joel): Resend is the backup provider behind AWeber** (see PARALLEL-PLAN.md §1, D4). Support contact `hi@theseerwithin.com` already set. Still open: refund handling (reading and audio) and whether a failed reading QA grade pauses for review or sends anyway.
 
 ## 1. Freeze the shared reading and order contracts
 
@@ -179,7 +179,7 @@ Acceptance: base-only, bump, upsell, and combined purchases show the exact items
 - [x] Created a NEW [inactive Marcus workflow](n8n/README.md). Its Stage 1 manual lane is credentialed and testable; Stage 2 records the 24h/12h, Supabase, delivery, and Chatterbox plan. Existing workflows remain untouched.
 - [x] Ran cloud Stage 1 end to end with fictional data: OpenAI report, fail-closed structural/content checks, PDFShift, and downloadable PDF binary. See [Stage 1 evidence](n8n/STAGE-1-TEST-EVIDENCE.md).
 - [x] Ran numerology-anchored Stage 1 on the supplied profile: the expanded calculation returned Life Path 4, Expression 6, and Personality 1; the edition retained The Star and Seven of Pentacles; all six positions were written; both private-support and customer-view graders passed; and a 1.18 MB PDF binary was returned. Raw birth name/date were excluded from OpenAI request bodies.
-- [ ] Approve the reusable 33-entry numerology canon: 500–800 words for each Life Path, Expression, and Personality value in 1–9, 11, and 22. See [canon design](n8n/numerology-canon/README.md).
+- [x] Approve the reusable 33-entry numerology canon: 500–800 words for each Life Path, Expression, and Personality value in 1–9, 11, and 22 (approved 2026-09-15). See [canon design](n8n/numerology-canon/README.md).
 - [x] Compiled the canon into versioned runtime records; the 37-node Stage 1 workflow retrieves exactly three entries, requires passage-ID evidence for every synthesis claim, grades the synthesis independently, and scrubs private machinery before the report writer.
 - [x] Ran canon-backed execution `30684`: selected `LP4`/`EX6`/`PE1`, synthesis evidence scores were all 9/10, one bounded report rewrite cleared the stricter customer gate, zero unsupported claims remained, and PDFShift returned a 1.18 MB six-position report.
 - [x] Repaired the node-22 test failure: internal “saved message” wording is withheld from the writer, citation confidence is derived deterministically, and a second customer-grade rejection terminates at an explicit no-PDF QA hold. Execution `30691` then passed on its first report and returned a 1.18 MB PDF.
@@ -212,7 +212,7 @@ Acceptance: a test purchase produces the correct stored deliverable and reaches 
 - [ ] Check desktop/mobile, accessibility, broken assets, form recovery, page errors, and customer-visible placeholder removal.
 - [ ] Run focused regression checks on shared offer/payment/order code for existing products.
 - [ ] Produce a local evidence pack first (provider actions simulated/captured), then a separate staging evidence pack when authorized: screenshots, sanitized test order, saved draw, workflow run, resulting reading, delivery result, and remaining issues.
-- [ ] Joel reviews final offer copy/design, generated reading samples, and end-to-end evidence.
+- [ ] Joel reviews final offer copy/design, generated reading samples, and end-to-end evidence. *(2026-09-15: reading sample approved; page copy locked; twelve letters and end-to-end evidence still to review.)*
 - [ ] Prepare launch changes: scoped migrations, assets/routes, offer switch, webhook/workflow configuration, provider templates, monitoring, and rollback steps.
 - [ ] Activate production only after a separate launch decision. Actual customer email sends must be explicitly authorized; no production charge is used as a test by default.
 - [ ] Run the agreed post-launch verification and monitor paid-but-undelivered orders.

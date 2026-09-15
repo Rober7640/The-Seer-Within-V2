@@ -4,6 +4,8 @@ Decided 2026-09-13 (Joel): **D4 = AWeber, on a new list for Marcus buyers.** Mar
 reading offers (blind spots today, soulmate in two days). One list, tags for the offer and the edition,
 custom fields for the per-order words. The four emails never change per reading; the fields do.
 
+Amended 2026-09-15 (Joel): **Resend is the backup path when the AWeber write fails.** AWeber stays primary; if the AWeber write/trigger fails for an order, the send helper (`server/lib/beMail.ts`, T10) sends the same email through Resend's transactional API instead and records the attempt in `be_send_attempts` with `provider: 'resend'`. The four HTML/TXT files in this folder are reused as the Resend bodies, with merge fields filled server-side instead of by AWeber's Liquid tags. n8n only needs its existing `POST /api/be/:offer/delivered` call; it may also call Resend directly as a last resort if the app itself is unreachable.
+
 ## FOR DEV — AWeber setup (Joel, 2026-09-13: "my dev will do these tasks")
 
 Status: **waiting on Joel's review of the four emails first.** Do not paste anything into AWeber until

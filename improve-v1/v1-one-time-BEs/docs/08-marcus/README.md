@@ -41,7 +41,7 @@ Each daily edition fixes the question, spread, theme, face-up cards, and hidden 
 | Local application | Loopback-only funnel, SQLite persistence, edition export, simulated payment, saved buyer draw, personal-card logic, adaptive report fixtures, and local PDF rendering | Uses fake payments and captured deliveries; makes no Supabase, Stripe, OpenAI, PDFShift, Replicate, email, or analytics call |
 | n8n Stage 1 | Dedicated inactive 37-node workflow with numerology calculation, fixed canon selection, evidence synthesis, tarot planning, report writing, two graders, one bounded rewrite, fail-closed QA, and PDFShift rendering | Manual test lane only; does not load an order or deliver a customer report |
 | n8n Stage 2 | Production flow architecture, delivery policy, operation envelopes, retry/lease design, audio branch plan, and a separate [48-node inactive cloud draft](https://ezyabsorb.app.n8n.cloud/workflow/UJamB32MGlNKdoEW) with an explicit numerology gate and Chatterbox Turbo fields | Reviewable scaffold only; its guard is disabled and its backend operations remain placeholders until the production data and verified-payment contracts are implemented |
-| Numerology canon | Versioned 33-entry canon covering Life Path, Expression, and Personality numbers 1–9, 11, and 22, with combination rules and compiled runtime JSON | Prose library still needs final editorial approval; unsupported master number 33 fails explicitly |
+| Numerology canon | Versioned 33-entry canon covering Life Path, Expression, and Personality numbers 1–9, 11, and 22, with combination rules and compiled runtime JSON | Prose approved 2026-09-15 (Joel); master 33 reduces to 6 per D7. Earlier text: unsupported master number 33 fails explicitly |
 
 The executable local application is under [local/08-marcus](../../local/08-marcus/README.md). Its routes are `/email`, `/booking`, `/bridge`, `/upsell`, and `/thank-you` on `127.0.0.1:5088`.
 
@@ -209,9 +209,11 @@ OUR page, never as Stripe custom fields (Joel, 2026-09-14, re-confirmed 2026-09-
 ### Joel
 
 - [ ] Review the twelve launch letters (five rewrites + seven new): [gallery](https://claude.ai/code/artifact/375861ea-7ef2-4bbf-a9db-e176cc7b0164), [refresh-five packet](daily-email/reviews/refresh-five/REVIEW.md), [mixed-batch packet](daily-email/reviews/mixed-batch/REVIEW.md). Codex's batch is uncommitted until this review is done.
-- [ ] Voice rights: the approved voice is a real YouTube speaker without consent — replace it or accept the risk in writing before any customer audio ([n8n/assets/marcus-voice/README.md](n8n/assets/marcus-voice/README.md)).
-- [ ] Three locked-copy stumbles from the page cold read (bridge "your saved cards" reads as stored bank cards; "one optional way to receive the same reading" hides the $17; the failed-payment screen never says whether money was taken) — decide whether to reword before launch.
-- [ ] Privacy, retention, refund and missed-deadline remedy wording before real orders.
+- [x] Numerology canon prose approved for production use, 2026-09-15 (Joel) — all 33 entries ([n8n/numerology-canon/README.md](n8n/numerology-canon/README.md)).
+- [x] Generated reading approved, 2026-09-15 (Joel): read a finished Stage 1 PDF and called it good.
+- [x] Voice rights secured, 2026-09-15 (Joel): the Marcus voice (v2) may be used for customer audio; the earlier no-consent/test-only caveat is closed ([n8n/assets/marcus-voice/README.md](n8n/assets/marcus-voice/README.md)).
+- [ ] Three locked-copy stumbles from the page cold read (bridge "your saved cards" reads as stored bank cards; "one optional way to receive the same reading" hides the $17; the failed-payment screen never says whether money was taken) — **in progress 2026-09-15** (writer + cold read), not done.
+- [ ] Privacy, retention, refund and missed-deadline remedy wording before real orders. **Retention decided 2026-09-15 (Joel): permanent** (full birth name + date of birth kept indefinitely; privacy copy must say so plainly). Still open: refund policy (reading and audio), missed-deadline remedy, and whether a failed quality grade pauses for a human or sends anyway.
 
 ### Dev
 
@@ -220,6 +222,7 @@ OUR page, never as Stripe custom fields (Joel, 2026-09-14, re-confirmed 2026-09-
 - [ ] Set `BE_FULFILMENT_TOKEN` (long random string) on the server and in n8n's credentials.
 - [ ] AWeber, per [AWEBER-DELIVERY.md](post-purchase-emails/AWEBER-DELIVERY.md): new list "Marcus Stone — buyers" (id → `AWEBER_MARCUS_BUYERS_LIST_ID`), nine `m8_*` custom fields, four campaigns on tags `be-08`, `be-08-audio`, `be-08-delivered`, `be-08-audio-delivered`, internal test send, then the launch gate (one test buyer, two purchases ten minutes apart, both confirmations arrive). Hand the list id to Claude for T10.
 - [ ] Deploy `08-marcus` only after the three migrations are applied; keep `readyForMoney` false until the test-mode matrix passes.
+- [ ] Resend: create API key `RESEND_API_KEY`, verify sending domain theseerwithin.com, hand the from-address to Claude.
 
 ### Claude
 
@@ -230,13 +233,14 @@ OUR page, never as Stripe custom fields (Joel, 2026-09-14, re-confirmed 2026-09-
 - [x] Card art for the twelve on S3 `marcus/08/` (41 files).
 - [x] Local simulator + docs aligned to the booking-page rule.
 - [ ] T8 audio upsell: real $17 one-click charge via `/upsell/charge`; `/marcus/reading/welcome1` is a pass-through stub today.
-- [ ] T10 send helper (`server/lib/beMail.ts`): write `m8_*` fields → remove trigger tag → add trigger tag, per subscriber, recorded in `be_send_attempts`. Needs the dev's list id.
+- [ ] T10 send helper (`server/lib/beMail.ts`): write `m8_*` fields → remove trigger tag → add trigger tag, per subscriber. **AWeber primary → Resend fallback, both recorded in `be_send_attempts`** (decided 2026-09-15). Needs the dev's list id and `RESEND_API_KEY`.
 - [ ] T11 wire the real n8n workflow `UJamB32MGlNKdoEW` through `build-workflow.py`: Stripe trigger + `GET /api/be/marcus-reading/fulfilment/:sessionId`, add `the_cross` (5) and `cross_and_triangle` (7) spreads, PDF to `analysis_pdf/08/<order>/`, sign 60 days, `POST /delivered`; keep inactive.
 - [ ] Supabase disposable-branch rehearsal of the three migrations + publisher + concurrency test (MCP was down 2026-09-13/14; proven on local Postgres 17 only).
 - [ ] Written end-to-end test runbook for Joel: Stripe test card → booking → bridge → receipt → n8n → PDF in inbox (after the dev steps and T11).
 - [ ] Bind each AWeber CTA to its edition URL and replace `{{BOOKING_URL}}` once the readings are published.
 - [ ] Test-mode matrix: late audio purchase, provider failure, missed deadline, retries, duplicate webhooks, customer-safe recovery.
 - [ ] Two stale rows in `docs/test-ideas.md` still describe the old "ambiguous" DOB rule.
+- [ ] Privacy copy: state permanent retention of birth name + DOB (needs cold read).
 
 ### Done and not reopened
 

@@ -54,4 +54,6 @@ Both candidate WAV files are 28 seconds, mono, 48 kHz, 16-bit PCM. Automated che
 
 ## Rights note (coordinator, 2026-09-13)
 
-Both candidate voices are real, identifiable people from public YouTube videos (v2: the uploader "Aliso Creek Voice Over Classes", 2019) who have not consented to cloning. Resemble's Chatterbox and Replicate's terms require consent for voice cloning; a paid product on this voice can be cut off, and a voice-over professional is the person most likely to recognise their own voice. Joel has been told. Decision pending: treat v2 as **test-only** and source a released voice-actor recording or a licensed synthetic voice before launch — or accept the risk in writing.
+Both candidate voices are real, identifiable people from public YouTube videos (v2: the uploader "Aliso Creek Voice Over Classes", 2019) who have not consented to cloning. Resemble's Chatterbox and Replicate's terms require consent for voice cloning; a paid product on this voice can be cut off, and a voice-over professional is the person most likely to recognise their own voice. Joel has been told.
+
+**Rights secured 2026-09-15 (Joel): approved for customer audio.** The test-only caveat above is closed.

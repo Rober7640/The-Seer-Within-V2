@@ -1,7 +1,7 @@
 # Marcus numerology canon
 
-Status: compiled and connected to the inactive Stage 1 workflow for technical testing. The prose
-must still be approved before production use.
+Status: compiled and connected to the inactive Stage 1 workflow for technical testing. **Prose
+approved for production use, 2026-09-15 by Joel** (all 33 entries).
 
 ## Why this exists
 
@@ -21,8 +21,8 @@ The workflow calculates three numbers, retrieves three approved entries, and com
 customer's question. It does not regenerate the underlying numerology meanings.
 
 The current engine reduces 10 to 1, so there is no Number 10 entry. It can also preserve 33, but 33
-is outside this approved set. A 33 result must fail closed until its meaning, calculation treatment,
-and personal-card behavior are explicitly approved.
+is outside this approved set. Per D7 (decided 2026-09-13, confirmed 2026-09-15 by Joel): a 33
+result reduces further to 6 and uses the Number 6 entry — it does not fail closed.
 
 ## Source files
 

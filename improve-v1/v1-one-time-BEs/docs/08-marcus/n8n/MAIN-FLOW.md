@@ -76,7 +76,7 @@ Both paths use the same atomic audio claim. A scheduled recovery entry covers mi
 | Audio voice/provider | Configures narration | Replicate Chatterbox; voice v2 is selected and privately uploaded, v1 is retained as an alternate, and the signed-URL operation remains pending |
 | Audio deadline / bump coverage | Sets audio due time | Same order deadline: 24h standard / 12h with bump |
 | Main generation model and review policy | Determines prompts, cost and response to failed QA | Compare permitted local/sample outputs; no unapproved failure-send policy |
-| Name edge cases | Ensures reproducible personal card for supported names | Master 33 and non-ASCII handling unresolved; local harness fails explicitly |
+| Name edge cases | Ensures reproducible personal card for supported names | Master 33 reduces to 6 (D7, 2026-09-13; canon approved 2026-09-15); non-ASCII names fail closed to support. Earlier: unresolved; local harness fails explicitly |
 | Target n8n instance and environment | Determines where credentials/workflow are eventually installed | Local-first; eventual instance unconfirmed |
 | Audio price | Required for final purchase/receipt integration | $17 is a test value only, not approved |
 

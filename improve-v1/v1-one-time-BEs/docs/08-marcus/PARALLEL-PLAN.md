@@ -55,11 +55,22 @@ files, so they can run as parallel subagents, and names the decisions that gate 
 **Decided 2026-09-13 by Joel:** (AWeber setup and the send helper are **for dev**; Joel reviews the four emails first)
 - **D2 — one click.** Audio is charged off the saved card via `/upsell/charge`; no second checkout.
 - **D4 — AWeber, on a NEW list for 08 buyers.** The four post-purchase emails are AWeber campaigns triggered by tags on that list, personalised through subscriber custom fields (the 02 pattern: `reading_url` etc.). ⚠ Known limit carried forward: a repeat buyer already on the list may not get a second campaign send — the send helper must re-tag or use a per-order custom field change that AWeber treats as a trigger, and this must be tested before launch.
+- **D4 amended 2026-09-15 by Joel: Resend is now the backup provider behind AWeber.** Order: AWeber primary (unchanged) → on a failed AWeber write/trigger, the same email sends through Resend's transactional API and the attempt is recorded in `be_send_attempts` with `provider: 'resend'`. D4 first recommended Resend, then Joel chose AWeber on 2026-09-13 — the decision now uses both, in that order. Needs `RESEND_API_KEY` and a verified sending domain (theseerwithin.com); dev task.
 - **D6 — signed PDF link lasts 60 days** (not one year). Resend re-signs.
 - **D7 — no numerology rules to resolve master 33: reduce 33 → 6.** Non-ASCII names still fail closed to support.
 - **D3 — delivery shape decided 2026-09-13 (Joel): the audio is a downloadable file**, not a listening page; delivered when ready in its own email (the four emails stay). Copy, HTML and TXT of the two audio emails reworded ("a recording you download and keep"; link "Download your recording"); cold read 05 on the changed lines ✅ passed (`post-purchase-emails/COLD-READ-05.md`); one sentence added to the delivery email so she knows the tap saves to her phone and plays like a song or voice message. **Price decided 2026-09-13 (Joel): $17.** `AUDIO_TEST_CENTS = 1700` becomes the real audio product price in the catalog (T8). Consequence for the local app: the upsell sleeve and the thank-you audio row say "listening page" — reword to "recording" (dev, with the T8 route).
 - **Subject lines — keep as written** (`Your reading is confirmed — {{QUESTION}}`). Joel 2026-09-13.
 - **Multi-offer requirement (Joel 2026-09-13):** Marcus runs many readings — blind spots today, soulmate in two days. Everything built must be per-edition, not per-topic: the booking URL carries the edition id, the four emails render from per-order fields, and buyers sit on **one AWeber list** with offer + edition + topic tags. Design in `post-purchase-emails/AWEBER-DELIVERY.md`; the repeat-buyer re-trigger test is a launch gate.
+
+**Decided 2026-09-15 by Joel:**
+1. **Numerology canon prose approved for production use** (all 33 entries) — see `n8n/numerology-canon/README.md`.
+2. **Generated reading approved.** Joel read a finished Stage 1 PDF and called it good.
+3. **Voice rights secured.** The Marcus voice (v2) may be used for customer audio; the earlier "test-only / real YouTube speaker without consent" caveat is closed — see `n8n/assets/marcus-voice/README.md`.
+4. **Delivery-failure backup = Resend**, behind AWeber as primary (detail above, this amends D4).
+5. **Birth data retained permanently** (full birth name, date of birth). Privacy copy must say so plainly.
+6. **Reword three locked lines** (bridge "your saved cards"; bridge "one optional way to receive the same reading"; the failed-payment screen must say whether money was taken) — **in progress** with a writer + cold read, not done.
+
+Still open under operations: refund policy for the reading and for the audio; missed-deadline remedy; whether a failed quality grade pauses for a human or sends anyway.
 
 Wave 1 launched 2026-09-13 (T1–T4). **Status, same day:**
 
@@ -105,7 +116,7 @@ T1–T4 have zero file overlap. T5 waits for T3 (same schema), so it is the firs
 
 | Track | Blocked on |
 |---|---|
-| **T12 Audio branch** (audit §13) | ✅ voice sample approved by Joel 2026-09-13 (Chatterbox **Turbo**, voice v2 10-s reference; `n8n/AUDIO-TEST-EVIDENCE.md`); Replicate credential in n8n; config `n8n/config/marcus-audio-v1.json`. ⚠ Rights: the voice is a real YouTube speaker without consent — test-only until a released or licensed voice replaces it (see `n8n/assets/marcus-voice/README.md`). Two Marcus workflows on n8n cloud, **both kept** (Joel 2026-09-13): `Lksy14rvjB5Z7aYg` = the Stage 1 **test** lane (manual inputs, writing + grading + PDF); `UJamB32MGlNKdoEW` = the 48-node draft is **the real production workflow**. Both inactive. T11 wires the real one; the test lane stays for report iteration. Audio price $17 ✅. |
+| **T12 Audio branch** (audit §13) | ✅ voice sample approved by Joel 2026-09-13 (Chatterbox **Turbo**, voice v2 10-s reference; `n8n/AUDIO-TEST-EVIDENCE.md`); Replicate credential in n8n; config `n8n/config/marcus-audio-v1.json`. ✅ Rights secured 2026-09-15 (Joel), approved for customer audio. (Earlier caveat: the voice is a real YouTube speaker without consent — test-only until a released or licensed voice replaces it (see `n8n/assets/marcus-voice/README.md`). Two Marcus workflows on n8n cloud, **both kept** (Joel 2026-09-13): `Lksy14rvjB5Z7aYg` = the Stage 1 **test** lane (manual inputs, writing + grading + PDF); `UJamB32MGlNKdoEW` = the 48-node draft is **the real production workflow**. Both inactive. T11 wires the real one; the test lane stays for report iteration. Audio price $17 ✅. |
 | **T13 AWeber ESL send test** (audit §2) | T6 live booking URL bound to the edition id |
 | **T14 Full test-mode matrix + launch evidence** (audit §14, §16) | everything above |
 
