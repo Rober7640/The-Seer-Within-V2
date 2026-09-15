@@ -1,0 +1,302 @@
+{
+  "verifiedAt": "2026-09-15T01:40:05.020Z",
+  "results": [
+    {
+      "email": "01",
+      "width": 390,
+      "status": "PASS",
+      "horizontalOverflow": false,
+      "contentCtas": 1,
+      "bannerLoaded": true,
+      "authoringMarkerRemoved": true,
+      "footerPresent": true
+    },
+    {
+      "email": "02",
+      "width": 390,
+      "status": "PASS",
+      "horizontalOverflow": false,
+      "contentCtas": 1,
+      "bannerLoaded": true,
+      "authoringMarkerRemoved": true,
+      "footerPresent": true
+    },
+    {
+      "email": "03",
+      "width": 390,
+      "status": "PASS",
+      "horizontalOverflow": false,
+      "contentCtas": 1,
+      "bannerLoaded": true,
+      "authoringMarkerRemoved": true,
+      "footerPresent": true
+    },
+    {
+      "email": "04",
+      "width": 390,
+      "status": "PASS",
+      "horizontalOverflow": false,
+      "contentCtas": 1,
+      "bannerLoaded": true,
+      "authoringMarkerRemoved": true,
+      "footerPresent": true
+    },
+    {
+      "email": "05",
+      "width": 390,
+      "status": "PASS",
+      "horizontalOverflow": false,
+      "contentCtas": 1,
+      "bannerLoaded": true,
+      "authoringMarkerRemoved": true,
+      "footerPresent": true
+    },
+    {
+      "email": "06",
+      "width": 390,
+      "status": "PASS",
+      "horizontalOverflow": false,
+      "contentCtas": 1,
+      "bannerLoaded": true,
+      "authoringMarkerRemoved": true,
+      "footerPresent": true
+    },
+    {
+      "email": "07",
+      "width": 390,
+      "status": "PASS",
+      "horizontalOverflow": false,
+      "contentCtas": 1,
+      "bannerLoaded": true,
+      "authoringMarkerRemoved": true,
+      "footerPresent": true
+    },
+    {
+      "email": "08",
+      "width": 390,
+      "status": "PASS",
+      "horizontalOverflow": false,
+      "contentCtas": 1,
+      "bannerLoaded": true,
+      "authoringMarkerRemoved": true,
+      "footerPresent": true
+    },
+    {
+      "email": "09",
+      "width": 390,
+      "status": "PASS",
+      "horizontalOverflow": false,
+      "contentCtas": 1,
+      "bannerLoaded": true,
+      "authoringMarkerRemoved": true,
+      "footerPresent": true
+    },
+    {
+      "email": "10",
+      "width": 390,
+      "status": "PASS",
+      "horizontalOverflow": false,
+      "contentCtas": 1,
+      "bannerLoaded": true,
+      "authoringMarkerRemoved": true,
+      "footerPresent": true
+    },
+    {
+      "email": "11",
+      "width": 390,
+      "status": "PASS",
+      "horizontalOverflow": false,
+      "contentCtas": 1,
+      "bannerLoaded": true,
+      "authoringMarkerRemoved": true,
+      "footerPresent": true
+    },
+    {
+      "email": "12",
+      "width": 390,
+      "status": "PASS",
+      "horizontalOverflow": false,
+      "contentCtas": 1,
+      "bannerLoaded": true,
+      "authoringMarkerRemoved": true,
+      "footerPresent": true
+    },
+    {
+      "email": "13",
+      "width": 390,
+      "status": "PASS",
+      "horizontalOverflow": false,
+      "contentCtas": 1,
+      "bannerLoaded": true,
+      "authoringMarkerRemoved": true,
+      "footerPresent": true
+    },
+    {
+      "email": "14",
+      "width": 390,
+      "status": "PASS",
+      "horizontalOverflow": false,
+      "contentCtas": 1,
+      "bannerLoaded": true,
+      "authoringMarkerRemoved": true,
+      "footerPresent": true
+    },
+    {
+      "email": "01",
+      "width": 1280,
+      "status": "PASS",
+      "horizontalOverflow": false,
+      "contentCtas": 1,
+      "bannerLoaded": true,
+      "authoringMarkerRemoved": true,
+      "footerPresent": true
+    },
+    {
+      "email": "02",
+      "width": 1280,
+      "status": "PASS",
+      "horizontalOverflow": false,
+      "contentCtas": 1,
+      "bannerLoaded": true,
+      "authoringMarkerRemoved": true,
+      "footerPresent": true
+    },
+    {
+      "email": "03",
+      "width": 1280,
+      "status": "PASS",
+      "horizontalOverflow": false,
+      "contentCtas": 1,
+      "bannerLoaded": true,
+      "authoringMarkerRemoved": true,
+      "footerPresent": true
+    },
+    {
+      "email": "04",
+      "width": 1280,
+      "status": "PASS",
+      "horizontalOverflow": false,
+      "contentCtas": 1,
+      "bannerLoaded": true,
+      "authoringMarkerRemoved": true,
+      "footerPresent": true
+    },
+    {
+      "email": "05",
+      "width": 1280,
+      "status": "PASS",
+      "horizontalOverflow": false,
+      "contentCtas": 1,
+      "bannerLoaded": true,
+      "authoringMarkerRemoved": true,
+      "footerPresent": true
+    },
+    {
+      "email": "06",
+      "width": 1280,
+      "status": "PASS",
+      "horizontalOverflow": false,
+      "contentCtas": 1,
+      "bannerLoaded": true,
+      "authoringMarkerRemoved": true,
+      "footerPresent": true
+    },
+    {
+      "email": "07",
+      "width": 1280,
+      "status": "PASS",
+      "horizontalOverflow": false,
+      "contentCtas": 1,
+      "bannerLoaded": true,
+      "authoringMarkerRemoved": true,
+      "footerPresent": true
+    },
+    {
+      "email": "08",
+      "width": 1280,
+      "status": "PASS",
+      "horizontalOverflow": false,
+      "contentCtas": 1,
+      "bannerLoaded": true,
+      "authoringMarkerRemoved": true,
+      "footerPresent": true
+    },
+    {
+      "email": "09",
+      "width": 1280,
+      "status": "PASS",
+      "horizontalOverflow": false,
+      "contentCtas": 1,
+      "bannerLoaded": true,
+      "authoringMarkerRemoved": true,
+      "footerPresent": true
+    },
+    {
+      "email": "10",
+      "width": 1280,
+      "status": "PASS",
+      "horizontalOverflow": false,
+      "contentCtas": 1,
+      "bannerLoaded": true,
+      "authoringMarkerRemoved": true,
+      "footerPresent": true
+    },
+    {
+      "email": "11",
+      "width": 1280,
+      "status": "PASS",
+      "horizontalOverflow": false,
+      "contentCtas": 1,
+      "bannerLoaded": true,
+      "authoringMarkerRemoved": true,
+      "footerPresent": true
+    },
+    {
+      "email": "12",
+      "width": 1280,
+      "status": "PASS",
+      "horizontalOverflow": false,
+      "contentCtas": 1,
+      "bannerLoaded": true,
+      "authoringMarkerRemoved": true,
+      "footerPresent": true
+    },
+    {
+      "email": "13",
+      "width": 1280,
+      "status": "PASS",
+      "horizontalOverflow": false,
+      "contentCtas": 1,
+      "bannerLoaded": true,
+      "authoringMarkerRemoved": true,
+      "footerPresent": true
+    },
+    {
+      "email": "14",
+      "width": 1280,
+      "status": "PASS",
+      "horizontalOverflow": false,
+      "contentCtas": 1,
+      "bannerLoaded": true,
+      "authoringMarkerRemoved": true,
+      "footerPresent": true
+    }
+  ],
+  "reviewPage": {
+    "status": "PASS",
+    "desktopWidth": 1500,
+    "mobileWidth": 390,
+    "selection": true,
+    "phoneToggle": true,
+    "bothCardImagesLoaded": true,
+    "horizontalOverflow": false
+  },
+  "manualInspection": {
+    "screenshots": [
+      "01-390.png",
+      "11-390.png",
+      "review-desktop.png"
+    ],
+    "result": "Readable paragraphs, reframe emphasis, CTA and footer; consistent canonical shell."
+  }
+}

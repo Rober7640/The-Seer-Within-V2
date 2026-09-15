@@ -1,0 +1,1064 @@
+{
+  "approved": true,
+  "verifiedAt": "2026-09-15T02:02:42.571Z",
+  "status": "scheduled",
+  "firstSend": "2026-09-16T10:30:00+00:00",
+  "lastSend": "2026-09-29T10:30:00+00:00",
+  "timezone": "Asia/Kuala_Lumpur",
+  "localSendTime": "18:30",
+  "emailCount": 14,
+  "listCount": 13,
+  "broadcastCount": 182,
+  "emails": [
+    {
+      "num": "01",
+      "campaign": "reframe-c6-01-first-step",
+      "subject": "{{ subscriber.first_name | capitalize }}, she took six dance classes without dancing.",
+      "scheduledFor": "2026-09-16T10:30:00+00:00",
+      "code": "qXGOP14",
+      "url": "https://www.theseerwithin.com/e/qXGOP14",
+      "broadcasts": [
+        {
+          "listId": "6936953",
+          "broadcastId": "61398173",
+          "status": "scheduled"
+        },
+        {
+          "listId": "6963143",
+          "broadcastId": "61398174",
+          "status": "scheduled"
+        },
+        {
+          "listId": "6970613",
+          "broadcastId": "61398175",
+          "status": "scheduled"
+        },
+        {
+          "listId": "6963139",
+          "broadcastId": "61398176",
+          "status": "scheduled"
+        },
+        {
+          "listId": "6963141",
+          "broadcastId": "61398177",
+          "status": "scheduled"
+        },
+        {
+          "listId": "6936955",
+          "broadcastId": "61398178",
+          "status": "scheduled"
+        },
+        {
+          "listId": "6969209",
+          "broadcastId": "61398179",
+          "status": "scheduled"
+        },
+        {
+          "listId": "6937139",
+          "broadcastId": "61398180",
+          "status": "scheduled"
+        },
+        {
+          "listId": "6939683",
+          "broadcastId": "61398181",
+          "status": "scheduled"
+        },
+        {
+          "listId": "6956485",
+          "broadcastId": "61398182",
+          "status": "scheduled"
+        },
+        {
+          "listId": "6956486",
+          "broadcastId": "61398183",
+          "status": "scheduled"
+        },
+        {
+          "listId": "6956488",
+          "broadcastId": "61398184",
+          "status": "scheduled"
+        },
+        {
+          "listId": "6956490",
+          "broadcastId": "61398185",
+          "status": "scheduled"
+        }
+      ]
+    },
+    {
+      "num": "02",
+      "campaign": "reframe-c6-02-another-apology",
+      "subject": "{{ subscriber.first_name | capitalize }}, his apology had a question tucked inside.",
+      "scheduledFor": "2026-09-17T10:30:00+00:00",
+      "code": "Xnp_sEU",
+      "url": "https://www.theseerwithin.com/e/Xnp_sEU",
+      "broadcasts": [
+        {
+          "listId": "6936953",
+          "broadcastId": "61398188",
+          "status": "scheduled"
+        },
+        {
+          "listId": "6963143",
+          "broadcastId": "61398190",
+          "status": "scheduled"
+        },
+        {
+          "listId": "6970613",
+          "broadcastId": "61398191",
+          "status": "scheduled"
+        },
+        {
+          "listId": "6963139",
+          "broadcastId": "61398192",
+          "status": "scheduled"
+        },
+        {
+          "listId": "6963141",
+          "broadcastId": "61398193",
+          "status": "scheduled"
+        },
+        {
+          "listId": "6936955",
+          "broadcastId": "61398194",
+          "status": "scheduled"
+        },
+        {
+          "listId": "6969209",
+          "broadcastId": "61398195",
+          "status": "scheduled"
+        },
+        {
+          "listId": "6937139",
+          "broadcastId": "61398196",
+          "status": "scheduled"
+        },
+        {
+          "listId": "6939683",
+          "broadcastId": "61398197",
+          "status": "scheduled"
+        },
+        {
+          "listId": "6956485",
+          "broadcastId": "61398198",
+          "status": "scheduled"
+        },
+        {
+          "listId": "6956486",
+          "broadcastId": "61398199",
+          "status": "scheduled"
+        },
+        {
+          "listId": "6956488",
+          "broadcastId": "61398200",
+          "status": "scheduled"
+        },
+        {
+          "listId": "6956490",
+          "broadcastId": "61398201",
+          "status": "scheduled"
+        }
+      ]
+    },
+    {
+      "num": "03",
+      "campaign": "reframe-c6-03-ring-mark",
+      "subject": "{{ subscriber.first_name | capitalize }}, the ring is off. The question stays.",
+      "scheduledFor": "2026-09-18T10:30:00+00:00",
+      "code": "zzPvxWo",
+      "url": "https://www.theseerwithin.com/e/zzPvxWo",
+      "broadcasts": [
+        {
+          "listId": "6936953",
+          "broadcastId": "61398202",
+          "status": "scheduled"
+        },
+        {
+          "listId": "6963143",
+          "broadcastId": "61398203",
+          "status": "scheduled"
+        },
+        {
+          "listId": "6970613",
+          "broadcastId": "61398204",
+          "status": "scheduled"
+        },
+        {
+          "listId": "6963139",
+          "broadcastId": "61398205",
+          "status": "scheduled"
+        },
+        {
+          "listId": "6963141",
+          "broadcastId": "61398206",
+          "status": "scheduled"
+        },
+        {
+          "listId": "6936955",
+          "broadcastId": "61398207",
+          "status": "scheduled"
+        },
+        {
+          "listId": "6969209",
+          "broadcastId": "61398208",
+          "status": "scheduled"
+        },
+        {
+          "listId": "6937139",
+          "broadcastId": "61398210",
+          "status": "scheduled"
+        },
+        {
+          "listId": "6939683",
+          "broadcastId": "61398211",
+          "status": "scheduled"
+        },
+        {
+          "listId": "6956485",
+          "broadcastId": "61398212",
+          "status": "scheduled"
+        },
+        {
+          "listId": "6956486",
+          "broadcastId": "61398213",
+          "status": "scheduled"
+        },
+        {
+          "listId": "6956488",
+          "broadcastId": "61398214",
+          "status": "scheduled"
+        },
+        {
+          "listId": "6956490",
+          "broadcastId": "61398215",
+          "status": "scheduled"
+        }
+      ]
+    },
+    {
+      "num": "04",
+      "campaign": "reframe-c6-04-last-conversation",
+      "subject": "{{ subscriber.first_name | capitalize }}, what if the last conversation never happens?",
+      "scheduledFor": "2026-09-19T10:30:00+00:00",
+      "code": "Qi_9fJs",
+      "url": "https://www.theseerwithin.com/e/Qi_9fJs",
+      "broadcasts": [
+        {
+          "listId": "6936953",
+          "broadcastId": "61398216",
+          "status": "scheduled"
+        },
+        {
+          "listId": "6963143",
+          "broadcastId": "61398217",
+          "status": "scheduled"
+        },
+        {
+          "listId": "6970613",
+          "broadcastId": "61398218",
+          "status": "scheduled"
+        },
+        {
+          "listId": "6963139",
+          "broadcastId": "61398219",
+          "status": "scheduled"
+        },
+        {
+          "listId": "6963141",
+          "broadcastId": "61398220",
+          "status": "scheduled"
+        },
+        {
+          "listId": "6936955",
+          "broadcastId": "61398221",
+          "status": "scheduled"
+        },
+        {
+          "listId": "6969209",
+          "broadcastId": "61398222",
+          "status": "scheduled"
+        },
+        {
+          "listId": "6937139",
+          "broadcastId": "61398223",
+          "status": "scheduled"
+        },
+        {
+          "listId": "6939683",
+          "broadcastId": "61398224",
+          "status": "scheduled"
+        },
+        {
+          "listId": "6956485",
+          "broadcastId": "61398225",
+          "status": "scheduled"
+        },
+        {
+          "listId": "6956486",
+          "broadcastId": "61398226",
+          "status": "scheduled"
+        },
+        {
+          "listId": "6956488",
+          "broadcastId": "61398227",
+          "status": "scheduled"
+        },
+        {
+          "listId": "6956490",
+          "broadcastId": "61398228",
+          "status": "scheduled"
+        }
+      ]
+    },
+    {
+      "num": "05",
+      "campaign": "reframe-c6-05-being-realistic",
+      "subject": "{{ subscriber.first_name | capitalize }}, you closed the page before checking this.",
+      "scheduledFor": "2026-09-20T10:30:00+00:00",
+      "code": "J8CtIGk",
+      "url": "https://www.theseerwithin.com/e/J8CtIGk",
+      "broadcasts": [
+        {
+          "listId": "6936953",
+          "broadcastId": "61398229",
+          "status": "scheduled"
+        },
+        {
+          "listId": "6963143",
+          "broadcastId": "61398230",
+          "status": "scheduled"
+        },
+        {
+          "listId": "6970613",
+          "broadcastId": "61398231",
+          "status": "scheduled"
+        },
+        {
+          "listId": "6963139",
+          "broadcastId": "61398232",
+          "status": "scheduled"
+        },
+        {
+          "listId": "6963141",
+          "broadcastId": "61398233",
+          "status": "scheduled"
+        },
+        {
+          "listId": "6936955",
+          "broadcastId": "61398234",
+          "status": "scheduled"
+        },
+        {
+          "listId": "6969209",
+          "broadcastId": "61398235",
+          "status": "scheduled"
+        },
+        {
+          "listId": "6937139",
+          "broadcastId": "61398236",
+          "status": "scheduled"
+        },
+        {
+          "listId": "6939683",
+          "broadcastId": "61398237",
+          "status": "scheduled"
+        },
+        {
+          "listId": "6956485",
+          "broadcastId": "61398238",
+          "status": "scheduled"
+        },
+        {
+          "listId": "6956486",
+          "broadcastId": "61398239",
+          "status": "scheduled"
+        },
+        {
+          "listId": "6956488",
+          "broadcastId": "61398240",
+          "status": "scheduled"
+        },
+        {
+          "listId": "6956490",
+          "broadcastId": "61398241",
+          "status": "scheduled"
+        }
+      ]
+    },
+    {
+      "num": "06",
+      "campaign": "reframe-c6-06-two-of-cups",
+      "subject": "{{ subscriber.first_name | capitalize }}, look at the space between these two cups.",
+      "scheduledFor": "2026-09-21T10:30:00+00:00",
+      "code": "07hcu9Y",
+      "url": "https://www.theseerwithin.com/e/07hcu9Y",
+      "broadcasts": [
+        {
+          "listId": "6936953",
+          "broadcastId": "61398242",
+          "status": "scheduled"
+        },
+        {
+          "listId": "6963143",
+          "broadcastId": "61398243",
+          "status": "scheduled"
+        },
+        {
+          "listId": "6970613",
+          "broadcastId": "61398244",
+          "status": "scheduled"
+        },
+        {
+          "listId": "6963139",
+          "broadcastId": "61398245",
+          "status": "scheduled"
+        },
+        {
+          "listId": "6963141",
+          "broadcastId": "61398247",
+          "status": "scheduled"
+        },
+        {
+          "listId": "6936955",
+          "broadcastId": "61398248",
+          "status": "scheduled"
+        },
+        {
+          "listId": "6969209",
+          "broadcastId": "61398249",
+          "status": "scheduled"
+        },
+        {
+          "listId": "6937139",
+          "broadcastId": "61398250",
+          "status": "scheduled"
+        },
+        {
+          "listId": "6939683",
+          "broadcastId": "61398251",
+          "status": "scheduled"
+        },
+        {
+          "listId": "6956485",
+          "broadcastId": "61398252",
+          "status": "scheduled"
+        },
+        {
+          "listId": "6956486",
+          "broadcastId": "61398253",
+          "status": "scheduled"
+        },
+        {
+          "listId": "6956488",
+          "broadcastId": "61398254",
+          "status": "scheduled"
+        },
+        {
+          "listId": "6956490",
+          "broadcastId": "61398255",
+          "status": "scheduled"
+        }
+      ]
+    },
+    {
+      "num": "07",
+      "campaign": "reframe-c6-07-had-to-ask",
+      "subject": "{{ subscriber.first_name | capitalize }}, \"but I had to ask\" came up twice.",
+      "scheduledFor": "2026-09-22T10:30:00+00:00",
+      "code": "lPeHlEo",
+      "url": "https://www.theseerwithin.com/e/lPeHlEo",
+      "broadcasts": [
+        {
+          "listId": "6936953",
+          "broadcastId": "61398256",
+          "status": "scheduled"
+        },
+        {
+          "listId": "6963143",
+          "broadcastId": "61398257",
+          "status": "scheduled"
+        },
+        {
+          "listId": "6970613",
+          "broadcastId": "61398258",
+          "status": "scheduled"
+        },
+        {
+          "listId": "6963139",
+          "broadcastId": "61398259",
+          "status": "scheduled"
+        },
+        {
+          "listId": "6963141",
+          "broadcastId": "61398260",
+          "status": "scheduled"
+        },
+        {
+          "listId": "6936955",
+          "broadcastId": "61398261",
+          "status": "scheduled"
+        },
+        {
+          "listId": "6969209",
+          "broadcastId": "61398262",
+          "status": "scheduled"
+        },
+        {
+          "listId": "6937139",
+          "broadcastId": "61398264",
+          "status": "scheduled"
+        },
+        {
+          "listId": "6939683",
+          "broadcastId": "61398265",
+          "status": "scheduled"
+        },
+        {
+          "listId": "6956485",
+          "broadcastId": "61398266",
+          "status": "scheduled"
+        },
+        {
+          "listId": "6956486",
+          "broadcastId": "61398267",
+          "status": "scheduled"
+        },
+        {
+          "listId": "6956488",
+          "broadcastId": "61398268",
+          "status": "scheduled"
+        },
+        {
+          "listId": "6956490",
+          "broadcastId": "61398270",
+          "status": "scheduled"
+        }
+      ]
+    },
+    {
+      "num": "08",
+      "campaign": "reframe-c6-08-first-four-bars",
+      "subject": "{{ subscriber.first_name | capitalize }}, he played the beginning for twenty minutes.",
+      "scheduledFor": "2026-09-23T10:30:00+00:00",
+      "code": "-z0R6Qw",
+      "url": "https://www.theseerwithin.com/e/-z0R6Qw",
+      "broadcasts": [
+        {
+          "listId": "6936953",
+          "broadcastId": "61398271",
+          "status": "scheduled"
+        },
+        {
+          "listId": "6963143",
+          "broadcastId": "61398272",
+          "status": "scheduled"
+        },
+        {
+          "listId": "6970613",
+          "broadcastId": "61398274",
+          "status": "scheduled"
+        },
+        {
+          "listId": "6963139",
+          "broadcastId": "61398275",
+          "status": "scheduled"
+        },
+        {
+          "listId": "6963141",
+          "broadcastId": "61398276",
+          "status": "scheduled"
+        },
+        {
+          "listId": "6936955",
+          "broadcastId": "61398277",
+          "status": "scheduled"
+        },
+        {
+          "listId": "6969209",
+          "broadcastId": "61398278",
+          "status": "scheduled"
+        },
+        {
+          "listId": "6937139",
+          "broadcastId": "61398279",
+          "status": "scheduled"
+        },
+        {
+          "listId": "6939683",
+          "broadcastId": "61398280",
+          "status": "scheduled"
+        },
+        {
+          "listId": "6956485",
+          "broadcastId": "61398281",
+          "status": "scheduled"
+        },
+        {
+          "listId": "6956486",
+          "broadcastId": "61398282",
+          "status": "scheduled"
+        },
+        {
+          "listId": "6956488",
+          "broadcastId": "61398283",
+          "status": "scheduled"
+        },
+        {
+          "listId": "6956490",
+          "broadcastId": "61398284",
+          "status": "scheduled"
+        }
+      ]
+    },
+    {
+      "num": "09",
+      "campaign": "reframe-c6-09-unexpected-laugh",
+      "subject": "{{ subscriber.first_name | capitalize }}, the laugh came before you could stop it.",
+      "scheduledFor": "2026-09-24T10:30:00+00:00",
+      "code": "sS66mnY",
+      "url": "https://www.theseerwithin.com/e/sS66mnY",
+      "broadcasts": [
+        {
+          "listId": "6936953",
+          "broadcastId": "61398285",
+          "status": "scheduled"
+        },
+        {
+          "listId": "6963143",
+          "broadcastId": "61398286",
+          "status": "scheduled"
+        },
+        {
+          "listId": "6970613",
+          "broadcastId": "61398287",
+          "status": "scheduled"
+        },
+        {
+          "listId": "6963139",
+          "broadcastId": "61398288",
+          "status": "scheduled"
+        },
+        {
+          "listId": "6963141",
+          "broadcastId": "61398290",
+          "status": "scheduled"
+        },
+        {
+          "listId": "6936955",
+          "broadcastId": "61398291",
+          "status": "scheduled"
+        },
+        {
+          "listId": "6969209",
+          "broadcastId": "61398292",
+          "status": "scheduled"
+        },
+        {
+          "listId": "6937139",
+          "broadcastId": "61398293",
+          "status": "scheduled"
+        },
+        {
+          "listId": "6939683",
+          "broadcastId": "61398294",
+          "status": "scheduled"
+        },
+        {
+          "listId": "6956485",
+          "broadcastId": "61398295",
+          "status": "scheduled"
+        },
+        {
+          "listId": "6956486",
+          "broadcastId": "61398296",
+          "status": "scheduled"
+        },
+        {
+          "listId": "6956488",
+          "broadcastId": "61398297",
+          "status": "scheduled"
+        },
+        {
+          "listId": "6956490",
+          "broadcastId": "61398298",
+          "status": "scheduled"
+        }
+      ]
+    },
+    {
+      "num": "10",
+      "campaign": "reframe-c6-10-nothing-in-common",
+      "subject": "{{ subscriber.first_name | capitalize }}, she liked him. Their lists didn't match.",
+      "scheduledFor": "2026-09-25T10:30:00+00:00",
+      "code": "kfnpVD0",
+      "url": "https://www.theseerwithin.com/e/kfnpVD0",
+      "broadcasts": [
+        {
+          "listId": "6936953",
+          "broadcastId": "61398299",
+          "status": "scheduled"
+        },
+        {
+          "listId": "6963143",
+          "broadcastId": "61398300",
+          "status": "scheduled"
+        },
+        {
+          "listId": "6970613",
+          "broadcastId": "61398301",
+          "status": "scheduled"
+        },
+        {
+          "listId": "6963139",
+          "broadcastId": "61398302",
+          "status": "scheduled"
+        },
+        {
+          "listId": "6963141",
+          "broadcastId": "61398303",
+          "status": "scheduled"
+        },
+        {
+          "listId": "6936955",
+          "broadcastId": "61398304",
+          "status": "scheduled"
+        },
+        {
+          "listId": "6969209",
+          "broadcastId": "61398305",
+          "status": "scheduled"
+        },
+        {
+          "listId": "6937139",
+          "broadcastId": "61398306",
+          "status": "scheduled"
+        },
+        {
+          "listId": "6939683",
+          "broadcastId": "61398307",
+          "status": "scheduled"
+        },
+        {
+          "listId": "6956485",
+          "broadcastId": "61398308",
+          "status": "scheduled"
+        },
+        {
+          "listId": "6956486",
+          "broadcastId": "61398309",
+          "status": "scheduled"
+        },
+        {
+          "listId": "6956488",
+          "broadcastId": "61398310",
+          "status": "scheduled"
+        },
+        {
+          "listId": "6956490",
+          "broadcastId": "61398311",
+          "status": "scheduled"
+        }
+      ]
+    },
+    {
+      "num": "11",
+      "campaign": "reframe-c6-11-eight-of-pentacles",
+      "subject": "{{ subscriber.first_name | capitalize }}, this card has a question for the one doing the work.",
+      "scheduledFor": "2026-09-26T10:30:00+00:00",
+      "code": "G3Vy4CY",
+      "url": "https://www.theseerwithin.com/e/G3Vy4CY",
+      "broadcasts": [
+        {
+          "listId": "6936953",
+          "broadcastId": "61398312",
+          "status": "scheduled"
+        },
+        {
+          "listId": "6963143",
+          "broadcastId": "61398313",
+          "status": "scheduled"
+        },
+        {
+          "listId": "6970613",
+          "broadcastId": "61398314",
+          "status": "scheduled"
+        },
+        {
+          "listId": "6963139",
+          "broadcastId": "61398315",
+          "status": "scheduled"
+        },
+        {
+          "listId": "6963141",
+          "broadcastId": "61398316",
+          "status": "scheduled"
+        },
+        {
+          "listId": "6936955",
+          "broadcastId": "61398317",
+          "status": "scheduled"
+        },
+        {
+          "listId": "6969209",
+          "broadcastId": "61398318",
+          "status": "scheduled"
+        },
+        {
+          "listId": "6937139",
+          "broadcastId": "61398319",
+          "status": "scheduled"
+        },
+        {
+          "listId": "6939683",
+          "broadcastId": "61398320",
+          "status": "scheduled"
+        },
+        {
+          "listId": "6956485",
+          "broadcastId": "61398321",
+          "status": "scheduled"
+        },
+        {
+          "listId": "6956486",
+          "broadcastId": "61398322",
+          "status": "scheduled"
+        },
+        {
+          "listId": "6956488",
+          "broadcastId": "61398323",
+          "status": "scheduled"
+        },
+        {
+          "listId": "6956490",
+          "broadcastId": "61398324",
+          "status": "scheduled"
+        }
+      ]
+    },
+    {
+      "num": "12",
+      "campaign": "reframe-c6-12-bedtime-rule",
+      "subject": "{{ subscriber.first_name | capitalize }}, does \"fine\" mean it's settled, or just bedtime?",
+      "scheduledFor": "2026-09-27T10:30:00+00:00",
+      "code": "8dzJwYg",
+      "url": "https://www.theseerwithin.com/e/8dzJwYg",
+      "broadcasts": [
+        {
+          "listId": "6936953",
+          "broadcastId": "61398325",
+          "status": "scheduled"
+        },
+        {
+          "listId": "6963143",
+          "broadcastId": "61398326",
+          "status": "scheduled"
+        },
+        {
+          "listId": "6970613",
+          "broadcastId": "61398327",
+          "status": "scheduled"
+        },
+        {
+          "listId": "6963139",
+          "broadcastId": "61398328",
+          "status": "scheduled"
+        },
+        {
+          "listId": "6963141",
+          "broadcastId": "61398329",
+          "status": "scheduled"
+        },
+        {
+          "listId": "6936955",
+          "broadcastId": "61398330",
+          "status": "scheduled"
+        },
+        {
+          "listId": "6969209",
+          "broadcastId": "61398331",
+          "status": "scheduled"
+        },
+        {
+          "listId": "6937139",
+          "broadcastId": "61398332",
+          "status": "scheduled"
+        },
+        {
+          "listId": "6939683",
+          "broadcastId": "61398333",
+          "status": "scheduled"
+        },
+        {
+          "listId": "6956485",
+          "broadcastId": "61398334",
+          "status": "scheduled"
+        },
+        {
+          "listId": "6956486",
+          "broadcastId": "61398335",
+          "status": "scheduled"
+        },
+        {
+          "listId": "6956488",
+          "broadcastId": "61398336",
+          "status": "scheduled"
+        },
+        {
+          "listId": "6956490",
+          "broadcastId": "61398337",
+          "status": "scheduled"
+        }
+      ]
+    },
+    {
+      "num": "13",
+      "campaign": "reframe-c6-13-keeping-busy",
+      "subject": "{{ subscriber.first_name | capitalize }}, a full diary can leave something out.",
+      "scheduledFor": "2026-09-28T10:30:00+00:00",
+      "code": "wvCLWXE",
+      "url": "https://www.theseerwithin.com/e/wvCLWXE",
+      "broadcasts": [
+        {
+          "listId": "6936953",
+          "broadcastId": "61398338",
+          "status": "scheduled"
+        },
+        {
+          "listId": "6963143",
+          "broadcastId": "61398339",
+          "status": "scheduled"
+        },
+        {
+          "listId": "6970613",
+          "broadcastId": "61398340",
+          "status": "scheduled"
+        },
+        {
+          "listId": "6963139",
+          "broadcastId": "61398341",
+          "status": "scheduled"
+        },
+        {
+          "listId": "6963141",
+          "broadcastId": "61398342",
+          "status": "scheduled"
+        },
+        {
+          "listId": "6936955",
+          "broadcastId": "61398343",
+          "status": "scheduled"
+        },
+        {
+          "listId": "6969209",
+          "broadcastId": "61398344",
+          "status": "scheduled"
+        },
+        {
+          "listId": "6937139",
+          "broadcastId": "61398345",
+          "status": "scheduled"
+        },
+        {
+          "listId": "6939683",
+          "broadcastId": "61398346",
+          "status": "scheduled"
+        },
+        {
+          "listId": "6956485",
+          "broadcastId": "61398347",
+          "status": "scheduled"
+        },
+        {
+          "listId": "6956486",
+          "broadcastId": "61398348",
+          "status": "scheduled"
+        },
+        {
+          "listId": "6956488",
+          "broadcastId": "61398349",
+          "status": "scheduled"
+        },
+        {
+          "listId": "6956490",
+          "broadcastId": "61398350",
+          "status": "scheduled"
+        }
+      ]
+    },
+    {
+      "num": "14",
+      "campaign": "reframe-c6-14-expected-no",
+      "subject": "{{ subscriber.first_name | capitalize }}, there was a second sentence in their reply.",
+      "scheduledFor": "2026-09-29T10:30:00+00:00",
+      "code": "4_pB1c8",
+      "url": "https://www.theseerwithin.com/e/4_pB1c8",
+      "broadcasts": [
+        {
+          "listId": "6936953",
+          "broadcastId": "61398351",
+          "status": "scheduled"
+        },
+        {
+          "listId": "6963143",
+          "broadcastId": "61398352",
+          "status": "scheduled"
+        },
+        {
+          "listId": "6970613",
+          "broadcastId": "61398354",
+          "status": "scheduled"
+        },
+        {
+          "listId": "6963139",
+          "broadcastId": "61398355",
+          "status": "scheduled"
+        },
+        {
+          "listId": "6963141",
+          "broadcastId": "61398356",
+          "status": "scheduled"
+        },
+        {
+          "listId": "6936955",
+          "broadcastId": "61398357",
+          "status": "scheduled"
+        },
+        {
+          "listId": "6969209",
+          "broadcastId": "61398358",
+          "status": "scheduled"
+        },
+        {
+          "listId": "6937139",
+          "broadcastId": "61398359",
+          "status": "scheduled"
+        },
+        {
+          "listId": "6939683",
+          "broadcastId": "61398360",
+          "status": "scheduled"
+        },
+        {
+          "listId": "6956485",
+          "broadcastId": "61398361",
+          "status": "scheduled"
+        },
+        {
+          "listId": "6956486",
+          "broadcastId": "61398363",
+          "status": "scheduled"
+        },
+        {
+          "listId": "6956488",
+          "broadcastId": "61398364",
+          "status": "scheduled"
+        },
+        {
+          "listId": "6956490",
+          "broadcastId": "61398365",
+          "status": "scheduled"
+        }
+      ]
+    }
+  ]
+}

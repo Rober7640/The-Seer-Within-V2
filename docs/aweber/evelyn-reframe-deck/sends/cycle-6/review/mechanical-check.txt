@@ -1,0 +1,14 @@
+PASS  01-first-step.md                       dear=2 reframe=1 emdash=0 words=337 subj=85B slug=reframe-c6-01-first-step cta=y ul=n
+PASS  02-another-apology.md                  dear=2 reframe=1 emdash=0 words=344 subj=83B slug=reframe-c6-02-another-apology cta=y ul=n
+PASS  03-ring-mark.md                        dear=2 reframe=1 emdash=0 words=346 subj=78B slug=reframe-c6-03-ring-mark cta=y ul=n
+PASS  04-last-conversation.md                dear=2 reframe=1 emdash=0 words=324 subj=86B slug=reframe-c6-04-last-conversation cta=y ul=n
+PASS  05-being-realistic.md                  dear=2 reframe=1 emdash=0 words=349 subj=83B slug=reframe-c6-05-being-realistic cta=y ul=n
+PASS  06-two-of-cups.md                      dear=2 reframe=1 emdash=0 words=341 subj=83B slug=reframe-c6-06-two-of-cups cta=y ul=n
+PASS  07-had-to-ask.md                       dear=2 reframe=1 emdash=0 words=352 subj=75B slug=reframe-c6-07-had-to-ask cta=y ul=n
+PASS  08-first-four-bars.md                  dear=2 reframe=1 emdash=0 words=350 subj=85B slug=reframe-c6-08-first-four-bars cta=y ul=n
+PASS  09-unexpected-laugh.md                 dear=2 reframe=1 emdash=0 words=353 subj=82B slug=reframe-c6-09-unexpected-laugh cta=y ul=n
+PASS  10-nothing-in-common.md                dear=2 reframe=1 emdash=0 words=368 subj=82B slug=reframe-c6-10-nothing-in-common cta=y ul=n
+PASS  11-eight-of-pentacles.md               dear=2 reframe=1 emdash=0 words=355 subj=94B slug=reframe-c6-11-eight-of-pentacles cta=y ul=n
+PASS  12-bedtime-rule.md                     dear=2 reframe=1 emdash=0 words=355 subj=89B slug=reframe-c6-12-bedtime-rule cta=y ul=n
+PASS  13-keeping-busy.md                     dear=2 reframe=1 emdash=0 words=353 subj=79B slug=reframe-c6-13-keeping-busy cta=y ul=n
+PASS  14-expected-no.md                      dear=2 reframe=1 emdash=0 words=353 subj=85B slug=reframe-c6-14-expected-no cta=y ul=n

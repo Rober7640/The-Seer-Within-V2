@@ -1,0 +1,1827 @@
+{
+  "verifiedAt": "2026-09-15T02:04:52.100Z",
+  "broadcastCount": 182,
+  "status": "PASS",
+  "results": [
+    {
+      "num": "01",
+      "listId": "6936953",
+      "broadcastId": "61398173",
+      "status": "PASS",
+      "subjectExact": true,
+      "htmlSha256": "423381a806e64a610a365cb441d0207453977ea80445dec614c42915205016f5",
+      "textSha256": "4e53bc87e6d4dffb54e80bc267dc89a157d42d2aec517173aa073c6d103ad849",
+      "scheduledFor": "2026-09-16T10:30:00+00:00"
+    },
+    {
+      "num": "01",
+      "listId": "6963143",
+      "broadcastId": "61398174",
+      "status": "PASS",
+      "subjectExact": true,
+      "htmlSha256": "423381a806e64a610a365cb441d0207453977ea80445dec614c42915205016f5",
+      "textSha256": "4e53bc87e6d4dffb54e80bc267dc89a157d42d2aec517173aa073c6d103ad849",
+      "scheduledFor": "2026-09-16T10:30:00+00:00"
+    },
+    {
+      "num": "01",
+      "listId": "6970613",
+      "broadcastId": "61398175",
+      "status": "PASS",
+      "subjectExact": true,
+      "htmlSha256": "423381a806e64a610a365cb441d0207453977ea80445dec614c42915205016f5",
+      "textSha256": "4e53bc87e6d4dffb54e80bc267dc89a157d42d2aec517173aa073c6d103ad849",
+      "scheduledFor": "2026-09-16T10:30:00+00:00"
+    },
+    {
+      "num": "01",
+      "listId": "6963139",
+      "broadcastId": "61398176",
+      "status": "PASS",
+      "subjectExact": true,
+      "htmlSha256": "423381a806e64a610a365cb441d0207453977ea80445dec614c42915205016f5",
+      "textSha256": "4e53bc87e6d4dffb54e80bc267dc89a157d42d2aec517173aa073c6d103ad849",
+      "scheduledFor": "2026-09-16T10:30:00+00:00"
+    },
+    {
+      "num": "01",
+      "listId": "6963141",
+      "broadcastId": "61398177",
+      "status": "PASS",
+      "subjectExact": true,
+      "htmlSha256": "423381a806e64a610a365cb441d0207453977ea80445dec614c42915205016f5",
+      "textSha256": "4e53bc87e6d4dffb54e80bc267dc89a157d42d2aec517173aa073c6d103ad849",
+      "scheduledFor": "2026-09-16T10:30:00+00:00"
+    },
+    {
+      "num": "01",
+      "listId": "6936955",
+      "broadcastId": "61398178",
+      "status": "PASS",
+      "subjectExact": true,
+      "htmlSha256": "423381a806e64a610a365cb441d0207453977ea80445dec614c42915205016f5",
+      "textSha256": "4e53bc87e6d4dffb54e80bc267dc89a157d42d2aec517173aa073c6d103ad849",
+      "scheduledFor": "2026-09-16T10:30:00+00:00"
+    },
+    {
+      "num": "01",
+      "listId": "6969209",
+      "broadcastId": "61398179",
+      "status": "PASS",
+      "subjectExact": true,
+      "htmlSha256": "423381a806e64a610a365cb441d0207453977ea80445dec614c42915205016f5",
+      "textSha256": "4e53bc87e6d4dffb54e80bc267dc89a157d42d2aec517173aa073c6d103ad849",
+      "scheduledFor": "2026-09-16T10:30:00+00:00"
+    },
+    {
+      "num": "01",
+      "listId": "6937139",
+      "broadcastId": "61398180",
+      "status": "PASS",
+      "subjectExact": true,
+      "htmlSha256": "423381a806e64a610a365cb441d0207453977ea80445dec614c42915205016f5",
+      "textSha256": "4e53bc87e6d4dffb54e80bc267dc89a157d42d2aec517173aa073c6d103ad849",
+      "scheduledFor": "2026-09-16T10:30:00+00:00"
+    },
+    {
+      "num": "01",
+      "listId": "6939683",
+      "broadcastId": "61398181",
+      "status": "PASS",
+      "subjectExact": true,
+      "htmlSha256": "423381a806e64a610a365cb441d0207453977ea80445dec614c42915205016f5",
+      "textSha256": "4e53bc87e6d4dffb54e80bc267dc89a157d42d2aec517173aa073c6d103ad849",
+      "scheduledFor": "2026-09-16T10:30:00+00:00"
+    },
+    {
+      "num": "01",
+      "listId": "6956485",
+      "broadcastId": "61398182",
+      "status": "PASS",
+      "subjectExact": true,
+      "htmlSha256": "423381a806e64a610a365cb441d0207453977ea80445dec614c42915205016f5",
+      "textSha256": "4e53bc87e6d4dffb54e80bc267dc89a157d42d2aec517173aa073c6d103ad849",
+      "scheduledFor": "2026-09-16T10:30:00+00:00"
+    },
+    {
+      "num": "01",
+      "listId": "6956486",
+      "broadcastId": "61398183",
+      "status": "PASS",
+      "subjectExact": true,
+      "htmlSha256": "423381a806e64a610a365cb441d0207453977ea80445dec614c42915205016f5",
+      "textSha256": "4e53bc87e6d4dffb54e80bc267dc89a157d42d2aec517173aa073c6d103ad849",
+      "scheduledFor": "2026-09-16T10:30:00+00:00"
+    },
+    {
+      "num": "01",
+      "listId": "6956488",
+      "broadcastId": "61398184",
+      "status": "PASS",
+      "subjectExact": true,
+      "htmlSha256": "423381a806e64a610a365cb441d0207453977ea80445dec614c42915205016f5",
+      "textSha256": "4e53bc87e6d4dffb54e80bc267dc89a157d42d2aec517173aa073c6d103ad849",
+      "scheduledFor": "2026-09-16T10:30:00+00:00"
+    },
+    {
+      "num": "01",
+      "listId": "6956490",
+      "broadcastId": "61398185",
+      "status": "PASS",
+      "subjectExact": true,
+      "htmlSha256": "423381a806e64a610a365cb441d0207453977ea80445dec614c42915205016f5",
+      "textSha256": "4e53bc87e6d4dffb54e80bc267dc89a157d42d2aec517173aa073c6d103ad849",
+      "scheduledFor": "2026-09-16T10:30:00+00:00"
+    },
+    {
+      "num": "02",
+      "listId": "6936953",
+      "broadcastId": "61398188",
+      "status": "PASS",
+      "subjectExact": true,
+      "htmlSha256": "001ef05a8dc83de2966b78dea2bd264aff8cd501cc0868a564ed45fed42e9c80",
+      "textSha256": "2fbd20fa45292f6acc2d263acc0d862eba56d84a352ea2b29d83bf9f9417ae48",
+      "scheduledFor": "2026-09-17T10:30:00+00:00"
+    },
+    {
+      "num": "02",
+      "listId": "6963143",
+      "broadcastId": "61398190",
+      "status": "PASS",
+      "subjectExact": true,
+      "htmlSha256": "001ef05a8dc83de2966b78dea2bd264aff8cd501cc0868a564ed45fed42e9c80",
+      "textSha256": "2fbd20fa45292f6acc2d263acc0d862eba56d84a352ea2b29d83bf9f9417ae48",
+      "scheduledFor": "2026-09-17T10:30:00+00:00"
+    },
+    {
+      "num": "02",
+      "listId": "6970613",
+      "broadcastId": "61398191",
+      "status": "PASS",
+      "subjectExact": true,
+      "htmlSha256": "001ef05a8dc83de2966b78dea2bd264aff8cd501cc0868a564ed45fed42e9c80",
+      "textSha256": "2fbd20fa45292f6acc2d263acc0d862eba56d84a352ea2b29d83bf9f9417ae48",
+      "scheduledFor": "2026-09-17T10:30:00+00:00"
+    },
+    {
+      "num": "02",
+      "listId": "6963139",
+      "broadcastId": "61398192",
+      "status": "PASS",
+      "subjectExact": true,
+      "htmlSha256": "001ef05a8dc83de2966b78dea2bd264aff8cd501cc0868a564ed45fed42e9c80",
+      "textSha256": "2fbd20fa45292f6acc2d263acc0d862eba56d84a352ea2b29d83bf9f9417ae48",
+      "scheduledFor": "2026-09-17T10:30:00+00:00"
+    },
+    {
+      "num": "02",
+      "listId": "6963141",
+      "broadcastId": "61398193",
+      "status": "PASS",
+      "subjectExact": true,
+      "htmlSha256": "001ef05a8dc83de2966b78dea2bd264aff8cd501cc0868a564ed45fed42e9c80",
+      "textSha256": "2fbd20fa45292f6acc2d263acc0d862eba56d84a352ea2b29d83bf9f9417ae48",
+      "scheduledFor": "2026-09-17T10:30:00+00:00"
+    },
+    {
+      "num": "02",
+      "listId": "6936955",
+      "broadcastId": "61398194",
+      "status": "PASS",
+      "subjectExact": true,
+      "htmlSha256": "001ef05a8dc83de2966b78dea2bd264aff8cd501cc0868a564ed45fed42e9c80",
+      "textSha256": "2fbd20fa45292f6acc2d263acc0d862eba56d84a352ea2b29d83bf9f9417ae48",
+      "scheduledFor": "2026-09-17T10:30:00+00:00"
+    },
+    {
+      "num": "02",
+      "listId": "6969209",
+      "broadcastId": "61398195",
+      "status": "PASS",
+      "subjectExact": true,
+      "htmlSha256": "001ef05a8dc83de2966b78dea2bd264aff8cd501cc0868a564ed45fed42e9c80",
+      "textSha256": "2fbd20fa45292f6acc2d263acc0d862eba56d84a352ea2b29d83bf9f9417ae48",
+      "scheduledFor": "2026-09-17T10:30:00+00:00"
+    },
+    {
+      "num": "02",
+      "listId": "6937139",
+      "broadcastId": "61398196",
+      "status": "PASS",
+      "subjectExact": true,
+      "htmlSha256": "001ef05a8dc83de2966b78dea2bd264aff8cd501cc0868a564ed45fed42e9c80",
+      "textSha256": "2fbd20fa45292f6acc2d263acc0d862eba56d84a352ea2b29d83bf9f9417ae48",
+      "scheduledFor": "2026-09-17T10:30:00+00:00"
+    },
+    {
+      "num": "02",
+      "listId": "6939683",
+      "broadcastId": "61398197",
+      "status": "PASS",
+      "subjectExact": true,
+      "htmlSha256": "001ef05a8dc83de2966b78dea2bd264aff8cd501cc0868a564ed45fed42e9c80",
+      "textSha256": "2fbd20fa45292f6acc2d263acc0d862eba56d84a352ea2b29d83bf9f9417ae48",
+      "scheduledFor": "2026-09-17T10:30:00+00:00"
+    },
+    {
+      "num": "02",
+      "listId": "6956485",
+      "broadcastId": "61398198",
+      "status": "PASS",
+      "subjectExact": true,
+      "htmlSha256": "001ef05a8dc83de2966b78dea2bd264aff8cd501cc0868a564ed45fed42e9c80",
+      "textSha256": "2fbd20fa45292f6acc2d263acc0d862eba56d84a352ea2b29d83bf9f9417ae48",
+      "scheduledFor": "2026-09-17T10:30:00+00:00"
+    },
+    {
+      "num": "02",
+      "listId": "6956486",
+      "broadcastId": "61398199",
+      "status": "PASS",
+      "subjectExact": true,
+      "htmlSha256": "001ef05a8dc83de2966b78dea2bd264aff8cd501cc0868a564ed45fed42e9c80",
+      "textSha256": "2fbd20fa45292f6acc2d263acc0d862eba56d84a352ea2b29d83bf9f9417ae48",
+      "scheduledFor": "2026-09-17T10:30:00+00:00"
+    },
+    {
+      "num": "02",
+      "listId": "6956488",
+      "broadcastId": "61398200",
+      "status": "PASS",
+      "subjectExact": true,
+      "htmlSha256": "001ef05a8dc83de2966b78dea2bd264aff8cd501cc0868a564ed45fed42e9c80",
+      "textSha256": "2fbd20fa45292f6acc2d263acc0d862eba56d84a352ea2b29d83bf9f9417ae48",
+      "scheduledFor": "2026-09-17T10:30:00+00:00"
+    },
+    {
+      "num": "02",
+      "listId": "6956490",
+      "broadcastId": "61398201",
+      "status": "PASS",
+      "subjectExact": true,
+      "htmlSha256": "001ef05a8dc83de2966b78dea2bd264aff8cd501cc0868a564ed45fed42e9c80",
+      "textSha256": "2fbd20fa45292f6acc2d263acc0d862eba56d84a352ea2b29d83bf9f9417ae48",
+      "scheduledFor": "2026-09-17T10:30:00+00:00"
+    },
+    {
+      "num": "03",
+      "listId": "6936953",
+      "broadcastId": "61398202",
+      "status": "PASS",
+      "subjectExact": true,
+      "htmlSha256": "c2874ba48c93864c3e8a497cf42445a524f275af715c7fbdf9c9fd80776ec8b2",
+      "textSha256": "232e042f5417706c9d916e5bacc506fd451a53acc6561e5be754bf3fbb5e831b",
+      "scheduledFor": "2026-09-18T10:30:00+00:00"
+    },
+    {
+      "num": "03",
+      "listId": "6963143",
+      "broadcastId": "61398203",
+      "status": "PASS",
+      "subjectExact": true,
+      "htmlSha256": "c2874ba48c93864c3e8a497cf42445a524f275af715c7fbdf9c9fd80776ec8b2",
+      "textSha256": "232e042f5417706c9d916e5bacc506fd451a53acc6561e5be754bf3fbb5e831b",
+      "scheduledFor": "2026-09-18T10:30:00+00:00"
+    },
+    {
+      "num": "03",
+      "listId": "6970613",
+      "broadcastId": "61398204",
+      "status": "PASS",
+      "subjectExact": true,
+      "htmlSha256": "c2874ba48c93864c3e8a497cf42445a524f275af715c7fbdf9c9fd80776ec8b2",
+      "textSha256": "232e042f5417706c9d916e5bacc506fd451a53acc6561e5be754bf3fbb5e831b",
+      "scheduledFor": "2026-09-18T10:30:00+00:00"
+    },
+    {
+      "num": "03",
+      "listId": "6963139",
+      "broadcastId": "61398205",
+      "status": "PASS",
+      "subjectExact": true,
+      "htmlSha256": "c2874ba48c93864c3e8a497cf42445a524f275af715c7fbdf9c9fd80776ec8b2",
+      "textSha256": "232e042f5417706c9d916e5bacc506fd451a53acc6561e5be754bf3fbb5e831b",
+      "scheduledFor": "2026-09-18T10:30:00+00:00"
+    },
+    {
+      "num": "03",
+      "listId": "6963141",
+      "broadcastId": "61398206",
+      "status": "PASS",
+      "subjectExact": true,
+      "htmlSha256": "c2874ba48c93864c3e8a497cf42445a524f275af715c7fbdf9c9fd80776ec8b2",
+      "textSha256": "232e042f5417706c9d916e5bacc506fd451a53acc6561e5be754bf3fbb5e831b",
+      "scheduledFor": "2026-09-18T10:30:00+00:00"
+    },
+    {
+      "num": "03",
+      "listId": "6936955",
+      "broadcastId": "61398207",
+      "status": "PASS",
+      "subjectExact": true,
+      "htmlSha256": "c2874ba48c93864c3e8a497cf42445a524f275af715c7fbdf9c9fd80776ec8b2",
+      "textSha256": "232e042f5417706c9d916e5bacc506fd451a53acc6561e5be754bf3fbb5e831b",
+      "scheduledFor": "2026-09-18T10:30:00+00:00"
+    },
+    {
+      "num": "03",
+      "listId": "6969209",
+      "broadcastId": "61398208",
+      "status": "PASS",
+      "subjectExact": true,
+      "htmlSha256": "c2874ba48c93864c3e8a497cf42445a524f275af715c7fbdf9c9fd80776ec8b2",
+      "textSha256": "232e042f5417706c9d916e5bacc506fd451a53acc6561e5be754bf3fbb5e831b",
+      "scheduledFor": "2026-09-18T10:30:00+00:00"
+    },
+    {
+      "num": "03",
+      "listId": "6937139",
+      "broadcastId": "61398210",
+      "status": "PASS",
+      "subjectExact": true,
+      "htmlSha256": "c2874ba48c93864c3e8a497cf42445a524f275af715c7fbdf9c9fd80776ec8b2",
+      "textSha256": "232e042f5417706c9d916e5bacc506fd451a53acc6561e5be754bf3fbb5e831b",
+      "scheduledFor": "2026-09-18T10:30:00+00:00"
+    },
+    {
+      "num": "03",
+      "listId": "6939683",
+      "broadcastId": "61398211",
+      "status": "PASS",
+      "subjectExact": true,
+      "htmlSha256": "c2874ba48c93864c3e8a497cf42445a524f275af715c7fbdf9c9fd80776ec8b2",
+      "textSha256": "232e042f5417706c9d916e5bacc506fd451a53acc6561e5be754bf3fbb5e831b",
+      "scheduledFor": "2026-09-18T10:30:00+00:00"
+    },
+    {
+      "num": "03",
+      "listId": "6956485",
+      "broadcastId": "61398212",
+      "status": "PASS",
+      "subjectExact": true,
+      "htmlSha256": "c2874ba48c93864c3e8a497cf42445a524f275af715c7fbdf9c9fd80776ec8b2",
+      "textSha256": "232e042f5417706c9d916e5bacc506fd451a53acc6561e5be754bf3fbb5e831b",
+      "scheduledFor": "2026-09-18T10:30:00+00:00"
+    },
+    {
+      "num": "03",
+      "listId": "6956486",
+      "broadcastId": "61398213",
+      "status": "PASS",
+      "subjectExact": true,
+      "htmlSha256": "c2874ba48c93864c3e8a497cf42445a524f275af715c7fbdf9c9fd80776ec8b2",
+      "textSha256": "232e042f5417706c9d916e5bacc506fd451a53acc6561e5be754bf3fbb5e831b",
+      "scheduledFor": "2026-09-18T10:30:00+00:00"
+    },
+    {
+      "num": "03",
+      "listId": "6956488",
+      "broadcastId": "61398214",
+      "status": "PASS",
+      "subjectExact": true,
+      "htmlSha256": "c2874ba48c93864c3e8a497cf42445a524f275af715c7fbdf9c9fd80776ec8b2",
+      "textSha256": "232e042f5417706c9d916e5bacc506fd451a53acc6561e5be754bf3fbb5e831b",
+      "scheduledFor": "2026-09-18T10:30:00+00:00"
+    },
+    {
+      "num": "03",
+      "listId": "6956490",
+      "broadcastId": "61398215",
+      "status": "PASS",
+      "subjectExact": true,
+      "htmlSha256": "c2874ba48c93864c3e8a497cf42445a524f275af715c7fbdf9c9fd80776ec8b2",
+      "textSha256": "232e042f5417706c9d916e5bacc506fd451a53acc6561e5be754bf3fbb5e831b",
+      "scheduledFor": "2026-09-18T10:30:00+00:00"
+    },
+    {
+      "num": "04",
+      "listId": "6936953",
+      "broadcastId": "61398216",
+      "status": "PASS",
+      "subjectExact": true,
+      "htmlSha256": "3ec738bbb333f8440896f80674cd7a4c0d17d9881261ba7e217120aaa2e6ca52",
+      "textSha256": "b7b7f1ff37ee46702ef8a758f1a59da74b85e3045b5472f3c1d4df76eda21d4a",
+      "scheduledFor": "2026-09-19T10:30:00+00:00"
+    },
+    {
+      "num": "04",
+      "listId": "6963143",
+      "broadcastId": "61398217",
+      "status": "PASS",
+      "subjectExact": true,
+      "htmlSha256": "3ec738bbb333f8440896f80674cd7a4c0d17d9881261ba7e217120aaa2e6ca52",
+      "textSha256": "b7b7f1ff37ee46702ef8a758f1a59da74b85e3045b5472f3c1d4df76eda21d4a",
+      "scheduledFor": "2026-09-19T10:30:00+00:00"
+    },
+    {
+      "num": "04",
+      "listId": "6970613",
+      "broadcastId": "61398218",
+      "status": "PASS",
+      "subjectExact": true,
+      "htmlSha256": "3ec738bbb333f8440896f80674cd7a4c0d17d9881261ba7e217120aaa2e6ca52",
+      "textSha256": "b7b7f1ff37ee46702ef8a758f1a59da74b85e3045b5472f3c1d4df76eda21d4a",
+      "scheduledFor": "2026-09-19T10:30:00+00:00"
+    },
+    {
+      "num": "04",
+      "listId": "6963139",
+      "broadcastId": "61398219",
+      "status": "PASS",
+      "subjectExact": true,
+      "htmlSha256": "3ec738bbb333f8440896f80674cd7a4c0d17d9881261ba7e217120aaa2e6ca52",
+      "textSha256": "b7b7f1ff37ee46702ef8a758f1a59da74b85e3045b5472f3c1d4df76eda21d4a",
+      "scheduledFor": "2026-09-19T10:30:00+00:00"
+    },
+    {
+      "num": "04",
+      "listId": "6963141",
+      "broadcastId": "61398220",
+      "status": "PASS",
+      "subjectExact": true,
+      "htmlSha256": "3ec738bbb333f8440896f80674cd7a4c0d17d9881261ba7e217120aaa2e6ca52",
+      "textSha256": "b7b7f1ff37ee46702ef8a758f1a59da74b85e3045b5472f3c1d4df76eda21d4a",
+      "scheduledFor": "2026-09-19T10:30:00+00:00"
+    },
+    {
+      "num": "04",
+      "listId": "6936955",
+      "broadcastId": "61398221",
+      "status": "PASS",
+      "subjectExact": true,
+      "htmlSha256": "3ec738bbb333f8440896f80674cd7a4c0d17d9881261ba7e217120aaa2e6ca52",
+      "textSha256": "b7b7f1ff37ee46702ef8a758f1a59da74b85e3045b5472f3c1d4df76eda21d4a",
+      "scheduledFor": "2026-09-19T10:30:00+00:00"
+    },
+    {
+      "num": "04",
+      "listId": "6969209",
+      "broadcastId": "61398222",
+      "status": "PASS",
+      "subjectExact": true,
+      "htmlSha256": "3ec738bbb333f8440896f80674cd7a4c0d17d9881261ba7e217120aaa2e6ca52",
+      "textSha256": "b7b7f1ff37ee46702ef8a758f1a59da74b85e3045b5472f3c1d4df76eda21d4a",
+      "scheduledFor": "2026-09-19T10:30:00+00:00"
+    },
+    {
+      "num": "04",
+      "listId": "6937139",
+      "broadcastId": "61398223",
+      "status": "PASS",
+      "subjectExact": true,
+      "htmlSha256": "3ec738bbb333f8440896f80674cd7a4c0d17d9881261ba7e217120aaa2e6ca52",
+      "textSha256": "b7b7f1ff37ee46702ef8a758f1a59da74b85e3045b5472f3c1d4df76eda21d4a",
+      "scheduledFor": "2026-09-19T10:30:00+00:00"
+    },
+    {
+      "num": "04",
+      "listId": "6939683",
+      "broadcastId": "61398224",
+      "status": "PASS",
+      "subjectExact": true,
+      "htmlSha256": "3ec738bbb333f8440896f80674cd7a4c0d17d9881261ba7e217120aaa2e6ca52",
+      "textSha256": "b7b7f1ff37ee46702ef8a758f1a59da74b85e3045b5472f3c1d4df76eda21d4a",
+      "scheduledFor": "2026-09-19T10:30:00+00:00"
+    },
+    {
+      "num": "04",
+      "listId": "6956485",
+      "broadcastId": "61398225",
+      "status": "PASS",
+      "subjectExact": true,
+      "htmlSha256": "3ec738bbb333f8440896f80674cd7a4c0d17d9881261ba7e217120aaa2e6ca52",
+      "textSha256": "b7b7f1ff37ee46702ef8a758f1a59da74b85e3045b5472f3c1d4df76eda21d4a",
+      "scheduledFor": "2026-09-19T10:30:00+00:00"
+    },
+    {
+      "num": "04",
+      "listId": "6956486",
+      "broadcastId": "61398226",
+      "status": "PASS",
+      "subjectExact": true,
+      "htmlSha256": "3ec738bbb333f8440896f80674cd7a4c0d17d9881261ba7e217120aaa2e6ca52",
+      "textSha256": "b7b7f1ff37ee46702ef8a758f1a59da74b85e3045b5472f3c1d4df76eda21d4a",
+      "scheduledFor": "2026-09-19T10:30:00+00:00"
+    },
+    {
+      "num": "04",
+      "listId": "6956488",
+      "broadcastId": "61398227",
+      "status": "PASS",
+      "subjectExact": true,
+      "htmlSha256": "3ec738bbb333f8440896f80674cd7a4c0d17d9881261ba7e217120aaa2e6ca52",
+      "textSha256": "b7b7f1ff37ee46702ef8a758f1a59da74b85e3045b5472f3c1d4df76eda21d4a",
+      "scheduledFor": "2026-09-19T10:30:00+00:00"
+    },
+    {
+      "num": "04",
+      "listId": "6956490",
+      "broadcastId": "61398228",
+      "status": "PASS",
+      "subjectExact": true,
+      "htmlSha256": "3ec738bbb333f8440896f80674cd7a4c0d17d9881261ba7e217120aaa2e6ca52",
+      "textSha256": "b7b7f1ff37ee46702ef8a758f1a59da74b85e3045b5472f3c1d4df76eda21d4a",
+      "scheduledFor": "2026-09-19T10:30:00+00:00"
+    },
+    {
+      "num": "05",
+      "listId": "6936953",
+      "broadcastId": "61398229",
+      "status": "PASS",
+      "subjectExact": true,
+      "htmlSha256": "58d58163d753b1a864d042e35a71acc8f4109e041060345a3b39203755bd0d9f",
+      "textSha256": "bb0258eb33d3db544f72123345d76fd9a8b45fe6f62e613cb0d8ced3b5b6f79c",
+      "scheduledFor": "2026-09-20T10:30:00+00:00"
+    },
+    {
+      "num": "05",
+      "listId": "6963143",
+      "broadcastId": "61398230",
+      "status": "PASS",
+      "subjectExact": true,
+      "htmlSha256": "58d58163d753b1a864d042e35a71acc8f4109e041060345a3b39203755bd0d9f",
+      "textSha256": "bb0258eb33d3db544f72123345d76fd9a8b45fe6f62e613cb0d8ced3b5b6f79c",
+      "scheduledFor": "2026-09-20T10:30:00+00:00"
+    },
+    {
+      "num": "05",
+      "listId": "6970613",
+      "broadcastId": "61398231",
+      "status": "PASS",
+      "subjectExact": true,
+      "htmlSha256": "58d58163d753b1a864d042e35a71acc8f4109e041060345a3b39203755bd0d9f",
+      "textSha256": "bb0258eb33d3db544f72123345d76fd9a8b45fe6f62e613cb0d8ced3b5b6f79c",
+      "scheduledFor": "2026-09-20T10:30:00+00:00"
+    },
+    {
+      "num": "05",
+      "listId": "6963139",
+      "broadcastId": "61398232",
+      "status": "PASS",
+      "subjectExact": true,
+      "htmlSha256": "58d58163d753b1a864d042e35a71acc8f4109e041060345a3b39203755bd0d9f",
+      "textSha256": "bb0258eb33d3db544f72123345d76fd9a8b45fe6f62e613cb0d8ced3b5b6f79c",
+      "scheduledFor": "2026-09-20T10:30:00+00:00"
+    },
+    {
+      "num": "05",
+      "listId": "6963141",
+      "broadcastId": "61398233",
+      "status": "PASS",
+      "subjectExact": true,
+      "htmlSha256": "58d58163d753b1a864d042e35a71acc8f4109e041060345a3b39203755bd0d9f",
+      "textSha256": "bb0258eb33d3db544f72123345d76fd9a8b45fe6f62e613cb0d8ced3b5b6f79c",
+      "scheduledFor": "2026-09-20T10:30:00+00:00"
+    },
+    {
+      "num": "05",
+      "listId": "6936955",
+      "broadcastId": "61398234",
+      "status": "PASS",
+      "subjectExact": true,
+      "htmlSha256": "58d58163d753b1a864d042e35a71acc8f4109e041060345a3b39203755bd0d9f",
+      "textSha256": "bb0258eb33d3db544f72123345d76fd9a8b45fe6f62e613cb0d8ced3b5b6f79c",
+      "scheduledFor": "2026-09-20T10:30:00+00:00"
+    },
+    {
+      "num": "05",
+      "listId": "6969209",
+      "broadcastId": "61398235",
+      "status": "PASS",
+      "subjectExact": true,
+      "htmlSha256": "58d58163d753b1a864d042e35a71acc8f4109e041060345a3b39203755bd0d9f",
+      "textSha256": "bb0258eb33d3db544f72123345d76fd9a8b45fe6f62e613cb0d8ced3b5b6f79c",
+      "scheduledFor": "2026-09-20T10:30:00+00:00"
+    },
+    {
+      "num": "05",
+      "listId": "6937139",
+      "broadcastId": "61398236",
+      "status": "PASS",
+      "subjectExact": true,
+      "htmlSha256": "58d58163d753b1a864d042e35a71acc8f4109e041060345a3b39203755bd0d9f",
+      "textSha256": "bb0258eb33d3db544f72123345d76fd9a8b45fe6f62e613cb0d8ced3b5b6f79c",
+      "scheduledFor": "2026-09-20T10:30:00+00:00"
+    },
+    {
+      "num": "05",
+      "listId": "6939683",
+      "broadcastId": "61398237",
+      "status": "PASS",
+      "subjectExact": true,
+      "htmlSha256": "58d58163d753b1a864d042e35a71acc8f4109e041060345a3b39203755bd0d9f",
+      "textSha256": "bb0258eb33d3db544f72123345d76fd9a8b45fe6f62e613cb0d8ced3b5b6f79c",
+      "scheduledFor": "2026-09-20T10:30:00+00:00"
+    },
+    {
+      "num": "05",
+      "listId": "6956485",
+      "broadcastId": "61398238",
+      "status": "PASS",
+      "subjectExact": true,
+      "htmlSha256": "58d58163d753b1a864d042e35a71acc8f4109e041060345a3b39203755bd0d9f",
+      "textSha256": "bb0258eb33d3db544f72123345d76fd9a8b45fe6f62e613cb0d8ced3b5b6f79c",
+      "scheduledFor": "2026-09-20T10:30:00+00:00"
+    },
+    {
+      "num": "05",
+      "listId": "6956486",
+      "broadcastId": "61398239",
+      "status": "PASS",
+      "subjectExact": true,
+      "htmlSha256": "58d58163d753b1a864d042e35a71acc8f4109e041060345a3b39203755bd0d9f",
+      "textSha256": "bb0258eb33d3db544f72123345d76fd9a8b45fe6f62e613cb0d8ced3b5b6f79c",
+      "scheduledFor": "2026-09-20T10:30:00+00:00"
+    },
+    {
+      "num": "05",
+      "listId": "6956488",
+      "broadcastId": "61398240",
+      "status": "PASS",
+      "subjectExact": true,
+      "htmlSha256": "58d58163d753b1a864d042e35a71acc8f4109e041060345a3b39203755bd0d9f",
+      "textSha256": "bb0258eb33d3db544f72123345d76fd9a8b45fe6f62e613cb0d8ced3b5b6f79c",
+      "scheduledFor": "2026-09-20T10:30:00+00:00"
+    },
+    {
+      "num": "05",
+      "listId": "6956490",
+      "broadcastId": "61398241",
+      "status": "PASS",
+      "subjectExact": true,
+      "htmlSha256": "58d58163d753b1a864d042e35a71acc8f4109e041060345a3b39203755bd0d9f",
+      "textSha256": "bb0258eb33d3db544f72123345d76fd9a8b45fe6f62e613cb0d8ced3b5b6f79c",
+      "scheduledFor": "2026-09-20T10:30:00+00:00"
+    },
+    {
+      "num": "06",
+      "listId": "6936953",
+      "broadcastId": "61398242",
+      "status": "PASS",
+      "subjectExact": true,
+      "htmlSha256": "d41619d40e5306695c42a9fb2d7c58a59ed1ff13ef71e3c862eafc6c8d8d2959",
+      "textSha256": "6c71f38b1d4221739111e32857655515228ebbe6279ade5bd36f629c12c8df9c",
+      "scheduledFor": "2026-09-21T10:30:00+00:00"
+    },
+    {
+      "num": "06",
+      "listId": "6963143",
+      "broadcastId": "61398243",
+      "status": "PASS",
+      "subjectExact": true,
+      "htmlSha256": "d41619d40e5306695c42a9fb2d7c58a59ed1ff13ef71e3c862eafc6c8d8d2959",
+      "textSha256": "6c71f38b1d4221739111e32857655515228ebbe6279ade5bd36f629c12c8df9c",
+      "scheduledFor": "2026-09-21T10:30:00+00:00"
+    },
+    {
+      "num": "06",
+      "listId": "6970613",
+      "broadcastId": "61398244",
+      "status": "PASS",
+      "subjectExact": true,
+      "htmlSha256": "d41619d40e5306695c42a9fb2d7c58a59ed1ff13ef71e3c862eafc6c8d8d2959",
+      "textSha256": "6c71f38b1d4221739111e32857655515228ebbe6279ade5bd36f629c12c8df9c",
+      "scheduledFor": "2026-09-21T10:30:00+00:00"
+    },
+    {
+      "num": "06",
+      "listId": "6963139",
+      "broadcastId": "61398245",
+      "status": "PASS",
+      "subjectExact": true,
+      "htmlSha256": "d41619d40e5306695c42a9fb2d7c58a59ed1ff13ef71e3c862eafc6c8d8d2959",
+      "textSha256": "6c71f38b1d4221739111e32857655515228ebbe6279ade5bd36f629c12c8df9c",
+      "scheduledFor": "2026-09-21T10:30:00+00:00"
+    },
+    {
+      "num": "06",
+      "listId": "6963141",
+      "broadcastId": "61398247",
+      "status": "PASS",
+      "subjectExact": true,
+      "htmlSha256": "d41619d40e5306695c42a9fb2d7c58a59ed1ff13ef71e3c862eafc6c8d8d2959",
+      "textSha256": "6c71f38b1d4221739111e32857655515228ebbe6279ade5bd36f629c12c8df9c",
+      "scheduledFor": "2026-09-21T10:30:00+00:00"
+    },
+    {
+      "num": "06",
+      "listId": "6936955",
+      "broadcastId": "61398248",
+      "status": "PASS",
+      "subjectExact": true,
+      "htmlSha256": "d41619d40e5306695c42a9fb2d7c58a59ed1ff13ef71e3c862eafc6c8d8d2959",
+      "textSha256": "6c71f38b1d4221739111e32857655515228ebbe6279ade5bd36f629c12c8df9c",
+      "scheduledFor": "2026-09-21T10:30:00+00:00"
+    },
+    {
+      "num": "06",
+      "listId": "6969209",
+      "broadcastId": "61398249",
+      "status": "PASS",
+      "subjectExact": true,
+      "htmlSha256": "d41619d40e5306695c42a9fb2d7c58a59ed1ff13ef71e3c862eafc6c8d8d2959",
+      "textSha256": "6c71f38b1d4221739111e32857655515228ebbe6279ade5bd36f629c12c8df9c",
+      "scheduledFor": "2026-09-21T10:30:00+00:00"
+    },
+    {
+      "num": "06",
+      "listId": "6937139",
+      "broadcastId": "61398250",
+      "status": "PASS",
+      "subjectExact": true,
+      "htmlSha256": "d41619d40e5306695c42a9fb2d7c58a59ed1ff13ef71e3c862eafc6c8d8d2959",
+      "textSha256": "6c71f38b1d4221739111e32857655515228ebbe6279ade5bd36f629c12c8df9c",
+      "scheduledFor": "2026-09-21T10:30:00+00:00"
+    },
+    {
+      "num": "06",
+      "listId": "6939683",
+      "broadcastId": "61398251",
+      "status": "PASS",
+      "subjectExact": true,
+      "htmlSha256": "d41619d40e5306695c42a9fb2d7c58a59ed1ff13ef71e3c862eafc6c8d8d2959",
+      "textSha256": "6c71f38b1d4221739111e32857655515228ebbe6279ade5bd36f629c12c8df9c",
+      "scheduledFor": "2026-09-21T10:30:00+00:00"
+    },
+    {
+      "num": "06",
+      "listId": "6956485",
+      "broadcastId": "61398252",
+      "status": "PASS",
+      "subjectExact": true,
+      "htmlSha256": "d41619d40e5306695c42a9fb2d7c58a59ed1ff13ef71e3c862eafc6c8d8d2959",
+      "textSha256": "6c71f38b1d4221739111e32857655515228ebbe6279ade5bd36f629c12c8df9c",
+      "scheduledFor": "2026-09-21T10:30:00+00:00"
+    },
+    {
+      "num": "06",
+      "listId": "6956486",
+      "broadcastId": "61398253",
+      "status": "PASS",
+      "subjectExact": true,
+      "htmlSha256": "d41619d40e5306695c42a9fb2d7c58a59ed1ff13ef71e3c862eafc6c8d8d2959",
+      "textSha256": "6c71f38b1d4221739111e32857655515228ebbe6279ade5bd36f629c12c8df9c",
+      "scheduledFor": "2026-09-21T10:30:00+00:00"
+    },
+    {
+      "num": "06",
+      "listId": "6956488",
+      "broadcastId": "61398254",
+      "status": "PASS",
+      "subjectExact": true,
+      "htmlSha256": "d41619d40e5306695c42a9fb2d7c58a59ed1ff13ef71e3c862eafc6c8d8d2959",
+      "textSha256": "6c71f38b1d4221739111e32857655515228ebbe6279ade5bd36f629c12c8df9c",
+      "scheduledFor": "2026-09-21T10:30:00+00:00"
+    },
+    {
+      "num": "06",
+      "listId": "6956490",
+      "broadcastId": "61398255",
+      "status": "PASS",
+      "subjectExact": true,
+      "htmlSha256": "d41619d40e5306695c42a9fb2d7c58a59ed1ff13ef71e3c862eafc6c8d8d2959",
+      "textSha256": "6c71f38b1d4221739111e32857655515228ebbe6279ade5bd36f629c12c8df9c",
+      "scheduledFor": "2026-09-21T10:30:00+00:00"
+    },
+    {
+      "num": "07",
+      "listId": "6936953",
+      "broadcastId": "61398256",
+      "status": "PASS",
+      "subjectExact": true,
+      "htmlSha256": "8f5cfcbe309d71da4338aca5ff2ede9571b52c0d61d815a52e5280949f52b623",
+      "textSha256": "ddefc0b24daf5350682bfd3bb4af9c91f75276abc8a8d10e8a2c13783db40e9b",
+      "scheduledFor": "2026-09-22T10:30:00+00:00"
+    },
+    {
+      "num": "07",
+      "listId": "6963143",
+      "broadcastId": "61398257",
+      "status": "PASS",
+      "subjectExact": true,
+      "htmlSha256": "8f5cfcbe309d71da4338aca5ff2ede9571b52c0d61d815a52e5280949f52b623",
+      "textSha256": "ddefc0b24daf5350682bfd3bb4af9c91f75276abc8a8d10e8a2c13783db40e9b",
+      "scheduledFor": "2026-09-22T10:30:00+00:00"
+    },
+    {
+      "num": "07",
+      "listId": "6970613",
+      "broadcastId": "61398258",
+      "status": "PASS",
+      "subjectExact": true,
+      "htmlSha256": "8f5cfcbe309d71da4338aca5ff2ede9571b52c0d61d815a52e5280949f52b623",
+      "textSha256": "ddefc0b24daf5350682bfd3bb4af9c91f75276abc8a8d10e8a2c13783db40e9b",
+      "scheduledFor": "2026-09-22T10:30:00+00:00"
+    },
+    {
+      "num": "07",
+      "listId": "6963139",
+      "broadcastId": "61398259",
+      "status": "PASS",
+      "subjectExact": true,
+      "htmlSha256": "8f5cfcbe309d71da4338aca5ff2ede9571b52c0d61d815a52e5280949f52b623",
+      "textSha256": "ddefc0b24daf5350682bfd3bb4af9c91f75276abc8a8d10e8a2c13783db40e9b",
+      "scheduledFor": "2026-09-22T10:30:00+00:00"
+    },
+    {
+      "num": "07",
+      "listId": "6963141",
+      "broadcastId": "61398260",
+      "status": "PASS",
+      "subjectExact": true,
+      "htmlSha256": "8f5cfcbe309d71da4338aca5ff2ede9571b52c0d61d815a52e5280949f52b623",
+      "textSha256": "ddefc0b24daf5350682bfd3bb4af9c91f75276abc8a8d10e8a2c13783db40e9b",
+      "scheduledFor": "2026-09-22T10:30:00+00:00"
+    },
+    {
+      "num": "07",
+      "listId": "6936955",
+      "broadcastId": "61398261",
+      "status": "PASS",
+      "subjectExact": true,
+      "htmlSha256": "8f5cfcbe309d71da4338aca5ff2ede9571b52c0d61d815a52e5280949f52b623",
+      "textSha256": "ddefc0b24daf5350682bfd3bb4af9c91f75276abc8a8d10e8a2c13783db40e9b",
+      "scheduledFor": "2026-09-22T10:30:00+00:00"
+    },
+    {
+      "num": "07",
+      "listId": "6969209",
+      "broadcastId": "61398262",
+      "status": "PASS",
+      "subjectExact": true,
+      "htmlSha256": "8f5cfcbe309d71da4338aca5ff2ede9571b52c0d61d815a52e5280949f52b623",
+      "textSha256": "ddefc0b24daf5350682bfd3bb4af9c91f75276abc8a8d10e8a2c13783db40e9b",
+      "scheduledFor": "2026-09-22T10:30:00+00:00"
+    },
+    {
+      "num": "07",
+      "listId": "6937139",
+      "broadcastId": "61398264",
+      "status": "PASS",
+      "subjectExact": true,
+      "htmlSha256": "8f5cfcbe309d71da4338aca5ff2ede9571b52c0d61d815a52e5280949f52b623",
+      "textSha256": "ddefc0b24daf5350682bfd3bb4af9c91f75276abc8a8d10e8a2c13783db40e9b",
+      "scheduledFor": "2026-09-22T10:30:00+00:00"
+    },
+    {
+      "num": "07",
+      "listId": "6939683",
+      "broadcastId": "61398265",
+      "status": "PASS",
+      "subjectExact": true,
+      "htmlSha256": "8f5cfcbe309d71da4338aca5ff2ede9571b52c0d61d815a52e5280949f52b623",
+      "textSha256": "ddefc0b24daf5350682bfd3bb4af9c91f75276abc8a8d10e8a2c13783db40e9b",
+      "scheduledFor": "2026-09-22T10:30:00+00:00"
+    },
+    {
+      "num": "07",
+      "listId": "6956485",
+      "broadcastId": "61398266",
+      "status": "PASS",
+      "subjectExact": true,
+      "htmlSha256": "8f5cfcbe309d71da4338aca5ff2ede9571b52c0d61d815a52e5280949f52b623",
+      "textSha256": "ddefc0b24daf5350682bfd3bb4af9c91f75276abc8a8d10e8a2c13783db40e9b",
+      "scheduledFor": "2026-09-22T10:30:00+00:00"
+    },
+    {
+      "num": "07",
+      "listId": "6956486",
+      "broadcastId": "61398267",
+      "status": "PASS",
+      "subjectExact": true,
+      "htmlSha256": "8f5cfcbe309d71da4338aca5ff2ede9571b52c0d61d815a52e5280949f52b623",
+      "textSha256": "ddefc0b24daf5350682bfd3bb4af9c91f75276abc8a8d10e8a2c13783db40e9b",
+      "scheduledFor": "2026-09-22T10:30:00+00:00"
+    },
+    {
+      "num": "07",
+      "listId": "6956488",
+      "broadcastId": "61398268",
+      "status": "PASS",
+      "subjectExact": true,
+      "htmlSha256": "8f5cfcbe309d71da4338aca5ff2ede9571b52c0d61d815a52e5280949f52b623",
+      "textSha256": "ddefc0b24daf5350682bfd3bb4af9c91f75276abc8a8d10e8a2c13783db40e9b",
+      "scheduledFor": "2026-09-22T10:30:00+00:00"
+    },
+    {
+      "num": "07",
+      "listId": "6956490",
+      "broadcastId": "61398270",
+      "status": "PASS",
+      "subjectExact": true,
+      "htmlSha256": "8f5cfcbe309d71da4338aca5ff2ede9571b52c0d61d815a52e5280949f52b623",
+      "textSha256": "ddefc0b24daf5350682bfd3bb4af9c91f75276abc8a8d10e8a2c13783db40e9b",
+      "scheduledFor": "2026-09-22T10:30:00+00:00"
+    },
+    {
+      "num": "08",
+      "listId": "6936953",
+      "broadcastId": "61398271",
+      "status": "PASS",
+      "subjectExact": true,
+      "htmlSha256": "5c51a104fa6bcf2ca3dc97a5ca6801d61baa1f80969c6f6c42101e4df95bdeaa",
+      "textSha256": "d2ddd97d7b8e0d890e1fd369211d36fe71143811002b99291c5a85913db15e82",
+      "scheduledFor": "2026-09-23T10:30:00+00:00"
+    },
+    {
+      "num": "08",
+      "listId": "6963143",
+      "broadcastId": "61398272",
+      "status": "PASS",
+      "subjectExact": true,
+      "htmlSha256": "5c51a104fa6bcf2ca3dc97a5ca6801d61baa1f80969c6f6c42101e4df95bdeaa",
+      "textSha256": "d2ddd97d7b8e0d890e1fd369211d36fe71143811002b99291c5a85913db15e82",
+      "scheduledFor": "2026-09-23T10:30:00+00:00"
+    },
+    {
+      "num": "08",
+      "listId": "6970613",
+      "broadcastId": "61398274",
+      "status": "PASS",
+      "subjectExact": true,
+      "htmlSha256": "5c51a104fa6bcf2ca3dc97a5ca6801d61baa1f80969c6f6c42101e4df95bdeaa",
+      "textSha256": "d2ddd97d7b8e0d890e1fd369211d36fe71143811002b99291c5a85913db15e82",
+      "scheduledFor": "2026-09-23T10:30:00+00:00"
+    },
+    {
+      "num": "08",
+      "listId": "6963139",
+      "broadcastId": "61398275",
+      "status": "PASS",
+      "subjectExact": true,
+      "htmlSha256": "5c51a104fa6bcf2ca3dc97a5ca6801d61baa1f80969c6f6c42101e4df95bdeaa",
+      "textSha256": "d2ddd97d7b8e0d890e1fd369211d36fe71143811002b99291c5a85913db15e82",
+      "scheduledFor": "2026-09-23T10:30:00+00:00"
+    },
+    {
+      "num": "08",
+      "listId": "6963141",
+      "broadcastId": "61398276",
+      "status": "PASS",
+      "subjectExact": true,
+      "htmlSha256": "5c51a104fa6bcf2ca3dc97a5ca6801d61baa1f80969c6f6c42101e4df95bdeaa",
+      "textSha256": "d2ddd97d7b8e0d890e1fd369211d36fe71143811002b99291c5a85913db15e82",
+      "scheduledFor": "2026-09-23T10:30:00+00:00"
+    },
+    {
+      "num": "08",
+      "listId": "6936955",
+      "broadcastId": "61398277",
+      "status": "PASS",
+      "subjectExact": true,
+      "htmlSha256": "5c51a104fa6bcf2ca3dc97a5ca6801d61baa1f80969c6f6c42101e4df95bdeaa",
+      "textSha256": "d2ddd97d7b8e0d890e1fd369211d36fe71143811002b99291c5a85913db15e82",
+      "scheduledFor": "2026-09-23T10:30:00+00:00"
+    },
+    {
+      "num": "08",
+      "listId": "6969209",
+      "broadcastId": "61398278",
+      "status": "PASS",
+      "subjectExact": true,
+      "htmlSha256": "5c51a104fa6bcf2ca3dc97a5ca6801d61baa1f80969c6f6c42101e4df95bdeaa",
+      "textSha256": "d2ddd97d7b8e0d890e1fd369211d36fe71143811002b99291c5a85913db15e82",
+      "scheduledFor": "2026-09-23T10:30:00+00:00"
+    },
+    {
+      "num": "08",
+      "listId": "6937139",
+      "broadcastId": "61398279",
+      "status": "PASS",
+      "subjectExact": true,
+      "htmlSha256": "5c51a104fa6bcf2ca3dc97a5ca6801d61baa1f80969c6f6c42101e4df95bdeaa",
+      "textSha256": "d2ddd97d7b8e0d890e1fd369211d36fe71143811002b99291c5a85913db15e82",
+      "scheduledFor": "2026-09-23T10:30:00+00:00"
+    },
+    {
+      "num": "08",
+      "listId": "6939683",
+      "broadcastId": "61398280",
+      "status": "PASS",
+      "subjectExact": true,
+      "htmlSha256": "5c51a104fa6bcf2ca3dc97a5ca6801d61baa1f80969c6f6c42101e4df95bdeaa",
+      "textSha256": "d2ddd97d7b8e0d890e1fd369211d36fe71143811002b99291c5a85913db15e82",
+      "scheduledFor": "2026-09-23T10:30:00+00:00"
+    },
+    {
+      "num": "08",
+      "listId": "6956485",
+      "broadcastId": "61398281",
+      "status": "PASS",
+      "subjectExact": true,
+      "htmlSha256": "5c51a104fa6bcf2ca3dc97a5ca6801d61baa1f80969c6f6c42101e4df95bdeaa",
+      "textSha256": "d2ddd97d7b8e0d890e1fd369211d36fe71143811002b99291c5a85913db15e82",
+      "scheduledFor": "2026-09-23T10:30:00+00:00"
+    },
+    {
+      "num": "08",
+      "listId": "6956486",
+      "broadcastId": "61398282",
+      "status": "PASS",
+      "subjectExact": true,
+      "htmlSha256": "5c51a104fa6bcf2ca3dc97a5ca6801d61baa1f80969c6f6c42101e4df95bdeaa",
+      "textSha256": "d2ddd97d7b8e0d890e1fd369211d36fe71143811002b99291c5a85913db15e82",
+      "scheduledFor": "2026-09-23T10:30:00+00:00"
+    },
+    {
+      "num": "08",
+      "listId": "6956488",
+      "broadcastId": "61398283",
+      "status": "PASS",
+      "subjectExact": true,
+      "htmlSha256": "5c51a104fa6bcf2ca3dc97a5ca6801d61baa1f80969c6f6c42101e4df95bdeaa",
+      "textSha256": "d2ddd97d7b8e0d890e1fd369211d36fe71143811002b99291c5a85913db15e82",
+      "scheduledFor": "2026-09-23T10:30:00+00:00"
+    },
+    {
+      "num": "08",
+      "listId": "6956490",
+      "broadcastId": "61398284",
+      "status": "PASS",
+      "subjectExact": true,
+      "htmlSha256": "5c51a104fa6bcf2ca3dc97a5ca6801d61baa1f80969c6f6c42101e4df95bdeaa",
+      "textSha256": "d2ddd97d7b8e0d890e1fd369211d36fe71143811002b99291c5a85913db15e82",
+      "scheduledFor": "2026-09-23T10:30:00+00:00"
+    },
+    {
+      "num": "09",
+      "listId": "6936953",
+      "broadcastId": "61398285",
+      "status": "PASS",
+      "subjectExact": true,
+      "htmlSha256": "76988ac818fb71f7918dd6f39e0b110ee6b32cda35aec155354187ee5a8923ab",
+      "textSha256": "14501b1687467335f967e5f6ef1d38b4090820e872d766dc27c63d21669fa143",
+      "scheduledFor": "2026-09-24T10:30:00+00:00"
+    },
+    {
+      "num": "09",
+      "listId": "6963143",
+      "broadcastId": "61398286",
+      "status": "PASS",
+      "subjectExact": true,
+      "htmlSha256": "76988ac818fb71f7918dd6f39e0b110ee6b32cda35aec155354187ee5a8923ab",
+      "textSha256": "14501b1687467335f967e5f6ef1d38b4090820e872d766dc27c63d21669fa143",
+      "scheduledFor": "2026-09-24T10:30:00+00:00"
+    },
+    {
+      "num": "09",
+      "listId": "6970613",
+      "broadcastId": "61398287",
+      "status": "PASS",
+      "subjectExact": true,
+      "htmlSha256": "76988ac818fb71f7918dd6f39e0b110ee6b32cda35aec155354187ee5a8923ab",
+      "textSha256": "14501b1687467335f967e5f6ef1d38b4090820e872d766dc27c63d21669fa143",
+      "scheduledFor": "2026-09-24T10:30:00+00:00"
+    },
+    {
+      "num": "09",
+      "listId": "6963139",
+      "broadcastId": "61398288",
+      "status": "PASS",
+      "subjectExact": true,
+      "htmlSha256": "76988ac818fb71f7918dd6f39e0b110ee6b32cda35aec155354187ee5a8923ab",
+      "textSha256": "14501b1687467335f967e5f6ef1d38b4090820e872d766dc27c63d21669fa143",
+      "scheduledFor": "2026-09-24T10:30:00+00:00"
+    },
+    {
+      "num": "09",
+      "listId": "6963141",
+      "broadcastId": "61398290",
+      "status": "PASS",
+      "subjectExact": true,
+      "htmlSha256": "76988ac818fb71f7918dd6f39e0b110ee6b32cda35aec155354187ee5a8923ab",
+      "textSha256": "14501b1687467335f967e5f6ef1d38b4090820e872d766dc27c63d21669fa143",
+      "scheduledFor": "2026-09-24T10:30:00+00:00"
+    },
+    {
+      "num": "09",
+      "listId": "6936955",
+      "broadcastId": "61398291",
+      "status": "PASS",
+      "subjectExact": true,
+      "htmlSha256": "76988ac818fb71f7918dd6f39e0b110ee6b32cda35aec155354187ee5a8923ab",
+      "textSha256": "14501b1687467335f967e5f6ef1d38b4090820e872d766dc27c63d21669fa143",
+      "scheduledFor": "2026-09-24T10:30:00+00:00"
+    },
+    {
+      "num": "09",
+      "listId": "6969209",
+      "broadcastId": "61398292",
+      "status": "PASS",
+      "subjectExact": true,
+      "htmlSha256": "76988ac818fb71f7918dd6f39e0b110ee6b32cda35aec155354187ee5a8923ab",
+      "textSha256": "14501b1687467335f967e5f6ef1d38b4090820e872d766dc27c63d21669fa143",
+      "scheduledFor": "2026-09-24T10:30:00+00:00"
+    },
+    {
+      "num": "09",
+      "listId": "6937139",
+      "broadcastId": "61398293",
+      "status": "PASS",
+      "subjectExact": true,
+      "htmlSha256": "76988ac818fb71f7918dd6f39e0b110ee6b32cda35aec155354187ee5a8923ab",
+      "textSha256": "14501b1687467335f967e5f6ef1d38b4090820e872d766dc27c63d21669fa143",
+      "scheduledFor": "2026-09-24T10:30:00+00:00"
+    },
+    {
+      "num": "09",
+      "listId": "6939683",
+      "broadcastId": "61398294",
+      "status": "PASS",
+      "subjectExact": true,
+      "htmlSha256": "76988ac818fb71f7918dd6f39e0b110ee6b32cda35aec155354187ee5a8923ab",
+      "textSha256": "14501b1687467335f967e5f6ef1d38b4090820e872d766dc27c63d21669fa143",
+      "scheduledFor": "2026-09-24T10:30:00+00:00"
+    },
+    {
+      "num": "09",
+      "listId": "6956485",
+      "broadcastId": "61398295",
+      "status": "PASS",
+      "subjectExact": true,
+      "htmlSha256": "76988ac818fb71f7918dd6f39e0b110ee6b32cda35aec155354187ee5a8923ab",
+      "textSha256": "14501b1687467335f967e5f6ef1d38b4090820e872d766dc27c63d21669fa143",
+      "scheduledFor": "2026-09-24T10:30:00+00:00"
+    },
+    {
+      "num": "09",
+      "listId": "6956486",
+      "broadcastId": "61398296",
+      "status": "PASS",
+      "subjectExact": true,
+      "htmlSha256": "76988ac818fb71f7918dd6f39e0b110ee6b32cda35aec155354187ee5a8923ab",
+      "textSha256": "14501b1687467335f967e5f6ef1d38b4090820e872d766dc27c63d21669fa143",
+      "scheduledFor": "2026-09-24T10:30:00+00:00"
+    },
+    {
+      "num": "09",
+      "listId": "6956488",
+      "broadcastId": "61398297",
+      "status": "PASS",
+      "subjectExact": true,
+      "htmlSha256": "76988ac818fb71f7918dd6f39e0b110ee6b32cda35aec155354187ee5a8923ab",
+      "textSha256": "14501b1687467335f967e5f6ef1d38b4090820e872d766dc27c63d21669fa143",
+      "scheduledFor": "2026-09-24T10:30:00+00:00"
+    },
+    {
+      "num": "09",
+      "listId": "6956490",
+      "broadcastId": "61398298",
+      "status": "PASS",
+      "subjectExact": true,
+      "htmlSha256": "76988ac818fb71f7918dd6f39e0b110ee6b32cda35aec155354187ee5a8923ab",
+      "textSha256": "14501b1687467335f967e5f6ef1d38b4090820e872d766dc27c63d21669fa143",
+      "scheduledFor": "2026-09-24T10:30:00+00:00"
+    },
+    {
+      "num": "10",
+      "listId": "6936953",
+      "broadcastId": "61398299",
+      "status": "PASS",
+      "subjectExact": true,
+      "htmlSha256": "e70da67e25626d964145e0517a7b923aeaea55b431ba71c842afa7c49cbcc6cd",
+      "textSha256": "f3380a12de58793c7e3e38862a2413cae5d542b8062af7f8d8813057f35b1d38",
+      "scheduledFor": "2026-09-25T10:30:00+00:00"
+    },
+    {
+      "num": "10",
+      "listId": "6963143",
+      "broadcastId": "61398300",
+      "status": "PASS",
+      "subjectExact": true,
+      "htmlSha256": "e70da67e25626d964145e0517a7b923aeaea55b431ba71c842afa7c49cbcc6cd",
+      "textSha256": "f3380a12de58793c7e3e38862a2413cae5d542b8062af7f8d8813057f35b1d38",
+      "scheduledFor": "2026-09-25T10:30:00+00:00"
+    },
+    {
+      "num": "10",
+      "listId": "6970613",
+      "broadcastId": "61398301",
+      "status": "PASS",
+      "subjectExact": true,
+      "htmlSha256": "e70da67e25626d964145e0517a7b923aeaea55b431ba71c842afa7c49cbcc6cd",
+      "textSha256": "f3380a12de58793c7e3e38862a2413cae5d542b8062af7f8d8813057f35b1d38",
+      "scheduledFor": "2026-09-25T10:30:00+00:00"
+    },
+    {
+      "num": "10",
+      "listId": "6963139",
+      "broadcastId": "61398302",
+      "status": "PASS",
+      "subjectExact": true,
+      "htmlSha256": "e70da67e25626d964145e0517a7b923aeaea55b431ba71c842afa7c49cbcc6cd",
+      "textSha256": "f3380a12de58793c7e3e38862a2413cae5d542b8062af7f8d8813057f35b1d38",
+      "scheduledFor": "2026-09-25T10:30:00+00:00"
+    },
+    {
+      "num": "10",
+      "listId": "6963141",
+      "broadcastId": "61398303",
+      "status": "PASS",
+      "subjectExact": true,
+      "htmlSha256": "e70da67e25626d964145e0517a7b923aeaea55b431ba71c842afa7c49cbcc6cd",
+      "textSha256": "f3380a12de58793c7e3e38862a2413cae5d542b8062af7f8d8813057f35b1d38",
+      "scheduledFor": "2026-09-25T10:30:00+00:00"
+    },
+    {
+      "num": "10",
+      "listId": "6936955",
+      "broadcastId": "61398304",
+      "status": "PASS",
+      "subjectExact": true,
+      "htmlSha256": "e70da67e25626d964145e0517a7b923aeaea55b431ba71c842afa7c49cbcc6cd",
+      "textSha256": "f3380a12de58793c7e3e38862a2413cae5d542b8062af7f8d8813057f35b1d38",
+      "scheduledFor": "2026-09-25T10:30:00+00:00"
+    },
+    {
+      "num": "10",
+      "listId": "6969209",
+      "broadcastId": "61398305",
+      "status": "PASS",
+      "subjectExact": true,
+      "htmlSha256": "e70da67e25626d964145e0517a7b923aeaea55b431ba71c842afa7c49cbcc6cd",
+      "textSha256": "f3380a12de58793c7e3e38862a2413cae5d542b8062af7f8d8813057f35b1d38",
+      "scheduledFor": "2026-09-25T10:30:00+00:00"
+    },
+    {
+      "num": "10",
+      "listId": "6937139",
+      "broadcastId": "61398306",
+      "status": "PASS",
+      "subjectExact": true,
+      "htmlSha256": "e70da67e25626d964145e0517a7b923aeaea55b431ba71c842afa7c49cbcc6cd",
+      "textSha256": "f3380a12de58793c7e3e38862a2413cae5d542b8062af7f8d8813057f35b1d38",
+      "scheduledFor": "2026-09-25T10:30:00+00:00"
+    },
+    {
+      "num": "10",
+      "listId": "6939683",
+      "broadcastId": "61398307",
+      "status": "PASS",
+      "subjectExact": true,
+      "htmlSha256": "e70da67e25626d964145e0517a7b923aeaea55b431ba71c842afa7c49cbcc6cd",
+      "textSha256": "f3380a12de58793c7e3e38862a2413cae5d542b8062af7f8d8813057f35b1d38",
+      "scheduledFor": "2026-09-25T10:30:00+00:00"
+    },
+    {
+      "num": "10",
+      "listId": "6956485",
+      "broadcastId": "61398308",
+      "status": "PASS",
+      "subjectExact": true,
+      "htmlSha256": "e70da67e25626d964145e0517a7b923aeaea55b431ba71c842afa7c49cbcc6cd",
+      "textSha256": "f3380a12de58793c7e3e38862a2413cae5d542b8062af7f8d8813057f35b1d38",
+      "scheduledFor": "2026-09-25T10:30:00+00:00"
+    },
+    {
+      "num": "10",
+      "listId": "6956486",
+      "broadcastId": "61398309",
+      "status": "PASS",
+      "subjectExact": true,
+      "htmlSha256": "e70da67e25626d964145e0517a7b923aeaea55b431ba71c842afa7c49cbcc6cd",
+      "textSha256": "f3380a12de58793c7e3e38862a2413cae5d542b8062af7f8d8813057f35b1d38",
+      "scheduledFor": "2026-09-25T10:30:00+00:00"
+    },
+    {
+      "num": "10",
+      "listId": "6956488",
+      "broadcastId": "61398310",
+      "status": "PASS",
+      "subjectExact": true,
+      "htmlSha256": "e70da67e25626d964145e0517a7b923aeaea55b431ba71c842afa7c49cbcc6cd",
+      "textSha256": "f3380a12de58793c7e3e38862a2413cae5d542b8062af7f8d8813057f35b1d38",
+      "scheduledFor": "2026-09-25T10:30:00+00:00"
+    },
+    {
+      "num": "10",
+      "listId": "6956490",
+      "broadcastId": "61398311",
+      "status": "PASS",
+      "subjectExact": true,
+      "htmlSha256": "e70da67e25626d964145e0517a7b923aeaea55b431ba71c842afa7c49cbcc6cd",
+      "textSha256": "f3380a12de58793c7e3e38862a2413cae5d542b8062af7f8d8813057f35b1d38",
+      "scheduledFor": "2026-09-25T10:30:00+00:00"
+    },
+    {
+      "num": "11",
+      "listId": "6936953",
+      "broadcastId": "61398312",
+      "status": "PASS",
+      "subjectExact": true,
+      "htmlSha256": "59bc03695e0a0bee2dda311fe3f965cff5f19dd0ee1b1cbae62cb95e4e4da0fb",
+      "textSha256": "acdd9d705b4dc4e97a96796557faa764e307c8d0a1bb70a50a3fa6eb4629370f",
+      "scheduledFor": "2026-09-26T10:30:00+00:00"
+    },
+    {
+      "num": "11",
+      "listId": "6963143",
+      "broadcastId": "61398313",
+      "status": "PASS",
+      "subjectExact": true,
+      "htmlSha256": "59bc03695e0a0bee2dda311fe3f965cff5f19dd0ee1b1cbae62cb95e4e4da0fb",
+      "textSha256": "acdd9d705b4dc4e97a96796557faa764e307c8d0a1bb70a50a3fa6eb4629370f",
+      "scheduledFor": "2026-09-26T10:30:00+00:00"
+    },
+    {
+      "num": "11",
+      "listId": "6970613",
+      "broadcastId": "61398314",
+      "status": "PASS",
+      "subjectExact": true,
+      "htmlSha256": "59bc03695e0a0bee2dda311fe3f965cff5f19dd0ee1b1cbae62cb95e4e4da0fb",
+      "textSha256": "acdd9d705b4dc4e97a96796557faa764e307c8d0a1bb70a50a3fa6eb4629370f",
+      "scheduledFor": "2026-09-26T10:30:00+00:00"
+    },
+    {
+      "num": "11",
+      "listId": "6963139",
+      "broadcastId": "61398315",
+      "status": "PASS",
+      "subjectExact": true,
+      "htmlSha256": "59bc03695e0a0bee2dda311fe3f965cff5f19dd0ee1b1cbae62cb95e4e4da0fb",
+      "textSha256": "acdd9d705b4dc4e97a96796557faa764e307c8d0a1bb70a50a3fa6eb4629370f",
+      "scheduledFor": "2026-09-26T10:30:00+00:00"
+    },
+    {
+      "num": "11",
+      "listId": "6963141",
+      "broadcastId": "61398316",
+      "status": "PASS",
+      "subjectExact": true,
+      "htmlSha256": "59bc03695e0a0bee2dda311fe3f965cff5f19dd0ee1b1cbae62cb95e4e4da0fb",
+      "textSha256": "acdd9d705b4dc4e97a96796557faa764e307c8d0a1bb70a50a3fa6eb4629370f",
+      "scheduledFor": "2026-09-26T10:30:00+00:00"
+    },
+    {
+      "num": "11",
+      "listId": "6936955",
+      "broadcastId": "61398317",
+      "status": "PASS",
+      "subjectExact": true,
+      "htmlSha256": "59bc03695e0a0bee2dda311fe3f965cff5f19dd0ee1b1cbae62cb95e4e4da0fb",
+      "textSha256": "acdd9d705b4dc4e97a96796557faa764e307c8d0a1bb70a50a3fa6eb4629370f",
+      "scheduledFor": "2026-09-26T10:30:00+00:00"
+    },
+    {
+      "num": "11",
+      "listId": "6969209",
+      "broadcastId": "61398318",
+      "status": "PASS",
+      "subjectExact": true,
+      "htmlSha256": "59bc03695e0a0bee2dda311fe3f965cff5f19dd0ee1b1cbae62cb95e4e4da0fb",
+      "textSha256": "acdd9d705b4dc4e97a96796557faa764e307c8d0a1bb70a50a3fa6eb4629370f",
+      "scheduledFor": "2026-09-26T10:30:00+00:00"
+    },
+    {
+      "num": "11",
+      "listId": "6937139",
+      "broadcastId": "61398319",
+      "status": "PASS",
+      "subjectExact": true,
+      "htmlSha256": "59bc03695e0a0bee2dda311fe3f965cff5f19dd0ee1b1cbae62cb95e4e4da0fb",
+      "textSha256": "acdd9d705b4dc4e97a96796557faa764e307c8d0a1bb70a50a3fa6eb4629370f",
+      "scheduledFor": "2026-09-26T10:30:00+00:00"
+    },
+    {
+      "num": "11",
+      "listId": "6939683",
+      "broadcastId": "61398320",
+      "status": "PASS",
+      "subjectExact": true,
+      "htmlSha256": "59bc03695e0a0bee2dda311fe3f965cff5f19dd0ee1b1cbae62cb95e4e4da0fb",
+      "textSha256": "acdd9d705b4dc4e97a96796557faa764e307c8d0a1bb70a50a3fa6eb4629370f",
+      "scheduledFor": "2026-09-26T10:30:00+00:00"
+    },
+    {
+      "num": "11",
+      "listId": "6956485",
+      "broadcastId": "61398321",
+      "status": "PASS",
+      "subjectExact": true,
+      "htmlSha256": "59bc03695e0a0bee2dda311fe3f965cff5f19dd0ee1b1cbae62cb95e4e4da0fb",
+      "textSha256": "acdd9d705b4dc4e97a96796557faa764e307c8d0a1bb70a50a3fa6eb4629370f",
+      "scheduledFor": "2026-09-26T10:30:00+00:00"
+    },
+    {
+      "num": "11",
+      "listId": "6956486",
+      "broadcastId": "61398322",
+      "status": "PASS",
+      "subjectExact": true,
+      "htmlSha256": "59bc03695e0a0bee2dda311fe3f965cff5f19dd0ee1b1cbae62cb95e4e4da0fb",
+      "textSha256": "acdd9d705b4dc4e97a96796557faa764e307c8d0a1bb70a50a3fa6eb4629370f",
+      "scheduledFor": "2026-09-26T10:30:00+00:00"
+    },
+    {
+      "num": "11",
+      "listId": "6956488",
+      "broadcastId": "61398323",
+      "status": "PASS",
+      "subjectExact": true,
+      "htmlSha256": "59bc03695e0a0bee2dda311fe3f965cff5f19dd0ee1b1cbae62cb95e4e4da0fb",
+      "textSha256": "acdd9d705b4dc4e97a96796557faa764e307c8d0a1bb70a50a3fa6eb4629370f",
+      "scheduledFor": "2026-09-26T10:30:00+00:00"
+    },
+    {
+      "num": "11",
+      "listId": "6956490",
+      "broadcastId": "61398324",
+      "status": "PASS",
+      "subjectExact": true,
+      "htmlSha256": "59bc03695e0a0bee2dda311fe3f965cff5f19dd0ee1b1cbae62cb95e4e4da0fb",
+      "textSha256": "acdd9d705b4dc4e97a96796557faa764e307c8d0a1bb70a50a3fa6eb4629370f",
+      "scheduledFor": "2026-09-26T10:30:00+00:00"
+    },
+    {
+      "num": "12",
+      "listId": "6936953",
+      "broadcastId": "61398325",
+      "status": "PASS",
+      "subjectExact": true,
+      "htmlSha256": "3d817c20ca8cf2e270067df69af2c4402f35b18dea8a8f05ecee8f54671e5710",
+      "textSha256": "55a1afd7ee2296fb2c17c0084902e607a853e09dbed12c5c737ecabf6e8b21fa",
+      "scheduledFor": "2026-09-27T10:30:00+00:00"
+    },
+    {
+      "num": "12",
+      "listId": "6963143",
+      "broadcastId": "61398326",
+      "status": "PASS",
+      "subjectExact": true,
+      "htmlSha256": "3d817c20ca8cf2e270067df69af2c4402f35b18dea8a8f05ecee8f54671e5710",
+      "textSha256": "55a1afd7ee2296fb2c17c0084902e607a853e09dbed12c5c737ecabf6e8b21fa",
+      "scheduledFor": "2026-09-27T10:30:00+00:00"
+    },
+    {
+      "num": "12",
+      "listId": "6970613",
+      "broadcastId": "61398327",
+      "status": "PASS",
+      "subjectExact": true,
+      "htmlSha256": "3d817c20ca8cf2e270067df69af2c4402f35b18dea8a8f05ecee8f54671e5710",
+      "textSha256": "55a1afd7ee2296fb2c17c0084902e607a853e09dbed12c5c737ecabf6e8b21fa",
+      "scheduledFor": "2026-09-27T10:30:00+00:00"
+    },
+    {
+      "num": "12",
+      "listId": "6963139",
+      "broadcastId": "61398328",
+      "status": "PASS",
+      "subjectExact": true,
+      "htmlSha256": "3d817c20ca8cf2e270067df69af2c4402f35b18dea8a8f05ecee8f54671e5710",
+      "textSha256": "55a1afd7ee2296fb2c17c0084902e607a853e09dbed12c5c737ecabf6e8b21fa",
+      "scheduledFor": "2026-09-27T10:30:00+00:00"
+    },
+    {
+      "num": "12",
+      "listId": "6963141",
+      "broadcastId": "61398329",
+      "status": "PASS",
+      "subjectExact": true,
+      "htmlSha256": "3d817c20ca8cf2e270067df69af2c4402f35b18dea8a8f05ecee8f54671e5710",
+      "textSha256": "55a1afd7ee2296fb2c17c0084902e607a853e09dbed12c5c737ecabf6e8b21fa",
+      "scheduledFor": "2026-09-27T10:30:00+00:00"
+    },
+    {
+      "num": "12",
+      "listId": "6936955",
+      "broadcastId": "61398330",
+      "status": "PASS",
+      "subjectExact": true,
+      "htmlSha256": "3d817c20ca8cf2e270067df69af2c4402f35b18dea8a8f05ecee8f54671e5710",
+      "textSha256": "55a1afd7ee2296fb2c17c0084902e607a853e09dbed12c5c737ecabf6e8b21fa",
+      "scheduledFor": "2026-09-27T10:30:00+00:00"
+    },
+    {
+      "num": "12",
+      "listId": "6969209",
+      "broadcastId": "61398331",
+      "status": "PASS",
+      "subjectExact": true,
+      "htmlSha256": "3d817c20ca8cf2e270067df69af2c4402f35b18dea8a8f05ecee8f54671e5710",
+      "textSha256": "55a1afd7ee2296fb2c17c0084902e607a853e09dbed12c5c737ecabf6e8b21fa",
+      "scheduledFor": "2026-09-27T10:30:00+00:00"
+    },
+    {
+      "num": "12",
+      "listId": "6937139",
+      "broadcastId": "61398332",
+      "status": "PASS",
+      "subjectExact": true,
+      "htmlSha256": "3d817c20ca8cf2e270067df69af2c4402f35b18dea8a8f05ecee8f54671e5710",
+      "textSha256": "55a1afd7ee2296fb2c17c0084902e607a853e09dbed12c5c737ecabf6e8b21fa",
+      "scheduledFor": "2026-09-27T10:30:00+00:00"
+    },
+    {
+      "num": "12",
+      "listId": "6939683",
+      "broadcastId": "61398333",
+      "status": "PASS",
+      "subjectExact": true,
+      "htmlSha256": "3d817c20ca8cf2e270067df69af2c4402f35b18dea8a8f05ecee8f54671e5710",
+      "textSha256": "55a1afd7ee2296fb2c17c0084902e607a853e09dbed12c5c737ecabf6e8b21fa",
+      "scheduledFor": "2026-09-27T10:30:00+00:00"
+    },
+    {
+      "num": "12",
+      "listId": "6956485",
+      "broadcastId": "61398334",
+      "status": "PASS",
+      "subjectExact": true,
+      "htmlSha256": "3d817c20ca8cf2e270067df69af2c4402f35b18dea8a8f05ecee8f54671e5710",
+      "textSha256": "55a1afd7ee2296fb2c17c0084902e607a853e09dbed12c5c737ecabf6e8b21fa",
+      "scheduledFor": "2026-09-27T10:30:00+00:00"
+    },
+    {
+      "num": "12",
+      "listId": "6956486",
+      "broadcastId": "61398335",
+      "status": "PASS",
+      "subjectExact": true,
+      "htmlSha256": "3d817c20ca8cf2e270067df69af2c4402f35b18dea8a8f05ecee8f54671e5710",
+      "textSha256": "55a1afd7ee2296fb2c17c0084902e607a853e09dbed12c5c737ecabf6e8b21fa",
+      "scheduledFor": "2026-09-27T10:30:00+00:00"
+    },
+    {
+      "num": "12",
+      "listId": "6956488",
+      "broadcastId": "61398336",
+      "status": "PASS",
+      "subjectExact": true,
+      "htmlSha256": "3d817c20ca8cf2e270067df69af2c4402f35b18dea8a8f05ecee8f54671e5710",
+      "textSha256": "55a1afd7ee2296fb2c17c0084902e607a853e09dbed12c5c737ecabf6e8b21fa",
+      "scheduledFor": "2026-09-27T10:30:00+00:00"
+    },
+    {
+      "num": "12",
+      "listId": "6956490",
+      "broadcastId": "61398337",
+      "status": "PASS",
+      "subjectExact": true,
+      "htmlSha256": "3d817c20ca8cf2e270067df69af2c4402f35b18dea8a8f05ecee8f54671e5710",
+      "textSha256": "55a1afd7ee2296fb2c17c0084902e607a853e09dbed12c5c737ecabf6e8b21fa",
+      "scheduledFor": "2026-09-27T10:30:00+00:00"
+    },
+    {
+      "num": "13",
+      "listId": "6936953",
+      "broadcastId": "61398338",
+      "status": "PASS",
+      "subjectExact": true,
+      "htmlSha256": "12e5e48a4cd37993d461bcc7846cafd0d6066795bba07a89a7eaa428d5158d31",
+      "textSha256": "c4ae269933ce03cc451a08ce7cabad38faca1d149ee3e1c6601259348babab33",
+      "scheduledFor": "2026-09-28T10:30:00+00:00"
+    },
+    {
+      "num": "13",
+      "listId": "6963143",
+      "broadcastId": "61398339",
+      "status": "PASS",
+      "subjectExact": true,
+      "htmlSha256": "12e5e48a4cd37993d461bcc7846cafd0d6066795bba07a89a7eaa428d5158d31",
+      "textSha256": "c4ae269933ce03cc451a08ce7cabad38faca1d149ee3e1c6601259348babab33",
+      "scheduledFor": "2026-09-28T10:30:00+00:00"
+    },
+    {
+      "num": "13",
+      "listId": "6970613",
+      "broadcastId": "61398340",
+      "status": "PASS",
+      "subjectExact": true,
+      "htmlSha256": "12e5e48a4cd37993d461bcc7846cafd0d6066795bba07a89a7eaa428d5158d31",
+      "textSha256": "c4ae269933ce03cc451a08ce7cabad38faca1d149ee3e1c6601259348babab33",
+      "scheduledFor": "2026-09-28T10:30:00+00:00"
+    },
+    {
+      "num": "13",
+      "listId": "6963139",
+      "broadcastId": "61398341",
+      "status": "PASS",
+      "subjectExact": true,
+      "htmlSha256": "12e5e48a4cd37993d461bcc7846cafd0d6066795bba07a89a7eaa428d5158d31",
+      "textSha256": "c4ae269933ce03cc451a08ce7cabad38faca1d149ee3e1c6601259348babab33",
+      "scheduledFor": "2026-09-28T10:30:00+00:00"
+    },
+    {
+      "num": "13",
+      "listId": "6963141",
+      "broadcastId": "61398342",
+      "status": "PASS",
+      "subjectExact": true,
+      "htmlSha256": "12e5e48a4cd37993d461bcc7846cafd0d6066795bba07a89a7eaa428d5158d31",
+      "textSha256": "c4ae269933ce03cc451a08ce7cabad38faca1d149ee3e1c6601259348babab33",
+      "scheduledFor": "2026-09-28T10:30:00+00:00"
+    },
+    {
+      "num": "13",
+      "listId": "6936955",
+      "broadcastId": "61398343",
+      "status": "PASS",
+      "subjectExact": true,
+      "htmlSha256": "12e5e48a4cd37993d461bcc7846cafd0d6066795bba07a89a7eaa428d5158d31",
+      "textSha256": "c4ae269933ce03cc451a08ce7cabad38faca1d149ee3e1c6601259348babab33",
+      "scheduledFor": "2026-09-28T10:30:00+00:00"
+    },
+    {
+      "num": "13",
+      "listId": "6969209",
+      "broadcastId": "61398344",
+      "status": "PASS",
+      "subjectExact": true,
+      "htmlSha256": "12e5e48a4cd37993d461bcc7846cafd0d6066795bba07a89a7eaa428d5158d31",
+      "textSha256": "c4ae269933ce03cc451a08ce7cabad38faca1d149ee3e1c6601259348babab33",
+      "scheduledFor": "2026-09-28T10:30:00+00:00"
+    },
+    {
+      "num": "13",
+      "listId": "6937139",
+      "broadcastId": "61398345",
+      "status": "PASS",
+      "subjectExact": true,
+      "htmlSha256": "12e5e48a4cd37993d461bcc7846cafd0d6066795bba07a89a7eaa428d5158d31",
+      "textSha256": "c4ae269933ce03cc451a08ce7cabad38faca1d149ee3e1c6601259348babab33",
+      "scheduledFor": "2026-09-28T10:30:00+00:00"
+    },
+    {
+      "num": "13",
+      "listId": "6939683",
+      "broadcastId": "61398346",
+      "status": "PASS",
+      "subjectExact": true,
+      "htmlSha256": "12e5e48a4cd37993d461bcc7846cafd0d6066795bba07a89a7eaa428d5158d31",
+      "textSha256": "c4ae269933ce03cc451a08ce7cabad38faca1d149ee3e1c6601259348babab33",
+      "scheduledFor": "2026-09-28T10:30:00+00:00"
+    },
+    {
+      "num": "13",
+      "listId": "6956485",
+      "broadcastId": "61398347",
+      "status": "PASS",
+      "subjectExact": true,
+      "htmlSha256": "12e5e48a4cd37993d461bcc7846cafd0d6066795bba07a89a7eaa428d5158d31",
+      "textSha256": "c4ae269933ce03cc451a08ce7cabad38faca1d149ee3e1c6601259348babab33",
+      "scheduledFor": "2026-09-28T10:30:00+00:00"
+    },
+    {
+      "num": "13",
+      "listId": "6956486",
+      "broadcastId": "61398348",
+      "status": "PASS",
+      "subjectExact": true,
+      "htmlSha256": "12e5e48a4cd37993d461bcc7846cafd0d6066795bba07a89a7eaa428d5158d31",
+      "textSha256": "c4ae269933ce03cc451a08ce7cabad38faca1d149ee3e1c6601259348babab33",
+      "scheduledFor": "2026-09-28T10:30:00+00:00"
+    },
+    {
+      "num": "13",
+      "listId": "6956488",
+      "broadcastId": "61398349",
+      "status": "PASS",
+      "subjectExact": true,
+      "htmlSha256": "12e5e48a4cd37993d461bcc7846cafd0d6066795bba07a89a7eaa428d5158d31",
+      "textSha256": "c4ae269933ce03cc451a08ce7cabad38faca1d149ee3e1c6601259348babab33",
+      "scheduledFor": "2026-09-28T10:30:00+00:00"
+    },
+    {
+      "num": "13",
+      "listId": "6956490",
+      "broadcastId": "61398350",
+      "status": "PASS",
+      "subjectExact": true,
+      "htmlSha256": "12e5e48a4cd37993d461bcc7846cafd0d6066795bba07a89a7eaa428d5158d31",
+      "textSha256": "c4ae269933ce03cc451a08ce7cabad38faca1d149ee3e1c6601259348babab33",
+      "scheduledFor": "2026-09-28T10:30:00+00:00"
+    },
+    {
+      "num": "14",
+      "listId": "6936953",
+      "broadcastId": "61398351",
+      "status": "PASS",
+      "subjectExact": true,
+      "htmlSha256": "0b999c62cf959efe830f7b4e96e3836d0bdd044a8a8cd7152e0bab50f24887eb",
+      "textSha256": "d01e793d40ef1bb7cd2eb7ba9072d67aa4d05a1f14104419b6bd9e87a3b9c5b9",
+      "scheduledFor": "2026-09-29T10:30:00+00:00"
+    },
+    {
+      "num": "14",
+      "listId": "6963143",
+      "broadcastId": "61398352",
+      "status": "PASS",
+      "subjectExact": true,
+      "htmlSha256": "0b999c62cf959efe830f7b4e96e3836d0bdd044a8a8cd7152e0bab50f24887eb",
+      "textSha256": "d01e793d40ef1bb7cd2eb7ba9072d67aa4d05a1f14104419b6bd9e87a3b9c5b9",
+      "scheduledFor": "2026-09-29T10:30:00+00:00"
+    },
+    {
+      "num": "14",
+      "listId": "6970613",
+      "broadcastId": "61398354",
+      "status": "PASS",
+      "subjectExact": true,
+      "htmlSha256": "0b999c62cf959efe830f7b4e96e3836d0bdd044a8a8cd7152e0bab50f24887eb",
+      "textSha256": "d01e793d40ef1bb7cd2eb7ba9072d67aa4d05a1f14104419b6bd9e87a3b9c5b9",
+      "scheduledFor": "2026-09-29T10:30:00+00:00"
+    },
+    {
+      "num": "14",
+      "listId": "6963139",
+      "broadcastId": "61398355",
+      "status": "PASS",
+      "subjectExact": true,
+      "htmlSha256": "0b999c62cf959efe830f7b4e96e3836d0bdd044a8a8cd7152e0bab50f24887eb",
+      "textSha256": "d01e793d40ef1bb7cd2eb7ba9072d67aa4d05a1f14104419b6bd9e87a3b9c5b9",
+      "scheduledFor": "2026-09-29T10:30:00+00:00"
+    },
+    {
+      "num": "14",
+      "listId": "6963141",
+      "broadcastId": "61398356",
+      "status": "PASS",
+      "subjectExact": true,
+      "htmlSha256": "0b999c62cf959efe830f7b4e96e3836d0bdd044a8a8cd7152e0bab50f24887eb",
+      "textSha256": "d01e793d40ef1bb7cd2eb7ba9072d67aa4d05a1f14104419b6bd9e87a3b9c5b9",
+      "scheduledFor": "2026-09-29T10:30:00+00:00"
+    },
+    {
+      "num": "14",
+      "listId": "6936955",
+      "broadcastId": "61398357",
+      "status": "PASS",
+      "subjectExact": true,
+      "htmlSha256": "0b999c62cf959efe830f7b4e96e3836d0bdd044a8a8cd7152e0bab50f24887eb",
+      "textSha256": "d01e793d40ef1bb7cd2eb7ba9072d67aa4d05a1f14104419b6bd9e87a3b9c5b9",
+      "scheduledFor": "2026-09-29T10:30:00+00:00"
+    },
+    {
+      "num": "14",
+      "listId": "6969209",
+      "broadcastId": "61398358",
+      "status": "PASS",
+      "subjectExact": true,
+      "htmlSha256": "0b999c62cf959efe830f7b4e96e3836d0bdd044a8a8cd7152e0bab50f24887eb",
+      "textSha256": "d01e793d40ef1bb7cd2eb7ba9072d67aa4d05a1f14104419b6bd9e87a3b9c5b9",
+      "scheduledFor": "2026-09-29T10:30:00+00:00"
+    },
+    {
+      "num": "14",
+      "listId": "6937139",
+      "broadcastId": "61398359",
+      "status": "PASS",
+      "subjectExact": true,
+      "htmlSha256": "0b999c62cf959efe830f7b4e96e3836d0bdd044a8a8cd7152e0bab50f24887eb",
+      "textSha256": "d01e793d40ef1bb7cd2eb7ba9072d67aa4d05a1f14104419b6bd9e87a3b9c5b9",
+      "scheduledFor": "2026-09-29T10:30:00+00:00"
+    },
+    {
+      "num": "14",
+      "listId": "6939683",
+      "broadcastId": "61398360",
+      "status": "PASS",
+      "subjectExact": true,
+      "htmlSha256": "0b999c62cf959efe830f7b4e96e3836d0bdd044a8a8cd7152e0bab50f24887eb",
+      "textSha256": "d01e793d40ef1bb7cd2eb7ba9072d67aa4d05a1f14104419b6bd9e87a3b9c5b9",
+      "scheduledFor": "2026-09-29T10:30:00+00:00"
+    },
+    {
+      "num": "14",
+      "listId": "6956485",
+      "broadcastId": "61398361",
+      "status": "PASS",
+      "subjectExact": true,
+      "htmlSha256": "0b999c62cf959efe830f7b4e96e3836d0bdd044a8a8cd7152e0bab50f24887eb",
+      "textSha256": "d01e793d40ef1bb7cd2eb7ba9072d67aa4d05a1f14104419b6bd9e87a3b9c5b9",
+      "scheduledFor": "2026-09-29T10:30:00+00:00"
+    },
+    {
+      "num": "14",
+      "listId": "6956486",
+      "broadcastId": "61398363",
+      "status": "PASS",
+      "subjectExact": true,
+      "htmlSha256": "0b999c62cf959efe830f7b4e96e3836d0bdd044a8a8cd7152e0bab50f24887eb",
+      "textSha256": "d01e793d40ef1bb7cd2eb7ba9072d67aa4d05a1f14104419b6bd9e87a3b9c5b9",
+      "scheduledFor": "2026-09-29T10:30:00+00:00"
+    },
+    {
+      "num": "14",
+      "listId": "6956488",
+      "broadcastId": "61398364",
+      "status": "PASS",
+      "subjectExact": true,
+      "htmlSha256": "0b999c62cf959efe830f7b4e96e3836d0bdd044a8a8cd7152e0bab50f24887eb",
+      "textSha256": "d01e793d40ef1bb7cd2eb7ba9072d67aa4d05a1f14104419b6bd9e87a3b9c5b9",
+      "scheduledFor": "2026-09-29T10:30:00+00:00"
+    },
+    {
+      "num": "14",
+      "listId": "6956490",
+      "broadcastId": "61398365",
+      "status": "PASS",
+      "subjectExact": true,
+      "htmlSha256": "0b999c62cf959efe830f7b4e96e3836d0bdd044a8a8cd7152e0bab50f24887eb",
+      "textSha256": "d01e793d40ef1bb7cd2eb7ba9072d67aa4d05a1f14104419b6bd9e87a3b9c5b9",
+      "scheduledFor": "2026-09-29T10:30:00+00:00"
+    }
+  ]
+}

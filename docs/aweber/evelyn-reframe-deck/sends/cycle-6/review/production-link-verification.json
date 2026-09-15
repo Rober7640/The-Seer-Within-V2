@@ -1,0 +1,132 @@
+{
+  "verifiedAt": "2026-09-15T01:54:38.688Z",
+  "environment": "production",
+  "results": [
+    {
+      "num": "01",
+      "campaign": "reframe-c6-01-first-step",
+      "code": "qXGOP14",
+      "status": "PASS",
+      "redirect": 302,
+      "continuation": "exact",
+      "bucket": "love"
+    },
+    {
+      "num": "02",
+      "campaign": "reframe-c6-02-another-apology",
+      "code": "Xnp_sEU",
+      "status": "PASS",
+      "redirect": 302,
+      "continuation": "exact",
+      "bucket": "love"
+    },
+    {
+      "num": "03",
+      "campaign": "reframe-c6-03-ring-mark",
+      "code": "zzPvxWo",
+      "status": "PASS",
+      "redirect": 302,
+      "continuation": "exact",
+      "bucket": "love"
+    },
+    {
+      "num": "04",
+      "campaign": "reframe-c6-04-last-conversation",
+      "code": "Qi_9fJs",
+      "status": "PASS",
+      "redirect": 302,
+      "continuation": "exact",
+      "bucket": "love"
+    },
+    {
+      "num": "05",
+      "campaign": "reframe-c6-05-being-realistic",
+      "code": "J8CtIGk",
+      "status": "PASS",
+      "redirect": 302,
+      "continuation": "exact",
+      "bucket": "purpose"
+    },
+    {
+      "num": "06",
+      "campaign": "reframe-c6-06-two-of-cups",
+      "code": "07hcu9Y",
+      "status": "PASS",
+      "redirect": 302,
+      "continuation": "exact",
+      "bucket": "love"
+    },
+    {
+      "num": "07",
+      "campaign": "reframe-c6-07-had-to-ask",
+      "code": "lPeHlEo",
+      "status": "PASS",
+      "redirect": 302,
+      "continuation": "exact",
+      "bucket": "love"
+    },
+    {
+      "num": "08",
+      "campaign": "reframe-c6-08-first-four-bars",
+      "code": "-z0R6Qw",
+      "status": "PASS",
+      "redirect": 302,
+      "continuation": "exact",
+      "bucket": "purpose"
+    },
+    {
+      "num": "09",
+      "campaign": "reframe-c6-09-unexpected-laugh",
+      "code": "sS66mnY",
+      "status": "PASS",
+      "redirect": 302,
+      "continuation": "exact",
+      "bucket": "love"
+    },
+    {
+      "num": "10",
+      "campaign": "reframe-c6-10-nothing-in-common",
+      "code": "kfnpVD0",
+      "status": "PASS",
+      "redirect": 302,
+      "continuation": "exact",
+      "bucket": "love"
+    },
+    {
+      "num": "11",
+      "campaign": "reframe-c6-11-eight-of-pentacles",
+      "code": "G3Vy4CY",
+      "status": "PASS",
+      "redirect": 302,
+      "continuation": "exact",
+      "bucket": "love"
+    },
+    {
+      "num": "12",
+      "campaign": "reframe-c6-12-bedtime-rule",
+      "code": "8dzJwYg",
+      "status": "PASS",
+      "redirect": 302,
+      "continuation": "exact",
+      "bucket": "love"
+    },
+    {
+      "num": "13",
+      "campaign": "reframe-c6-13-keeping-busy",
+      "code": "wvCLWXE",
+      "status": "PASS",
+      "redirect": 302,
+      "continuation": "exact",
+      "bucket": "love"
+    },
+    {
+      "num": "14",
+      "campaign": "reframe-c6-14-expected-no",
+      "code": "4_pB1c8",
+      "status": "PASS",
+      "redirect": 302,
+      "continuation": "exact",
+      "bucket": "love"
+    }
+  ]
+}

@@ -1,0 +1,21 @@
+{
+  "recordedAt": "2026-09-15T01:54:46.919272+00:00",
+  "operatorApproval": "apprve. then commit and push to 08-marcus",
+  "approvedScope": "Publish V2 continuation links; schedule Sep16\u201329 2026 at 10:30 UTC (18:30MYT); commit and push to 08-marcus.",
+  "approvedDraftSha256": {
+    "01-first-step.md": "35ef4c111e97f929448147d66144f80aa8f3d2a30f4eb8c4b185ceeccc20a8ac",
+    "02-another-apology.md": "147c05d46c20e39ee73a3c43a643213253fd74175c1f54341405da0b37870e53",
+    "03-ring-mark.md": "dcaeddf170fa77005b85d275e99e5844ffa10d8446e8c49359e7b124dbdd445f",
+    "04-last-conversation.md": "93a09b9b9b091cc89e635fb25c2c92c645b9d4081d87f507ee289296a582db2b",
+    "05-being-realistic.md": "719088dac414f49937d09845352e354e2940836139925e942b5c307a453b426d",
+    "06-two-of-cups.md": "4e607f510b842d4231aee44da390ddbfd6975d591a4497d976648d531f67dc1a",
+    "07-had-to-ask.md": "0fc5ee1f3125d5173a6a6ed40f600378e666eec320438cb2fd0129f7f574f0eb",
+    "08-first-four-bars.md": "2453dbdda70ad030df07c3b7b8e49451e64459c88ccb1e19321db49ccc563019",
+    "09-unexpected-laugh.md": "12da0de57258ef7db2b9f760efa0b0372c8a02246f0aa0550b3ffc486200fd78",
+    "10-nothing-in-common.md": "5fe18756ebf29b7d2f440dd95eba0d4a77cce6bc169230b5b026bcae50d2f84e",
+    "11-eight-of-pentacles.md": "c27fa03b24f26793d4765995dfc24b660951eddee1aa1d1042ab4d42d1254321",
+    "12-bedtime-rule.md": "b0ab7f20782014b92a0fd036706007f6783651be71ab055bb156de7fa532e711",
+    "13-keeping-busy.md": "e59825fd1762c2cdd78a0f2b41cb977a4445009e8cca0b23da78abd49a4e61a7",
+    "14-expected-no.md": "92ac33e82dca4833c096ecdbd947823c724a8e0045f01e0665d81e0e73f8296c"
+  }
+}
