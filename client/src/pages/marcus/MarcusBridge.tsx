@@ -27,6 +27,7 @@ import './bridge.css'
 
 const BRIDGE_SECONDS = 7
 const NEXT_PATH = '/marcus/reading/welcome1'
+const SUPPORT_EMAIL = 'hi@theseerwithin.com' // same address as the receipt sheet
 // The row holds the literal "Friend" when the letter carried no ?fn= (02/06 convention).
 const PLACEHOLDER_NAMES = ['Friend'] as const
 
@@ -50,18 +51,29 @@ export default function MarcusBridge() {
   )
 }
 
-/** Fail closed: no paid order, no page and no redirect. Local copy, verbatim; the
- *  link goes to the offer root, where the booking page lists the readings. */
+/** Fail closed: no paid order, no page and no redirect. Third copy pass (cold read 3):
+ *  one idea per sentence, the likely case first, the bank check as the default action,
+ *  a named person for the charged case, and the link alone on the last line. The link
+ *  goes to the offer root, where the booking page lists readings. */
 function FailClosed() {
   return (
     <section className="review bridge-page">
-      <h1>Let’s find your reading.</h1>
+      <h1>No payment has reached Marcus’s team yet.</h1>
       <p className="bridge">
-        This order could not be confirmed.{' '}
+        Most of the time this means your card was not charged. Please check your bank. If there
+        is no $35 charge, choose a reading and pay for it. Opening the readings costs nothing.
+        Nothing is charged until you press Pay.
+      </p>
+      <p className="bridge">
+        If your bank does show a $35 charge, email{' '}
+        <a href={`mailto:${SUPPORT_EMAIL}`}>{SUPPORT_EMAIL}</a> with the time you paid. A person
+        on Marcus’s team will match it to your order and send your reading. You will never be
+        charged twice.
+      </p>
+      <p className="bridge">
         <a href="/marcus/reading" className="text-link">
           Choose a reading
         </a>
-        .
       </p>
     </section>
   )
@@ -128,8 +140,8 @@ function ConfirmedSheet({ order, sessionId }: { order: PublicMarcusOrder; sessio
         </h1>
       </div>
       <p className="bridge thanks">
-        {name ? `Thank you, ${name}.` : 'Thank you.'} I have your question, your saved cards, and
-        the personal card connected to your name.
+        {name ? `Thank you, ${name}.` : 'Thank you.'} I have your question, the tarot cards turned
+        over for you, and your personal tarot card from your birth name.
       </p>
       <div className="facts" id="delivery-facts">
         <div className="rule-double" aria-hidden="true" />
@@ -156,8 +168,8 @@ function ConfirmedSheet({ order, sessionId }: { order: PublicMarcusOrder; sessio
         <div className="hair" aria-hidden="true" />
       </div>
       <p className="next">
-        Before you view your receipt, I want to show you one optional way to receive the same
-        reading.
+        Before your receipt, the next page offers this same reading as an audio recording. It
+        costs extra, and you can buy it or skip it.
       </p>
       <div className="action">
         <p className="count-line" id="countdown-line" aria-live="off">

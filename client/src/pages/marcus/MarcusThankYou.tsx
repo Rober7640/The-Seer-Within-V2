@@ -112,13 +112,22 @@ export default function MarcusThankYou() {
         <Receipt order={state.order} />
       ) : (
         <section className="review thanks still">
-          <h1>Let’s find your reading.</h1>
+          <h1>No payment has reached Marcus’s team yet.</h1>
           <p className="bridge">
-            This order could not be confirmed.{' '}
+            Most of the time this means your card was not charged. Please check your bank. If
+            there is no $35 charge, choose a reading and pay for it. Opening the readings costs
+            nothing. Nothing is charged until you press Pay.
+          </p>
+          <p className="bridge">
+            If your bank does show a $35 charge, email{' '}
+            <a href={`mailto:${SUPPORT_EMAIL}`}>{SUPPORT_EMAIL}</a> with the time you paid. A
+            person on Marcus’s team will match it to your order and send your reading. You will
+            never be charged twice.
+          </p>
+          <p className="bridge">
             <a href="/marcus/reading" className="text-link">
               Choose a reading
             </a>
-            .
           </p>
         </section>
       )}
