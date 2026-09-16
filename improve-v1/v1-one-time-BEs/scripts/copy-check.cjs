@@ -41,8 +41,14 @@ const OFFERS = {
   // copy/07-marcus/ (see the offer-number regex below, which allows the label suffix).
   // 07's booking page runs three tiers (The Spread / The Pattern / The Table) plus a speed bump.
   '07': { name: 'Marcus Daily Tarot', sla: /\b24 hours?\b/i, prices: ['35.00', '35', '57', '87', '12.77'] },
+  // 09 is the second physical offer. Its material lives in docs/09/, not copy/09/ (settled
+  // 2026-09-15) — see the offer-number regex below, which accepts both roots.
+  // SLA (Joel, 2026-09-15): ships within 2 business days, then arrives in 7–14 days (US) or
+  // 2–4 weeks (everywhere else), both counted from dispatch. $59, one charm. Order bump
+  // $11.11 — Reiki charging by Evelyn before packing (09-C3, Joel 2026-09-15).
+  '09': { name: 'Heart Cleanser Love Charm', sla: /\b(2 business days|7[-–]14 days|2[-–]4 weeks)\b/i, prices: ['59', '59.00', '11.11'] },
 };
-const ALL_PRICES = ['35.00', '35', '47', '57', '67', '87', '12.77', '300', '250', '11.11'];
+const ALL_PRICES = ['35.00', '35', '47', '57', '67', '87', '12.77', '300', '250', '11.11', '59', '59.00'];
 
 // ── per-file rules ─────────────────────────────────────────────────────────────────────────
 const BANNED = [
@@ -64,7 +70,7 @@ const BANNED = [
 
 // A leading "+" makes it a SEND DELAY, not a fulfilment SLA: "+1h" / "+24h" are the abandon
 // nudges' own names (02-E6). Only an unprefixed duration is a promise about when work arrives.
-const SLA_ANY = /(?<![+\d])\b(24 ?h(ours?)?|(three|3) (days|nights)|(sixteen|16|eight|8) hours?|7 business days|1[-–]2 weeks)\b/i;
+const SLA_ANY = /(?<![+\d])\b(24 ?h(ours?)?|(three|3) (days|nights)|(sixteen|16|eight|8) hours?|7 business days|1[-–]2 weeks|2 business days|7[-–]14 days|2[-–]4 weeks)\b/i;
 
 // A letter is an ESL or a nudge: money first appears on the booking page, after five yeses.
 // 07's dailies (`07-D-<day>-<spread>`) are letters too: same rule, price and delivery
@@ -132,7 +138,7 @@ for (const file of files) {
   // A folder may carry a human label after the number — copy/07-marcus/ is still offer 07.
   // Without the optional suffix the match fails, `offer` is undefined, and the price, SLA and
   // device-variance checks below all silently skip. The script then prints PASS on anything.
-  const offer = (rel.match(/copy\/(\d{2})(?:-[a-z-]+)?\//) || [])[1];
+  const offer = (rel.match(/(?:copy|docs)\/(\d{2})(?:-[a-z-]+)?\//) || [])[1];
   const id = path.basename(file, '.md');
   const body = bodyOf(fs.readFileSync(file, 'utf8'));
 
@@ -234,7 +240,7 @@ for (const [norm, offers] of sentencesByOffer) {
 }
 
 // ── report ─────────────────────────────────────────────────────────────────────────────────
-const offersSeen = [...new Set(files.map((f) => (path.relative(ROOT, f).match(/copy\/(\d{2})(?:-[a-z-]+)?\//) || [])[1]).filter(Boolean))];
+const offersSeen = [...new Set(files.map((f) => (path.relative(ROOT, f).match(/(?:copy|docs)\/(\d{2})(?:-[a-z-]+)?\//) || [])[1]).filter(Boolean))];
 console.log(`copy-check — ${files.length} file(s), offers ${offersSeen.sort().join(', ') || '—'}\n`);
 
 const showWarnings = () => {

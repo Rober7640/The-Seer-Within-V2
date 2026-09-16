@@ -36,10 +36,21 @@ export interface BackendOfferListing {
   name: string;
   /** Applied to every buyer of this offer. Fires her thank-you email. */
   tag: string;
-  /** Also applied when she took the order bump. */
-  bumpTag: string;
-  /** Applied when her reading is out. Fires the delivery email. */
-  deliveredTag: string;
+  /** Also applied when she took the order bump. UNDEFINED ⇒ the offer has no bump. */
+  bumpTag?: string;
+  /**
+   * Applied when her READING is out. Fires the delivery email. UNDEFINED ⇒ nothing to
+   * read (09 is an object, not a reading), and markBackendReadingDelivered refuses.
+   */
+  deliveredTag?: string;
+  /**
+   * PHYSICAL offers: applied when the parcel is marked shipped (POST
+   * /api/admin/shipments/:id/shipped). Fires the tracking email, which merges the
+   * `tracking_url` custom field. A SEPARATE field from `deliveredTag` on purpose: a
+   * reading's delivery and a parcel's dispatch are different Campaigns with different
+   * merge fields. UNDEFINED ⇒ markBackendOrderShipped refuses (no Campaign to fire).
+   */
+  shippedTag?: string;
   /**
    * The AWeber list a reading buyer lands on, and where the delivery email fires.
    * ⚠ Created BY HAND in the AWeber UI; this is the id it was given.
@@ -132,13 +143,30 @@ export const BACKEND_OFFERS: Record<BackendOfferKey, BackendOfferListing> = {
     initialListId: '6972552',
     bumpListId: '6972554',
   },
+  // ⭐ 09 — the Heart Cleanser Love Charm. A physical object with NO reading, so no delivered
+  // tag. Campaign triggers: the purchase tag (thank-you), the SHIPPED tag (tracking email,
+  // `tracking_url` merged) and — since 09-C3 (Joel, 2026-09-15) — the BUMP tag for Reiki
+  // charging before packing. Lists: the same initial (6972552) and bump (6972554) lists as 06,
+  // told apart only by the be-09 tags.
+  // ⛔ A Campaign on 6972554 must trigger on `be-09-bump`, never on `be-09-heart-cleanser`:
+  //    the purchase tag rides the bump-list write too, so it would send the thank-you twice.
+  'heart-cleanser': {
+    number: '09',
+    name: 'Heart Cleanser Love Charm',
+    tag: 'be-09-heart-cleanser',
+    bumpTag: 'be-09-bump',
+    shippedTag: 'be-09-shipped',
+    initialListId: '6972552',
+    bumpListId: '6972554',
+  },
 };
 
 /** Tags to apply at the moment she pays. */
 export function purchaseTags(offer: BackendOfferKey, bumpPurchased = false): string[] {
   const listing = BACKEND_OFFERS[offer];
   const tags = [BE_CUSTOMER_TAG, listing.tag];
-  if (bumpPurchased) tags.push(listing.bumpTag);
+  // An offer with no bump tag has no bump to tag, whatever the flag says.
+  if (bumpPurchased && listing.bumpTag) tags.push(listing.bumpTag);
   return tags;
 }
 
@@ -159,7 +187,7 @@ export function purchaseListWrites(
   const writes: BackendListWrite[] = [
     { listId: readingListId, tags: [BE_CUSTOMER_TAG, listing.tag], role: 'initial' },
   ];
-  if (bumpPurchased) {
+  if (bumpPurchased && listing.bumpTag) {
     if (listing.bumpListId) {
       writes.push({
         listId: listing.bumpListId,
@@ -236,7 +264,14 @@ export function upsellPurchaseTags(offer: BackendOfferKey, productKey: string): 
   return [BE_CUSTOMER_TAG, offerListing.tag, `be-${offerListing.number}-${listing.tagSuffix}`];
 }
 
-/** Tag to apply when her reading has been produced and can be linked. */
-export function deliveredTag(offer: BackendOfferKey): string {
+/** Tag to apply when her reading has been produced and can be linked. Undefined for an
+ *  offer with no reading (09). */
+export function deliveredTag(offer: BackendOfferKey): string | undefined {
   return BACKEND_OFFERS[offer].deliveredTag;
+}
+
+/** Tag to apply when a physical order's parcel is marked shipped. Undefined when the
+ *  offer has no shipped Campaign configured (every offer except 09 today). */
+export function shippedTag(offer: BackendOfferKey): string | undefined {
+  return BACKEND_OFFERS[offer].shippedTag;
 }

@@ -27,6 +27,7 @@ import {
   type Upsell1Chain,
   type Upsell1Copy,
 } from "@/lib/backendOffers";
+import { reusableUpsellShipping } from "@/lib/upsellShipping";
 import { backendOfferFunnel, currentFunnel, getPostHogFunnel, isTwinFlameOffer } from "@/lib/funnel";
 import type { BackendOfferKey } from "@shared/backendOffers";
 import { track as trackPH } from "@/lib/posthog";
@@ -51,6 +52,10 @@ interface UserData {
   // Upsell 1 price (cents) for this user's price-test variant. Drives the
   // displayed price so it matches what /api/upsell/charge bills.
   upsell1PriceCents?: number;
+  // The address the BOOKING checkout already collected, on a physical backend offer
+  // (09, 06). Its presence is what lets this chat skip the shipping form. Absent on
+  // V1 and on every offer whose checkout collected no address.
+  shipping?: ShippingAddress | null;
 }
 
 interface ShippingAddress {
@@ -444,8 +449,22 @@ export function useUpsellChat({
         setUpsellPaymentId(result.paymentIntentId);
         await sendBotMessages(p(copy.SUCCESS));
         setIsProcessing(false);
-        setShowShippingForm(true);
-        setStage("SHIPPING");
+        // ⭐ On a physical backend offer (09, 06) she gave her address at the booking
+        // checkout, and /api/backend/upsell/charge has already stamped it onto THIS
+        // payment — so do not make her type it again (Joel, 2026-09-16: "skip").
+        // Null ⇒ V1, a digital backend offer, or an unusable address: open the form
+        // exactly as before, rather than ship blind.
+        const reuse = reusableUpsellShipping({
+          backend: beFunnel,
+          offer,
+          shipping: userData.shipping,
+        });
+        if (reuse) {
+          await processStage("COMPLETE");
+        } else {
+          setShowShippingForm(true);
+          setStage("SHIPPING");
+        }
       } else if (result.fallback && beFunnel) {
         // The off-session charge on her saved card was declined (Indian cards reject
         // off-session PIs; 3DS cards can't authenticate off-session). Send her to a
@@ -522,6 +541,8 @@ export function useUpsellChat({
     sendBotMessages,
     p,
     backendOverride,
+    offer,
+    processStage,
   ]);
 
   // Handle CTA Decline

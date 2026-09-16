@@ -19,6 +19,7 @@ import { backendUpsellFor } from '../lib/backendCustomerList';
 import { buildBackendPurchaseEvent, utmsFromMetadata } from '../lib/backendPurchaseAnalytics';
 import { BACKEND_STRIPE_PRODUCT_PREFIX, resolveOfferKey } from '@shared/backendOffers';
 import { recordBackendUpsellOrder } from '../lib/beUpsellOrders';
+import { handleBackendRefund, recordBackendShipment } from '../lib/beShipments';
 import { migrateAndEmailFunnelUser } from '../lib/funnelMigrationEmail';
 import { fireGoogleAdsConversion, gadsStepForProduct } from '../lib/googleAds';
 import { maybeSchedulePostPurchaseDrip } from '../lib/postPurchaseDripTrigger';
@@ -1077,8 +1078,16 @@ router.post('/stripe', async (req: Request, res: Response) => {
           );
         }
       } else {
-        await recordBackendOrder(session).catch((err) =>
-          logger.error('recordBackendOrder failed (non-blocking):', err),
+        const beOrder = await recordBackendOrder(session).catch((err) => {
+          logger.error('recordBackendOrder failed (non-blocking):', err);
+          return null;
+        });
+        // PHYSICAL offers (06, 09): record the parcel and tell the operator to post it.
+        // Deliberately INDEPENDENT of the be_orders write above — production may lack the
+        // 07/08 be_orders columns, and a paid parcel must still be on record. A digital
+        // offer returns immediately without touching anything. Swallows its own errors.
+        await recordBackendShipment(session, { beOrderId: beOrder?.id ?? null }).catch((err) =>
+          logger.error('recordBackendShipment failed (non-blocking):', err),
         );
       }
     }
@@ -1291,6 +1300,20 @@ router.post('/stripe', async (req: Request, res: Response) => {
         );
       }
     }
+  }
+
+  // Handle charge.refunded — BACKEND (`be_*`) products only.
+  // No other branch of this webhook reads this event type, so no funnel side effect can
+  // fire from it. handleBackendRefund owns the gate: it returns before touching the
+  // database unless the charge's (or its PaymentIntent's) metadata.product starts with
+  // `be_`. A full refund marks be_orders refunded, cancels a PENDING shipment and emails
+  // the operator "do not ship". Swallows its own errors — the ack is never failed.
+  if (event.type === 'charge.refunded') {
+    const charge = event.data.object as Stripe.Charge;
+    const stripe = stripeClient;
+    await handleBackendRefund(charge, {
+      retrievePaymentIntent: (id: string) => stripe.paymentIntents.retrieve(id),
+    }).catch((err) => logger.error('handleBackendRefund failed (non-blocking):', err));
   }
 
   // Always return 200 to acknowledge receipt

@@ -108,7 +108,7 @@ You know what they say. You know why you chose them.
 
 When your fingers touch the capsule, you can return to the whole wish: the person you may still long for, and the affection you want to experience in your own life.
 
-**[Get your Heart Cleanser Love Charm here.]({{OFFER_URL}}?c=21)**
+**[Get your Heart Cleanser Love Charm here.](https://theseerwithin.com/offers/heart-cleanser?c=21)**
 
 ### His name is optional. Your part belongs there.
 
@@ -152,7 +152,7 @@ Slip it onto your left wrist.
 
 Now your wish has a place you can carry with you, held inside a charm you've made personal with your own words.
 
-**[Get your Heart Cleanser Love Charm here.]({{OFFER_URL}}?c=22)**
+**[Get your Heart Cleanser Love Charm here.](https://theseerwithin.com/offers/heart-cleanser?c=22)**
 
 ### Remember what you wrote after his name
 
@@ -178,13 +178,13 @@ You have probably given a great deal of thought to how he feels. Give your own f
 
 Write the sentence you want to carry.
 
-And if you'd like a place to keep it on your left wrist, **[get your Heart Cleanser Love Charm here.]({{OFFER_URL}}?c=23)**
+And if you'd like a place to keep it on your left wrist, **[get your Heart Cleanser Love Charm here.](https://theseerwithin.com/offers/heart-cleanser?c=23)**
 
 I'm on your side in this, dear.
 
 — Evelyn
 
-P.S. **What happens after hello?** That's the question to keep beside you when you write your wish. His name may be the first thing you put on the paper. Leave room for how you wish to feel. **[Get your Heart Cleanser Love Charm here.]({{OFFER_URL}}?c=24)**
+P.S. **What happens after hello?** That's the question to keep beside you when you write your wish. His name may be the first thing you put on the paper. Leave room for how you wish to feel. **[Get your Heart Cleanser Love Charm here.](https://theseerwithin.com/offers/heart-cleanser?c=24)**
 
 ---
 
@@ -193,5 +193,5 @@ P.S. **What happens after hello?** That's the question to keep beside you when y
 - **Sequence role:** Email 1 introduces left-wrist placement and the wish capsule. Email 2 pays off a new hook: what to add beneath his name. The reveal is how she wishes to feel in the relationship; the capsule makes that wish tangible.
 - **Audience:** Follow-up for readers who have not purchased. Does not assume the recipient owns the bracelet, read the entire first letter, or chose to write his name.
 - **Product:** Pink quartz and a wish capsule, per user. Paper size and opening instructions should follow the actual upgraded product. No supplied stationery, guaranteed reunion, or product-controlled romantic outcome is promised.
-- **Build:** New imagery pending. `%FIRSTNAME%` becomes `{{ subscriber.first_name | capitalize }}`. `{{OFFER_URL}}` is a placeholder. Proposed email-2 tracking range is `c=21–24`, distinct from email 1's `c=1–4`; confirm with the final campaign configuration.
+- **Build:** New imagery pending. `%FIRSTNAME%` becomes `{{ subscriber.first_name | capitalize }}`. Offer URL wired to `https://theseerwithin.com/offers/heart-cleanser` (Joel, 2026-09-15). Proposed email-2 tracking range is `c=21–24`, distinct from email 1's `c=1–4`; confirm with the final campaign configuration.
 - **Timing:** No invented deadline or assumption about elapsed days. Price is $59 for one charm, on the offer page only. Do not reveal price in the ESL. Fulfilment terms remain on the offer page.

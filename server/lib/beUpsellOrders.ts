@@ -12,6 +12,23 @@ export type UpsellPILike = {
   amount_received?: number | null;
   currency?: string | null;
   metadata?: Record<string, string | undefined> | null;
+  /**
+   * Where this upsell parcel goes. Set at charge time from the address she gave at the
+   * booking checkout for a `collectsShipping` offer (09, 06) — the upsells no longer ask
+   * her to type it a second time (Joel, 2026-09-16: "skip") — or, on every other offer,
+   * from the shipping form she filled in after paying.
+   */
+  shipping?: {
+    name?: string | null;
+    address?: {
+      line1?: string | null;
+      line2?: string | null;
+      city?: string | null;
+      state?: string | null;
+      postal_code?: string | null;
+      country?: string | null;
+    } | null;
+  } | null;
 };
 
 /**
@@ -25,6 +42,10 @@ export function upsellOrderValuesFromPI(pi: UpsellPILike): InsertBeUpsellOrder |
   if (!listing) return null;
   if (!isBackendOfferKey(meta.offer)) return null;
   const offer = meta.offer;
+  // The address the charge carried. ⚠ This is the ONLY record of where an upsell parcel
+  // goes once the chat stops asking for it, so it is written even when it is all nulls —
+  // a null column is a visible gap; a missing one is a silent guess.
+  const address = pi.shipping?.address ?? null;
   return {
     stripePaymentIntentId: pi.id,
     bookingSessionId: meta.originalSession ?? null,
@@ -36,6 +57,13 @@ export function upsellOrderValuesFromPI(pi: UpsellPILike): InsertBeUpsellOrder |
     currency: pi.currency ?? 'usd',
     email: meta.email ?? null,
     firstName: meta.firstName ?? null,
+    recipientName: pi.shipping?.name ?? null,
+    line1: address?.line1 ?? null,
+    line2: address?.line2 ?? null,
+    city: address?.city ?? null,
+    state: address?.state ?? null,
+    postalCode: address?.postal_code ?? null,
+    country: address?.country ?? null,
   };
 }
 

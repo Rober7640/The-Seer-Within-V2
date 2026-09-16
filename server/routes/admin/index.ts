@@ -25,6 +25,7 @@ import postPurchaseDripTestRoutes from './postPurchaseDripTest';
 import priceTestRoutes from './priceTest';
 import { publicRouter as abTestingPublicRouter } from './abTesting';
 import experimentsRoutes from './experiments';
+import shipmentRoutes from './shipments';
 import logger from '../../lib/logger';
 
 const router = Router();
@@ -200,6 +201,8 @@ router.use('/post-purchase-drip', postPurchaseDripTestRoutes);
 // experiments framework (its only readout; framework v1_main_price_2026 is draft).
 router.use('/price-test', priceTestRoutes);
 router.use('/experiments', experimentsRoutes);
+// Backend-deck physical shipments (06, 09): list / mark shipped / cancel. API only.
+router.use('/shipments', shipmentRoutes);
 
 export { abTestingPublicRouter };
 export default router;

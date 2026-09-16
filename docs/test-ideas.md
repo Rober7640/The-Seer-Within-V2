@@ -2058,3 +2058,55 @@ Not covered — needs Stripe or a browser:
 - [ ] A DOB typed as `03/07/1971` at Checkout → order paid, `fulfilment_note = DOB_AMBIGUOUS(raw=03/07/1971)`, draw still dealt, support can see it
 - [ ] `scripts/publish-08-editions.ts --apply` REFUSED without `BE_08_ALLOW_PUBLISH=1` (covered by hand, not by a test)
 - [ ] T5's GET reads `draw_json.edition.positions` + `draw_json.positions` and never needs the editions table for an already-dealt order
+
+## Backend offer 09 — Heart Cleanser Love Charm (client)
+
+Booking `/offers/heart-cleanser`, receipt `/offers/heart-cleanser/success`, upsells on the shared
+`/offers/upsell/*` pages with `client/src/lib/upsellCopy/heartCleanser.ts`.
+
+Covered by vitest (`client/src/lib/heartCleanserBooking.test.ts`, `heartCleanserReceipt.test.ts`,
+`upsellCopy/heartCleanser.test.ts`, `funnel.heartCleanser.test.ts`):
+
+- [x] four statements in order, word for word against 09-C1 (operator-approved 2026-09-15); `allStatementsTicked` false until all four (and for a wrong-length list)
+- [x] no statement carries logistics (shipping, days, price, `$`, checkout, subscription, address); no `PAGE_REQUEST` export and no request section in the doc
+- [x] small print is 09-C1's word for word, carries "ships within 2 business days, then arrives in 7–14 days in the US and 2–4 weeks everywhere else", and names no amount; no "Stripe" / "One payment of $59" anywhere in page copy
+- [x] deck, grey hint and small print count match `PAGE_STATEMENTS.length`; caption says the clear crystal isn't included, alt names it only as display
+- [x] checkout request = `heart-cleanser` / `page` / `bump: true|false` (only a ticked box) and carries `firstName` + `letterCode`
+- [x] page `$59` = catalog 5900; only the studio close-up (rosequartz, 570px)
+- [x] order bump (09-C3, Reiki charging): label + second line word for word against the doc; `+$11.11` and the $59.00 → $70.11 total computed from catalog cents; no "incomplete"/outcome/energy wording; small print says "One payment." with no amount
+- [x] receipt: `bumpPurchased` only for a literal `true`; the "Added: Reiki charging by Evelyn before packing, $11.11" line matches 09-T1 and 09-C3
+- [x] receipt: no `?s=` fetches nothing; 400/404 → not-found, 402 → unpaid, 5xx/offline/non-JSON → error; an order for another offer is never shown
+- [x] receipt subjects match 09-T3 / 09-T4 docs word for word
+- [x] every string reachable in U1 and both U2 paths has no clearing / energy field / our conversation / reading and no unfilled token; U2 never reaches a Claude stage
+- [x] `/offers/heart-cleanser` and `/success` tag PostHog `heartcleanser` (booking / thank_you)
+
+Covered by `improve-v1/v1-one-time-BEs/scripts/walk-09-smoke.mjs` (Playwright, local only):
+
+- [x] four statements and no request block; button absent through three ticks, present after four, reachable on screen at 390 and 1280
+- [x] rendered page never says "Stripe" / "One payment of $59"; small print carries the shipping sentence and stays unchanged with the bump ticked
+- [x] click with checkout dark logs the preview (with `letterCode`) and does not navigate
+- [x] no horizontal scroll at 390; receipt with no / unknown `?s=` shows the fallback
+- [x] order bump shown unticked above the total; ticking → $70.11 and the next click carries `bump: true`; unticking → $59.00
+- [x] verified receipt (lookup stubbed in the browser) shows the Added line for a bump order only
+
+Covered by vitest (server) for the 09 bump — `backendOffers.test.ts`, `beOrders.test.ts`, `backendOffers.heartCleanser.test.ts`, `beShipments.test.ts`, `admin/shipments.test.ts`, `backendCustomerList.test.ts`:
+
+- [x] catalog bump `reiki_charge` / 1111 / `+ Reiki charging by Evelyn before packing` / `packingAlert`; `bump:true` → second Stripe line, `bumpProduct` metadata, `BE 09 · … + Reiki charging…` descriptor; an offer with no bump still refuses `bump:true`
+- [x] `be_shipments.bump_purchased` / `bump_product_key` written from `metadata.bump` + the catalog key; the retry upsert never rewrites them; schema and the migration file agree
+- [x] operator alert: bump order → subject AND first line start `⚡ REIKI CHARGE BEFORE PACKING` (also with no address, on the NOT RECORDED fallback and on a retried alert); non-bump 09 says `NO — pack as normal`; 06's Closed Purse bump never gets the alarm; DO NOT SHIP stays first on a refund
+- [x] `be-09-bump` on bump list 6972554 as a second write; no second write without the bump
+
+Not covered — needs Stripe test mode, AWeber or a person:
+
+- [ ] Real test-mode Checkout with the bump ticked → Stripe shows two lines ($59.00 + $11.11), metadata `bump=1`, `bumpProduct=reiki_charge`; the webhook writes `be_shipments.bump_purchased = true` and the operator email leads with ⚡ REIKI CHARGE BEFORE PACKING
+- [ ] Partial refund of only the $11.11 → parcel stays pending, `bump_purchased` still true (by design) — confirm the packer is told by hand
+- [ ] AWeber: a Campaign on 6972554 triggered by `be-09-bump` sends the bump confirmation once; the 09-T3 confirmation still sends once (not twice)
+
+Not covered — needs Stripe test mode or the sandbox server:
+
+- [ ] Real test-mode Checkout from `?c=21&fn=…` → Stripe metadata carries `c=21` and `firstName`; address collected on Stripe's page for a non-US country
+- [ ] Stripe cancel → back on the booking page with `?cancelled=1`, boxes clear, `c` still sent on the next try (sessionStorage)
+- [ ] Browser Back from Stripe (bfcache) → checkout button is enabled again, not stuck disabled
+- [ ] Receipt with a real paid 09 session → name, `$59 (free shipping)`, the Stripe address as lines; a paid 06 session with the 09 URL → fallback
+- [ ] U1 accept → shipping form still opens (re-asks the address she gave Stripe) — decide prefill/skip, then test
+- [ ] U2 off-session decline → hosted fallback checkout accepts the buyer's country (today it allows only 7)

@@ -171,8 +171,11 @@ export async function recordBackendOrder(
   const treatment = isBookingTreatment(metadata.treatment) ? metadata.treatment : null;
 
   const amountCents = session.amount_total ?? 0;
-  const bumpPurchased = metadata.bump === '1';
-  const bumpCents = bumpPurchased ? offer.bump.cents : 0;
+  // ⛔ An offer with no bump cannot have sold one, whatever the metadata says —
+  //    checkout refuses `bump: true` for it, so a '1' here is tampering or a bug.
+  const bump = metadata.bump === '1' ? offer.bump : undefined;
+  const bumpPurchased = Boolean(bump);
+  const bumpCents = bump ? bump.cents : 0;
   // Prefer what checkout recorded; fall back to the arithmetic Stripe can prove. The
   // two agree unless a coupon was applied, and then Stripe's total is the truth.
   const readingCents = centsFrom(metadata.readingCents) ?? Math.max(0, amountCents - bumpCents);
@@ -212,7 +215,7 @@ export async function recordBackendOrder(
         readingCents,
         bumpPurchased,
         bumpCents,
-        bumpProductKey: bumpPurchased ? offer.bump.productKey : null,
+        bumpProductKey: bump ? bump.productKey : null,
         amountCents,
         currency: session.currency ?? 'usd',
         email,

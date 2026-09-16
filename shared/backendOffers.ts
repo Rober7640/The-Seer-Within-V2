@@ -27,12 +27,15 @@
 // Trackdesk branch defaults an unrecognised product to conversionType 'sale', which
 // would book a backend reading as a main-funnel affiliate sale.
 
+import { STRIPE_CHECKOUT_SHIPPING_COUNTRIES } from './shippingCountries';
+
 export type BackendOfferKey =
   | 'twin-flame'
   | 'judgement-day'
   | 'pixiu-bracelet'
   | 'marcus-daily'
-  | 'marcus-reading';
+  | 'marcus-reading'
+  | 'heart-cleanser';
 
 /** Which of the two booking treatments sold it — decides where a cancel returns to. */
 export type BookingTreatment = 'page' | 'chat';
@@ -123,6 +126,22 @@ export const MARCUS_READING_PRICE_CENTS = 3500;
 export const MARCUS_READING_BUMP_PRODUCT_KEY = 'marcus_speed';
 export const MARCUS_READING_BUMP_CENTS = 1277;
 
+// 09 — the Heart Cleanser Love Charm (operator, 2026-09-15). A PHYSICAL object from our
+// own stock, packed and shipped by us, free shipping worldwide, ships within 2 business
+// days (dispatch — the delivery clock starts after that). Fixed price, quantity one.
+export const HEART_CLEANSER_PRICE_CENTS = 5900;
+
+// 09's bump — Reiki charging by Evelyn before the charm is packed, $11.11 (09-C3; Joel,
+// 2026-09-15, superseding "no order bump"). ⭐ The deck's first bump that is a REAL SERVICE
+// done by hand, not a text instructional: someone charges each bump buyer's charm before it
+// is packed, inside the same 2-business-day dispatch window. That is why it carries a
+// `packingAlert` — be_shipments records it and the operator alert leads with it.
+export const HEART_CLEANSER_BUMP_CENTS = 1111;
+
+// ⛔ 09's bump key — see the note on 02's above. Never 06's `closed_purse`: that one is an
+//    emailed instructional, and nothing is done to the bracelet.
+export const HEART_CLEANSER_BUMP_PRODUCT_KEY = 'reiki_charge';
+
 // ─── The catalog ───────────────────────────────────────────────────────────────
 
 /** 07's rungs. ⛔ The key is what the browser may send; the price is looked up here. */
@@ -161,19 +180,30 @@ export interface BackendOfferBump {
   cents: number;
   /** What Stripe prints on its own page and on her card statement line item. */
   stripeName: string;
+  /**
+   * PHYSICAL offers only: set when the bump is something a person must DO TO THE PARCEL
+   * before it is packed (09's Reiki charging). The operator's parcel alert leads its subject
+   * and first line with it, so a bump order cannot be packed as a plain one.
+   * UNDEFINED ⇒ nothing happens at packing (every text-instructional bump: 02/03/06/07/08).
+   */
+  packingAlert?: string;
 }
 
 export interface BackendOffer {
   key: BackendOfferKey;
   /** The deck's number, as every doc cites it. */
-  number: '02' | '03' | '06' | '07' | '08';
+  number: '02' | '03' | '06' | '07' | '08' | '09';
   /** What Stripe shows her at checkout. */
   stripeName: string;
   stripeDescription: string;
   /** `metadata.product`. ⛔ Must start with the `be_` prefix — see the header. */
   stripeProduct: string;
   pricing: BackendPricing;
-  bump: BackendOfferBump;
+  /**
+   * The order bump. UNDEFINED ⇒ the offer has none (no offer today). A checkout that asks
+   * for a bump on such an offer is refused with `bump_unavailable` — never charged, never ignored.
+   */
+  bump?: BackendOfferBump;
   /** Where each treatment sends her back to when she cancels out of Stripe. */
   bookingPath: Record<BookingTreatment, string>;
   /** Where Stripe returns her after paying. Gets `?s=<session>` appended. */
@@ -219,6 +249,15 @@ export interface BackendOffer {
    * collects only the email (02, 03).
    */
   collectsShipping?: boolean;
+  /**
+   * PHYSICAL offers only: the countries Stripe Checkout lets her ship to.
+   *
+   * UNDEFINED ⇒ the server's default seven-country list (BACKEND_SHIPPING_COUNTRIES in
+   * server/routes/backendOffers.ts), which is what 06 has always used. 09 ships free
+   * worldwide, so it names STRIPE_CHECKOUT_SHIPPING_COUNTRIES (shared/shippingCountries.ts).
+   * Plain strings — the server typechecks them against Stripe's own union.
+   */
+  shippingCountries?: readonly string[];
   /**
    * Extra questions Stripe's hosted Checkout asks on ITS page (`custom_fields`), for an
    * offer that collects nothing on the booking page (08, decision D5 2026-09-13).
@@ -440,6 +479,43 @@ export const BACKEND_OFFER_CATALOG: Record<BackendOfferKey, BackendOffer> = {
     // ⛔ Flip this in the same commit that closes all three, never before.
     readyForMoney: false,
   },
+
+  // ⭐ 09 — the Heart Cleanser Love Charm. A PHYSICAL object from our own stock, the
+  // deck's second shipped product after 06, and the first whose bump is done BY HAND.
+  'heart-cleanser': {
+    key: 'heart-cleanser',
+    number: '09',
+    // Deck-wide rule: the verb is never "buy". Stripe's own label stays a plain noun.
+    stripeName: 'Heart Cleanser Love Charm',
+    // ⚠ Placeholder copy for operator review. "Ships within" = dispatch, not delivery.
+    stripeDescription: 'Free shipping worldwide. Ships within 2 business days.',
+    stripeProduct: 'be_heart_cleanser',
+    pricing: { model: 'fixed', priceCents: HEART_CLEANSER_PRICE_CENTS },
+    // 09-C3 — see HEART_CLEANSER_BUMP_CENTS. Rides as line item 2 on the same session; the
+    // webhook reads `metadata.bump` to flag the be_shipments row and the parcel alert.
+    bump: {
+      productKey: HEART_CLEANSER_BUMP_PRODUCT_KEY,
+      cents: HEART_CLEANSER_BUMP_CENTS,
+      stripeName: '+ Reiki charging by Evelyn before packing',
+      packingAlert: 'REIKI CHARGE BEFORE PACKING',
+    },
+    // Page treatment only (no chat). Both treatment keys point at the one booking page so
+    // a Stripe cancel always returns somewhere real — the same pattern as 06.
+    bookingPath: {
+      page: '/offers/heart-cleanser',
+      chat: '/offers/heart-cleanser',
+    },
+    successPath: '/offers/heart-cleanser/success',
+    // V1's two upsells through the shared backend upsell engine, exactly as 03/06.
+    upsellEntryPath: '/offers/upsell/welcome1',
+    // Stripe Checkout collects the address; the webhook records a be_shipments row.
+    collectsShipping: true,
+    shippingCountries: STRIPE_CHECKOUT_SHIPPING_COUNTRIES,
+    // 🔴 FALSE in committed code. Flip only after the booking + success pages render, the
+    //    be_shipments migration is applied, the AWeber Campaigns on be-09-* exist, and a
+    //    Stripe TEST-mode order has been walked end to end (packing alert included).
+    readyForMoney: false,
+  },
 };
 
 /** ⛔ Every backend Stripe product starts with this, and nothing else in the repo does. */
@@ -477,7 +553,7 @@ export function backendOrderDescriptor(
 ): string {
   const offer = BACKEND_OFFER_CATALOG[key];
   const base = `BE ${offer.number} · ${offer.stripeName}`;
-  if (!bumpPurchased) return base;
+  if (!bumpPurchased || !offer.bump) return base;
   return `${base} + ${offer.bump.stripeName.replace(/^\+\s*/, '')}`;
 }
 
@@ -569,7 +645,9 @@ export type BackendChargeResult =
         | 'amount_below_floor'
         | 'amount_too_large'
         | 'tier_missing'
-        | 'tier_unknown';
+        | 'tier_unknown'
+        /** She asked for a bump on an offer that has none. */
+        | 'bump_unavailable';
       message: string;
     };
 
@@ -673,8 +751,19 @@ export function priceBackendOffer(
     readingCents = given;
   }
 
-  const bumpPurchased = req.bump === true;
-  const bumpCents = bumpPurchased ? offer.bump.cents : 0;
+  // ⛔ An offer with no bump REFUSES `bump: true`. Charging would take money for nothing;
+  //    silently ignoring it would hide a booking page that shows a box it should not.
+  if (req.bump === true && !offer.bump) {
+    return {
+      ok: false,
+      code: 'bump_unavailable',
+      message: 'That add-on is not available for this order. Please refresh the page and try again.',
+    };
+  }
+
+  const bump = req.bump === true ? offer.bump : undefined;
+  const bumpPurchased = Boolean(bump);
+  const bumpCents = bump ? bump.cents : 0;
 
   const lines: BackendChargeLine[] = [
     {
@@ -687,8 +776,8 @@ export function priceBackendOffer(
       amountCents: readingCents,
     },
   ];
-  if (bumpPurchased) {
-    lines.push({ name: offer.bump.stripeName, amountCents: bumpCents });
+  if (bump) {
+    lines.push({ name: bump.stripeName, amountCents: bumpCents });
   }
 
   return {

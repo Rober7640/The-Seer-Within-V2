@@ -32,6 +32,14 @@ describe('upsellOrderValuesFromPI', () => {
       currency: 'usd',
       email: 'her@example.com',
       firstName: 'Sarah',
+      // A digital booking's upsell carries no address of its own.
+      recipientName: null,
+      line1: null,
+      line2: null,
+      city: null,
+      state: null,
+      postalCode: null,
+      country: null,
     });
   });
 
@@ -60,5 +68,64 @@ describe('upsellOrderValuesFromPI', () => {
 
   it('returns null when the offer does not resolve (never misattribute)', () => {
     expect(upsellOrderValuesFromPI({ ...basePI, metadata: { product: 'be_protection_ritual', offer: 'bogus' } })).toBeNull();
+  });
+});
+
+// The upsells no longer ask a 09/06 buyer for an address — she gave one at checkout and
+// it is copied onto the upsell PaymentIntent (operator, Joel 2026-09-16: "skip"). So the
+// ORDER RECORD has to keep it too: the row is what says where this parcel goes.
+describe('upsellOrderValuesFromPI — the shipping address on the record', () => {
+  const shipped = (shipping: unknown) =>
+    upsellOrderValuesFromPI({
+      ...basePI,
+      shipping,
+      metadata: {
+        product: 'be_bracelet',
+        offer: 'heart-cleanser',
+        originalSession: 'cs_booking_09',
+        email: 'her@example.com',
+      },
+    } as Parameters<typeof upsellOrderValuesFromPI>[0]);
+
+  it('records the address the charge carried, so nothing is lost by skipping the form', () => {
+    const v = shipped({
+      name: 'Sarah Rose',
+      address: {
+        line1: '1 Rose Lane',
+        line2: 'Flat 2',
+        city: 'Bath',
+        state: 'Somerset',
+        postal_code: 'BA1 1AA',
+        country: 'GB',
+      },
+    });
+    expect(v).toMatchObject({
+      offer: 'heart-cleanser',
+      offerNumber: '09',
+      recipientName: 'Sarah Rose',
+      line1: '1 Rose Lane',
+      line2: 'Flat 2',
+      city: 'Bath',
+      state: 'Somerset',
+      postalCode: 'BA1 1AA',
+      country: 'GB',
+    });
+  });
+
+  it('leaves the address columns null when the charge carried none', () => {
+    expect(shipped(undefined)).toMatchObject({ recipientName: null, line1: null, country: null });
+    expect(shipped(null)).toMatchObject({ line1: null });
+  });
+
+  it('records the parts that are there and nulls the rest', () => {
+    expect(shipped({ name: 'Sarah Rose', address: { line1: '1 Rose Lane', country: 'GB' } })).toMatchObject({
+      recipientName: 'Sarah Rose',
+      line1: '1 Rose Lane',
+      line2: null,
+      city: null,
+      state: null,
+      postalCode: null,
+      country: 'GB',
+    });
   });
 });

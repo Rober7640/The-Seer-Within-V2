@@ -25,10 +25,10 @@ export {
   PIXIU_BRACELET_BUMP_PRODUCT_KEY,
 } from '@shared/backendOffers';
 
-export const TAB_TITLE = 'The Wishing Bracelet — your booking';
+export const TAB_TITLE = 'Your Wishing Bracelet';
 
 export const PAGE_HEADER = {
-  title: 'The Wishing Bracelet — your booking',
+  title: 'Your Wishing Bracelet',
   deck: 'By booking this you agree to the following:',
 } as const;
 
