@@ -16,6 +16,12 @@ See [README.md](README.md). File names are unchanged; only their folders moved.
 
 Every internal link, code comment and test path was rewritten with the move. Verified: 53 client tests pass (one test reads `09-T1`/`09-T3`/`09-T4`/`09-C3` by path), tsc unchanged at its 46-error baseline, copy-check still detects these files as offer 09 and passes, no broken links inside 09 except pre-existing ones in this file's copied master text.
 
+### Committed 2026-09-16
+
+Branch **`09-heart-cleanser`**, commit **`ad33868`** (122 files), branched from `09-love`'s `f187970` so the Codex email/doc commit is kept. Other sessions' uncommitted work (Evelyn cycle-6, `output/`, `tmp/`) was deliberately left out. ⛔ Nothing deployed, sent or charged; `readyForMoney` is still `false`.
+
+Also in that commit: the upsell address form is SKIPPED when the booking already took an address (Joel, 2026-09-16), with the address carried to the upsell charge and order row; two V1 lines that became false for 09 were replaced ("I just need to know where to send it", "the same address as your protection stone"). ⚠ The same two lines are still false for 06, which shares them.
+
 ### Joel's decisions, 2026-09-16
 
 - [x] **Upsell address form → worldwide** (backend offers only; V1 keeps its seven).
