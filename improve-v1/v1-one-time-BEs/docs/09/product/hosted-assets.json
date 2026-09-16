@@ -13,5 +13,15 @@
     "url": "https://luna-assets-tsw.s3.ap-southeast-2.amazonaws.com/evelyn/backend-09/debd65ca70-black_lava_steps-email.gif",
     "bytes": 1424620,
     "contentType": "image/gif"
+  },
+  "rosequartz3-page-800.jpg": {
+    "url": "https://luna-assets-tsw.s3.ap-southeast-2.amazonaws.com/evelyn/backend-09/rosequartz3-page-800.jpg",
+    "bytes": 55365,
+    "contentType": "image/jpeg"
+  },
+  "rosequartz-page-570.jpg": {
+    "url": "https://luna-assets-tsw.s3.ap-southeast-2.amazonaws.com/evelyn/backend-09/rosequartz-page-570.jpg",
+    "bytes": 38311,
+    "contentType": "image/jpeg"
   }
 }

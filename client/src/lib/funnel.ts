@@ -103,6 +103,7 @@ export function skipEmail(search?: string): boolean {
 export const TWIN_FLAME_PREFIX = "/tarot/twin-flame"; // 02 Twin Flame Tarot
 export const JUDGEMENT_PREFIX = "/offers/wiccan/judgement-day"; // 03 Judgement Day
 export const PIXIU_PREFIX = "/offers/wiccan/pixiu-bracelet"; // 06 Pixiu (Wishing) Bracelet
+export const HEART_CLEANSER_PREFIX = "/offers/heart-cleanser"; // 09 Heart Cleanser Love Charm
 
 export const BACKEND_OFFER_PREFIXES = [
   TWIN_FLAME_PREFIX,
@@ -206,7 +207,7 @@ export function funnelPath(v1Path: string, pathname?: string): string {
 export type PostHogFunnel =
   | "soulmate" | "fb" | "fb2" | "gdn" | "palm" | "tarot" | "read" | "v1" | "evelyn" | "aiden"
   | "marcus" | "luna" | "nova" | "maren" | "seven-seven" | "twinflame" | "judgement" | "pixiu"
-  | "marcusreading";
+  | "marcusreading" | "heartcleanser";
 
 // Generalized persona landers → their PostHog funnel name. One route each.
 const PERSONA_LANDER_FUNNELS: Record<string, PostHogFunnel> = {
@@ -240,6 +241,9 @@ export function getPostHogFunnel(pathname?: string): PostHogFunnel | null {
   // page is /marcus/reading/welcome1 (NOT the shared /offers/upsell/*), so it is matched
   // by path here. Matches the server's BACKEND_FUNNEL['marcus-reading'] = 'marcusreading'.
   if (p === "/marcus/reading" || p.startsWith("/marcus/reading/")) return "marcusreading";
+  // 09 Heart Cleanser Love Charm — same shape as 06 (booking root + /success, page
+  // only). The label matches backendOfferFunnel('heart-cleanser') and the server map.
+  if (p === HEART_CLEANSER_PREFIX || p.startsWith(`${HEART_CLEANSER_PREFIX}/`)) return "heartcleanser";
   if (p === "/soulmate" || p.startsWith("/soulmate/")) return "soulmate";
   const adDef = funnelDefForPath(p);
   if (adDef) return adDef.posthog as PostHogFunnel;
@@ -266,6 +270,7 @@ export function backendOfferFunnel(offer: string): string {
     case "twin-flame": return "twinflame";
     case "judgement-day": return "judgement";
     case "pixiu-bracelet": return "pixiu";
+    case "heart-cleanser": return "heartcleanser";
     default: return offer;
   }
 }
@@ -312,6 +317,14 @@ export function getPostHogStep(pathname?: string): string {
     case "pixiu": {
       // 06 is page-only (no chat variant): just the booking root and /success.
       const sub = p.slice(PIXIU_PREFIX.length); // "" at the booking root
+      if (sub === "") return "booking";
+      if (sub === "/success") return "thank_you";
+      return "unknown";
+    }
+    case "heartcleanser": {
+      // 09 is page-only like 06: the booking root and /success. Its upsells are the
+      // shared /offers/upsell/* pages, which fire their own lander_view.
+      const sub = p.slice(HEART_CLEANSER_PREFIX.length); // "" at the booking root
       if (sub === "") return "booking";
       if (sub === "/success") return "thank_you";
       return "unknown";

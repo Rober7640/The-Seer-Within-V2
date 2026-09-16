@@ -5,6 +5,7 @@ import { db } from './db';
 import { braceletOrders } from '@shared/schema';
 import { getBraceletBySlug, BUSINESS, FULFILMENT } from '@shared/braceletProducts';
 import logger from './logger';
+import { shippingFromSession } from './stripeShipping';
 
 // Persist + confirm a bracelet order from the Facebook-compliance storefront.
 //
@@ -48,41 +49,10 @@ export interface RecordedOrder {
   createdAt: Date;
 }
 
-interface AddressLike {
-  name?: string | null;
-  address?: {
-    line1?: string | null;
-    line2?: string | null;
-    city?: string | null;
-    state?: string | null;
-    postal_code?: string | null;
-    country?: string | null;
-  } | null;
-}
-
 function shippingFrom(session: Stripe.Checkout.Session) {
-  // Stripe has moved this between `shipping_details` and `collected_information` across
-  // API versions, and typings lag. Read both shapes defensively, fall back to the billing
-  // address on customer_details — an order with no address is a parcel nobody can post.
-  const raw = session as unknown as {
-    shipping_details?: AddressLike;
-    collected_information?: { shipping_details?: AddressLike };
-    customer_details?: AddressLike;
-  };
-  const s =
-    raw.shipping_details ??
-    raw.collected_information?.shipping_details ??
-    raw.customer_details;
-  const addr = s?.address;
-  return {
-    name: s?.name ?? null,
-    line1: addr?.line1 ?? null,
-    line2: addr?.line2 ?? null,
-    city: addr?.city ?? null,
-    state: addr?.state ?? null,
-    postal: addr?.postal_code ?? null,
-    country: addr?.country ?? null,
-  };
+  // Both Stripe shapes, falling back to the billing address on customer_details — an
+  // order with no address is a parcel nobody can post. Shared helper: ./stripeShipping.
+  return shippingFromSession(session).address;
 }
 
 /**
