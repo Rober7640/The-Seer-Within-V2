@@ -138,7 +138,7 @@ const HC_U1_SUCCESS = [
   "Your protection is set. The ritual, and the charged stone that holds it.",
   "I'll do the work tonight.",
   UPSELL_SUCCESS[3],
-  "It goes to the same address as your charm. There's nothing more I need from you.",
+  "Your stone goes to the same address as your Heart Cleanser Love Charm. There's nothing more I need from you.",
 ];
 
 // Index 4 only. V1's line promises a reading by email; 09's buyer has a charm on the way.
@@ -340,7 +340,7 @@ const HC_U2_SUCCESS_HAS_SHIPPING = [
   UPSELL2_SUCCESS_HAS_SHIPPING[0],
   HC_ATTUNED,
   UPSELL2_SUCCESS_HAS_SHIPPING[2],
-  "I'll ship it to the same address as your charm.",
+  "I'll send your Manifestation Bracelet to the same address as your Heart Cleanser Love Charm.",
 ];
 
 const HC_U2_SUCCESS_NEEDS_SHIPPING = [
