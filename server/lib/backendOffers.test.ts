@@ -643,8 +643,10 @@ describe('regression: every offer that existed before 09 is unchanged', () => {
 
   it('keeps the Stripe Dashboard labels, with and without the bump', () => {
     expect(backendOrderDescriptor('judgement-day', true)).toBe('BE 03 · Judgement Day + The Unburdening instructional');
-    expect(backendOrderDescriptor('pixiu-bracelet', false)).toBe('BE 06 · The Wishing Bracelet');
-    expect(backendOrderDescriptor('pixiu-bracelet', true)).toBe('BE 06 · The Wishing Bracelet + The Closed Purse instructional');
+    // 06's label was deliberately made descriptive on development (9a3e515) so fulfilment
+    // ships the right bracelet — pinned to the NEW wording, not reverted.
+    expect(backendOrderDescriptor('pixiu-bracelet', false)).toBe('BE 06 · Wishing Bracelet Black Agate Pixiu Wealth');
+    expect(backendOrderDescriptor('pixiu-bracelet', true)).toBe('BE 06 · Wishing Bracelet Black Agate Pixiu Wealth + The Closed Purse instructional');
     expect(backendOrderDescriptor('marcus-daily', true)).toBe('BE 07 · Marcus Daily Tarot + Read first, same morning');
   });
 
