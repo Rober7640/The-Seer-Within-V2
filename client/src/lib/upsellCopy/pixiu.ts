@@ -124,7 +124,9 @@ const PX_U1_SUCCESS = [
   "Your protection is confirmed — the ritual, and the charged stone that carries it.",
   "I'll perform it tonight. The work will be deeper this way.",
   "Your charged volcanic stone will ship within 48 hours.",
-  "I just need to know where to send it.",
+  // was "I just need to know where to send it." — the booking already took her address and
+  // the engine now skips the shipping form (Joel, 2026-09-16), so she is never asked.
+  "It goes to the same address as your Pixiu. There's nothing more I need from you.",
 ];
 
 const PX_U1_SHIPPING_CONFIRMED = [
@@ -305,6 +307,12 @@ export const PIXIU_UPSELL2: Upsell2Copy = {
   STONES: PX_STONES,
   AFTER_Q2: PX_U2_AFTER_Q2,
   WHAT_RECEIVE: PX_WHAT_RECEIVE,
+  // Index 3 only. V1 ships "to the same address as your protection stone", but this path is now
+  // reached by buyers who DECLINED the stone and still have a booking address (Joel, 2026-09-16).
+  SUCCESS_HAS_SHIPPING: [
+    ...V1_UPSELL2.SUCCESS_HAS_SHIPPING.slice(0, 3),
+    "I'll ship it to the same address as your Pixiu.",
+  ],
   // REVEAL/PERSONALIZE stay inherited (null) but are now UNREACHABLE — the chain
   // skips MANIFEST_REVEAL and MANIFEST_PERSONALIZE. Kept only to satisfy the type.
   chain: PX_CHAIN_2,
