@@ -193,9 +193,34 @@ const RECEIVED: Array<{
   authHeaderPresent?: boolean;
   authUser?: string | null;
   sourceIp?: string | null;
+  /** The HTTP status we answered with — 503 marks a deliberately failed delivery. */
+  responded?: number;
   body: unknown;
 }> = [];
-const MAX_RECEIVED = 50;
+// Room for a retry probe: every event is delivered up to 12 times to a failing
+// destination, so 50 fills after about four events.
+const MAX_RECEIVED = 200;
+
+/**
+ * RETRY PROBE — a destination registered with THIS basic-auth username has its
+ * delivery recorded and then answered 503, so Payments.AI treats it as failed
+ * and retries.
+ *
+ * Their written answer (16 Sep): 12 attempts, backoff 15s, 30s, 1m … ~4h, about
+ * 8.5 hours in all, then delivery stops; at-least-once, so "dedupe on the event
+ * ID". None of it has been observed, and the payload carries BOTH `id` and
+ * `eventId`, so which one is "the event ID" is not known. Watching one failing
+ * destination answers all of it.
+ *
+ * Every other username still gets 200, so our normal destination receives the
+ * same events once and is the control. Keyed on the username alone, not the
+ * password: the worst anyone can do by sending it is get a 503 from a diagnostic.
+ */
+export const RETRY_PROBE_USER = 'paymentsai-retryprobe';
+
+export function webhookResponseStatus(authUser: string | null | undefined): number {
+  return authUser === RETRY_PROBE_USER ? 503 : 200;
+}
 
 router.post('/webhook', (req: Request, res: Response) => {
   const expectUser = process.env.PAI_WEBHOOK_USER || 'paymentsai';
@@ -223,6 +248,7 @@ router.post('/webhook', (req: Request, res: Response) => {
     : null;
 
   const body: any = req.body;
+  const responded = webhookResponseStatus(authUser);
   RECEIVED.unshift({
     at: new Date().toISOString(),
     type: body?.type ?? body?.meta?.eventType,
@@ -230,14 +256,16 @@ router.post('/webhook', (req: Request, res: Response) => {
     authHeaderPresent,
     authUser,
     sourceIp,
+    responded,
     body,
   });
   if (RECEIVED.length > MAX_RECEIVED) RECEIVED.length = MAX_RECEIVED;
 
-  logger.info(`[pai] webhook ${body?.type ?? 'unknown'} authOk=${authOk}`);
-  // Always 200: a non-2xx may make them retry, and we want a clean record of what
-  // was sent, not a redelivery storm. Auth failures are recorded, not rejected.
-  res.status(200).json({ received: true });
+  logger.info(`[pai] webhook ${body?.type ?? 'unknown'} authOk=${authOk} responded=${responded}`);
+  // 200 for everything except the retry probe: a non-2xx makes them retry, and on
+  // any other destination we want a clean record, not a redelivery storm. Auth
+  // failures are recorded, not rejected.
+  res.status(responded).json({ received: true });
 });
 
 /** Read what has arrived, newest first. */
@@ -245,6 +273,8 @@ router.get('/webhook/received', (req: Request, res: Response) => {
   const full = req.query.full === '1';
   res.json({
     count: RECEIVED.length,
+    // Lets a probe script refuse to run against a deploy that predates the probe.
+    retryProbeUser: RETRY_PROBE_USER,
     events: RECEIVED.map((e) =>
       full
         ? e
@@ -255,6 +285,10 @@ router.get('/webhook/received', (req: Request, res: Response) => {
             authHeaderPresent: e.authHeaderPresent,
             authUser: e.authUser,
             sourceIp: e.sourceIp,
+            responded: e.responded,
+            // Both candidates for "the event ID" — the retry probe compares them.
+            id: (e.body as any)?.id,
+            eventId: (e.body as any)?.eventId,
             // The two fields we are actually here to read.
             amount: (e.body as any)?.meta?.metadata?.transaction?.amount,
             metadataKeys: Object.keys(
