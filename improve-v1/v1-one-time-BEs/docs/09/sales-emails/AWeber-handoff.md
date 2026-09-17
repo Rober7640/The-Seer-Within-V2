@@ -22,6 +22,8 @@ Built 2026-09-16 in email 2's exact shell, fictional-story framing intact (twice
 ### Superseded — DELETED 2026-09-16
 The earlier Fold the Paper (c=31–33) and Leave the Date Off (c=41–43) versions, and their HTML/text builds, were deleted at Joel's instruction. Nothing to upload; `c=31–33` and `c=41–43` are free again.
 
+⛔ **Two superseded drafts live in this folder — do not upload them.** `09-E4-esl-v1-left-wrist.html` is an earlier build of email 1 and still contains four unreplaced `{{OFFER_URL}}` links; `09-E2-esl-v1.md` is an earlier copy draft of the same email. Email 1 is `09-E4-esl-v1-evelyn.html` + `.txt`.
+
 Use these HTML files, not the -preview files. Supply the matching plain-text part separately.
 
 ## Remaining send dependency
