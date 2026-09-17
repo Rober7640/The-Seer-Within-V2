@@ -126,7 +126,7 @@ const PX_U1_SUCCESS = [
   "Your charged volcanic stone will ship within 48 hours.",
   // was "I just need to know where to send it." — the booking already took her address and
   // the engine now skips the shipping form (Joel, 2026-09-16), so she is never asked.
-  "It goes to the same address as your Pixiu. There's nothing more I need from you.",
+  "Your stone goes to the same address as your Pixiu. There's nothing more I need from you.",
 ];
 
 const PX_U1_SHIPPING_CONFIRMED = [
@@ -311,7 +311,7 @@ export const PIXIU_UPSELL2: Upsell2Copy = {
   // reached by buyers who DECLINED the stone and still have a booking address (Joel, 2026-09-16).
   SUCCESS_HAS_SHIPPING: [
     ...V1_UPSELL2.SUCCESS_HAS_SHIPPING.slice(0, 3),
-    "I'll ship it to the same address as your Pixiu.",
+    "I'll send your Manifestation Bracelet to the same address as your Pixiu.",
   ],
   // REVEAL/PERSONALIZE stay inherited (null) but are now UNREACHABLE — the chain
   // skips MANIFEST_REVEAL and MANIFEST_PERSONALIZE. Kept only to satisfy the type.

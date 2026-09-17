@@ -1,6 +1,6 @@
 # 0-WORKFLOW-09 — Heart Cleanser Love Charm launch checklist
 
-Updated 2026-09-16. This is 09's working tick sheet. Physical-product adaptation follows [06's workflow](../06/0-WORKFLOW-06.md) and [handover](../06/HANDOVER.md). The complete master workflow is copied below, following its per-offer convention. General rules remain owned by [the master](../0-WORKFLOW.md); 09 decisions and status live here.
+Updated 2026-09-17. This is 09's working tick sheet. Physical-product adaptation follows [06's workflow](../06/0-WORKFLOW-06.md) and [handover](../06/HANDOVER.md). The complete master workflow is copied below, following its per-offer convention. General rules remain owned by [the master](../0-WORKFLOW.md); 09 decisions and status live here.
 
 ## Folder layout *(reorganised 2026-09-16, Joel: the flat folder was too messy)*
 
@@ -16,146 +16,141 @@ See [README.md](README.md). File names are unchanged; only their folders moved.
 
 Every internal link, code comment and test path was rewritten with the move. Verified: 53 client tests pass (one test reads `09-T1`/`09-T3`/`09-T4`/`09-C3` by path), tsc unchanged at its 46-error baseline, copy-check still detects these files as offer 09 and passes, no broken links inside 09 except pre-existing ones in this file's copied master text.
 
-### Committed 2026-09-16
+## Status, 2026-09-17
 
-Branch **`09-heart-cleanser`**, commit **`ad33868`** (122 files), branched from `09-love`'s `f187970` so the Codex email/doc commit is kept. Other sessions' uncommitted work (Evelyn cycle-6, `output/`, `tmp/`) was deliberately left out. ⛔ Nothing deployed, sent or charged; `readyForMoney` is still `false`.
+**Built end to end on branch `09-heart-cleanser`. Nothing is live.** Checkout is dark (`readyForMoney: false`), the `be_shipments` migration is NOT applied, no AWeber draft or campaign exists, no test purchase has run, and nothing is deployed, sent or charged.
 
-Also in that commit: the upsell address form is SKIPPED when the booking already took an address (Joel, 2026-09-16), with the address carried to the upsell charge and order row; two V1 lines that became false for 09 were replaced ("I just need to know where to send it", "the same address as your protection stone"). ⚠ The same two lines are still false for 06, which shares them.
+Commits (branched from `09-love`'s `f187970`, so the Codex email/doc commit is kept):
 
-### Joel's decisions, 2026-09-16
-
-- [x] **Upsell address form → worldwide** (backend offers only; V1 keeps its seven).
-- [x] **Lava stone on the left wrist beside the charm: OK** — U1/U2 copy stays as written.
-- [x] **The wish paper is ROLLED, not folded** — insert card `product/09-B3-insert-card.md` step 3 updated to match email 3 ("She rolled the paper"). ⚠ Still check against a real capsule before printing.
-- [x] **Local Stripe test-purchase gate: a developer will do it** — Claude builds nothing for it; `readyForMoney` stays `false` in committed code.
-
-## Launch status
-
-**Not live-ready.** Sales emails 1 and 2 have HTML/text builds. Email 3 is the selected Anna/Daniel fictional story (item → story → item), built 2026-09-16 as `sales-emails/09-E6-esl-email-3-anna-evelyn.html` + `.txt`. The earlier A/B options and their builds were deleted. Offer URL and implementation progress are recorded below; final deployment, payment/fulfilment proof, AWeber activation and launch testing remain open.
-
-Important: email 1 and email 2 are sales emails. They do **not** satisfy Phase C's order confirmation and shipping email requirements.
-
-### Settled for 09
-
-- [x] Sender: Evelyn Cross / The Seer Within.
-- [x] Product: one Heart Cleanser Love Charm; pink quartz bracelet with wish capsule.
-- [x] Price: $59 for one charm; no quantity choices. Price appears on the offer page, never in the ESL.
-- [x] Object-led pitch: left wrist → personal written wish → capsule → wearing ritual.
-- [x] Email 1 and 2 copy, Evelyn HTML, plain text and hosted assets exist.
-- [x] Preview HTML deleted; all 09 material consolidated in this directory.
-- [x] **Joel, 2026-09-15 — URL:** `https://theseerwithin.com/offers/heart-cleanser`; receipt at `/offers/heart-cleanser/success`.
-- [x] **Joel, 2026-09-15 — fulfilment:** our own stock; we pack and ship ourselves (not dropship).
-- [x] **Joel, 2026-09-15 — shipping:** free shipping, worldwide. Ships within **2 business days**; **after it ships**, arrives in **7–14 days (US)** and **2–4 weeks (everywhere else)**.
-- [x] **Joel, 2026-09-15 — box contents:** the charm (pink quartz + wish capsule), blank wish papers that fit the capsule, an instruction/care card, and a **gift box**.
-- [x] **Joel, 2026-09-15 — returns/support:** the site's `/refund` page — damaged: email hi@theseerwithin.com within 7 days of delivery with photos; not arrived within 30 days **of the estimated delivery date**: reship or refund. No change-of-mind returns. ⚠ Joel picked "45 days outside the US" after Claude wrongly said the 30 days counted from the order; the page already counts from the estimated delivery date. Joel then confirmed **no change** to the refund page (2026-09-15).
-- [x] **Joel, 2026-09-15 — packing process:** "leave it to me." Joel owns who packs and how they receive orders and enter tracking. Code provides the pieces (saved address, order alert email, mark-shipped API that fires the shipment tag); no admin UI is built unless asked.
-- [x] **Joel, 2026-09-15 — order bump (supersedes "no order bump"):** Reiki charging by Evelyn before the charm is packed, **$11.11**. Joel confirmed it is a real service: someone actually charges each bump buyer's charm before packing, inside the 2-business-day window. Parcel alert must flag it. (Brainstorm of 10 no-fulfilment alternatives kept in `booking-page/09-C3-order-bump-brainstorm.md`.)
-- [x] **Joel, 2026-09-15 — page title:** "Your Heart Cleanser Love Charm" ("your booking" is wrong for a physical item). 06 renamed to "Your Wishing Bracelet" too.
-- [x] **Joel, 2026-09-15 — photos:** "Wish Miracle Bracelet" box branding may confuse buyers, so the offer page AND email 1 use the unbranded studio close-up `evelyn/backend-09/rosequartz-page-570.jpg` (email 1's second product photo swapped; its first photo, the wrist shot, is unchanged).
-- ◐ **Joel, 2026-09-15 — commitment ticks:** keep the tick pattern, fix the wording. Audit: `booking-page/09-C1-commitment-audit.md`. Joel: ticks must focus on product, ritual and the "magic", not logistics. **Version 2 in `booking-page/09-C1-ticks-rewrite.md` APPROVED by Joel 2026-09-15** (4 ticks: wish in the capsule · "I am ready to receive love, too." · pink quartz on the left wrist · wish goes with me through the day; shipping/price/checkout moved to small print; no request paragraph). **Wired 2026-09-16** (copy doc, page code, tests, walk 76/76; Claude re-ran 116 tests and viewed the mobile screenshot with the bump ticked). Page ≈2.6 phone screens at 390px — above A2's ~2-screen guide, flagged not cut.
-- [x] **Joel, 2026-09-15 — extras:** reuse V1's two upsells (U1 Protection Ritual, U2 Manifestation Bracelet) through the shared backend upsell engine, with 09-specific opening beats. **No order bump.**
-
-### Launch shape — 06's physical-product pattern, 09's own facts
-
-ESL → `/offers/heart-cleanser` → Stripe Checkout (fixed $59, worldwide shipping address) → U1 → U2 → receipt → confirmation email (AWeber tag) → operator packs → marked shipped with tracking → shipment email (AWeber tag).
-
-No buyer reply, AI reading, or PDF is required for the main charm. The upsells are V1's existing products; do not inherit 06's bump, price or pitch.
-
-## Step 0 — decisions and worksheet
-
-| Item | 09 answer / next action |
+| Commit | What |
 |---|---|
-| D1 / URL | ✅ `https://theseerwithin.com/offers/heart-cleanser` (Joel, 2026-09-15). Wired into email 1 and 2 CTA links (source, HTML, text); `c=1–4` / `c=21–24` kept. |
-| Price / quantity | ✅ $59, quantity 1. Charge server-side 5900 cents; no quantity selector; no shipping fee; no tax configured (same as every backend offer). |
-| Product details | ✅ Pink quartz + capsule; box = charm, blank wish papers, instruction/care card, gift box or pouch. ☐ Open: box vs pouch; size/fit/closure/care wording checked against a real unit (B1). Do not copy 06's certificate, plating or waterproof claims. |
-| Shipping | ✅ Own stock; ships within 2 business days; US 7–14 days, rest of world 2–4 weeks; free worldwide. Windows count after dispatch. Packing process: Joel owns it. |
-| Address capture | ✅ Stripe Checkout `shipping_address_collection`, worldwide list. ⚠ Current code keeps the address only in Stripe; 09 must persist it for the queue and the receipt (A7). |
-| Return/support terms | ✅ Current `/refund` page + hi@theseerwithin.com. |
-| A3–A5 | ✅ A3 bump N/A. A4/A5 = V1 upsells with 09 opening beats. |
-| B product format | ✅ Physical charm; buyer writes her own wish on the supplied papers. Instruction/care card to write (B3). No personalized digital product promised. |
-| D12 / product/images | Hosted pink-quartz photos + black-bead capsule demo, clearly captioned. Review final upgraded-product assets when supplied. |
-| Audience / cadence | Confirm eligible Evelyn list/segment, exclusions and email 1→2 interval. Email 3 selected 2026-09-16: Anna/Daniel fictional story, subject “She wrote his name. Then he called.” Previous A/B options superseded; confirm sequence timing and purchaser suppression. |
+| `ad33868` | the offer end to end — 122 files |
+| `c817f4b` | this checklist |
+| `316fff9` | 06's two lines that the address skip made false |
+| *(next)* | all four upsell lines reworded to name both items (Joel, 2026-09-17) |
 
-## Content — sales emails (separate from Phase C)
+Other sessions' uncommitted work (Evelyn cycle-6, `output/`, `tmp/`) was deliberately left out.
 
-- [x] Email 1: [copy](sales-emails/09-E2-esl-v1-left-wrist.md), [HTML](sales-emails/09-E4-esl-v1-evelyn.html), [text](sales-emails/09-E4-esl-v1-evelyn.txt).
-- [x] Email 2: [copy](sales-emails/09-E3-esl-email-2-his-name.md), [HTML](sales-emails/09-E4-esl-email-2-evelyn.html), [text](sales-emails/09-E4-esl-email-2-evelyn.txt).
-- [x] Hosted HTTPS product/images, small static JPEGs, optimized GIF; [asset manifest](product/hosted-assets.json).
-- [x] AWeber first-name and subscriber footer tags; 02 branding/address; no sample name or price in send HTML.
-- [x] Browser image/layout checks at desktop and mobile; this is not an inbox/seed-send test.
-- [ ] Final copy and final product-photo review, including capsule demonstration accuracy.
-- [x] Offer URL wired in all three emails' source/HTML/text; tracking `c=1–4` (email 1), `c=21–24` (email 2), `c=51–52` (email 3).
-- [ ] Prove tracked links preserve attribution to payment.
-- [ ] Configure nonbuyer follow-ups and immediate purchaser suppression.
-- [ ] Upload actual AWeber drafts with matching HTML/text, subjects, sender/reply-to and correct audience; seed-test name and missing-name cases, image blocking, mobile, links and footer.
-- [x] **Joel, 2026-09-16 — replacement email 3 selected:** [Anna’s wish](sales-emails/09-E5-email-3-anna-story.md). Item first → fictional results-based story → item again. Subject: “She wrote his name. Then he called.”
-- [x] ⛔ Previous Fold the Paper and Leave the Date Off drafts AND their HTML/text builds were DELETED 2026-09-16 at Joel's instruction (copies kept only in Claude's scratch folder). `c=31–33` and `c=41–43` are free again.
-- [x] Email 3 uses the confirmed offer URL and tracking `c=51–52`.
-- [x] Built 2026-09-16: `sales-emails/09-E6-esl-email-3-anna-evelyn.html` + `.txt`, in email 2's exact shell (AWeber first-name and unsubscribe tags, 02 branding/footer). Image: unbranded studio close-up `rosequartz-page-570.jpg` at the capsule line, 240px mobile / 300px desktop. Fictional framing kept in both parts. Verified by Claude: product/images load and no sideways scroll at 390px and 700px; text part built by email 2's own method (proven byte-identical on email 2).
-- [ ] Human review of the built email 3 (read it, then seed-test). The superseded A/B assets no longer exist, so they cannot be uploaded by mistake.
-- [ ] Add email 3 to the chosen AWeber nonbuyer sequence, set timing and purchaser suppression, then seed-test. No email-3 broadcast or automation exists yet.
-- [ ] Decide abandon-reminder scope separately; write/build only the selected launch scope.
+## ⭐ What is left
 
-## Phase A — funnel checklist (06 physical-item adaptation)
+### Joel
+- [ ] **Read the built emails** and approve or edit: [email 3 Anna](sales-emails/09-E6-esl-email-3-anna-evelyn.html), [confirmation](order-emails/09-T3-confirmation-email.md), [shipment](order-emails/09-T4-shipment-email.md), [receipt page](booking-page/09-T1-thank-you-page.md), [insert card](product/09-B3-insert-card.md).
+- [ ] **Email 3 story markers.** "In this story, Daniel called on a Thursday evening" and "That is how Anna's story ends, dear" are still in. The word "fictional" was removed at Joel's instruction 2026-09-16; say whether these two go too.
+- [ ] **Sequence plan:** which list/segment, exclusions, the gap between emails 1 → 2 → 3, and whether abandon reminders are in scope.
+- [ ] **Packer instructions:** who packs, how they read the "⚡ REIKI CHARGE BEFORE PACKING" alert, and who enters tracking. ⚠ Refunding only the $11.11 bump changes nothing automatically — the packer must be told by hand.
+- [ ] **Insert card print:** final card size with the printer. Wording is done and needs no real unit (Joel, 2026-09-16).
+- [ ] **06's leftover V1 lines** ("tonight's clearing", "your energy field", "your clearing reading arrives within 24 hours") — 06 is `readyForMoney: true`, so a real buyer can see them. 09's equivalents were rewritten. Say whether to fix 06 too.
+- [ ] **Booking page length** ≈2.6 phone screens, above the deck's ~2-screen guide. Flagged, not cut.
 
-- [ ] **A1: settle worksheet / URL.** Resolve above decisions. Record them here.
-- ◐ **2026-09-15 copy drafts, awaiting Joel's review (copy-check PASS, not approved):** [09-C1 booking](booking-page/09-C1-booking-page.md) · [09-T1 receipt](booking-page/09-T1-thank-you-page.md) · [09-T3 confirmation](order-emails/09-T3-confirmation-email.md) (+html/txt) · [09-T4 shipment](order-emails/09-T4-shipment-email.md) (+html/txt) · [09-U1a](upsells/09-U1a-upsell1-opening-beats.md) · [09-U2a](upsells/09-U2a-upsell2-opening-beats.md) · [09-B3 insert card](product/09-B3-insert-card.md). ✅ `rosequartz3` shows the "Wish Miracle Bracelet" gift box and card — Joel confirmed 2026-09-15 this IS the packaging buyers receive, but Joel then judged its "Wish Miracle" branding likely to confuse buyers, so the offer page uses the unbranded studio close-up (`evelyn/backend-09/rosequartz-page-570.jpg`). ⚠ Email 1 still shows the branded box photo — same confusion risk, Joel to decide. ⚠ Buyers will still receive a box and card saying "Wish Miracle Bracelet". Page title is now "Your Heart Cleanser Love Charm" (06's is "Your Wishing Bracelet") — Joel: "your booking" is wrong for a physical item.
-- [ ] **A2: offer/booking page.** Write `booking-page/09-C1-booking-page.md`; adapt current Pixiu static page into Evelyn's charm offer. Show $59, one charm, capsule, actual contents, shipping wait and terms. No digital-reading language. Explicitly mark chat N/A if adopting the physical-item page-only pattern.
-- ◐ **2026-09-15 A3 order bump built, uncommitted:** Reiki charging by Evelyn before packing, `reiki_charge`, 1111 cents; copy in [booking-page/09-C3-order-bump.md](booking-page/09-C3-order-bump.md) (checkbox "Yes — have Evelyn charge my charm with Reiki before it's packed." · FINAL line approved by Joel 2026-09-16: "+$11.11 · Before it's packed, Evelyn holds my charm in her hands and gives it Reiki for love. So on my first morning, I'm not starting with a new stone. I'm starting with one she has already worked on for me. No extra wait."); unticked by default, total $59.00 → $70.11; receipt "Added:" line; **appears only once all four ticks are ticked** (Joel, 2026-09-16) and resets to unticked if a tick is removed; `be_shipments.bump_purchased` + `bump_product_key` (added to the still-unapplied migration); operator alert leads "⚡ REIKI CHARGE BEFORE PACKING" (09 only, via catalog `packingAlert`); AWeber `be-09-bump` on list 6972554. Verified by Claude: 12 test files / 308 tests pass; tsc unchanged at 46. No Reiki email (Joel, 2026-09-16) — ⛔ don't build a campaign on `be-09-bump`. Hand step: packer instructions. ⚠ Refunding only the $11.11 changes nothing automatically — tell the packer by hand. ⚠ "By Evelyn" must be true of whoever charges. ⚠ U2 sells stones "attuned before shipping" — re-read with a bump buyer in mind.
-- [ ] **A3: order bump.** Decide. If none, mark N/A and ensure checkout does not inherit Closed Purse or an automatic bump. If included, own copy, product code, price, delivery and tests.
-- [ ] **A4: upsell 1.** Decide inclusion; otherwise skip and route to receipt. If included, write a charm-specific transition and verify separate fulfilment.
-- [ ] **A5: upsell 2.** Same; avoid selling the same wish-capsule benefit again without a distinct product rationale.
-- [ ] **A6: thank-you receipt.** Write `booking-page/09-T1-thank-you-page.md`; show verified order, item, amount, address, shipping expectations, support and next step. Render safely on refresh and reject unrelated sessions.
-- ◐ **2026-09-15 server side built, uncommitted, not deployed:** catalog row `heart-cleanser` / `be_heart_cleanser` / 5900 / no bump (`bump:true` refused) / worldwide `shippingCountries` / `upsellEntryPath` / `readyForMoney: false`; new `be_shipments` table (`migrations/2026-09-15-be-shipments.sql`, NOT applied) written from the webhook and the receipt lookup; Resend operator alert to `ORDERS_NOTIFY_EMAIL`; admin API `GET/POST /api/admin/shipments[/:id/shipped|/:id/cancel]` → AWeber tag `be-09-shipped` + `tracking_url`/`tracking_number`/`carrier`; `charge.refunded` for `be_*` cancels pending parcels; receipt lookup `?offer=` rejects other offers' sessions and returns the address. Verified by Claude: 9 test files / 237 tests pass; tsc adds no errors. ⚠ 06 now also writes `be_shipments` — apply the migration before deploying. Hand steps: AWeber custom fields `tracking_url`, `tracking_number`, `carrier` on list 6972552; Campaigns on `be-09-heart-cleanser` and `be-09-shipped`; enable `charge.refunded` on the Stripe webhook; set `ORDERS_NOTIFY_EMAIL`.
-- ◐ **2026-09-15 client side built, uncommitted, checkout dark:** booking `/offers/heart-cleanser` (page only; chat N/A; five ticks gate the button; passes `letterCode` for `c=`), receipt `/offers/heart-cleanser/success?s=cs_…` (looks up with `?offer=heart-cleanser`; one safe fallback for missing/404/402/network), 09 U1/U2 copy in `client/src/lib/upsellCopy/heartCleanser.ts` registered in `BACKEND_UPSELL_PITCH`. Evidence: `improve-v1/evidence/09-booking-2026-09-15/` (16 screenshots, 1280 + 390; Vite-only, receipts with a stubbed order) and `scripts/walk-09-smoke.mjs` (38/38). Verified by Claude: 6 client test files / 53 tests pass; tsc adds no errors; mobile booking + receipt screenshots viewed. ⚠ Booking page is ~2.7 phone screens (A2 split rule says ~2). ✅ **Fixed 2026-09-16 (Joel: "upsell address form change to worldwide"):** `ShippingForm` takes an optional `countries` prop — default is still V1's seven (⛔ the live V1 funnel is unchanged), and both BACKEND upsell pages pass the worldwide list; the U2 card-declined fallback checkout now uses the same worldwide list. Verified: 3 new tests pass, tsc unchanged at 46, both upsell pages still render in the local preview. ⚠ Still open: after U1 "yes" she is asked for the address she already gave Stripe (prefill or skip not decided).
-- [ ] **A7: catalog and payment wiring.** Add unique offer number/key and `be_` product key, fixed 5900 cents, route/success path, physical shipping flag and launch gate. Reuse backend order/webhook machinery; verify persistence, quantity=1, address capture, idempotency, failed/cancelled payments and retry handling. Do not copy 06's temporary `readyForMoney: true` setting as a launch approval. Keep unrelated funnels/affiliate attribution unchanged.
-- [ ] **A7: fulfilment handoff.** Paid order produces exactly one actionable charm order with SKU, address, customer contact and payment reference. Verify operator queue/alert, retry and duplicate protection. Refund/cancel handling must be explicit.
-- [ ] **A8: end-to-end proof.** Stripe test order from an ESL tracking link → payment/address → receipt → order queue → confirmation → shipment/tracking notification. Browser screenshots desktop/mobile; tests for modified payment and webhook branches; regression checks for 02/06 and shared upsells where touched.
+### Developer
+- [ ] **Apply `migrations/2026-09-15-be-shipments.sql` BEFORE deploying.** ⛔ Never `db:push`. ⚠ The shared production DB is also missing the 07/08 `be_orders` columns — see [[be-deploy-trap-unapplied-migrations]]; 06 starts writing `be_shipments` the moment this code ships.
+- [ ] ⚠ **`be_upsell_orders` has no CREATE migration anywhere** — it exists only in `schema.ts`. Check it exists in production before the upsell address columns matter.
+- [ ] **AWeber:** custom fields `tracking_url`, `tracking_number`, `carrier` on list 6972552; Campaign on `be-09-heart-cleanser` (confirmation) and on `be-09-shipped` (tracking). ⛔ No Campaign on `be-09-bump` — there is no Reiki email (Joel, 2026-09-16). ⛔ Keep the confirmation Campaign on 6972552 only; 6972554 also receives the purchase tag, so a Campaign there would send it twice.
+- [ ] **AWeber sales emails:** upload 1–3 as drafts with matching HTML/text and subjects, seed-test (with and without a first name, images off, mobile, links, footer), and set purchaser suppression.
+- [ ] **Stripe:** enable `charge.refunded` on the webhook endpoint (account A, and B if used). Set `ORDERS_NOTIFY_EMAIL`; `RESEND_API_KEY` already exists.
+- [ ] **Test purchase gate.** Nothing today opens a dark offer for a Stripe test order. Joel, 2026-09-16: a developer will do it. Proposal on file: an env var checked in the checkout route only, off by default, refusing unless `NODE_ENV` is not production AND the Stripe key is `sk_test_`.
+- [ ] **A8 end-to-end proof:** test order from a real email link → payment + address → receipt → parcel row + operator alert → confirmation email → mark shipped → tracking email. Then flip `readyForMoney` and deploy.
 
-## Phase B — physical product checklist
+### Still unproven by anyone
+- [ ] Stripe, the webhook, AWeber and Resend have never run for 09 — every check so far is unit tests plus a local preview with a fake API.
+- [ ] Tracked links (`?c=`) preserving attribution through to payment.
+- [ ] U2 sells stones "attuned before shipping", which sits close to the Reiki bump. Worth one read with a bump buyer in mind.
 
-Use 06's object-shaped Phase B; the copied master's PDF/card-production instructions are N/A for this main product.
+## Joel's decisions
 
-- [ ] **B1: scope.** Confirm SKU, stock, dimensions/fit, capsule function, materials and box contents against an actual unit.
-- [ ] **B2: packaging plan.** Confirm wish-paper fit, insert quantity if supplied, opening instructions, care instructions and packing materials.
-- [ ] **B3: write instructions.** Create the real use/care insert if included. Close the promises made in the ESL: write wish, insert paper, close capsule, wear. No unverified shower/water/continuous-wear claims.
-- [ ] **B4: product imagery.** Approve actual upgraded unit photos and demonstrate the capsule. Existing hosted photos are assets available, not proof final packaging is ready.
-- [ ] **B5: prepare package.** Sample packed unit checked; any print insert proofed. No PDF production for the main charm.
-- [ ] **B6: make deliverable.** Assign fulfilment owner, inventory/queue, carrier, postage, tracking-entry procedure and exception/retry process.
-- [ ] **B7: ship gate.** Verify sample contents, legible instructions, correct SKU, usable address and tracking. Mark shipped only after real dispatch; never equate payment with delivery.
+*2026-09-15*
+- [x] **URL** `https://theseerwithin.com/offers/heart-cleanser`; receipt `/offers/heart-cleanser/success`.
+- [x] **Fulfilment:** our own stock; we pack and ship (not dropship).
+- [x] **Shipping:** free worldwide. Ships within **2 business days**; **after dispatch**, arrives in **7–14 days (US)** / **2–4 weeks (elsewhere)**.
+- [x] **Box:** the charm (pink quartz + wish capsule), blank wish papers, an instruction/care card, a **gift box**.
+- [x] **Returns/support:** the site's `/refund` page + hi@theseerwithin.com, unchanged. ⚠ Joel first picked "45 days outside the US" after Claude wrongly said the 30 days ran from the order date; the page already counts from the estimated delivery date, and Joel then confirmed no change.
+- [x] **Packing process:** "leave it to me." Code provides the pieces (saved address, order alert, mark-shipped API); no admin UI built.
+- [x] **Extras:** reuse V1's two upsells (U1 Protection Ritual + lava stone, U2 Manifestation Bracelet) with 09-specific opening beats.
 
-## Phase C — purchase emails and customer automation
+*2026-09-16*
+- [x] **Order bump — supersedes the earlier "no bump":** Reiki charging by Evelyn before packing, **$11.11**. A real service: someone charges each bump buyer's charm before packing, inside the 2-business-day window.
+- [x] **Page title** "Your Heart Cleanser Love Charm" ("your booking" is wrong for a physical item). 06 renamed "Your Wishing Bracelet".
+- [x] **Photos:** the "Wish Miracle Bracelet" box IS our real packaging, but its branding could confuse buyers next to this product's name, so the offer page and email 1 both use the unbranded studio close-up. ⚠ Buyers still receive a box and card saying "Wish Miracle Bracelet".
+- [x] **Ticks:** keep them, but about the product, the ritual and the "magic" — not logistics. Version 2 of [the rewrite](booking-page/09-C1-ticks-rewrite.md) approved and wired.
+- [x] **Bump placement:** appears only once all four ticks are ticked, and resets to unticked if one is removed.
+- [x] **Upsell address form → worldwide** for backend offers; V1 keeps its seven.
+- [x] **Lava stone on the left wrist beside the charm: OK.**
+- [x] **The wish paper is ROLLED**, matching email 3.
+- [x] **No Reiki email.** The receipt's "Added" line is the only confirmation.
+- [x] **Email 3:** the Anna story replaces both earlier options, which were deleted. The word "fictional" removed from the send copy.
+- [x] **Skip the upsell address form** when the booking already took an address.
+- [x] **Test purchase gate:** a developer will do it.
+- [x] **Folder layout:** `docs/09` split into subfolders (see [README.md](README.md)).
 
-- [ ] **C0: shared customer list.** Verify existing backend customer list and needed custom fields; do not create a duplicate list by default. Add unique 09 purchase/bump-if-any/shipped tag mapping; names must agree with actual code and AWeber campaigns. Preserve other offer fields on updates; protect repeat buyers from tracking-field overwrites.
-- [ ] **C1: order confirmation.** Write/build `09-T3-confirmation-email` (HTML + text). Trigger after verified payment; item, order reference, shipping expectations and support. This is not sales email 1.
-- [ ] **C2: shipment email.** Write/build `09-T4-delivery-email` (HTML + text) with carrier/tracking. Trigger from actual shipment state; no PDF or reading URL. Choose exact AWeber fields/tags with order-safe storage and retry behaviour.
-- [ ] **C3: upload/automate/prove.** AWeber campaigns, payment-to-list sync, shipment-to-email sync, retry and duplicate tests; seed proof for both purchase emails. Prevent receipt or tracking campaigns firing for unrelated products.
+*2026-09-17*
+- [x] **Upsell lines name both items** — "Your stone goes to the same address as your Heart Cleanser Love Charm", "I'll send your Manifestation Bracelet to the same address as your Heart Cleanser Love Charm" (06 says "your Pixiu"). The earlier wording left "it" ambiguous when the thing shipping is the Protection Ritual's lava stone.
+
+## Launch shape
+
+ESL → `/offers/heart-cleanser` → Stripe Checkout (fixed $59 + optional $11.11 Reiki, worldwide address) → U1 → U2 → receipt → confirmation email (AWeber tag) → operator packs → marked shipped with tracking → shipment email (AWeber tag).
+
+No buyer reply, AI reading or PDF. The upsells are V1's existing products.
+
+## Phase A — the funnel ✅ built, dark
+
+- [x] **A1 worksheet / URL** — every decision above.
+- [x] **A2 offer page** `/offers/heart-cleanser` — [copy](booking-page/09-C1-booking-page.md); four ticks, $59, free worldwide shipping, studio photo, small print, `?c=` and `?fn=` carried to checkout. **Chat treatment: N/A** (page-only physical pattern, as 06).
+- [x] **A3 order bump** — [copy](booking-page/09-C3-order-bump.md); `reiki_charge`, 1111 cents, never pre-checked, total $59.00 → $70.11, `be-09-bump` on list 6972554, parcel alert leads "⚡ REIKI CHARGE BEFORE PACKING" (09 only, via catalog `packingAlert`).
+- [x] **A4 / A5 upsells** — [U1](upsells/09-U1a-upsell1-opening-beats.md), [U2](upsells/09-U2a-upsell2-opening-beats.md), wired in `client/src/lib/upsellCopy/heartCleanser.ts`. The shipping form is skipped (the booking address rides on the upsell charge and order row); the worldwide list applies to the backend upsell pages and the card-declined fallback checkout.
+- [x] **A6 receipt** `/offers/heart-cleanser/success` — [copy](booking-page/09-T1-thank-you-page.md); shows the order, `$59 (free shipping)`, the "Added" bump line, her address, the wait, and both email subjects. Rejects another offer's session; safe on refresh, 404, 402 and network error.
+- [x] **A7 catalog + payment wiring** — `heart-cleanser` / `be_heart_cleanser` / 5900 / `collectsShipping` / worldwide `shippingCountries` / `upsellEntryPath` / `readyForMoney: false`; `bump` is now optional deck-wide and `bump: true` is refused for an offer without one.
+- [x] **A7 fulfilment handoff** — `be_shipments` (one row per paid physical order, written from the webhook AND the receipt lookup, independent of `be_orders`), Resend alert to `ORDERS_NOTIFY_EMAIL`, admin API `GET /api/admin/shipments` + `POST :id/shipped` (AWeber `be-09-shipped` + tracking fields) + `POST :id/cancel`, and `charge.refunded` cancelling a pending parcel with a "DO NOT SHIP" alert.
+- [ ] **A8 end-to-end proof** — see *Developer* above. Local evidence only so far: `improve-v1/evidence/09-booking-2026-09-15/`, `scripts/walk-09-smoke.mjs` (82/82), and a Vite-only preview walk of all four upsell chats.
+
+## Phase B — the object
+
+- [x] **B1 scope / B2 packaging** — settled by Joel's box-contents decision. No unit inspected; the copy is written so it does not depend on one.
+- [x] **B3 instructions** — [insert card](product/09-B3-insert-card.md): open, write, roll, place, close, left palm, seven words, left wrist; plain care notes; support address. Print size open.
+- [x] **B4 imagery** — hosted studio close-up + wrist photo + capsule demo GIF (captioned that the demo shows black beads). New unit photos welcome, not blocking.
+- [ ] **B5–B7 pack and ship** — a sample packed unit, the printed card proofed, and the ship gate (contents, SKU, usable address, tracking entered only after real dispatch). Joel's process.
+
+## Phase C — purchase emails
+
+- [x] **C0 list + tags** — `be-customer`, `be-09-heart-cleanser`, `be-09-bump`, `be-09-shipped`, asserted by unit tests against the literal strings.
+- [x] **C1 confirmation email** — [copy + HTML/text](order-emails/09-T3-confirmation-email.md). Item, order reference slot, box contents, the wait, both next steps, support; a wait-filler that tells her to draft the wish. Sells nothing.
+- [x] **C2 shipment email** — [copy + HTML/text](order-emails/09-T4-shipment-email.md). Tracking slot, arrival window, the ritual in steps, support. Sells nothing.
+- [ ] **C3 upload, automate, prove** — see *Developer* above. ⚠ Both emails still carry `{{AWEBER_STRIPE_ORDER_ID}}` and `{{AWEBER_TRACKING_URL}}`; swap them from AWeber's picker and prove on a seed send.
+
+## Content — sales emails
+
+- [x] **Email 1** [copy](sales-emails/09-E2-esl-v1-left-wrist.md) · [HTML](sales-emails/09-E4-esl-v1-evelyn.html) · [text](sales-emails/09-E4-esl-v1-evelyn.txt) — `c=1–4`.
+- [x] **Email 2** [copy](sales-emails/09-E3-esl-email-2-his-name.md) · [HTML](sales-emails/09-E4-esl-email-2-evelyn.html) · [text](sales-emails/09-E4-esl-email-2-evelyn.txt) — `c=21–24`.
+- [x] **Email 3** [copy](sales-emails/09-E5-email-3-anna-story.md) · [HTML](sales-emails/09-E6-esl-email-3-anna-evelyn.html) · [text](sales-emails/09-E6-esl-email-3-anna-evelyn.txt) — `c=51–52`. Built in email 2's shell; images load at 390px and 700px. `c=31–33` and `c=41–43` are free again (deleted options).
+- [x] Offer URL wired in all three, AWeber first-name and unsubscribe tags, 02 branding and postal footer, no price in any ESL.
+- [ ] Everything else about sending them is in *Joel* and *Developer* above.
 
 ## Final release gate — all required before live promotion
 
-- [ ] Offer page and tested checkout deployed at final URL; environment/configuration verified.
-- [ ] Live Stripe setup confirmed; $59 and single-item behaviour match page and server; stock and fulfilment ready.
-- [ ] Real hosted assets/CTA URLs and AWeber tags verified in both email parts; no build placeholders.
-- [ ] Purchase and shipment campaigns active and tested; marketing purchaser suppression verified.
-- [ ] Final review of shipping/returns/contact details and end-to-end evidence.
-- [ ] Authorized launch activation and send schedule; monitor payments, fulfilment queue and failed AWeber syncs.
+- [ ] Migration applied; offer page and checkout deployed at the final URL; environment verified.
+- [ ] Live Stripe confirmed: $59 (+$11.11 when ticked), quantity 1, address captured; `charge.refunded` enabled.
+- [ ] Stock in hand, packer briefed, tracking procedure working.
+- [ ] Purchase and shipment Campaigns active and seed-tested; every `{{AWEBER_…}}` slot swapped; purchaser suppression verified.
+- [ ] A test purchase proved end to end, then `readyForMoney: true`.
+- [ ] Authorized send schedule; watch payments, the parcel queue and failed AWeber writes.
 
-## Evidence / reuse map — inspected in this workspace
+## Where 09's code lives
 
-06's September 2 handover says no code exists and describes post-payment address capture. Current repository code supersedes that snapshot:
+| File | 09's part of it |
+|---|---|
+| `shared/backendOffers.ts` | the `heart-cleanser` row (5900, `be_heart_cleanser`, `reiki_charge` bump, `collectsShipping`, worldwide `shippingCountries`, `readyForMoney: false`, `packingAlert`) |
+| `shared/shippingCountries.ts` | Stripe's full country list, checked against the SDK's own type at compile time |
+| `shared/schema.ts` + `migrations/2026-09-15-be-shipments.sql` | `be_shipments`, plus the address columns on `be_upsell_orders` |
+| `client/src/pages/offers/heart-cleanser/` | the offer page and the receipt page |
+| `client/src/lib/heartCleanserBooking.ts` · `heartCleanserReceipt.ts` | their copy and rules |
+| `client/src/lib/upsellCopy/heartCleanser.ts` | U1/U2 copy (06's equivalent is `pixiu.ts`) |
+| `client/src/lib/upsellShipping.ts` | the skip-or-ask decision for the address form |
+| `client/src/components/upsell/ShippingForm.tsx` | the optional `countries` prop (V1 keeps its seven) |
+| `server/lib/beShipments.ts` · `beShipmentAlerts.ts` · `beShipmentAdmin.ts` | the parcel row, the operator alert, the admin actions |
+| `server/routes/admin/shipments.ts` | list / mark shipped / cancel |
+| `server/routes/backendOffers.ts` · `webhooks.ts` | checkout, the receipt lookup, the `be_*` and `charge.refunded` branches |
+| `server/lib/backendCustomerList.ts` · `aweber.ts` | 09's tags and the shipped-tag write |
 
-- `shared/backendOffers.ts`: `pixiu-bracelet`, price 4900, Closed Purse bump, `/offers/wiccan/pixiu-bracelet`, `collectsShipping: true`; temporary dev-gate comments. No 09 catalog entry.
-- `client/src/pages/offers/pixiu-bracelet/BookingPage.tsx` and `ThankYouPage.tsx`: existing physical-product page/receipt reference.
-- `server/routes/backendOffers.ts`: catalog-driven checkout with `shipping_address_collection` for physical offers.
-- `server/lib/backendCustomerList.ts`: existing `be-06-pixiu-bracelet` mapping; extend with 09's own keys.
-- `server/lib/braceletOrders.ts`: physical-order reference; inspect exact backend main-product persistence before choosing reuse.
-- `client/src/lib/upsellCopy/pixiu.ts`: reference only if 09 upsells are chosen.
-
-Repository presence does not establish deployment, live Stripe configuration, stock or AWeber campaign status. Those remain unticked until checked.
-
-## Next action
-
-Resolve URL + shipping/contents + bump/upsell scope, then write the 09 offer/booking page and receipt/confirmation/shipping copy. Build against the existing physical backend flow. The missing offer URL is already requested in the conversation.
+⚠ Code in the repository does not mean deployed, configured, stocked or automated. Everything in *What is left* stays unticked until someone checks it.
 
 ---
 
