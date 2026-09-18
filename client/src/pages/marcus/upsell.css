@@ -1,0 +1,105 @@
+/* upsell page — page-specific rules only; tokens live in ./marcus.css
+   PORT of improve-v1/v1-one-time-BEs/local/08-marcus/client/pages/upsell.css, every
+   selector prefixed with `.m8` (MarcusShell's root) so nothing leaks into the app.
+   Spec: design-reviews/03-audio-upsell.md (+ README ruling 2, 04 §4 motion).
+   Red is spent twice on this sheet: the accept stamp and the personal-card mark in the sleeve. */
+
+/* ── headline block: the letter begins at once ───────────────────────────── */
+.m8 .upsell .step-label{position:relative;margin:0 0 var(--s3);padding-top:12px}
+.m8 .upsell .step-label::before{content:"";position:absolute;left:0;top:0;width:34px;height:2px;background:var(--ink)}
+.m8 .upsell h1{margin:0 0 26px}
+.m8 .upsell .upsell-copy{margin-block:0 var(--s5)}
+.m8 .upsell .upsell-copy p{margin:0 0 22px}
+.m8 .upsell .upsell-copy p:last-child{margin-bottom:0}
+
+/* ── the running-order sleeve: a printed sleeve, not a web card ──────────── */
+.m8 .upsell .sleeve{
+  position:relative;margin:var(--s5) 0 var(--s6);padding:18px 20px 16px;
+  border:1px solid var(--stock-rule);background:linear-gradient(180deg,#f7f4ea,#efe9da);
+}
+.m8 .upsell .sleeve::after{content:"";position:absolute;inset:5px;border:1px solid #d8cfba;pointer-events:none}
+.m8 .upsell .sleeve>*{position:relative;z-index:1}
+.m8 .upsell .sleeve-head{display:flex;justify-content:space-between;align-items:baseline;gap:var(--s3) var(--s4);flex-wrap:wrap}
+.m8 .upsell .sleeve-head .kicker{margin:0}
+.m8 .upsell .sleeve-state{font:italic var(--t-small)/1.3 var(--text);color:var(--muted)}
+
+.m8 .upsell .player{display:flex;align-items:center;gap:var(--s4);margin:var(--s4) 0 var(--s2)}
+.m8 .upsell .play{
+  flex:0 0 46px;width:46px;height:46px;border-radius:50%;border:1.5px solid var(--ink);
+  display:grid;place-items:center;opacity:.5;background:var(--paper);
+}
+.m8 .upsell .play::before{content:"";width:0;height:0;border-left:15px solid var(--ink);border-top:9px solid transparent;border-bottom:9px solid transparent;margin-left:4px}
+.m8 .upsell .track{flex:1;display:grid;grid-template-columns:repeat(var(--segs,12),1fr);gap:3px;height:22px;align-items:end;min-width:0}
+.m8 .upsell .seg{display:block;height:14px;background:var(--ink);opacity:.8;transform-origin:left center}
+.m8 .upsell .seg.lens{height:22px;background:var(--red);opacity:1}
+.m8 .upsell .seg.end{height:9px}
+
+.m8 .upsell .chapters{list-style:none;padding:0;margin:var(--s4) 0 0;display:grid;grid-template-columns:1fr 1fr;column-gap:26px}
+.m8 .upsell .chapters li{display:flex;gap:var(--s3);align-items:baseline;padding:7px 0;border-top:1px solid #dcd3bf;font-size:var(--t-small);line-height:1.35}
+.m8 .upsell .chapters li:nth-child(1),.m8 .upsell .chapters li:nth-child(2){border-top:0}
+.m8 .upsell .chapters .n{flex:0 0 22px;font-size:13px;letter-spacing:.04em;color:var(--muted)}
+.m8 .upsell .chapters .t{min-width:0}
+.m8 .upsell .chapters .lens{grid-column:1/-1;border-top:1px solid var(--ink);margin-top:6px;padding-top:10px}
+.m8 .upsell .chapters .lens .n{color:var(--red)}
+.m8 .upsell .chapters .end{grid-column:1/-1;border-top:1px solid #dcd3bf}
+.m8 .upsell .sleeve-foot{margin-top:var(--s3);font-size:var(--t-small);line-height:1.5;color:var(--muted);border:0;padding:0;max-width:none}
+
+/* ── the one motion moment: the track fills, the rows settle, once ───────── */
+@media (prefers-reduced-motion:no-preference){
+  @keyframes sleeve-fill{to{transform:scaleX(1)}}
+  @keyframes sleeve-settle{to{opacity:1;transform:none}}
+  .m8 .upsell .sleeve.pending .seg{transform:scaleX(0)}
+  .m8 .upsell .sleeve.pending .chapters li{opacity:0;transform:translateY(4px)}
+  .m8 .upsell .sleeve.in .seg{transform:scaleX(0);animation:sleeve-fill .55s cubic-bezier(.2,.7,.2,1) forwards;animation-delay:calc(var(--i)*.075s)}
+  .m8 .upsell .sleeve.in .chapters li{opacity:0;transform:translateY(4px);animation:sleeve-settle .5s ease-out forwards;animation-delay:calc(.25s + var(--i)*.06s)}
+}
+
+/* ── includes: ticks, a left rule, a smaller heading ─────────────────────── */
+.m8 .upsell .includes{margin:var(--s6) 0;padding:22px 26px;border-left:3px solid var(--ink)}
+.m8 .upsell .includes-h{font-size:26px;line-height:1.2;margin:0 0 var(--s3)}
+.m8 .upsell .includes ul{list-style:none;padding:0;margin:0}
+.m8 .upsell .includes li{position:relative;margin:0;padding:7px 0 7px 30px;font-size:17px;line-height:1.45}
+.m8 .upsell .includes li::before{content:"";position:absolute;left:2px;top:15px;width:11px;height:6px;border-left:2px solid var(--ink);border-bottom:2px solid var(--ink);transform:rotate(-45deg)}
+
+/* ── the close: heading + price, the note, the two-row charge ledger ─────── */
+.m8 .upsell .offer-close{border-bottom:0;padding-bottom:0}
+.m8 .upsell .price-row{display:flex;justify-content:space-between;align-items:baseline;gap:var(--s4)}
+.m8 .upsell .price-row .price{font-size:26px}
+.m8 .upsell .offer-note{font-size:var(--t-body);color:var(--ink);margin-top:var(--s3)}
+.m8 .upsell .charge-ledger{margin:var(--s5) 0 var(--s5);border-top:1px solid var(--hair);border-bottom:1px solid var(--hair)}
+.m8 .upsell .charge-ledger>div{display:flex;justify-content:space-between;align-items:baseline;gap:var(--s4);padding:12px 0;font-size:var(--t-small)}
+.m8 .upsell .charge-ledger>div+div{border-top:1px solid #d9d1bd}
+.m8 .upsell .charge-ledger dt{display:flex;gap:10px;align-items:baseline;flex-wrap:wrap}
+.m8 .upsell .charge-ledger dd{margin:0;white-space:nowrap}
+.m8 .upsell .charge-ledger .tag{font-style:normal;font-size:13px;line-height:1.3;letter-spacing:.08em;text-transform:uppercase;padding:2px 7px;border:1px solid currentColor}
+.m8 .upsell .charge-ledger .paid{color:var(--muted)}
+.m8 .upsell .charge-ledger .paid .tag::before{content:"✓ "}
+.m8 .upsell .charge-ledger .add-row{color:var(--ink)}
+.m8 .upsell .charge-ledger .add-row dd{font-size:19px}
+
+/* ── accept / decline: two equal buttons, colour carries the hierarchy ───── */
+.m8 .upsell .upsell-actions{display:grid;grid-auto-rows:1fr;gap:12px;margin-top:0} /* 1fr rows: both buttons share one height even when one label wraps */
+.m8 .upsell .upsell-actions .primary{min-height:60px;font-size:19px;padding:15px 18px}
+.m8 .upsell .upsell-decline{
+  display:block;width:100%;max-width:var(--measure);min-height:60px;margin:0;padding:15px 18px;
+  background:transparent;color:var(--ink);border:1px solid var(--field);border-radius:0;
+  font:400 17px/1.35 var(--text);text-align:center;text-decoration:none;transition:background .15s,border-color .15s;
+}
+.m8 .upsell .upsell-decline:hover{background:#ede7d8;border-color:var(--ink)}
+.m8 .upsell .upsell-decline[disabled]{opacity:.7;cursor:progress}
+
+/* ── sign-off in his hand, not in note grey ──────────────────────────────── */
+.m8 .upsell .sign{margin:var(--s6) 0 0;font:italic 26px/1.2 var(--display);color:var(--headink)}
+
+/* ── phone ───────────────────────────────────────────────────────────────── */
+@media (max-width:620px){
+  .m8 .upsell h1{margin-bottom:22px}
+  .m8 .upsell .sleeve{margin-left:-6px;margin-right:-6px;padding:16px 14px 14px}
+  .m8 .upsell .track{height:20px}
+  .m8 .upsell .chapters{grid-template-columns:1fr}
+  .m8 .upsell .chapters li:nth-child(2){border-top:1px solid #dcd3bf}
+  .m8 .upsell .includes{padding:18px}
+  .m8 .upsell .includes-h{font-size:24px}
+  .m8 .upsell .upsell-actions .primary{font-size:17px;padding:15px 14px}
+  .m8 .upsell .upsell-decline{padding:15px 14px}
+}

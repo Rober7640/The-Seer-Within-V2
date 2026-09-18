@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Marcus Stone · local funnel test</title>
+<!-- Same Google Fonts link the daily email uses (build-08-daily.py). display=swap: Georgia shows first. -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400;0,6..96,700;1,6..96,400&family=Spectral:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/client/styles.css">
+<link rel="stylesheet" href="/client/pages/booking.css">
+<link rel="stylesheet" href="/client/pages/bridge.css">
+<link rel="stylesheet" href="/client/pages/upsell.css">
+<link rel="stylesheet" href="/client/pages/thank-you.css">
+</head>
+<body>
+<aside class="test-banner"><strong>LOCAL TEST · no charge, no email sent</strong><br>Payments and delivery are simulated. Audio price $17 is provisional. Written delivery: within 24 hours, or within 12 hours with the $12.77 upgrade.<br><a href="/">Start a new test</a></aside>
+<main class="sheet paper" id="sheet">
+  <!-- Masthead (nameplate + SCOTCH rule + dateline) is rendered by shared.js: shell('Order form') -->
+  <header class="masthead" id="masthead"></header>
+  <div id="app" aria-live="polite"></div>
+  <p id="error" class="error" role="alert" hidden></p>
+  <!-- Footer (FOLIO rule + dateline) is rendered by shared.js -->
+  <footer class="footer" id="footer"></footer>
+</main>
+<!-- Plain script tags, in order. shared.js first; each page registers itself on PAGES; boot() last. -->
+<script src="/client/shared.js"></script>
+<script src="/client/pages/email.js"></script>
+<script src="/client/pages/booking.js"></script>
+<script src="/client/pages/checkout-sim.js"></script>
+<script src="/client/pages/bridge.js"></script>
+<script src="/client/pages/upsell.js"></script>
+<script src="/client/pages/thank-you.js"></script>
+<script>window.addEventListener('popstate',boot);boot();</script>
+</body>
+</html>

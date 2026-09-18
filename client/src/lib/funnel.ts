@@ -205,7 +205,8 @@ export function funnelPath(v1Path: string, pathname?: string): string {
 
 export type PostHogFunnel =
   | "soulmate" | "fb" | "fb2" | "gdn" | "palm" | "tarot" | "read" | "v1" | "evelyn" | "aiden"
-  | "marcus" | "luna" | "nova" | "maren" | "seven-seven" | "twinflame" | "judgement" | "pixiu";
+  | "marcus" | "luna" | "nova" | "maren" | "seven-seven" | "twinflame" | "judgement" | "pixiu"
+  | "marcusreading";
 
 // Generalized persona landers → their PostHog funnel name. One route each.
 const PERSONA_LANDER_FUNNELS: Record<string, PostHogFunnel> = {
@@ -234,6 +235,11 @@ export function getPostHogFunnel(pathname?: string): PostHogFunnel | null {
   // lander_view with the letter's utm_* attached, so a mailed Pixiu link reports
   // clicks (revenue is grouped server-side via BACKEND_FUNNEL['pixiu-bracelet']).
   if (p === PIXIU_PREFIX || p.startsWith(`${PIXIU_PREFIX}/`)) return "pixiu";
+  // 08 Marcus one-time reading. The offer lives under /marcus/reading/* — kept DISTINCT
+  // from the /marcus PERSONA lander below (exact "/marcus" → "marcus"). Its OWN upsell
+  // page is /marcus/reading/welcome1 (NOT the shared /offers/upsell/*), so it is matched
+  // by path here. Matches the server's BACKEND_FUNNEL['marcus-reading'] = 'marcusreading'.
+  if (p === "/marcus/reading" || p.startsWith("/marcus/reading/")) return "marcusreading";
   if (p === "/soulmate" || p.startsWith("/soulmate/")) return "soulmate";
   const adDef = funnelDefForPath(p);
   if (adDef) return adDef.posthog as PostHogFunnel;
@@ -328,6 +334,14 @@ export function getPostHogStep(pathname?: string): string {
       if (sub === "/welcome2") return "upsell2";
       if (sub === "/success") return "thank_you";
       return "unknown";
+    }
+    case "marcusreading": {
+      // 08 offer chain: booking (root or /<editionId>) → bridge → welcome1 → success.
+      const sub = p.slice("/marcus/reading".length); // "" at the booking root
+      if (sub === "/bridge") return "bridge";
+      if (sub === "/welcome1") return "upsell1";
+      if (sub === "/success") return "thank_you";
+      return "booking"; // "" or "/<editionId>"
     }
     case "evelyn":
       return "landing";

@@ -819,6 +819,11 @@ interface BackendCustomerParams {
   bumpPurchased?: boolean;
   /** 03 only — her Entry form, for the woman who leaves the thank-you page without filling it. */
   entryUrl?: string;
+  /** Per-order custom fields written ONLY to the initial (reading) list — 08 Marcus's
+   *  `m8_question` / `m8_spread` / `m8_paid_count` / `m8_hours`, which the confirmation +
+   *  delivery emails merge. Omitted for offers that don't use them; the bump list never
+   *  gets them (it has no campaign). */
+  contentFields?: Record<string, string>;
 }
 
 interface BackendDeliveredParams {
@@ -937,24 +942,36 @@ export async function addBackendCustomer(
     return { success: false, error: 'missing stripeOrderId' };
   }
 
-  const customFields: Record<string, string> = {
-    stripe_order_id: params.stripeOrderId,
-    offer: params.offer,
-  };
-  if (params.entryUrl) customFields.entry_url = params.entryUrl;
+  // An offer with `orderIdField` (08 Marcus) has ONE custom field per list — the order
+  // id — and NOT the deck's stripe_order_id/offer/entry_url (its lists don't have them,
+  // and AWeber drops the whole subscriber on an unknown field). That single field is
+  // written on EVERY list. Every other offer keeps the default: stripe_order_id + offer
+  // (+ entry_url) on the INITIAL list only; the bump list holds none.
+  const orderIdField = listing.orderIdField;
+  const idFields: Record<string, string> = orderIdField
+    ? { [orderIdField]: params.stripeOrderId }
+    : { stripe_order_id: params.stripeOrderId, offer: params.offer };
+  if (!orderIdField && params.entryUrl) idFields.entry_url = params.entryUrl;
+  // Per-order content fields (08 Marcus: m8_question etc.) go ONLY on the reading (initial)
+  // list — its confirmation + delivery emails merge them. The bump list holds no campaign,
+  // so it never carries them.
+  const contentFields = params.contentFields ?? {};
 
   // A purchase can produce more than one write — the reading list always, and a
-  // separate order-bump list when she took the bump. Only the initial write
-  // carries custom fields; the bump/upsell lists hold none.
+  // separate order-bump list when she took the bump.
   const writes = purchaseListWrites(params.offer, params.bumpPurchased);
   let firstError: string | undefined;
   for (const write of writes) {
+    const isInitial = write.role === 'initial';
+    // id fields: on every list for an orderIdField offer, else the default fields on the
+    // initial list only. Content fields: initial list only.
+    const base = orderIdField || isInitial ? idFields : {};
     const result = await writeBackendCustomer({
       label: `BE customer (${listing.number}) → ${write.role}`,
       listId: write.listId,
       email: params.email,
       name: params.firstName,
-      customFields: write.role === 'initial' ? customFields : {},
+      customFields: isInitial ? { ...base, ...contentFields } : base,
       tags: write.tags,
     });
     if (!result.success && !firstError) firstError = result.error;
@@ -1028,6 +1045,14 @@ export async function addBackendUpsellCustomer(params: {
   firstName?: string;
   productKey: string;
   offer: BackendOfferKey;
+  /** The booking session id (`originalSession`). Written to the upsell list as the
+   *  offer's `orderIdField` (08 Marcus → `order_id`) so the audio write carries the
+   *  SAME order id as the reading + bump writes. Ignored for offers without one. */
+  orderId?: string;
+  /** Per-order fields the upsell list's confirmation email merges (08 Marcus audio →
+   *  `m8_question` + `m8_hours`). ⛔ Only fields that exist ON THAT LIST. Omitted for
+   *  offers whose upsell list has no custom fields. */
+  contentFields?: Record<string, string>;
 }): Promise<{ success: boolean; error?: string }> {
   const listing = backendUpsellFor(params.productKey);
   if (!listing) {
@@ -1037,12 +1062,21 @@ export async function addBackendUpsellCustomer(params: {
     return { success: false, error: `unknown upsell product: ${params.productKey}` };
   }
 
+  // Only offers whose lists carry an order-id field get one here (08 Marcus's audio
+  // list). Others keep no custom fields, as their upsell lists have none. The audio
+  // confirmation's merge fields (m8_question / m8_hours) ride alongside.
+  const orderIdField = BACKEND_OFFERS[params.offer]?.orderIdField;
+  const customFields = {
+    ...(orderIdField && params.orderId ? { [orderIdField]: params.orderId } : {}),
+    ...(params.contentFields ?? {}),
+  };
+
   return writeBackendCustomer({
     label: `BE upsell (${listing.name})`,
     listId: listing.listId,
     email: params.email,
     name: params.firstName,
-    customFields: {},
+    customFields,
     tags: upsellPurchaseTags(params.offer, params.productKey),
   });
 }

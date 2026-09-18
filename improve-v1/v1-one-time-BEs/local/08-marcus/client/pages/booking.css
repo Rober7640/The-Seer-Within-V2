@@ -1,0 +1,119 @@
+/* booking page — page-specific rules only; tokens live in ../styles.css
+   Spec: design-reviews/01-booking.md (layout 1–12, form moot), 05-over-55-phone.md (floors),
+   04-visual-identity.md §3–§4 (tokens, the one motion moment).
+   Floors: body 18px on phone · nothing under 13px · eyebrows 14px · tap targets ≥ 44px. */
+
+/* ── the turned cards: one row at every width, the letter's FIG. captions ── */
+.up-cards{
+  grid-template-columns:repeat(var(--n,3),minmax(0,1fr));justify-content:center;
+  gap:var(--s5);max-width:var(--measure);margin:var(--s6) auto;
+}
+.up-cards figure.up{min-width:0}
+.up-cards .cut,.up-cards .tarot{max-width:200px}
+.up-cards .fig{max-width:200px;border-top:0;padding-top:0;margin-top:var(--s3)}
+.up-cards .fig-no{letter-spacing:.08em}                  /* "FIG. I · POSITION ONE" on one line at 200px */
+.up-cards .fig-pos{font-weight:600;font-size:17px;line-height:1.3}
+.up-cards .fig-name{font-size:15px}
+.up-cards .tarot{background:#dfd7c4}                     /* reserved space while the JPEG loads */
+
+/* ── the bridge and the table photograph, once ─────────────────────────── */
+.remaining>.bridge{margin:var(--s4) auto var(--s5)}
+.table{max-width:var(--measure);margin:0 auto var(--s5)}
+.table img{display:block;width:100%;height:auto;aspect-ratio:3/2;border:1px solid var(--hair);background:#dfd7c4}
+.table figcaption{max-width:none;border-top:0;padding-top:0;font-size:15px;line-height:1.45;color:var(--muted);margin-top:var(--s2)}
+.table figcaption .label{display:inline}
+
+/* ── the face-down positions as a ruled ledger (01 §3.5): small back + question, read DOWN ── */
+.down-cards.ledger-down{
+  list-style:none;margin:0 auto;padding:0;max-width:var(--measure);
+  display:grid;grid-template-columns:1fr 1fr;grid-template-rows:repeat(var(--rows,4),auto);
+  grid-auto-flow:column;column-gap:var(--s6);row-gap:0;border-top:1px solid var(--hair);
+}
+.ledger-down li{margin:0;padding:0;border-bottom:1px solid var(--hair)}
+.ledger-down figure.down{display:flex;align-items:center;gap:var(--s4);padding:var(--s3) 0;min-width:0}
+.ledger-down .cut{
+  flex:0 0 52px;width:52px;height:89px;overflow:hidden;
+  background:#5d6c80 repeating-radial-gradient(circle at 50% 50%,#7a889a 0 1px,transparent 1px 7px); /* a drawn back if the image is slow */
+}
+.ledger-down .cut,.ledger-down .tarot{max-width:52px}
+.ledger-down .tarot{width:52px;height:89px;object-fit:cover}
+.ledger-down .fig{flex:1 1 auto;min-width:0;max-width:none;margin:0;padding:0;border-top:0}
+.ledger-down .position{margin:0}
+.ledger-down .fig-pos{font-size:19px;line-height:1.3;margin-top:3px}
+
+/* ── the offer: price like a price in a paper, delivery promise beside it, signature ── */
+.offer .price-row{align-items:flex-end}
+.offer .price-row h2{margin-bottom:0}
+.delivery{
+  margin:var(--s4) 0 0;padding:var(--s3) var(--s4);background:var(--stock);border-left:3px solid var(--stock-rule);
+  font-size:17px;line-height:1.5;
+}
+.offer .offer-copy{margin-top:var(--s5)}
+.offer .name-note{color:var(--ink);font-size:17px}
+.sig-row{margin:var(--s2) 0 0}
+.sig{display:block;height:44px;width:auto;margin-left:-6px}          /* flattened to paper — never multiply */
+.sig-name{font:italic 400 26px/1.1 var(--display);color:var(--headink)}
+
+/* ── her details (operator rule 2026-09-14/15: birth name and date on the booking page, never on Stripe):
+   the three fields above the button, exactly as production's booking.css places them.
+   .field / .hint / .field-error / .dob and the input box itself come from ../styles.css §13;
+   only the placement and the faint in-box hint (MM · DD · YYYY) are this page's. */
+.intake{margin-top:var(--s6)}
+.intake .field+.field{margin-top:var(--s5)}
+.intake input::placeholder{color:var(--muted);opacity:.55}   /* faint: the label above carries the meaning */
+.intake input:focus::placeholder{opacity:.35}
+.intake .dob{flex-wrap:wrap}                                  /* three boxes stay on one row at 320; wrap is a safety net */
+.offer .submit[disabled]:not([aria-busy="true"]){cursor:not-allowed}  /* waiting on the boxes, not on the network */
+
+/* ── the bump: red off the box and the tick (01 §3.8); the whole row is the tap target ── */
+.booking-bump{margin-top:var(--s6)}
+.booking-bump .review-label{color:var(--muted)}
+.booking-bump h3{font-size:20px}
+.booking-bump .extra-desc{font-size:17px;color:var(--muted)}
+.booking-bump .check{
+  min-height:56px;margin-top:var(--s4);padding:var(--s3);
+  background:var(--paper);border:1px solid var(--stock-rule);
+}
+.booking-bump .check:active{background:#fbf9f2}
+.booking-bump .check input{accent-color:var(--ink)}
+
+/* ── the total, its breakdown, the button ──────────────────────────────── */
+.booking-total{flex-wrap:wrap;gap:var(--s1) var(--s5);align-items:baseline}
+.booking-total .cur{font:400 15px/1 var(--text);color:var(--muted);letter-spacing:.08em}
+.total-note{font-size:var(--t-small);color:var(--muted);margin-top:var(--s2)}
+.offer .under{margin-inline:auto}
+
+/* ── the one motion moment: the turned cards are dealt (04 §4) ─────────── */
+@media (prefers-reduced-motion:no-preference){
+  .up-cards figure.up{animation:deal .38s cubic-bezier(.2,.7,.2,1) both}
+  .up-cards figure.up:nth-child(2){animation-delay:.12s}
+  .up-cards figure.up:nth-child(3){animation-delay:.24s}
+}
+
+/* ── phone ─────────────────────────────────────────────────────────────── */
+@media (max-width:620px){
+  .up-cards{grid-template-columns:repeat(var(--n,3),minmax(0,1fr));gap:var(--s3);margin:var(--s5) 0 var(--s6)}
+  .up-cards .cut,.up-cards .tarot,.up-cards .fig{max-width:none}
+  .up-cards .figno,.table .figno{display:none}                                /* "POSITION ONE" fits the column; the numeral returns on desktop */
+  .up-cards .fig-no{letter-spacing:.08em}
+  .up-cards .fig-pos{font-size:16px}
+  .up-cards .fig-name{font-size:14px}
+  /* the ledger reads down one column; a smaller back keeps seven rows inside ~600px so the price arrives sooner */
+  .down-cards.ledger-down{grid-template-columns:1fr;grid-template-rows:none;grid-auto-flow:row;column-gap:0}
+  .ledger-down figure.down{gap:var(--s3);padding:9px 0}
+  .ledger-down .cut{flex-basis:40px;width:40px;height:69px}
+  .ledger-down .cut,.ledger-down .tarot{max-width:40px}
+  .ledger-down .tarot{width:40px;height:69px}
+  /* section breaks a step tighter on the phone (04 §3d: 32 between sections) */
+  .remaining,.offer{margin-top:var(--s5);padding-top:var(--s4)}
+  .remaining::before,.offer::before{margin-bottom:var(--s4)}
+  .remaining>.bridge{margin-bottom:var(--s4)}
+  .table{margin-bottom:var(--s4)}
+  .booking-bump .check{margin-inline:0}
+  .offer .price-row h2{max-width:none}
+}
+@media (max-width:360px){
+  .up-cards{gap:var(--s2)}
+  .up-cards .fig-no{font-size:13px;letter-spacing:.02em}       /* 13px is the floor; "POSITION" must fit a 79px column */
+  .up-cards .fig-pos{hyphens:auto;overflow-wrap:anywhere}      /* "understand" is wider than the column at 320 */
+}

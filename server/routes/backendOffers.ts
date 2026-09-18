@@ -10,7 +10,10 @@ import {
   upsellChargeFields,
   type BookingTreatment,
 } from '@shared/backendOffers';
-import { getBeOrderBySession, recordBackendOrder, writeToCustomerList } from '../lib/beOrders';
+import { getBeOrderBySession, recordBackendOrder, saveOrderIntake, writeToCustomerList } from '../lib/beOrders';
+import { getBe08Edition, listPublishedBe08Editions, type Be08Edition } from '../lib/be08Editions';
+import { BE_08_DECK } from '../lib/be08Draw';
+import { parseDateOfBirth } from '../lib/be08Birth';
 import { resolveBeBookingTreatment } from '../lib/experiments';
 import { BACKEND_UPSELLS } from '../lib/backendCustomerList';
 import logger from '../lib/logger';
@@ -374,14 +377,24 @@ router.post('/upsell/fallback-checkout', async (req: Request, res: Response) => 
     // receipt. The next page reads the BOOKING session_id, exactly as the 1-click path.
     const upsellBase = catalog.upsellEntryPath.replace(/\/welcome1$/, '');
     const isUpsell2 = productKey === 'be_bracelet';
+    // 08 Marcus's chain is bridge → welcome1 → success — there is NO welcome2, and its
+    // upsellEntryPath is the bridge, so welcome1 can't be derived from upsellBase. Derive
+    // the reading root from the receipt path instead; buy AND decline both land on the
+    // receipt (which reads `s`), decline routing back to welcome1.
+    const isMarcusAudio = offer === 'marcus-reading';
+    const marcusRoot = catalog.successPath.replace(/\/success$/, '');
     const origin = baseUrl(req);
     const sid = encodeURIComponent(sessionId);
-    const successUrl = isUpsell2
+    const successUrl = isMarcusAudio
+      ? `${origin}${catalog.successPath}?s=${sid}&fallback_session_id={CHECKOUT_SESSION_ID}`
+      : isUpsell2
       // The two offers' thank-you pages read different params by design — Judgement Day
       // reads `s`, Twin Flame reads `session_id`. Carry BOTH so either resolves the order.
       ? `${origin}${catalog.successPath}?s=${sid}&session_id=${sid}&fallback_session_id={CHECKOUT_SESSION_ID}`
       : `${origin}${upsellBase}/welcome2?session_id=${sid}&fallback_session_id={CHECKOUT_SESSION_ID}`;
-    const cancelUrl = isUpsell2
+    const cancelUrl = isMarcusAudio
+      ? `${origin}${marcusRoot}/welcome1?session_id=${sid}&declined=true`
+      : isUpsell2
       ? `${origin}${upsellBase}/welcome2?session_id=${sid}&declined=true`
       : `${origin}${upsellBase}/welcome1?session_id=${sid}&declined=true`;
 
@@ -414,11 +427,16 @@ router.post('/upsell/fallback-checkout', async (req: Request, res: Response) => 
           quantity: 1,
         },
       ],
-      // Physical item — collect the shipping address on the hosted page; the manual
-      // shipper reads it off the Stripe payment (same as the 1-click path's shipping).
-      shipping_address_collection: {
-        allowed_countries: ['US', 'CA', 'GB', 'AU', 'NZ', 'SG', 'IN'],
-      },
+      // Physical items collect a shipping address on the hosted page; the manual shipper
+      // reads it off the Stripe payment (same as the 1-click path's shipping). The 08 audio
+      // is DIGITAL — no address, so it is skipped for that product.
+      ...(isMarcusAudio
+        ? {}
+        : {
+            shipping_address_collection: {
+              allowed_countries: ['US', 'CA', 'GB', 'AU', 'NZ', 'SG', 'IN'],
+            },
+          }),
       success_url: successUrl,
       cancel_url: cancelUrl,
       payment_intent_data: { description, metadata: beMeta },
@@ -487,6 +505,74 @@ router.post('/upsell/shipping', async (req: Request, res: Response) => {
   }
 });
 
+// ── 08 · the editions the booking page sells ─────────────────────────────────────
+// An edition is one named spread (server/lib/be08Editions.ts). The booking page at
+// /marcus/reading/:editionId renders the turned cards, the face-down positions and the
+// edition's own booking copy from this — nothing else.
+//
+// ⛔ `publicEdition` is a WHITELIST. `freeEmailText` (the daily letter's body) and any
+//    future field the page does not render stay server-side. The face-up cards get their
+//    name from BE_08_DECK so the client never carries a deck; `image` is the asset id the
+//    client resolves through marcusAsset().
+
+const BE_08_DECK_BY_ID = new Map(BE_08_DECK.map((card) => [card.id, card]));
+
+/** Only the id shape a booking URL can carry — the same alphabet the edition ids use. */
+const BE_08_EDITION_ID = /^[a-z0-9][a-z0-9-]{0,99}$/;
+
+function publicEdition(edition: Be08Edition) {
+  return {
+    id: edition.id,
+    version: edition.version,
+    slug: edition.slug,
+    question: edition.question,
+    theme: edition.theme,
+    spread: edition.spread,
+    positions: edition.positions.map((p) => {
+      const card = p.fixedCard ? BE_08_DECK_BY_ID.get(p.fixedCard.cardId) : undefined;
+      return {
+        id: p.id,
+        number: p.number,
+        label: p.label,
+        visibility: p.visibility,
+        ...(p.visibility === 'free' && p.fixedCard
+          ? {
+              card: {
+                id: p.fixedCard.cardId,
+                name: card?.name ?? p.fixedCard.cardId,
+                image: p.fixedCard.cardId,
+              },
+            }
+          : {}),
+      };
+    }),
+    bookingCopy: edition.bookingCopy ?? null,
+  };
+}
+
+router.get('/marcus/editions', async (_req: Request, res: Response) => {
+  try {
+    const editions = await listPublishedBe08Editions();
+    return res.json({ editions: editions.map(publicEdition) });
+  } catch (err) {
+    logger.error('backend/marcus/editions failed:', err);
+    return res.status(500).json({ error: 'Please try again.' });
+  }
+});
+
+router.get('/marcus/editions/:id', async (req: Request, res: Response) => {
+  try {
+    const id = String(req.params.id || '');
+    if (!BE_08_EDITION_ID.test(id)) return res.status(404).json({ error: 'Edition not found.' });
+    const edition = await getBe08Edition(id);
+    if (!edition) return res.status(404).json({ error: 'Edition not found.' });
+    return res.json({ edition: publicEdition(edition) });
+  } catch (err) {
+    logger.error('backend/marcus/editions/:id failed:', err);
+    return res.status(500).json({ error: 'Please try again.' });
+  }
+});
+
 router.post('/checkout', async (req: Request, res: Response) => {
   try {
     const stripe = getStripe();
@@ -504,6 +590,47 @@ router.post('/checkout', async (req: Request, res: Response) => {
       ? req.body.treatment
       : 'page';
 
+    // ── 08's edition ─────────────────────────────────────────────────────────────────
+    // She books an EDITION (one named spread). The id comes from the booking URL; the
+    // VERSION is pinned here from the row we resolved — never from the browser — so a
+    // re-cut edition published between her page load and her payment cannot change what
+    // she was sold. Unknown, unpublished or missing → refused before Stripe is touched.
+    let edition: Be08Edition | null = null;
+    if (offerKey === 'marcus-reading') {
+      const rawEdition = typeof req.body?.editionId === 'string' ? req.body.editionId.trim() : '';
+      edition = BE_08_EDITION_ID.test(rawEdition) ? await getBe08Edition(rawEdition) : null;
+      if (!edition) {
+        logger.info('backend/checkout: refused', { offer: offerKey, code: 'edition_unknown' });
+        return res.status(400).json({ error: 'Choose a valid reading.', code: 'edition_unknown' });
+      }
+    }
+
+    // ── 08's three personal fields ────────────────────────────────────────────────────
+    // D5 as amended 2026-09-14: the booking page collects what Marcus needs before he can
+    // read her — the first name he uses, her full birth name and her date of birth — and
+    // POSTs them here. They are parked on be_order_intake (below) and NEVER on Stripe
+    // metadata (PII). The date arrives as YYYY-MM-DD from the three boxes; it still goes
+    // through the be08Birth parser so the calendar + age rules apply here, before money.
+    // Missing or unusable → 400 with a plain message, before Stripe is touched.
+    // ⚠ A non-ASCII birth name is NOT refused — the lens stage routes it to support.
+    let be08Person: { displayFirstName: string; fullBirthName: string; dateOfBirth: string } | null = null;
+    if (offerKey === 'marcus-reading') {
+      const trimmed = (v: unknown) => (typeof v === 'string' ? v.replace(/\s+/g, ' ').trim() : '');
+      const displayFirstName = trimmed(req.body?.displayFirstName).slice(0, 60);
+      const fullBirthName = trimmed(req.body?.fullBirthName).slice(0, 200);
+      const dobRaw = trimmed(req.body?.dateOfBirth);
+      const refuse = (code: string, error: string) => {
+        logger.info('backend/checkout: refused', { offer: offerKey, code });
+        return res.status(400).json({ error, code });
+      };
+      if (!displayFirstName) return refuse('first_name_missing', 'Please enter your first name.');
+      if (!fullBirthName) return refuse('birth_name_missing', 'Please enter your first and last name as it is on your birth certificate.');
+      if (!dobRaw) return refuse('dob_missing', 'Please enter your date of birth.');
+      const dob = parseDateOfBirth(dobRaw);
+      if (!dob.ok) return refuse('dob_invalid', 'That is not a real date of birth, so please look at the month, day and year again.');
+      be08Person = { displayFirstName, fullBirthName, dateOfBirth: dob.iso };
+    }
+
     // The pay-what-you-want amount, in cents, as the screen computed it. Absent and
     // ignored on a fixed-price offer. ⚠ Absent must stay absent — `Number(null)` is 0,
     // which would come back as "give a little more" instead of "tell us the amount".
@@ -517,6 +644,9 @@ router.post('/checkout', async (req: Request, res: Response) => {
       offer: offerKey,
       bump: req.body?.bump === true,
       amountCents: amountCents !== null && Number.isFinite(amountCents) ? amountCents : null,
+      // ⛔ A tier KEY, never a tier price. `resolveBackendCharge` validates it against the
+      //    catalog and looks the cents up server-side; an unknown rung is refused outright.
+      tier: req.body?.tier,
     });
 
     if (!charge.ok) {
@@ -534,8 +664,39 @@ router.post('/checkout', async (req: Request, res: Response) => {
 
     const { offer } = charge;
 
-    const rawName = typeof req.body?.firstName === 'string' ? req.body.firstName : '';
+    // 08: what Marcus calls her is the booking form's first-name box, not a letter ?fn=.
+    const rawName = be08Person
+      ? be08Person.displayFirstName
+      : typeof req.body?.firstName === 'string' ? req.body.firstName : '';
     const firstName = rawName.trim().slice(0, MAX_FIRST_NAME);
+
+    // The sales letter's ?c=, as the booking screen read it. Each backend letter's CTAs use
+    // their own range (02-E2/v1: 1..6, 02-E3/v2: 21..26), so fulfilment can tell WHICH letter
+    // she bought from and pay that letter's promises. ⛔ Digits only, and absent stays absent —
+    // n8n treats a missing `c` as letter 1, which every buyer has read.
+    const rawCode = typeof req.body?.letterCode === 'string' ? req.body.letterCode.trim() : '';
+    const letterCode = /^\d{1,4}$/.test(rawCode) ? rawCode : '';
+
+    // ── 07's intake ────────────────────────────────────────────────────────────────
+    // ⛔ HER QUESTIONS CANNOT RIDE STRIPE METADATA. A metadata value caps at 500
+    //    characters and Stripe truncates silently, so a long question would arrive cut in
+    //    half and be read out as if it were what she asked. They go to `be_order_intake`
+    //    below; only the short, fixed-shape fields go on the session.
+    const str = (v: unknown, max: number) =>
+      typeof v === 'string' && v.trim() ? v.trim().slice(0, max) : null;
+    // ⛔ Must be a FULL registry key. A short slug (`undertow` for `the-undertow`) makes
+    //    the fulfilment guard fail silently, which is why the shape is checked here.
+    //    ⚠ Membership in the registry is NOT checked — the registry is a build-script
+    //    JSON outside the server's tree. Add that check before `readyForMoney` is flipped.
+    const rawSpread = str(req.body?.spreadKey, 100);
+    const spreadKey = rawSpread && /^[a-z0-9][a-z0-9-]*$/.test(rawSpread) ? rawSpread : null;
+    const rawDate = str(req.body?.drawDate, 10);
+    const drawDate = rawDate && /^\d{4}-\d{2}-\d{2}$/.test(rawDate) ? rawDate : null;
+    const topic = ['love', 'money'].includes(String(req.body?.topic)) ? String(req.body.topic) : null;
+    // ⛔ No cap she can hit. This is the column's entire reason for existing.
+    const question = str(req.body?.question, 4000);
+    const question2 = str(req.body?.question2, 4000);
+    const question3 = str(req.body?.question3, 4000);
 
     const origin = baseUrl(req);
     const session = await stripe.checkout.sessions.create({
@@ -548,6 +709,24 @@ router.post('/checkout', async (req: Request, res: Response) => {
       // Manifestation Bracelet already ships to (ShippingForm.tsx).
       ...(offer.collectsShipping
         ? { shipping_address_collection: { allowed_countries: BACKEND_SHIPPING_COUNTRIES } }
+        : {}),
+      // Generic: an offer may ask short, NON-personal questions on Stripe's own page. All
+      // required, all free text. ⛔ Keys are read back by the webhook — see the catalog.
+      // No live offer uses this today (08 moved its three personal fields onto the booking
+      // page, 2026-09-14 — Stripe forbids personal data in custom fields).
+      ...(offer.checkoutCustomFields?.length
+        ? {
+            custom_fields: offer.checkoutCustomFields.map((f) => ({
+              key: f.key,
+              label: { type: 'custom' as const, custom: f.label },
+              type: 'text' as const,
+              optional: false,
+              text: {
+                maximum_length: f.maxLength,
+                ...(f.minLength ? { minimum_length: f.minLength } : {}),
+              },
+            })),
+          }
         : {}),
       // Create a Customer and save the card for OFF-SESSION reuse, exactly as V1's
       // main checkout does — this is what lets the post-purchase upsells charge in
@@ -577,7 +756,11 @@ router.post('/checkout', async (req: Request, res: Response) => {
       // ⚠ Back to the treatment she came from, with the door the booking copy expects.
       // Its resume copy is written for exactly this round-trip, and says that nothing
       // has been taken — which is her live question at that moment.
-      cancel_url: `${origin}${offer.bookingPath[treatment]}?cancelled=1`,
+      // 08's booking page is edition-scoped, and the catalog's static path cannot carry
+      // the id — so an edition cancel goes back to the edition she was on, not the root.
+      cancel_url: edition
+        ? `${origin}${offer.bookingPath[treatment]}/${encodeURIComponent(edition.id)}?cancelled=1`
+        : `${origin}${offer.bookingPath[treatment]}?cancelled=1`,
       metadata: {
         app: 'the-seer-within',
         // ⛔ Deliberately NOT one of the funnel's product names — see the header.
@@ -590,6 +773,8 @@ router.post('/checkout', async (req: Request, res: Response) => {
         // reused code sends her the wrong thing. Absent entirely when she declined.
         ...(charge.bumpPurchased ? { bumpProduct: offer.bump.productKey } : {}),
         ...(firstName ? { firstName } : {}),
+        // Which sales letter she bought from — read by the fulfilment workflow's draw node.
+        ...(letterCode ? { c: letterCode } : {}),
         // The booking-treatment A/B visitor subject, echoed back on the webhook so the
         // purchase can be attributed to the arm she saw. ⚠ Not a funnel product key —
         // nothing keys behaviour on it; it is read only by logBeBookingConversion.
@@ -599,6 +784,17 @@ router.post('/checkout', async (req: Request, res: Response) => {
         // PostHog attribution — distinct id + link UTM, read back by the webhook's
         // BE revenue event. NOT a product/behaviour key; nothing branches on these.
         ...posthogMetaFromBody(req.body),
+
+        // ⭐ Short and fixed-shape, so they are safe on metadata and give the webhook a
+        //    backstop if the intake table write failed. ⛔ The questions are NOT here.
+        ...(charge.tier ? { tier: charge.tier } : {}),
+        ...(spreadKey ? { spreadKey } : {}),
+        ...(drawDate ? { drawDate } : {}),
+        ...(topic ? { topic } : {}),
+        // 08: the edition she booked, pinned to the version the SERVER resolved. Short and
+        // fixed-shape; a backstop for the intake row. ⛔ Her birth name and birth date are
+        // NOT here (PII) — they live on be_order_intake only.
+        ...(edition ? { editionId: edition.id, editionVersion: String(edition.version) } : {}),
       },
       payment_intent_data: {
         // The Stripe Dashboard's Description column, prefixed `BE <nn>` so a backend
@@ -625,6 +821,30 @@ router.post('/checkout', async (req: Request, res: Response) => {
       return res.status(502).json({ error: 'Checkout could not be started. Please try again.' });
     }
 
+    // ⛔ AFTER the session, because the session id is the key. Non-fatal: a failure here
+    //    must not deny a checkout to a woman who is ready to pay — it costs a 409 at
+    //    fulfilment, which a human can fix, instead of a lost sale, which nobody can.
+    if (question || spreadKey || charge.tier || edition) {
+      await saveOrderIntake({
+        stripeSessionId: session.id,
+        offer: offer.key,
+        spreadKey,
+        drawDate,
+        tier: charge.tier ?? null,
+        topic,
+        question,
+        question2,
+        question3,
+        // 08 (D5 as amended 2026-09-14): the edition, the bump flag AND the three personal
+        // fields the booking page collected. The webhook reads these first and falls back
+        // to Stripe's custom_fields only for sessions created before the change.
+        ...(edition
+          ? { editionId: edition.id, editionVersion: edition.version, speedBump: charge.bumpPurchased }
+          : {}),
+        ...(be08Person ? be08Person : {}),
+      });
+    }
+
     logger.info('backend/checkout: session created', {
       offer: offer.key,
       treatment,
@@ -632,6 +852,8 @@ router.post('/checkout', async (req: Request, res: Response) => {
       bump: charge.bumpPurchased,
       totalCents: charge.totalCents,
       session: session.id,
+      ...(charge.tier ? { tier: charge.tier, spreadKey, drawDate } : {}),
+      ...(edition ? { editionId: edition.id, editionVersion: edition.version } : {}),
     });
 
     return res.json({ url: session.url });
@@ -666,7 +888,7 @@ router.get('/order/:sessionId', async (req: Request, res: Response) => {
     const existing = await getBeOrderBySession(sessionId);
     if (existing) {
       const row = await writeToCustomerList(existing);
-      return res.json({ order: publicOrder(row) });
+      return res.json({ order: await publicOrder(row) });
     }
 
     const stripe = getStripe();
@@ -683,16 +905,61 @@ router.get('/order/:sessionId', async (req: Request, res: Response) => {
     const recorded = await recordBackendOrder(session);
     if (!recorded) return res.status(404).json({ error: 'Order not found.' });
 
-    return res.json({ order: publicOrder(recorded) });
+    return res.json({ order: await publicOrder(recorded) });
   } catch (err) {
     logger.error('backend/order lookup failed:', err);
     return res.status(500).json({ error: 'Could not load your order.' });
   }
 });
 
-/** Only what the thank-you screen needs. No payment ids, no internal columns. */
-function publicOrder(row: Awaited<ReturnType<typeof getBeOrderBySession>>) {
+/** A Date column as ISO, or null. Rows arrive as Date objects from drizzle; a string
+ *  (a mocked row, a JSON round-trip) is passed through unchanged. */
+function isoOrNull(value: unknown): string | null {
+  if (value instanceof Date) return Number.isNaN(value.getTime()) ? null : value.toISOString();
+  return typeof value === 'string' && value ? value : null;
+}
+
+/**
+ * Only what the thank-you screens need. No payment ids, no internal columns.
+ *
+ * Shared by every offer's receipt (02/03/06) and by 08's bridge + receipt
+ * (client/src/pages/marcus/). The 08 fields are additive: `edition` resolves only for
+ * `marcus-reading`, everything else gets `null` there. ⛔ Never add the lens card, the
+ * birth name, the date of birth, `fulfilmentNote` or any Stripe id to this shape — it
+ * is readable by anyone holding the session id.
+ */
+async function publicOrder(row: Awaited<ReturnType<typeof getBeOrderBySession>>) {
   if (!row) return null;
+
+  // 12h with the '+ 12-hour delivery' bump, 24h without — the same rule that stamps
+  // `due_at` (server/lib/beOrders.ts, prepareBe08).
+  const deliveryHours = row.bumpPurchased ? 12 : 24;
+
+  // 08 · the edition she booked, pinned to the version on the order. A lookup failure
+  // (table not migrated yet, DB hiccup, retired row) must never break the receipt.
+  let edition: { id: string; version: number; slug: string; question: string; theme: string } | null = null;
+  if (row.offer === 'marcus-reading' && row.editionId) {
+    try {
+      const found = await getBe08Edition(row.editionId, row.editionVersion);
+      if (found) {
+        edition = {
+          id: found.id,
+          version: found.version,
+          slug: found.slug,
+          question: found.question,
+          theme: found.theme,
+        };
+      }
+    } catch (err) {
+      logger.warn('backend/order: 08 edition lookup failed, receipt renders without it', {
+        session: row.stripeSessionId,
+        editionId: row.editionId,
+        err: err instanceof Error ? err.message : String(err),
+      });
+      edition = null;
+    }
+  }
+
   return {
     reference: row.stripeSessionId.slice(-8).toUpperCase(),
     offer: row.offer,
@@ -702,6 +969,22 @@ function publicOrder(row: Awaited<ReturnType<typeof getBeOrderBySession>>) {
     amountCents: row.amountCents,
     bumpPurchased: row.bumpPurchased,
     status: row.status,
+
+    // ── additive (08 bridge + receipt; harmless on 02/03/06) ──────────────────────
+    readingCents: row.readingCents,
+    bumpCents: row.bumpCents,
+    bumpProductKey: row.bumpProductKey ?? null,
+    deliveryHours,
+    dueAt: isoOrNull(row.dueAt),
+    deliveredAt: isoOrNull(row.deliveredAt),
+    createdAt: isoOrNull(row.createdAt),
+    editionId: row.editionId ?? null,
+    editionVersion: row.editionVersion ?? null,
+    edition,
+    // T8: read the real entitlement (be_upsell_orders for this session, product = the
+    // $17 recording) and the catalog price. Until then the receipt can only say,
+    // honestly, that no recording was bought. Price = PARALLEL-PLAN D3 ($17).
+    audio: { available: false, priceCents: 1700, purchased: false },
   };
 }
 

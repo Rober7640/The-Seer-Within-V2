@@ -1,0 +1,16 @@
+{{ subscriber.first_name | default: "friend" }},
+
+Marcus. The audio's done.
+
+Your audio is here → Download your recording
+{{ subscriber.custom_field['m8_audio_url'] }}
+
+It's a recording you download and keep. Tap the link and it saves to your phone, and plays there like any song or voice message. It's your written reading, read by me. Same cards, same order, nothing in it that isn't in the written one. Your own tarot card — the one your name points to — is in it, same as in the written one.
+
+Listen to it in order. Don't skip ahead to the last card. Find somewhere nobody will talk to you while it plays. Headphones if you have them. Start to finish, in order.
+
+If the file won't download or play, or you want it sent to a different address, write to hi@theseerwithin.com and I'll sort it.
+
+You have the reading in my voice now, {{ subscriber.first_name | default: "friend" }}.
+
+Marcus

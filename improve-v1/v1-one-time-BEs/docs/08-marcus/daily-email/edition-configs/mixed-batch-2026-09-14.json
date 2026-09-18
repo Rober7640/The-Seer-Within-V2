@@ -1,0 +1,338 @@
+{
+  "does-love-have-to-feel-this-hard": {
+    "question": "Does love always have to feel this hard",
+    "up": 2,
+    "down": 4,
+    "n_cards": 6,
+    "opening_paragraphs": 0,
+    "close_style": "letter",
+    "cards": [
+      [
+        "ten-of-wands",
+        "The Ten of Wands",
+        "The Ten of Wands — Rider–Waite–Smith card"
+      ],
+      [
+        "six-of-pentacles",
+        "The Six of Pentacles",
+        "The Six of Pentacles — Rider–Waite–Smith card"
+      ]
+    ],
+    "hero_alt": "Six Rider–Waite cards on a raven cloth: The Ten of Wands and The Six of Pentacles face up, four face down.",
+    "panel_start": "I'd like to continue there,",
+    "crosshead_start": "Those are the two face-up cards",
+    "backs": 4,
+    "funnel": {
+      "id": "does-love-have-to-feel-this-hard-v1",
+      "version": 1,
+      "status": "published",
+      "theme": "Effort, reciprocity and personal needs in love",
+      "paid_labels": [
+        "What you need back",
+        "What you keep taking on",
+        "What you can ask for",
+        "Where you can begin"
+      ],
+      "spread": {
+        "id": "six-questions",
+        "name": "The Six Questions (in-house adaptation)",
+        "version": 1
+      },
+      "booking_copy": {
+        "headline": "Let’s look at what you need from love.",
+        "intro": "Continue your personal reading: Does love always have to feel this hard?",
+        "bridge": "The Ten of Wands and Six of Pentacles separated effort from mutual care. The remaining reading explores what you need back and what you can ask for.",
+        "offer": "In your personal reading, I’ll explore what you need back, what you keep taking on, what you can ask for, and where you can begin.",
+        "name": "I’ll use the strengths and habits represented by your personal tarot card to explore how you give care and ask for it."
+      }
+    }
+  },
+  "seeing-love-clearly": {
+    "question": "What are you not seeing in love",
+    "up": 2,
+    "down": 4,
+    "n_cards": 6,
+    "opening_paragraphs": 0,
+    "close_style": "letter",
+    "cards": [
+      [
+        "seven-of-cups",
+        "The Seven of Cups",
+        "The Seven of Cups — Rider–Waite–Smith card"
+      ],
+      [
+        "queen-of-swords",
+        "The Queen of Swords",
+        "The Queen of Swords — Rider–Waite–Smith card"
+      ]
+    ],
+    "hero_alt": "Six Rider–Waite cards on a raven cloth: The Seven of Cups and The Queen of Swords face up, four face down.",
+    "panel_start": "I'd like to explore that with you,",
+    "crosshead_start": "Those are the two face-up cards",
+    "backs": 4,
+    "funnel": {
+      "id": "seeing-love-clearly-v1",
+      "version": 1,
+      "status": "published",
+      "theme": "Romantic possibility, present experience and seeking clarity",
+      "paid_labels": [
+        "What you keep hoping for",
+        "What needs closer attention",
+        "What you need to ask",
+        "What your next step is"
+      ],
+      "spread": {
+        "id": "six-questions",
+        "name": "The Six Questions (in-house adaptation)",
+        "version": 1
+      },
+      "booking_copy": {
+        "headline": "Let’s look at love more clearly.",
+        "intro": "Continue your personal reading: What are you not seeing in love?",
+        "bridge": "The Seven of Cups and Queen of Swords distinguished possibility from what you can learn through experience. The remaining reading explores what deserves attention in your approach to love.",
+        "offer": "In your personal reading, I’ll explore what you keep hoping for, what needs closer attention, what you need to ask, and what your next step is.",
+        "name": "I’ll use the strengths and habits represented by your personal tarot card to explore how you approach hope and seek clarity in love."
+      }
+    }
+  },
+  "heading-in-the-right-direction": {
+    "question": "Are you heading in the right direction",
+    "up": 2,
+    "down": 4,
+    "n_cards": 6,
+    "opening_paragraphs": 0,
+    "close_style": "letter",
+    "cards": [
+      [
+        "eight-of-pentacles",
+        "The Eight of Pentacles",
+        "The Eight of Pentacles — Rider–Waite–Smith card"
+      ],
+      [
+        "eight-of-cups",
+        "The Eight of Cups",
+        "The Eight of Cups — Rider–Waite–Smith card"
+      ]
+    ],
+    "hero_alt": "Six Rider–Waite cards on a raven cloth: The Eight of Pentacles and The Eight of Cups face up, four face down.",
+    "panel_start": "I'd continue with the four",
+    "crosshead_start": "Those are the two face-up cards",
+    "backs": 4,
+    "funnel": {
+      "id": "heading-in-the-right-direction-v1",
+      "version": 1,
+      "status": "published",
+      "theme": "Competence, fulfillment and working direction",
+      "paid_labels": [
+        "What matters in your work",
+        "What strength you can use",
+        "What deserves reconsideration",
+        "Where you can begin"
+      ],
+      "spread": {
+        "id": "six-questions",
+        "name": "The Six Questions (in-house adaptation)",
+        "version": 1
+      },
+      "booking_copy": {
+        "headline": "Let’s explore your working direction.",
+        "intro": "Continue your personal reading: Are you heading in the right direction?",
+        "bridge": "The Eight of Pentacles and Eight of Cups brought together practiced ability and the question of fulfillment. The remaining reading explores where you want your work to take you.",
+        "offer": "In your personal reading, I’ll explore what matters in your work, what strength you can use, what deserves reconsideration, and where you can begin.",
+        "name": "I’ll use the strengths and habits represented by your personal tarot card to explore how you use your abilities and approach responsibility."
+      }
+    }
+  },
+  "whats-keeping-you-stuck-with-money": {
+    "question": "What’s keeping you stuck with money",
+    "up": 2,
+    "down": 4,
+    "n_cards": 6,
+    "opening_paragraphs": 0,
+    "close_style": "letter",
+    "cards": [
+      [
+        "four-of-pentacles",
+        "The Four of Pentacles",
+        "The Four of Pentacles — Rider–Waite–Smith card"
+      ],
+      [
+        "ace-of-pentacles",
+        "The Ace of Pentacles",
+        "The Ace of Pentacles — Rider–Waite–Smith card"
+      ]
+    ],
+    "hero_alt": "Six Rider–Waite cards on a raven cloth: The Four of Pentacles and The Ace of Pentacles face up, four face down.",
+    "panel_start": "I'd like to take that distinction",
+    "crosshead_start": "Those are the two face-up cards",
+    "backs": 4,
+    "funnel": {
+      "id": "whats-keeping-you-stuck-with-money-v1",
+      "version": 1,
+      "status": "published",
+      "theme": "Security, available resources and a manageable beginning",
+      "paid_labels": [
+        "What security means to you",
+        "What deserves a closer look",
+        "What resource you can use",
+        "Where you can begin"
+      ],
+      "spread": {
+        "id": "six-questions",
+        "name": "The Six Questions (in-house adaptation)",
+        "version": 1
+      },
+      "booking_copy": {
+        "headline": "Let’s look at what you can draw on.",
+        "intro": "Continue your personal reading: What’s keeping you stuck with money?",
+        "bridge": "The Four of Pentacles and Ace of Pentacles separated protecting resources from considering what you could use. The remaining reading explores security, resourcefulness and a beginning.",
+        "offer": "In your personal reading, I’ll explore what security means to you, what deserves a closer look, what resource you can use, and where you can begin.",
+        "name": "I’ll use the strengths and habits represented by your personal tarot card to explore how you seek stability and recognize available resources."
+      }
+    }
+  },
+  "what-deserves-your-attention": {
+    "question": "What deserves your attention right now",
+    "up": 2,
+    "down": 4,
+    "n_cards": 6,
+    "opening_paragraphs": 0,
+    "close_style": "letter",
+    "cards": [
+      [
+        "two-of-pentacles",
+        "The Two of Pentacles",
+        "The Two of Pentacles — Rider–Waite–Smith card"
+      ],
+      [
+        "four-of-swords",
+        "The Four of Swords",
+        "The Four of Swords — Rider–Waite–Smith card"
+      ]
+    ],
+    "hero_alt": "Six Rider–Waite cards on a raven cloth: The Two of Pentacles and The Four of Swords face up, four face down.",
+    "panel_start": "I'd like to explore that with you,",
+    "crosshead_start": "Those are the two face-up cards",
+    "backs": 4,
+    "funnel": {
+      "id": "what-deserves-your-attention-v1",
+      "version": 1,
+      "status": "published",
+      "theme": "Competing demands, personal priorities and attention",
+      "paid_labels": [
+        "What matters most now",
+        "What can wait",
+        "What needs your care",
+        "Where to place your attention"
+      ],
+      "spread": {
+        "id": "six-questions",
+        "name": "The Six Questions (in-house adaptation)",
+        "version": 1
+      },
+      "booking_copy": {
+        "headline": "Let’s look at what matters now.",
+        "intro": "Continue your personal reading: What deserves your attention right now?",
+        "bridge": "The Two of Pentacles and Four of Swords distinguished keeping busy from choosing what matters. The remaining reading explores where your attention could go next.",
+        "offer": "In your personal reading, I’ll explore what matters most now, what can wait, what needs your care, and where to place your attention.",
+        "name": "I’ll use the strengths and habits represented by your personal tarot card to explore how you take responsibility and respond to demands."
+      }
+    }
+  },
+  "what-gift-are-you-overlooking": {
+    "question": "What gift are you overlooking",
+    "up": 2,
+    "down": 4,
+    "n_cards": 6,
+    "opening_paragraphs": 0,
+    "close_style": "letter",
+    "cards": [
+      [
+        "the-magician",
+        "The Magician",
+        "The Magician — Rider–Waite–Smith card"
+      ],
+      [
+        "queen-of-pentacles",
+        "The Queen of Pentacles",
+        "The Queen of Pentacles — Rider–Waite–Smith card"
+      ]
+    ],
+    "hero_alt": "Six Rider–Waite cards on a raven cloth: The Magician and The Queen of Pentacles face up, four face down.",
+    "panel_start": "I'd like to explore that distinction",
+    "crosshead_start": "Those are the two face-up cards",
+    "backs": 4,
+    "funnel": {
+      "id": "what-gift-are-you-overlooking-v1",
+      "version": 1,
+      "status": "published",
+      "theme": "Recognizing a familiar ability and putting it to use",
+      "paid_labels": [
+        "What strength you overlook",
+        "Where it can be useful",
+        "What keeps it small",
+        "What you can try"
+      ],
+      "spread": {
+        "id": "six-questions",
+        "name": "The Six Questions (in-house adaptation)",
+        "version": 1
+      },
+      "booking_copy": {
+        "headline": "Let’s look at the strength you overlook.",
+        "intro": "Continue your personal reading: What gift are you overlooking?",
+        "bridge": "The Magician and Queen of Pentacles brought together available abilities and deliberate attention. The remaining reading explores a strength you may overlook and where it could be useful.",
+        "offer": "In your personal reading, I’ll explore what strength you overlook, where it can be useful, what keeps it small, and what you can try.",
+        "name": "I’ll use the strengths and habits represented by your personal tarot card to explore how you recognize and develop familiar abilities."
+      }
+    }
+  },
+  "is-it-time-for-a-new-chapter": {
+    "question": "Is it time for a new chapter",
+    "up": 2,
+    "down": 4,
+    "n_cards": 6,
+    "opening_paragraphs": 0,
+    "close_style": "letter",
+    "cards": [
+      [
+        "death",
+        "Death",
+        "Death — Rider–Waite–Smith card"
+      ],
+      [
+        "six-of-swords",
+        "The Six of Swords",
+        "The Six of Swords — Rider–Waite–Smith card"
+      ]
+    ],
+    "hero_alt": "Six Rider–Waite cards on a raven cloth: Death and The Six of Swords face up, four face down.",
+    "panel_start": "The remaining reading is where",
+    "crosshead_start": "Those are the two face-up cards",
+    "backs": 4,
+    "funnel": {
+      "id": "is-it-time-for-a-new-chapter-v1",
+      "version": 1,
+      "status": "published",
+      "theme": "Endings, continuity, support and a considered transition",
+      "paid_labels": [
+        "What has run its course",
+        "What you want to carry forward",
+        "What support you can accept",
+        "Where your next step begins"
+      ],
+      "spread": {
+        "id": "six-questions",
+        "name": "The Six Questions (in-house adaptation)",
+        "version": 1
+      },
+      "booking_copy": {
+        "headline": "Let’s explore your next chapter.",
+        "intro": "Continue your personal reading: Is it time for a new chapter?",
+        "bridge": "Death and the Six of Swords separated recognizing an ending from making a transition. The remaining reading explores what to carry forward and where to begin.",
+        "offer": "In your personal reading, I’ll explore what has run its course, what you want to carry forward, what support you can accept, and where your next step begins.",
+        "name": "I’ll use the strengths and habits represented by your personal tarot card to explore how you approach change and accept support."
+      }
+    }
+  }
+}

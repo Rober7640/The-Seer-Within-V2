@@ -1,0 +1,81 @@
+{
+  "schemaVersion": 1,
+  "purpose": "Narration sample for a REAL Marcus voice run (Chatterbox Turbo on Replicate). Text is taken verbatim from the cloud-generated Stage 1 report output/pdf/marcus-stage1-ye-ying-blind-spots-tree-of-life.pdf (Ye Ying, blind-spots edition, Tree of Life), lightly flattened for speech: list bullets joined into sentences, markdown emphasis and block-quote marks removed, section headings spoken as a lead-in.",
+  "sourceReport": {
+    "path": "output/pdf/marcus-stage1-ye-ying-blind-spots-tree-of-life.pdf",
+    "edition": "marcus-08-blind-spots-2026-09-11",
+    "spread": "The Tree of Life",
+    "lifePath": "7 — The Seeker",
+    "personalCard": "The Lovers"
+  },
+  "pronunciation": {
+    "rule": "Card names are kept in their standard English spelling because Chatterbox Turbo reads plain English words; the four chosen segments use only names with no known TTS trap (Seven of Pentacles, Tree of Life). Hierophant (HY-er-oh-fant) was deliberately left out of the sample; if a later full narration mispronounces it, respell it in the script as \"Hi-ro-fant\" rather than changing the report.",
+    "numbers": "Position numbers and the Life Path number are written as words or plain digits (\"7\") — the model reads single digits reliably."
+  },
+  "pacing": {
+    "configVersion": "marcus-audio-v1",
+    "timeStretchRatio": 0.9,
+    "processor": "ffmpeg atempo=0.9 per segment (pitch-preserving)",
+    "cardSectionPauseMs": 600,
+    "closingPauseMs": 900,
+    "paragraphPauseMs": 300,
+    "note": "pauseBeforeMs on each segment follows the config: 600 ms between sections, 900 ms before the closing; paragraph pauses (300 ms) apply only inside a multi-paragraph segment and these four are single paragraphs."
+  },
+  "provider": {
+    "model": "resemble-ai/chatterbox-turbo",
+    "createEndpoint": "POST https://api.replicate.com/v1/models/resemble-ai/chatterbox-turbo/predictions",
+    "pollEndpoint": "GET https://api.replicate.com/v1/predictions/{id}",
+    "headers": {
+      "Authorization": "Bearer <REPLICATE token read from the environment at run time — never stored here>",
+      "Content-Type": "application/json"
+    },
+    "voice": {
+      "version": "marcus-voice-v2-10s",
+      "privateObjectKey": "marcus/08/audio/voices/marcus-voice-v2-10s-7475c804.wav",
+      "sha256": "7475c80452f865a2ec08638fca8b8fa1f421e1b72ddfd9f9cdb19c3cb89a88bb",
+      "delivery": "one-hour signed S3 URL minted at run time by narrate-sample.sh; never written to a tracked file"
+    },
+    "requestBodyTemplate": {
+      "input": {
+        "text": "<segment.text>",
+        "reference_audio": "<signed voice URL>",
+        "top_p": 0.95,
+        "top_k": 1000,
+        "temperature": 0.8,
+        "repetition_penalty": 1.2,
+        "seed": "<1-based segment index, as build-workflow.py uses segment.seed>"
+      }
+    },
+    "requestBodySource": "improve-v1/v1-one-time-BEs/docs/08-marcus/n8n/build-workflow.py — node \"Validate Chatterbox request\" (replicateInput) and \"Chatterbox create prediction\" (jsonBody = JSON.stringify({input: replicateInput}))"
+  },
+  "segments": [
+    {
+      "id": "01-opening",
+      "role": "opening",
+      "pauseBeforeMs": 0,
+      "chars": 483,
+      "text": "Ye Ying's Tree of Life Reading. Seeing the blind spots between your insight and your choices. Ye Ying, this Tree of Life spread looks straight at a subtle pattern: you think deeply, care a lot, and hold yourself to a high standard. The cards map out where that strength quietly turns into over-carrying, over-waiting, and staying inside your own impressions longer than you realize. This reading is a set of specific patterns to test in real situations, not a verdict on who you are."
+    },
+    {
+      "id": "02-life-path",
+      "role": "numerology foundation",
+      "pauseBeforeMs": 600,
+      "chars": 814,
+      "text": "Your numerology foundation. Life Path 7, The Seeker. How it shapes this reading: Your Life Path is 7, The Seeker. You naturally question, research, and look beneath the surface. You're strong at spotting patterns, weighing evidence, and trying to understand what's really true instead of just going along with how things appear. You tend to take ideas, responsibilities, and your own integrity seriously. The challenge side is that this depth can pull you inward. You may withdraw to think instead of talking things through, keep testing things in your mind long after there's enough information for a small step, or doubt people's words and systems more than you intend to show. You can end up trusting your private interpretations more than what you could learn from a simple clarifying question or shared check."
+    },
+    {
+      "id": "03-seven-of-pentacles",
+      "role": "card section — position 4",
+      "pauseBeforeMs": 600,
+      "chars": 770,
+      "text": "Position four. The Seven of Pentacles: what you keep excusing. In the Seven of Pentacles, a person leans on a long tool, gazing at a bush that bears golden coins like fruit. Their posture is weary and thoughtful, as if asking, \"Is this worth it?\" This card in the position of \"what you keep excusing\" points straight at effort and responsibility. The scene shows long, steady work already invested, a pause to assess the results, and a tendency to keep standing there waiting, hoping the harvest will finally justify all the labor. For you, this suggests a common blind spot: you may quietly take on more than was originally agreed. More tasks, more emotional labor, more keeping track. You tell yourself it's temporary, or that you just need to be patient a bit longer."
+    },
+    {
+      "id": "04-closing",
+      "role": "closing",
+      "pauseBeforeMs": 900,
+      "chars": 721,
+      "text": "A single practical test can help you tell whether you're in a blind spot or in healthy reflection. Set a clear, external marker, either a date or a conversation, for one decision or responsibility that currently lives mostly in your head. On that date, either take a modest, reversible step, even if you're not fully certain, or openly renegotiate what you're carrying with at least one other person. If doing this feels strangely difficult, even though no disaster will follow, that's a sign you've found one of these blind spots in action. If it brings relief or new information, you'll have proof that shifting from private holding to shared, concrete movement is the adjustment your cards are pointing toward. Marcus."
+    }
+  ]
+}

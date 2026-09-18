@@ -1,0 +1,86 @@
+/** 08 local build contract v1. No environment, DB, network, or payment imports. */
+export const CONTRACT_VERSION = 1 as const;
+export const MAIN_CENTS = 3500;
+export const SAME_DAY_CENTS = 1277;
+export type CardId = string;
+export interface Card { id: CardId; name: string; image: string }
+export interface FixedCard { cardId: CardId; reversed: boolean }
+export interface Position {
+  id: string;
+  number: number;
+  label: string;
+  visibility: 'free' | 'paid';
+  fixedCard?: FixedCard;
+}
+export interface Edition {
+  id: string;
+  version: number;
+  slug: string;
+  question: string;
+  /** Explicit daily theme used by the adaptive report prompt and PDF. */
+  theme: string;
+  spread: { id: string; name: string; version: number };
+  positions: Position[];
+  freeEmailText: string;
+  bookingCopy?: { headline: string; intro: string; bridge: string; offer: string; name: string };
+  status: 'draft' | 'published';
+}
+export interface PersonalLens {
+  firstName: string;
+  lastName: string;
+  expressionNumber: number;
+  cardId: CardId;
+  methodVersion: string;
+}
+export interface OrderDraw {
+  orderId: string;
+  editionId: string;
+  editionVersion: number;
+  methodVersion: string;
+  positions: Array<{ positionId: string; cardId: CardId; reversed: boolean }>;
+  /** Separate lens; can coincide with a spread card, never consumes a position. */
+  personalLens: PersonalLens;
+}
+/**
+ * Operator rule (2026-09-14, re-confirmed 2026-09-15): "Birth name and date only on the booking
+ * page. Never on Stripe." The booking page collects her first name, full birth name and date of
+ * birth and posts them with the edition and the speed-bump choice; the intake carries all three.
+ * The hosted checkout (Stripe in production, `/checkout-sim` locally) collects email, card and
+ * name on card only, and reads nothing personal back from her. Never log the three values.
+ */
+export interface Intake {
+  id: string;
+  editionId: string;
+  editionVersion: number;
+  sameDay: boolean;
+  /** What the pages call her. Typed into the booking page's "First name" box. */
+  displayFirstName: string;
+  /** The name on her birth certificate, as typed — the personal-card lens is computed from it. Never log it. */
+  fullBirthName: string;
+  /** `YYYY-MM-DD` as combined from the booking page's three numeric boxes. Never log it. */
+  dateOfBirth: string;
+}
+export interface PaidOrder {
+  id: string;
+  intakeId: string;
+  editionSnapshot: Edition;
+  draw: OrderDraw;
+  deliveryEmail: string;
+  /** What the pages call her. Copied from the intake (the booking page's "First name" box). */
+  displayFirstName: string;
+  /** The name given at birth, as typed — the personal-card lens is computed from it. Never log it. */
+  fullBirthName: string;
+  /** `YYYY-MM-DD` as combined from the booking page's three numeric boxes. Never log it. */
+  dateOfBirth: string;
+  baseCents: typeof MAIN_CENTS;
+  bumpCents: number;
+  currency: 'usd';
+  paymentReference: string;
+  paidAt: string;
+  dueAt: string;
+  deliveryHours: 12 | 24;
+  /** Audio purchase is separate; false/absent cannot delay the main reading. */
+  audio?: { purchased: true; amountCents: number; paymentReference: string };
+  writtenStatus: 'queued' | 'generating' | 'review' | 'ready' | 'delivered' | 'failed';
+  audioStatus?: 'queued' | 'generating' | 'ready' | 'delivered' | 'failed';
+}

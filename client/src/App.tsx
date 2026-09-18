@@ -71,6 +71,14 @@ const JudgementBookingChat = lazyWithRetry(() => import("@/pages/JudgementBookin
 const JudgementThankYouPage = lazyWithRetry(() => import("@/pages/JudgementThankYouPage"));
 const PixiuBookingPage = lazyWithRetry(() => import("@/pages/offers/pixiu-bracelet/BookingPage"));
 const PixiuThankYouPage = lazyWithRetry(() => import("@/pages/offers/pixiu-bracelet/ThankYouPage"));
+// Backend deck, offer 08 — Marcus Stone's personal reading (catalog key
+// `marcus-reading`). Stub pages for now; the real booking/bridge/thank-you
+// pages land from a parallel build. Lazy for the same reason as the rest of
+// the deck. Plan: improve-v1/v1-one-time-BEs/docs/08-marcus/PARALLEL-PLAN.md.
+const MarcusBooking = lazyWithRetry(() => import("@/pages/marcus/MarcusBooking"));
+const MarcusBridge = lazyWithRetry(() => import("@/pages/marcus/MarcusBridge"));
+const MarcusUpsell = lazyWithRetry(() => import("@/pages/marcus/MarcusUpsell"));
+const MarcusThankYou = lazyWithRetry(() => import("@/pages/marcus/MarcusThankYou"));
 // Shared /offers/upsell/ pages — offer + pitch resolved from the booking
 // SESSION rather than the URL prefix, so one route pair serves every backend
 // offer in the deck. Lazy for the same reason as the booking pages above.
@@ -372,6 +380,25 @@ function Router() {
             Spec: improve-v1/v1-one-time-BEs/docs/06/HANDOVER.md */}
         <Route path="/offers/wiccan/pixiu-bracelet" component={PixiuBookingPage} />
         <Route path="/offers/wiccan/pixiu-bracelet/success" component={PixiuThankYouPage} />
+
+        {/* Backend deck, offer 08 — Marcus Stone's personal reading. Catalog
+            key `marcus-reading` (shared/backendOffers.ts). Reading-shaped like
+            02/03/06: booking sits at the offer root (where the letter's
+            booking URL points) and doubles as the Stripe cancel_url target, so
+            it must render sanely even with no edition chosen yet ("choose a
+            reading"). Route order: specific paths BEFORE the :editionId
+            param, and the param route before the bare offer root, so
+            /bridge and /success never get swallowed by :editionId.
+            Plan: improve-v1/v1-one-time-BEs/docs/08-marcus/PARALLEL-PLAN.md.
+            ⚠ Not /marcus — that's the unrelated persona lander above
+            (PersonaLanderPage, an exact-match leaf route); wouter does not
+            treat it as a prefix, so it can't match anything under
+            /marcus/reading/*. */}
+        <Route path="/marcus/reading/bridge" component={MarcusBridge} />
+        <Route path="/marcus/reading/welcome1" component={MarcusUpsell} />
+        <Route path="/marcus/reading/success" component={MarcusThankYou} />
+        <Route path="/marcus/reading/:editionId" component={MarcusBooking} />
+        <Route path="/marcus/reading" component={MarcusBooking} />
 
         {/* Shared /offers/upsell/ pages — the deck-wide Upsell 1 → Upsell 2
             chain. Offer + pitch are resolved from the booking SESSION

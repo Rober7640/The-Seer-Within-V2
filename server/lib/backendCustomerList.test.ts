@@ -283,6 +283,105 @@ describe('addBackendCustomer', () => {
   });
 });
 
+describe('08 Marcus — its own lists, one order_id field on every write', () => {
+  it('routes the reading to 6975749 and the bump to 6975750', () => {
+    // A bump buyer carries be-08-speed on BOTH lists — on the reading list so its delivery
+    // campaign can detect the 12-hour customer and stop its own 24-hour send.
+    expect(purchaseListWrites('marcus-reading', true)).toEqual([
+      { listId: '6975749', tags: ['be-customer', 'be-08', 'be-08-speed'], role: 'initial' },
+      { listId: '6975750', tags: ['be-customer', 'be-08', 'be-08-speed'], role: 'bump' },
+    ]);
+  });
+
+  it('a NON-bump reading buyer gets no speed tag on the reading list', () => {
+    expect(purchaseListWrites('marcus-reading', false)).toEqual([
+      { listId: '6975749', tags: ['be-customer', 'be-08'], role: 'initial' },
+    ]);
+  });
+
+  it('routes the audio upsell to its own list 6975753', () => {
+    expect(backendUpsellFor('be_08_marcus_audio')?.listId).toBe('6975753');
+  });
+
+  it('writes order_id (the session id) and NOT the deck stripe_order_id/offer fields', async () => {
+    const f = okFetch();
+    await addBackendCustomer({
+      email: 'she@example.com',
+      offer: 'marcus-reading',
+      stripeOrderId: 'cs_marcus_1',
+    });
+    const body = sentBody(f);
+    expect(body.custom_fields.order_id).toBe('cs_marcus_1');
+    expect(body.custom_fields).not.toHaveProperty('stripe_order_id');
+    expect(body.custom_fields).not.toHaveProperty('offer');
+  });
+
+  it('carries order_id on BOTH the reading and the bump list', async () => {
+    const f = okFetch();
+    await addBackendCustomer({
+      email: 'she@example.com',
+      offer: 'marcus-reading',
+      stripeOrderId: 'cs_marcus_2',
+      bumpPurchased: true,
+    });
+    expect(f).toHaveBeenCalledTimes(2);
+    const initial = JSON.parse(f.mock.calls.find((c) => c[0].includes('/lists/6975749/'))![1].body);
+    const bump = JSON.parse(f.mock.calls.find((c) => c[0].includes('/lists/6975750/'))![1].body);
+    expect(initial.custom_fields.order_id).toBe('cs_marcus_2');
+    expect(bump.custom_fields.order_id).toBe('cs_marcus_2');
+  });
+
+  it('writes the m8_* content fields to the reading list but NOT the bump list', async () => {
+    const f = okFetch();
+    await addBackendCustomer({
+      email: 'she@example.com',
+      offer: 'marcus-reading',
+      stripeOrderId: 'cs_marcus_c',
+      bumpPurchased: true,
+      contentFields: { m8_question: 'What are my blind spots?', m8_hours: '12', m8_paid_count: 'seven' },
+    });
+    const reading = JSON.parse(f.mock.calls.find((c) => c[0].includes('/lists/6975749/'))![1].body);
+    const bump = JSON.parse(f.mock.calls.find((c) => c[0].includes('/lists/6975750/'))![1].body);
+    // reading list carries the content fields + the order id
+    expect(reading.custom_fields.m8_question).toBe('What are my blind spots?');
+    expect(reading.custom_fields.m8_hours).toBe('12');
+    expect(reading.custom_fields.order_id).toBe('cs_marcus_c');
+    // bump list holds only the order id — no content (it has no campaign)
+    expect(bump.custom_fields.order_id).toBe('cs_marcus_c');
+    expect(bump.custom_fields).not.toHaveProperty('m8_question');
+  });
+
+  it('writes the same order_id to the audio upsell list', async () => {
+    const f = okFetch();
+    await addBackendUpsellCustomer({
+      email: 'she@example.com',
+      firstName: 'Sarah',
+      productKey: 'be_08_marcus_audio',
+      offer: 'marcus-reading',
+      orderId: 'cs_marcus_3',
+    });
+    expect(f.mock.calls[0][0]).toContain('/lists/6975753/subscribers');
+    const body = sentBody(f);
+    expect(body.custom_fields.order_id).toBe('cs_marcus_3');
+    expect(body.tags).toEqual(['be-customer', 'be-08', 'be-08-upsell1-audio']);
+  });
+
+  it('writes order_id + the audio-confirmation content fields to the audio list', async () => {
+    const f = okFetch();
+    await addBackendUpsellCustomer({
+      email: 'she@example.com',
+      productKey: 'be_08_marcus_audio',
+      offer: 'marcus-reading',
+      orderId: 'cs_marcus_4',
+      contentFields: { m8_question: 'What are my blind spots?', m8_hours: '12' },
+    });
+    const body = sentBody(f);
+    expect(body.custom_fields.order_id).toBe('cs_marcus_4');
+    expect(body.custom_fields.m8_question).toBe('What are my blind spots?');
+    expect(body.custom_fields.m8_hours).toBe('12');
+  });
+});
+
 describe('addBackendUpsellCustomer — the upsell lands on its OWN list', () => {
   it('writes a Protection Ritual buyer to list 6972555 with her tags and NO custom fields', async () => {
     const f = okFetch();

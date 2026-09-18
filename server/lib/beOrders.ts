@@ -1,7 +1,7 @@
 import type Stripe from 'stripe';
-import { eq } from 'drizzle-orm';
+import { eq, sql } from 'drizzle-orm';
 import { db } from './db';
-import { beOrders, type BeOrder } from '@shared/schema';
+import { beOrders, beOrderIntake, type BeOrder, type InsertBeOrderIntake } from '@shared/schema';
 import {
   BACKEND_OFFER_CATALOG,
   backendOfferForStripeProduct,
@@ -12,6 +12,18 @@ import {
 import { addBackendCustomer } from './aweber';
 import { logBeBookingConversion } from './experiments';
 import logger from './logger';
+import { getBe08Edition } from './be08Editions';
+import { parseDateOfBirth, readBe08CustomFields, splitBirthName, type Be08CustomFields } from './be08Birth';
+import {
+  BE_08_DECK,
+  Be08DrawError,
+  LENS_METHOD_VERSION,
+  be08ContextHash,
+  buildDrawJson,
+  drawForOrder,
+  insertBe08DrawOnce,
+  personalLens,
+} from './be08Draw';
 
 // Persist a backend-deck purchase, then put her on the customer list.
 //
@@ -48,6 +60,81 @@ interface BackendSessionMeta {
   bumpProduct?: string;
   /** The booking-treatment A/B visitor subject, for purchase attribution. */
   expSubject?: string;
+  /** 08 backstop only — the intake row is the source; these are read when it is missing. */
+  editionId?: string;
+  editionVersion?: string;
+}
+
+/**
+ * Park what she typed, keyed on the Stripe Checkout session, BEFORE she pays.
+ *
+ * 🔴 Why not straight onto `be_orders`: a be_orders row means she PAID, and nothing
+ * downstream filters on status — an abandoned checkout with a row would render a
+ * thank-you page and start a fulfilment. See shared/schema.ts on `be_order_intake`.
+ *
+ * ⚠ NON-FATAL BY DESIGN, and this is a real trade-off, not an oversight. If this write
+ * fails she can still pay, and the order simply arrives without its intake: the
+ * fulfilment endpoint then answers 409 with the missing field list rather than guessing,
+ * which is recoverable by hand. Throwing here would instead deny a checkout to a woman
+ * who is ready to buy, over a table nobody has read yet. Loud in the log either way.
+ */
+export async function saveOrderIntake(intake: InsertBeOrderIntake): Promise<boolean> {
+  try {
+    await db
+      .insert(beOrderIntake)
+      .values(intake)
+      // Idempotent: a retried checkout POST for the same session overwrites its own
+      // intake. She is still on the booking page, so the LAST thing she typed wins.
+      .onConflictDoUpdate({
+        target: beOrderIntake.stripeSessionId,
+        set: {
+          spreadKey: intake.spreadKey ?? null,
+          drawDate: intake.drawDate ?? null,
+          tier: intake.tier ?? null,
+          topic: intake.topic ?? null,
+          question: intake.question ?? null,
+          question2: intake.question2 ?? null,
+          question3: intake.question3 ?? null,
+          // 08: written by POST /checkout before Stripe. Since 2026-09-14 (D5 amended) the
+          // three personal fields come from the booking page too, so a retry refreshes them
+          // — the last thing she typed wins, same as the questions above.
+          editionId: intake.editionId ?? null,
+          editionVersion: intake.editionVersion ?? null,
+          speedBump: intake.speedBump ?? false,
+          displayFirstName: intake.displayFirstName ?? null,
+          fullBirthName: intake.fullBirthName ?? null,
+          dateOfBirth: intake.dateOfBirth ?? null,
+        },
+      });
+    return true;
+  } catch (err) {
+    logger.error('be_order_intake: WRITE FAILED — she can still pay, but the order will ' +
+      'arrive with no question and fulfilment will 409', {
+      session: intake.stripeSessionId,
+      offer: intake.offer,
+      error: err instanceof Error ? err.message : String(err),
+    });
+    return false;
+  }
+}
+
+/** Read back what she typed. Null when there is none — every 02/03 order, and any 07
+ *  order whose intake write failed. */
+async function intakeFor(sessionId: string) {
+  try {
+    const [row] = await db
+      .select()
+      .from(beOrderIntake)
+      .where(eq(beOrderIntake.stripeSessionId, sessionId))
+      .limit(1);
+    return row ?? null;
+  } catch (err) {
+    logger.error('be_order_intake: READ FAILED — order will be recorded without it', {
+      session: sessionId,
+      error: err instanceof Error ? err.message : String(err),
+    });
+    return null;
+  }
 }
 
 function centsFrom(value: string | undefined): number | null {
@@ -81,7 +168,6 @@ export async function recordBackendOrder(
   // Prefer the letter's ?fn= (metadata.firstName); fall back to the name Stripe
   // Checkout collected on the card, so a buyer who arrived without ?fn= still gets
   // her name on the AWeber list instead of a blank "Friend".
-  const firstName = metadata.firstName || session.customer_details?.name || null;
   const treatment = isBookingTreatment(metadata.treatment) ? metadata.treatment : null;
 
   const amountCents = session.amount_total ?? 0;
@@ -95,6 +181,23 @@ export async function recordBackendOrder(
     typeof session.payment_intent === 'string'
       ? session.payment_intent
       : session.payment_intent?.id ?? null;
+
+  // ⭐ What she typed on the booking page, parked at checkout. Read BEFORE the insert so
+  //    the order lands complete in one write — an order that exists for a moment without
+  //    its question is an order the fulfilment poller can pick up and 409 on.
+  const intake = await intakeFor(session.id);
+
+  // ⭐ 08 only: the three personal fields (the intake the booking page parked, else what
+  //    Stripe Checkout collected on an older session), the edition she booked, and her
+  //    delivery deadline. Pure; nothing here can throw on her input. NULL for every other offer.
+  const be08 = offer.key === 'marcus-reading' ? prepareBe08(session, metadata, intake, bumpPurchased) : null;
+
+  // 08: what Marcus calls her, typed on the booking page, beats everything. Otherwise prefer the
+  // letter's ?fn= (metadata.firstName); fall back to the name Stripe Checkout collected on
+  // the card, so a buyer who arrived without ?fn= still gets her name on the AWeber list
+  // instead of a blank "Friend".
+  const firstName =
+    be08?.fields.displayFirstName || metadata.firstName || session.customer_details?.name || null;
 
   let row: BeOrder | undefined;
   try {
@@ -115,18 +218,52 @@ export async function recordBackendOrder(
         email,
         firstName,
         status: 'paid',
+        // ⛔ 07 only. NULL on every offer that sells one fixed thing, which is all of
+        //    them except this one. `tier` is what the SERVER priced, not what the
+        //    browser asked for — see resolveBackendCharge.
+        ...(intake
+          ? {
+              spreadKey: intake.spreadKey,
+              drawDate: intake.drawDate,
+              tier: intake.tier,
+              topic: intake.topic,
+              question: intake.question,
+              question2: intake.question2,
+              question3: intake.question3,
+            }
+          : {}),
+        // ⛔ 08 only. The edition is pinned by id + version; due_at is the SLA clock.
+        ...(be08
+          ? {
+              editionId: be08.editionId,
+              editionVersion: be08.editionVersion,
+              dueAt: be08.dueAt,
+            }
+          : {}),
       })
       // Idempotent: a Stripe retry, or the thank-you page arriving first, updates the
       // same row. ⛔ Deliberately does NOT touch the fulfilment or customer-list columns
       // — a second write must never un-stamp work that already happened.
       .onConflictDoUpdate({
         target: beOrders.stripeSessionId,
+        // ⛔ Deliberately does NOT touch the intake columns. They were written on the
+        //    first insert from the same intake row, so a retry has nothing new to say —
+        //    and re-setting them from a failed intake read would blank her question.
         set: {
           stripePaymentIntentId: paymentIntentId,
           email,
           firstName,
           amountCents,
           updatedAt: new Date(),
+          // 08: deterministic from the same session, so a retry says the same thing —
+          // but COALESCE keeps the first write if THIS retry's intake read failed.
+          ...(be08
+            ? {
+                editionId: sql`COALESCE(${beOrders.editionId}, ${be08.editionId})`,
+                editionVersion: sql`COALESCE(${beOrders.editionVersion}, ${be08.editionVersion})`,
+                dueAt: sql`COALESCE(${beOrders.dueAt}, ${be08.dueAt})`,
+              }
+            : {}),
         },
       })
       .returning();
@@ -179,7 +316,272 @@ export async function recordBackendOrder(
     );
   }
 
+  // ⭐ 08: copy Stripe's birth fields onto the intake, resolve the edition, cut the lens,
+  //    deal the cards ONCE. Every failure inside is caught and written to
+  //    be_orders.fulfilment_note — the order is recorded and she is emailed regardless.
+  if (be08) row = await fulfilBe08OnPayment(row, session.id, be08);
+
   return writeToCustomerList(row, offer);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// 08 · Marcus Stone's personal reading — draw on payment
+// ═══════════════════════════════════════════════════════════════════════════════
+//
+// PARALLEL-PLAN.md D1/D5/D7 (2026-09-13), D5 amended 2026-09-14: the BOOKING PAGE collects
+// her display first name, full birth name and date of birth and POST /checkout parks them
+// on be_order_intake with the edition and the bump. The intake is PRIMARY. Stripe's
+// `session.custom_fields` are read only as a FALLBACK, per field, for sessions created
+// before the change (Stripe forbids personal data in custom fields). On the paid signal we:
+//   1. make sure be_order_intake holds the three values we resolved (if the pre-pay write
+//      failed, insert the row now from the fallback);
+//   2. pin edition id + version and stamp due_at on be_orders (done in the insert above);
+//   3. cut the lens from her birth name, deal the paid positions, store the draw ONCE;
+//   4. stamp lens_card + lens_method_version.
+//
+// 🔴 NOTHING HERE FAILS THE ORDER. A birth date Stripe let through unvalidated, a name the
+//    lens cannot read, an edition nobody published — each is a reason code on
+//    be_orders.fulfilment_note for support, logged with the session id only, and the
+//    customer-list write (her thank-you email) still runs. ⚠ Never log the name or DOB.
+//
+// IDEMPOTENT: `lens_card` is stamped only after the draw row exists, so a stamped row is
+// skipped outright; a row whose first attempt failed is retried by the next caller (the
+// webhook redelivery, or the thank-you page's backstop).
+
+interface Be08Prepared {
+  /** The three personal fields as RESOLVED: intake first, Stripe custom_fields as fallback. */
+  fields: ReturnType<typeof readBe08CustomFields>;
+  /** ISO date, or null when missing / unparseable (then `dobNote` says why). */
+  dateOfBirth: string | null;
+  /** e.g. 'DOB_UNPARSEABLE(raw=…)'. Null when the date was fine. */
+  dobNote: string | null;
+  editionId: string | null;
+  editionVersion: number | null;
+  dueAt: Date;
+  /** Only when the pre-pay intake row was missing; used to insert it now. */
+  speedBump: boolean;
+}
+
+/** Pure. Everything the 08 hook needs, computed before the order insert. */
+function prepareBe08(
+  session: Stripe.Checkout.Session,
+  metadata: BackendSessionMeta,
+  intake: Awaited<ReturnType<typeof intakeFor>>,
+  bumpPurchased: boolean,
+): Be08Prepared {
+  // Intake (the booking page, validated at checkout) beats Stripe's custom_fields (older
+  // sessions), field by field — a value the intake lacks still falls through to Stripe.
+  const stripeFields = readBe08CustomFields(session);
+  const text = (v: unknown): string | null => {
+    if (typeof v !== 'string') return null;
+    const trimmed = v.replace(/\s+/g, ' ').trim();
+    return trimmed || null;
+  };
+  // drizzle's `date` column reads back as 'YYYY-MM-DD' (a Date only if the mode changes) —
+  // both go through the parser below, so the range rules apply either way.
+  const rawIntakeDob: unknown = intake?.dateOfBirth;
+  const intakeDob = rawIntakeDob instanceof Date
+    ? rawIntakeDob.toISOString().slice(0, 10)
+    : text(rawIntakeDob);
+  const fields: Be08CustomFields = {
+    displayFirstName: text(intake?.displayFirstName) ?? stripeFields.displayFirstName,
+    fullBirthName: text(intake?.fullBirthName) ?? stripeFields.fullBirthName,
+    dateOfBirthRaw: intakeDob ?? stripeFields.dateOfBirthRaw,
+  };
+  const dob = parseDateOfBirth(fields.dateOfBirthRaw);
+  const dobNote = dob.ok
+    ? null
+    : dob.reason === 'missing'
+      ? 'DOB_MISSING'
+      : `DOB_${dob.reason.toUpperCase()}(raw=${fields.dateOfBirthRaw})`;
+
+  const metaVersion = Number(metadata.editionVersion);
+  const editionId = intake?.editionId || metadata.editionId || null;
+  const editionVersion =
+    intake?.editionVersion ?? (Number.isSafeInteger(metaVersion) && metaVersion > 0 ? metaVersion : null);
+
+  // Paid time = the session's own clock (Stripe epoch seconds), else now. 12h with the
+  // '+ 12-hour delivery' bump, 24h without — the promise on the booking page.
+  const paidAt = typeof session.created === 'number' && session.created > 0
+    ? new Date(session.created * 1000)
+    : new Date();
+  const hours = bumpPurchased ? 12 : 24;
+  const dueAt = new Date(paidAt.getTime() + hours * 3_600_000);
+
+  return {
+    fields,
+    dateOfBirth: dob.ok ? dob.iso : null,
+    dobNote,
+    editionId,
+    editionVersion,
+    dueAt,
+    speedBump: intake?.speedBump ?? bumpPurchased,
+  };
+}
+
+/** Steps 1, 3 and 4 above. Returns the row as it stands afterwards. */
+async function fulfilBe08OnPayment(row: BeOrder, sessionId: string, be08: Be08Prepared): Promise<BeOrder> {
+  // 1 · The resolved values onto the intake (a no-op when the booking page's write landed;
+  //     the Stripe fallback fills an older session). Insert if the pre-pay write never landed.
+  try {
+    await db
+      .insert(beOrderIntake)
+      .values({
+        stripeSessionId: sessionId,
+        offer: 'marcus-reading',
+        editionId: be08.editionId,
+        editionVersion: be08.editionVersion,
+        speedBump: be08.speedBump,
+        displayFirstName: be08.fields.displayFirstName,
+        fullBirthName: be08.fields.fullBirthName,
+        dateOfBirth: be08.dateOfBirth,
+      })
+      .onConflictDoUpdate({
+        target: beOrderIntake.stripeSessionId,
+        // The three personal fields are what prepareBe08 resolved (intake first, so this
+        // rewrites the intake's own values; Stripe's only where the intake had none). The
+        // edition and bump were the checkout's to write and are left alone unless missing.
+        set: {
+          displayFirstName: be08.fields.displayFirstName,
+          fullBirthName: be08.fields.fullBirthName,
+          dateOfBirth: be08.dateOfBirth,
+          editionId: sql`COALESCE(${beOrderIntake.editionId}, ${be08.editionId})`,
+          editionVersion: sql`COALESCE(${beOrderIntake.editionVersion}, ${be08.editionVersion})`,
+        },
+      });
+  } catch (err) {
+    logger.error('be_08: intake write on payment FAILED (order still recorded)', {
+      session: sessionId,
+      error: err instanceof Error ? err.message : String(err),
+    });
+  }
+
+  // Already dealt (the lens is stamped only after the draw row exists) — nothing to do.
+  if (row.lensCard) return row;
+
+  const notes: string[] = [];
+  if (be08.dobNote) notes.push(be08.dobNote);
+
+  try {
+    if (!be08.editionId) throw new Be08DrawError('EDITION_MISSING', 'No edition on the intake or the session.');
+    const edition = await getBe08Edition(be08.editionId, be08.editionVersion);
+    if (!edition) throw new Be08DrawError('EDITION_NOT_FOUND', 'No such edition/version.');
+
+    if (!be08.fields.fullBirthName) throw new Be08DrawError('BIRTH_NAME_MISSING', 'No full birth name on the intake or the session.');
+    const name = splitBirthName(be08.fields.fullBirthName);
+    if (!name) throw new Be08DrawError('BIRTH_NAME_UNSPLITTABLE', 'The birth name has no last name to split off.');
+
+    const lens = personalLens(name.first, name.last);
+    const draw = drawForOrder(row.id, edition, lens, BE_08_DECK);
+    const stored = await insertBe08DrawOnce(row.id, {
+      drawJson: buildDrawJson(edition, draw),
+      drawMethodVersion: draw.methodVersion,
+      contextHash: be08ContextHash({
+        editionId: edition.id,
+        editionVersion: edition.version,
+        fullBirthName: be08.fields.fullBirthName,
+        dateOfBirth: be08.dateOfBirth,
+        lensCard: lens.cardId,
+      }),
+    });
+
+    // 4 · Stamp the lens AND the edition FROM THE STORED ROW, so a retry that lost the race
+    //     records the deal that actually exists, not the one it computed — and so a support
+    //     fix that re-pointed the intake at a different edition before the retry leaves
+    //     be_orders agreeing with draw_json (the first insert's COALESCE would otherwise
+    //     keep the edition that failed).
+    const storedJson = stored.drawJson as {
+      lens?: { cardId?: string; methodVersion?: string };
+      edition?: { id?: string; version?: number };
+    };
+    const [updated] = await db
+      .update(beOrders)
+      .set({
+        editionId: storedJson.edition?.id ?? edition.id,
+        editionVersion: storedJson.edition?.version ?? edition.version,
+        lensCard: storedJson.lens?.cardId ?? lens.cardId,
+        lensMethodVersion: storedJson.lens?.methodVersion ?? LENS_METHOD_VERSION,
+        fulfilmentNote: notes.length ? notes.join('; ') : null,
+        updatedAt: new Date(),
+      })
+      .where(eq(beOrders.id, row.id))
+      .returning();
+    logger.info('be_08: draw stored', {
+      session: sessionId,
+      edition: `${edition.id}@${edition.version}`,
+      lens: storedJson.lens?.cardId ?? lens.cardId,
+      ...(notes.length ? { note: notes.join('; ') } : {}),
+    });
+    return updated ?? row;
+  } catch (err) {
+    const code = err instanceof Be08DrawError ? err.code : 'DRAW_FAILED';
+    logger.error('be_08: FULFILMENT NOT STARTED — order recorded, support must look', {
+      session: sessionId,
+      code,
+      ...(code === 'DRAW_FAILED' ? { error: err instanceof Error ? err.message : String(err) } : {}),
+    });
+    notes.unshift(code);
+    try {
+      const [updated] = await db
+        .update(beOrders)
+        .set({ fulfilmentNote: notes.join('; ').slice(0, 1000), updatedAt: new Date() })
+        .where(eq(beOrders.id, row.id))
+        .returning();
+      return updated ?? row;
+    } catch (noteErr) {
+      logger.error('be_08: could not even record the fulfilment note', {
+        session: sessionId,
+        error: noteErr instanceof Error ? noteErr.message : String(noteErr),
+      });
+      return row;
+    }
+  }
+}
+
+// 08 Marcus confirmation + delivery emails merge per-order custom fields. Build them from
+// the edition she bought — the question, the spread's name, the paid-card count as a word —
+// plus the delivery window her bump chose (12h vs 24h). Reading-list only; every other offer
+// gets `undefined` and writes nothing extra. A lookup miss returns `undefined` so the write
+// still lands (a blank merge beats losing the subscriber).
+const PAID_COUNT_WORDS = [
+  'zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten',
+  'eleven', 'twelve', 'thirteen', 'fourteen', 'fifteen',
+];
+const paidCountWord = (n: number): string => PAID_COUNT_WORDS[n] ?? String(n);
+
+async function marcus08ContentFields(row: BeOrder): Promise<Record<string, string> | undefined> {
+  if (row.offer !== 'marcus-reading' || !row.editionId) return undefined;
+  const version = row.editionVersion != null ? Number(row.editionVersion) : null;
+  const edition = await getBe08Edition(
+    row.editionId,
+    Number.isFinite(version) ? version : null,
+  ).catch(() => null);
+  if (!edition) return undefined;
+  const paidCount = edition.positions.filter((p) => p.visibility === 'paid').length;
+  return {
+    m8_question: edition.question,
+    m8_spread: edition.spread.name,
+    m8_paid_count: paidCountWord(paidCount),
+    m8_hours: row.bumpPurchased ? '12' : '24',
+  };
+}
+
+/**
+ * The subset the AUDIO list's confirmation email merges — `m8_question` + `m8_hours`.
+ * Looked up from the booking order the audio upsell references (its `originalSession`),
+ * since the audio charge itself carries no edition. ⛔ Only these two — the audio list
+ * does not hold `m8_spread` / `m8_paid_count`, and an unknown field loses the subscriber.
+ * `undefined` on any miss (not a Marcus order, no edition, lookup failure).
+ */
+export async function marcusAudioContentFields(
+  bookingSessionId: string,
+): Promise<Record<string, string> | undefined> {
+  if (!bookingSessionId) return undefined;
+  const row = await getBeOrderBySession(bookingSessionId).catch(() => null);
+  if (!row) return undefined;
+  const all = await marcus08ContentFields(row);
+  if (!all) return undefined;
+  return { m8_question: all.m8_question, m8_hours: all.m8_hours };
 }
 
 /**
@@ -211,6 +613,10 @@ export async function writeToCustomerList(
     return stamp(row, 'no email on the session');
   }
 
+  // 08 Marcus: the per-order fields the confirmation/delivery emails merge (question,
+  // spread, paid count, 12/24h). undefined for every other offer.
+  const contentFields = await marcus08ContentFields(row);
+
   const result = await addBackendCustomer({
     email: row.email,
     firstName: row.firstName || undefined,
@@ -221,6 +627,7 @@ export async function writeToCustomerList(
     bumpPurchased: row.bumpPurchased,
     // ⚠ Sent only when that screen exists — see `entryPath` in shared/backendOffers.ts.
     entryUrl: entryUrlFor(listing, row),
+    contentFields,
   }).catch((err) => ({
     success: false as const,
     error: err instanceof Error ? err.message : 'unknown error',

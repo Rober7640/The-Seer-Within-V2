@@ -1,0 +1,106 @@
+[
+  {
+    "slug": "does-love-have-to-feel-this-hard",
+    "edition_id": "does-love-have-to-feel-this-hard-v1",
+    "version": 1,
+    "copy_sha256": "6e3665f9c76761b9a7dadfcc14e602f9428b09ae440139ce45fbd32392c90bec",
+    "cold_read": "clear after revisions",
+    "review_files": [
+      "cold-effort-v2-a.md",
+      "cold-effort-v2-b.md",
+      "cold-effort-v2-c.md"
+    ],
+    "hero": "https://luna-assets-tsw.s3.ap-southeast-2.amazonaws.com/marcus/08/08-hero-does-love-have-to-feel-this-hard.jpg",
+    "status": "awaiting human review"
+  },
+  {
+    "slug": "seeing-love-clearly",
+    "edition_id": "seeing-love-clearly-v1",
+    "version": 1,
+    "copy_sha256": "217fa12aa48fa3d965d73fb2f018cf5d332f7d2a29cfaaddd9d692f336a6ccf7",
+    "cold_read": "clear after revisions",
+    "review_files": [
+      "cold-clarity-v2-a.md",
+      "cold-clarity-v2-b.md",
+      "cold-clarity-v2-c.md"
+    ],
+    "hero": "https://luna-assets-tsw.s3.ap-southeast-2.amazonaws.com/marcus/08/08-hero-seeing-love-clearly.jpg",
+    "status": "awaiting human review"
+  },
+  {
+    "slug": "heading-in-the-right-direction",
+    "edition_id": "heading-in-the-right-direction-v1",
+    "version": 1,
+    "copy_sha256": "a29591a4ff54ce70f9d20b126b902e2fcbfc05c302b307a2bc0814596d672ba5",
+    "cold_read": "clear after revisions",
+    "review_files": [
+      "cold-career-a.md",
+      "cold-career-b.md",
+      "cold-career-c.md"
+    ],
+    "hero": "https://luna-assets-tsw.s3.ap-southeast-2.amazonaws.com/marcus/08/08-hero-heading-in-the-right-direction.jpg",
+    "status": "awaiting human review"
+  },
+  {
+    "slug": "whats-keeping-you-stuck-with-money",
+    "edition_id": "whats-keeping-you-stuck-with-money-v1",
+    "version": 1,
+    "copy_sha256": "474f3260cdea27240ff128a19e845d424da2d34a46c8b733d81334ea607667be",
+    "cold_read": "clear after revisions",
+    "review_files": [
+      "cold-money-a.md",
+      "cold-money-b.md",
+      "cold-money-c.md",
+      "cold-money-patch2-a.md",
+      "cold-money-patch2-b.md",
+      "cold-money-patch2-c.md"
+    ],
+    "hero": "https://luna-assets-tsw.s3.ap-southeast-2.amazonaws.com/marcus/08/08-hero-whats-keeping-you-stuck-with-money.jpg",
+    "status": "awaiting human review"
+  },
+  {
+    "slug": "what-deserves-your-attention",
+    "edition_id": "what-deserves-your-attention-v1",
+    "version": 1,
+    "copy_sha256": "7601b4d54ba73adcc16f3cd325a8e4e75cacbd9d371f84ab3308dfe3ccf8e371",
+    "cold_read": "clear after revisions",
+    "review_files": [
+      "cold-priorities-final-a.md",
+      "cold-priorities-final-b.md",
+      "cold-priorities-final-c.md",
+      "cold-priorities-last-a.md",
+      "cold-priorities-last-b.md",
+      "cold-priorities-last-c.md"
+    ],
+    "hero": "https://luna-assets-tsw.s3.ap-southeast-2.amazonaws.com/marcus/08/08-hero-what-deserves-your-attention.jpg",
+    "status": "awaiting human review"
+  },
+  {
+    "slug": "what-gift-are-you-overlooking",
+    "edition_id": "what-gift-are-you-overlooking-v1",
+    "version": 1,
+    "copy_sha256": "493a2f9d9f05a2cc8400bf164632ab1a95bd5a16bc35a99ba4da76b57665f67a",
+    "cold_read": "clear after revisions",
+    "review_files": [
+      "cold-gift-a.md",
+      "cold-gift-b.md",
+      "cold-gift-c.md"
+    ],
+    "hero": "https://luna-assets-tsw.s3.ap-southeast-2.amazonaws.com/marcus/08/08-hero-what-gift-are-you-overlooking.jpg",
+    "status": "awaiting human review"
+  },
+  {
+    "slug": "is-it-time-for-a-new-chapter",
+    "edition_id": "is-it-time-for-a-new-chapter-v1",
+    "version": 1,
+    "copy_sha256": "b7b827c58156eb26bec951a17881a853795a1057df362caef361133cfd00090d",
+    "cold_read": "clear after revisions",
+    "review_files": [
+      "cold-chapter-a.md",
+      "cold-chapter-b.md",
+      "cold-chapter-c.md"
+    ],
+    "hero": "https://luna-assets-tsw.s3.ap-southeast-2.amazonaws.com/marcus/08/08-hero-is-it-time-for-a-new-chapter.jpg",
+    "status": "awaiting human review"
+  }
+]

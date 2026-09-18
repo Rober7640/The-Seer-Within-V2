@@ -1,0 +1,78 @@
+/* thank-you page — page-specific rules only; tokens live in ./marcus.css
+   PORT of improve-v1/v1-one-time-BEs/local/08-marcus/client/pages/thank-you.css, every
+   selector prefixed with `.m8` (MarcusShell's root). The local-only `.test-control` block
+   (the PDF-fixture button) is harness chrome and is not ported.
+   Every rule is scoped under .thanks (the RECEIPT sheet). Order on the page:
+   name + question → status rows → delivery email → ledger (total last, quiet).
+   Floors (review 05): body 18px on phones, nothing under 13px, tap targets ≥ 44px. */
+
+/* ── her question, as a quotation (02 T6) ───────────────────────────────── */
+.m8 .thanks .question{
+  margin:var(--s4) 0 var(--s6);padding-left:var(--s4);border-left:3px solid var(--hair);
+  font:italic 20px/1.5 var(--text);color:var(--ink);text-wrap:pretty;
+}
+
+/* ── status rows (02 §4): glyph + piece + state word + one plain line ────── */
+.m8 .thanks .status{margin-top:var(--s5)}
+.m8 .thanks .status .label{margin:0 0 var(--s2);color:var(--ink)}
+.m8 .thanks .status-row{
+  display:grid;grid-template-columns:28px minmax(0,1fr);gap:var(--s4);align-items:start;
+  padding:18px 0;border-top:1px solid var(--hair);
+}
+.m8 .thanks .status-row:last-child{border-bottom:1px solid var(--hair)}
+.m8 .thanks .glyph{font:400 20px/1.45 var(--text);color:var(--ink);text-align:center}
+.m8 .thanks .state-failed .glyph{color:var(--red);font-weight:600}                     /* the one red mark besides the button/links */
+.m8 .thanks .status-head{margin:0;font-weight:600;line-height:1.45}
+.m8 .thanks .state-word::before{content:"— "}
+.m8 .thanks .status-line{margin:var(--s1) 0 0;font-size:var(--t-body);line-height:var(--lh-body)}
+.m8 .thanks .status-line+.status-line{margin-top:var(--s2)}
+.m8 .thanks .status-line .email,.m8 .thanks .status-line .due{overflow-wrap:anywhere}
+
+/* ── delivery email as a display line (same label-over-value as the bridge) ─ */
+.m8 .thanks .facts{margin:var(--s5) 0 0;padding:var(--s4) 0;border-bottom:1px solid var(--hair)}
+.m8 .thanks .facts div{margin:0}
+.m8 .thanks .facts dt{margin:0 0 var(--s1)}
+.m8 .thanks .facts dd{margin:0;font-size:21px;font-weight:600;line-height:1.35;overflow-wrap:anywhere;font-variant-numeric:lining-nums}
+/* 02 T5 — the correction path, directly under the address, small and plain (new to the port) */
+.m8 .thanks .fix-email{margin:var(--s3) 0 0;font-size:var(--t-small);line-height:1.55;color:var(--muted)}
+.m8 .thanks .fix-email a{display:inline-flex;align-items:center;min-height:var(--tap);color:var(--red)}
+
+/* ── the ledger — last and quiet: total at body weight, never display size ── */
+.m8 .thanks .ledger-block{margin-top:var(--s6)}
+.m8 .thanks .ledger-block .label{margin:0 0 var(--s2)}
+.m8 .thanks .ledger-rows{border-top:1px solid var(--hair)}
+.m8 .thanks .ledger-row{display:flex;justify-content:space-between;gap:var(--s4);padding:10px 0;border-bottom:1px solid var(--hair);font-size:var(--t-body);margin:0}
+.m8 .thanks .ledger-total{
+  position:relative;display:flex;justify-content:space-between;gap:var(--s4);padding:12px 0 0;margin-top:2px;
+  font:600 var(--t-body)/var(--lh-body) var(--text);color:var(--ink);
+}
+.m8 .thanks .ledger-total::before{content:"";position:absolute;top:0;left:0;right:0;height:1px;background:var(--ink)}
+.m8 .thanks .ledger-block .num{font-variant-numeric:lining-nums tabular-nums;white-space:nowrap}
+.m8 .thanks .ledger-note{margin:var(--s3) 0 0;font-size:var(--t-small);line-height:1.55;color:var(--muted)}
+
+/* ── motion (04 §4): the receipt prints — rows rise top to bottom, then the ink rule above the
+   total draws, then the total appears. Once, on first load only; `.still` = no replay
+   (the loading and fail states carry it so nothing animates there). Keyframes live in marcus.css. */
+@media (prefers-reduced-motion:no-preference){
+  .m8 .thanks:not(.still) .status-row,
+  .m8 .thanks:not(.still) .facts,
+  .m8 .thanks:not(.still) .ledger-row,
+  .m8 .thanks:not(.still) .ledger-total,
+  .m8 .thanks:not(.still) .ledger-note{animation:rise .3s ease-out both}
+  .m8 .thanks:not(.still) .status .status-row:nth-child(2){animation-delay:.09s}
+  .m8 .thanks:not(.still) .status .status-row:nth-child(3){animation-delay:.18s}
+  .m8 .thanks:not(.still) .facts{animation-delay:.27s}
+  .m8 .thanks:not(.still) .ledger-row:nth-child(1){animation-delay:.36s}
+  .m8 .thanks:not(.still) .ledger-row:nth-child(2){animation-delay:.45s}
+  .m8 .thanks:not(.still) .ledger-row:nth-child(3){animation-delay:.54s}
+  .m8 .thanks:not(.still) .ledger-total{animation-delay:.72s}
+  .m8 .thanks:not(.still) .ledger-note{animation-delay:.8s}
+  .m8 .thanks:not(.still) .ledger-total::before{transform:scaleX(0);transform-origin:left;animation:draw .45s ease-out .62s forwards}
+}
+
+/* ── phone ──────────────────────────────────────────────────────────────── */
+@media (max-width:620px){
+  .m8 .thanks .question{font-size:19px;margin-bottom:var(--s5)}
+  .m8 .thanks .status-row{grid-template-columns:24px minmax(0,1fr);gap:var(--s3);padding:16px 0}
+  .m8 .thanks .facts dd{font-size:20px}
+}

@@ -16,6 +16,14 @@ export interface NumerologyProfile {
   currentPinnacleNumber: number;
   challengeNumbers: [number, number, number, number];
   personalYearNumber: number;
+  // Karmic Debt numbers (13/14/16/19) carried by each core number, when present.
+  karmicDebts: {
+    lifePath?: number;
+    expression?: number;
+    soulUrge?: number;
+    personality?: number;
+    birthday?: number;
+  };
 }
 
 // ──────────────────────────────────────────────────────────────────────
@@ -30,14 +38,30 @@ function sumDigits(n: number): number {
 }
 
 /**
- * Reduce a number to a single digit, preserving master numbers 11 and 22.
+ * Reduce a number to a single digit, preserving master numbers 11, 22, and 33.
  * Runs iteratively until stable.
  */
 export function reduceNumber(n: number): number {
-  while (n > 9 && n !== 11 && n !== 22) {
+  while (n > 9 && n !== 11 && n !== 22 && n !== 33) {
     n = sumDigits(n);
   }
   return n;
+}
+
+/**
+ * Karmic Debt detection. A core number carries a Karmic Debt (13, 14, 16, or 19)
+ * when its reduction passes THROUGH one of those totals on the way to its final
+ * digit. Returns the karmic-debt number, or 0 if none. Master numbers (11/22/33)
+ * halt reduction and are never karmic debts.
+ */
+const KARMIC_DEBTS = new Set([13, 14, 16, 19]);
+export function detectKarmicDebt(rawSum: number): number {
+  let n = Math.abs(rawSum);
+  while (n > 9 && n !== 11 && n !== 22 && n !== 33) {
+    if (KARMIC_DEBTS.has(n)) return n;
+    n = sumDigits(n);
+  }
+  return 0;
 }
 
 /**
@@ -69,6 +93,21 @@ const LETTER_VALUES: Record<string, number> = {
 
 const VOWEL_SET = new Set(['a', 'e', 'i', 'o', 'u']);
 
+/**
+ * Raw (unreduced) sum of a birth name's letter values.
+ * kind: 'all' (Expression), 'vowel' (Soul Urge), 'consonant' (Personality).
+ */
+export function letterSum(birthName: string, kind: 'all' | 'vowel' | 'consonant'): number {
+  const letters = birthName.toLowerCase().replace(/[^a-z]/g, '');
+  return letters.split('').reduce((acc, l) => {
+    const val = LETTER_VALUES[l];
+    if (val === undefined) return acc;
+    if (kind === 'vowel' && !VOWEL_SET.has(l)) return acc;
+    if (kind === 'consonant' && VOWEL_SET.has(l)) return acc;
+    return acc + val;
+  }, 0);
+}
+
 // ──────────────────────────────────────────────────────────────────────
 // Core number calculations
 // ──────────────────────────────────────────────────────────────────────
@@ -91,9 +130,7 @@ export function calculateLifePath(birthdate: string): number {
  * Sum of all letter values in the full birth name, reduced.
  */
 export function calculateExpression(birthName: string): number {
-  const letters = birthName.toLowerCase().replace(/[^a-z]/g, '');
-  const sum = letters.split('').reduce((acc, l) => acc + (LETTER_VALUES[l] ?? 0), 0);
-  return reduceNumber(sum);
+  return reduceNumber(letterSum(birthName, 'all'));
 }
 
 /**
@@ -101,12 +138,7 @@ export function calculateExpression(birthName: string): number {
  * Sum of vowel values in the full birth name, reduced.
  */
 export function calculateSoulUrge(birthName: string): number {
-  const letters = birthName.toLowerCase().replace(/[^a-z]/g, '');
-  const sum = letters
-    .split('')
-    .filter(l => VOWEL_SET.has(l))
-    .reduce((acc, l) => acc + (LETTER_VALUES[l] ?? 0), 0);
-  return reduceNumber(sum);
+  return reduceNumber(letterSum(birthName, 'vowel'));
 }
 
 /**
@@ -114,12 +146,7 @@ export function calculateSoulUrge(birthName: string): number {
  * Sum of consonant values in the full birth name, reduced.
  */
 export function calculatePersonality(birthName: string): number {
-  const letters = birthName.toLowerCase().replace(/[^a-z]/g, '');
-  const sum = letters
-    .split('')
-    .filter(l => !VOWEL_SET.has(l) && LETTER_VALUES[l] !== undefined)
-    .reduce((acc, l) => acc + (LETTER_VALUES[l] ?? 0), 0);
-  return reduceNumber(sum);
+  return reduceNumber(letterSum(birthName, 'consonant'));
 }
 
 /** Birthday Number — the birth day reduced. */
@@ -248,6 +275,21 @@ export function calculateNumerologyProfile(
   const challengeNumbers = calculateChallenges(birthdate);
   const personalYearNumber = calculatePersonalYear(birthdate);
 
+  // Karmic Debt detection — from each core number's raw (unreduced) total.
+  const [year, month, day] = birthdate.split('-').map(Number);
+  const lifePathRaw = reduceNumber(month) + reduceNumber(day) + reduceNumber(sumDigits(year));
+  const karmicDebts: NumerologyProfile['karmicDebts'] = {};
+  const lp = detectKarmicDebt(lifePathRaw);
+  if (lp) karmicDebts.lifePath = lp;
+  const ex = detectKarmicDebt(letterSum(birthName, 'all'));
+  if (ex) karmicDebts.expression = ex;
+  const su = detectKarmicDebt(letterSum(birthName, 'vowel'));
+  if (su) karmicDebts.soulUrge = su;
+  const pe = detectKarmicDebt(letterSum(birthName, 'consonant'));
+  if (pe) karmicDebts.personality = pe;
+  const bd = detectKarmicDebt(day);
+  if (bd) karmicDebts.birthday = bd;
+
   return {
     birthdate,
     birthName,
@@ -262,6 +304,7 @@ export function calculateNumerologyProfile(
     currentPinnacleNumber: numbers[currentIndex],
     challengeNumbers,
     personalYearNumber,
+    karmicDebts,
   };
 }
 
@@ -272,11 +315,24 @@ export function calculateNumerologyProfile(
 const PINNACLE_LABELS = ['First', 'Second', 'Third', 'Fourth'] as const;
 const CURRENT_YEAR = new Date().getFullYear();
 
+const CORE_LABELS: Record<string, string> = {
+  lifePath: 'Life Path',
+  expression: 'Expression',
+  soulUrge: 'Soul Urge',
+  personality: 'Personality',
+  birthday: 'Birthday',
+};
+
 export function formatNumerologyProfileForPrompt(profile: NumerologyProfile): string {
   const [p1, p2, p3, p4] = profile.pinnacleNumbers;
   const [a1, a2, a3] = profile.pinnacleAges;
   const [c1, c2, c3, c4] = profile.challengeNumbers;
   const label = PINNACLE_LABELS[profile.currentPinnacleIndex];
+
+  const kdEntries = Object.entries(profile.karmicDebts ?? {});
+  const karmicDebtLine = kdEntries.length
+    ? `\nKarmic Debt: ${kdEntries.map(([core, num]) => `${num} (in ${CORE_LABELS[core] ?? core})`).join(', ')}`
+    : '';
 
   return `Birthdate: ${profile.birthdate}
 Birth name: ${profile.birthName}
@@ -291,5 +347,5 @@ Pinnacle 2 (${a1}–${a2}): ${p2}
 Pinnacle 3 (${a2}–${a3}): ${p3}
 Pinnacle 4 (${a3}+): ${p4}
 Current Pinnacle: ${label} (${profile.currentPinnacleNumber})
-Challenges: ${c1}, ${c2}, ${c3}, ${c4}`;
+Challenges: ${c1}, ${c2}, ${c3}, ${c4}${karmicDebtLine}`;
 }
