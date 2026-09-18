@@ -264,10 +264,14 @@ export async function updateStripeData(
           stripeSessionId: stripeData.stripeSessionId,
           stripeCustomerId: stripeData.stripeCustomerId,
           stripePaymentMethodId: stripeData.stripePaymentMethodId,
-          // Only a Stripe sale has a Stripe account. Stamping the active tag on a
-          // Payments.AI row would claim its ids resolve against a Stripe account
-          // they were never created in. Identical behaviour for Stripe rows.
-          stripeAccount: stripeData.paymentGateway === 'stripe' ? activeStripeAccountTag() : null,
+          // ⚠️ MEANINGLESS ON A PAYMENTS.AI ROW, deliberately left that way. Those
+          // ids resolve against no Stripe account, so 'A' here is a lie — but
+          // markUpsellPurchased/markUpsell2Purchased re-stamp this field
+          // unconditionally from eight call sites on the LIVE Stripe path, so
+          // conditioning it here only made the value INCONSISTENT (null without
+          // upsells, 'A' with them — observed on the 18 Sep dev smoke test).
+          // Read payment_gateway to tell the processors apart; never this.
+          stripeAccount: activeStripeAccountTag(),
           mainPurchaseAmount: stripeData.mainPurchaseAmount,
           bumpOffered: stripeData.bumpOffered,
           bumpPurchased: stripeData.bumpPurchased,
@@ -287,8 +291,9 @@ export async function updateStripeData(
           stripeSessionId: stripeData.stripeSessionId,
           stripeCustomerId: stripeData.stripeCustomerId,
           stripePaymentMethodId: stripeData.stripePaymentMethodId,
-          // See the UPDATE branch above — a Payments.AI row gets no Stripe account.
-          stripeAccount: stripeData.paymentGateway === 'stripe' ? activeStripeAccountTag() : null,
+          // See the UPDATE branch above — meaningless on a Payments.AI row, and
+          // left that way on purpose. payment_gateway is the discriminator.
+          stripeAccount: activeStripeAccountTag(),
           mainPurchaseAmount: stripeData.mainPurchaseAmount,
           bumpOffered: stripeData.bumpOffered,
           bumpPurchased: stripeData.bumpPurchased,
