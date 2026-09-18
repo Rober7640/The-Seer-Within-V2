@@ -16,6 +16,8 @@ See [README.md](README.md). File names are unchanged; only their folders moved.
 
 Every internal link, code comment and test path was rewritten with the move. Verified: 53 client tests pass (one test reads `09-T1`/`09-T3`/`09-T4`/`09-C3` by path), tsc unchanged at its 46-error baseline, copy-check still detects these files as offer 09 and passes, no broken links inside 09 except pre-existing ones in this file's copied master text.
 
+👉 **Taking this live? Read [HANDOVER.md](HANDOVER.md) first** — the traps and the steps in order. This page is the full record.
+
 ## Status, 2026-09-17
 
 **Built end to end on branch `09-heart-cleanser`. Nothing is live.** Checkout is dark (`readyForMoney: false`), the `be_shipments` migration is NOT applied, no AWeber draft or campaign exists, no test purchase has run, and nothing is deployed, sent or charged.

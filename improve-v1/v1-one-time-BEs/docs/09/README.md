@@ -2,6 +2,7 @@
 
 | Folder | What's in it |
 |---|---|
+| [`HANDOVER.md`](HANDOVER.md) | **start here if you are taking this live** — the traps, then the steps in order |
 | [`0-WORKFLOW-09.md`](0-WORKFLOW-09.md) | the working checklist — decisions, status, next steps |
 | [`booking-page/`](booking-page/) | offer page copy (`09-C1`), its tick audit and rewrite, the Reiki order bump (`09-C3`), and the receipt page (`09-T1`) |
 | [`sales-emails/`](sales-emails/) | emails 1–3 (`09-E2`–`09-E6`), their HTML/text builds, and [`AWeber-handoff.md`](sales-emails/AWeber-handoff.md) |
