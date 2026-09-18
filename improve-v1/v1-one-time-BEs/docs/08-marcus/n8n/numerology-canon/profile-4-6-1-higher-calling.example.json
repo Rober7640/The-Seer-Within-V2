@@ -1,0 +1,54 @@
+{
+  "status": "worked-example-not-customer-copy",
+  "question": "What is my higher calling?",
+  "canonVersion": "marcus-numerology-canon-v1",
+  "canonKeys": ["LP4", "EX6", "PE1"],
+  "centralTension": {
+    "claim": "A durable contribution may matter more than a dramatic change, but responsibility can spread until maintaining other people's needs consumes the capacity needed to build something personally directed.",
+    "support": ["LP4.DIRECTION", "EX6.PRESSURE", "PE1.STYLE"],
+    "confidence": "pair-inference",
+    "questionRelevance": "central",
+    "disconfirmation": "This weakens if current responsibilities are already limited and shared, or if the person has ample protected capacity for self-directed work."
+  },
+  "claims": [
+    {
+      "claim": "A promising form of contribution would turn an intention into a dependable process that makes a shared service, environment, or standard work better for people.",
+      "support": ["LP4.CONTRIBUTION", "EX6.CONTRIBUTION"],
+      "confidence": "reinforced",
+      "questionRelevance": "central",
+      "disconfirmation": "Do not use this if the question and cards point toward a private pursuit with no meaningful implementation or service component."
+    },
+    {
+      "claim": "The usable strength in the combination is the ability to begin, organize, and follow through on work whose value becomes visible in how reliably it serves its purpose.",
+      "support": ["LP4.GIFTS", "EX6.GIFTS", "PE1.GIFTS"],
+      "confidence": "reinforced",
+      "questionRelevance": "supporting",
+      "disconfirmation": "Treat this as undeveloped potential if there is no observable example of initiation followed by sustained completion."
+    },
+    {
+      "claim": "One obstacle worth testing is whether competence has become a reason to accept too much ownership, making a self-created path feel impossible because every existing structure still depends on the person.",
+      "support": ["LP4.PRESSURE", "EX6.PRESSURE", "PE1.PROTECTION"],
+      "confidence": "pair-inference",
+      "questionRelevance": "central",
+      "disconfirmation": "Discard this if work is already delegated, help is used comfortably, and the main limit comes from resources or authority outside the person's control."
+    },
+    {
+      "claim": "The next decision should preserve one real commitment while testing one bounded change, with clear responsibility and room for information that could alter the plan.",
+      "support": ["LP4.CHOICE", "EX6.CHOICE", "PE1.CHOICE"],
+      "confidence": "reinforced",
+      "questionRelevance": "central",
+      "disconfirmation": "A bounded trial is unsuitable where the decision is irreversible, unsafe, or requires professional advice."
+    },
+    {
+      "claim": "A firm outward manner may lead others to assume the direction is settled before the person has invited the discussion or support needed to refine it.",
+      "support": ["PE1.STYLE", "PE1.CHOICE", "LP4.DIRECTION"],
+      "confidence": "pair-inference",
+      "questionRelevance": "supporting",
+      "disconfirmation": "Do not use this if the person routinely labels uncertainty and actively asks others to challenge a developing plan."
+    }
+  ],
+  "conclusionBoundary": {
+    "allowed": "Describe a calling shaped around building a reliable, useful structure with proportionate responsibility and enough authority to improve how it works.",
+    "notAllowed": "Name a specific occupation, organization, family role, or life event unless independent question and card evidence supports it."
+  }
+}

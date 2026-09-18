@@ -1,0 +1,15 @@
+# Cold reading
+
+Perspective: first-time reader, woman over 55, reading once on a phone. Only the supplied passage was read.
+
+| Sentence | Sayback | Pronoun referents | Reread | Unidentified people | Double-use words | Alternative meaning |
+|---|---|---|---|---|---|---|
+| A carved knight lies at full length on a tomb, his hands joined in prayer. | There is a carving of a knight lying stretched out on a tomb with his hands together in a prayer position. | “his” means the carved knight. | No. | The knight has no name; I take him as the figure being described. | “lies” can mean tells an untruth, but here means is lying down. | I do not take this as a living knight lying there. |
+| This is a stone figure, an effigy. | The knight is a stone representation of a person. | “This” means the carved knight. | No. | No new person. | “figure” can mean a number, but here means a carved human form. | “Effigy” also brings to mind a figure burned in protest; “stone figure” tells me what is meant here. |
+| The stillness belongs to the carving. | The carving itself is motionless. | None. | No. | None. | “belongs” can mean ownership; here it describes where the stillness comes from. | It could also mean that the image’s feeling of quiet comes from the carving. |
+| Look at his hands. | Pay attention to the carved knight’s hands. | “his” means the carved knight; implied “you” means me, the reader. | No. | No new person. | None noticed. | None noticed. |
+| They hold that quiet gesture without reaching for anything. | The stone hands remain together in prayer and are not trying to grasp anything. | “They” means the hands; “that” points to the prayer position. | No. | None. | “hold” means maintain a position, though it can mean grasp an object. “Reaching” can also suggest trying to obtain or achieve something. | The hands may also be presented as an image of not striving for more. |
+| I read this image as an invitation to step back and consider which tasks you keep taking on. | The writer sees the carving as a reason for me to pause and think about the responsibilities I repeatedly accept. | “I” means the writer; “this image” means the scene of the carved knight; “you” means me, the reader. | No. | The writer is not named in this passage. | “read” means interpret. “Step back” means pause and get perspective. “Taking on” means accepting responsibilities. | “Image” could mean a picture of the carving or the scene described in words. |
+| When you pause before taking on another task, you have room to ask whether that task needs to be yours. | Before accepting another job, I can stop and consider whether I need to be responsible for it. | Both instances of “you” mean me, the reader; “that task” means the additional task; “yours” means my responsibility. | No. | None. | “room” means time or mental space, not a physical room. “Yours” means responsibility rather than possession. | The question could mean whether the task is my duty or whether I could let somebody else do it. |
+
+Unresolved meaning: none. The writer’s name and the image’s physical format are unspecified, but I understand the passage without them.

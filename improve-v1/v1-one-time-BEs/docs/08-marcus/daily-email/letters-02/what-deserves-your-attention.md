@@ -1,0 +1,51 @@
+Subject: What deserves your attention right now?
+
+%FIRSTNAME%,
+
+You can spend a whole day getting things done and still wonder whether you gave your attention to what mattered. I've turned two of six Rider–Waite cards on that question this morning. The first is full of movement.
+
+**One — what keeps you occupied. The Two of Pentacles.**
+
+A young man dances with a gold coin in each hand. A cord loops around both coins in a sideways figure eight.
+
+Follow that cord with your eye. It joins the two coins in one continuous loop, with no end to reach.
+
+That's the detail I want to stay with. He can keep moving without coming to a finish.
+
+A day can feel like that. You answer one request, deal with the next thing, and find something else ready for your attention. Each task has a reason for being there. Some really do need you.
+
+But the fact that something keeps arriving doesn't tell you how much of your life it deserves.
+
+If you've been measuring a good day by how much you managed to handle, this card offers another question: what did all that handling leave room for?
+
+You may have been busy enough to postpone asking.
+
+**Two — what a pause makes possible. The Four of Swords.**
+
+Here the movement stops. A carved knight lies at full length on a tomb, his hands joined in prayer. This is a stone figure, an effigy. The stillness belongs to the carving.
+
+Look at his hands. They hold that quiet gesture without reaching for anything.
+
+I read this image as an invitation to step back and consider which tasks you keep taking on. When you pause before taking on another task, you have room to ask whether that task needs to be yours.
+
+Beside the dancing figure, this card gives the pause a purpose. You can use a quiet moment to notice which concerns you've chosen and which ones have simply kept you occupied.
+
+That distinction can be difficult to hear while you're answering the next request. Once you stop for a moment, a quieter concern may come to mind: something important that hasn't been insisting on your attention.
+
+Those are the two face-up cards in this morning’s reading.
+
+Taken together, these cards ask you to look at how your attention gets assigned. A task can be urgent because someone wants an answer. Something you care about can wait patiently and still matter deeply.
+
+Neither card names your priority for you. They give you a way to question the order you've fallen into. You don't have to finish every demand before you're allowed to consider that order.
+
+The next question is which part of your life deserves more room now.
+
+I'd like to explore that with you, %FIRSTNAME%: what matters most, what can wait, what needs your care, and where to place your attention. The remaining four cards take those questions one at a time.
+
+I'll need your first and last name and your date of birth to continue. Your name identifies your personal tarot card. Its meaning helps me consider how you take responsibility and respond to demands as I interpret the remaining cards. That matters here: a strength you rely on to keep things going may also make it difficult to leave something for later.
+
+[Explore what deserves your attention](BOOKING).
+
+Marcus
+
+P.S. The cord around those two coins has no end. You can pause before the tasks run out.

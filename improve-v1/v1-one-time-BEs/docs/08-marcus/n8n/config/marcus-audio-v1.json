@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 1,
+  "configVersion": "marcus-audio-v1",
+  "provider": {
+    "model": "resemble-ai/chatterbox-turbo",
+    "temperature": 0.8,
+    "topP": 0.95,
+    "topK": 1000,
+    "repetitionPenalty": 1.2,
+    "defaultSeed": 0
+  },
+  "voice": {
+    "version": "marcus-voice-v2-10s",
+    "sha256": "7475c80452f865a2ec08638fca8b8fa1f421e1b72ddfd9f9cdb19c3cb89a88bb"
+  },
+  "pacing": {
+    "timeStretchRatio": 0.9,
+    "processor": "ffmpeg_atempo",
+    "preservePitch": true,
+    "paragraphPauseMs": 300,
+    "cardSectionPauseMs": 600,
+    "closingPauseMs": 900
+  },
+  "approval": {
+    "pacingDefaultApprovedBy": "Joel",
+    "pacingDefaultApprovedAt": "2026-09-13",
+    "voiceOutputListeningReview": "pending"
+  }
+}

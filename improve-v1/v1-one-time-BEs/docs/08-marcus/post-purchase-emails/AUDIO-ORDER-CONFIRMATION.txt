@@ -1,0 +1,17 @@
+{{ subscriber.first_name | default: "friend" }},
+
+Marcus again. The audio you added and paid for is confirmed.
+
+Some readings get read once and put in a drawer. One you can hear gets played on a walk, in the car, at the sink. Now you've got that one as well.
+
+Here's what it is, so there's no surprise. It's me reading your written reading out loud. Same cards. Same order. Nothing is in the audio that isn't in the written one, and nothing from the written one is missing from the audio. The written one stands on its own. This is the same thing in my voice.
+
+The written reading comes first, inside {{ subscriber.custom_field['m8_hours'] }} hours, as I said. The audio doesn't hold it up. The audio comes to {{ subscriber.email }} in its own email, titled Your audio is ready — {{ subscriber.custom_field['m8_question'] }}, with a link to download the recording. It may land after the written one. That's normal.
+
+In the written reading you'll see which tarot card is yours — the one your name points to. On the audio you'll hear me say it. Hearing your card named is not the same as reading its name.
+
+Nothing new to do while you wait, {{ subscriber.first_name | default: "friend" }}. Read the written one when it lands. When the audio comes, put the written one down and listen.
+
+If you want it sent to a different address, or need help, write to hi@theseerwithin.com.
+
+Marcus

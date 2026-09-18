@@ -1,0 +1,51 @@
+{
+  "originalMarkdownAndHtmlPreserved": true,
+  "finalReaderTextMatches": true,
+  "editions": [
+    {
+      "sourceSlug": "what-part-of-me-needs-healing-v2",
+      "editionId": "healing-v2",
+      "version": 2,
+      "sha256": "b3c0f39f9f8d7e4c3b1ca7acff57acb7e1cb507221858fdf33ee43e5ee96deb8",
+      "finalReaderText": "what-part-of-me-needs-healing-v2-reader-final.txt",
+      "coldRead": "clear; see scoped audit evidence",
+      "status": "human-review-pending"
+    },
+    {
+      "sourceSlug": "why-wont-he-commit-v2",
+      "editionId": "commitment-v2",
+      "version": 2,
+      "sha256": "3a79d2a4fd571297266dfb1c9f818a1abd9be569bd9f62fbcccbe7b0c2194898",
+      "finalReaderText": "why-wont-he-commit-v2-reader.txt",
+      "coldRead": "clear; see scoped audit evidence",
+      "status": "human-review-pending"
+    },
+    {
+      "sourceSlug": "what-is-my-higher-calling-v3",
+      "editionId": "higher-calling-v3",
+      "version": 3,
+      "sha256": "c372dc92ea881b71b05082474165896ccec4301cfc36869a222cd394ec2bda76",
+      "finalReaderText": "what-is-my-higher-calling-v3-reader-final.txt",
+      "coldRead": "clear; see scoped audit evidence",
+      "status": "human-review-pending"
+    },
+    {
+      "sourceSlug": "why-they-go-quiet-v2",
+      "editionId": "quiet-v2",
+      "version": 2,
+      "sha256": "98e8ad4bcc94ae715606cf35217c6a162bea9fd8dd636e8e3159652310832fcb",
+      "finalReaderText": "why-they-go-quiet-v2-reader-last.txt",
+      "coldRead": "clear; see scoped audit evidence",
+      "status": "human-review-pending"
+    },
+    {
+      "sourceSlug": "what-are-my-blind-spots-v2",
+      "editionId": "blind-spots-v2",
+      "version": 2,
+      "sha256": "d19d7966ca44b1d2a3ffa3f8277cc797e7ffc4942086e3531af21abffe8bbd82",
+      "finalReaderText": "what-are-my-blind-spots-v2-reader-final.txt",
+      "coldRead": "clear; see scoped audit evidence",
+      "status": "human-review-pending"
+    }
+  ]
+}

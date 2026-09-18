@@ -1,0 +1,244 @@
+<!-- 08 · MARCUS DAILY — why-they-go-quiet  ·  DESIGN 03: LETTERPRESS
+     Subject:   🕯️ %FIRSTNAME%, his quiet isn't what you think it is
+     Preheader: Her feet aren&rsquo;t tied. That&rsquo;s the whole card.
+     Copy rendered VERBATIM from docs/08-marcus/letters-02/why-they-go-quiet.md.
+     Scaffolding (head, mso conditionals, 600px container table, .px media query,
+     AWeber footer) carried from html/why-they-go-quiet.html. The LOOK is new.
+
+     THE DIRECTION — one ink on paper stock, the way a 1909 occult manual was printed.
+       ink    #191510  (warm black; every rule, every letter, every tint is this ink
+                        laid at a lighter density, never a second colour)
+       paper  #ece5d4  (the sheet)          desk #ddd4bf (the table it sits on)
+       tints  #5c584f 68% · #8d877c 45% · #b1ab9d 28%
+     ONE bold gesture: the stacked display name at the top. Near-silence after it.
+     ONE printer's ornament: the three-asterisk dinkus at the pivot, used once.
+     Rules mean things: fat+thin opens and closes the sheet, a hairline broken by a
+     roman numeral opens each turned card, a short rule marks the postscript.
+
+     ⛔ HEADSHOT — this design uses 08-headshot.jpg, the SQUARE original, NOT
+        08-headshot-round.jpg. The round one has its circle masked into the JPEG on a
+        WHITE ground; on this cream sheet that would ship four white corners. The
+        square photograph inside a hairline frame is the printed form anyway — every
+        photograph in this letter is a plate mounted in a rule.
+     ⛔ The images are .jpg, NOT .png. The .png keys on S3 return 403.
+     ⛔ IMAGE SIZING — style width:100% + max-width in px, never width:600px in the
+        style. A fixed px width in CSS on a full-measure image pins the whole email
+        open at 600 and the media query cannot claw it back. The px WIDTH ATTRIBUTE
+        is fine and necessary: it is what Outlook reads. Every image also carries a
+        HEIGHT attribute computed at the true aspect ratio, so a client that reserves
+        the box before loading reserves the right box.
+     ⛔ %FIRSTNAME% is the ESP merge tag and must reach AWeber INTACT. It is NOT a
+        build token. Any brace sweep must match {{...}} literally and leave % alone.
+     {{BOOKING_URL}} → the booking page, carrying this letter's topic slug.
+     ⛔ No price, no clock, no deadline anywhere in this file (08 SHAPE.md). -->
+<!DOCTYPE html>
+<html xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office" lang="en"><head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="x-apple-disable-message-reformatting">
+<meta name="color-scheme" content="light">
+<meta name="supported-color-schemes" content="light">
+<title>The Seer Within &mdash; Marcus</title>
+<!--[if gte mso 9]><xml><o:OfficeDocumentSettings><o:AllowPNG/><o:PixelsPerInch>96</o:PixelsPerInch></o:OfficeDocumentSettings></xml><![endif]-->
+<link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:wght@700;900&amp;family=Libre+Caslon+Text:ital,wght@0,400;0,700;1,400&amp;display=swap" rel="stylesheet" type="text/css">
+<style type="text/css">
+  /* THE FALLBACK IS THE DESIGN. Bodoni Moda and Libre Caslon Text are the bonus;
+     the stacks under them are all didone / old-style book faces, so the letter is
+     the same letter in Gmail, in Outlook and on a phone with the fonts blocked:
+       display  Bodoni Moda → Didot (macOS/iOS) → Bodoni MT (Office) → Playfair → Georgia
+       text     Libre Caslon Text → Baskerville → Palatino → Georgia */
+  body{-webkit-font-smoothing:antialiased;margin:0;padding:0;width:100%;background-color:#ddd4bf;}
+  img{border:0;height:auto;line-height:100%;max-width:100%;outline:none;text-decoration:none;-ms-interpolation-mode:bicubic;}
+  table,td{border-collapse:collapse;border-spacing:0;border:0;}
+  body,a{word-break:break-word;}   /* a word too long for the column breaks instead
+                                        of widening the table */
+  @media only screen and (max-width:600px){
+    .container{width:100%!important;max-width:100%!important;}
+    .px{padding-left:22px!important;padding-right:22px!important;}
+    .pxp{padding-left:18px!important;padding-right:18px!important;}
+    .mast{font-size:38px!important;line-height:38px!important;letter-spacing:2px!important;text-indent:2px!important;}
+    .mast2{letter-spacing:12px!important;text-indent:12px!important;}
+    .hd{font-size:18px!important;line-height:26px!important;}
+    .col{font-size:10px!important;letter-spacing:2px!important;}
+    .desk{height:14px!important;}
+  }
+</style>
+<!--[if mso]>
+<style type="text/css">
+  /* Word drops a webfont AND everything after it in the stack, landing on Times.
+     Name the installed faces again, by class, so Outlook gets the intended pair. */
+  .dsp,.dsp *{font-family:'Bodoni MT','Bodoni MT Black','Baskerville Old Face',Georgia,'Times New Roman',serif !important;}
+  .bd,.bd *{font-family:Georgia,'Times New Roman',Times,serif !important;}
+</style>
+<![endif]-->
+</head>
+<body style="margin:0;padding:0;background-color:#ddd4bf;">
+<div style="display:none;max-height:0;overflow:hidden;mso-hide:all;font-size:1px;line-height:1px;color:#ddd4bf;opacity:0;">Her feet aren&rsquo;t tied. That&rsquo;s the whole card.</div>
+<div style="display:none;max-height:0;overflow:hidden;">&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;</div>
+<center>
+<table align="center" cellpadding="0" cellspacing="0" border="0" width="100%" bgcolor="#ddd4bf" role="presentation" style="background-color:#ddd4bf;">
+<tr><td class="desk" height="26" bgcolor="#ddd4bf" style="background-color:#ddd4bf;font-size:0;line-height:0;height:26px;">&nbsp;</td></tr>
+<tr><td align="center" bgcolor="#ddd4bf" style="padding:0;background-color:#ddd4bf;">
+
+<!-- THE SHEET · 600px of paper on the desk. -->
+<table class="container" align="center" cellpadding="0" cellspacing="0" border="0" width="600" bgcolor="#ece5d4" role="presentation" style="max-width:600px;width:100%;background-color:#ece5d4;">
+
+  <!-- THE HEAD RULE · fat over thin, edge to edge. The one place the ink is laid
+       thick. Mirrored at the foot, so the sheet is bounded. -->
+  <tr><td height="5" bgcolor="#191510" style="background-color:#191510;font-size:0;line-height:0;height:5px;">&nbsp;</td></tr>
+  <tr><td height="3" bgcolor="#ece5d4" style="background-color:#ece5d4;font-size:0;line-height:0;height:3px;">&nbsp;</td></tr>
+  <tr><td height="1" bgcolor="#191510" style="background-color:#191510;font-size:0;line-height:0;height:1px;">&nbsp;</td></tr>
+
+  <!-- MASTHEAD · the photograph as a mounted plate, then the name stacked and set
+       heavy — two words, two lines, tight leading. This is the letter's only loud
+       moment; everything under it is set quiet on purpose. -->
+  <tr><td class="px" align="center" bgcolor="#ece5d4" style="padding:44px 44px 0;background-color:#ece5d4;">
+    <table align="center" cellpadding="0" cellspacing="0" border="0" role="presentation"><tr>
+      <td bgcolor="#ece5d4" style="background-color:#ece5d4;border:1px solid #8d877c;padding:5px;font-size:0;line-height:0;">
+        <img src="https://luna-assets-tsw.s3.ap-southeast-2.amazonaws.com/marcus/08/08-headshot.jpg" alt="Marcus Stone" width="104" height="104" style="display:block;width:104px;height:104px;border:0;outline:none;text-decoration:none;-ms-interpolation-mode:bicubic;font-family:'Libre Caslon Text',Baskerville,'Palatino Linotype',Palatino,Georgia,serif;font-size:13px;line-height:18px;color:#5c584f;">
+      </td></tr></table></td></tr>
+  <!-- The name is set as two lines and the short one is tracked out until it measures
+       the same as the long one — a title page justifies its display lines rather than
+       centring a ragged stack. Each line carries text-indent equal to its own tracking,
+       to cancel the trailing letter-space and keep the block optically centred. -->
+  <tr><td class="px mast dsp" align="center" bgcolor="#ece5d4" style="padding:30px 44px 0;background-color:#ece5d4;font-family:'Bodoni Moda',Didot,'Bodoni MT','Playfair Display',Georgia,'Times New Roman',serif;font-size:47px;line-height:46px;mso-line-height-rule:exactly;color:#191510;font-weight:900;letter-spacing:3px;text-transform:uppercase;text-align:center;text-indent:3px;">Marcus</td></tr>
+  <tr><td class="px mast mast2 dsp" align="center" bgcolor="#ece5d4" style="padding:0 44px 0;background-color:#ece5d4;font-family:'Bodoni Moda',Didot,'Bodoni MT','Playfair Display',Georgia,'Times New Roman',serif;font-size:47px;line-height:46px;mso-line-height-rule:exactly;color:#191510;font-weight:900;letter-spacing:17px;text-transform:uppercase;text-align:center;text-indent:17px;">Stone</td></tr>
+  <tr><td align="center" bgcolor="#ece5d4" style="padding:24px 44px 0;background-color:#ece5d4;">
+    <table align="center" cellpadding="0" cellspacing="0" border="0" role="presentation"><tr><td width="46" height="1" bgcolor="#191510" style="background-color:#191510;font-size:0;line-height:0;width:46px;height:1px;">&nbsp;</td></tr></table></td></tr>
+  <tr><td class="px dsp" align="center" bgcolor="#ece5d4" style="padding:20px 44px 0;padding-left:48px;background-color:#ece5d4;font-family:'Bodoni Moda',Didot,'Bodoni MT','Playfair Display',Georgia,'Times New Roman',serif;font-size:11px;line-height:16px;mso-line-height-rule:exactly;color:#5c584f;font-weight:700;letter-spacing:4.5px;text-transform:uppercase;text-align:center;">Daily Tarot Reader</td></tr>
+
+  <!-- INTRO · the greeting, the framing line naming the morning's question and the
+       up/down count, then the last thing he says before the first card.
+       ⛔ All of it plain body copy at body size and body colour. -->
+  <tr><td class="px bd" bgcolor="#ece5d4" style="padding:46px 44px 22px;background-color:#ece5d4;font-family:'Libre Caslon Text',Baskerville,'Palatino Linotype',Palatino,Georgia,'Times New Roman',serif;font-size:17px;line-height:29px;mso-line-height-rule:exactly;color:#191510;text-align:left;"><p style="margin:0;">%FIRSTNAME%,</p></td></tr>
+  <tr><td class="px bd" bgcolor="#ece5d4" style="padding:0 44px 22px;background-color:#ece5d4;font-family:'Libre Caslon Text',Baskerville,'Palatino Linotype',Palatino,Georgia,'Times New Roman',serif;font-size:17px;line-height:29px;mso-line-height-rule:exactly;color:#191510;text-align:left;"><p style="margin:0;">Marcus. Six cards on one question this morning: why he goes quiet. Three up, three face down. Rider&ndash;Waite.</p></td></tr>
+  <tr><td class="px bd" bgcolor="#ece5d4" style="padding:0 44px 26px;background-color:#ece5d4;font-family:'Libre Caslon Text',Baskerville,'Palatino Linotype',Palatino,Georgia,'Times New Roman',serif;font-size:17px;line-height:29px;mso-line-height-rule:exactly;color:#191510;text-align:left;"><p style="margin:0;">I&rsquo;ll say him. If yours is a her, swap it as you read &mdash; the cards don&rsquo;t care and neither do I.</p></td></tr>
+
+  <!-- HERO · the spread, inset to the measure and mounted in a hairline: a plate
+       tipped into a book, not a banner bled off the edge. He introduces the reading,
+       then shows you the table. -->
+  <tr><td class="px" align="center" bgcolor="#ece5d4" style="padding:6px 44px 12px;background-color:#ece5d4;">
+    <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation"><tr>
+      <td bgcolor="#ece5d4" style="background-color:#ece5d4;border:1px solid #8d877c;padding:6px;font-size:0;line-height:0;">
+        <img src="https://luna-assets-tsw.s3.ap-southeast-2.amazonaws.com/marcus/08/08-hero-why-they-go-quiet.jpg" alt="Six Rider&ndash;Waite cards laid on a printed cloth &mdash; three face up in the top row, three face down in the bottom row" width="498" height="332" style="display:block;width:100%;max-width:498px;height:auto;border:0;outline:none;text-decoration:none;-ms-interpolation-mode:bicubic;font-family:'Libre Caslon Text',Baskerville,'Palatino Linotype',Palatino,Georgia,serif;font-size:14px;line-height:21px;color:#5c584f;">
+      </td></tr></table></td></tr>
+
+  <!-- ═══ THE TURNED CARDS ═══
+       Each opens on a hairline broken by its roman numeral, then the heading centred
+       over the plate, then the reading set left.
+       ⛔ Face-down positions get NO picture. Only turned cards. -->
+
+  <!-- I -->
+  <tr><td class="px" bgcolor="#ece5d4" style="padding:24px 44px 0;background-color:#ece5d4;">
+    <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation"><tr>
+      <td width="43%" valign="middle" bgcolor="#ece5d4" style="background-color:#ece5d4;"><table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation"><tr><td height="1" bgcolor="#b1ab9d" style="background-color:#b1ab9d;font-size:0;line-height:0;height:1px;">&nbsp;</td></tr></table></td>
+      <td class="dsp" align="center" valign="middle" bgcolor="#ece5d4" style="padding:0 18px;background-color:#ece5d4;font-family:'Bodoni Moda',Didot,'Bodoni MT','Playfair Display',Georgia,'Times New Roman',serif;font-size:15px;line-height:15px;mso-line-height-rule:exactly;color:#191510;font-weight:700;letter-spacing:3px;text-indent:3px;">I</td>
+      <td width="43%" valign="middle" bgcolor="#ece5d4" style="background-color:#ece5d4;"><table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation"><tr><td height="1" bgcolor="#b1ab9d" style="background-color:#b1ab9d;font-size:0;line-height:0;height:1px;">&nbsp;</td></tr></table></td>
+    </tr></table></td></tr>
+  <tr><td class="px hd dsp" align="center" bgcolor="#ece5d4" style="padding:26px 44px 22px;background-color:#ece5d4;font-family:'Bodoni Moda',Didot,'Bodoni MT','Playfair Display',Georgia,'Times New Roman',serif;font-size:20px;line-height:28px;mso-line-height-rule:exactly;color:#191510;font-weight:700;text-align:center;">One &mdash; what the quiet actually is. The Four of Cups.</td></tr>
+  <tr><td class="px" align="center" bgcolor="#ece5d4" style="padding:0 44px 26px;background-color:#ece5d4;">
+    <table align="center" cellpadding="0" cellspacing="0" border="0" role="presentation"><tr>
+      <td bgcolor="#ece5d4" style="background-color:#ece5d4;border:1px solid #8d877c;padding:0;font-size:0;line-height:0;">
+        <img src="https://luna-assets-tsw.s3.ap-southeast-2.amazonaws.com/evelyn/tarot-rws/four-of-cups.jpg" alt="The Four of Cups" width="210" height="360" style="display:block;width:210px;max-width:100%;height:auto;border:0;outline:none;text-decoration:none;-ms-interpolation-mode:bicubic;font-family:'Libre Caslon Text',Baskerville,'Palatino Linotype',Palatino,Georgia,serif;font-size:14px;line-height:21px;color:#5c584f;">
+      </td></tr></table></td></tr>
+  <tr><td class="px bd" bgcolor="#ece5d4" style="padding:0 44px 22px;background-color:#ece5d4;font-family:'Libre Caslon Text',Baskerville,'Palatino Linotype',Palatino,Georgia,'Times New Roman',serif;font-size:17px;line-height:29px;mso-line-height-rule:exactly;color:#191510;text-align:left;"><p style="margin:0;">A young man sitting on the ground under a tree, knees up, arms folded across his chest. Three gold cups on the grass in front of him. And out of a cloud beside him, a hand, holding out a fourth.</p></td></tr>
+  <tr><td class="px bd" bgcolor="#ece5d4" style="padding:0 44px 22px;background-color:#ece5d4;font-family:'Libre Caslon Text',Baskerville,'Palatino Linotype',Palatino,Georgia,'Times New Roman',serif;font-size:17px;line-height:29px;mso-line-height-rule:exactly;color:#191510;text-align:left;"><p style="margin:0;">He isn&rsquo;t looking at it. He&rsquo;s looking at the three he&rsquo;s already got.</p></td></tr>
+  <tr><td class="px bd" bgcolor="#ece5d4" style="padding:0 44px 8px;background-color:#ece5d4;font-family:'Libre Caslon Text',Baskerville,'Palatino Linotype',Palatino,Georgia,'Times New Roman',serif;font-size:17px;line-height:29px;mso-line-height-rule:exactly;color:#191510;text-align:left;"><p style="margin:0;">That&rsquo;s the quiet. He hasn&rsquo;t left and he hasn&rsquo;t stopped caring. He&rsquo;s sat down inside himself and he&rsquo;s staring at what&rsquo;s already in front of him. The hand is out. He isn&rsquo;t seeing it.</p></td></tr>
+
+  <!-- II -->
+  <tr><td class="px" bgcolor="#ece5d4" style="padding:24px 44px 0;background-color:#ece5d4;">
+    <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation"><tr>
+      <td width="43%" valign="middle" bgcolor="#ece5d4" style="background-color:#ece5d4;"><table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation"><tr><td height="1" bgcolor="#b1ab9d" style="background-color:#b1ab9d;font-size:0;line-height:0;height:1px;">&nbsp;</td></tr></table></td>
+      <td class="dsp" align="center" valign="middle" bgcolor="#ece5d4" style="padding:0 18px;background-color:#ece5d4;font-family:'Bodoni Moda',Didot,'Bodoni MT','Playfair Display',Georgia,'Times New Roman',serif;font-size:15px;line-height:15px;mso-line-height-rule:exactly;color:#191510;font-weight:700;letter-spacing:3px;text-indent:3px;">II</td>
+      <td width="43%" valign="middle" bgcolor="#ece5d4" style="background-color:#ece5d4;"><table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation"><tr><td height="1" bgcolor="#b1ab9d" style="background-color:#b1ab9d;font-size:0;line-height:0;height:1px;">&nbsp;</td></tr></table></td>
+    </tr></table></td></tr>
+  <tr><td class="px hd dsp" align="center" bgcolor="#ece5d4" style="padding:26px 44px 22px;background-color:#ece5d4;font-family:'Bodoni Moda',Didot,'Bodoni MT','Playfair Display',Georgia,'Times New Roman',serif;font-size:20px;line-height:28px;mso-line-height-rule:exactly;color:#191510;font-weight:700;text-align:center;">Two &mdash; what it is not. The Three of Swords.</td></tr>
+  <tr><td class="px" align="center" bgcolor="#ece5d4" style="padding:0 44px 26px;background-color:#ece5d4;">
+    <table align="center" cellpadding="0" cellspacing="0" border="0" role="presentation"><tr>
+      <td bgcolor="#ece5d4" style="background-color:#ece5d4;border:1px solid #8d877c;padding:0;font-size:0;line-height:0;">
+        <img src="https://luna-assets-tsw.s3.ap-southeast-2.amazonaws.com/evelyn/tarot-rws/three-of-swords.jpg" alt="The Three of Swords" width="210" height="360" style="display:block;width:210px;max-width:100%;height:auto;border:0;outline:none;text-decoration:none;-ms-interpolation-mode:bicubic;font-family:'Libre Caslon Text',Baskerville,'Palatino Linotype',Palatino,Georgia,serif;font-size:14px;line-height:21px;color:#5c584f;">
+      </td></tr></table></td></tr>
+  <tr><td class="px bd" bgcolor="#ece5d4" style="padding:0 44px 22px;background-color:#ece5d4;font-family:'Libre Caslon Text',Baskerville,'Palatino Linotype',Palatino,Georgia,'Times New Roman',serif;font-size:17px;line-height:29px;mso-line-height-rule:exactly;color:#191510;text-align:left;"><p style="margin:0;">A red heart with three swords straight through it. Grey cloud, rain coming down.</p></td></tr>
+  <tr><td class="px bd" bgcolor="#ece5d4" style="padding:0 44px 22px;background-color:#ece5d4;font-family:'Libre Caslon Text',Baskerville,'Palatino Linotype',Palatino,Georgia,'Times New Roman',serif;font-size:17px;line-height:29px;mso-line-height-rule:exactly;color:#191510;text-align:left;"><p style="margin:0;">Here&rsquo;s the thing about that card, and it&rsquo;s why it&rsquo;s in position two. Nobody is holding those swords. They&rsquo;re just in it.</p></td></tr>
+  <tr><td class="px bd" bgcolor="#ece5d4" style="padding:0 44px 8px;background-color:#ece5d4;font-family:'Libre Caslon Text',Baskerville,'Palatino Linotype',Palatino,Georgia,'Times New Roman',serif;font-size:17px;line-height:29px;mso-line-height-rule:exactly;color:#191510;text-align:left;"><p style="margin:0;">The quiet is not a wound. It isn&rsquo;t something he did to you. It feels exactly like this card and it is not this card &mdash; and if you&rsquo;ve been reading his silence as an injury with your name on it, that&rsquo;s the first thing to put down this morning.</p></td></tr>
+
+  <!-- III -->
+  <tr><td class="px" bgcolor="#ece5d4" style="padding:24px 44px 0;background-color:#ece5d4;">
+    <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation"><tr>
+      <td width="43%" valign="middle" bgcolor="#ece5d4" style="background-color:#ece5d4;"><table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation"><tr><td height="1" bgcolor="#b1ab9d" style="background-color:#b1ab9d;font-size:0;line-height:0;height:1px;">&nbsp;</td></tr></table></td>
+      <td class="dsp" align="center" valign="middle" bgcolor="#ece5d4" style="padding:0 18px;background-color:#ece5d4;font-family:'Bodoni Moda',Didot,'Bodoni MT','Playfair Display',Georgia,'Times New Roman',serif;font-size:15px;line-height:15px;mso-line-height-rule:exactly;color:#191510;font-weight:700;letter-spacing:3px;text-indent:3px;">III</td>
+      <td width="43%" valign="middle" bgcolor="#ece5d4" style="background-color:#ece5d4;"><table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation"><tr><td height="1" bgcolor="#b1ab9d" style="background-color:#b1ab9d;font-size:0;line-height:0;height:1px;">&nbsp;</td></tr></table></td>
+    </tr></table></td></tr>
+  <tr><td class="px hd dsp" align="center" bgcolor="#ece5d4" style="padding:26px 44px 22px;background-color:#ece5d4;font-family:'Bodoni Moda',Didot,'Bodoni MT','Playfair Display',Georgia,'Times New Roman',serif;font-size:20px;line-height:28px;mso-line-height-rule:exactly;color:#191510;font-weight:700;text-align:center;">Three &mdash; what it costs you while it lasts. The Eight of Swords.</td></tr>
+  <tr><td class="px" align="center" bgcolor="#ece5d4" style="padding:0 44px 26px;background-color:#ece5d4;">
+    <table align="center" cellpadding="0" cellspacing="0" border="0" role="presentation"><tr>
+      <td bgcolor="#ece5d4" style="background-color:#ece5d4;border:1px solid #8d877c;padding:0;font-size:0;line-height:0;">
+        <img src="https://luna-assets-tsw.s3.ap-southeast-2.amazonaws.com/evelyn/tarot-rws/eight-of-swords.jpg" alt="The Eight of Swords" width="210" height="360" style="display:block;width:210px;max-width:100%;height:auto;border:0;outline:none;text-decoration:none;-ms-interpolation-mode:bicubic;font-family:'Libre Caslon Text',Baskerville,'Palatino Linotype',Palatino,Georgia,serif;font-size:14px;line-height:21px;color:#5c584f;">
+      </td></tr></table></td></tr>
+  <tr><td class="px bd" bgcolor="#ece5d4" style="padding:0 44px 22px;background-color:#ece5d4;font-family:'Libre Caslon Text',Baskerville,'Palatino Linotype',Palatino,Georgia,'Times New Roman',serif;font-size:17px;line-height:29px;mso-line-height-rule:exactly;color:#191510;text-align:left;"><p style="margin:0;">A woman standing in wet ground, wrapped and bound, a cloth over her eyes. Eight swords stuck upright in the earth around her. A castle up on the rock behind.</p></td></tr>
+  <tr><td class="px bd" bgcolor="#ece5d4" style="padding:0 44px 22px;background-color:#ece5d4;font-family:'Libre Caslon Text',Baskerville,'Palatino Linotype',Palatino,Georgia,'Times New Roman',serif;font-size:17px;line-height:29px;mso-line-height-rule:exactly;color:#191510;text-align:left;"><p style="margin:0;">Look at the swords. They don&rsquo;t join up. There&rsquo;s a clear gap in front of her, and her feet aren&rsquo;t tied.</p></td></tr>
+  <tr><td class="px bd" bgcolor="#ece5d4" style="padding:0 44px 0;background-color:#ece5d4;font-family:'Libre Caslon Text',Baskerville,'Palatino Linotype',Palatino,Georgia,'Times New Roman',serif;font-size:17px;line-height:29px;mso-line-height-rule:exactly;color:#191510;text-align:left;"><p style="margin:0;">That&rsquo;s the cost. Not heartbreak &mdash; stillness. While he&rsquo;s sitting under his tree, you&rsquo;ve stopped moving, and nothing in the picture is actually holding you.</p></td></tr>
+
+  <!-- THE PIVOT · the turned three end here and the face-down three begin. The one
+       printer's ornament in the letter marks the hinge, and the two lines that
+       follow are the only body copy set centred. Used once; never again. -->
+  <tr><td class="px dsp" align="center" bgcolor="#ece5d4" style="padding:40px 44px 34px;padding-left:60px;background-color:#ece5d4;font-family:'Bodoni Moda',Didot,'Bodoni MT','Playfair Display',Georgia,'Times New Roman',serif;font-size:19px;line-height:19px;mso-line-height-rule:exactly;color:#5c584f;letter-spacing:16px;text-align:center;">&#42;&#42;&#42;</td></tr>
+  <tr><td class="px bd" align="center" bgcolor="#ece5d4" style="padding:0 44px 10px;background-color:#ece5d4;font-family:'Libre Caslon Text',Baskerville,'Palatino Linotype',Palatino,Georgia,'Times New Roman',serif;font-size:18px;line-height:29px;mso-line-height-rule:exactly;color:#191510;text-align:center;"><p style="margin:0;">That&rsquo;s the three I can turn.</p></td></tr>
+  <tr><td class="px bd" align="center" bgcolor="#ece5d4" style="padding:0 44px 34px;background-color:#ece5d4;font-family:'Libre Caslon Text',Baskerville,'Palatino Linotype',Palatino,Georgia,'Times New Roman',serif;font-size:18px;line-height:29px;mso-line-height-rule:exactly;color:#191510;text-align:center;"><p style="margin:0;">The other three are the ones you want.</p></td></tr>
+
+  <!-- THE FACE-DOWN THREE · run-in sideheads, the way a printed manual marks a
+       numbered position inside running text. Uppercase + tracking stands in for the
+       small caps no email client can be trusted with; if text-transform is stripped
+       the line is still bold and still correct. -->
+  <tr><td class="px bd" bgcolor="#ece5d4" style="padding:0 44px 22px;background-color:#ece5d4;font-family:'Libre Caslon Text',Baskerville,'Palatino Linotype',Palatino,Georgia,'Times New Roman',serif;font-size:17px;line-height:29px;mso-line-height-rule:exactly;color:#191510;text-align:left;"><p style="margin:0;"><strong style="font-weight:700;font-size:15px;letter-spacing:.8px;text-transform:uppercase;color:#191510;">The fourth is what he&rsquo;s protecting.</strong> A man who sits down inside himself is always guarding something, and it&rsquo;s almost never the thing she&rsquo;d guess.</p></td></tr>
+  <tr><td class="px bd" bgcolor="#ece5d4" style="padding:0 44px 22px;background-color:#ece5d4;font-family:'Libre Caslon Text',Baskerville,'Palatino Linotype',Palatino,Georgia,'Times New Roman',serif;font-size:17px;line-height:29px;mso-line-height-rule:exactly;color:#191510;text-align:left;"><p style="margin:0;"><strong style="font-weight:700;font-size:15px;letter-spacing:.8px;text-transform:uppercase;color:#191510;">The fifth is you</strong> &mdash; what you&rsquo;ve been doing inside his quiet. That&rsquo;s a different question from what you&rsquo;ve been feeling about it.</p></td></tr>
+  <tr><td class="px bd" bgcolor="#ece5d4" style="padding:0 44px 26px;background-color:#ece5d4;font-family:'Libre Caslon Text',Baskerville,'Palatino Linotype',Palatino,Georgia,'Times New Roman',serif;font-size:17px;line-height:29px;mso-line-height-rule:exactly;color:#191510;text-align:left;"><p style="margin:0;"><strong style="font-weight:700;font-size:15px;letter-spacing:.8px;text-transform:uppercase;color:#191510;">The sixth is what ends it.</strong> Not whether. What.</p></td></tr>
+
+  <!-- VALIDATE, then TURN. -->
+  <tr><td class="px bd" bgcolor="#ece5d4" style="padding:0 44px 22px;background-color:#ece5d4;font-family:'Libre Caslon Text',Baskerville,'Palatino Linotype',Palatino,Georgia,'Times New Roman',serif;font-size:17px;line-height:29px;mso-line-height-rule:exactly;color:#191510;text-align:left;"><p style="margin:0;">And you&rsquo;ve been decent about it. You&rsquo;ve given him room. You haven&rsquo;t chased him, you haven&rsquo;t made him explain himself, you&rsquo;ve let him have whatever this is. That&rsquo;s a generous way to treat someone and it&rsquo;s the right instinct.</p></td></tr>
+  <tr><td class="px bd" bgcolor="#ece5d4" style="padding:0 44px 30px;background-color:#ece5d4;font-family:'Libre Caslon Text',Baskerville,'Palatino Linotype',Palatino,Georgia,'Times New Roman',serif;font-size:17px;line-height:29px;mso-line-height-rule:exactly;color:#191510;text-align:left;"><p style="margin:0;">You&rsquo;ve just been standing still to do it.</p></td></tr>
+
+  <!-- THE ASK · ruled off in a hairline box with a heavy head rule — the coupon at
+       the foot of a mail-order page, which is exactly what this beat is. No fill, no
+       button, no second colour: the CTA is a sentence with a permission verb (house
+       rule, carried from 07), and the one link in the letter lives inside it. -->
+  <tr><td class="px" bgcolor="#ece5d4" style="padding:0 44px 0;background-color:#ece5d4;">
+    <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" bgcolor="#ece5d4" style="background-color:#ece5d4;border:1px solid #191510;border-top:4px solid #191510;">
+      <tr><td height="26" bgcolor="#ece5d4" style="background-color:#ece5d4;font-size:0;line-height:0;height:26px;">&nbsp;</td></tr>
+      <tr><td class="pxp bd" bgcolor="#ece5d4" style="padding:0 26px 22px;background-color:#ece5d4;font-family:'Libre Caslon Text',Baskerville,'Palatino Linotype',Palatino,Georgia,'Times New Roman',serif;font-size:17px;line-height:29px;mso-line-height-rule:exactly;color:#191510;text-align:left;"><p style="margin:0;">I can&rsquo;t turn those three for a list. What a man protects depends on the man, and I don&rsquo;t know yours.</p></td></tr>
+      <tr><td class="pxp bd" bgcolor="#ece5d4" style="padding:0 26px 22px;background-color:#ece5d4;font-family:'Libre Caslon Text',Baskerville,'Palatino Linotype',Palatino,Georgia,'Times New Roman',serif;font-size:17px;line-height:29px;mso-line-height-rule:exactly;color:#191510;text-align:left;"><p style="margin:0;">So here&rsquo;s this morning&rsquo;s job, and it&rsquo;s one line. Write down what he did on the day it changed. Not how you felt about it. What he <em>did</em>. One sentence.</p></td></tr>
+      <tr><td class="pxp bd" bgcolor="#ece5d4" style="padding:0 26px 26px;background-color:#ece5d4;font-family:'Libre Caslon Text',Baskerville,'Palatino Linotype',Palatino,Georgia,'Times New Roman',serif;font-size:17px;line-height:29px;mso-line-height-rule:exactly;color:#191510;text-align:left;"><p style="margin:0;">That sentence is all I need. <a href="{{BOOKING_URL}}" target="_blank" rel="noopener noreferrer" style="color:#191510;text-decoration:underline;font-weight:700;">Open the other three here</a> &mdash; there&rsquo;s a box on that page, and that&rsquo;s what goes in it.</p></td></tr>
+    </table></td></tr>
+
+  <!-- THE ACT · hers. ⛔ the letter never closes on the link -->
+  <tr><td class="px bd" bgcolor="#ece5d4" style="padding:30px 44px 0;background-color:#ece5d4;font-family:'Libre Caslon Text',Baskerville,'Palatino Linotype',Palatino,Georgia,'Times New Roman',serif;font-size:17px;line-height:29px;mso-line-height-rule:exactly;color:#191510;text-align:left;"><p style="margin:0;">Then, today: name one thing you&rsquo;ve been holding until he comes back, and do it anyway.</p></td></tr>
+
+  <!-- SIGNATURE · the name only, set in the display face so it answers the masthead
+       at a whisper. ⛔ the headshot is at the TOP, not here: two photographs of the
+       same man in one letter is one too many. -->
+  <tr><td class="px dsp" bgcolor="#ece5d4" style="padding:32px 44px 0;background-color:#ece5d4;font-family:'Bodoni Moda',Didot,'Bodoni MT','Playfair Display',Georgia,'Times New Roman',serif;font-size:25px;line-height:30px;mso-line-height-rule:exactly;color:#191510;font-weight:700;letter-spacing:.5px;text-align:left;">Marcus</td></tr>
+
+  <!-- P.S. · last, and quiet. A short rule to mark it, italic, one ink at 68%. -->
+  <tr><td class="px" bgcolor="#ece5d4" style="padding:30px 44px 0;background-color:#ece5d4;">
+    <table cellpadding="0" cellspacing="0" border="0" role="presentation"><tr><td width="44" height="1" bgcolor="#b1ab9d" style="background-color:#b1ab9d;font-size:0;line-height:0;width:44px;height:1px;">&nbsp;</td></tr></table></td></tr>
+  <tr><td class="px bd" bgcolor="#ece5d4" style="padding:18px 44px 0;background-color:#ece5d4;font-family:'Libre Caslon Text',Baskerville,'Palatino Linotype',Palatino,Georgia,'Times New Roman',serif;font-size:15px;line-height:26px;mso-line-height-rule:exactly;color:#5c584f;font-style:italic;text-align:left;"><p style="margin:0;">P.S. Her feet aren&rsquo;t tied. That&rsquo;s the whole card.</p></td></tr>
+
+  <!-- COLOPHON · the imprint at the foot of the sheet. Physical address + both
+       AWeber links are what keeps the send CAN-SPAM clean; do not trim either. -->
+  <tr><td class="px" bgcolor="#ece5d4" style="padding:44px 44px 0;background-color:#ece5d4;"><table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation"><tr><td height="1" bgcolor="#b1ab9d" style="background-color:#b1ab9d;font-size:0;line-height:0;height:1px;">&nbsp;</td></tr></table></td></tr>
+  <tr><td class="px col dsp" align="center" bgcolor="#ece5d4" style="padding:26px 44px 0;padding-left:48px;background-color:#ece5d4;font-family:'Bodoni Moda',Didot,'Bodoni MT','Playfair Display',Georgia,'Times New Roman',serif;font-size:11px;line-height:16px;mso-line-height-rule:exactly;color:#191510;font-weight:700;letter-spacing:3.5px;text-transform:uppercase;text-align:center;">Marcus Stone &middot; The Seer Within</td></tr>
+  <tr><td class="px bd" align="center" bgcolor="#ece5d4" style="padding:16px 44px 40px;background-color:#ece5d4;font-family:'Libre Caslon Text',Baskerville,'Palatino Linotype',Palatino,Georgia,'Times New Roman',serif;font-size:12px;line-height:20px;mso-line-height-rule:exactly;color:#5c584f;text-align:center;">
+    140 Broadway, Manhattan,<br>New York New York 10005<br>USA<br><br>
+    <a href="https://www.aweber.com/z/r/?ThisIsATestEmail" target="_blank" rel="noopener noreferrer" style="color:#5c584f;text-decoration:underline;">Unsubscribe</a>
+    &nbsp;&middot;&nbsp;
+    <a href="https://www.aweber.com/z/r/?ThisIsATestEmail" target="_blank" rel="noopener noreferrer" style="color:#5c584f;text-decoration:underline;">Change Subscriber Options</a></td></tr>
+
+  <!-- THE FOOT RULE · thin over fat. The head rule, upside down. -->
+  <tr><td height="1" bgcolor="#191510" style="background-color:#191510;font-size:0;line-height:0;height:1px;">&nbsp;</td></tr>
+  <tr><td height="3" bgcolor="#ece5d4" style="background-color:#ece5d4;font-size:0;line-height:0;height:3px;">&nbsp;</td></tr>
+  <tr><td height="5" bgcolor="#191510" style="background-color:#191510;font-size:0;line-height:0;height:5px;">&nbsp;</td></tr>
+
+</table></td></tr>
+<tr><td class="desk" height="26" bgcolor="#ddd4bf" style="background-color:#ddd4bf;font-size:0;line-height:0;height:26px;">&nbsp;</td></tr>
+</table></center></body></html>

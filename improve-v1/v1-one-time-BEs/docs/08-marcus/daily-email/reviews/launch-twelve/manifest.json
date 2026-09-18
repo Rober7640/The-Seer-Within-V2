@@ -1,0 +1,137 @@
+{
+  "publicationScope": "local-review-only",
+  "editions": [
+    {
+      "editionId": "healing-v2",
+      "version": 2,
+      "topicSlug": "what-part-of-me-needs-healing",
+      "sourceSlug": "what-part-of-me-needs-healing-v2",
+      "source": "docs/08-marcus/daily-email/letters-02/what-part-of-me-needs-healing-v2.md",
+      "sha256": "b3c0f39f9f8d7e4c3b1ca7acff57acb7e1cb507221858fdf33ee43e5ee96deb8",
+      "preview": "html/what-part-of-me-needs-healing-v2.html",
+      "bookingPreviewUrl": "http://127.0.0.1:5093/booking?edition=healing-v2&version=2",
+      "status": "human-review-pending"
+    },
+    {
+      "editionId": "does-love-have-to-feel-this-hard-v1",
+      "version": 1,
+      "topicSlug": "does-love-have-to-feel-this-hard",
+      "sourceSlug": "does-love-have-to-feel-this-hard",
+      "source": "docs/08-marcus/daily-email/letters-02/does-love-have-to-feel-this-hard.md",
+      "sha256": "6e3665f9c76761b9a7dadfcc14e602f9428b09ae440139ce45fbd32392c90bec",
+      "preview": "html/does-love-have-to-feel-this-hard.html",
+      "bookingPreviewUrl": "http://127.0.0.1:5093/booking?edition=does-love-have-to-feel-this-hard-v1&version=1",
+      "status": "human-review-pending"
+    },
+    {
+      "editionId": "heading-in-the-right-direction-v1",
+      "version": 1,
+      "topicSlug": "heading-in-the-right-direction",
+      "sourceSlug": "heading-in-the-right-direction",
+      "source": "docs/08-marcus/daily-email/letters-02/heading-in-the-right-direction.md",
+      "sha256": "a29591a4ff54ce70f9d20b126b902e2fcbfc05c302b307a2bc0814596d672ba5",
+      "preview": "html/heading-in-the-right-direction.html",
+      "bookingPreviewUrl": "http://127.0.0.1:5093/booking?edition=heading-in-the-right-direction-v1&version=1",
+      "status": "human-review-pending"
+    },
+    {
+      "editionId": "higher-calling-v3",
+      "version": 3,
+      "topicSlug": "what-is-my-higher-calling",
+      "sourceSlug": "what-is-my-higher-calling-v3",
+      "source": "docs/08-marcus/daily-email/letters-02/what-is-my-higher-calling-v3.md",
+      "sha256": "c372dc92ea881b71b05082474165896ccec4301cfc36869a222cd394ec2bda76",
+      "preview": "html/what-is-my-higher-calling-v3.html",
+      "bookingPreviewUrl": "http://127.0.0.1:5093/booking?edition=higher-calling-v3&version=3",
+      "status": "human-review-pending"
+    },
+    {
+      "editionId": "quiet-v2",
+      "version": 2,
+      "topicSlug": "why-they-go-quiet",
+      "sourceSlug": "why-they-go-quiet-v2",
+      "source": "docs/08-marcus/daily-email/letters-02/why-they-go-quiet-v2.md",
+      "sha256": "98e8ad4bcc94ae715606cf35217c6a162bea9fd8dd636e8e3159652310832fcb",
+      "preview": "html/why-they-go-quiet-v2.html",
+      "bookingPreviewUrl": "http://127.0.0.1:5093/booking?edition=quiet-v2&version=2",
+      "status": "human-review-pending"
+    },
+    {
+      "editionId": "whats-keeping-you-stuck-with-money-v1",
+      "version": 1,
+      "topicSlug": "whats-keeping-you-stuck-with-money",
+      "sourceSlug": "whats-keeping-you-stuck-with-money",
+      "source": "docs/08-marcus/daily-email/letters-02/whats-keeping-you-stuck-with-money.md",
+      "sha256": "474f3260cdea27240ff128a19e845d424da2d34a46c8b733d81334ea607667be",
+      "preview": "html/whats-keeping-you-stuck-with-money.html",
+      "bookingPreviewUrl": "http://127.0.0.1:5093/booking?edition=whats-keeping-you-stuck-with-money-v1&version=1",
+      "status": "human-review-pending"
+    },
+    {
+      "editionId": "what-gift-are-you-overlooking-v1",
+      "version": 1,
+      "topicSlug": "what-gift-are-you-overlooking",
+      "sourceSlug": "what-gift-are-you-overlooking",
+      "source": "docs/08-marcus/daily-email/letters-02/what-gift-are-you-overlooking.md",
+      "sha256": "493a2f9d9f05a2cc8400bf164632ab1a95bd5a16bc35a99ba4da76b57665f67a",
+      "preview": "html/what-gift-are-you-overlooking.html",
+      "bookingPreviewUrl": "http://127.0.0.1:5093/booking?edition=what-gift-are-you-overlooking-v1&version=1",
+      "status": "human-review-pending"
+    },
+    {
+      "editionId": "commitment-v2",
+      "version": 2,
+      "topicSlug": "why-wont-he-commit",
+      "sourceSlug": "why-wont-he-commit-v2",
+      "source": "docs/08-marcus/daily-email/letters-02/why-wont-he-commit-v2.md",
+      "sha256": "3a79d2a4fd571297266dfb1c9f818a1abd9be569bd9f62fbcccbe7b0c2194898",
+      "preview": "html/why-wont-he-commit-v2.html",
+      "bookingPreviewUrl": "http://127.0.0.1:5093/booking?edition=commitment-v2&version=2",
+      "status": "human-review-pending"
+    },
+    {
+      "editionId": "what-deserves-your-attention-v1",
+      "version": 1,
+      "topicSlug": "what-deserves-your-attention",
+      "sourceSlug": "what-deserves-your-attention",
+      "source": "docs/08-marcus/daily-email/letters-02/what-deserves-your-attention.md",
+      "sha256": "7601b4d54ba73adcc16f3cd325a8e4e75cacbd9d371f84ab3308dfe3ccf8e371",
+      "preview": "html/what-deserves-your-attention.html",
+      "bookingPreviewUrl": "http://127.0.0.1:5093/booking?edition=what-deserves-your-attention-v1&version=1",
+      "status": "human-review-pending"
+    },
+    {
+      "editionId": "seeing-love-clearly-v1",
+      "version": 1,
+      "topicSlug": "seeing-love-clearly",
+      "sourceSlug": "seeing-love-clearly",
+      "source": "docs/08-marcus/daily-email/letters-02/seeing-love-clearly.md",
+      "sha256": "217fa12aa48fa3d965d73fb2f018cf5d332f7d2a29cfaaddd9d692f336a6ccf7",
+      "preview": "html/seeing-love-clearly.html",
+      "bookingPreviewUrl": "http://127.0.0.1:5093/booking?edition=seeing-love-clearly-v1&version=1",
+      "status": "human-review-pending"
+    },
+    {
+      "editionId": "blind-spots-v2",
+      "version": 2,
+      "topicSlug": "what-are-my-blind-spots",
+      "sourceSlug": "what-are-my-blind-spots-v2",
+      "source": "docs/08-marcus/daily-email/letters-02/what-are-my-blind-spots-v2.md",
+      "sha256": "d19d7966ca44b1d2a3ffa3f8277cc797e7ffc4942086e3531af21abffe8bbd82",
+      "preview": "html/what-are-my-blind-spots-v2.html",
+      "bookingPreviewUrl": "http://127.0.0.1:5093/booking?edition=blind-spots-v2&version=2",
+      "status": "human-review-pending"
+    },
+    {
+      "editionId": "is-it-time-for-a-new-chapter-v1",
+      "version": 1,
+      "topicSlug": "is-it-time-for-a-new-chapter",
+      "sourceSlug": "is-it-time-for-a-new-chapter",
+      "source": "docs/08-marcus/daily-email/letters-02/is-it-time-for-a-new-chapter.md",
+      "sha256": "b7b827c58156eb26bec951a17881a853795a1057df362caef361133cfd00090d",
+      "preview": "html/is-it-time-for-a-new-chapter.html",
+      "bookingPreviewUrl": "http://127.0.0.1:5093/booking?edition=is-it-time-for-a-new-chapter-v1&version=1",
+      "status": "human-review-pending"
+    }
+  ]
+}

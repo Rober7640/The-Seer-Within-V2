@@ -67,6 +67,23 @@ describe('buildBackendPurchaseEvent', () => {
   });
 
   it('heart-cleanser (09) maps to funnel heartcleanser: booking = sales, upsells keep the funnel', () => {
+  it('08 Marcus maps to funnel marcusreading across the reading + audio upsell', () => {
+    const reading = buildBackendPurchaseEvent({
+      product: 'be_marcus_reading', offer: 'marcus-reading',
+      amountCents: 3500, email: 'x@y.com', dedupeId: 'cs_m1',
+    });
+    assert.equal(reading.properties.funnel, 'marcusreading');
+    assert.equal(reading.properties.step, 'sales');
+    const audio = buildBackendPurchaseEvent({
+      product: 'be_08_marcus_audio', offer: 'marcus-reading',
+      amountCents: 1700, email: 'x@y.com', dedupeId: 'pi_m1',
+    });
+    assert.equal(audio.properties.funnel, 'marcusreading');
+    assert.equal(audio.properties.step, 'upsell1');
+    assert.equal(audio.properties.amount_cents, 1700);
+  });
+
+  it('judgement-day (03) maps to funnel judgement across booking + both upsells', () => {
     const booking = buildBackendPurchaseEvent({
       product: 'be_heart_cleanser', offer: 'heart-cleanser',
       amountCents: 5900, email: 'x@y.com', dedupeId: 'cs_hc',

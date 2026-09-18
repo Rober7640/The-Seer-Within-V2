@@ -1,0 +1,55 @@
+<!--
+  08 Marcus — READING READY delivery email
+  AWeber list 6975749 (theseerwithin_be_marcus_reading) · trigger tag: be-08-reading-ready
+  Merge fields (AWeber Liquid, account 442730):
+    {{ subscriber.first_name | capitalize }}          -> buyer first name
+    {{ subscriber.custom_fields.m8_reading_url }}      -> the PDF link (written by n8n node 35)
+  ⚠ VERIFY the custom-field tag in AWeber: open the message editor, use the "Personalize"
+    dropdown and insert the m8_reading_url field so the exact tag matches your account.
+  Subject:   Your personal reading is ready, {{ subscriber.first_name | capitalize }}
+  Preheader: Marcus has finished your personal reading — it's ready to read.
+-->
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0;padding:0;background:#f6f1e6;">
+  <tr>
+    <td align="center" style="padding:28px 12px;">
+      <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="width:600px;max-width:100%;background:#ffffff;border:1px solid #e4dcc8;">
+        <tr>
+          <td style="background:#302c24;padding:22px 32px;">
+            <div style="font:700 11px/1 Arial,sans-serif;letter-spacing:2.5px;color:#ddc692;text-transform:uppercase;">Marcus Stone</div>
+            <div style="font:11px/1 Arial,sans-serif;letter-spacing:1.5px;color:#a99873;text-transform:uppercase;margin-top:6px;">Personal Tarot Reading</div>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:34px 32px 8px;">
+            <h1 style="margin:0 0 18px;font:400 28px/1.2 Georgia,'Times New Roman',serif;color:#302a22;">Your reading is ready.</h1>
+            <p style="margin:0 0 16px;font:15px/1.6 Georgia,serif;color:#3c352b;">{{ subscriber.first_name | capitalize }},</p>
+            <p style="margin:0 0 16px;font:15px/1.6 Georgia,serif;color:#3c352b;">
+              I've finished your personal reading — drawn against your birth name and date of birth, and the cards you were dealt. The two cards you first saw in your email are here too, and the rest of the spread is read out in full.
+            </p>
+          </td>
+        </tr>
+        <tr>
+          <td align="center" style="padding:14px 32px 26px;">
+            <table role="presentation" cellpadding="0" cellspacing="0"><tr>
+              <td style="background:#8a6c38;">
+                <a href="{{ subscriber.custom_fields.m8_reading_url }}" style="display:inline-block;padding:15px 40px;font:700 14px/1 Arial,sans-serif;letter-spacing:1px;color:#ffffff;text-decoration:none;text-transform:uppercase;">Read your reading</a>
+              </td>
+            </tr></table>
+            <p style="margin:16px 0 0;font:12px/1.5 Arial,sans-serif;color:#8a7d63;">or paste this link into your browser:<br><span style="color:#8a6c38;">{{ subscriber.custom_fields.m8_reading_url }}</span></p>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:0 32px 30px;">
+            <p style="margin:0 0 16px;font:15px/1.6 Georgia,serif;color:#3c352b;">Take your time with it. A reading like this is meant to be read once slowly, then again a week later against what actually happened.</p>
+            <p style="margin:0;font:italic 20px/1.3 Georgia,serif;color:#79633c;">Marcus</p>
+          </td>
+        </tr>
+        <tr>
+          <td style="background:#f6f1e6;border-top:1px solid #e4dcc8;padding:18px 32px;font:11px/1.6 Arial,sans-serif;color:#9a8f78;">
+            You're receiving this because you purchased a personal reading from Marcus Stone.
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
