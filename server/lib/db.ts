@@ -1,6 +1,6 @@
 import { drizzle } from "drizzle-orm/node-postgres";
 import pg from "pg";
-import { conversations, type Conversation, type InsertConversation } from "@shared/schema";
+import { conversations, type Conversation, type InsertConversation, type PaymentGateway } from "@shared/schema";
 import { eq, desc, sql } from "drizzle-orm";
 import logger from "./logger";
 import { activeStripeAccountTag } from "./stripeAccount";
@@ -218,6 +218,14 @@ export async function markPurchased(email: string, purchaseType: "main" | "downs
 export async function updateStripeData(
   email: string,
   stripeData: {
+    /**
+     * REQUIRED. Which processor took the money — the ONLY thing that separates a
+     * Stripe row from a Payments.AI one, because both write the three `stripe*`
+     * id columns below and Payments.AI customers are also `cus_`-prefixed. The
+     * 50/50 gateway test reads this column, so a default here would be a guess
+     * about revenue attribution. Three call sites; tsc keeps the fourth honest.
+     */
+    paymentGateway: PaymentGateway;
     stripeSessionId: string;
     stripeCustomerId: string;
     stripePaymentMethodId?: string;
@@ -252,10 +260,14 @@ export async function updateStripeData(
       await db
         .update(conversations)
         .set({
+          paymentGateway: stripeData.paymentGateway,
           stripeSessionId: stripeData.stripeSessionId,
           stripeCustomerId: stripeData.stripeCustomerId,
           stripePaymentMethodId: stripeData.stripePaymentMethodId,
-          stripeAccount: activeStripeAccountTag(),
+          // Only a Stripe sale has a Stripe account. Stamping the active tag on a
+          // Payments.AI row would claim its ids resolve against a Stripe account
+          // they were never created in. Identical behaviour for Stripe rows.
+          stripeAccount: stripeData.paymentGateway === 'stripe' ? activeStripeAccountTag() : null,
           mainPurchaseAmount: stripeData.mainPurchaseAmount,
           bumpOffered: stripeData.bumpOffered,
           bumpPurchased: stripeData.bumpPurchased,
@@ -271,10 +283,12 @@ export async function updateStripeData(
           email: email,
           firstName: userData?.firstName || 'Friend',
           bucket: userData?.bucket,
+          paymentGateway: stripeData.paymentGateway,
           stripeSessionId: stripeData.stripeSessionId,
           stripeCustomerId: stripeData.stripeCustomerId,
           stripePaymentMethodId: stripeData.stripePaymentMethodId,
-          stripeAccount: activeStripeAccountTag(),
+          // See the UPDATE branch above — a Payments.AI row gets no Stripe account.
+          stripeAccount: stripeData.paymentGateway === 'stripe' ? activeStripeAccountTag() : null,
           mainPurchaseAmount: stripeData.mainPurchaseAmount,
           bumpOffered: stripeData.bumpOffered,
           bumpPurchased: stripeData.bumpPurchased,

@@ -3,6 +3,14 @@ import { pgTable, text, varchar, boolean, integer, timestamp, real, jsonb, index
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
+/**
+ * Which payment processor took the money. Added 2026-09-18 for the 50/50
+ * Stripe-vs-Payments.AI split: both processors write the same `stripe_*` id
+ * columns, so this is the only thing that separates the two arms when the test
+ * is read. See `conversations.paymentGateway`.
+ */
+export type PaymentGateway = 'stripe' | 'paymentsai';
+
 export const conversations = pgTable("conversations", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   email: text("email").notNull(),
@@ -24,6 +32,18 @@ export const conversations = pgTable("conversations", {
   conversationState: text("conversation_state"),
   messages: text("messages"),
   
+  // Which processor actually took the money on this row: 'stripe' | 'paymentsai'.
+  // NULL = rows written before 2026-09-18, every one of which is Stripe — but read
+  // it as "unknown, assume stripe", never as a Payments.AI sale.
+  //
+  // 🔴 THE THREE COLUMNS BELOW ARE SHARED BY BOTH PROCESSORS. Payments.AI has no
+  // session object, so its `txn_…` transaction id takes stripe_session_id's place,
+  // its `cus_…` customer takes stripe_customer_id, and its `inst_…` instrument takes
+  // stripe_payment_method_id. Nothing is lost — but you CANNOT tell the processors
+  // apart from those values: Payments.AI customers are ALSO `cus_`-prefixed. This
+  // column is the only reliable discriminator, and the 50/50 gateway test reads it.
+  paymentGateway: text("payment_gateway"),
+
   // Stripe fields
   stripeSessionId: text("stripe_session_id"),
   stripeCustomerId: text("stripe_customer_id"),

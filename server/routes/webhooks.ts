@@ -900,6 +900,8 @@ router.post('/stripe', async (req: Request, res: Response) => {
       amountCents: session.amount_total ?? 0,
       stripeSessionId: session.id,
       email,
+      // This handler IS the Stripe webhook — it can never see a Payments.AI sale.
+      paymentGateway: 'stripe',
     });
     if (purchaseEvent) {
       posthog.capture(purchaseEvent);
