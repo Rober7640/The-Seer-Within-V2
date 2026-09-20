@@ -25,6 +25,7 @@
 // this only fixes what PostHog can see.
 
 import { funnelDefForParam } from '@shared/funnelConfig';
+import type { PaymentGateway } from '@shared/schema';
 
 interface TrackedProduct {
   funnel: 'soulmate' | null;
@@ -43,6 +44,15 @@ export const TRACKED_PRODUCTS: Record<string, TrackedProduct> = {
   manifestation_bracelet: { funnel: null,       step: 'upsell2', product: 'manifestation_bracelet' },
 };
 
+/**
+ * What `payment_method` reports per processor. 'stripe_checkout' is pinned by the
+ * regression tests and by every existing PostHog insight — it must not drift.
+ */
+const PAYMENT_METHOD: Record<PaymentGateway, string> = {
+  stripe: 'stripe_checkout',
+  paymentsai: 'paymentsai',
+};
+
 export interface PurchaseEventInput {
   /** Stripe session metadata.product. Unknown/absent → no event. */
   product?: string;
@@ -50,8 +60,22 @@ export interface PurchaseEventInput {
   metadata: Record<string, string | undefined>;
   /** session.amount_total — the amount ACTUALLY charged, not the assigned price. */
   amountCents: number;
+  /**
+   * The processor's durable handle for this sale. A Stripe `cs_…` checkout session
+   * id, or — on Payments.AI, which has no session object — the `txn_…` transaction
+   * id. The KEY IS NOT RENAMED on the emitted event: existing PostHog insights
+   * filter on `stripe_session_id` and must keep working.
+   */
   stripeSessionId: string;
   email: string;
+  /**
+   * Which processor actually took the money. REQUIRED, deliberately: before the
+   * 50/50 split this was the hardcoded literal 'stripe_checkout', so a Payments.AI
+   * sale would have reported as a Stripe one and the test would have been
+   * unreadable. A default here would be a guess about revenue — tsc refusing a new
+   * call site that hasn't decided is the point.
+   */
+  paymentGateway: PaymentGateway;
 }
 
 export interface PurchaseEvent {
@@ -78,10 +102,17 @@ export function buildPurchaseEvent(input: PurchaseEventInput): PurchaseEvent | n
       funnel: funnelValue,
       step: info.step,
       product: info.product,
-      payment_method: 'stripe_checkout',
+      payment_method: PAYMENT_METHOD[input.paymentGateway],
       amount_cents: input.amountCents,
       stripe_session_id: input.stripeSessionId,
       email: input.email,
+
+      // ── Added 2026-09-18 for the 50/50 Stripe vs Payments.AI split. ADDITIVE, on
+      // the same rule as the sliding-close keys below: nothing is renamed or removed,
+      // so every insight keyed on the properties above keeps working. Without this
+      // there is no property that separates the two arms — `stripe_session_id` holds
+      // a `cs_…` or a `txn_…` and telling them apart by prefix is guesswork.
+      payment_gateway: input.paymentGateway,
       // No-optin arm marker so purchases are filterable/comparable in PostHog
       // (email_gate=off = no-email lander). Derived from the session metadata.
       email_gate: md.noemail === '1' ? 'off' : 'on',

@@ -541,6 +541,52 @@ async function fulfilBe08OnPayment(row: BeOrder, sessionId: string, be08: Be08Pr
   }
 }
 
+// 08 Marcus confirmation + delivery emails merge per-order custom fields. Build them from
+// the edition she bought — the question, the spread's name, the paid-card count as a word —
+// plus the delivery window her bump chose (12h vs 24h). Reading-list only; every other offer
+// gets `undefined` and writes nothing extra. A lookup miss returns `undefined` so the write
+// still lands (a blank merge beats losing the subscriber).
+const PAID_COUNT_WORDS = [
+  'zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten',
+  'eleven', 'twelve', 'thirteen', 'fourteen', 'fifteen',
+];
+const paidCountWord = (n: number): string => PAID_COUNT_WORDS[n] ?? String(n);
+
+async function marcus08ContentFields(row: BeOrder): Promise<Record<string, string> | undefined> {
+  if (row.offer !== 'marcus-reading' || !row.editionId) return undefined;
+  const version = row.editionVersion != null ? Number(row.editionVersion) : null;
+  const edition = await getBe08Edition(
+    row.editionId,
+    Number.isFinite(version) ? version : null,
+  ).catch(() => null);
+  if (!edition) return undefined;
+  const paidCount = edition.positions.filter((p) => p.visibility === 'paid').length;
+  return {
+    m8_question: edition.question,
+    m8_spread: edition.spread.name,
+    m8_paid_count: paidCountWord(paidCount),
+    m8_hours: row.bumpPurchased ? '12' : '24',
+  };
+}
+
+/**
+ * The subset the AUDIO list's confirmation email merges — `m8_question` + `m8_hours`.
+ * Looked up from the booking order the audio upsell references (its `originalSession`),
+ * since the audio charge itself carries no edition. ⛔ Only these two — the audio list
+ * does not hold `m8_spread` / `m8_paid_count`, and an unknown field loses the subscriber.
+ * `undefined` on any miss (not a Marcus order, no edition, lookup failure).
+ */
+export async function marcusAudioContentFields(
+  bookingSessionId: string,
+): Promise<Record<string, string> | undefined> {
+  if (!bookingSessionId) return undefined;
+  const row = await getBeOrderBySession(bookingSessionId).catch(() => null);
+  if (!row) return undefined;
+  const all = await marcus08ContentFields(row);
+  if (!all) return undefined;
+  return { m8_question: all.m8_question, m8_hours: all.m8_hours };
+}
+
 /**
  * Put her on the backend customer list, unless that already happened.
  *
@@ -570,6 +616,10 @@ export async function writeToCustomerList(
     return stamp(row, 'no email on the session');
   }
 
+  // 08 Marcus: the per-order fields the confirmation/delivery emails merge (question,
+  // spread, paid count, 12/24h). undefined for every other offer.
+  const contentFields = await marcus08ContentFields(row);
+
   const result = await addBackendCustomer({
     email: row.email,
     firstName: row.firstName || undefined,
@@ -580,6 +630,7 @@ export async function writeToCustomerList(
     bumpPurchased: row.bumpPurchased,
     // ⚠ Sent only when that screen exists — see `entryPath` in shared/backendOffers.ts.
     entryUrl: entryUrlFor(listing, row),
+    contentFields,
   }).catch((err) => ({
     success: false as const,
     error: err instanceof Error ? err.message : 'unknown error',

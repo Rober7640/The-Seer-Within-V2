@@ -457,14 +457,24 @@ router.post('/upsell/fallback-checkout', async (req: Request, res: Response) => 
     // receipt. The next page reads the BOOKING session_id, exactly as the 1-click path.
     const upsellBase = catalog.upsellEntryPath.replace(/\/welcome1$/, '');
     const isUpsell2 = productKey === 'be_bracelet';
+    // 08 Marcus's chain is bridge → welcome1 → success — there is NO welcome2, and its
+    // upsellEntryPath is the bridge, so welcome1 can't be derived from upsellBase. Derive
+    // the reading root from the receipt path instead; buy AND decline both land on the
+    // receipt (which reads `s`), decline routing back to welcome1.
+    const isMarcusAudio = offer === 'marcus-reading';
+    const marcusRoot = catalog.successPath.replace(/\/success$/, '');
     const origin = baseUrl(req);
     const sid = encodeURIComponent(sessionId);
-    const successUrl = isUpsell2
+    const successUrl = isMarcusAudio
+      ? `${origin}${catalog.successPath}?s=${sid}&fallback_session_id={CHECKOUT_SESSION_ID}`
+      : isUpsell2
       // The two offers' thank-you pages read different params by design — Judgement Day
       // reads `s`, Twin Flame reads `session_id`. Carry BOTH so either resolves the order.
       ? `${origin}${catalog.successPath}?s=${sid}&session_id=${sid}&fallback_session_id={CHECKOUT_SESSION_ID}`
       : `${origin}${upsellBase}/welcome2?session_id=${sid}&fallback_session_id={CHECKOUT_SESSION_ID}`;
-    const cancelUrl = isUpsell2
+    const cancelUrl = isMarcusAudio
+      ? `${origin}${marcusRoot}/welcome1?session_id=${sid}&declined=true`
+      : isUpsell2
       ? `${origin}${upsellBase}/welcome2?session_id=${sid}&declined=true`
       : `${origin}${upsellBase}/welcome1?session_id=${sid}&declined=true`;
 
@@ -501,9 +511,14 @@ router.post('/upsell/fallback-checkout', async (req: Request, res: Response) => 
       // shipper reads it off the Stripe payment (same as the 1-click path's shipping).
       // Worldwide (Joel, 2026-09-16): 09 ships everywhere, so its buyer must be able to
       // give an address for a shipped upsell too. Same list the 09 booking checkout uses.
-      shipping_address_collection: {
-        allowed_countries: STRIPE_ALLOWED_COUNTRIES as StripeAllowedCountry[],
-      },
+      // ⛔ The 08 audio upsell is DIGITAL — no parcel, so it collects no address at all.
+      ...(isMarcusAudio
+        ? {}
+        : {
+            shipping_address_collection: {
+              allowed_countries: STRIPE_ALLOWED_COUNTRIES as StripeAllowedCountry[],
+            },
+          }),
       success_url: successUrl,
       cancel_url: cancelUrl,
       payment_intent_data: { description, metadata: beMeta },
@@ -777,6 +792,24 @@ router.post('/checkout', async (req: Request, res: Response) => {
       // (its catalog `shippingCountries`).
       ...(offer.collectsShipping
         ? { shipping_address_collection: { allowed_countries: shippingCountriesFor(offer) } }
+        : {}),
+      // Generic: an offer may ask short, NON-personal questions on Stripe's own page. All
+      // required, all free text. ⛔ Keys are read back by the webhook — see the catalog.
+      // No live offer uses this today (08 moved its three personal fields onto the booking
+      // page, 2026-09-14 — Stripe forbids personal data in custom fields).
+      ...(offer.checkoutCustomFields?.length
+        ? {
+            custom_fields: offer.checkoutCustomFields.map((f) => ({
+              key: f.key,
+              label: { type: 'custom' as const, custom: f.label },
+              type: 'text' as const,
+              optional: false,
+              text: {
+                maximum_length: f.maxLength,
+                ...(f.minLength ? { minimum_length: f.minLength } : {}),
+              },
+            })),
+          }
         : {}),
       // Generic: an offer may ask short, NON-personal questions on Stripe's own page. All
       // required, all free text. ⛔ Keys are read back by the webhook — see the catalog.

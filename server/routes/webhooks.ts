@@ -13,7 +13,7 @@ import * as paypal from '../lib/paypal';
 import { fireV2PurchaseEvent, fireStripePurchaseEvent } from '../lib/facebook';
 import { buildPurchaseEvent } from '../lib/purchaseAnalytics';
 import { recordBraceletOrder } from '../lib/braceletOrders';
-import { recordBackendOrder } from '../lib/beOrders';
+import { recordBackendOrder, marcusAudioContentFields } from '../lib/beOrders';
 import { addBackendUpsellCustomer } from '../lib/aweber';
 import { backendUpsellFor } from '../lib/backendCustomerList';
 import { buildBackendPurchaseEvent, utmsFromMetadata } from '../lib/backendPurchaseAnalytics';
@@ -901,6 +901,8 @@ router.post('/stripe', async (req: Request, res: Response) => {
       amountCents: session.amount_total ?? 0,
       stripeSessionId: session.id,
       email,
+      // This handler IS the Stripe webhook — it can never see a Payments.AI sale.
+      paymentGateway: 'stripe',
     });
     if (purchaseEvent) {
       posthog.capture(purchaseEvent);
@@ -1068,11 +1070,21 @@ router.post('/stripe', async (req: Request, res: Response) => {
           session.customer_details?.email || session.customer_email || metadata.email || null;
         if (upsellEmail) {
           const offer = resolveOfferKey(metadata) ?? 'twin-flame';
+          // 08 audio: the confirmation email on the audio list merges m8_question + m8_hours,
+          // looked up from the booking order this upsell references.
+          const audioFields =
+            beUpsell.productKey === 'be_08_marcus_audio'
+              ? await marcusAudioContentFields(metadata.originalSession ?? '')
+              : undefined;
           await addBackendUpsellCustomer({
             email: upsellEmail,
             firstName: metadata.firstName,
             productKey: beUpsell.productKey,
             offer,
+            // The booking session id, so the audio write carries the same order_id as
+            // the reading/bump writes (offers with an orderIdField — 08 Marcus).
+            orderId: metadata.originalSession,
+            contentFields: audioFields,
           }).catch((err) =>
             logger.error('BE upsell fallback list write FAILED — buyer paid:', err),
           );
@@ -1286,11 +1298,20 @@ router.post('/stripe', async (req: Request, res: Response) => {
       await recordBackendUpsellOrder(pi); // idempotent, self-logging, never throws
       if (metadata.email) {
         const offer = resolveOfferKey(metadata) ?? 'twin-flame';
+        // 08 audio: audio-list confirmation merges m8_question + m8_hours, from the booking order.
+        const audioFields =
+          beUpsell.productKey === 'be_08_marcus_audio'
+            ? await marcusAudioContentFields(metadata.originalSession ?? '')
+            : undefined;
         await addBackendUpsellCustomer({
           email: metadata.email,
           firstName: metadata.firstName,
           productKey: beUpsell.productKey,
           offer,
+          // Booking session id (the 1-click charge stamps it as originalSession), so the
+          // audio write shares one order_id with the reading/bump writes (08 Marcus).
+          orderId: metadata.originalSession,
+          contentFields: audioFields,
         }).catch((err) =>
           logger.error('BE upsell list write FAILED — buyer paid, may miss her email', {
             pi: pi.id,

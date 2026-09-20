@@ -1,6 +1,6 @@
 import { drizzle } from "drizzle-orm/node-postgres";
 import pg from "pg";
-import { conversations, type Conversation, type InsertConversation } from "@shared/schema";
+import { conversations, type Conversation, type InsertConversation, type PaymentGateway } from "@shared/schema";
 import { eq, desc, sql } from "drizzle-orm";
 import logger from "./logger";
 import { activeStripeAccountTag } from "./stripeAccount";
@@ -218,6 +218,14 @@ export async function markPurchased(email: string, purchaseType: "main" | "downs
 export async function updateStripeData(
   email: string,
   stripeData: {
+    /**
+     * REQUIRED. Which processor took the money — the ONLY thing that separates a
+     * Stripe row from a Payments.AI one, because both write the three `stripe*`
+     * id columns below and Payments.AI customers are also `cus_`-prefixed. The
+     * 50/50 gateway test reads this column, so a default here would be a guess
+     * about revenue attribution. Three call sites; tsc keeps the fourth honest.
+     */
+    paymentGateway: PaymentGateway;
     stripeSessionId: string;
     stripeCustomerId: string;
     stripePaymentMethodId?: string;
@@ -252,9 +260,17 @@ export async function updateStripeData(
       await db
         .update(conversations)
         .set({
+          paymentGateway: stripeData.paymentGateway,
           stripeSessionId: stripeData.stripeSessionId,
           stripeCustomerId: stripeData.stripeCustomerId,
           stripePaymentMethodId: stripeData.stripePaymentMethodId,
+          // ⚠️ MEANINGLESS ON A PAYMENTS.AI ROW, deliberately left that way. Those
+          // ids resolve against no Stripe account, so 'A' here is a lie — but
+          // markUpsellPurchased/markUpsell2Purchased re-stamp this field
+          // unconditionally from eight call sites on the LIVE Stripe path, so
+          // conditioning it here only made the value INCONSISTENT (null without
+          // upsells, 'A' with them — observed on the 18 Sep dev smoke test).
+          // Read payment_gateway to tell the processors apart; never this.
           stripeAccount: activeStripeAccountTag(),
           mainPurchaseAmount: stripeData.mainPurchaseAmount,
           bumpOffered: stripeData.bumpOffered,
@@ -271,9 +287,12 @@ export async function updateStripeData(
           email: email,
           firstName: userData?.firstName || 'Friend',
           bucket: userData?.bucket,
+          paymentGateway: stripeData.paymentGateway,
           stripeSessionId: stripeData.stripeSessionId,
           stripeCustomerId: stripeData.stripeCustomerId,
           stripePaymentMethodId: stripeData.stripePaymentMethodId,
+          // See the UPDATE branch above — meaningless on a Payments.AI row, and
+          // left that way on purpose. payment_gateway is the discriminator.
           stripeAccount: activeStripeAccountTag(),
           mainPurchaseAmount: stripeData.mainPurchaseAmount,
           bumpOffered: stripeData.bumpOffered,

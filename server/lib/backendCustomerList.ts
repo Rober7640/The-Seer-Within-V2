@@ -63,6 +63,24 @@ export interface BackendOfferListing {
    * single initial write (the old one-list behaviour).
    */
   bumpListId?: string;
+  /**
+   * The name of the ONE AWeber custom field these lists carry for the order id
+   * (08 Marcus: `order_id`, holding the Stripe checkout session id). When set, the
+   * deck's default fields (`stripe_order_id`, `offer`, `entry_url`) are NOT sent —
+   * these lists do not have them, and AWeber drops the whole subscriber on an
+   * unknown field — and this one field is written on EVERY list (reading, bump AND
+   * the audio upsell) so all of a customer's writes share one id. Unset → the
+   * default per-offer fields on the initial list only (02/03/06).
+   */
+  orderIdField?: string;
+  /**
+   * When true, the order-bump tag (`bumpTag`) is ALSO applied to the reading (initial)
+   * list write for a bump buyer — 08 Marcus. It lets the reading list's delivery campaign
+   * detect a 12-hour customer (an if-condition on the tag) and STOP its own 24-hour
+   * delivery, so only the faster order-bump-list delivery sends. Off for offers whose bump
+   * is a product, not a delivery-speed upgrade.
+   */
+  bumpTagOnInitial?: boolean;
 }
 
 /** One AWeber write a purchase produces: which list, which tags, and its role. */
@@ -129,19 +147,21 @@ export const BACKEND_OFFERS: Record<BackendOfferKey, BackendOfferListing> = {
   // ⭐ 08 — Marcus Stone's one-time personal reading. NOT 07: its own tags, so the 07
   // Campaigns (filtered on be-07-*) never fire for an 08 buyer.
   //
-  // Lists: 08 REUSES the shared BE lists exactly as 03 and 06 do — initial 6972552,
-  // bump 6972554 — distinguished only by TAG (be-08-*). ⚠ Copied from 03/06, not
-  // decided for 08: the plan's D4 recommends Resend for the four 08 messages, in which
-  // case the AWeber write is a customer-list record and not the send. If a per-product
-  // list is ever created for 08, replace the two ids here; nothing else reads them.
+  // Lists: 08 has its OWN per-product AWeber lists (unlike 03/06, which reuse the shared
+  // BE lists) — the reading list 6975749 and the order-bump list 6975750. Each carries a
+  // single custom field, `order_id`, holding the Stripe checkout session id (see
+  // `orderIdField`); it does NOT have the deck's stripe_order_id/offer fields. The audio
+  // upsell has its own list too (be_08_marcus_audio → 6975753, in BACKEND_UPSELLS).
   'marcus-reading': {
     number: '08',
     name: 'Marcus Personal Reading',
     tag: 'be-08',
     bumpTag: 'be-08-speed',
     deliveredTag: 'be-08-delivered',
-    initialListId: '6972552',
-    bumpListId: '6972554',
+    initialListId: '6975749',
+    bumpListId: '6975750',
+    orderIdField: 'order_id',
+    bumpTagOnInitial: true,
   },
   // ⭐ 09 — the Heart Cleanser Love Charm. A physical object with NO reading, so no delivered
   // tag. Campaign triggers: the purchase tag (thank-you), the SHIPPED tag (tracking email,
@@ -194,6 +214,9 @@ export function purchaseListWrites(
         tags: [BE_CUSTOMER_TAG, listing.tag, listing.bumpTag],
         role: 'bump',
       });
+      // 08 Marcus: also stamp the bump tag on the reading-list entry so its delivery
+      // campaign can detect a 12-hour customer and suppress its own 24-hour send.
+      if (listing.bumpTagOnInitial) writes[0].tags.push(listing.bumpTag);
     } else {
       writes[0].tags.push(listing.bumpTag);
     }
@@ -244,6 +267,22 @@ export const BACKEND_UPSELLS: Record<string, BackendUpsellListing> = {
     tagSuffix: 'upsell2-bracelet',
     priceCents: 4700,
     downsellCents: 3000,
+  },
+  // ⭐ 08 — the audio recording of Marcus's personal reading. A DIGITAL product
+  // (no shipping), unlike the two physical be_ upsells above. Its own `be_`
+  // product key so it is invisible to every V1 webhook branch, and — as with the
+  // reading itself — n8n fulfils it by exact-matching this key on the Stripe event.
+  // Its OWN AWeber list, 6975753 (theseerwithin_be_marcus_audio), carrying the single
+  // `order_id` custom field — the Stripe booking session id, the SAME value written to
+  // the reading + bump lists, so a customer's three writes share one id (the offer's
+  // `orderIdField` drives this). Price $17 (Joel 2026-09-13) — the T8 catalog price.
+  be_08_marcus_audio: {
+    productKey: 'be_08_marcus_audio',
+    name: 'Marcus Audio Reading',
+    listId: '6975753',
+    tag: 'be-08-upsell1-audio',
+    tagSuffix: 'upsell1-audio',
+    priceCents: 1700,
   },
 };
 

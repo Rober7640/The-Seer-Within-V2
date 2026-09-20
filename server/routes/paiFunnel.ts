@@ -51,6 +51,9 @@ import {
 } from '../lib/paymentsai';
 import { writeSoulmateSubscriber } from '../lib/aweber';
 import { updateStripeData, markUpsellPurchased, markUpsell2Purchased } from '../lib/db';
+import { posthog } from '../lib/posthog';
+import { buildPurchaseEvent } from '../lib/purchaseAnalytics';
+import type { FunnelParam } from '@shared/funnelConfig';
 
 const router = Router();
 
@@ -60,6 +63,52 @@ const PAI_TAG = 'paymentsAI';
 /** The dummy lander this mirrors. */
 const PAI_HOOK = 'cards-after-marriage';
 const PAI_FUNNEL = 'fb-tarot';
+
+/**
+ * The PostHog funnel this lander's purchases belong to, as a real `FunnelParam`.
+ *
+ * 🔴 DELIBERATELY NOT `PAI_FUNNEL`. That constant is the loose lander label
+ * ('fb-tarot') reported by /config and sent in the provider metadata. It is NOT a
+ * FunnelParam — `funnelDefForParam('fb-tarot')` returns null and the event would
+ * silently report funnel='v1'. The live Stripe tarot arm reports funnel='tarot',
+ * so using PAI_FUNNEL here would file the two arms of the 50/50 test into
+ * DIFFERENT PostHog funnels while looking perfectly fine in the payload.
+ */
+const PAI_POSTHOG_FUNNEL: FunnelParam = 'v1-tarot';
+
+/**
+ * Emit the PostHog `purchase_completed` event for a Payments.AI sale.
+ *
+ * 🔴 Before 2026-09-18 this funnel emitted NOTHING, so every Payments.AI sale was
+ * invisible in PostHog — a 50/50 gateway test would have shown revenue for the
+ * Stripe arm only and read as a catastrophic loss for Payments.AI. Same builder as
+ * the Stripe webhook so the two arms are directly comparable; `paymentGateway` is
+ * what separates them.
+ */
+function capturePaiPurchase(args: {
+  metadata: Record<string, string>;
+  amountCents: number;
+  transactionId: string;
+  email: string;
+}): void {
+  try {
+    const event = buildPurchaseEvent({
+      product: args.metadata.product,
+      // Override the lander label with a real FunnelParam — see PAI_POSTHOG_FUNNEL.
+      metadata: { ...args.metadata, funnel: PAI_POSTHOG_FUNNEL },
+      amountCents: args.amountCents,
+      // Payments.AI has no session; the txn id rides in the stripe_session_id
+      // property, whose KEY is deliberately unchanged so existing insights work.
+      stripeSessionId: args.transactionId,
+      email: args.email,
+      paymentGateway: 'paymentsai',
+    });
+    if (event) posthog.capture(event);
+  } catch (err) {
+    // Analytics must never fail a charge that already succeeded.
+    logger.error(`[pai] posthog capture failed: ${String(err)}`);
+  }
+}
 
 /** Hosts this must never serve on, whatever the environment claims to be. */
 const FORBIDDEN_HOSTS = [
@@ -391,6 +440,11 @@ router.post('/checkout', async (req: Request, res: Response) => {
         await updateStripeData(
           email,
           {
+            // 🔴 THE DISCRIMINATOR. Without it this row cannot be told from a Stripe
+            // one: the three id columns below are shared by both processors, and
+            // Payments.AI customer ids are ALSO `cus_`-prefixed. The 50/50 revenue
+            // comparison reads this column and nothing else.
+            paymentGateway: 'paymentsai',
             // Payments.AI has no session object; the transaction id is the only
             // durable handle, so it takes the session column's place.
             stripeSessionId: settled.id,
@@ -412,6 +466,16 @@ router.post('/checkout', async (req: Request, res: Response) => {
       } catch (err) {
         logger.error(`[pai] DB write failed: ${String(err)}`);
       }
+
+      // PostHog — the 50/50 test's revenue for this arm. amountCents is what was
+      // ACTUALLY charged (bump included), matching session.amount_total on the
+      // Stripe side so the two arms are comparable.
+      capturePaiPurchase({
+        metadata,
+        amountCents: totalCents,
+        transactionId: settled.id,
+        email,
+      });
 
       // AWeber — the REAL soulmate lists, with the paymentsAI tag added
       // alongside the existing ones. Safe because those lists carry thank-you
@@ -543,6 +607,15 @@ async function chargeUpsell(
     } catch (err) {
       logger.error(`[pai] ${opts.label} DB write failed: ${String(err)}`);
     }
+
+    // PostHog for the upsell leg. The agreed A/B design splits the UPSELL CHARGE,
+    // so this is the arm's headline number — it must not be missing.
+    capturePaiPurchase({
+      metadata,
+      amountCents: cents,
+      transactionId: settled.id,
+      email,
+    });
     aweber = await writeSoulmateSubscriber({
       listId: opts.awebeListId || '',
       listLabel: `${opts.awebeLabel} (PAI dev)`,

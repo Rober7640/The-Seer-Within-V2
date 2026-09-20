@@ -291,7 +291,10 @@ export default function MarcusBooking() {
     setBusy(true)
     const totalCents = sameDay ? BOOKING_PRICE + BOOKING_BUMP : BOOKING_PRICE
     trackPH('checkout_initiated', {
-      funnel: 'marcus-reading',
+      // The funnel identifier must match the server's purchase_completed value
+      // (BACKEND_FUNNEL['marcus-reading'] = 'marcusreading') so the whole Marcus funnel
+      // filters as ONE in PostHog — the same convention Twin Flame uses ('twinflame').
+      funnel: 'marcusreading',
       step: 'booking',
       product: 'be_marcus_reading',
       price_cents: totalCents,

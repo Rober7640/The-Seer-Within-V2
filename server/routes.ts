@@ -1311,6 +1311,8 @@ export async function registerRoutes(
           await updateStripeData(
             email,
             {
+              // Stripe Checkout path. The Payments.AI funnel writes its own row.
+              paymentGateway: 'stripe',
               stripeSessionId: session.id,
               stripeCustomerId: customer.id,
               // MAIN OFFER ONLY — deliberately excludes the bump even on a bump
@@ -1991,6 +1993,8 @@ export async function registerRoutes(
               await updateStripeData(
                 email,
                 {
+                  // Stripe fallback/recovery path — always Stripe by construction.
+                  paymentGateway: 'stripe',
                   stripeSessionId: sessionId,
                   stripeCustomerId: customerId || "",
                   mainPurchaseAmount: stripeSession.amount_total || 3500,
