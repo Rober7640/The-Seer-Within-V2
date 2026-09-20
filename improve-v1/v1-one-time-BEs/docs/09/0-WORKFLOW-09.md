@@ -9,7 +9,7 @@ See [README.md](README.md). File names are unchanged; only their folders moved.
 | Folder | What's in it |
 |---|---|
 | `booking-page/` | `09-C1` offer page + tick audit/rewrite, `09-C3` Reiki bump, `09-T1` receipt page |
-| `sales-emails/` | emails 1–3 (`09-E2`–`09-E6`) with builds, `AWeber-handoff.md` |
+| `sales-emails/` | the 3 final HTML/text builds + `AWeber-handoff.md`; copy drafts in `sales-emails/md/` |
 | `order-emails/` | `09-T3` confirmation, `09-T4` shipment, with builds |
 | `upsells/` | `09-U1a`, `09-U2a` opening beats |
 | `product/` | `09-B3` insert card, `images/`, `hosted-assets.json`, original source package |
@@ -120,9 +120,9 @@ No buyer reply, AI reading or PDF. The upsells are V1's existing products.
 
 ## Content — sales emails
 
-- [x] **Email 1** [copy](sales-emails/09-E2-esl-v1-left-wrist.md) · [HTML](sales-emails/09-E4-esl-v1-evelyn.html) · [text](sales-emails/09-E4-esl-v1-evelyn.txt) — `c=1–4`.
-- [x] **Email 2** [copy](sales-emails/09-E3-esl-email-2-his-name.md) · [HTML](sales-emails/09-E4-esl-email-2-evelyn.html) · [text](sales-emails/09-E4-esl-email-2-evelyn.txt) — `c=21–24`.
-- [x] **Email 3** [copy](sales-emails/09-E5-email-3-anna-story.md) · [HTML](sales-emails/09-E6-esl-email-3-anna-evelyn.html) · [text](sales-emails/09-E6-esl-email-3-anna-evelyn.txt) — `c=51–52`. Built in email 2's shell; images load at 390px and 700px. `c=31–33` and `c=41–43` are free again (deleted options).
+- [x] **Email 1** [copy](sales-emails/md/09-E2-esl-v1-left-wrist.md) · [HTML](sales-emails/09-E4-esl-v1-evelyn.html) · [text](sales-emails/09-E4-esl-v1-evelyn.txt) — `c=1–4`.
+- [x] **Email 2** [copy](sales-emails/md/09-E3-esl-email-2-his-name.md) · [HTML](sales-emails/09-E4-esl-email-2-evelyn.html) · [text](sales-emails/09-E4-esl-email-2-evelyn.txt) — `c=21–24`.
+- [x] **Email 3** [copy](sales-emails/md/09-E5-email-3-anna-story.md) · [HTML](sales-emails/09-E6-esl-email-3-anna-evelyn.html) · [text](sales-emails/09-E6-esl-email-3-anna-evelyn.txt) — `c=51–52`. Built in email 2's shell; images load at 390px and 700px. `c=31–33` and `c=41–43` are free again (deleted options).
 - [x] Offer URL wired in all three, AWeber first-name and unsubscribe tags, 02 branding and postal footer, no price in any ESL.
 - [ ] Everything else about sending them is in *Joel* and *Developer* above.
 

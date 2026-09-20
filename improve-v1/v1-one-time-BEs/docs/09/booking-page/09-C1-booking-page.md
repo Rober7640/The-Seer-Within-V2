@@ -4,7 +4,7 @@
 |---|---|
 | **Offer** | 09 the Heart Cleanser Love Charm — one pink quartz bracelet with a wish capsule · **$59**, fixed, quantity 1 · free worldwide shipping · our own stock, packed and shipped by us |
 | **URL** | `https://theseerwithin.com/offers/heart-cleanser` (Joel, 2026-09-15) · receipt at `/offers/heart-cleanser/success` |
-| **Arrives from** | the CTAs in `../sales-emails/09-E2-esl-v1-left-wrist.md` (`?c=1–4`) and `../sales-emails/09-E3-esl-email-2-his-name.md` (`?c=21–24`); email 3 once chosen (`?c=31–33` proposed) |
+| **Arrives from** | the CTAs in `../sales-emails/md/09-E2-esl-v1-left-wrist.md` (`?c=1–4`) and `../sales-emails/md/09-E3-esl-email-2-his-name.md` (`?c=21–24`); email 3 once chosen (`?c=31–33` proposed) |
 | **Treatment** | Page |
 | **Chat treatment** | **N/A** — physical-item, page-only pattern (06 precedent). There is no `/offers/heart-cleanser/chat` |
 | **Order bump** | **Reiki charging by Evelyn before packing, $11.11**, unticked, beside the total — copy in [`09-C3`](09-C3-order-bump.md) (Joel, 2026-09-15, supersedes "none"). Its own product key `reiki_charge`; checkout must not inherit 06's Closed Purse |
