@@ -8,27 +8,23 @@ Leave room for the part of the wish that belongs to you, dear.
 
 Evelyn here.
 
+The Heart Cleanser Love Charm is a pink quartz bracelet with a small capsule inside. You write a love wish on paper and tuck it there, dear.
+
 If you were thinking of putting his name inside your wish capsule, leave a little room on the paper.
 
 There is something I want you to write underneath it.
 
-When I showed you the Heart Cleanser Love Charm, I asked you to think of one wish you would place inside it before wearing it on your left wrist.
+Before you wear it on your left wrist, you choose one wish to place inside.
 
-Perhaps his name came to you before I'd even finished asking.
+Perhaps his name has already come to you.
 
 You knew whose message you wanted. Whose voice. Who you would like to be sitting beside if you could choose anyone this evening.
 
-Keep that name in mind, dear.
-
-Now imagine he calls.
-
-You see his name on the screen. You answer. You hear the voice you've been missing.
-
-What do you wish would happen after hello?
+Write his name at the top of your paper, dear. Leave a line beneath it.
 
 Give the wish another sentence
 
-Stay with that question for a moment.
+Look at the space beneath his name.
 
 Perhaps you want him to say he's missed you. To ask when he can see you. To make a plan and follow through with it.
 
@@ -52,27 +48,9 @@ You can spend so long wishing for a person that you forget to describe the love 
 
 Give that love a sentence of its own, dear.
 
-Imagine the ordinary evening after he comes back
-
-The first message is easy to picture.
-
-You've probably pictured it already. What it might say. How quickly you would answer. Whether you would tell anyone he'd been in touch.
+Give your feelings a place, too
 
 Go a little further this time, {{ subscriber.first_name | capitalize }}.
-
-Imagine an ordinary evening together, after the excitement of hearing from him has settled.
-
-Can you tell him what's on your mind?
-
-Does he ask about your day and listen to the answer?
-
-When you reach for his hand, do you feel welcome?
-
-These small things can hold so much of what you've been missing.
-
-And they deserve a place in your wish just as much as his name does.
-
-You might find yourself writing:
 
 “I wish for another chance with him, with affection we both show.”
 
@@ -80,9 +58,7 @@ Or:
 
 “I wish to feel loved without having to wonder where I stand.”
 
-Read the sentence back to yourself.
-
-Does it include you?
+Read your sentence aloud. Underline the words that say how you want to feel.
 
 That's what I want you to place inside this charm
 
@@ -90,43 +66,24 @@ The Heart Cleanser Love Charm has a wish capsule built into the bracelet, alongs
 
 You write your wish on a small piece of paper that fits inside. You place it in the capsule and close it.
 
-Then you wear the charm on your left wrist—the receiving side in the ritual I shared with you.
+Then you wear the charm on your left wrist—the receiving side in this ritual.
 
-How to place your wish inside the capsule.
-Demonstration shown with the black-bead version; your charm is pink quartz.
+How to place your wish inside the capsule.Demonstration shown with the black-bead version; your charm is pink quartz.
 
-Picture those words tucked inside, dear.
+Tonight, read both lines together, dear. His name, if you choose. Your own wish beneath it.
 
-You know what they say. You know why you chose them.
-
-When your fingers touch the capsule, you can return to the whole wish: the person you may still long for, and the affection you want to experience in your own life.
+Fold the paper and keep it ready for your Heart Cleanser Love Charm. When yours arrives, both lines go inside its capsule. Each time you touch it on your left wrist, your part of the wish is there, too.
 
 Get your Heart Cleanser Love Charm here.
 https://theseerwithin.com/offers/heart-cleanser?c=21
 
 His name is optional. Your part belongs there.
 
-You may still be deciding whether you want another chance with him.
+Some mornings you want him back. Other mornings you remember how lonely you felt together.
 
-Some mornings you do. Other mornings you remember how lonely you felt even while you were together.
+His name can wait, dear. Your wish can begin with you.
 
-You can write a wish that leaves room for that uncertainty.
-
-“I wish for a love in which I feel wanted and at peace.”
-
-That sentence can be yours while you're deciding what you want to do about him.
-
-And if someone new is on your mind, you can begin with the same question: how would you like to feel as you get to know each other?
-
-You don't have to make your wish sound grand, dear.
-
-“I want to look forward to seeing him.”
-
-“I want to feel comfortable being myself.”
-
-“I want affection that goes both ways.”
-
-Choose the words that make you pause because they say something you've needed to admit.
+Write: “I wish for a love in which I feel wanted and at peace.” Change any word that doesn't feel like yours.
 
 Before you close the capsule
 
@@ -138,49 +95,33 @@ If you include his name, add the sentence about what you wish to feel. Read both
 
 Then close the capsule and hold the charm in your left palm.
 
-Say the seven words from my first letter:
+Say these seven words:
 
 “I am ready to receive love, too.”
 
 Slip it onto your left wrist.
 
-Now your wish has a place you can carry with you, held inside a charm you've made personal with your own words.
+For tonight, hold your folded wish in your left palm and say those seven words aloud.
 
 Get your Heart Cleanser Love Charm here.
 https://theseerwithin.com/offers/heart-cleanser?c=22
 
 Remember what you wrote after his name
 
-If he calls, you may feel so pleased to hear from him that everything you wanted to ask leaves your mind.
+Picture an evening after your charm arrives. It's eight. You're on the sofa, your phone in your right hand. Before you open his messages, touch the capsule on your left wrist. Say the words you wrote after his name.
 
-Enjoy the conversation, dear. Then give yourself a moment to notice how you feel.
+Tonight, {{ subscriber.first_name | capitalize }}, write that sentence on your scrap. Read it aloud once.
 
-Think about the words inside your capsule.
+Give those words a place inside your Heart Cleanser Love Charm, dear. Wear it on your left wrist, with your whole wish tucked inside.
 
-Were you comfortable speaking? Did you feel heard? Is there something you'd like to say next time?
-
-Let your wish help you remember what matters to you as the relationship unfolds.
-
-The pink quartz carries the tenderness we've given this ritual. The capsule holds your particular wish. Wearing them together gives you something close enough to touch when you want to return to it.
-
-You already know the name. Take a moment with the rest.
-
-What would you write underneath it, {{ subscriber.first_name | capitalize }}?
-
-Take a moment before you answer.
-
-You have probably given a great deal of thought to how he feels. Give your own feelings some attention here.
-
-Write the sentence you want to carry.
-
-And if you'd like a place to keep it on your left wrist, get your Heart Cleanser Love Charm here.
+Get your Heart Cleanser Love Charm here.
 https://theseerwithin.com/offers/heart-cleanser?c=23
 
 I'm on your side in this, dear.
 
 — Evelyn
 
-P.S. What happens after hello? That's the question to keep beside you when you write your wish. His name may be the first thing you put on the paper. Leave room for how you wish to feel. Get your Heart Cleanser Love Charm here.
+P.S. Read the words beneath his name aloud, dear. Then fold the paper and put it beside your bed for the morning. Get your Heart Cleanser Love Charm here.
 https://theseerwithin.com/offers/heart-cleanser?c=24
 
 140 Broadway, Manhattan,
@@ -189,5 +130,5 @@ USA
 
 Unsubscribe
 {{ subscriber.unsubscribe_link }}
- |  Change Subscriber Options
+ |  Change Subscriber Options
 {{ subscriber.unsubscribe_link }}

@@ -1,6 +1,6 @@
 # 09-E2 — ESL v1 · Left-wrist hook · Revised review draft
 
-**Subject:** Wear this on your left wrist, %FIRSTNAME%
+**Subject:** Wear this on your left wrist, {{ subscriber.first_name | capitalize }}
 
 **Preview:** Before you put it on, there is something I want you to place inside.
 
@@ -10,7 +10,7 @@
 
 *One wish, kept inside your Heart Cleanser Love Charm. Let me show you what to do before you put it on.*
 
-%FIRSTNAME% —
+{{ subscriber.first_name | capitalize }} —
 
 Evelyn here.
 
@@ -26,33 +26,15 @@ One wish, dear.
 
 The one you would make about your love life if you didn't have to explain it to anybody.
 
-Keep it in mind as you read. In a moment, I'll show you the small wish capsule built into this charm—and how to carry that wish on your left wrist.
+Another chance with someone you still miss. A new love you can feel at ease with.
 
-Perhaps you already know what you would put inside it.
-
-Another chance with someone you still miss. A new love you can feel at ease with. Affection that comes back to you as readily as you give it.
-
-You don't have to decide on the words just yet.
-
-First, let me explain the wrist.
+Tonight, take a pen and a scrap of paper, dear. Write one wish. You can change the words as we go.
 
 ### Why the left?
 
-In a crystal-wearing practice that treats the left as the receiving side, a bracelet worn here carries an inward intention: what you are inviting into your own life.
+Your left wrist is the receiving side in this ritual. It's where you wear the love you want to welcome.
 
-That's the symbolism we're using with this love charm.
-
-Look at your left wrist for a moment, dear.
-
-Picture your Heart Cleanser Love Charm there, with your wish tucked inside. Each morning, as you slip it on, you give yourself a few quiet seconds to name what you want to receive.
-
-Affection. Tenderness. A love in which someone makes room for you, too.
-
-Then you take that intention into your day, on the hand that reaches for your phone, opens your door, and rests beside you at the table.
-
-Something private, close enough to touch.
-
-**Now let me show you what makes this particular bracelet part of the ritual.**
+For now, rest your right hand on your left wrist. Say your wish aloud.
 
 ### Why this pink quartz bracelet?
 
@@ -60,7 +42,7 @@ The **Heart Cleanser Love Charm is made with pink quartz**, and in this ritual, 
 
 `[IMG-1: Actual pink quartz Heart Cleanser Love Charm worn on a clearly identifiable left wrist. Close enough to see the stones and actual construction; natural light and a simple background.]`
 
-But there is another part of this charm I want you to look at closely.
+On your paper, circle the word that says what you want to receive.
 
 ### A wish capsule that holds something only you can choose
 
@@ -84,19 +66,15 @@ Or:
 
 Read your words once before you place them inside. Make sure they say what you want. You can keep them entirely to yourself.
 
-Then close the capsule and slip the charm onto your left wrist.
+Then close the capsule. You'll hold the charm and say the seven words before you put it on.
 
 **Pink quartz. Your receiving wrist. Your own wish held inside the charm.**
 
-An ordinary bracelet in your jewellery box doesn't arrive with that personal meaning. With this one, you create it before the first time you wear it.
-
-Later, when your fingers find the capsule, you know exactly what you've placed there.
-
-The wish has your words in it.
+For tonight, read your wish aloud once. Fold the paper with the words inside.
 
 ### The word I want you to keep is “too”
 
-Once your wish is inside, hold the charm in your palm and say these seven words, %FIRSTNAME%.
+Once your wish is inside, hold the charm in your palm and say these seven words, {{ subscriber.first_name | capitalize }}.
 
 “I am ready to receive love, too.”
 
@@ -114,37 +92,23 @@ That's why this is the sentence I want you to use with your charm.
 
 Let “too” mean that your needs get a place today.
 
-Let it mean you can enjoy being asked how you are. You can accept affection. You can want someone who follows through.
-
-You can love someone and still pay attention to whether you feel loved in their company.
+Say the seven words aloud now, dear. Say “too” clearly.
 
 ### Your Heart Cleanser Love Charm
 
-Your charm brings together the whole ritual: **your wish placed inside its capsule, pink quartz held in your palm, and the bracelet worn on your left wrist.**
+Read your wish aloud tonight, dear. Those are the words you'll place inside your Heart Cleanser Love Charm.
 
-Keep this bracelet for that intention. When you put it on in the morning, let it be the moment you make room for the affection you want to receive.
+The pink quartz rests against your wrist. Your wish stays inside the capsule, kept to yourself. When your fingers touch it, you know what you're carrying.
 
-The capsule gives your wish a place. The pink quartz carries the tenderness we've chosen as this ritual's meaning. Your left wrist brings them together on the receiving side.
+A love wish in your own words, worn on your receiving side.
+
+Your charm ships free worldwide.
 
 **[Get your Heart Cleanser Love Charm here.](https://theseerwithin.com/offers/heart-cleanser?c=1)**
 
-When yours arrives, take a quiet moment before putting it on for the first time.
+When yours arrives, place that paper inside the capsule and close it. Hold the charm in your left palm and say, “I am ready to receive love, too.” Then slip it onto your left wrist.
 
-Set the charm in front of you and write the wish you want to place inside its capsule.
-
-Think about what you would like love to feel like in your life.
-
-Be specific, dear.
-
-Perhaps you'd like to feel considered. To make plans with someone and trust that they'll be there. To speak honestly without spending the rest of the evening wishing you'd asked for less.
-
-Place your written wish inside the capsule and close it. Hold the charm in your left palm, rest your right hand over it, and say:
-
-**“I am ready to receive love, too.”**
-
-Slip the bracelet onto your left wrist.
-
-That's how you begin.
+For tonight, fold your wish and keep it beside your bed.
 
 ### Take the intention with you
 
@@ -156,9 +120,7 @@ Or someone might offer you a kindness, and you catch yourself about to wave it a
 
 Let yourself receive it. Say thank you. Stay with the feeling for a moment.
 
-These are the places to bring your ritual into your life. Ordinary moments in which your own heart deserves your attention.
-
-Your wish stays inside the capsule as you wear the charm. You can return to those words wherever the day takes you.
+Tonight, put your folded wish beside the place where you charge your phone.
 
 **[Get your Heart Cleanser Love Charm here.](https://theseerwithin.com/offers/heart-cleanser?c=2)**
 
@@ -166,27 +128,13 @@ Your wish stays inside the capsule as you wear the charm. You can return to thos
 
 If a particular face came to mind while you were reading, dear, you don't have to pretend it didn't.
 
-Bring your feelings honestly to the ritual.
+You can still miss him, dear. Read your wish aloud with his name in it, if that's what you want.
 
-You may still want another chance with him. You may be curious about someone new. You may simply want to feel comfortable letting someone close again.
+### The first morning with your charm
 
-Begin where you are.
+Picture seven in the morning, after your charm has arrived. You're in the kitchen, a warm cup in your right hand. Your wish is inside the capsule on your left wrist. Touch it. Say, “I am ready to receive love, too.” Then take your first sip.
 
-The words leave room for that: “I am ready to receive love, too.”
-
-They leave room for your wishes, and for you to notice how the people in your life actually treat you.
-
-### Tomorrow morning, picture it on your left wrist
-
-Before the messages. Before the errands. Before you begin thinking about what everyone else needs from you.
-
-A quiet moment with your charm in your left palm.
-
-Your wish already tucked inside its capsule.
-
-Seven words spoken for yourself.
-
-Then the bracelet on your wrist, your written wish going with you into the rest of your day.
+Tonight, leave your written wish beside your cup for the morning.
 
 If that is how you'd like to begin your mornings, **[get your Heart Cleanser Love Charm here.](https://theseerwithin.com/offers/heart-cleanser?c=3)**
 
@@ -194,14 +142,16 @@ I'm on your side in this, dear.
 
 — Evelyn
 
-P.S. Have you thought of the wish you would put inside, dear? Keep those words. When your Heart Cleanser Love Charm arrives, write them down, place them in its capsule, and wear it on your left wrist. **[Get your Heart Cleanser Love Charm here.](https://theseerwithin.com/offers/heart-cleanser?c=4)**
+P.S. Write your wish tonight, dear. When your charm arrives, tuck that same paper inside its capsule. The words you wrote in private become the wish you wear on your left wrist. **[Get your Heart Cleanser Love Charm here.](https://theseerwithin.com/offers/heart-cleanser?c=4)**
 
 ---
 
 ## Editorial notes — not part of the email
 
+- **2026-09-20 copy pass:** Applied approved tightening, tonight's paper-and-pen actions, and specific future scenes. ✅ The HTML and plain-text builds were re-rendered from this file the same day and are in sync — CTA URLs and tracking positions, the hosted images, the call-out boxes, the postal address and both `{{ subscriber.unsubscribe_link }}` tags all verified unchanged. Re-render the builds after any further edit here; never hand-edit the HTML.
+
 - **Revision:** Replaces the opening and sales structure of the first draft. This is an alternate first letter, not a sequence resend. Named-charm hook → wish teased → left-wrist explanation → pink quartz reveal → wish capsule reveal → personal wish and affirmation → product invitation → usage → close.
-- **New proposed ritual:** Written wish placed in the capsule, charm held in left palm, right hand over it, seven-word affirmation, bracelet on left wrist. These instructions are proposed creative development, not an ancient ceremony or instructions found in the raw upsell.
+- **New proposed ritual:** Written wish placed in the capsule, charm held in left palm, seven-word affirmation, bracelet on left wrist. These instructions are proposed creative development, not an ancient ceremony or instructions found in the raw upsell.
 - **Sources for spiritual framing:** [Satv Aura's account of its left/receiving crystal-wearing convention](https://satvaura.in/blogs/satvaaura-in-blog/which-hand-to-wear-crystal-bracelet). This establishes a contemporary commercial spiritual convention, not scientific efficacy or a universal rule. Pink quartz symbolism is presented as the intention assigned within this proposed ritual; no unique efficacy is claimed.
-- **Product/build:** Pink quartz and an integrated wish capsule are user-confirmed product updates. Written-paper usage is a draft assumption based on the capsule holding a wish; confirm fit and supplied writing materials before production. Do not imply paper is included. Keep the user's exact material name; do not silently rename it rose quartz. Verify fit and appearance against the actual product. No exclusive sourcing, blessing, special treatment, bead count, or superiority over other pink quartz bracelets has been supplied or invented. Offer-page price: $59 for one charm. Do not reveal price in the ESL. Confirm offer page, availability, shipping, and tracking before build. `%FIRSTNAME%` builds to `{{ subscriber.first_name | capitalize }}`; Offer URL wired to `https://theseerwithin.com/offers/heart-cleanser` (Joel, 2026-09-15). No first-name substitution or send has been performed.
+- **Product/build:** Pink quartz and an integrated wish capsule are user-confirmed product updates. Written-paper usage is a draft assumption based on the capsule holding a wish; confirm fit and supplied writing materials before production. Do not imply paper is included. Keep the user's exact material name; do not silently rename it rose quartz. Verify fit and appearance against the actual product. No exclusive sourcing, blessing, special treatment, bead count, or superiority over other pink quartz bracelets has been supplied or invented. Keep the price on the offer page only; do not reveal it in the email. Free worldwide shipping is user-confirmed. Confirm offer page, availability, and tracking before build. Preserve `{{ subscriber.first_name | capitalize }}` exactly at build; Offer URL wired to `https://theseerwithin.com/offers/heart-cleanser` (Joel, 2026-09-15). No first-name substitution or send has been performed.
 - **Image timing:** Bracelet image appears at its stone reveal. The photograph must depict the actual product on the left wrist, including its capsule. Add a second image showing the actual capsule accepting a wish; do not invent its closure or dimensions.
