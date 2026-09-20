@@ -12,7 +12,7 @@ Text: [09-E4-esl-email-2-evelyn.txt](09-E4-esl-email-2-evelyn.txt)
 
 ## Email 3 — selected replacement, 2026-09-16
 Subject: She wrote his name. Then he called.
-Source: [09-E5-email-3-anna-story.md](09-E5-email-3-anna-story.md)
+Source: [md/09-E5-email-3-anna-story.md](md/09-E5-email-3-anna-story.md)
 Structure: item → Anna/Daniel fictional results-based story → item.
 Tracking: `c=51–52`; confirmed offer URL in source.
 HTML: [09-E6-esl-email-3-anna-evelyn.html](09-E6-esl-email-3-anna-evelyn.html)
@@ -22,7 +22,13 @@ Built 2026-09-16 in email 2's exact shell, fictional-story framing intact (twice
 ### Superseded — DELETED 2026-09-16
 The earlier Fold the Paper (c=31–33) and Leave the Date Off (c=41–43) versions, and their HTML/text builds, were deleted at Joel's instruction. Nothing to upload; `c=31–33` and `c=41–43` are free again.
 
-⛔ **Two superseded drafts live in this folder — do not upload them.** `09-E4-esl-v1-left-wrist.html` is an earlier build of email 1 and still contains four unreplaced `{{OFFER_URL}}` links; `09-E2-esl-v1.md` is an earlier copy draft of the same email. Email 1 is `09-E4-esl-v1-evelyn.html` + `.txt`.
+### Superseded email-1 drafts — DELETED 2026-09-20
+`09-E4-esl-v1-left-wrist.html` (an earlier build carrying four unreplaced `{{OFFER_URL}}` links)
+and `09-E2-esl-v1.md` (an earlier copy draft of the same email) were deleted at Joel's
+instruction. Email 1 is `09-E4-esl-v1-evelyn.html` + `.txt`.
+
+✅ **Every `.html`/`.txt` left in this folder is final and uploadable.** The copy drafts the
+three finals were built from now live in [`md/`](md/) — sources, never uploaded.
 
 Use these HTML files, not the -preview files. Supply the matching plain-text part separately.
 
