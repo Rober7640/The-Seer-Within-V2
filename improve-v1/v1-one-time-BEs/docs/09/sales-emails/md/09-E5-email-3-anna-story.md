@@ -10,13 +10,13 @@
 
 # Before you put a wish inside this charm, picture this
 
-%FIRSTNAME% —
+{{ subscriber.first_name | capitalize }} —
 
 Evelyn here.
 
-**See the little capsule on this Heart Cleanser Love Charm?**
+**This is the Heart Cleanser Love Charm, dear.**
 
-That’s where your written wish goes before you wear it on your left wrist.
+A pink quartz bracelet with a small capsule for your written wish. You tuck the paper inside and wear it on your left wrist.
 
 `[IMAGE: Pink quartz Heart Cleanser Love Charm]`
 
@@ -88,38 +88,34 @@ The result she wanted began to take a shape she could recognise: two people maki
 
 That is how Anna’s story ends, dear.
 
-### Now look at your charm again
+### Now take up your own wish
 
 The **Heart Cleanser Love Charm** brings pink quartz together with a capsule for your own written wish.
 
-The part you place inside comes from your life.
+Picture an evening a few days after your charm arrives. It's nine. You're in your bedroom, your phone in your right hand. Touch the capsule on your left wrist. Say your wish aloud before you set the phone down.
 
-Perhaps there is someone you would like another chance with.
+Tonight, take a small piece of paper and write your own wish, dear. Read it aloud. Fold it and keep it ready.
 
-Perhaps your wish is to meet someone new—and feel comfortable letting them know who you are.
-
-Write the words you want to remember. Place them inside the capsule. Then wear the charm on your left wrist as part of your personal ritual.
-
-When you touch it, return to the whole wish.
-
-The affection you want. The honesty. The way you hope to feel when you’re together.
+When your Heart Cleanser Love Charm arrives, that wish goes inside the capsule. Then slip it onto your left wrist. Your own words, held close enough to touch.
 
 **[Get your Heart Cleanser Love Charm here.](https://theseerwithin.com/offers/heart-cleanser?c=51)**
 
-What would you write inside yours, %FIRSTNAME%?
+Choose the words you want to wear, {{ subscriber.first_name | capitalize }}. Write them just as you would say them.
 
 I’m on your side in this, dear.
 
 — Evelyn
 
-P.S. Anna’s sentence was *“A chance where we both show up.”* Yours can be entirely different. **[Give your own wish a place inside the Heart Cleanser Love Charm.](https://theseerwithin.com/offers/heart-cleanser?c=52)**
+P.S. Anna’s sentence was “A chance where we both show up.” Yours can be entirely different. Read yours once more before bed, dear. **[Give your own wish a place inside the Heart Cleanser Love Charm.](https://theseerwithin.com/offers/heart-cleanser?c=52)**
 
 ---
 
 ## Build notes — not email copy
 
-- Selected email 3: item → results-based story → item. ⚠ Joel, 2026-09-16: the two "fictional" lines were REMOVED from the send copy at his instruction. Anna and Daniel are invented; the letter no longer says so, and it is not customer evidence.
+- **2026-09-20 copy pass:** Applied approved tightening, tonight's paper-and-pen actions, and specific future scenes. ✅ The HTML and plain-text builds were re-rendered from this file the same day and are in sync — CTA URLs and tracking positions, the hosted images, the call-out boxes, the postal address and both `{{ subscriber.unsubscribe_link }}` tags all verified unchanged. Re-render the builds after any further edit here; never hand-edit the HTML.
+
+- Selected email 3: item → fictional story → reader action → item. Anna and Daniel are invented, not a testimonial. Preserve both fictional markers exactly: “In this story, Daniel called on a Thursday evening.” and “That is how Anna’s story ends, dear.”
 - Supersedes both previous email-3 options and their HTML/text builds. Those remain reference-only; do not upload or schedule them as the active email 3.
 - Uses the now-confirmed offer URL. Reserve fresh `c=51–52` for this replacement rather than reusing old options' `c=31–33` / `c=41–43`.
 - No price in ESL. Pink quartz Heart Cleanser Love Charm, one item; retain Evelyn branding and compact hosted product photograph in the build.
-- HTML/plain-text build, AWeber upload, schedule and seed test remain pending. Preserve `%FIRSTNAME%` → `{{ subscriber.first_name | capitalize }}` at build.
+- HTML/plain-text build, AWeber upload, schedule and seed test remain pending. Preserve `{{ subscriber.first_name | capitalize }}` exactly at build.
