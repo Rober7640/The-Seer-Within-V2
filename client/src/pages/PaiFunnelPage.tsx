@@ -15,6 +15,12 @@
  * AND the API base is staging, so this page is inert in production even if routed.
  */
 import { useEffect, useRef, useState } from 'react';
+import {
+  trackInitiateCheckout,
+  trackPurchase,
+  trackUpsellPurchase,
+  trackUpsell2Purchase,
+} from '@/lib/facebook';
 
 const FRAMEPAY_SRC = 'https://framepay.payments.ai/framepay.js';
 
@@ -43,6 +49,8 @@ interface ChargeResult {
   family?: string;
   bumpProduct?: string | null;
   dbWritten?: boolean;
+  /** The server-side (CAPI) half of the Facebook Purchase. */
+  facebook?: { eventId?: string; sent: boolean; error?: string } | null;
   aweber?: AweberWrite;
   bumpList?: AweberWrite | null;
   transactionId?: string;
@@ -188,6 +196,9 @@ export default function PaiFunnelPage() {
     if (busy) return;
     setBusy(true);
     setStage('charging');
+    // Facebook InitiateCheckout, as the live chat fires it when she heads to checkout
+    // (useConversation handlePurchase): the MAIN price, browser + server relay.
+    trackInitiateCheckout(35, 'USD');
     try {
       say('createToken()…');
       const token = await window.Framepay.createToken(formRef.current, {
@@ -217,6 +228,20 @@ export default function PaiFunnelPage() {
       const data: ChargeResult = await res.json();
       setMain(data);
       say(`main -> ${data.result ?? data.error ?? 'no result'}`);
+      if (data.ok && data.transactionId) {
+        // Facebook Purchase — what UpsellPage fires on /welcome1: the order TOTAL
+        // (bump included), event_id purchase_<main txn>. skipServerRelay because the
+        // server already fired the CAPI half with the same id; Facebook dedups them.
+        trackPurchase(
+          (data.amountSentCents ?? 3500) / 100,
+          'USD',
+          data.email,
+          'Energy Clearing Ritual',
+          data.transactionId,
+          { skipServerRelay: true },
+        );
+        say(`facebook Purchase (browser) purchase_${data.transactionId}`);
+      }
       setStage(data.ok ? 'main-done' : 'error');
     } catch (err) {
       say(`main charge failed: ${String(err)}`);
@@ -247,6 +272,20 @@ export default function PaiFunnelPage() {
       });
       const data: ChargeResult = await res.json();
       (which === 1 ? setU1 : setU2)(data);
+      if (data.ok && main.transactionId) {
+        // Facebook Purchase — what Upsell2Page (u1) and SuccessPage (u2) fire, keyed on
+        // the MAIN transaction. Upsell 2 uses trackUpsell2Purchase (upsell2_<main>)
+        // because this is a recognised ad funnel — the server's id for it is the same.
+        const dollars = (data.amountSentCents ?? 4700) / 100;
+        if (which === 1) {
+          trackUpsellPurchase(dollars, 'USD', main.email, 'Protection Ritual + Volcanic Stone',
+            main.transactionId, 'u1', { skipServerRelay: true });
+        } else {
+          trackUpsell2Purchase(dollars, 'USD', main.email, 'Manifestation Bracelet',
+            main.transactionId, { skipServerRelay: true });
+        }
+        say(`facebook Purchase (browser) ${which === 1 ? 'upsell_u1_' : 'upsell2_'}${main.transactionId}`);
+      }
       say(
         data.blockedByGuard
           ? `upsell ${which} BLOCKED by MIT guard — ${data.reason}`
@@ -447,6 +486,12 @@ function ResultBlock({ label, r }: { label: string; r: ChargeResult }) {
       {typeof r.dbWritten === 'boolean' && (
         <div style={{ color: r.dbWritten ? undefined : '#ff6b6b' }}>
           DB row written: {r.dbWritten ? 'yes' : 'NO'}
+        </div>
+      )}
+      {r.facebook && (
+        <div style={{ color: r.facebook.sent ? undefined : '#ff6b6b' }}>
+          Facebook Purchase (server): {r.facebook.sent ? 'accepted' : `NOT SENT — ${r.facebook.error ?? ''}`}
+          {r.facebook.eventId && ` · ${r.facebook.eventId}`}
         </div>
       )}
       {r.aweber && <AweberLine label="AWeber" w={r.aweber} />}

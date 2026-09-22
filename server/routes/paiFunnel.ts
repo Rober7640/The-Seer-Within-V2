@@ -60,6 +60,7 @@ import {
 import { updateStripeData, markUpsellPurchased, markUpsell2Purchased } from '../lib/db';
 import { posthog } from '../lib/posthog';
 import { buildPurchaseEvent } from '../lib/purchaseAnalytics';
+import { fireStripePurchaseEvent, type StripeFbEventResult } from '../lib/facebook';
 import { funnelDefForParam, type FunnelParam } from '@shared/funnelConfig';
 import { bumpProductKeyFor, bumpPaidListWanted } from '@shared/landerBumpRouting';
 
@@ -329,6 +330,62 @@ function capturePaiPurchase(args: {
     // Analytics must never fail a charge that already succeeded.
     logger.error(`[pai] posthog capture failed: ${String(err)}`);
   }
+}
+
+/**
+ * The Facebook (CAPI) Purchase for a Payments.AI sale — the SAME server-side fire the
+ * Stripe webhook makes for the live tarot funnel (webhooks.ts, fireStripePurchaseEvent),
+ * so the two arms of the 50/50 report to Facebook identically.
+ *
+ * Keyed on the MAIN transaction id, exactly as Stripe keys on the main Checkout
+ * Session, so the event_ids match what this page's browser Pixel sends —
+ * purchase_<main>, upsell_u1_<main>, upsell2_<main> — and Facebook dedups each
+ * browser + server pair into ONE Purchase.
+ *
+ * 🔴 `funnel` MUST be the FunnelParam ('v1-tarot'), not PAI_FUNNEL ('fb-tarot'). With
+ * the lander label funnelDefForParam() returns null, so event_source_url loses its
+ * /fb-tarot prefix and upsell 2's id becomes upsell_u2_… — out of step with the
+ * browser's upsell2_…, and Facebook counts that upsell twice. Same trap as PostHog.
+ *
+ * Fired from the charge handler, not Payments.AI's webhook: their webhook carries
+ * none of our metadata (0 of 17 fields registered), so it cannot say which product
+ * was bought. Only after an APPROVED result — never on a decline.
+ *
+ * Awaited, capped at FB_WAIT_MS, so the response can SHOW whether Facebook took it
+ * (the Stripe webhook fires and forgets; this harness exists to surface results).
+ */
+export const FB_WAIT_MS = 10_000;
+
+export type PaiFbResult = StripeFbEventResult | { sent: false; error: string; eventId?: undefined };
+
+export async function firePaiFbPurchase(
+  args: {
+    product: string;
+    transactionId: string;
+    mainTransactionId: string;
+    amountCents: number;
+    email: string;
+    firstName: string;
+  },
+  waitMs = FB_WAIT_MS,
+): Promise<PaiFbResult> {
+  const send = fireStripePurchaseEvent({
+    stripeRefId: args.transactionId,
+    mainSessionId: args.mainTransactionId,
+    product: args.product,
+    funnel: PAI_POSTHOG_FUNNEL,
+    amountCents: args.amountCents,
+    email: args.email,
+    firstName: args.firstName,
+  }).catch(() => null);
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const timeout = new Promise<'timeout'>((resolve) => {
+    timer = setTimeout(() => resolve('timeout'), waitMs);
+  });
+  const first = await Promise.race([send, timeout]);
+  clearTimeout(timer);
+  if (first === 'timeout') return { sent: false, error: `no answer within ${waitMs / 1000}s (may still send)` };
+  return first ?? { sent: false, error: 'not sent — see the server log' };
 }
 
 /** Hosts this must never serve on, whatever the environment claims to be. */
@@ -675,6 +732,7 @@ router.post('/checkout', async (req: Request, res: Response) => {
     const bumpStage =
       bumpApplied && lander.bump && bumpPaidListWanted(bumpProduct) ? lander.bump(stageArgs) : null;
     let bumpAweber: AweberResult = { success: false, error: 'not attempted' };
+    let facebook: PaiFbResult | null = null;
     let dbWritten = false;
 
     // DB row — dev Supabase, separate from production.
@@ -720,6 +778,16 @@ router.post('/checkout', async (req: Request, res: Response) => {
         email,
       });
 
+      // Facebook — the order total (bump included), as Stripe's amount_total is.
+      facebook = await firePaiFbPurchase({
+        product: 'energy_clearing_ritual',
+        transactionId: settled.id,
+        mainTransactionId: settled.id,
+        amountCents: totalCents,
+        email,
+        firstName,
+      });
+
       // AWeber — the REAL lists this lander's live counterpart writes, with the
       // paymentsAI tag added alongside the live ones. The address is always +pai on
       // a domain we own, so it can never collide with a real subscriber.
@@ -743,6 +811,8 @@ router.post('/checkout', async (req: Request, res: Response) => {
       gateway: { name: settled.gatewayName, slug: settled.gatewaySlug },
       metadataAudit: audit,
       dbWritten,
+      // Server-side (CAPI) half of the Facebook Purchase; null ⇒ not approved, not sent.
+      facebook,
       aweber: {
         attempted: approved,
         ...aweber,
@@ -846,6 +916,7 @@ async function chargeUpsell(
   const settled = (await settleTransaction(tx.data.id)) ?? tx.data;
   const approved = String(settled.result ?? '').toLowerCase() === 'approved';
   let aweber: AweberResult = { success: false, error: 'not attempted' };
+  let facebook: PaiFbResult | null = null;
   const stage = opts.stage(lander)({ email, name: firstName, orderId: settled.id, cents });
 
   if (approved) {
@@ -863,6 +934,17 @@ async function chargeUpsell(
       transactionId: settled.id,
       email,
     });
+
+    // Facebook — keyed on the MAIN transaction, as Stripe keys 1-click upsells on
+    // metadata.originalSession.
+    facebook = await firePaiFbPurchase({
+      product: opts.product,
+      transactionId: settled.id,
+      mainTransactionId,
+      amountCents: cents,
+      email,
+      firstName,
+    });
     // The live tag for this stage, plus our marker. Must match what the live
     // funnel writes, or any automation keyed on the tag will not fire.
     aweber = await timedWrite(stage, opts.label);
@@ -879,6 +961,7 @@ async function chargeUpsell(
     // seen it come back null in every sandbox round. Reported so we can see it.
     parentTransactionId: settled.parentTransactionId ?? null,
     metadataAudit: auditMetadata(metadata, settled.metadata),
+    facebook,
     aweber: {
       attempted: approved,
       ...aweber,
