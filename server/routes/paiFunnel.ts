@@ -6,8 +6,9 @@
  * written answers hold up inside the funnel we actually run — not just against
  * their API in isolation. So this clones the live tarot flow
  *   main + order bump  ->  upsell 1  ->  upsell 2  ->  DB row  ->  AWeber
- * onto Payments.AI, against the hook `cards-after-marriage`
- * (family soulmate-ageband, bucket love).
+ * onto Payments.AI, against one of the dummy landers in PAI_LANDERS below —
+ * `cards-after-marriage` (soulmate, the default) or `cards-meant-alone` (alone),
+ * picked by `?hook=` on the page. Each writes the AWeber lists its LIVE lander does.
  *
  * WHAT THIS IS NOT. It is not the live funnel and never becomes it. Nothing in
  * routes.ts's existing Stripe handlers calls into this file; the live path is
@@ -49,19 +50,24 @@ import {
   paymentsAiReady,
   type PaiTransaction,
 } from '../lib/paymentsai';
-import { writeSoulmateSubscriber } from '../lib/aweber';
+import {
+  writeSoulmateSubscriber,
+  addPaidSubscriber,
+  addBumpPaidSubscriber,
+  addUpsellSubscriber,
+  addUpsell2Subscriber,
+} from '../lib/aweber';
 import { updateStripeData, markUpsellPurchased, markUpsell2Purchased } from '../lib/db';
 import { posthog } from '../lib/posthog';
 import { buildPurchaseEvent } from '../lib/purchaseAnalytics';
-import type { FunnelParam } from '@shared/funnelConfig';
+import { funnelDefForParam, type FunnelParam } from '@shared/funnelConfig';
+import { bumpProductKeyFor, bumpPaidListWanted } from '@shared/landerBumpRouting';
 
 const router = Router();
 
 /** The tag that identifies every record this funnel creates. */
-const PAI_TAG = 'paymentsAI';
+export const PAI_TAG = 'paymentsAI';
 
-/** The dummy lander this mirrors. */
-const PAI_HOOK = 'cards-after-marriage';
 const PAI_FUNNEL = 'fb-tarot';
 
 /**
@@ -75,6 +81,164 @@ const PAI_FUNNEL = 'fb-tarot';
  * DIFFERENT PostHog funnels while looking perfectly fine in the payload.
  */
 const PAI_POSTHOG_FUNNEL: FunnelParam = 'v1-tarot';
+
+// ── THE DUMMY LANDERS ───────────────────────────────────────────────────────────
+//
+// One entry per lander this harness can run. What differs between them is WHERE
+// the buyer is filed — the AWeber list and tags at each stage, and the bump key —
+// because that is what differs between their live counterparts. The charge chain,
+// the MIT guard and the DB row are the same for all of them.
+//
+// 🔴 EACH ENTRY MUST MIRROR ITS LIVE LANDER, not the other dummy. The two families
+// use DIFFERENT lists on the live Stripe path: the soulmate dummy writes the soulmate
+// lists (the 2026-09-10 decision), while every other tarot lander — the alone family
+// included — writes the four shared V1 lists through the exact functions the live
+// Stripe path calls. Reusing one family's lists for the other would "work" and prove
+// nothing about the lists that lander really uses.
+//
+// 🔴 update_existing:true on every writer ⇒ each STAGE needs its own list, or the
+// later stage overwrites the earlier one's custom fields. Both families have that.
+
+interface StageArgs {
+  email: string;
+  name: string;
+  /** The Payments.AI txn id — it stands in for the Stripe order id on every list. */
+  orderId: string;
+  cents: number;
+}
+
+/** One AWeber write for one funnel stage, plus where it lands (for the response). */
+export interface StageWrite {
+  listId: string | null;
+  tags: string[];
+  write: () => Promise<{ success: boolean; error?: string }>;
+}
+
+export interface PaiLander {
+  hook: string;
+  family: string;
+  bucket: string;
+  /** metadata.bumpProduct on a bump order — whatever the LIVE lander stamps. */
+  bumpProduct: () => string;
+  main: (a: StageArgs) => StageWrite;
+  /** The order-bump paid list (6969209), or null when this dummy never writes it. */
+  bump: ((a: StageArgs) => StageWrite) | null;
+  upsell1: (a: StageArgs) => StageWrite;
+  upsell2: (a: StageArgs) => StageWrite;
+}
+
+/** A soulmate-list stage — the exact write this file made before PAI_LANDERS existed. */
+function soulmateStage(listEnv: string, label: string, tag: string, product: string) {
+  return (a: StageArgs): StageWrite => {
+    const listId = process.env[listEnv] || '';
+    const tags = [tag, PAI_TAG];
+    return {
+      listId: listId || null,
+      tags,
+      write: () =>
+        writeSoulmateSubscriber({
+          listId,
+          listLabel: `${label} (PAI dev)`,
+          email: a.email,
+          name: a.name,
+          customFields: {
+            stripe_order_id: a.orderId,
+            purchase_amount_usd: String(a.cents / 100),
+            product,
+          },
+          tags,
+        }),
+    };
+  };
+}
+
+/** "-tarot" — the same registry value the live path's fbTagSuffix() reads. */
+const TAROT_TAG_SUFFIX = funnelDefForParam(PAI_POSTHOG_FUNNEL)?.aweberSuffix ?? '';
+
+/**
+ * The four V1 tarot stages, tagged exactly as the live Stripe path tags a tarot
+ * buyer (routes.ts /api/upsell/user-data, webhooks.ts bump block, the two 1-click
+ * upsell charges), plus our marker. The list ids shown are each writer's own
+ * fallback, repeated here for REPORTING only — the writer decides where it goes.
+ */
+function tarotStages(bucket: string) {
+  return {
+    main: (a: StageArgs): StageWrite => {
+      const tags = [bucket, 'paid', 'initial-purchase', `initial-purchase${TAROT_TAG_SUFFIX}`, PAI_TAG];
+      return {
+        listId: process.env.AWEBER_PAID_LIST_ID || '6936955',
+        tags,
+        write: () => addPaidSubscriber({ email: a.email, name: a.name, stripeOrderId: a.orderId, tags }),
+      };
+    },
+    bump: (a: StageArgs): StageWrite => {
+      const tags = ['order-bump', 'paid', bucket, `initial-purchase${TAROT_TAG_SUFFIX}`, PAI_TAG];
+      return {
+        listId: process.env.AWEBER_BUMP_PAID_LIST_ID || '6969209',
+        tags,
+        write: () => addBumpPaidSubscriber({ email: a.email, name: a.name, stripeOrderId: a.orderId, tags }),
+      };
+    },
+    upsell1: (a: StageArgs): StageWrite => {
+      const tags = [`seer-within-upsell${TAROT_TAG_SUFFIX}`, PAI_TAG];
+      return {
+        listId: '6937139',
+        tags,
+        write: () => addUpsellSubscriber({ email: a.email, name: a.name, stripeOrderId: a.orderId, tags }),
+      };
+    },
+    upsell2: (a: StageArgs): StageWrite => {
+      // `bracelet-full`: this harness only ever sells the $47 bracelet.
+      const tags = [`seer-within-upsell2${TAROT_TAG_SUFFIX}`, 'bracelet-full', PAI_TAG];
+      return {
+        listId: '6939683',
+        tags,
+        write: () => addUpsell2Subscriber({ email: a.email, name: a.name, stripeOrderId: a.orderId, tags }),
+      };
+    },
+  };
+}
+
+export const DEFAULT_PAI_HOOK = 'cards-after-marriage';
+const ALONE_HOOK = 'cards-meant-alone';
+
+export const PAI_LANDERS: Record<string, PaiLander> = {
+  // The original dummy — unchanged in every write it makes.
+  [DEFAULT_PAI_HOOK]: {
+    hook: DEFAULT_PAI_HOOK,
+    family: 'soulmate-ageband',
+    bucket: 'love',
+    bumpProduct: () => 'soulmate_reading_bump',
+    main: soulmateStage('AWEBER_SOULMATE_PAID_LIST_ID', 'Soulmate Sketch Buyers', 'soulmate-sketch-buyer', 'energy_clearing_ritual'),
+    bump: null,
+    upsell1: soulmateStage('AWEBER_SOULMATE_UPSELL1_LIST_ID', 'Soulmate Bracelet Buyers', 'soulmate-bracelet-buyer', 'soulmate_bracelet'),
+    upsell2: soulmateStage('AWEBER_SOULMATE_UPSELL2_LIST_ID', 'Soulmate Love Tuner Buyers', 'soulmate-love-tuner-buyer', 'soulmate_love_tuner'),
+  },
+  // "Am I meant to be alone?" — the alone (loneliness) family, bucket love. Not a
+  // soulmate or money lander, so live it gets the default bump key and the shared
+  // V1 lists. The key comes from the live resolver rather than a copied literal.
+  [ALONE_HOOK]: {
+    hook: ALONE_HOOK,
+    family: 'loneliness',
+    bucket: 'love',
+    bumpProduct: () => bumpProductKeyFor(PAI_POSTHOG_FUNNEL, 'love', ALONE_HOOK),
+    ...tarotStages('love'),
+  },
+};
+
+/** No hook ⇒ the original dummy, so existing callers are unchanged. Unknown ⇒ null. */
+export function resolvePaiLander(hook: unknown): PaiLander | null {
+  if (hook === undefined || hook === null || hook === '') return PAI_LANDERS[DEFAULT_PAI_HOOK];
+  if (typeof hook !== 'string') return null;
+  return Object.prototype.hasOwnProperty.call(PAI_LANDERS, hook) ? PAI_LANDERS[hook] : null;
+}
+
+function unknownHook(res: Response, hook: unknown) {
+  return res.status(400).json({
+    error: `unknown hook ${JSON.stringify(hook)}`,
+    hooks: Object.keys(PAI_LANDERS),
+  });
+}
 
 /**
  * Emit the PostHog `purchase_completed` event for a Payments.AI sale.
@@ -103,7 +267,19 @@ function capturePaiPurchase(args: {
       email: args.email,
       paymentGateway: 'paymentsai',
     });
-    if (event) posthog.capture(event);
+    if (event) {
+      // 🔴 THE SANDBOX MARKER. These events carry funnel='tarot' — the same name as
+      // the live tarot funnel, on purpose, so the 50/50 arms match — and nothing
+      // else on them says "no real money moved". If the dev and prod environments
+      // report into ONE PostHog project, every dummy purchase lands in the real
+      // tarot revenue, and `sandbox = true` is the single filter that takes it out.
+      // Derived from the API base (not hardcoded) so it can never survive onto a
+      // production Payments.AI base by accident.
+      event.properties.sandbox = (
+        process.env.PAYMENTSAI_BASE || 'https://staging-api.payments.ai'
+      ).includes('staging');
+      posthog.capture(event);
+    }
   } catch (err) {
     // Analytics must never fail a charge that already succeeded.
     logger.error(`[pai] posthog capture failed: ${String(err)}`);
@@ -170,7 +346,10 @@ function idem(prefix: string): string {
 }
 
 /** Everything the FramePay page needs to boot. Never returns the secret API key. */
-router.get('/config', async (_req: Request, res: Response) => {
+router.get('/config', async (req: Request, res: Response) => {
+  const lander = resolvePaiLander(req.query.hook);
+  if (!lander) return unknownHook(res, req.query.hook);
+
   const orgId = process.env.PAYMENTSAI_ORG_ID;
   const websiteId = process.env.PAYMENTSAI_WEBSITE_ID;
   const base = process.env.PAYMENTSAI_BASE || 'https://staging-api.payments.ai';
@@ -204,7 +383,10 @@ router.get('/config', async (_req: Request, res: Response) => {
     // scripts/audit/pai-r20-framepay-origin.mjs. We reuse an existing record
     // because their `url` field caps at 50 chars and our dev URL is 52.
     websiteId,
-    hook: PAI_HOOK,
+    hook: lander.hook,
+    family: lander.family,
+    bucket: lander.bucket,
+    hooks: Object.keys(PAI_LANDERS),
     funnel: PAI_FUNNEL,
   });
 });
@@ -364,9 +546,9 @@ router.get('/webhook/received', (req: Request, res: Response) => {
 router.post('/checkout', async (req: Request, res: Response) => {
   const {
     token,
+    hook,
     firstName = 'PaiTest',
     email: rawEmail,
-    bucket = 'love',
     mainCents = 3500,
     bumpApplied = false,
     bumpCents = 977,
@@ -378,6 +560,14 @@ router.post('/checkout', async (req: Request, res: Response) => {
   } = req.body ?? {};
 
   if (!token) return res.status(400).json({ error: 'missing FramePay token' });
+
+  // Before any money moves: an unknown hook would otherwise be charged and then
+  // filed to the wrong lists.
+  const lander = resolvePaiLander(hook);
+  if (!lander) return unknownHook(res, hook);
+  // The lander's bucket, as the live path derives it from the hook — not the body's.
+  const bucket = lander.bucket;
+  const bumpProduct = lander.bumpProduct();
 
   const email = paiTestEmail(rawEmail);
   const totalCents = bumpApplied ? mainCents + bumpCents : mainCents;
@@ -397,7 +587,7 @@ router.post('/checkout', async (req: Request, res: Response) => {
     ...(gclid ? { gclid: String(gclid) } : {}),
     ...(bumpApplied
       ? {
-          bumpProduct: 'soulmate_reading_bump',
+          bumpProduct,
           bumpBucket: String(bumpBucket),
           bumpAmount: String(bumpCents),
         }
@@ -432,6 +622,14 @@ router.post('/checkout', async (req: Request, res: Response) => {
       success: false,
       error: 'not attempted',
     };
+    const stageArgs: StageArgs = { email, name: firstName, orderId: settled.id, cents: totalCents };
+    const mainStage = lander.main(stageArgs);
+    // Written exactly when the live webhook writes it: a bump order whose stamped key
+    // is not on the exclusion list — and only for a dummy that mirrors a lander
+    // whose bump buyers go there at all.
+    const bumpStage =
+      bumpApplied && lander.bump && bumpPaidListWanted(bumpProduct) ? lander.bump(stageArgs) : null;
+    let bumpAweber: { success: boolean; error?: string } = { success: false, error: 'not attempted' };
     let dbWritten = false;
 
     // DB row — dev Supabase, separate from production.
@@ -477,25 +675,18 @@ router.post('/checkout', async (req: Request, res: Response) => {
         email,
       });
 
-      // AWeber — the REAL soulmate lists, with the paymentsAI tag added
-      // alongside the existing ones. Safe because those lists carry thank-you
-      // emails only and the address is +pai on a domain we own.
-      aweber = await writeSoulmateSubscriber({
-        listId: process.env.AWEBER_SOULMATE_PAID_LIST_ID || '',
-        listLabel: 'Soulmate Sketch Buyers (PAI dev)',
-        email,
-        name: firstName,
-        customFields: {
-          stripe_order_id: settled.id,
-          purchase_amount_usd: String(totalCents / 100),
-          product: 'energy_clearing_ritual',
-        },
-        tags: ['soulmate-sketch-buyer', PAI_TAG],
-      });
+      // AWeber — the REAL lists this lander's live counterpart writes, with the
+      // paymentsAI tag added alongside the live ones. The address is always +pai on
+      // a domain we own, so it can never collide with a real subscriber.
+      aweber = await mainStage.write();
+      if (bumpStage) bumpAweber = await bumpStage.write();
     }
 
     res.json({
       ok: approved,
+      hook: lander.hook,
+      family: lander.family,
+      bumpProduct: bumpApplied ? bumpProduct : null,
       transactionId: settled.id,
       result: settled.result,
       status: settled.status,
@@ -510,10 +701,19 @@ router.post('/checkout', async (req: Request, res: Response) => {
       aweber: {
         attempted: approved,
         ...aweber,
-        listConfigured: Boolean(process.env.AWEBER_SOULMATE_PAID_LIST_ID),
-        listId: process.env.AWEBER_SOULMATE_PAID_LIST_ID || null,
-        tags: ['soulmate-sketch-buyer', PAI_TAG],
+        listConfigured: Boolean(mainStage.listId),
+        listId: mainStage.listId,
+        tags: mainStage.tags,
       },
+      // null ⇒ this order is not one the live path puts on the order-bump list.
+      bumpList: bumpStage
+        ? {
+            attempted: approved,
+            ...bumpAweber,
+            listId: bumpStage.listId,
+            tags: bumpStage.tags,
+          }
+        : null,
     });
   } catch (err) {
     logger.error(`[pai] checkout error: ${String(err)}`);
@@ -531,22 +731,18 @@ async function chargeUpsell(
     label: string;
     markPurchased: (txId: string, cents: number, mainTxId: string) => Promise<void>;
     /**
-     * 🔴 EACH FUNNEL STAGE HAS ITS OWN AWEBER LIST. Getting this wrong does not
-     * just misfile the subscriber: writeSoulmateSubscriber sends
+     * 🔴 EACH FUNNEL STAGE HAS ITS OWN AWEBER LIST — picked from the lander. Getting
+     * this wrong does not just misfile the subscriber: every writer sends
      * update_existing:true, so sending two stages to the SAME list makes the
      * second overwrite the first's custom fields. That is exactly what happened
      * on the first dev run — main, upsell 1 and upsell 2 all went to the paid
      * list, and the main purchase's $44.77 / energy_clearing_ritual were
      * replaced by upsell 2's $47 / manifestation_bracelet.
      */
-    awebeListId: string;
-    /** The live tag for this stage — NOT a generated one. */
-    awebeTag: string;
-    awebeProduct: string;
-    awebeLabel: string;
+    stage: (lander: PaiLander) => PaiLander['upsell1'];
   },
 ) {
-  const { customerId, instrumentId, mainTransactionId, amountCents, firstName = 'PaiTest', email: rawEmail } =
+  const { customerId, instrumentId, mainTransactionId, amountCents, hook, firstName = 'PaiTest', email: rawEmail } =
     req.body ?? {};
 
   if (!customerId || !instrumentId || !mainTransactionId) {
@@ -554,6 +750,11 @@ async function chargeUpsell(
       .status(400)
       .json({ error: 'need customerId, instrumentId and mainTransactionId' });
   }
+
+  // Before the charge, same as /checkout. The page sends the hook the main
+  // purchase used; with none, this is the original soulmate dummy.
+  const lander = resolvePaiLander(hook);
+  if (!lander) return unknownHook(res, hook);
 
   // 🔴 THE 23-OCTOBER GUARD. Their platform does not enforce this — Tim
   // reproduced a declined CIT still allowing an approved MIT on production.
@@ -600,6 +801,7 @@ async function chargeUpsell(
   const settled = (await settleTransaction(tx.data.id)) ?? tx.data;
   const approved = String(settled.result ?? '').toLowerCase() === 'approved';
   let aweber: { success: boolean; error?: string } = { success: false, error: 'not attempted' };
+  const stage = opts.stage(lander)({ email, name: firstName, orderId: settled.id, cents });
 
   if (approved) {
     try {
@@ -616,24 +818,14 @@ async function chargeUpsell(
       transactionId: settled.id,
       email,
     });
-    aweber = await writeSoulmateSubscriber({
-      listId: opts.awebeListId || '',
-      listLabel: `${opts.awebeLabel} (PAI dev)`,
-      email,
-      name: firstName,
-      customFields: {
-        stripe_order_id: settled.id,
-        purchase_amount_usd: String(cents / 100),
-        product: opts.awebeProduct,
-      },
-      // The live tag for this stage, plus our marker. Must match what the live
-      // funnel writes, or any automation keyed on the tag will not fire.
-      tags: [opts.awebeTag, PAI_TAG],
-    });
+    // The live tag for this stage, plus our marker. Must match what the live
+    // funnel writes, or any automation keyed on the tag will not fire.
+    aweber = await stage.write();
   }
 
   res.json({
     ok: approved,
+    hook: lander.hook,
     transactionId: settled.id,
     result: settled.result,
     amountReturned: settled.amount,
@@ -645,9 +837,9 @@ async function chargeUpsell(
     aweber: {
       attempted: approved,
       ...aweber,
-      listConfigured: Boolean(opts.awebeListId),
-      listId: opts.awebeListId || null,
-      tags: [opts.awebeTag, PAI_TAG],
+      listConfigured: Boolean(stage.listId),
+      listId: stage.listId,
+      tags: stage.tags,
     },
   });
 }
@@ -658,11 +850,8 @@ router.post('/upsell/charge', (req, res) =>
     defaultCents: 4700,
     label: 'upsell1',
     markPurchased: (txId, cents, mainTxId) => markUpsellPurchased(mainTxId, txId, cents),
-    // Its OWN list and the live tag — see the note on awebeListId above.
-    awebeListId: process.env.AWEBER_SOULMATE_UPSELL1_LIST_ID || '',
-    awebeTag: 'soulmate-bracelet-buyer',
-    awebeProduct: 'soulmate_bracelet',
-    awebeLabel: 'Soulmate Bracelet Buyers',
+    // Its OWN list and the live tag — see the note on `stage` above.
+    stage: (l) => l.upsell1,
   }),
 );
 
@@ -673,10 +862,7 @@ router.post('/upsell2/charge', (req, res) =>
     label: 'upsell2',
     markPurchased: (txId, cents, mainTxId) =>
       markUpsell2Purchased(mainTxId, txId, cents, 'manifestation_bracelet'),
-    awebeListId: process.env.AWEBER_SOULMATE_UPSELL2_LIST_ID || '',
-    awebeTag: 'soulmate-love-tuner-buyer',
-    awebeProduct: 'soulmate_love_tuner',
-    awebeLabel: 'Soulmate Love Tuner Buyers',
+    stage: (l) => l.upsell2,
   }),
 );
 

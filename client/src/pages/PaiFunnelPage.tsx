@@ -27,8 +27,22 @@ interface MetadataAudit {
   expectedDropped: string[];
 }
 
+interface AweberWrite {
+  attempted?: boolean;
+  success?: boolean;
+  error?: string;
+  listId?: string | null;
+  tags?: string[];
+}
+
 interface ChargeResult {
   ok: boolean;
+  hook?: string;
+  family?: string;
+  bumpProduct?: string | null;
+  dbWritten?: boolean;
+  aweber?: AweberWrite;
+  bumpList?: AweberWrite | null;
   transactionId?: string;
   result?: string;
   status?: string;
@@ -53,8 +67,19 @@ declare global {
   }
 }
 
+interface LanderConfig {
+  hook: string;
+  family: string;
+  bucket: string;
+  hooks: string[];
+}
+
 export default function PaiFunnelPage() {
   const [stage, setStage] = useState<Stage>('boot');
+  // Which dummy lander to run, as `?hook=` on the live lander. Absent ⇒ the server's
+  // default (the original soulmate dummy); the server rejects an unknown one.
+  const [urlHook] = useState(() => new URLSearchParams(window.location.search).get('hook'));
+  const [lander, setLander] = useState<LanderConfig | null>(null);
   const [log, setLog] = useState<string[]>([]);
   const [bumpApplied, setBumpApplied] = useState(true);
   const [main, setMain] = useState<ChargeResult | null>(null);
@@ -71,13 +96,22 @@ export default function PaiFunnelPage() {
     let cancelled = false;
     (async () => {
       try {
-        const cfgRes = await fetch('/api/pai/config');
+        const cfgRes = await fetch(
+          `/api/pai/config${urlHook ? `?hook=${encodeURIComponent(urlHook)}` : ''}`,
+        );
         if (cfgRes.status === 404) {
           setStage('disabled');
           say('server route is 404 — PAI_DEV_FUNNEL is not enabled here');
           return;
         }
         const cfg = await cfgRes.json();
+        if (cfgRes.status === 400) {
+          setStage('error');
+          say(`${cfg.error} — known hooks: ${(cfg.hooks ?? []).join(', ')}`);
+          return;
+        }
+        setLander({ hook: cfg.hook, family: cfg.family, bucket: cfg.bucket, hooks: cfg.hooks ?? [] });
+        say(`lander ${cfg.hook} (${cfg.family}, bucket ${cfg.bucket})`);
         if (!cfg.publishableKey) {
           setStage('error');
           say('no publishable key from /api/pai/config');
@@ -162,9 +196,9 @@ export default function PaiFunnelPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           token: tokenId,
+          hook: lander?.hook,
           firstName: 'PaiTest',
           email: 'lewis@theseerwithin.com', // server forces the +pai tag
-          bucket: 'love',
           mainCents: 3500,
           bumpApplied,
           bumpCents: 977,
@@ -199,6 +233,8 @@ export default function PaiFunnelPage() {
           customerId: main.customerId,
           instrumentId: main.instrumentId,
           mainTransactionId: main.transactionId,
+          // The lander the MAIN purchase ran on, so the upsell files to its lists.
+          hook: main.hook ?? lander?.hook,
           amountCents: 4700,
           firstName: 'PaiTest',
           email: main.email,
@@ -240,10 +276,22 @@ export default function PaiFunnelPage() {
     >
       <h1 style={{ fontSize: 20, marginBottom: 4 }}>Payments.AI dev funnel</h1>
       <p style={{ opacity: 0.7, fontSize: 13, marginTop: 0 }}>
-        Mirrors <code>/fb-tarot/c?hook=cards-after-marriage</code> (soulmate-ageband,
-        bucket love) onto Payments.AI. Sandbox only — no real money. The live Stripe
-        funnel is untouched.
+        Mirrors <code>/fb-tarot/c?hook={lander?.hook ?? '…'}</code>
+        {lander && ` (${lander.family}, bucket ${lander.bucket})`} onto Payments.AI.
+        Sandbox only — no real money. The live Stripe funnel is untouched.
       </p>
+      {lander && lander.hooks.length > 1 && (
+        <p style={{ fontSize: 12.5, marginTop: -6 }}>
+          Run another lander:{' '}
+          {lander.hooks
+            .filter((h) => h !== lander.hook)
+            .map((h) => (
+              <a key={h} href={`?hook=${h}`} style={{ color: '#8fb0ff', marginRight: 10 }}>
+                {h}
+              </a>
+            ))}
+        </p>
+      )}
 
       {stage === 'disabled' && (
         <div style={{ ...box, borderColor: '#a33' }}>
@@ -335,6 +383,17 @@ function btn(on: boolean): React.CSSProperties {
   };
 }
 
+// ⚠️ `success` is what AWeber's API said, not proof — it has returned success on a
+// badly routed write before. Open the subscriber record to confirm.
+function AweberLine({ label, w }: { label: string; w: AweberWrite }) {
+  const state = !w.attempted ? 'not attempted' : w.success ? 'success' : `FAILED — ${w.error ?? ''}`;
+  return (
+    <div style={{ color: w.attempted && !w.success ? '#ff6b6b' : undefined }}>
+      {label}: {state} · list {w.listId ?? '(unset)'} · tags {(w.tags ?? []).join(', ')}
+    </div>
+  );
+}
+
 function ResultBlock({ label, r }: { label: string; r: ChargeResult }) {
   const a = r.metadataAudit;
   const good = r.ok;
@@ -377,6 +436,14 @@ function ResultBlock({ label, r }: { label: string; r: ChargeResult }) {
       {'parentTransactionId' in r && (
         <div>parentTransactionId: {String(r.parentTransactionId)}</div>
       )}
+      {r.bumpProduct && <div>bumpProduct: {r.bumpProduct}</div>}
+      {typeof r.dbWritten === 'boolean' && (
+        <div style={{ color: r.dbWritten ? undefined : '#ff6b6b' }}>
+          DB row written: {r.dbWritten ? 'yes' : 'NO'}
+        </div>
+      )}
+      {r.aweber && <AweberLine label="AWeber" w={r.aweber} />}
+      {r.bumpList && <AweberLine label="AWeber bump list" w={r.bumpList} />}
       {a && (
         <div style={{ marginTop: 6 }}>
           <div>
