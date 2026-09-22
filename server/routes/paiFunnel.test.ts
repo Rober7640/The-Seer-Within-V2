@@ -21,6 +21,10 @@ process.env.PAYMENTSAI_API_KEY = 'test-not-a-key';
 process.env.PAYMENTSAI_ORG_ID = 'test-org';
 process.env.PAYMENTSAI_BASE = 'https://staging-api.payments.ai';
 process.env.PAI_WEBHOOK_PASS = 'test-pass';
+// server/lib/facebook.ts reads its token ONCE at import, so it must exist before the
+// first import below or every CAPI send is skipped as "not configured". Fake: the
+// Facebook tests capture fetch, and every other test stubs it to throw.
+process.env.FB_ACCESS_TOKEN = 'test-not-a-token';
 
 const { default: paiFunnelRouter, RETRY_PROBE_USER, webhookResponseStatus } = await import('./paiFunnel');
 
@@ -320,5 +324,109 @@ describe('timedWrite', () => {
     assert.equal(r.success, false);
     assert.equal(r.timedOut, false);
     assert.match(r.error ?? '', /boom/);
+  });
+});
+
+// ── Facebook (CAPI) Purchase for Payments.AI sales ───────────────────────────────
+// Must be what the Stripe webhook sends for the live tarot funnel, keyed on the MAIN
+// transaction so the ids match the page's browser Pixel (purchase_ / upsell_u1_ /
+// upsell2_) and Facebook dedups each pair. Runs the REAL fireStripePurchaseEvent with
+// fetch captured — nothing leaves the machine.
+
+const { firePaiFbPurchase } = await import('./paiFunnel');
+const { createHash } = await import('node:crypto');
+
+describe('firePaiFbPurchase', () => {
+  const realFetch = globalThis.fetch;
+  const saved = { base: process.env.BASE_URL };
+  let sent: any[] = [];
+
+  before(() => {
+    process.env.BASE_URL = 'https://dev.example';
+    globalThis.fetch = (async (_url: unknown, init?: { body?: string }) => {
+      const body = JSON.parse(init?.body ?? '{}');
+      // Direct-to-Meta wraps the event in data[]; the Stape route sends it flat.
+      sent.push(body.data ? body.data[0] : body);
+      return new Response('{"events_received":1}', { status: 200 });
+    }) as typeof fetch;
+  });
+  after(() => {
+    globalThis.fetch = realFetch;
+    if (saved.base === undefined) delete process.env.BASE_URL;
+    else process.env.BASE_URL = saved.base;
+  });
+
+  const buyer = { email: 'lewis+pai-alone2@theseerwithin.com', firstName: 'PaiTest' };
+  const cases = [
+    {
+      product: 'energy_clearing_ritual', transactionId: 'txn_main', cents: 4477,
+      id: 'purchase_txn_main', url: 'https://dev.example/fb-tarot/welcome1', value: 44.77,
+      category: 'frontend', name: 'Energy Clearing Ritual',
+    },
+    {
+      product: 'protection_ritual', transactionId: 'txn_u1', cents: 4700,
+      id: 'upsell_u1_txn_main', url: 'https://dev.example/fb-tarot/welcome2', value: 47,
+      category: 'upsell', name: 'Protection Ritual + Volcanic Stone',
+    },
+    {
+      // upsell2_ (not upsell_u2_) — only true when funnel is the FunnelParam.
+      product: 'manifestation_bracelet', transactionId: 'txn_u2', cents: 4700,
+      id: 'upsell2_txn_main', url: 'https://dev.example/fb-tarot/success', value: 47,
+      category: 'upsell', name: 'Manifestation Bracelet',
+    },
+  ];
+
+  for (const c of cases) {
+    it(`${c.product}: ${c.id}, same shape as the Stripe webhook's`, async () => {
+      sent = [];
+      const result = await firePaiFbPurchase({
+        product: c.product,
+        transactionId: c.transactionId,
+        mainTransactionId: 'txn_main',
+        amountCents: c.cents,
+        ...buyer,
+      });
+      // What the dummy's response reports — must name the id it actually sent.
+      assert.deepEqual(result, { eventId: c.id, sent: true });
+      assert.equal(sent.length, 1, 'exactly one CAPI event');
+      const ev = sent[0];
+      assert.equal(ev.event_name, 'Purchase');
+      assert.equal(ev.event_id, c.id);
+      assert.equal(ev.event_source_url, c.url);
+      assert.equal(ev.action_source, 'website');
+      assert.equal(ev.custom_data.value, c.value);
+      assert.equal(ev.custom_data.currency, 'USD');
+      assert.equal(ev.custom_data.content_category, c.category);
+      assert.equal(ev.custom_data.content_name, c.name);
+      assert.equal(ev.user_data.em, createHash('sha256').update(buyer.email).digest('hex'));
+    });
+  }
+});
+
+describe('firePaiFbPurchase failure reporting', () => {
+  const realFetch = globalThis.fetch;
+  after(() => {
+    globalThis.fetch = realFetch;
+  });
+  const args = {
+    product: 'energy_clearing_ritual', transactionId: 'txn_m', mainTransactionId: 'txn_m',
+    amountCents: 3500, email: 'lewis+pai@theseerwithin.com', firstName: 'PaiTest',
+  };
+
+  it('reports a rejection by Facebook as not sent', async () => {
+    globalThis.fetch = (async () => new Response('{"error":"bad"}', { status: 400 })) as typeof fetch;
+    const r = await firePaiFbPurchase(args);
+    assert.equal(r.sent, false);
+    assert.equal(r.eventId, 'purchase_txn_m');
+    assert.match(r.error ?? '', /bad/);
+  });
+
+  it('stops waiting on a Facebook that never answers, and says so', async () => {
+    globalThis.fetch = (() => new Promise(() => {})) as typeof fetch;
+    const started = Date.now();
+    const r = await firePaiFbPurchase(args, 50);
+    assert.equal(r.sent, false);
+    assert.match(r.error ?? '', /no answer/);
+    assert.ok(Date.now() - started < 1000);
   });
 });

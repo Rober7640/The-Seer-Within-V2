@@ -317,9 +317,20 @@ interface StripeFbEventParams {
   firstName?: string;
 }
 
+/**
+ * What fireStripePurchaseEvent did — returned so a caller that can SHOW it (the
+ * Payments.AI dev funnel) can prove the send instead of inferring it. The Stripe
+ * webhook ignores it, exactly as it ignored the old void.
+ */
+export interface StripeFbEventResult {
+  eventId: string;
+  sent: boolean;
+  error?: string;
+}
+
 export async function fireStripePurchaseEvent(
   params: StripeFbEventParams,
-): Promise<void> {
+): Promise<StripeFbEventResult | null> {
   try {
     // logicalName drives the event_id ONLY — it stays Purchase/Upsell/Upsell2
     // so each charge keeps its distinct, dedup-safe id (purchase_*, upsell_u1_*,
@@ -329,7 +340,7 @@ export async function fireStripePurchaseEvent(
       logger.warn('fireStripePurchaseEvent: unknown product, skipping', {
         product: params.product,
       });
-      return;
+      return null;
     }
 
     const eventId = makeStripeEventId(logicalName, params.product, params.mainSessionId);
@@ -359,7 +370,7 @@ export async function fireStripePurchaseEvent(
 
     const contentName = FB_PRODUCT_NAMES[params.product] ?? '';
 
-    await sendFacebookEvent({
+    const result = await sendFacebookEvent({
       eventName,
       eventId,
       eventSourceUrl: eventSourceUrlForStripeEvent(params.product, params.funnel),
@@ -380,12 +391,14 @@ export async function fireStripePurchaseEvent(
       stripeRefId: params.stripeRefId,
       valueUsd: params.amountCents / 100,
     });
+    return { eventId, sent: result.success, ...(result.error ? { error: result.error } : {}) };
   } catch (err) {
     logger.error('fireStripePurchaseEvent failed', {
       err: String(err),
       stripeRefId: params.stripeRefId,
       product: params.product,
     });
+    return null;
   }
 }
 
