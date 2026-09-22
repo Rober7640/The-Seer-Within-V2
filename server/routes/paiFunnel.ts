@@ -233,6 +233,51 @@ export function resolvePaiLander(hook: unknown): PaiLander | null {
   return Object.prototype.hasOwnProperty.call(PAI_LANDERS, hook) ? PAI_LANDERS[hook] : null;
 }
 
+/** What an AWeber write reports back in the response. */
+type AweberResult = { success: boolean; error?: string; ms?: number; timedOut?: boolean };
+
+/** How long a charge response waits on one AWeber write. */
+export const AWEBER_WAIT_MS = 20_000;
+
+/**
+ * Await one AWeber write — but never longer than `waitMs` — and time it.
+ *
+ * 🔴 WHY (22 Sep, alone-lander run). The main charge was approved and its DB row
+ * written at 08:33:13, then the response never came back: the browser gave up
+ * with "Failed to fetch" at 08:39:20. The writers have no timeout of their own,
+ * so one AWeber call that does not answer holds the buyer's response for as long
+ * as Node's fetch will wait (minutes). The live Stripe path never awaits AWeber
+ * at all; this harness does only so it can REPORT the result.
+ *
+ * The write is NOT cancelled on timeout — it may still land — so whatever it
+ * eventually does is logged with its real duration.
+ */
+export async function timedWrite(stage: StageWrite, label: string, waitMs = AWEBER_WAIT_MS): Promise<AweberResult> {
+  const started = Date.now();
+  const write = stage.write().catch((err): AweberResult => ({ success: false, error: String(err) }));
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const timeout = new Promise<'timeout'>((resolve) => {
+    timer = setTimeout(() => resolve('timeout'), waitMs);
+  });
+  const first = await Promise.race([write, timeout]);
+  clearTimeout(timer);
+  if (first === 'timeout') {
+    logger.warn(`[pai] ${label}: no AWeber answer from list ${stage.listId} within ${waitMs}ms`);
+    void write.then((r) =>
+      logger.warn(`[pai] ${label}: AWeber answered ${Date.now() - started}ms after the call: ${JSON.stringify(r)}`),
+    );
+    return {
+      success: false,
+      error: `no answer from AWeber within ${waitMs / 1000}s (the write may still land)`,
+      ms: Date.now() - started,
+      timedOut: true,
+    };
+  }
+  const ms = Date.now() - started;
+  logger.info(`[pai] ${label}: AWeber list ${stage.listId} ${first.success ? 'ok' : 'FAILED'} in ${ms}ms`);
+  return { ...first, ms, timedOut: false };
+}
+
 function unknownHook(res: Response, hook: unknown) {
   return res.status(400).json({
     error: `unknown hook ${JSON.stringify(hook)}`,
@@ -618,7 +663,7 @@ router.post('/checkout', async (req: Request, res: Response) => {
     const instrumentId = instrumentIdOf(settled);
     // Reported in the response so a chain run can PROVE the AWeber write landed.
     // Without this the only evidence is a server log nobody outside Railway sees.
-    let aweber: { success: boolean; error?: string } = {
+    let aweber: AweberResult = {
       success: false,
       error: 'not attempted',
     };
@@ -629,7 +674,7 @@ router.post('/checkout', async (req: Request, res: Response) => {
     // whose bump buyers go there at all.
     const bumpStage =
       bumpApplied && lander.bump && bumpPaidListWanted(bumpProduct) ? lander.bump(stageArgs) : null;
-    let bumpAweber: { success: boolean; error?: string } = { success: false, error: 'not attempted' };
+    let bumpAweber: AweberResult = { success: false, error: 'not attempted' };
     let dbWritten = false;
 
     // DB row — dev Supabase, separate from production.
@@ -678,8 +723,8 @@ router.post('/checkout', async (req: Request, res: Response) => {
       // AWeber — the REAL lists this lander's live counterpart writes, with the
       // paymentsAI tag added alongside the live ones. The address is always +pai on
       // a domain we own, so it can never collide with a real subscriber.
-      aweber = await mainStage.write();
-      if (bumpStage) bumpAweber = await bumpStage.write();
+      aweber = await timedWrite(mainStage, 'main');
+      if (bumpStage) bumpAweber = await timedWrite(bumpStage, 'bump');
     }
 
     res.json({
@@ -800,7 +845,7 @@ async function chargeUpsell(
 
   const settled = (await settleTransaction(tx.data.id)) ?? tx.data;
   const approved = String(settled.result ?? '').toLowerCase() === 'approved';
-  let aweber: { success: boolean; error?: string } = { success: false, error: 'not attempted' };
+  let aweber: AweberResult = { success: false, error: 'not attempted' };
   const stage = opts.stage(lander)({ email, name: firstName, orderId: settled.id, cents });
 
   if (approved) {
@@ -820,7 +865,7 @@ async function chargeUpsell(
     });
     // The live tag for this stage, plus our marker. Must match what the live
     // funnel writes, or any automation keyed on the tag will not fire.
-    aweber = await stage.write();
+    aweber = await timedWrite(stage, opts.label);
   }
 
   res.json({

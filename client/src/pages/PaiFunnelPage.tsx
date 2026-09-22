@@ -31,6 +31,8 @@ interface AweberWrite {
   attempted?: boolean;
   success?: boolean;
   error?: string;
+  ms?: number;
+  timedOut?: boolean;
   listId?: string | null;
   tags?: string[];
 }
@@ -79,6 +81,9 @@ export default function PaiFunnelPage() {
   // Which dummy lander to run, as `?hook=` on the live lander. Absent ⇒ the server's
   // default (the original soulmate dummy); the server rejects an unknown one.
   const [urlHook] = useState(() => new URLSearchParams(window.location.search).get('hook'));
+  // Optional test address, so a run can keep its own DB row: the DB save matches on
+  // email and UPDATES the newest row. The server still forces the +pai tag.
+  const [urlEmail] = useState(() => new URLSearchParams(window.location.search).get('email'));
   const [lander, setLander] = useState<LanderConfig | null>(null);
   const [log, setLog] = useState<string[]>([]);
   const [bumpApplied, setBumpApplied] = useState(true);
@@ -198,7 +203,7 @@ export default function PaiFunnelPage() {
           token: tokenId,
           hook: lander?.hook,
           firstName: 'PaiTest',
-          email: 'lewis@theseerwithin.com', // server forces the +pai tag
+          email: urlEmail || 'lewis@theseerwithin.com', // server forces the +pai tag
           mainCents: 3500,
           bumpApplied,
           bumpCents: 977,
@@ -389,7 +394,9 @@ function AweberLine({ label, w }: { label: string; w: AweberWrite }) {
   const state = !w.attempted ? 'not attempted' : w.success ? 'success' : `FAILED — ${w.error ?? ''}`;
   return (
     <div style={{ color: w.attempted && !w.success ? '#ff6b6b' : undefined }}>
-      {label}: {state} · list {w.listId ?? '(unset)'} · tags {(w.tags ?? []).join(', ')}
+      {label}: {state}
+      {typeof w.ms === 'number' && ` in ${(w.ms / 1000).toFixed(1)}s`} · list {w.listId ?? '(unset)'} · tags{' '}
+      {(w.tags ?? []).join(', ')}
     </div>
   );
 }

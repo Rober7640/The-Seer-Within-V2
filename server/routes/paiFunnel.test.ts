@@ -285,3 +285,40 @@ describe('pai routes refuse an unknown hook before any money moves', () => {
     }
   });
 });
+
+// ── The AWeber wait limit ────────────────────────────────────────────────────────
+// 22 Sep: an approved main charge never answered the browser because one AWeber write
+// did not return. A write that never answers must cost the buyer seconds, not minutes.
+
+const { timedWrite } = await import('./paiFunnel');
+
+describe('timedWrite', () => {
+  const stage = (write: () => Promise<{ success: boolean; error?: string }>) => ({
+    listId: '6936955',
+    tags: ['t'],
+    write,
+  });
+
+  it('gives up on a write that never answers, and says so', async () => {
+    const started = Date.now();
+    const r = await timedWrite(stage(() => new Promise(() => {})), 'test', 50);
+    assert.equal(r.success, false);
+    assert.equal(r.timedOut, true);
+    assert.match(r.error ?? '', /no answer from AWeber/);
+    assert.ok(Date.now() - started < 1000, 'must not wait past the limit');
+  });
+
+  it('passes an answered write through, timed', async () => {
+    const r = await timedWrite(stage(async () => ({ success: true })), 'test', 1000);
+    assert.equal(r.success, true);
+    assert.equal(r.timedOut, false);
+    assert.equal(typeof r.ms, 'number');
+  });
+
+  it('turns a thrown write into a failure instead of a crash', async () => {
+    const r = await timedWrite(stage(async () => { throw new Error('boom'); }), 'test', 1000);
+    assert.equal(r.success, false);
+    assert.equal(r.timedOut, false);
+    assert.match(r.error ?? '', /boom/);
+  });
+});
