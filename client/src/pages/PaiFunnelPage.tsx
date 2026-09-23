@@ -51,6 +51,9 @@ interface ChargeResult {
   dbWritten?: boolean;
   /** The server-side (CAPI) half of the Facebook Purchase. */
   facebook?: { eventId?: string; sent: boolean; error?: string } | null;
+  /** Google Ads (sGTM) and Trackdesk — the two the Stripe webhook fires. */
+  gads?: { attempted: boolean; step?: string; reason?: string } | null;
+  trackdesk?: { attempted: boolean; conversionType?: string; externalId?: string; reason?: string } | null;
   aweber?: AweberWrite;
   bumpList?: AweberWrite | null;
   transactionId?: string;
@@ -268,6 +271,10 @@ export default function PaiFunnelPage() {
           amountCents: 4700,
           firstName: 'PaiTest',
           email: main.email,
+          // The live path backfills these from the original Checkout Session; PAI
+          // has no session object, so the page carries them forward itself.
+          trackdeskClickId: 'pai-dev-td',
+          gclid: 'pai-dev-gclid',
         }),
       });
       const data: ChargeResult = await res.json();
@@ -492,6 +499,19 @@ function ResultBlock({ label, r }: { label: string; r: ChargeResult }) {
         <div style={{ color: r.facebook.sent ? undefined : '#ff6b6b' }}>
           Facebook Purchase (server): {r.facebook.sent ? 'accepted' : `NOT SENT — ${r.facebook.error ?? ''}`}
           {r.facebook.eventId && ` · ${r.facebook.eventId}`}
+        </div>
+      )}
+      {r.gads && (
+        <div style={{ color: r.gads.attempted ? undefined : '#ff6b6b' }}>
+          Google Ads (server): {r.gads.attempted ? `sent ${r.gads.step}` : `NOT SENT — ${r.gads.reason ?? ''}`}
+        </div>
+      )}
+      {r.trackdesk && (
+        <div style={{ color: r.trackdesk.attempted ? undefined : '#ff6b6b' }}>
+          Trackdesk (server):{' '}
+          {r.trackdesk.attempted
+            ? `sent ${r.trackdesk.conversionType} · ${r.trackdesk.externalId}`
+            : `NOT SENT — ${r.trackdesk.reason ?? ''}`}
         </div>
       )}
       {r.aweber && <AweberLine label="AWeber" w={r.aweber} />}
