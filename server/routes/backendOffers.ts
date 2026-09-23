@@ -1,12 +1,13 @@
 import { Router, type Request, type Response } from 'express';
 import type Stripe from 'stripe';
-import { getStripe } from '../lib/stripeAccount';
+import { getStripe, getActiveStripeSecretKey } from '../lib/stripeAccount';
 import {
   BACKEND_OFFER_CATALOG,
   backendOfferForStripeProduct,
   backendOrderDescriptor,
   isBackendOfferKey,
   isBookingTreatment,
+  priceBackendOffer,
   resolveBackendCharge,
   upsellChargeFields,
   type BackendOffer,
@@ -132,6 +133,25 @@ function shippingCountriesFor(offer: BackendOffer): StripeAllowedCountry[] {
     });
   }
   return valid;
+}
+
+/**
+ * The Stripe TEST-MODE checkout gate (HANDOVER §3 Step 6).
+ *
+ * A dev-only override that lets an offer whose `readyForMoney` is still false open a
+ * Stripe TEST-mode Checkout, so its end-to-end walk can be proved before it is opened
+ * for real money. It NEVER opens a real sale:
+ *   1. OFF by default — nothing happens unless BACKEND_CHECKOUT_TEST_MODE === 'true';
+ *   2. refuses in production (NODE_ENV === 'production');
+ *   3. refuses unless the active Stripe secret key is a TEST key (`sk_test_`).
+ * All three must hold. `readyForMoney: true` remains the only way to take live money —
+ * this switch only lifts the `not_ready` refusal, and only for test cards.
+ */
+function backendCheckoutTestModeOpen(): boolean {
+  if (process.env.BACKEND_CHECKOUT_TEST_MODE !== 'true') return false;
+  if (process.env.NODE_ENV === 'production') return false;
+  const key = getActiveStripeSecretKey();
+  return typeof key === 'string' && key.startsWith('sk_test_');
 }
 
 function baseUrl(req: Request): string {
@@ -722,14 +742,26 @@ router.post('/checkout', async (req: Request, res: Response) => {
         ? null
         : Number(rawAmount);
 
-    const charge = resolveBackendCharge({
+    const chargeReq = {
       offer: offerKey,
       bump: req.body?.bump === true,
       amountCents: amountCents !== null && Number.isFinite(amountCents) ? amountCents : null,
       // ⛔ A tier KEY, never a tier price. `resolveBackendCharge` validates it against the
       //    catalog and looks the cents up server-side; an unknown rung is refused outright.
       tier: req.body?.tier,
-    });
+    };
+    let charge = resolveBackendCharge(chargeReq);
+
+    // 🔬 TEST-MODE gate (HANDOVER §3 Step 6): if the ONLY reason the offer was refused is
+    // that it is not yet open for money (`not_ready`), and the dev-only test-mode gate is
+    // open (env var on + non-prod + a Stripe TEST key), price it anyway with the SAME
+    // pure rules — so its end-to-end walk can be proved on test cards. Every OTHER refusal
+    // (unknown offer, bad amount/tier, bump on a bumpless offer) still stands. This lifts
+    // nothing in production and nothing on a live key.
+    if (!charge.ok && charge.code === 'not_ready' && backendCheckoutTestModeOpen()) {
+      logger.warn('backend/checkout: TEST-MODE gate opened a not-ready offer', { offer: offerKey });
+      charge = priceBackendOffer(BACKEND_OFFER_CATALOG[offerKey], chargeReq);
+    }
 
     if (!charge.ok) {
       // 400 with her own message — a checkout that silently does nothing is worse than

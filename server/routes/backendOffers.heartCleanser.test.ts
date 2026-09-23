@@ -16,7 +16,7 @@
 
 import express from 'express';
 import request from 'supertest';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { STRIPE_CHECKOUT_SHIPPING_COUNTRIES } from '@shared/shippingCountries';
 
 const SESSION = 'cs_test_09_order_1';
@@ -26,6 +26,9 @@ const state = {
   created: null as Record<string, unknown> | null,
   order: null as Record<string, unknown> | null,
   shipment: null as Record<string, unknown> | null,
+  // The active Stripe secret key the test-mode gate reads. A test key by default so the
+  // gate's key-prefix check does not spuriously block a test that turns the gate on.
+  stripeSecretKey: 'sk_test_placeholder_09' as string | undefined,
 };
 
 vi.mock('../lib/db', () => ({ db: {} }));
@@ -68,6 +71,7 @@ const create = vi.fn(async (params: Record<string, unknown>) => {
 const retrieve = vi.fn();
 vi.mock('../lib/stripeAccount', () => ({
   getStripe: () => ({ checkout: { sessions: { create, retrieve } } }),
+  getActiveStripeSecretKey: () => state.stripeSecretKey,
 }));
 
 // The catalog stays real. The readiness gate is lifted per test (09 is readyForMoney:false
@@ -143,6 +147,7 @@ beforeEach(() => {
   state.created = null;
   state.order = null;
   state.shipment = null;
+  state.stripeSecretKey = 'sk_test_placeholder_09';
   for (const fn of [getBeOrderBySession, writeToCustomerList, recordBackendOrder, ensureBackendShipment, create, retrieve]) {
     fn.mockClear();
   }
@@ -199,6 +204,70 @@ describe('POST /api/backend/checkout — 09', () => {
 
   it('is refused outright by committed code — readyForMoney is false', async () => {
     state.liftGate = false;
+    const res = await request(app).post('/api/backend/checkout').send({ offer: 'heart-cleanser', treatment: 'page' });
+    expect(res.status).toBe(400);
+    expect(res.body.code).toBe('not_ready');
+    expect(create).not.toHaveBeenCalled();
+  });
+});
+
+// ─── 09 · the Stripe TEST-MODE gate (HANDOVER §3 Step 6) ────────────────────────
+// A dev-only override that lets a `readyForMoney: false` offer open a Stripe TEST-mode
+// checkout, so the end-to-end walk can be proved before the offer is opened for real
+// money. OFF by default; even when on it refuses in production and refuses a live key.
+describe('POST /api/backend/checkout — 09 test-mode gate', () => {
+  const ORIGINAL_TEST_MODE = process.env.BACKEND_CHECKOUT_TEST_MODE;
+  const ORIGINAL_NODE_ENV = process.env.NODE_ENV;
+
+  afterEach(() => {
+    if (ORIGINAL_TEST_MODE === undefined) delete process.env.BACKEND_CHECKOUT_TEST_MODE;
+    else process.env.BACKEND_CHECKOUT_TEST_MODE = ORIGINAL_TEST_MODE;
+    process.env.NODE_ENV = ORIGINAL_NODE_ENV;
+  });
+
+  it('opens a not-ready offer when the env var is on, non-prod, and a TEST key', async () => {
+    // The committed catalog refuses 09 (readyForMoney:false); the real gate must run.
+    state.liftGate = false;
+    process.env.BACKEND_CHECKOUT_TEST_MODE = 'true';
+    process.env.NODE_ENV = 'development';
+    state.stripeSecretKey = 'sk_test_abc123';
+
+    const res = await request(app).post('/api/backend/checkout').send({ offer: 'heart-cleanser', treatment: 'page' });
+    expect(res.status).toBe(200);
+    expect(create).toHaveBeenCalledTimes(1);
+    expect((state.created as any).line_items[0].price_data.unit_amount).toBe(5900);
+  });
+
+  it('stays refused in production even with the env var on', async () => {
+    state.liftGate = false;
+    process.env.BACKEND_CHECKOUT_TEST_MODE = 'true';
+    process.env.NODE_ENV = 'production';
+    state.stripeSecretKey = 'sk_test_abc123';
+
+    const res = await request(app).post('/api/backend/checkout').send({ offer: 'heart-cleanser', treatment: 'page' });
+    expect(res.status).toBe(400);
+    expect(res.body.code).toBe('not_ready');
+    expect(create).not.toHaveBeenCalled();
+  });
+
+  it('stays refused with a LIVE key even when non-prod and the env var is on', async () => {
+    state.liftGate = false;
+    process.env.BACKEND_CHECKOUT_TEST_MODE = 'true';
+    process.env.NODE_ENV = 'development';
+    state.stripeSecretKey = 'sk_live_realmoney';
+
+    const res = await request(app).post('/api/backend/checkout').send({ offer: 'heart-cleanser', treatment: 'page' });
+    expect(res.status).toBe(400);
+    expect(res.body.code).toBe('not_ready');
+    expect(create).not.toHaveBeenCalled();
+  });
+
+  it('stays refused when the env var is off (default), even non-prod with a test key', async () => {
+    state.liftGate = false;
+    delete process.env.BACKEND_CHECKOUT_TEST_MODE;
+    process.env.NODE_ENV = 'development';
+    state.stripeSecretKey = 'sk_test_abc123';
+
     const res = await request(app).post('/api/backend/checkout').send({ offer: 'heart-cleanser', treatment: 'page' });
     expect(res.status).toBe(400);
     expect(res.body.code).toBe('not_ready');
