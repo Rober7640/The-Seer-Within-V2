@@ -225,11 +225,14 @@ describe('POST /api/backend/checkout — 09 test-mode gate', () => {
     process.env.NODE_ENV = ORIGINAL_NODE_ENV;
   });
 
-  it('opens a not-ready offer when the env var is on, non-prod, and a TEST key', async () => {
+  // 🔬 The DEPLOYED dev site runs `NODE_ENV=production` (the start script forces it), so the
+  // gate must NOT hinge on NODE_ENV. Its real guard is the TEST Stripe key: a test key cannot
+  // charge a real card, and production uses a LIVE key, so the gate stays shut there.
+  it('opens a not-ready offer with the env var on + a TEST key — even under NODE_ENV=production (deployed-dev case)', async () => {
     // The committed catalog refuses 09 (readyForMoney:false); the real gate must run.
     state.liftGate = false;
     process.env.BACKEND_CHECKOUT_TEST_MODE = 'true';
-    process.env.NODE_ENV = 'development';
+    process.env.NODE_ENV = 'production';
     state.stripeSecretKey = 'sk_test_abc123';
 
     const res = await request(app).post('/api/backend/checkout').send({ offer: 'heart-cleanser', treatment: 'page' });
@@ -238,22 +241,21 @@ describe('POST /api/backend/checkout — 09 test-mode gate', () => {
     expect((state.created as any).line_items[0].price_data.unit_amount).toBe(5900);
   });
 
-  it('stays refused in production even with the env var on', async () => {
-    state.liftGate = false;
-    process.env.BACKEND_CHECKOUT_TEST_MODE = 'true';
-    process.env.NODE_ENV = 'production';
-    state.stripeSecretKey = 'sk_test_abc123';
-
-    const res = await request(app).post('/api/backend/checkout').send({ offer: 'heart-cleanser', treatment: 'page' });
-    expect(res.status).toBe(400);
-    expect(res.body.code).toBe('not_ready');
-    expect(create).not.toHaveBeenCalled();
-  });
-
-  it('stays refused with a LIVE key even when non-prod and the env var is on', async () => {
+  it('also opens under NODE_ENV=development with a TEST key (NODE_ENV is irrelevant)', async () => {
     state.liftGate = false;
     process.env.BACKEND_CHECKOUT_TEST_MODE = 'true';
     process.env.NODE_ENV = 'development';
+    state.stripeSecretKey = 'sk_test_abc123';
+
+    const res = await request(app).post('/api/backend/checkout').send({ offer: 'heart-cleanser', treatment: 'page' });
+    expect(res.status).toBe(200);
+    expect(create).toHaveBeenCalledTimes(1);
+  });
+
+  it('stays refused with a LIVE key even with the env var on (the production guard)', async () => {
+    state.liftGate = false;
+    process.env.BACKEND_CHECKOUT_TEST_MODE = 'true';
+    process.env.NODE_ENV = 'production';
     state.stripeSecretKey = 'sk_live_realmoney';
 
     const res = await request(app).post('/api/backend/checkout').send({ offer: 'heart-cleanser', treatment: 'page' });
@@ -262,10 +264,10 @@ describe('POST /api/backend/checkout — 09 test-mode gate', () => {
     expect(create).not.toHaveBeenCalled();
   });
 
-  it('stays refused when the env var is off (default), even non-prod with a test key', async () => {
+  it('stays refused when the env var is off (default), even with a test key', async () => {
     state.liftGate = false;
     delete process.env.BACKEND_CHECKOUT_TEST_MODE;
-    process.env.NODE_ENV = 'development';
+    process.env.NODE_ENV = 'production';
     state.stripeSecretKey = 'sk_test_abc123';
 
     const res = await request(app).post('/api/backend/checkout').send({ offer: 'heart-cleanser', treatment: 'page' });
