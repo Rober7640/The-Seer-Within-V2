@@ -4,7 +4,7 @@ import { Router, Request, Response } from 'express';
 import { Webhook } from 'svix';
 import Stripe from 'stripe';
 import { getStripe, verifyStripeWebhook } from '../lib/stripeAccount';
-import { db, markMainPaid } from '../lib/db';
+import { db, markMainPaid, savePhoneForSession } from '../lib/db';
 import { followUpEmails, userFollowUpPreferences, migrationDripEmails, topupEmails, aidenFollowupEmails, personaFollowupEmails, evelynFollowupEmails, users, emailSuppression, creditPurchases, soulmateLanderSessions } from '@shared/schema';
 import { and, eq, sql } from 'drizzle-orm';
 import logger from '../lib/logger';
@@ -1104,6 +1104,15 @@ router.post('/stripe', async (req: Request, res: Response) => {
       markMainPaid(session.id).catch((err) =>
         logger.error('markMainPaid failed (non-blocking):', err),
       );
+      // Root-funnel phone (Stripe only collects it there, so this is a no-op on
+      // every other funnel). Saved here as well as on /api/upsell/user-data so a
+      // buyer who pays and closes the tab still has it on file.
+      const phone = session.customer_details?.phone;
+      if (phone) {
+        savePhoneForSession(session.id, phone).catch((err) =>
+          logger.error('savePhoneForSession failed (non-blocking):', err),
+        );
+      }
     }
 
     // ── ORDER-BUMP paid list (theseerwithin_money_ob_paid, 6969209) ──────────

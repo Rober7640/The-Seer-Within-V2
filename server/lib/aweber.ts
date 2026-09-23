@@ -46,6 +46,8 @@ interface AddPaidSubscriberParams {
   stripeOrderId: string;
   tags?: string[];
   shipping?: ShippingAddress;
+  /** Root-funnel buyer's phone (Stripe Checkout, E.164). Paid list only. */
+  phone?: string;
 }
 
 let cachedTokens: AWeberTokens | null = null;
@@ -642,36 +644,43 @@ export async function addPaidSubscriber(params: AddPaidSubscriberParams): Promis
   }
   
   try {
-    const subscriberData: Record<string, unknown> = {
-      email: params.email,
-      update_existing: true,
-      custom_fields: {
-        stripe_order_id: params.stripeOrderId,
-      },
-    };
-    
-    if (params.name) {
-      subscriberData.name = params.name;
-    }
-    
-    if (params.tags && params.tags.length > 0) {
-      subscriberData.tags = params.tags;
-    }
-    
-    const response = await makeAWeberRequest(
-      `/accounts/${accountId}/lists/${paidListId}/subscribers`,
-      {
-        method: 'POST',
-        body: JSON.stringify(subscriberData),
+    // `phone` rides in custom_fields only when there is one (root-funnel buyers).
+    // Without it the body is exactly what it has always been.
+    const postSubscriber = (withPhone: boolean) => {
+      const subscriberData: Record<string, unknown> = {
+        email: params.email,
+        update_existing: true,
+        custom_fields: {
+          stripe_order_id: params.stripeOrderId,
+          ...(withPhone && params.phone && { phone: params.phone }),
+        },
+      };
+
+      if (params.name) {
+        subscriberData.name = params.name;
       }
-    );
-    
+
+      if (params.tags && params.tags.length > 0) {
+        subscriberData.tags = params.tags;
+      }
+
+      return makeAWeberRequest(
+        `/accounts/${accountId}/lists/${paidListId}/subscribers`,
+        {
+          method: 'POST',
+          body: JSON.stringify(subscriberData),
+        }
+      );
+    };
+
+    let response = await postSubscriber(true);
+
     if (response.ok || response.status === 201) {
       logger.info(`AWeber Paid List: Successfully added subscriber ${params.email} with order ${params.stripeOrderId}`);
       return { success: true };
     }
 
-    const errorText = await response.text();
+    let errorText = await response.text();
     logger.error(`AWeber paid list add subscriber failed: status=${response.status} body=${errorText}`);
 
     if (response.status === 400) {
@@ -682,6 +691,26 @@ export async function addPaidSubscriber(params: AddPaidSubscriberParams): Promis
           return { success: true };
         }
       } catch {}
+
+      // AWeber rejects the WHOLE request for a custom field the list doesn't
+      // define. If the `phone` field is missing or misnamed on the paid list, a
+      // root buyer would otherwise not reach the paid list at all. Retry once
+      // without the phone (keeping stripe_order_id) so she always lands; this
+      // warning is what says the field needs creating.
+      if (params.phone) {
+        logger.warn(
+          `AWeber Paid List: retrying ${params.email} without phone — list ${paidListId} may not define a "phone" custom field`
+        );
+        response = await postSubscriber(false);
+
+        if (response.ok || response.status === 201) {
+          logger.info(`AWeber Paid List: Added subscriber ${params.email} with order ${params.stripeOrderId} WITHOUT phone`);
+          return { success: true };
+        }
+
+        errorText = await response.text();
+        logger.error(`AWeber paid list retry without phone failed: status=${response.status} body=${errorText}`);
+      }
     }
 
     return { success: false, error: `AWeber API error: ${response.status} - ${errorText}` };

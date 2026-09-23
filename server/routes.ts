@@ -69,6 +69,7 @@ import {
   updateStripeData,
   getConversationByStripeSession,
   markUpsellOffered,
+  savePhoneForSession,
   markUpsellPurchased,
   saveShippingAddress,
   markUpsell2Offered,
@@ -1155,6 +1156,12 @@ export async function registerRoutes(
         ...(customer
           ? { customer: customer.id }
           : { customer_creation: "always" }),
+        // Compulsory phone field on the ROOT funnel only (theseerwithin.com — the
+        // one funnel that sends no `funnel`). Stripe won't let her pay without it.
+        // Every ad funnel's checkout stays exactly as it was. The number is read
+        // back from customer_details.phone by the purchase webhook (DB) and
+        // /api/upsell/user-data (DB + AWeber paid list).
+        ...(!funnel && { phone_number_collection: { enabled: true } }),
         payment_method_types: ["card"],
         line_items: [
           {
@@ -2052,11 +2059,22 @@ export async function registerRoutes(
                 paidTags.push("noemail");
               }
 
+              // Root-funnel phone (the only checkout that collects one). Also
+              // saved to the row here, not only by the webhook, because the
+              // no-email fallback above creates the row AFTER the webhook ran.
+              const phone = session.customer_details?.phone || undefined;
+              if (phone) {
+                savePhoneForSession(sessionId, phone).catch((err) =>
+                  logger.warn("savePhoneForSession error (non-blocking):", err),
+                );
+              }
+
               addPaidSubscriber({
                 email: conversation!.email!,
                 name: conversation!.firstName || undefined,
                 stripeOrderId: paymentIntentId,
                 tags: fbifyAweberTags(paidTags, sessionFunnel),
+                phone,
               })
                 .then((result) => {
                   if (result.success) {

@@ -2110,3 +2110,25 @@ Not covered — needs Stripe test mode or the sandbox server:
 - [ ] Receipt with a real paid 09 session → name, `$59 (free shipping)`, the Stripe address as lines; a paid 06 session with the 09 URL → fallback
 - [ ] U1 accept → shipping form still opens (re-asks the address she gave Stripe) — decide prefill/skip, then test
 - [ ] U2 off-session decline → hosted fallback checkout accepts the buyer's country (today it allows only 7)
+
+## Root funnel — compulsory phone at checkout (2026-09-23)
+
+Stripe Checkout's `phone_number_collection` is on for `/api/checkout` ONLY when no
+`funnel` is sent (the root funnel, theseerwithin.com). Saved to `conversations.phone`
+(webhook + `/api/upsell/user-data`) and to the AWeber paid list `phone` custom field.
+
+Covered by `server/lib/aweber.paidPhone.test.ts`:
+
+- [x] no phone ⇒ paid-list body unchanged (`stripe_order_id` only)
+- [x] phone ⇒ sent beside `stripe_order_id`
+- [x] list rejects `phone` ⇒ retried without it, `stripe_order_id` + tags kept, buyer still lands
+- [x] no retry on "already subscribed" or on a no-phone 400
+
+Not covered — needs a browser or a live walk:
+
+- [ ] Root `/chat` → checkout shows a required phone field; paying without it is blocked
+- [ ] `/fb`, `/fb-tarot`, `/fb-palm`, `/fb-read`, `/gdn` checkouts show NO phone field
+- [ ] Root downsell ($25) checkout also asks for phone
+- [ ] After a root test purchase: `conversations.phone` is set, and the AWeber paid-list subscriber has `phone`
+- [ ] Root `?noemail=1` purchase: phone still saved (row is created by the `/api/upsell/user-data` fallback)
+- [ ] Buyer who pays and closes the tab before `/welcome1`: phone still saved by the webhook

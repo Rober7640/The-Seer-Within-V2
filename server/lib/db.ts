@@ -353,6 +353,24 @@ export async function markMainPaid(sessionId: string): Promise<void> {
   }
 }
 
+// Save the phone Stripe Checkout collected (root funnel only — see
+// conversations.phone). Matched on the checkout session id like markMainPaid, so
+// a Stripe webhook retry just rewrites the same value. Non-throwing: a failure
+// here must never break the purchase webhook or the upsell page load.
+export async function savePhoneForSession(sessionId: string, phone: string): Promise<void> {
+  try {
+    await db
+      .update(conversations)
+      .set({
+        phone: phone.slice(0, 40),
+        updatedAt: new Date(),
+      })
+      .where(eq(conversations.stripeSessionId, sessionId));
+  } catch (error) {
+    logger.error("Database savePhoneForSession update error:", error);
+  }
+}
+
 export async function markUpsellPurchased(
   sessionId: string,
   upsellPaymentId: string,
