@@ -137,7 +137,7 @@ All four files exist in the repo and are safe to re-run.
 In order (full detail in `HANDOVER.md`):
 
 1. Run the 4 migrations above on the shared database (do this **first**).
-2. Set `ORDERS_NOTIFY_EMAIL` to whoever packs the parcels.
+2. Set `ORDERS_NOTIFY_EMAIL` = **`support@cosmonumerology.com`** (the support/packer inbox that receives the "parcel to ship" + "do not ship" alerts). This is a server env var on the Railway service, not a code change.
 3. Stripe dashboard: turn on the **`charge.refunded`** webhook event (both accounts if B is used).
 4. Do the AWeber setup in section 3.
 5. Deploy the branch **with checkout still off**.
