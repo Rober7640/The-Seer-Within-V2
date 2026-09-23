@@ -21,6 +21,7 @@ import { BACKEND_STRIPE_PRODUCT_PREFIX, resolveOfferKey } from '@shared/backendO
 import { recordBackendUpsellOrder } from '../lib/beUpsellOrders';
 import { migrateAndEmailFunnelUser } from '../lib/funnelMigrationEmail';
 import { fireGoogleAdsConversion, gadsStepForProduct } from '../lib/googleAds';
+import { reportTrackdeskConversion } from '../lib/trackdesk';
 import { maybeSchedulePostPurchaseDrip } from '../lib/postPurchaseDripTrigger';
 import {
   addSoulmatePaidSubscriber,
@@ -765,60 +766,10 @@ async function fireGAdsForStripe(opts: {
   });
 }
 
-const TRACKDESK_API_KEY = process.env.TRACKDESK_API_KEY;
-const TRACKDESK_CONVERSION_URL = 'https://the-seer-within.trackdesk.com/tracking/conversion/v1';
-
-/**
- * Report a conversion to Trackdesk server-side.
- * Fails silently — affiliate tracking should never block purchases.
- */
-export async function reportTrackdeskConversion(params: {
-  clickId: string;
-  conversionType: 'sale' | 'lead' | 'upsell1' | 'upsell2';
-  externalId: string;
-  customerId: string;
-  amount?: number;
-  currency?: string;
-}) {
-  // TRACKDESK_API_KEY acts as the feature flag for enabling tracking.
-  // The tenant-scoped conversion endpoint below does not require the key in headers.
-  if (!TRACKDESK_API_KEY) {
-    logger.warn('Trackdesk: API key not configured, skipping conversion');
-    return;
-  }
-
-  try {
-    const body: Record<string, unknown> = {
-      cid: params.clickId,
-      conversionTypeCode: params.conversionType,
-      externalId: params.externalId,
-      customerId: params.customerId,
-      status: 'CONVERSION_STATUS_APPROVED',
-    };
-    if (params.amount !== undefined) {
-      body.amount = { value: String(params.amount) };
-      body.currency = { code: params.currency || 'USD' };
-    }
-
-    const response = await fetch(TRACKDESK_CONVERSION_URL, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(body),
-    });
-
-    if (!response.ok) {
-      const text = await response.text();
-      logger.error(`Trackdesk ${params.conversionType} conversion failed (${response.status}) body=${text} payload=${JSON.stringify(body)}`);
-    } else {
-      const amountLabel = params.amount !== undefined ? ` — $${params.amount}` : '';
-      logger.info(`Trackdesk ${params.conversionType} reported: ${params.externalId}${amountLabel}`);
-    }
-  } catch (err) {
-    logger.error('Trackdesk conversion error:', err);
-  }
-}
+// Trackdesk now lives in lib/ beside the other conversion transports, so a
+// non-Stripe payment path can fire it without importing this module (Stripe,
+// PayPal, svix). Re-exported so routes.ts's existing import keeps working.
+export { reportTrackdeskConversion };
 
 /**
  * POST /api/webhooks/stripe

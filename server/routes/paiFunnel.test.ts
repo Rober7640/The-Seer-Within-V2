@@ -25,6 +25,11 @@ process.env.PAI_WEBHOOK_PASS = 'test-pass';
 // first import below or every CAPI send is skipped as "not configured". Fake: the
 // Facebook tests capture fetch, and every other test stubs it to throw.
 process.env.FB_ACCESS_TOKEN = 'test-not-a-token';
+// googleAds.ts and trackdesk.ts read theirs ONCE at import too, and an unset one
+// makes every conversion a SILENT no-op — so without these the conversion tests
+// below would pass against a dead path and prove nothing.
+process.env.SGTM_GADS_ENDPOINT = 'https://metrics.example/data';
+process.env.TRACKDESK_API_KEY = 'test-not-a-key';
 
 const { default: paiFunnelRouter, RETRY_PROBE_USER, webhookResponseStatus } = await import('./paiFunnel');
 
@@ -428,5 +433,172 @@ describe('firePaiFbPurchase failure reporting', () => {
     assert.equal(r.sent, false);
     assert.match(r.error ?? '', /no answer/);
     assert.ok(Date.now() - started < 1000);
+  });
+});
+
+// ── GOOGLE ADS + TRACKDESK ──────────────────────────────────────────────────────
+//
+// The last two side effects the live Stripe path fires that Payments.AI's does not.
+// Both hang off the Stripe WEBHOOK (webhooks.ts fireGAdsForStripe / the 1-click
+// upsell routes in routes.ts), which a PAI charge never reaches — so unlike Lead
+// or the price variant there is no shared upstream that covers them.
+//
+// The single rule both share, and the one worth a test: every conversion is keyed
+// on the MAIN transaction, never on the upsell's own id. Google Ads dedups
+// Count="Every" conversions on the order id and Trackdesk dedups on externalId,
+// so keying an upsell on its own charge id would double-count it against the
+// client-side fire for the same order.
+
+const { firePaiGAdsConversion, firePaiTrackdeskConversion } = await import('./paiFunnel');
+
+/** Capture whatever a conversion helper POSTs, without reaching the network. */
+function captureFetch(sink: { sent: any[] }) {
+  return (async (url: unknown, init?: { body?: string }) => {
+    sink.sent.push({ url: String(url), body: JSON.parse(init?.body ?? '{}') });
+    return new Response('{}', { status: 200 });
+  }) as typeof fetch;
+}
+
+describe('firePaiGAdsConversion', () => {
+  const realFetch = globalThis.fetch;
+  const sink = { sent: [] as any[] };
+  before(() => { globalThis.fetch = captureFetch(sink); });
+  after(() => { globalThis.fetch = realFetch; });
+
+  const buyer = { email: 'lewis+pai-alone2@theseerwithin.com', gclid: 'pai-dev-gclid' };
+  const cases = [
+    { product: 'energy_clearing_ritual', cents: 4477, event: 'gads_purchase', value: 44.77 },
+    { product: 'protection_ritual', cents: 4700, event: 'gads_upsell1', value: 47 },
+    { product: 'manifestation_bracelet', cents: 4700, event: 'gads_upsell2', value: 47 },
+  ];
+
+  for (const c of cases) {
+    it(`${c.product}: ${c.event}, order id = the MAIN transaction`, async () => {
+      sink.sent = [];
+      await firePaiGAdsConversion({
+        product: c.product,
+        mainTransactionId: 'txn_main',
+        amountCents: c.cents,
+        ...buyer,
+      });
+      assert.equal(sink.sent.length, 1, 'exactly one sGTM event');
+      const b = sink.sent[0].body;
+      assert.equal(b.event_name, c.event);
+      assert.equal(b.transaction_id, 'txn_main', 'dedup key must be the main txn');
+      assert.equal(b.value, c.value);
+      assert.equal(b.currency, 'USD');
+      assert.equal(b.gclid, 'pai-dev-gclid');
+    });
+  }
+
+  it('sends nothing without a gclid — no click to credit', async () => {
+    sink.sent = [];
+    await firePaiGAdsConversion({
+      product: 'energy_clearing_ritual',
+      mainTransactionId: 'txn_main',
+      amountCents: 3500,
+      email: buyer.email,
+    });
+    assert.equal(sink.sent.length, 0);
+  });
+
+  it('sends nothing for a product with no conversion step', async () => {
+    sink.sent = [];
+    await firePaiGAdsConversion({
+      product: 'soulmate_love_tuner',
+      mainTransactionId: 'txn_main',
+      amountCents: 7900,
+      ...buyer,
+    });
+    assert.equal(sink.sent.length, 0);
+  });
+});
+
+describe('firePaiTrackdeskConversion', () => {
+  const realFetch = globalThis.fetch;
+  const sink = { sent: [] as any[] };
+  before(() => { globalThis.fetch = captureFetch(sink); });
+  after(() => { globalThis.fetch = realFetch; });
+
+  const buyer = { email: 'lewis+pai-alone2@theseerwithin.com', clickId: 'pai-dev-td' };
+  const cases = [
+    // externalId: the main purchase is the bare txn, upsells are suffixed off it —
+    // exactly as webhooks.ts builds them from `metadata.originalSession || session.id`.
+    { product: 'energy_clearing_ritual', cents: 4477, type: 'sale', externalId: 'txn_main', amount: '44.77' },
+    { product: 'protection_ritual', cents: 4700, type: 'upsell1', externalId: 'txn_main_upsell1', amount: '47' },
+    { product: 'manifestation_bracelet', cents: 4700, type: 'upsell2', externalId: 'txn_main_upsell2', amount: '47' },
+  ];
+
+  for (const c of cases) {
+    it(`${c.product}: reports ${c.type} as ${c.externalId}`, async () => {
+      sink.sent = [];
+      await firePaiTrackdeskConversion({
+        product: c.product,
+        mainTransactionId: 'txn_main',
+        amountCents: c.cents,
+        ...buyer,
+      });
+      assert.equal(sink.sent.length, 1, 'exactly one Trackdesk conversion');
+      const b = sink.sent[0].body;
+      assert.equal(b.cid, 'pai-dev-td');
+      assert.equal(b.conversionTypeCode, c.type);
+      assert.equal(b.externalId, c.externalId);
+      assert.equal(b.customerId, buyer.email);
+      assert.equal(b.amount.value, c.amount);
+      assert.equal(b.currency.code, 'USD');
+      assert.equal(b.status, 'CONVERSION_STATUS_APPROVED');
+    });
+  }
+
+  it('sends nothing without a click id — no affiliate to credit', async () => {
+    sink.sent = [];
+    await firePaiTrackdeskConversion({
+      product: 'energy_clearing_ritual',
+      mainTransactionId: 'txn_main',
+      amountCents: 3500,
+      email: buyer.email,
+    });
+    assert.equal(sink.sent.length, 0);
+  });
+});
+
+// The harness exists to SURFACE results, so each conversion must say whether it was
+// attempted and, when it wasn't, why — otherwise a missing click id looks identical
+// to a working fire. (It reports "attempted", not "accepted": the underlying live
+// helpers swallow their own transport errors and return void.)
+describe('pai conversion reporting', () => {
+  const realFetch = globalThis.fetch;
+  const sink = { sent: [] as any[] };
+  before(() => { globalThis.fetch = captureFetch(sink); });
+  after(() => { globalThis.fetch = realFetch; });
+
+  const base = { mainTransactionId: 'txn_main', amountCents: 3500, email: 'lewis+pai@theseerwithin.com' };
+
+  it('says so when Google Ads was fired', async () => {
+    const r = await firePaiGAdsConversion({ ...base, product: 'energy_clearing_ritual', gclid: 'g1' });
+    assert.deepEqual(r, { attempted: true, step: 'gads_purchase' });
+  });
+
+  it('names the missing gclid rather than failing silently', async () => {
+    const r = await firePaiGAdsConversion({ ...base, product: 'energy_clearing_ritual' });
+    assert.equal(r.attempted, false);
+    assert.match(r.reason ?? '', /gclid/);
+  });
+
+  it('names an unmapped product for Google Ads', async () => {
+    const r = await firePaiGAdsConversion({ ...base, product: 'soulmate_love_tuner', gclid: 'g1' });
+    assert.equal(r.attempted, false);
+    assert.match(r.reason ?? '', /no conversion step/);
+  });
+
+  it('says so when Trackdesk was reported', async () => {
+    const r = await firePaiTrackdeskConversion({ ...base, product: 'protection_ritual', clickId: 'td1' });
+    assert.deepEqual(r, { attempted: true, conversionType: 'upsell1', externalId: 'txn_main_upsell1' });
+  });
+
+  it('names the missing click id rather than failing silently', async () => {
+    const r = await firePaiTrackdeskConversion({ ...base, product: 'protection_ritual' });
+    assert.equal(r.attempted, false);
+    assert.match(r.reason ?? '', /click id/);
   });
 });

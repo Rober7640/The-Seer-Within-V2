@@ -61,6 +61,8 @@ import { updateStripeData, markUpsellPurchased, markUpsell2Purchased } from '../
 import { posthog } from '../lib/posthog';
 import { buildPurchaseEvent } from '../lib/purchaseAnalytics';
 import { fireStripePurchaseEvent, type StripeFbEventResult } from '../lib/facebook';
+import { fireGoogleAdsConversion, gadsStepForProduct } from '../lib/googleAds';
+import { reportTrackdeskConversion } from '../lib/trackdesk';
 import { funnelDefForParam, type FunnelParam } from '@shared/funnelConfig';
 import { bumpProductKeyFor, bumpPaidListWanted } from '@shared/landerBumpRouting';
 
@@ -386,6 +388,93 @@ export async function firePaiFbPurchase(
   clearTimeout(timer);
   if (first === 'timeout') return { sent: false, error: `no answer within ${waitMs / 1000}s (may still send)` };
   return first ?? { sent: false, error: 'not sent — see the server log' };
+}
+
+/**
+ * Google Ads + Trackdesk for a Payments.AI sale — the last two side effects the live
+ * Stripe path fires that a PAI charge never triggers. Both live on the Stripe WEBHOOK
+ * (webhooks.ts fireGAdsForStripe) or the 1-click upsell routes (routes.ts), and
+ * Payments.AI reaches neither.
+ *
+ * 🔴 BOTH KEY ON THE MAIN TRANSACTION, never on the upsell's own charge id. Google Ads
+ * dedups Count="Every" conversions on the order id and Trackdesk dedups on externalId,
+ * so keying an upsell on its own id would count it TWICE against the client-side fire
+ * for the same order. Stripe keys both on the main Checkout Session — orderId =
+ * mainSessionId, externalId = `${originalSession}_upsell1` — so the main transaction
+ * id is the equivalent here.
+ *
+ * Fire-and-forget, like the live path: neither may fail a charge that already
+ * succeeded, and both swallow their own errors internally.
+ */
+export type PaiGAdsResult =
+  | { attempted: true; step: string; reason?: undefined }
+  | { attempted: false; reason: string; step?: undefined };
+
+export async function firePaiGAdsConversion(args: {
+  product: string;
+  mainTransactionId: string;
+  amountCents: number;
+  gclid?: string;
+  email?: string;
+}): Promise<PaiGAdsResult> {
+  const step = gadsStepForProduct(args.product);
+  if (!step) return { attempted: false, reason: `no conversion step for ${args.product}` };
+  // Checked HERE as well as inside fireGoogleAdsConversion, which returns silently:
+  // the harness has to be able to say WHY nothing was sent.
+  if (!args.gclid) return { attempted: false, reason: 'no gclid — no click to credit' };
+  // No Stripe session to backfill a gclid from, and none needed: unlike a 1-click
+  // PaymentIntent, the dummy carries the gclid on every charge request.
+  await fireGoogleAdsConversion({
+    step,
+    gclid: args.gclid,
+    valueCents: args.amountCents,
+    orderId: args.mainTransactionId,
+    email: args.email,
+  });
+  return { attempted: true, step: `gads_${step}` };
+}
+
+/**
+ * The Trackdesk conversion type and externalId suffix each product reports under —
+ * the same mapping webhooks.ts builds inline for the Stripe path.
+ */
+const PAI_TRACKDESK_CONVERSION: Record<
+  string,
+  { type: 'sale' | 'upsell1' | 'upsell2'; suffix: string }
+> = {
+  energy_clearing_ritual: { type: 'sale', suffix: '' },
+  protection_ritual: { type: 'upsell1', suffix: '_upsell1' },
+  manifestation_bracelet: { type: 'upsell2', suffix: '_upsell2' },
+};
+
+export type PaiTrackdeskResult =
+  | {
+      attempted: true;
+      conversionType: 'sale' | 'upsell1' | 'upsell2';
+      externalId: string;
+      reason?: undefined;
+    }
+  | { attempted: false; reason: string };
+
+export async function firePaiTrackdeskConversion(args: {
+  product: string;
+  mainTransactionId: string;
+  amountCents: number;
+  clickId?: string;
+  email: string;
+}): Promise<PaiTrackdeskResult> {
+  const mapping = PAI_TRACKDESK_CONVERSION[args.product];
+  if (!mapping) return { attempted: false, reason: `no conversion type for ${args.product}` };
+  if (!args.clickId) return { attempted: false, reason: 'no click id — no affiliate to credit' };
+  const externalId = `${args.mainTransactionId}${mapping.suffix}`;
+  await reportTrackdeskConversion({
+    clickId: args.clickId,
+    conversionType: mapping.type,
+    amount: args.amountCents / 100,
+    externalId,
+    customerId: args.email,
+  });
+  return { attempted: true, conversionType: mapping.type, externalId };
 }
 
 /** Hosts this must never serve on, whatever the environment claims to be. */
@@ -733,6 +822,8 @@ router.post('/checkout', async (req: Request, res: Response) => {
       bumpApplied && lander.bump && bumpPaidListWanted(bumpProduct) ? lander.bump(stageArgs) : null;
     let bumpAweber: AweberResult = { success: false, error: 'not attempted' };
     let facebook: PaiFbResult | null = null;
+    let gads: PaiGAdsResult | null = null;
+    let trackdesk: PaiTrackdeskResult | null = null;
     let dbWritten = false;
 
     // DB row — dev Supabase, separate from production.
@@ -788,6 +879,24 @@ router.post('/checkout', async (req: Request, res: Response) => {
         firstName,
       });
 
+      // Google Ads + Trackdesk — the two side effects that live on the Stripe
+      // WEBHOOK, which a Payments.AI charge never reaches. This transaction IS the
+      // main one, so it is its own dedup key.
+      gads = await firePaiGAdsConversion({
+        product: 'energy_clearing_ritual',
+        mainTransactionId: settled.id,
+        amountCents: totalCents,
+        gclid: gclid ? String(gclid) : undefined,
+        email,
+      });
+      trackdesk = await firePaiTrackdeskConversion({
+        product: 'energy_clearing_ritual',
+        mainTransactionId: settled.id,
+        amountCents: totalCents,
+        clickId: trackdeskClickId ? String(trackdeskClickId) : undefined,
+        email,
+      });
+
       // AWeber — the REAL lists this lander's live counterpart writes, with the
       // paymentsAI tag added alongside the live ones. The address is always +pai on
       // a domain we own, so it can never collide with a real subscriber.
@@ -813,6 +922,9 @@ router.post('/checkout', async (req: Request, res: Response) => {
       dbWritten,
       // Server-side (CAPI) half of the Facebook Purchase; null ⇒ not approved, not sent.
       facebook,
+      // null ⇒ not approved. `attempted:false` ⇒ approved but skipped, with the reason.
+      gads,
+      trackdesk,
       aweber: {
         attempted: approved,
         ...aweber,
@@ -857,8 +969,13 @@ async function chargeUpsell(
     stage: (lander: PaiLander) => PaiLander['upsell1'];
   },
 ) {
-  const { customerId, instrumentId, mainTransactionId, amountCents, hook, firstName = 'PaiTest', email: rawEmail } =
-    req.body ?? {};
+  const {
+    customerId, instrumentId, mainTransactionId, amountCents, hook,
+    firstName = 'PaiTest', email: rawEmail,
+    // Carried from the main purchase so the upsell's conversions credit the same
+    // click — the live path backfills these from the original Checkout Session.
+    trackdeskClickId, gclid,
+  } = req.body ?? {};
 
   if (!customerId || !instrumentId || !mainTransactionId) {
     return res
@@ -917,6 +1034,8 @@ async function chargeUpsell(
   const approved = String(settled.result ?? '').toLowerCase() === 'approved';
   let aweber: AweberResult = { success: false, error: 'not attempted' };
   let facebook: PaiFbResult | null = null;
+  let gads: PaiGAdsResult | null = null;
+  let trackdesk: PaiTrackdeskResult | null = null;
   const stage = opts.stage(lander)({ email, name: firstName, orderId: settled.id, cents });
 
   if (approved) {
@@ -945,6 +1064,23 @@ async function chargeUpsell(
       email,
       firstName,
     });
+    // Google Ads + Trackdesk, keyed on the MAIN transaction so each dedups against
+    // the client-side fire for the same order rather than counting twice.
+    gads = await firePaiGAdsConversion({
+      product: opts.product,
+      mainTransactionId,
+      amountCents: cents,
+      gclid: gclid ? String(gclid) : undefined,
+      email,
+    });
+    trackdesk = await firePaiTrackdeskConversion({
+      product: opts.product,
+      mainTransactionId,
+      amountCents: cents,
+      clickId: trackdeskClickId ? String(trackdeskClickId) : undefined,
+      email,
+    });
+
     // The live tag for this stage, plus our marker. Must match what the live
     // funnel writes, or any automation keyed on the tag will not fire.
     aweber = await timedWrite(stage, opts.label);
@@ -962,6 +1098,8 @@ async function chargeUpsell(
     parentTransactionId: settled.parentTransactionId ?? null,
     metadataAudit: auditMetadata(metadata, settled.metadata),
     facebook,
+    gads,
+    trackdesk,
     aweber: {
       attempted: approved,
       ...aweber,
