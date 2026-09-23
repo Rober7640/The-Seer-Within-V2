@@ -561,14 +561,19 @@ describe('regression: 06/07/08 tags and lists are unchanged', () => {
       bumpTag: 'be-07-bump',
       deliveredTag: 'be-07-delivered',
     });
+    // 08 has its OWN BE lists on development (reading 6975749 / order-bump 6975750),
+    // with orderIdField + bumpTagOnInitial — a development change made after the 09
+    // branch forked, so this regression snapshot was updated to match the live 08 wiring.
     expect(BACKEND_OFFERS['marcus-reading']).toEqual({
       number: '08',
       name: 'Marcus Personal Reading',
       tag: 'be-08',
       bumpTag: 'be-08-speed',
       deliveredTag: 'be-08-delivered',
-      initialListId: '6972552',
-      bumpListId: '6972554',
+      initialListId: '6975749',
+      bumpListId: '6975750',
+      orderIdField: 'order_id',
+      bumpTagOnInitial: true,
     });
     expect(purchaseListWrites('pixiu-bracelet', true)).toEqual([
       { listId: '6972552', tags: ['be-customer', 'be-06-pixiu-bracelet'], role: 'initial' },
