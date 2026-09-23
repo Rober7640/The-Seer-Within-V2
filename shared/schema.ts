@@ -1724,6 +1724,24 @@ export const beUpsellOrders = pgTable("be_upsell_orders", {
   email: text("email"),
   firstName: text("first_name"),
 
+  /**
+   * Where this upsell parcel goes — both upsells ship a physical object.
+   *
+   * Read off the upsell PaymentIntent (server/lib/beUpsellOrders.ts). For an offer that
+   * collected the address at checkout (09, 06 — the catalog's `collectsShipping`) the
+   * charge copies the BOOKING address onto the PI and the chat never asks for it again
+   * (Joel, 2026-09-16: "skip"). Every other offer fills these from the shipping form.
+   *
+   * ⚠️ Added by migrations/2026-09-15-be-shipments.sql. Do NOT `npm run db:push`.
+   */
+  recipientName: text("recipient_name"),
+  line1: text("line1"),
+  line2: text("line2"),
+  city: text("city"),
+  state: text("state"),
+  postalCode: text("postal_code"),
+  country: text("country"),                     // ISO alpha-2
+
   createdAt: timestamp("created_at").defaultNow().notNull(),
 }, (table) => [
   index("idx_be_upsell_orders_offer").on(table.offer, table.createdAt),
@@ -1732,6 +1750,98 @@ export const beUpsellOrders = pgTable("be_upsell_orders", {
 
 export type BeUpsellOrder = typeof beUpsellOrders.$inferSelect;
 export type InsertBeUpsellOrder = typeof beUpsellOrders.$inferInsert;
+
+// ============================================================
+// BACKEND DECK SHIPMENTS (be_shipments)
+// ============================================================
+// One parcel per paid PHYSICAL backend booking (06 Wishing Bracelet, 09 Heart Cleanser
+// Love Charm) — the record someone packs from, marks shipped, or cancels.
+//
+// 🔴 DELIBERATELY NOT COLUMNS ON be_orders. Production may lack the 07/08 be_orders
+// columns, so a be_orders insert can fail there; a parcel that was paid for must still be
+// recorded and still reach the operator. `be_order_id` is a soft link, NULL when that
+// write failed, and there is no foreign key on purpose.
+//
+// UNIQUE stripe_session_id ⇒ exactly one row per Checkout session: the webhook and the
+// order-lookup retry both upsert, and a retry never rewrites the address, the status or
+// the tracking (server/lib/beShipments.ts).
+//
+// The query this exists for — every paid parcel not yet posted:
+//   SELECT id, offer, recipient_name, country, created_at, operator_alert_error
+//   FROM be_shipments WHERE status = 'pending' ORDER BY created_at;
+//
+// ⚠️ Create it with migrations/2026-09-15-be-shipments.sql. Do NOT `npm run db:push` —
+// dev and prod share ONE database, and push diffs the WHOLE schema.
+// ============================================================
+
+export type BeShipmentStatus = 'pending' | 'shipped' | 'cancelled';
+
+export const beShipments = pgTable("be_shipments", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+
+  // The booking Checkout session = the order. UNIQUE => idempotent upsert.
+  stripeSessionId: text("stripe_session_id").notNull().unique(),
+  stripePaymentIntentId: text("stripe_payment_intent_id"),
+  /** Soft link to be_orders.id. NULL when the be_orders write failed. No FK on purpose. */
+  beOrderId: varchar("be_order_id"),
+
+  offer: text("offer").notNull(),              // pixiu-bracelet | heart-cleanser
+  offerNumber: text("offer_number").notNull(), // 06 | 09
+  /** What is in the parcel — the offer's Stripe product key, e.g. be_heart_cleanser. */
+  sku: text("sku").notNull(),
+  quantity: integer("quantity").notNull().default(1),
+  /**
+   * She took the offer's order bump (checkout's `metadata.bump === '1'`). For 09 that is Reiki
+   * charging BEFORE PACKING — a real service done by hand (09-C3), so the operator alert leads
+   * with it. Written once from the session; a retry never rewrites it.
+   */
+  bumpPurchased: boolean("bump_purchased").notNull().default(false),
+  /** The catalog bump key when she took it (09: `reiki_charge`), else NULL. */
+  bumpProductKey: text("bump_product_key"),
+
+  email: text("email"),
+  // The SHIPPING address from Stripe Checkout. ⛔ Never the billing address.
+  recipientName: text("recipient_name"),
+  phone: text("phone"),
+  line1: text("line1"),
+  line2: text("line2"),
+  city: text("city"),
+  state: text("state"),
+  postalCode: text("postal_code"),
+  country: text("country"),                    // ISO alpha-2
+  /** Paid, but Stripe carried no usable shipping address. The alert says so loudly. */
+  addressMissing: boolean("address_missing").notNull().default(false),
+
+  status: text("status").$type<BeShipmentStatus>().notNull().default("pending"),
+
+  // Filled by POST /api/admin/shipments/:id/shipped.
+  carrier: text("carrier"),
+  trackingNumber: text("tracking_number"),
+  trackingUrl: text("tracking_url"),           // https only
+  shippedAt: timestamp("shipped_at", { withTimezone: true }),
+  /** The AWeber shipped-tag write (the tracking email). NULL + error ⇒ re-POST retries it. */
+  shippedListWrittenAt: timestamp("shipped_list_written_at", { withTimezone: true }),
+  shippedListError: text("shipped_list_error"),
+
+  /** The "post this parcel" email to ORDERS_NOTIFY_EMAIL. NULL + error ⇒ retried later. */
+  operatorAlertedAt: timestamp("operator_alerted_at", { withTimezone: true }),
+  operatorAlertError: text("operator_alert_error"),
+
+  cancelledAt: timestamp("cancelled_at", { withTimezone: true }),
+  cancelReason: text("cancel_reason"),         // e.g. 'refunded'
+
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+}, (table) => [
+  index("idx_be_shipments_status").on(table.status, table.createdAt),
+  index("idx_be_shipments_offer").on(table.offer, table.createdAt),
+  // charge.refunded finds the parcel by its PaymentIntent.
+  index("idx_be_shipments_payment_intent").on(table.stripePaymentIntentId),
+  index("idx_be_shipments_email").on(table.email),
+]);
+
+export type BeShipment = typeof beShipments.$inferSelect;
+export type InsertBeShipment = typeof beShipments.$inferInsert;
 
 // ============================================================
 // 07 · THE DAILY DRAW (be_07_draws)

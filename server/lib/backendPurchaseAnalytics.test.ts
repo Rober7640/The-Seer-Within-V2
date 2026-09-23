@@ -104,6 +104,22 @@ describe('buildBackendPurchaseEvent', () => {
     assert.equal(u2.properties.step, 'upsell2');
   });
 
+  it('heart-cleanser (09) maps to funnel heartcleanser: booking = sales, upsells keep the funnel', () => {
+    const booking = buildBackendPurchaseEvent({
+      product: 'be_heart_cleanser', offer: 'heart-cleanser',
+      amountCents: 5900, email: 'x@y.com', dedupeId: 'cs_hc',
+    });
+    assert.equal(booking.properties.funnel, 'heartcleanser');
+    assert.equal(booking.properties.step, 'sales');
+    assert.equal(booking.properties.bump, false);
+    const u1 = buildBackendPurchaseEvent({
+      product: 'be_protection_ritual', offer: 'heart-cleanser',
+      amountCents: 4700, email: 'x@y.com', dedupeId: 'pi_hc1',
+    });
+    assert.equal(u1.properties.funnel, 'heartcleanser');
+    assert.equal(u1.properties.step, 'upsell1');
+  });
+
   it('falls back to email as distinctId when none threaded', () => {
     const ev = buildBackendPurchaseEvent({
       product: 'be_twin_flame', offer: 'twin-flame',

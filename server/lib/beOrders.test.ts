@@ -634,3 +634,68 @@ describe('08 · the draw', () => {
     expect(state.inserted).not.toHaveProperty('dueAt');
   });
 });
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// 09 · the Heart Cleanser Love Charm — its bump is Reiki charging before packing (09-C3)
+// ═══════════════════════════════════════════════════════════════════════════════
+
+describe('09 · the Reiki charging bump', () => {
+  beforeEach(() => {
+    state.row = { ...state.row, id: 'order-09', stripeSessionId: 'cs_test_09_1', offer: 'heart-cleanser' };
+  });
+
+  it('records a 09 bump buyer with the catalog bump — reiki_charge, 1111 cents', async () => {
+    await recordBackendOrder(
+      session(
+        { id: 'cs_test_09_1', amount_total: 7011 },
+        { product: 'be_heart_cleanser', offer: 'heart-cleanser', bump: '1', bumpProduct: 'reiki_charge', readingCents: '5900' },
+      ),
+    );
+    expect(state.inserted).toMatchObject({
+      stripeSessionId: 'cs_test_09_1',
+      offer: 'heart-cleanser',
+      offerNumber: '09',
+      readingCents: 5900,
+      amountCents: 7011,
+      bumpPurchased: true,
+      bumpCents: 1111,
+      bumpProductKey: 'reiki_charge',
+    });
+  });
+
+  it('records a 09 buyer who left the box unticked with no bump', async () => {
+    await recordBackendOrder(
+      session(
+        { id: 'cs_test_09_1', amount_total: 5900 },
+        { product: 'be_heart_cleanser', offer: 'heart-cleanser', bump: '0', readingCents: '5900' },
+      ),
+    );
+    expect(state.inserted).toMatchObject({
+      offer: 'heart-cleanser',
+      readingCents: 5900,
+      amountCents: 5900,
+      bumpPurchased: false,
+      bumpCents: 0,
+      bumpProductKey: null,
+    });
+    expect(addBackendCustomer).toHaveBeenCalledTimes(1);
+    expect(addBackendCustomer.mock.calls[0][0]).toMatchObject({
+      offer: 'heart-cleanser',
+      stripeOrderId: 'cs_test_09_1',
+    });
+  });
+
+  it('regression: 06 still records its own bump from the catalog', async () => {
+    state.row.offer = 'pixiu-bracelet';
+    await recordBackendOrder(
+      session({ amount_total: 6011 }, { product: 'be_pixiu_bracelet', offer: 'pixiu-bracelet', bump: '1', readingCents: '4900' }),
+    );
+    expect(state.inserted).toMatchObject({
+      offerNumber: '06',
+      bumpPurchased: true,
+      bumpCents: 1111,
+      bumpProductKey: 'closed_purse',
+      readingCents: 4900,
+    });
+  });
+});

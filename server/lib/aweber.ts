@@ -5,6 +5,7 @@ import {
   deliveredTag,
   initialListId,
   purchaseListWrites,
+  shippedTag,
   upsellPurchaseTags,
   type BackendOfferKey,
 } from './backendCustomerList';
@@ -1016,6 +1017,15 @@ export async function markBackendReadingDelivered(
     return { success: false, error: 'missing stripeOrderId' };
   }
 
+  // An offer with no reading (09 — a physical object) has no delivery Campaign to fire.
+  const tag = deliveredTag(params.offer);
+  if (!tag) {
+    logger.error('AWeber BE delivery: offer has no delivered tag (not a reading offer)', {
+      offer: params.offer,
+    });
+    return { success: false, error: `offer ${params.offer} has no delivered tag` };
+  }
+
   return writeBackendCustomer({
     label: `BE delivery (${listing.number})`,
     // The delivery email fires from the reading list, where reading_url lives.
@@ -1026,7 +1036,90 @@ export async function markBackendReadingDelivered(
       offer: params.offer,
       reading_url: params.readingUrl,
     },
-    tags: [deliveredTag(params.offer)],
+    tags: [tag],
+  });
+}
+
+interface BackendShippedParams {
+  email: string;
+  offer: BackendOfferKey;
+  /** The booking CHECKOUT SESSION id (cs_…), same as the purchase write. */
+  stripeOrderId: string;
+  carrier?: string | null;
+  trackingNumber?: string | null;
+  /** https only. Merged into the tracking email by AWeber. */
+  trackingUrl: string;
+}
+
+/**
+ * Hand AWeber a physical order's tracking link and let it send the "on its way" email.
+ *
+ * Applies the offer's SHIPPED tag (be-09-shipped) on its initial list — the Campaign
+ * trigger — and sets `tracking_url` (plus `tracking_number` and `carrier` when given).
+ *
+ * 🔴 `stripe_order_id` and `offer` are re-sent on purpose, exactly as the reading-delivery
+ * write does: AWeber treats `custom_fields` as the subscriber's whole custom-field state
+ * on write, so sending only the tracking fields risks clearing them. The object is never
+ * empty — both ids are required below.
+ *
+ * Refuses (no AWeber call) when the offer has no shipped tag, the tracking link is not
+ * https, or an id/email is missing. The caller records the error and can retry.
+ */
+export async function markBackendOrderShipped(
+  params: BackendShippedParams,
+): Promise<{ success: boolean; error?: string }> {
+  const listing = BACKEND_OFFERS[params.offer];
+  if (!listing) {
+    logger.error('AWeber BE shipped: unknown offer', { offer: params.offer });
+    return { success: false, error: `unknown offer: ${params.offer}` };
+  }
+
+  const tag = shippedTag(params.offer);
+  if (!tag) {
+    logger.error('AWeber BE shipped: offer has no shipped tag — no Campaign to fire', {
+      offer: params.offer,
+    });
+    return { success: false, error: `offer ${params.offer} has no shipped tag configured` };
+  }
+
+  if (!params.stripeOrderId) {
+    logger.error('AWeber BE shipped: refusing to write without a stripe_order_id', {
+      offer: params.offer,
+    });
+    return { success: false, error: 'missing stripeOrderId' };
+  }
+  if (!params.email) {
+    return { success: false, error: 'missing email' };
+  }
+
+  let httpsUrl = false;
+  try {
+    httpsUrl = new URL(params.trackingUrl).protocol === 'https:';
+  } catch {
+    httpsUrl = false;
+  }
+  if (!httpsUrl) {
+    logger.error('AWeber BE shipped: refusing a tracking link that is not https', {
+      offer: params.offer,
+      stripeOrderId: params.stripeOrderId,
+    });
+    return { success: false, error: 'trackingUrl must be an https URL' };
+  }
+
+  const customFields: Record<string, string> = {
+    stripe_order_id: params.stripeOrderId,
+    offer: params.offer,
+    tracking_url: params.trackingUrl,
+  };
+  if (params.trackingNumber) customFields.tracking_number = params.trackingNumber;
+  if (params.carrier) customFields.carrier = params.carrier;
+
+  return writeBackendCustomer({
+    label: `BE shipped (${listing.number})`,
+    listId: initialListId(params.offer),
+    email: params.email,
+    customFields,
+    tags: [tag],
   });
 }
 

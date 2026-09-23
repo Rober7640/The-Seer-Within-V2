@@ -3,6 +3,7 @@ import { useSearch, useLocation } from "wouter";
 import { CosmicBackground } from "../../components/CosmicBackground";
 import { BackgroundMusic } from "../../components/BackgroundMusic";
 import { UpsellCTA, ShippingForm, QuickReplies } from "../../components/upsell";
+import { STRIPE_CHECKOUT_SHIPPING_COUNTRIES } from "@shared/shippingCountries";
 import { useUpsellChat } from "../../hooks/useUpsellChat";
 import { upsell1CopyForOffer } from "../../lib/backendOffers";
 import { isBackendOfferKey, type BackendOfferKey } from "@shared/backendOffers";
@@ -31,6 +32,17 @@ interface UserData {
   stripeCustomerId?: string | null;
   upsell1PriceCents?: number;
   bumpAmountCents?: number;
+  // The booking checkout's own address on a physical offer (09, 06) — what lets the
+  // chat skip the shipping form. /api/backend/upsell/user-data already returns it.
+  shipping?: {
+    name: string;
+    line1: string;
+    line2?: string;
+    city: string;
+    state: string;
+    postal: string;
+    country: string;
+  } | null;
 }
 
 export default function OffersUpsell1() {
@@ -337,6 +349,7 @@ export default function OffersUpsell1() {
           <div className="max-w-lg mx-auto p-4">
             <ShippingForm
               defaultName={userData?.firstName || ""}
+              countries={STRIPE_CHECKOUT_SHIPPING_COUNTRIES}
               onSubmit={handleShippingSubmit}
             />
           </div>
