@@ -140,16 +140,20 @@ function shippingCountriesFor(offer: BackendOffer): StripeAllowedCountry[] {
  *
  * A dev-only override that lets an offer whose `readyForMoney` is still false open a
  * Stripe TEST-mode Checkout, so its end-to-end walk can be proved before it is opened
- * for real money. It NEVER opens a real sale:
+ * for real money. It NEVER opens a real sale — two conditions, BOTH required:
  *   1. OFF by default — nothing happens unless BACKEND_CHECKOUT_TEST_MODE === 'true';
- *   2. refuses in production (NODE_ENV === 'production');
- *   3. refuses unless the active Stripe secret key is a TEST key (`sk_test_`).
- * All three must hold. `readyForMoney: true` remains the only way to take live money —
- * this switch only lifts the `not_ready` refusal, and only for test cards.
+ *   2. the active Stripe secret key is a TEST key (`sk_test_`).
+ *
+ * 🔴 We do NOT gate on NODE_ENV. The deployed dev site runs `NODE_ENV=production` (the
+ * `start` script forces it), so a NODE_ENV check would make this switch impossible to use
+ * on dev — which is the one place it is meant for. The real safety is the TEST-KEY check:
+ * a `sk_test_` key runs Stripe in test mode and cannot charge a real card, and production
+ * uses a LIVE key (`sk_live_`), so the gate stays shut there even if the env var were set.
+ * `readyForMoney: true` remains the only way to take live money — this only lifts the
+ * `not_ready` refusal, and only for test cards.
  */
 function backendCheckoutTestModeOpen(): boolean {
   if (process.env.BACKEND_CHECKOUT_TEST_MODE !== 'true') return false;
-  if (process.env.NODE_ENV === 'production') return false;
   const key = getActiveStripeSecretKey();
   return typeof key === 'string' && key.startsWith('sk_test_');
 }
