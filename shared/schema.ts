@@ -55,9 +55,9 @@ export const conversations = pgTable("conversations", {
   stripeAccount: text("stripe_account"),
   mainPurchaseAmount: integer("main_purchase_amount"),
   // Buyer's phone as Stripe Checkout collected it (E.164, e.g. "+15555550123").
-  // ROOT FUNNEL ONLY (theseerwithin.com): /api/checkout turns on Stripe's
-  // compulsory phone field only when no funnel is set. NULL on every other
-  // funnel and on every row written before 2026-09-23.
+  // Collected on every V1 reading funnel's main checkout (root 2026-09-23; /fb,
+  // /fb2, /gdn, /fb-palm, /fb-read, /fb-tarot 2026-09-24 — server/lib/checkoutPhone.ts).
+  // NULL on rows written before that, and on rows from any other checkout.
   //
   // 🔴 Added 2026-09-23 — run improve-v1/add-conversations-phone-column-2026-09-23.sql
   // on a database BEFORE deploying this code to it: Drizzle selects every schema

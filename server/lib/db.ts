@@ -372,7 +372,7 @@ export async function markMainPaid(sessionId: string): Promise<void> {
   }
 }
 
-// Save the phone Stripe Checkout collected (root, /fb, /fb-tarot —
+// Save the phone Stripe Checkout collected (every V1 reading funnel —
 // see checkoutPhone.ts). Matched on the checkout session id like markMainPaid, so
 // a Stripe webhook retry just rewrites the same value. Non-throwing: a failure
 // here must never break the purchase webhook or the upsell page load.

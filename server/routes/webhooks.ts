@@ -1067,8 +1067,8 @@ router.post('/stripe', async (req: Request, res: Response) => {
       markMainPaid(session.id).catch((err) =>
         logger.error('markMainPaid failed (non-blocking):', err),
       );
-      // Checkout phone (root, /fb, /fb-tarot — see checkoutPhone.ts; a no-op on
-      // every other funnel). Saved here as well as on /api/upsell/user-data so a
+      // Checkout phone (every V1 reading funnel — see checkoutPhone.ts; a no-op on
+      // every other checkout). Saved here as well as on /api/upsell/user-data so a
       // buyer who pays and closes the tab still has it on file.
       const phone = session.customer_details?.phone;
       if (phone) {
