@@ -16,6 +16,8 @@
 //     collided with `energy_clearing_ritual` would fire V1's paid-list writes,
 //     Meta CAPI, Google Ads and the price-test stamp on a sale that is none of those.
 
+import { readFileSync } from 'fs';
+import path from 'path';
 import { describe, expect, it } from 'vitest';
 
 import {
@@ -23,17 +25,24 @@ import {
   BACKEND_PWYW_MAX_CENTS,
   BACKEND_STRIPE_PRODUCT_PREFIX,
   JUDGEMENT_BUMP_CENTS,
+  JUDGEMENT_BUMP_PRODUCT_KEY,
   JUDGEMENT_MIN_CENTS,
   TWIN_FLAME_BUMP_CENTS,
+  TWIN_FLAME_BUMP_PRODUCT_KEY,
   TWIN_FLAME_PRICE_CENTS,
   PIXIU_BRACELET_BUMP_CENTS,
+  PIXIU_BRACELET_BUMP_PRODUCT_KEY,
   PIXIU_BRACELET_PRICE_CENTS,
+  HEART_CLEANSER_PRICE_CENTS,
+  HEART_CLEANSER_BUMP_CENTS,
+  HEART_CLEANSER_BUMP_PRODUCT_KEY,
   backendOfferForStripeProduct,
   backendOrderDescriptor,
   isBackendOfferKey,
   priceBackendOffer,
   resolveBackendCharge,
 } from '@shared/backendOffers';
+import { STRIPE_CHECKOUT_SHIPPING_COUNTRIES } from '@shared/shippingCountries';
 
 /** Narrow to the success shape, failing loudly instead of returning undefined. */
 function charged(result: ReturnType<typeof resolveBackendCharge>) {
@@ -273,5 +282,169 @@ describe('upsell offer resolution + description', () => {
     // Unresolvable → the historical default, so a mis-stamped session never 500s.
     expect(upsellChargeFields({}, 'Protection Ritual', false))
       .toEqual({ offer: 'twin-flame', description: 'BE 02 · Protection Ritual' });
+  });
+});
+
+describe('a fixed-price PHYSICAL offer whose bump is done by hand (09 · Heart Cleanser Love Charm)', () => {
+  const CHARM = BACKEND_OFFER_CATALOG['heart-cleanser'];
+  const priceCharm = (req: Parameters<typeof priceBackendOffer>[1]) => priceBackendOffer(CHARM, req);
+
+  it('is catalogued with the settled product facts', () => {
+    expect(CHARM.key).toBe('heart-cleanser');
+    expect(CHARM.number).toBe('09');
+    expect(CHARM.stripeProduct).toBe('be_heart_cleanser');
+    expect(CHARM.stripeName).toBe('Heart Cleanser Love Charm');
+    expect(CHARM.pricing).toEqual({ model: 'fixed', priceCents: 5900 });
+    expect(HEART_CLEANSER_PRICE_CENTS).toBe(5900);
+    expect(CHARM.collectsShipping).toBe(true);
+    expect(CHARM.bookingPath).toEqual({ page: '/offers/heart-cleanser', chat: '/offers/heart-cleanser' });
+    expect(CHARM.successPath).toBe('/offers/heart-cleanser/success');
+    expect(CHARM.upsellEntryPath).toBe('/offers/upsell/welcome1');
+    expect(backendOfferForStripeProduct('be_heart_cleanser')?.key).toBe('heart-cleanser');
+    expect(isBackendOfferKey('heart-cleanser')).toBe(true);
+  });
+
+  it('charges $59.00, quantity one line, and ignores a browser-posted amount', () => {
+    const r = charged(priceCharm({}));
+    expect(r.readingCents).toBe(5900);
+    expect(r.bumpCents).toBe(0);
+    expect(r.totalCents).toBe(5900);
+    expect(r.bumpPurchased).toBe(false);
+    expect(r.lines).toEqual([
+      { name: 'Heart Cleanser Love Charm', description: CHARM.stripeDescription, amountCents: 5900 },
+    ]);
+    expect(charged(priceCharm({ amountCents: 1 })).totalCents).toBe(5900);
+    expect(charged(priceCharm({ bump: false })).totalCents).toBe(5900);
+  });
+
+  it('has its own bump: Reiki charging before packing, $11.11, key reiki_charge, flagged for the packer', () => {
+    expect(CHARM.bump).toEqual({
+      productKey: 'reiki_charge',
+      cents: 1111,
+      stripeName: '+ Reiki charging by Evelyn before packing',
+      packingAlert: 'REIKI CHARGE BEFORE PACKING',
+    });
+    expect(HEART_CLEANSER_BUMP_CENTS).toBe(1111);
+    expect(HEART_CLEANSER_BUMP_PRODUCT_KEY).toBe('reiki_charge');
+    // ⛔ Never another offer's key — 06's closed_purse is a text instructional, not a service.
+    expect(HEART_CLEANSER_BUMP_PRODUCT_KEY).not.toBe(PIXIU_BRACELET_BUMP_PRODUCT_KEY);
+  });
+
+  it('bump: true adds Reiki charging as a second line — $70.11 in all, amount from the catalog', () => {
+    const r = charged(priceCharm({ bump: true, amountCents: 1 }));
+    expect(r.readingCents).toBe(5900);
+    expect(r.bumpCents).toBe(1111);
+    expect(r.totalCents).toBe(7011);
+    expect(r.bumpPurchased).toBe(true);
+    expect(r.lines).toEqual([
+      { name: 'Heart Cleanser Love Charm', description: CHARM.stripeDescription, amountCents: 5900 },
+      { name: '+ Reiki charging by Evelyn before packing', amountCents: 1111 },
+    ]);
+  });
+
+  it('the bump ships unticked: anything but an explicit true is no bump', () => {
+    for (const bump of [undefined, false]) {
+      const r = charged(priceCharm({ bump }));
+      expect(r.bumpPurchased).toBe(false);
+      expect(r.totalCents).toBe(5900);
+    }
+  });
+
+  it('still REFUSES bump: true on an offer that has no bump — never charged, never ignored', () => {
+    const noBump = { ...CHARM, bump: undefined };
+    const r = priceBackendOffer(noBump, { bump: true });
+    expect(r.ok).toBe(false);
+    if (!r.ok) {
+      expect(r.code).toBe('bump_unavailable');
+      expect(r.message).toBeTruthy();
+    }
+    expect(charged(priceBackendOffer(noBump, { bump: false })).totalCents).toBe(5900);
+  });
+
+  it('only a bump someone performs before packing carries a packing alert (not 06\'s instructional)', () => {
+    const withAlert = Object.values(BACKEND_OFFER_CATALOG).filter((o) => o.bump?.packingAlert).map((o) => o.key);
+    expect(withAlert).toEqual(['heart-cleanser']);
+  });
+
+  it('ships to every country Stripe Checkout accepts', () => {
+    expect(CHARM.shippingCountries).toEqual(STRIPE_CHECKOUT_SHIPPING_COUNTRIES);
+  });
+
+  it('is OPEN for money in committed code (live on Production 2026-09-24)', () => {
+    expect(CHARM.readyForMoney).toBe(true);
+    const r = resolveBackendCharge({ offer: 'heart-cleanser' });
+    expect(r.ok).toBe(true);
+    if (r.ok) expect(r.totalCents).toBe(5900);
+  });
+
+  it('labels the Stripe Dashboard row BE 09, naming the bump only when she took it', () => {
+    expect(backendOrderDescriptor('heart-cleanser', false)).toBe('BE 09 · Heart Cleanser Love Charm');
+    expect(backendOrderDescriptor('heart-cleanser', true)).toBe(
+      'BE 09 · Heart Cleanser Love Charm + Reiki charging by Evelyn before packing',
+    );
+  });
+});
+
+describe('the worldwide shipping list is derived from the installed Stripe SDK', () => {
+  it('matches Checkout shipping_address_collection.allowed_countries exactly', () => {
+    const dts = readFileSync(
+      path.resolve(__dirname, '../../node_modules/stripe/types/Checkout/SessionsResource.d.ts'),
+      'utf8',
+    );
+    const block = dts.match(/namespace ShippingAddressCollection \{\s*type AllowedCountry =([^;]+);/);
+    expect(block, 'AllowedCountry union not found in the Stripe types').toBeTruthy();
+    const fromSdk = [...block![1].matchAll(/'([A-Z]{2})'/g)].map((m) => m[1]).sort();
+    expect(fromSdk.length).toBeGreaterThan(200);
+    expect([...STRIPE_CHECKOUT_SHIPPING_COUNTRIES].sort()).toEqual(fromSdk);
+  });
+
+  it('leaves 06 on the original seven-country list (no per-offer override)', () => {
+    expect(BACKEND_OFFER_CATALOG['pixiu-bracelet'].shippingCountries).toBeUndefined();
+  });
+});
+
+describe('regression: every offer that existed before 09 is unchanged', () => {
+  it('keeps each bump byte-identical', () => {
+    expect(BACKEND_OFFER_CATALOG['twin-flame'].bump).toEqual({
+      productKey: TWIN_FLAME_BUMP_PRODUCT_KEY, cents: 1277, stripeName: '+ Astro Force instructional',
+    });
+    expect(BACKEND_OFFER_CATALOG['judgement-day'].bump).toEqual({
+      productKey: JUDGEMENT_BUMP_PRODUCT_KEY, cents: 1277, stripeName: '+ The Unburdening instructional',
+    });
+    expect(BACKEND_OFFER_CATALOG['pixiu-bracelet'].bump).toEqual({
+      productKey: PIXIU_BRACELET_BUMP_PRODUCT_KEY, cents: 1111, stripeName: '+ The Closed Purse instructional',
+    });
+  });
+
+  it('still prices bump: true on every bumped offer as a second line at the catalog price', () => {
+    const cases = [
+      ['twin-flame', {}, 3500, 1277],
+      ['judgement-day', { amountCents: 2000 }, 2000, 1277],
+      ['pixiu-bracelet', {}, 4900, 1111],
+    ] as const;
+    for (const [key, extra, reading, bump] of cases) {
+      const r = charged(priceBackendOffer(BACKEND_OFFER_CATALOG[key], { ...extra, bump: true }));
+      expect(r.readingCents, key).toBe(reading);
+      expect(r.bumpCents, key).toBe(bump);
+      expect(r.totalCents, key).toBe(reading + bump);
+      expect(r.lines, key).toHaveLength(2);
+      expect(r.lines[1], key).toEqual({ name: BACKEND_OFFER_CATALOG[key].bump!.stripeName, amountCents: bump });
+    }
+  });
+
+  it('keeps the Stripe Dashboard labels, with and without the bump', () => {
+    expect(backendOrderDescriptor('judgement-day', true)).toBe('BE 03 · Judgement Day + The Unburdening instructional');
+    // 06's label was deliberately made descriptive on development (9a3e515) so fulfilment
+    // ships the right bracelet — pinned to the NEW wording, not reverted.
+    expect(backendOrderDescriptor('pixiu-bracelet', false)).toBe('BE 06 · Wishing Bracelet Black Agate Pixiu Wealth');
+    expect(backendOrderDescriptor('pixiu-bracelet', true)).toBe('BE 06 · Wishing Bracelet Black Agate Pixiu Wealth + The Closed Purse instructional');
+  });
+
+  it('keeps 06 physical, on its own booking page, with no shipping-country override', () => {
+    const WISHING = BACKEND_OFFER_CATALOG['pixiu-bracelet'];
+    expect(WISHING.collectsShipping).toBe(true);
+    expect(WISHING.stripeProduct).toBe('be_pixiu_bracelet');
+    expect(WISHING.successPath).toBe('/offers/wiccan/pixiu-bracelet/success');
+    expect(WISHING.upsellEntryPath).toBe('/offers/upsell/welcome1');
   });
 });

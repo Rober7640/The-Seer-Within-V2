@@ -369,3 +369,174 @@ describe('markBackendReadingDelivered', () => {
     expect(f).not.toHaveBeenCalled();
   });
 });
+
+// ─── 09 · the Heart Cleanser Love Charm ────────────────────────────────────────
+// A physical offer with NO reading. Its Campaign triggers are the purchase tag
+// (thank-you), the SHIPPED tag (tracking email) and — since 09-C3, 2026-09-15 — the BUMP
+// tag for the Reiki charging bump, on the shared order-bump list exactly as 06. Literals.
+const { markBackendOrderShipped } = await import('./aweber');
+
+describe('09 · the tag strings and lists', () => {
+  it('are the exact strings the 09 AWeber Campaigns are triggered by', () => {
+    const charm = BACKEND_OFFERS['heart-cleanser'];
+    expect(charm.number).toBe('09');
+    expect(charm.tag).toBe('be-09-heart-cleanser');
+    expect(charm.shippedTag).toBe('be-09-shipped');
+    expect(charm.bumpTag).toBe('be-09-bump');
+    expect(charm.deliveredTag).toBeUndefined();
+    // Same initial AND bump lists as 06 (and 02/03/08), told apart only by tag.
+    expect(charm.initialListId).toBe('6972552');
+    expect(charm.bumpListId).toBe('6972554');
+    expect(charm.initialListId).toBe(BACKEND_OFFERS['pixiu-bracelet'].initialListId);
+    expect(charm.bumpListId).toBe(BACKEND_OFFERS['pixiu-bracelet'].bumpListId);
+  });
+
+  it('adds be-09-bump only when she took the bump', () => {
+    expect(purchaseTags('heart-cleanser', false)).toEqual(['be-customer', 'be-09-heart-cleanser']);
+    expect(purchaseTags('heart-cleanser', true)).toEqual(['be-customer', 'be-09-heart-cleanser', 'be-09-bump']);
+  });
+
+  it('a bump buyer gets a SECOND write to the order-bump list; a non-bump buyer only the first', () => {
+    expect(purchaseListWrites('heart-cleanser', false)).toEqual([
+      { listId: '6972552', tags: ['be-customer', 'be-09-heart-cleanser'], role: 'initial' },
+    ]);
+    expect(purchaseListWrites('heart-cleanser', true)).toEqual([
+      { listId: '6972552', tags: ['be-customer', 'be-09-heart-cleanser'], role: 'initial' },
+      { listId: '6972554', tags: ['be-customer', 'be-09-heart-cleanser', 'be-09-bump'], role: 'bump' },
+    ]);
+  });
+
+  it('tags a 09 upsell buyer with be-09 product tags', () => {
+    expect(upsellPurchaseTags('heart-cleanser', 'be_protection_ritual'))
+      .toEqual(['be-customer', 'be-09-heart-cleanser', 'be-09-upsell1-protection']);
+    expect(upsellPurchaseTags('heart-cleanser', 'be_bracelet'))
+      .toEqual(['be-customer', 'be-09-heart-cleanser', 'be-09-upsell2-bracelet']);
+  });
+
+  it('writes a 09 buyer without the bump to ONE list', async () => {
+    const f = okFetch();
+    await addBackendCustomer({
+      email: 'she@example.com',
+      offer: 'heart-cleanser',
+      stripeOrderId: 'cs_test_09',
+      bumpPurchased: false,
+    });
+    expect(f).toHaveBeenCalledTimes(1);
+    const body = sentBody(f);
+    expect(f.mock.calls[0][0]).toContain('/lists/6972552/subscribers');
+    expect(body.tags).toEqual(['be-customer', 'be-09-heart-cleanser']);
+    expect(body.custom_fields).toEqual({ stripe_order_id: 'cs_test_09', offer: 'heart-cleanser' });
+  });
+
+  it('writes a 09 bump buyer to the initial list AND the order-bump list with be-09-bump', async () => {
+    const f = okFetch();
+    await addBackendCustomer({
+      email: 'she@example.com',
+      offer: 'heart-cleanser',
+      stripeOrderId: 'cs_test_09_bump',
+      bumpPurchased: true,
+    });
+    expect(f).toHaveBeenCalledTimes(2);
+    expect(f.mock.calls[0][0]).toContain('/lists/6972552/subscribers');
+    expect(JSON.parse(f.mock.calls[0][1].body).tags).toEqual(['be-customer', 'be-09-heart-cleanser']);
+    expect(f.mock.calls[1][0]).toContain('/lists/6972554/subscribers');
+    expect(JSON.parse(f.mock.calls[1][1].body).tags).toEqual(['be-customer', 'be-09-heart-cleanser', 'be-09-bump']);
+  });
+});
+
+describe('regression: 06 tags and lists are unchanged', () => {
+  it('keeps every existing literal', () => {
+    expect(BACKEND_OFFERS['pixiu-bracelet']).toEqual({
+      number: '06',
+      name: 'Wishing Bracelet',
+      tag: 'be-06-pixiu-bracelet',
+      bumpTag: 'be-06-bump',
+      deliveredTag: 'be-06-delivered',
+      initialListId: '6972552',
+      bumpListId: '6972554',
+    });
+    expect(purchaseListWrites('pixiu-bracelet', true)).toEqual([
+      { listId: '6972552', tags: ['be-customer', 'be-06-pixiu-bracelet'], role: 'initial' },
+      { listId: '6972554', tags: ['be-customer', 'be-06-pixiu-bracelet', 'be-06-bump'], role: 'bump' },
+    ]);
+  });
+});
+
+describe('markBackendOrderShipped — the tracking email trigger', () => {
+  const shipped = {
+    email: 'she@example.com',
+    offer: 'heart-cleanser' as const,
+    stripeOrderId: 'cs_test_ship_1',
+    carrier: 'USPS',
+    trackingNumber: '9400 1000 0000 0000 0000 00',
+    trackingUrl: 'https://tools.usps.com/go/TrackConfirmAction?tLabels=9400100000000000000000',
+  };
+
+  it('applies the shipped tag on the 09 initial list with the tracking fields', async () => {
+    const f = okFetch();
+    const result = await markBackendOrderShipped(shipped);
+    expect(result.success).toBe(true);
+    expect(f.mock.calls[0][0]).toContain('/accounts/acct-test/lists/6972552/subscribers');
+    const body = sentBody(f);
+    expect(body.tags).toEqual(['be-09-shipped']);
+    expect(body.update_existing).toBe(true);
+    expect(body.custom_fields).toEqual({
+      stripe_order_id: 'cs_test_ship_1',
+      offer: 'heart-cleanser',
+      tracking_url: shipped.trackingUrl,
+      tracking_number: shipped.trackingNumber,
+      carrier: 'USPS',
+    });
+  });
+
+  it('re-sends stripe_order_id and offer so custom_fields is never a partial wipe', async () => {
+    const f = okFetch();
+    await markBackendOrderShipped({ ...shipped, carrier: '', trackingNumber: '' });
+    const body = sentBody(f);
+    expect(body.custom_fields).toEqual({
+      stripe_order_id: 'cs_test_ship_1',
+      offer: 'heart-cleanser',
+      tracking_url: shipped.trackingUrl,
+    });
+  });
+
+  it('refuses an offer with no shipped tag — no Campaign to fire, so nothing is written', async () => {
+    const f = okFetch();
+    for (const offer of ['pixiu-bracelet', 'twin-flame'] as const) {
+      const result = await markBackendOrderShipped({ ...shipped, offer });
+      expect(result.success, offer).toBe(false);
+    }
+    expect(f).not.toHaveBeenCalled();
+  });
+
+  it('refuses a non-https tracking link, and a missing order id', async () => {
+    const f = okFetch();
+    for (const trackingUrl of ['http://tools.usps.com/x', 'javascript:alert(1)', '', 'not a url']) {
+      expect((await markBackendOrderShipped({ ...shipped, trackingUrl })).success, trackingUrl).toBe(false);
+    }
+    expect((await markBackendOrderShipped({ ...shipped, stripeOrderId: '' })).success).toBe(false);
+    expect((await markBackendOrderShipped({ ...shipped, email: '' })).success).toBe(false);
+    expect(f).not.toHaveBeenCalled();
+  });
+
+  it('reports an AWeber failure instead of swallowing it', async () => {
+    vi.stubGlobal('fetch', vi.fn(async () => new Response('nope', { status: 500 })));
+    const result = await markBackendOrderShipped(shipped);
+    expect(result.success).toBe(false);
+    expect(result.error).toContain('500');
+  });
+});
+
+describe('09 has no reading, so no reading-delivery write', () => {
+  it('markBackendReadingDelivered refuses heart-cleanser without calling AWeber', async () => {
+    const f = okFetch();
+    const result = await markBackendReadingDelivered({
+      email: 'she@example.com',
+      offer: 'heart-cleanser',
+      stripeOrderId: 'cs_test_09_d',
+      readingUrl: 'https://files.theseerwithin.com/x.pdf',
+    });
+    expect(result.success).toBe(false);
+    expect(f).not.toHaveBeenCalled();
+  });
+});

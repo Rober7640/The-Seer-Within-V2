@@ -41,6 +41,7 @@ import {
   type Upsell2Chain,
   type Upsell2Copy,
 } from "@/lib/backendOffers";
+import { reusableUpsellShipping } from "@/lib/upsellShipping";
 import { backendOfferFunnel, currentFunnel, getPostHogFunnel, isTwinFlameOffer } from "@/lib/funnel";
 import type { BackendOfferKey } from "@shared/backendOffers";
 import { track as trackPH } from "@/lib/posthog";
@@ -549,7 +550,16 @@ export function useUpsell2Chat({
         setUpsell2Bought(true);
         setUpsell2PaymentId(result.paymentIntentId ?? null);
         if (!beFunnel) fireTrackdeskUpsell2(sessionId, 47, userData.email);
-        if (isPathA && userData.hasShipping) {
+        // ⭐ Two ways she already has an address on file: V1's Path A (she gave one on
+        // Upsell 1), or a physical backend offer whose checkout took one before she paid
+        // (09, 06). Either way, do not ask again (Joel, 2026-09-16: "skip"). Neither ⇒
+        // the shipping form, exactly as before.
+        const reuse = reusableUpsellShipping({
+          backend: beFunnel,
+          offer,
+          shipping: userData.shipping,
+        });
+        if (reuse || (isPathA && userData.hasShipping)) {
           // Backend Path A: she reused her Upsell 1 address, so no form showed —
           // stamp it on THIS (bracelet) PaymentIntent too, so the shipper reads it
           // off both payments. V1 keeps shipping in its DB, so it needs nothing here.
@@ -649,6 +659,7 @@ export function useUpsell2Chat({
     isPathA,
     copy,
     backendOverride,
+    offer,
   ]);
 
   const handleDecline = useCallback(async () => {
@@ -727,7 +738,14 @@ export function useUpsell2Chat({
         setUpsell2Bought(true);
         setUpsell2PaymentId(result.paymentIntentId ?? null);
         if (!beFunnel) fireTrackdeskUpsell2(sessionId, 30, userData.email);
-        if (isPathA && userData.hasShipping) {
+        // See the matching branch in handleAccept — the downsell ships the same object to
+        // the same woman, so it must not ask for an address she has already given.
+        const reuse = reusableUpsellShipping({
+          backend: beFunnel,
+          offer,
+          shipping: userData.shipping,
+        });
+        if (reuse || (isPathA && userData.hasShipping)) {
           // Backend Path A: she reused her Upsell 1 address, so no form showed —
           // stamp it on THIS (bracelet) PaymentIntent too, so the shipper reads it
           // off both payments. V1 keeps shipping in its DB, so it needs nothing here.
@@ -824,6 +842,7 @@ export function useUpsell2Chat({
     isPathA,
     copy,
     backendOverride,
+    offer,
   ]);
 
   const handleDownsellDecline = useCallback(async () => {

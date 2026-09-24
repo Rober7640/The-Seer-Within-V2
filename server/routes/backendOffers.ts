@@ -1,16 +1,26 @@
 import { Router, type Request, type Response } from 'express';
 import type Stripe from 'stripe';
-import { getStripe } from '../lib/stripeAccount';
+import { getStripe, getActiveStripeSecretKey } from '../lib/stripeAccount';
 import {
   BACKEND_OFFER_CATALOG,
+  backendOfferForStripeProduct,
   backendOrderDescriptor,
   isBackendOfferKey,
   isBookingTreatment,
+  priceBackendOffer,
   resolveBackendCharge,
   upsellChargeFields,
+  type BackendOffer,
   type BookingTreatment,
 } from '@shared/backendOffers';
+import {
+  STRIPE_CHECKOUT_SHIPPING_COUNTRIES,
+  type StripeCheckoutShippingCountry,
+} from '@shared/shippingCountries';
+import type { BeShipment } from '@shared/schema';
 import { getBeOrderBySession, recordBackendOrder, writeToCustomerList } from '../lib/beOrders';
+import { ensureBackendShipment, publicShipping } from '../lib/beShipments';
+import { shippingFromSession, shippingParamFromSession } from '../lib/stripeShipping';
 import { resolveBeBookingTreatment } from '../lib/experiments';
 import { BACKEND_UPSELLS } from '../lib/backendCustomerList';
 import logger from '../lib/logger';
@@ -87,6 +97,64 @@ function posthogMetaFromStripe(meta: Record<string, string | undefined> | null |
 const BACKEND_SHIPPING_COUNTRIES: Stripe.Checkout.SessionCreateParams.ShippingAddressCollection['allowed_countries'] =
   ['US', 'CA', 'GB', 'AU', 'NZ', 'IE', 'SG'];
 
+type StripeAllowedCountry = Stripe.Checkout.SessionCreateParams.ShippingAddressCollection.AllowedCountry;
+
+/**
+ * Stripe's own "every country" list, proved at COMPILE time to be exactly the shared copy
+ * (shared/shippingCountries.ts, which the browser bundle can import):
+ *   · assigning the shared tuple to `readonly StripeAllowedCountry[]` fails if it holds a
+ *     code Stripe rejects;
+ *   · the conditional type turns into an object — and this line fails — if Stripe's union
+ *     gains a code the shared list lacks (an SDK upgrade).
+ */
+type MissingFromSharedList = Exclude<StripeAllowedCountry, StripeCheckoutShippingCountry>;
+const STRIPE_ALLOWED_COUNTRIES: [MissingFromSharedList] extends [never]
+  ? readonly StripeAllowedCountry[]
+  : { sharedShippingCountriesIsMissing: MissingFromSharedList } = STRIPE_CHECKOUT_SHIPPING_COUNTRIES;
+const STRIPE_ALLOWED_COUNTRY_SET: ReadonlySet<string> = new Set<string>(STRIPE_ALLOWED_COUNTRIES);
+
+/**
+ * The countries a physical offer's Checkout accepts. An offer without its own
+ * `shippingCountries` (06) keeps BACKEND_SHIPPING_COUNTRIES — the same array as always.
+ * A catalog code Stripe would reject is dropped and logged rather than failing her checkout.
+ */
+function shippingCountriesFor(offer: BackendOffer): StripeAllowedCountry[] {
+  if (!offer.shippingCountries) return BACKEND_SHIPPING_COUNTRIES;
+  const valid = offer.shippingCountries.filter(
+    (code): code is StripeAllowedCountry => STRIPE_ALLOWED_COUNTRY_SET.has(code),
+  );
+  if (valid.length !== offer.shippingCountries.length) {
+    logger.error('backend/checkout: catalog shippingCountries holds codes Stripe rejects — dropped', {
+      offer: offer.key,
+      dropped: offer.shippingCountries.filter((code) => !STRIPE_ALLOWED_COUNTRY_SET.has(code)),
+    });
+  }
+  return valid;
+}
+
+/**
+ * The Stripe TEST-MODE checkout gate (HANDOVER §3 Step 6).
+ *
+ * A dev-only override that lets an offer whose `readyForMoney` is still false open a
+ * Stripe TEST-mode Checkout, so its end-to-end walk can be proved before it is opened
+ * for real money. It NEVER opens a real sale — two conditions, BOTH required:
+ *   1. OFF by default — nothing happens unless BACKEND_CHECKOUT_TEST_MODE === 'true';
+ *   2. the active Stripe secret key is a TEST key (`sk_test_`).
+ *
+ * 🔴 We do NOT gate on NODE_ENV. The deployed dev site runs `NODE_ENV=production` (the
+ * `start` script forces it), so a NODE_ENV check would make this switch impossible to use
+ * on dev — which is the one place it is meant for. The real safety is the TEST-KEY check:
+ * a `sk_test_` key runs Stripe in test mode and cannot charge a real card, and production
+ * uses a LIVE key (`sk_live_`), so the gate stays shut there even if the env var were set.
+ * `readyForMoney: true` remains the only way to take live money — this only lifts the
+ * `not_ready` refusal, and only for test cards.
+ */
+function backendCheckoutTestModeOpen(): boolean {
+  if (process.env.BACKEND_CHECKOUT_TEST_MODE !== 'true') return false;
+  const key = getActiveStripeSecretKey();
+  return typeof key === 'string' && key.startsWith('sk_test_');
+}
+
 function baseUrl(req: Request): string {
   const proto = (req.headers['x-forwarded-proto'] as string) || req.protocol || 'https';
   const host = req.get('host');
@@ -159,6 +227,31 @@ router.get('/upsell/user-data', async (req: Request, res: Response) => {
             state: s.address.state || '',
             postal: s.address.postal_code || '',
             country: s.address.country || '',
+          };
+        }
+      }
+    }
+
+    // ⭐ A PHYSICAL offer (the catalog's `collectsShipping` — 09, 06) took her address on
+    // Stripe Checkout BEFORE she paid, so the upsells must not ask for it again
+    // (Joel, 2026-09-16: "skip"). Reporting it here is what makes `hasShipping` true and
+    // lets Upsell 2's "already has an address" path run for a woman who never saw a form.
+    // ⛔ A FALLBACK only: an address she typed on the Upsell 1 form above is the one she
+    //    chose most recently, and it still wins.
+    // ⛔ Never the billing address — often just a country and a postcode.
+    if (!shipping) {
+      const bookingOffer = backendOfferForStripeProduct(product);
+      if (bookingOffer?.collectsShipping) {
+        const { address } = shippingFromSession(session, { billingFallback: false });
+        if (address.line1 && address.country) {
+          shipping = {
+            name: address.name || '',
+            line1: address.line1,
+            ...(address.line2 ? { line2: address.line2 } : {}),
+            city: address.city || '',
+            state: address.state || '',
+            postal: address.postal || '',
+            country: address.country,
           };
         }
       }
@@ -271,6 +364,17 @@ router.post('/upsell/charge', async (req: Request, res: Response) => {
           }
         : undefined;
 
+    // ⭐ Nothing posted by the page? For an offer that already collected her address at
+    // checkout (09, 06) copy the BOOKING address onto this charge, so the manual shipper
+    // still reads it off the upsell payment — the chat no longer asks for it
+    // (Joel, 2026-09-16: "skip"). ⛔ A digital offer (02, 03) gets nothing invented for it,
+    // so its upsell keeps asking. ⚠ Optional either way: a missing address must never block
+    // a charge she asked for — fulfilment can chase an address, not a lost sale.
+    const bookingOffer = backendOfferForStripeProduct(session.metadata?.product);
+    const shippingParam =
+      shipping ??
+      (bookingOffer?.collectsShipping ? shippingParamFromSession(session) ?? undefined : undefined);
+
     // Attribute the upsell to the offer she actually booked (from the booking
     // session), not a hardcoded '02'. Defaults to twin-flame if unresolved.
     const { offer: chargeOffer, description: chargeDescription } = upsellChargeFields(
@@ -287,7 +391,7 @@ router.post('/upsell/charge', async (req: Request, res: Response) => {
       off_session: true,
       confirm: true,
       description: chargeDescription,
-      ...(shipping ? { shipping } : {}),
+      ...(shippingParam ? { shipping: shippingParam } : {}),
       metadata: {
         // ⛔ The `be_` key. Unknown to every V1 webhook branch → no Meta CAPI, no
         // Google Ads, no Trackdesk. The BE webhook branch routes it to the offer's
@@ -416,8 +520,10 @@ router.post('/upsell/fallback-checkout', async (req: Request, res: Response) => 
       ],
       // Physical item — collect the shipping address on the hosted page; the manual
       // shipper reads it off the Stripe payment (same as the 1-click path's shipping).
+      // 09 ships worldwide (Joel, 2026-09-16), so the shared upsell fallback uses the full
+      // country list — the same one the 09 booking checkout uses.
       shipping_address_collection: {
-        allowed_countries: ['US', 'CA', 'GB', 'AU', 'NZ', 'SG', 'IN'],
+        allowed_countries: STRIPE_ALLOWED_COUNTRIES as StripeAllowedCountry[],
       },
       success_url: successUrl,
       cancel_url: cancelUrl,
@@ -513,11 +619,22 @@ router.post('/checkout', async (req: Request, res: Response) => {
         ? null
         : Number(rawAmount);
 
-    const charge = resolveBackendCharge({
+    const chargeReq = {
       offer: offerKey,
       bump: req.body?.bump === true,
       amountCents: amountCents !== null && Number.isFinite(amountCents) ? amountCents : null,
-    });
+    };
+    let charge = resolveBackendCharge(chargeReq);
+
+    // 🔬 TEST-MODE gate (HANDOVER §3 Step 6): if the ONLY reason the offer was refused is
+    // that it is not yet open for money (`not_ready`), and the dev-only test-mode gate is
+    // open (env var on + a Stripe TEST key), price it anyway with the SAME pure rules — so
+    // its end-to-end walk can be proved on test cards. Every OTHER refusal (unknown offer,
+    // bad amount, bump on a bumpless offer) still stands. This lifts nothing on a live key.
+    if (!charge.ok && charge.code === 'not_ready' && backendCheckoutTestModeOpen()) {
+      logger.warn('backend/checkout: TEST-MODE gate opened a not-ready offer', { offer: offerKey });
+      charge = priceBackendOffer(BACKEND_OFFER_CATALOG[offerKey], chargeReq);
+    }
 
     if (!charge.ok) {
       // 400 with her own message — a checkout that silently does nothing is worse than
@@ -544,10 +661,11 @@ router.post('/checkout', async (req: Request, res: Response) => {
       // Physical offers (06+) collect a mailing address on Stripe's own checkout
       // page, after the commitment ladder. Stripe stamps it onto the session /
       // PaymentIntent — the record fulfilment ships from. Digital offers (02, 03)
-      // skip this and collect only the email. Matches the countries the funnel's
-      // Manifestation Bracelet already ships to (ShippingForm.tsx).
+      // skip this and collect only the email. 06 matches the countries the funnel's
+      // Manifestation Bracelet already ships to (ShippingForm.tsx); 09 ships worldwide
+      // (its catalog `shippingCountries`).
       ...(offer.collectsShipping
-        ? { shipping_address_collection: { allowed_countries: BACKEND_SHIPPING_COUNTRIES } }
+        ? { shipping_address_collection: { allowed_countries: shippingCountriesFor(offer) } }
         : {}),
       // Create a Customer and save the card for OFF-SESSION reuse, exactly as V1's
       // main checkout does — this is what lets the post-purchase upsells charge in
@@ -588,7 +706,7 @@ router.post('/checkout', async (req: Request, res: Response) => {
         bump: charge.bumpPurchased ? '1' : '0',
         // ⛔ The bump's own code. n8n exact-matches this to decide what to fulfil, so a
         // reused code sends her the wrong thing. Absent entirely when she declined.
-        ...(charge.bumpPurchased ? { bumpProduct: offer.bump.productKey } : {}),
+        ...(charge.bumpPurchased && offer.bump ? { bumpProduct: offer.bump.productKey } : {}),
         ...(firstName ? { firstName } : {}),
         // The booking-treatment A/B visitor subject, echoed back on the webhook so the
         // purchase can be attributed to the arm she saw. ⚠ Not a funnel product key —
@@ -655,6 +773,15 @@ router.post('/checkout', async (req: Request, res: Response) => {
  *
  * `payment_status` is verified against Stripe rather than trusted — a session id in a
  * query string proves nothing.
+ *
+ * `?offer=<key>` (optional): the receipt names the offer it renders. When present, an
+ * order or session belonging to any OTHER offer is a 404 and no work is done for it, so
+ * one offer's success page can never render — or retry writes for — another offer's order.
+ * Without the param the lookup behaves exactly as before.
+ *
+ * PHYSICAL offers (collectsShipping): the lookup also makes sure the parcel is on record
+ * (be_shipments) and its operator alert went — even when the be_orders write failed — and
+ * the receipt carries the shipping address. Digital receipts are unchanged.
  */
 router.get('/order/:sessionId', async (req: Request, res: Response) => {
   try {
@@ -663,10 +790,30 @@ router.get('/order/:sessionId', async (req: Request, res: Response) => {
       return res.status(400).json({ error: 'Invalid session.' });
     }
 
+    // A receipt page may pin the lookup to ITS offer with `?offer=`, so one offer's success
+    // page can never render — or retry writes for — another offer's order.
+    const expectedOffer = typeof req.query.offer === 'string' ? req.query.offer : null;
+    if (expectedOffer !== null && !isBackendOfferKey(expectedOffer)) {
+      return res.status(404).json({ error: 'Order not found.' });
+    }
+    const belongsElsewhere = (offerKey: string | null | undefined) =>
+      expectedOffer !== null && offerKey !== expectedOffer;
+
     const existing = await getBeOrderBySession(sessionId);
     if (existing) {
+      if (belongsElsewhere(existing.offer)) {
+        return res.status(404).json({ error: 'Order not found.' });
+      }
       const row = await writeToCustomerList(existing);
-      return res.json({ order: publicOrder(row) });
+      const shipment = collectsShipping(row.offer)
+        ? await ensureBackendShipment({
+            sessionId,
+            offerKey: row.offer,
+            beOrderId: row.id,
+            retrieveSession: async () => (await getStripe()?.checkout.sessions.retrieve(sessionId)) ?? null,
+          })
+        : null;
+      return res.json({ order: publicOrder(row, shipment) });
     }
 
     const stripe = getStripe();
@@ -679,19 +826,50 @@ router.get('/order/:sessionId', async (req: Request, res: Response) => {
     if (!session.metadata?.product?.startsWith('be_')) {
       return res.status(404).json({ error: 'Order not found.' });
     }
+    const sessionOffer = backendOfferForStripeProduct(session.metadata.product)?.key ?? null;
+    if (belongsElsewhere(sessionOffer)) {
+      return res.status(404).json({ error: 'Order not found.' });
+    }
 
     const recorded = await recordBackendOrder(session);
+
+    // ⭐ Independent of `recorded`: a parcel that was paid for is recorded (and the operator
+    //    told) even when the be_orders write failed. The receipt still answers as before.
+    const shipment =
+      sessionOffer && collectsShipping(sessionOffer)
+        ? await ensureBackendShipment({
+            sessionId,
+            offerKey: sessionOffer,
+            beOrderId: recorded?.id ?? null,
+            session,
+          })
+        : null;
+
     if (!recorded) return res.status(404).json({ error: 'Order not found.' });
 
-    return res.json({ order: publicOrder(recorded) });
+    return res.json({ order: publicOrder(recorded, shipment) });
   } catch (err) {
     logger.error('backend/order lookup failed:', err);
     return res.status(500).json({ error: 'Could not load your order.' });
   }
 });
 
-/** Only what the thank-you screen needs. No payment ids, no internal columns. */
-function publicOrder(row: Awaited<ReturnType<typeof getBeOrderBySession>>) {
+/** Does this offer key name a physical offer (a parcel to post)? */
+function collectsShipping(offerKey: string): boolean {
+  return isBackendOfferKey(offerKey) && Boolean(BACKEND_OFFER_CATALOG[offerKey].collectsShipping);
+}
+
+/**
+ * Only what the thank-you screen needs. No payment ids, no internal columns.
+ *
+ * PHYSICAL offers only (06, 09): `shipping` — the address as ONE newline-separated string,
+ * the shape the thank-you page renders — and `shippingAddress`, the same parts structured,
+ * plus the parcel's status. Both keys are ABSENT on a digital offer's receipt.
+ */
+function publicOrder(
+  row: Awaited<ReturnType<typeof getBeOrderBySession>>,
+  shipment: BeShipment | null = null,
+) {
   if (!row) return null;
   return {
     reference: row.stripeSessionId.slice(-8).toUpperCase(),
@@ -702,6 +880,8 @@ function publicOrder(row: Awaited<ReturnType<typeof getBeOrderBySession>>) {
     amountCents: row.amountCents,
     bumpPurchased: row.bumpPurchased,
     status: row.status,
+    // ── additive (physical offers only) ───────────────────────────────────────────
+    ...(collectsShipping(row.offer) ? publicShipping(shipment) : {}),
   };
 }
 

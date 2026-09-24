@@ -1700,6 +1700,14 @@ Context: V1→V2 migrated leads have a real (unknown) password hash, so on `/7-7
 - [ ] Welcome-back re-pitch for a sliding-variant session restores the grace link (priceVariantId survives localStorage round-trip)
 - [ ] InitiateCheckout / checkout_initiated tracking values: $55 on main CTA, $35 on grace link (price_cents 5500/3500)
 
+### fb-palm commitment gate — 3-checkbox pre-purchase ask ('35_palm_gate' variant, retires '55-35_palm') (2026-07-26)
+- [ ] `CommitmentGateCard` renders (in place of `PurchaseCTA`) only when `chat.userData.priceVariantId === '35_palm_gate'`; every other variant (incl. the retired `55-35_palm`) renders the classic `PurchaseCTA`/`ClearingChoiceCard` path unchanged
+- [ ] With 0, 1, or 2 of the 3 commitment checkboxes checked, no purchase button is present in the DOM (or, if present, is not clickable) — only the "Check all three to continue" placeholder shows
+- [ ] Checking all 3 checkboxes reveals the confirm button (`button-commitment-confirm`) and it is clickable/enabled
+- [ ] Unchecking any one of the 3 after all were checked hides the confirm button again (no stale enabled state)
+- [ ] Clicking the confirm button after all 3 are checked calls `handlePurchase("main")` and routes through the exact same `/api/checkout` call (same `type=main`, same funnel tag, same price) as the control variant's `PurchaseCTA` — the gate changes only the UI in front of the purchase, never the checkout itself
+- [ ] `35_palm_gate` carries the same $35 main / $25 downsell economics as `35_palm_u47` — price shown and charged is identical between the two arms
+- [ ] Commitment checkbox copy shows "I understand belief is required for this to work", "I'm ready to receive this tonight", "I'll read it with an open heart" (no secrecy or irreversibility framing that would contradict the card's own 30-Day Guarantee footer)
 
 ### V1 funnel audit skill — flow / pixels / palm / charge / funnels (`.claude/skills/v1-funnel-audit`, 2026-07-16)
 Covered = shipped in the skill (`[x]`); open = still a gap (`[ ]`). Runs LOCAL-ONLY against the muted `.env.sandbox`.
@@ -1742,6 +1750,52 @@ instead, and the auto-scroll effect was dead code — from ~the 8th message ever
 - [ ] Clicking the confirm button after all 3 are checked calls `handlePurchase("main")` and routes through the exact same `/api/checkout` call (same `type=main`, same funnel tag, same price) as the control variant's `PurchaseCTA` — the gate changes only the UI in front of the purchase, never the checkout itself
 - [ ] `35_palm_gate` carries the same $35 main / $25 downsell economics as `35_palm_u47` — price shown and charged is identical between the two arms
 - [ ] Commitment checkbox copy shows "I understand belief is required for this to work", "I'm ready to receive this tonight", "I'll read it with an open heart" (no secrecy or irreversibility framing that would contradict the card's own 30-Day Guarantee footer)
+
+---
+
+## Live Thread (Evelyn) — email → lander → chat continuity (2026-08-02)
+
+New spec file `tests/live-thread-evelyn.spec.ts`, following `fb-palm-commitment-gate.spec.ts`'s house style: a `harness(page)` helper stubbing network calls for determinism, `data-testid` locators, and a `beforeAll` localhost-only safety gate. Source: the plan's "Playwright Coverage" section (`docs/superpowers/plans/2026-08-01-live-thread-evelyn.md`).
+
+### Frames and outcomes
+- [ ] **Anonymous happy path (no account):** navigate to `/e/<test-code>` (seeded via a test-only mint call in `beforeAll`) with the `live_thread` arm forced on → assert Frame 1 shows the seeded `continueSeed` text → type a reply, assert it renders as a sent bubble → submit a new email → assert Frame 2b copy appears → assert (via a stubbed `/check-email` response) the correct outcome-specific confirmation renders
+- [ ] **Existing verified account:** same flow, but stub `/check-email` to return `verified_match` → assert Frame 2's "I know you" copy renders, not Frame 2b's
+- [ ] **Already-logged-in reader:** set an auth token in `localStorage` before navigating to `/e/<test-code>` → assert the lander UI never paints (no Frame 1 visible) and the page ends on `/reading` — this is the harness's hardest case to get deterministic, since it depends on Task 5's await-before-redirect fix; use `expect.poll` on the final URL rather than a fixed `waitForTimeout`
+- [ ] **Unresolvable code:** navigate to `/e/does-not-exist` → assert redirect to `/personas`
+- [ ] **Reply survives a real signup round-trip (the one true end-to-end test, network-real for the auth parts):** type a reply, submit a brand-new email, extract the verification link from a stubbed/captured email send, visit it, assert the reply appears as the first message when `/reading` loads
+
+---
+
+## Backend deck, offer 02 (Twin Flame Tarot) — U1 + U2 rebuilt, no questions (2026-08-06)
+
+Offer 02 collects NOTHING before the money (locked booking design), so both upsells
+were rebuilt to ask nothing and depend on no stored data — the fixed spread (`02-P1`)
+carries the specificity instead. Decisions: `improve-v1/v1-one-time-BEs/docs/00i-DELIVERABLES-U1-U2.md`.
+
+Unit-covered in `tests/twin-flame-upsell-copy.test.ts` (24 tests,
+`npx vitest run tests/twin-flame-upsell-copy.test.ts`):
+
+- [x] 02's stage chain never routes into a question or a WAITING state, in either flow
+- [x] Walking 02's chain from the first stage reaches the offer with no cycle, in the exact expected order
+- [x] V1's chain is asserted stage-by-stage against the order the hooks used to hardcode — the regression guard for six live funnels
+- [x] One universal block whatever the bucket is, or is not; no `{personName}` anywhere; reads correctly with no first name
+- [x] "Friend" (the `user-data` placeholder) resolves to Evelyn's "dear" for 02 only — V1 keeps whatever it was given
+- [x] 02 ships static copy in place of BOTH Claude calls; V1 still calls Claude
+- [x] No "clearing" / "energy field" / "both rituals" in any 02 line or button, in any branch
+- [x] The house-12 hinge survives: sold as what she does *instead of looking*, never as a way to find out
+- [x] Three CONTINUE taps per flow at the intended seams (U1 after bubbles 15/30/41, U2 after 11/29/42); labels carry no commitment; `pauses` is empty for every live funnel
+- [x] Verified in a browser: 02's U1 and U2 each walk 50 bubbles to the CTA with three taps, zero questions and zero text input; V1's `/welcome1` still asks its question, shows no continue chip, and still renders the composer
+- [x] 02's tap is reachable WITHOUT scrolling (832–864px in an 880px viewport) — see the shell fix below
+
+Not covered — needs a real Stripe session, so it waits on 02's checkout:
+
+- [ ] **U2 Path B** (declined U1) — `?demo=true` hardcodes `upsellPurchased: true`, so the trimmed Path B open + shared reveal are only unit-covered
+- [ ] **The `/welcome1` → `/welcome2` handoff watched in a browser** — unit-tested via `funnelPath`, but never observed end to end (needs a full flow run plus a decline)
+- [ ] **The accept path**: 1-click charge → shipping form → 02's shipping-confirmed copy → `/welcome2`
+- [ ] **The $30 downsell arm** and its 02 decline label ("No thanks, just my twelve")
+- [ ] **⚠ PRE-EXISTING, ALL SIX LIVE FUNNELS:** the chat pages never scroll internally (`flex-1 overflow-y-auto` under `min-h-screen`, no `min-h-0`), so `scrollHeight === clientHeight`, the auto-scroll effect is dead, and from ~bubble 8 every message AND every footer button sits below the fold. Measured: 12 bubbles ⇒ 1188px document vs 880px viewport, `scrollY` 0. Offer 02 opts into the `h-screen` + `min-h-0` fix; rolling it out to V1/fb/fb2/fb-palm/fb-tarot/gdn is an operator decision. A regression test should assert the CTA is in-viewport when it appears, on every funnel
+- [ ] The Purchase pixel on 02's `/welcome1` — `UpsellPage` fires `trackPurchase(..., "Energy Clearing Ritual")` on load regardless of route, and PostHog labels 02's upsell events `"v1"`. Settle BEFORE the letter's CTA points at this arm
+---
 
 ### V1 recovery link — `resume_url` AWeber custom field at lead capture (2026-08-13)
 Written on every V1 funnel's lead write so an AWeber recovery sequence can link a lead back to her own
@@ -1973,3 +2027,86 @@ Not covered — needs a browser or a live walk:
 - [ ] The Version-A lander (`/fb-read?device=coffee`) result card — same check on the `phase: 'result'` reveal
 - [ ] Regenerated ad creatives from `build-read-ad.mjs` render `A. Tree / B. Road / C. Lake` (the media team's current ads were made by hand)
 - [ ] **A generic version of the rings-vs-labels guard for every `pick: 'symbol'` device** — tea has the identical coupling (`armb` rings vs `optionLabel`) and nothing checks it today
+
+## Backend deck, offer 08 (Marcus Stone's personal reading) — editions + draw-on-payment (T9, 2026-09-13)
+
+The paid webhook (and the thank-you page's backstop) both call `recordBackendOrder`; for
+`marcus-reading` it copies Stripe's three `custom_fields` onto `be_order_intake`, pins the
+edition, stamps `due_at`, cuts the lens from her birth name and deals the cards ONCE into
+`be_08_draws`. Nothing in it may fail a paid order — failures land on
+`be_orders.fulfilment_note`.
+
+Covered by vitest (`server/lib/be08Draw.test.ts`, `be08Editions.test.ts`, `beOrders.test.ts`):
+
+- [x] lens: master 33 → 6 (Lovers), 11/22 stay masters, non-ASCII fails closed with `LENS_UNSUPPORTED_NAME`
+- [x] draw: fixed cards + orientations kept, no repeats over 10 positions on the 78-card deck, lens never consumes a position
+- [x] `insertBe08DrawOnce` returns the FIRST stored deal on a retry
+- [x] `getBe08Edition(id)` = latest published; `(id, version)` = that row whatever its status
+- [x] DOB parser table: `YYYY-MM-DD`, unambiguous `DD/MM` vs `MM/DD`, `D Month YYYY`; `03/07/1971` is `ambiguous`, not guessed
+- [x] `recordBackendOrder` for 08: custom_fields → intake (Stripe overwrites), display name → `first_name`, `due_at` +12h/+24h, draw once across two calls, lens failure → order recorded + customer list still written + note set
+
+Proven against a real Postgres 17 (local throwaway cluster, 2026-09-13; NOT yet a Supabase branch):
+
+- [x] both 08 migrations apply cleanly after the 02/07 ones; 8 and 24 concurrent `insertBe08DrawOnce` callers → exactly one row
+- [x] real `recordBackendOrder` end to end: happy path, no-intake + bad name/DOB, and a support fix that clears the note on retry
+
+Not covered — needs Stripe or a browser:
+
+- [ ] A real Stripe test-mode Checkout with the three `custom_fields` → `checkout.session.completed` → one `be_08_draws` row, `due_at` = `session.created` + 12h with the bump
+- [ ] Stripe webhook REPLAY of the same event → still one draw row, no second AWeber tag
+- [ ] Thank-you page landing BEFORE the webhook → order + draw created by the backstop, webhook then no-ops
+- [ ] A DOB typed as `03/07/1971` at Checkout → order paid, `fulfilment_note = DOB_AMBIGUOUS(raw=03/07/1971)`, draw still dealt, support can see it
+- [ ] `scripts/publish-08-editions.ts --apply` REFUSED without `BE_08_ALLOW_PUBLISH=1` (covered by hand, not by a test)
+- [ ] T5's GET reads `draw_json.edition.positions` + `draw_json.positions` and never needs the editions table for an already-dealt order
+
+## Backend offer 09 — Heart Cleanser Love Charm (client)
+
+Booking `/offers/heart-cleanser`, receipt `/offers/heart-cleanser/success`, upsells on the shared
+`/offers/upsell/*` pages with `client/src/lib/upsellCopy/heartCleanser.ts`.
+
+Covered by vitest (`client/src/lib/heartCleanserBooking.test.ts`, `heartCleanserReceipt.test.ts`,
+`upsellCopy/heartCleanser.test.ts`, `funnel.heartCleanser.test.ts`):
+
+- [x] four statements in order, word for word against 09-C1 (operator-approved 2026-09-15); `allStatementsTicked` false until all four (and for a wrong-length list)
+- [x] no statement carries logistics (shipping, days, price, `$`, checkout, subscription, address); no `PAGE_REQUEST` export and no request section in the doc
+- [x] small print is 09-C1's word for word, carries "ships within 2 business days, then arrives in 7–14 days in the US and 2–4 weeks everywhere else", and names no amount; no "Stripe" / "One payment of $59" anywhere in page copy
+- [x] deck, grey hint and small print count match `PAGE_STATEMENTS.length`; caption says the clear crystal isn't included, alt names it only as display
+- [x] checkout request = `heart-cleanser` / `page` / `bump: true|false` (only a ticked box) and carries `firstName` + `letterCode`
+- [x] page `$59` = catalog 5900; only the studio close-up (rosequartz, 570px)
+- [x] order bump (09-C3, Reiki charging): label + second line word for word against the doc; `+$11.11` and the $59.00 → $70.11 total computed from catalog cents; no "incomplete"/outcome/energy wording; small print says "One payment." with no amount
+- [x] receipt: `bumpPurchased` only for a literal `true`; the "Added: Reiki charging by Evelyn before packing, $11.11" line matches 09-T1 and 09-C3
+- [x] receipt: no `?s=` fetches nothing; 400/404 → not-found, 402 → unpaid, 5xx/offline/non-JSON → error; an order for another offer is never shown
+- [x] receipt subjects match 09-T3 / 09-T4 docs word for word
+- [x] every string reachable in U1 and both U2 paths has no clearing / energy field / our conversation / reading and no unfilled token; U2 never reaches a Claude stage
+- [x] `/offers/heart-cleanser` and `/success` tag PostHog `heartcleanser` (booking / thank_you)
+
+Covered by `improve-v1/v1-one-time-BEs/scripts/walk-09-smoke.mjs` (Playwright, local only):
+
+- [x] four statements and no request block; button absent through three ticks, present after four, reachable on screen at 390 and 1280
+- [x] rendered page never says "Stripe" / "One payment of $59"; small print carries the shipping sentence and stays unchanged with the bump ticked
+- [x] click with checkout dark logs the preview (with `letterCode`) and does not navigate
+- [x] no horizontal scroll at 390; receipt with no / unknown `?s=` shows the fallback
+- [x] order bump shown unticked above the total; ticking → $70.11 and the next click carries `bump: true`; unticking → $59.00
+- [x] verified receipt (lookup stubbed in the browser) shows the Added line for a bump order only
+
+Covered by vitest (server) for the 09 bump — `backendOffers.test.ts`, `beOrders.test.ts`, `backendOffers.heartCleanser.test.ts`, `beShipments.test.ts`, `admin/shipments.test.ts`, `backendCustomerList.test.ts`:
+
+- [x] catalog bump `reiki_charge` / 1111 / `+ Reiki charging by Evelyn before packing` / `packingAlert`; `bump:true` → second Stripe line, `bumpProduct` metadata, `BE 09 · … + Reiki charging…` descriptor; an offer with no bump still refuses `bump:true`
+- [x] `be_shipments.bump_purchased` / `bump_product_key` written from `metadata.bump` + the catalog key; the retry upsert never rewrites them; schema and the migration file agree
+- [x] operator alert: bump order → subject AND first line start `⚡ REIKI CHARGE BEFORE PACKING` (also with no address, on the NOT RECORDED fallback and on a retried alert); non-bump 09 says `NO — pack as normal`; 06's Closed Purse bump never gets the alarm; DO NOT SHIP stays first on a refund
+- [x] `be-09-bump` on bump list 6972554 as a second write; no second write without the bump
+
+Not covered — needs Stripe test mode, AWeber or a person:
+
+- [ ] Real test-mode Checkout with the bump ticked → Stripe shows two lines ($59.00 + $11.11), metadata `bump=1`, `bumpProduct=reiki_charge`; the webhook writes `be_shipments.bump_purchased = true` and the operator email leads with ⚡ REIKI CHARGE BEFORE PACKING
+- [ ] Partial refund of only the $11.11 → parcel stays pending, `bump_purchased` still true (by design) — confirm the packer is told by hand
+- [ ] AWeber: a Campaign on 6972554 triggered by `be-09-bump` sends the bump confirmation once; the 09-T3 confirmation still sends once (not twice)
+
+Not covered — needs Stripe test mode or the sandbox server:
+
+- [ ] Real test-mode Checkout from `?c=21&fn=…` → Stripe metadata carries `c=21` and `firstName`; address collected on Stripe's page for a non-US country
+- [ ] Stripe cancel → back on the booking page with `?cancelled=1`, boxes clear, `c` still sent on the next try (sessionStorage)
+- [ ] Browser Back from Stripe (bfcache) → checkout button is enabled again, not stuck disabled
+- [ ] Receipt with a real paid 09 session → name, `$59 (free shipping)`, the Stripe address as lines; a paid 06 session with the 09 URL → fallback
+- [ ] U1 accept → shipping form still opens (re-asks the address she gave Stripe) — decide prefill/skip, then test
+- [ ] U2 off-session decline → hosted fallback checkout accepts the buyer's country (today it allows only 7)

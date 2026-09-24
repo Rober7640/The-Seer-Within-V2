@@ -68,6 +68,8 @@ const JudgementBookingChat = lazyWithRetry(() => import("@/pages/JudgementBookin
 const JudgementThankYouPage = lazyWithRetry(() => import("@/pages/JudgementThankYouPage"));
 const PixiuBookingPage = lazyWithRetry(() => import("@/pages/offers/pixiu-bracelet/BookingPage"));
 const PixiuThankYouPage = lazyWithRetry(() => import("@/pages/offers/pixiu-bracelet/ThankYouPage"));
+const HeartCleanserBookingPage = lazyWithRetry(() => import("@/pages/offers/heart-cleanser/BookingPage"));
+const HeartCleanserThankYouPage = lazyWithRetry(() => import("@/pages/offers/heart-cleanser/ThankYouPage"));
 // Shared /offers/upsell/ pages — offer + pitch resolved from the booking
 // SESSION rather than the URL prefix, so one route pair serves every backend
 // offer in the deck. Lazy for the same reason as the booking pages above.
@@ -366,6 +368,15 @@ function Router() {
             Spec: improve-v1/v1-one-time-BEs/docs/06/HANDOVER.md */}
         <Route path="/offers/wiccan/pixiu-bracelet" component={PixiuBookingPage} />
         <Route path="/offers/wiccan/pixiu-bracelet/success" component={PixiuThankYouPage} />
+
+        {/* Backend deck, offer 09 — the Heart Cleanser Love Charm. Same shape as 06:
+            fixed $59, a physical item that ships, PAGE treatment only. Booking at the
+            offer root (where the letters' ?c= CTAs point and where a Stripe cancel
+            returns); the success page is a RECEIPT (09-T1), reached via successPath +
+            `?s=` from OffersUpsell2. The address is taken on Stripe's page, before payment.
+            Spec: improve-v1/v1-one-time-BEs/docs/09/booking-page/09-C1-booking-page.md */}
+        <Route path="/offers/heart-cleanser" component={HeartCleanserBookingPage} />
+        <Route path="/offers/heart-cleanser/success" component={HeartCleanserThankYouPage} />
 
         {/* Shared /offers/upsell/ pages — the deck-wide Upsell 1 → Upsell 2
             chain. Offer + pitch are resolved from the booking SESSION

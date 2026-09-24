@@ -21,6 +21,12 @@ import {
 interface ShippingFormProps {
   defaultName?: string
   productLabel?: string
+  /**
+   * ISO alpha-2 codes to offer. Omitted = the seven the V1 funnel has always shipped to
+   * (⛔ do not widen that default — V1 is live and its fulfilment is unchanged). Backend
+   * offers pass the worldwide list (Joel, 2026-09-16), since 09 ships everywhere.
+   */
+  countries?: readonly string[]
   onSubmit: (address: ShippingAddress) => void
 }
 
@@ -44,7 +50,7 @@ const shippingSchema = z.object({
   country: z.string().min(1, 'Country is required'),
 })
 
-const countries = [
+const DEFAULT_COUNTRY_OPTIONS = [
   { value: 'US', label: 'United States' },
   { value: 'CA', label: 'Canada' },
   { value: 'GB', label: 'United Kingdom' },
@@ -54,7 +60,23 @@ const countries = [
   { value: 'SG', label: 'Singapore' },
 ]
 
-export function ShippingForm({ defaultName = '', productLabel = 'protection stone', onSubmit }: ShippingFormProps) {
+/** Codes → {value,label}, alphabetical. Country names come from the browser (Intl), so no list
+ *  of 200 names lives in this repo; a browser without Intl.DisplayNames shows the code. */
+export function countryOptions(codes?: readonly string[]) {
+  if (!codes) return DEFAULT_COUNTRY_OPTIONS
+  let names: Intl.DisplayNames | null = null
+  try {
+    names = new Intl.DisplayNames(['en'], { type: 'region' })
+  } catch {
+    names = null
+  }
+  return [...codes]
+    .map((value) => ({ value, label: names?.of(value) ?? value }))
+    .sort((a, b) => a.label.localeCompare(b.label))
+}
+
+export function ShippingForm({ defaultName = '', productLabel = 'protection stone', countries, onSubmit }: ShippingFormProps) {
+  const countryList = countryOptions(countries)
   const form = useForm<ShippingAddress>({
     resolver: zodResolver(shippingSchema),
     defaultValues: {
@@ -192,7 +214,7 @@ export function ShippingForm({ defaultName = '', productLabel = 'protection ston
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent data-testid="select-content-country">
-                      {countries.map((country) => (
+                      {countryList.map((country) => (
                         <SelectItem 
                           key={country.value} 
                           value={country.value}

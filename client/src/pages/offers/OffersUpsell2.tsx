@@ -3,6 +3,7 @@ import { useSearch, useLocation } from "wouter";
 import { CosmicBackground } from "../../components/CosmicBackground";
 import { BackgroundMusic } from "../../components/BackgroundMusic";
 import { Upsell2CTA, Upsell2DownsellCTA, ShippingForm, QuickReplies } from "../../components/upsell";
+import { STRIPE_CHECKOUT_SHIPPING_COUNTRIES } from "@shared/shippingCountries";
 import { useUpsell2Chat } from "../../hooks/useUpsell2Chat";
 import { upsell2CopyForOffer } from "../../lib/backendOffers";
 import { isBackendOfferKey, BACKEND_OFFER_CATALOG, type BackendOfferKey } from "@shared/backendOffers";
@@ -338,6 +339,7 @@ export default function OffersUpsell2() {
             <ShippingForm
               defaultName={userData?.firstName || ""}
               productLabel="manifestation bracelet"
+              countries={STRIPE_CHECKOUT_SHIPPING_COUNTRIES}
               onSubmit={handleShippingSubmit}
             />
           </div>
