@@ -27,7 +27,7 @@ note). Reuse that. The booking page's job stays what every other booking page's 
 
 ## Header
 
-**The Wishing Bracelet — your booking**
+**Your Wishing Bracelet**
 
 *By booking this you agree to the following:*
 

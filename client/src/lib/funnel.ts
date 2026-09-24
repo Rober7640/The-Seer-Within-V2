@@ -103,6 +103,7 @@ export function skipEmail(search?: string): boolean {
 export const TWIN_FLAME_PREFIX = "/tarot/twin-flame"; // 02 Twin Flame Tarot
 export const JUDGEMENT_PREFIX = "/offers/wiccan/judgement-day"; // 03 Judgement Day
 export const PIXIU_PREFIX = "/offers/wiccan/pixiu-bracelet"; // 06 Pixiu (Wishing) Bracelet
+export const HEART_CLEANSER_PREFIX = "/offers/heart-cleanser"; // 09 Heart Cleanser Love Charm
 
 export const BACKEND_OFFER_PREFIXES = [
   TWIN_FLAME_PREFIX,
@@ -169,6 +170,36 @@ export function bookingFirstName(search?: string): string | null {
   }
 }
 
+// The letter code — the sales letter's ?c=. Each backend letter's CTAs use their own
+// range (02-E2/v1 sends c=1..6, 02-E3/v2 sends c=21..26), so this single number says
+// WHICH letter she bought from, and fulfilment reads it to decide which promises the
+// paid reading owes. Same lifecycle as the first name: read once per visit, kept in
+// sessionStorage so the page↔chat treatment switch and the back-from-Stripe round-trip
+// (neither of which carries the query string) do not lose it.
+const LETTER_CODE_KEY = "seer_c";
+const MAX_LETTER_CODE = 4;
+
+export function bookingLetterCode(search?: string): string | null {
+  if (typeof window === "undefined") return null;
+  const raw = new URLSearchParams(search ?? window.location.search).get("c");
+  if (raw !== null) {
+    // Digits only — anything else is somebody playing with the query string.
+    const code = /^\d{1,4}$/.test(raw.trim()) ? raw.trim().slice(0, MAX_LETTER_CODE) : "";
+    try {
+      if (code) window.sessionStorage.setItem(LETTER_CODE_KEY, code);
+      else window.sessionStorage.removeItem(LETTER_CODE_KEY);
+    } catch {
+      /* sessionStorage unavailable (private mode) — fall back to URL only */
+    }
+    return code || null;
+  }
+  try {
+    return window.sessionStorage.getItem(LETTER_CODE_KEY) || null;
+  } catch {
+    return null;
+  }
+}
+
 // Prefix a V1 path with the active funnel's prefix when the user is in an ad
 // funnel, otherwise leave it alone. Use for in-funnel navigation so the user
 // stays inside their own funnel for the entire flow.
@@ -205,7 +236,8 @@ export function funnelPath(v1Path: string, pathname?: string): string {
 
 export type PostHogFunnel =
   | "soulmate" | "fb" | "fb2" | "gdn" | "palm" | "tarot" | "read" | "v1" | "evelyn" | "aiden"
-  | "marcus" | "luna" | "nova" | "maren" | "seven-seven" | "twinflame" | "pixiu" | "judgement";
+  | "marcus" | "luna" | "nova" | "maren" | "seven-seven" | "twinflame" | "pixiu" | "judgement"
+  | "heartcleanser";
 
 // Generalized persona landers → their PostHog funnel name. One route each.
 const PERSONA_LANDER_FUNNELS: Record<string, PostHogFunnel> = {
@@ -228,6 +260,9 @@ export function getPostHogFunnel(pathname?: string): PostHogFunnel | null {
   // all App.tsx needs to fire lander_view with the letter's utm_* attached, so a
   // mailed Pixiu link reports clicks (revenue is grouped server-side, BACKEND_FUNNEL).
   if (p === PIXIU_PREFIX || p.startsWith(`${PIXIU_PREFIX}/`)) return "pixiu";
+  // 09 Heart Cleanser Love Charm — same shape as 06 (booking root + /success, page
+  // only). The label matches backendOfferFunnel('heart-cleanser') and the server map.
+  if (p === HEART_CLEANSER_PREFIX || p.startsWith(`${HEART_CLEANSER_PREFIX}/`)) return "heartcleanser";
   // 03 Judgement Day — booking (chat default at the root, page fallback at /page) +
   // /success under JUDGEMENT_PREFIX. Its upsells are on the SHARED /offers/upsell/*
   // pages, which self-report via backendOfferFunnel (session offer), not by path.
@@ -258,6 +293,7 @@ export function backendOfferFunnel(offer: string): string {
     case "twin-flame": return "twinflame";
     case "judgement-day": return "judgement";
     case "pixiu-bracelet": return "pixiu";
+    case "heart-cleanser": return "heartcleanser";
     default: return offer;
   }
 }
@@ -304,6 +340,14 @@ export function getPostHogStep(pathname?: string): string {
       // (backendOfferFunnel), so they are not handled here.
       const sub = p.slice(JUDGEMENT_PREFIX.length); // "" at the booking root (chat, default)
       if (sub === "" || sub === "/chat" || sub === "/page") return "booking";
+      if (sub === "/success") return "thank_you";
+      return "unknown";
+    }
+    case "heartcleanser": {
+      // 09 is page-only like 06: the booking root and /success. Its upsells are the
+      // shared /offers/upsell/* pages, which fire their own lander_view.
+      const sub = p.slice(HEART_CLEANSER_PREFIX.length); // "" at the booking root
+      if (sub === "") return "booking";
       if (sub === "/success") return "thank_you";
       return "unknown";
     }

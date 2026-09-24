@@ -42,6 +42,9 @@ export interface BackendCheckoutRequest {
   /** From the letter's ?fn=. Carried into Stripe metadata so every screen after the
    *  money can greet her by name. */
   firstName?: string | null;
+  /** From the letter's ?c=. Which sales letter she bought from — fulfilment reads it
+   *  off Stripe metadata (`c`) to decide which letter's promises the reading owes. */
+  letterCode?: string | null;
 }
 
 export type BackendCheckoutResult =
@@ -70,6 +73,7 @@ export async function beginBackendCheckout(
       bump: req.bump,
       amountCents: req.amountCents ?? null,
       firstName: req.firstName ?? null,
+      letterCode: req.letterCode ?? null,
     });
     return { status: 'preview' };
   }
@@ -84,6 +88,7 @@ export async function beginBackendCheckout(
         bump: req.bump,
         amountCents: req.amountCents ?? undefined,
         firstName: req.firstName ?? undefined,
+        letterCode: req.letterCode ?? undefined,
         // The booking-treatment A/B subject, so the purchase attributes back to the
         // arm she saw. Harmless when the test is off (no exposure → not counted).
         expSubject: getBackendVisitorId(),

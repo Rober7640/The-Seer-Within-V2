@@ -1,0 +1,25 @@
+Dear {{ subscriber.first_name | default: "friend" }},
+
+Your Heart Cleanser Love Charm is on its way to you.
+
+Track your charm here: {{AWEBER_TRACKING_URL}}
+
+Now that it's shipped, it arrives in 7–14 days in the US and 2–4 weeks everywhere else.
+
+WHEN IT ARRIVES
+
+Before you wear it, give yourself a few quiet minutes.
+
+Open the capsule and write your wish on one of the papers. Place the paper inside and close the capsule.
+
+Hold the charm in your left palm and say the seven words: "I am ready to receive love, too."
+
+Then put it on your left wrist.
+
+The card in the box has these steps too. Keep the spare papers for the day you want to write your wish again.
+
+If your parcel arrives damaged, or doesn't arrive, write to hi@theseerwithin.com. You can also read our refund policy: https://theseerwithin.com/refund.
+
+Enjoy that first morning with it on your wrist, dear.
+
+— Evelyn
