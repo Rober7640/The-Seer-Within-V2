@@ -23,6 +23,10 @@ const SESSION = 'cs_test_09_order_1';
 
 const state = {
   liftGate: true,
+  // 09 is now readyForMoney:true (live). To keep testing the dev-only test-mode gate — which
+  // only engages on a `not_ready` charge — a test can force resolveBackendCharge to report
+  // not_ready, simulating a still-dark offer, without depending on 09's real catalog flag.
+  forceNotReady: false,
   created: null as Record<string, unknown> | null,
   order: null as Record<string, unknown> | null,
   shipment: null as Record<string, unknown> | null,
@@ -81,6 +85,8 @@ vi.mock('@shared/backendOffers', async (importOriginal) => {
   return {
     ...actual,
     resolveBackendCharge: (req: Parameters<typeof actual.resolveBackendCharge>[0]) => {
+      // Simulate a still-dark offer so the test-mode gate has a `not_ready` to lift.
+      if (state.forceNotReady) return { ok: false as const, code: 'not_ready' as const, message: 'not open yet' };
       const offer = actual.BACKEND_OFFER_CATALOG[req.offer];
       if (!state.liftGate || !offer) return actual.resolveBackendCharge(req);
       return actual.priceBackendOffer(offer, req);
@@ -144,6 +150,7 @@ function shipmentRow(overrides: Record<string, unknown> = {}) {
 
 beforeEach(() => {
   state.liftGate = true;
+  state.forceNotReady = false;
   state.created = null;
   state.order = null;
   state.shipment = null;
@@ -202,12 +209,12 @@ describe('POST /api/backend/checkout — 09', () => {
     expect((state.created as any).line_items.map((l: any) => l.price_data.unit_amount)).toEqual([5900, 1111]);
   });
 
-  it('is refused outright by committed code — readyForMoney is false', async () => {
+  it('is OPEN in committed code — readyForMoney is true (live on Production)', async () => {
+    // No gate lift, real catalog: 09 is now live, so committed code prices it directly.
     state.liftGate = false;
     const res = await request(app).post('/api/backend/checkout').send({ offer: 'heart-cleanser', treatment: 'page' });
-    expect(res.status).toBe(400);
-    expect(res.body.code).toBe('not_ready');
-    expect(create).not.toHaveBeenCalled();
+    expect(res.status).toBe(200);
+    expect((state.created as any).line_items[0].price_data.unit_amount).toBe(5900);
   });
 });
 
@@ -229,8 +236,8 @@ describe('POST /api/backend/checkout — 09 test-mode gate', () => {
   // gate must NOT hinge on NODE_ENV. Its real guard is the TEST Stripe key: a test key cannot
   // charge a real card, and production uses a LIVE key, so the gate stays shut there.
   it('opens a not-ready offer with the env var on + a TEST key — even under NODE_ENV=production (deployed-dev case)', async () => {
-    // The committed catalog refuses 09 (readyForMoney:false); the real gate must run.
-    state.liftGate = false;
+    // Simulate a still-dark offer so the gate has a not_ready to lift.
+    state.forceNotReady = true;
     process.env.BACKEND_CHECKOUT_TEST_MODE = 'true';
     process.env.NODE_ENV = 'production';
     state.stripeSecretKey = 'sk_test_abc123';
@@ -242,7 +249,7 @@ describe('POST /api/backend/checkout — 09 test-mode gate', () => {
   });
 
   it('also opens under NODE_ENV=development with a TEST key (NODE_ENV is irrelevant)', async () => {
-    state.liftGate = false;
+    state.forceNotReady = true;
     process.env.BACKEND_CHECKOUT_TEST_MODE = 'true';
     process.env.NODE_ENV = 'development';
     state.stripeSecretKey = 'sk_test_abc123';
@@ -253,7 +260,7 @@ describe('POST /api/backend/checkout — 09 test-mode gate', () => {
   });
 
   it('stays refused with a LIVE key even with the env var on (the production guard)', async () => {
-    state.liftGate = false;
+    state.forceNotReady = true;
     process.env.BACKEND_CHECKOUT_TEST_MODE = 'true';
     process.env.NODE_ENV = 'production';
     state.stripeSecretKey = 'sk_live_realmoney';
@@ -265,7 +272,7 @@ describe('POST /api/backend/checkout — 09 test-mode gate', () => {
   });
 
   it('stays refused when the env var is off (default), even with a test key', async () => {
-    state.liftGate = false;
+    state.forceNotReady = true;
     delete process.env.BACKEND_CHECKOUT_TEST_MODE;
     process.env.NODE_ENV = 'production';
     state.stripeSecretKey = 'sk_test_abc123';

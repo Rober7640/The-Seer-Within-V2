@@ -370,11 +370,11 @@ describe('a fixed-price PHYSICAL offer whose bump is done by hand (09 · Heart C
     expect(CHARM.shippingCountries).toEqual(STRIPE_CHECKOUT_SHIPPING_COUNTRIES);
   });
 
-  it('⛔ is NOT open for money in committed code', () => {
-    expect(CHARM.readyForMoney).toBe(false);
+  it('is OPEN for money in committed code (live on Production 2026-09-24)', () => {
+    expect(CHARM.readyForMoney).toBe(true);
     const r = resolveBackendCharge({ offer: 'heart-cleanser' });
-    expect(r.ok).toBe(false);
-    if (!r.ok) expect(r.code).toBe('not_ready');
+    expect(r.ok).toBe(true);
+    if (r.ok) expect(r.totalCents).toBe(5900);
   });
 
   it('labels the Stripe Dashboard row BE 09, naming the bump only when she took it', () => {

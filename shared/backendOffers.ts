@@ -317,10 +317,12 @@ export const BACKEND_OFFER_CATALOG: Record<BackendOfferKey, BackendOffer> = {
     // Stripe Checkout collects the address; the webhook records a be_shipments row.
     collectsShipping: true,
     shippingCountries: STRIPE_CHECKOUT_SHIPPING_COUNTRIES,
-    // 🔴 FALSE in committed code. Flip only after the booking + success pages render, the
-    //    be_shipments migration is applied, the AWeber Campaigns on be-09-* exist, and a
-    //    Stripe TEST-mode order has been walked end to end (packing alert included).
-    readyForMoney: false,
+    // OPENED on Production (2026-09-24, Mayur) to walk one REAL order + refund before the
+    // sales emails mail — the same pattern 06 used to prove itself. Pages render, the
+    // be_shipments table exists on the prod DB, VITE_BACKEND_CHECKOUT_LIVE is already true
+    // (06 is live). ⚠ AWeber Campaigns on be-09-* are NOT built yet, so a buyer gets no
+    // confirmation email until they are — fine for the operator's own test, do before ads.
+    readyForMoney: true,
   },
 };
 
