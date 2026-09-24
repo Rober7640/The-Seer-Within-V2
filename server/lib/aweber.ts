@@ -46,7 +46,7 @@ interface AddPaidSubscriberParams {
   stripeOrderId: string;
   tags?: string[];
   shipping?: ShippingAddress;
-  /** Root-funnel buyer's phone (Stripe Checkout, E.164). Paid list only. */
+  /** Buyer's phone from root, /fb or /fb-tarot checkout (Stripe Checkout, E.164). Paid list only. */
   phone?: string;
 }
 
@@ -644,7 +644,7 @@ export async function addPaidSubscriber(params: AddPaidSubscriberParams): Promis
   }
   
   try {
-    // `phone` rides in custom_fields only when there is one (root-funnel buyers).
+    // `phone` rides in custom_fields only when there is one (root, /fb, /fb-tarot buyers).
     // Without it the body is exactly what it has always been.
     const postSubscriber = (withPhone: boolean) => {
       const subscriberData: Record<string, unknown> = {
