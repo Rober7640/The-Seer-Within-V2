@@ -1,5 +1,5 @@
 import { Router, type NextFunction, type Request, type Response } from 'express';
-import { timingSafeEqual } from 'crypto';
+import { randomUUID, timingSafeEqual } from 'crypto';
 import { eq, sql } from 'drizzle-orm';
 import { db } from '../lib/db';
 import {
@@ -14,6 +14,7 @@ import {
 import { BACKEND_OFFER_CATALOG, isBackendOfferKey, type BackendOffer } from '@shared/backendOffers';
 import { getBeOrderBySession, recordBackendOrder } from '../lib/beOrders';
 import { getStripe } from '../lib/stripeAccount';
+import { generateMarcus08Audio, type MarcusReport } from '../lib/marcus08Audio';
 import logger from '../lib/logger';
 
 // n8n's door into backend-deck fulfilment. Four endpoints, one caller: the workflow
@@ -484,6 +485,95 @@ router.post('/:offer/send-attempt', async (req: Request, res: Response) => {
     });
     return res.status(500).json({ error: 'Could not record the send attempt' });
   }
+});
+
+// ─── Audio (08 Marcus): server generates + assembles + uploads to Supabase ─────
+
+// The audio run is long (~5 min for a full reading), so this is ASYNC: POST starts
+// the job and returns a jobId; n8n polls GET /:offer/audio-status/:jobId until it
+// reports done, then reads audioUrl. A synchronous ~5-min HTTP response would trip
+// the edge-proxy timeout. The generation itself (fal.ai queue + ffmpeg assembly +
+// Supabase upload) lives in server/lib/marcus08Audio.ts.
+//
+// The job store is in-memory: a redeploy mid-job forgets it, and n8n simply
+// re-POSTs (fal/Supabase are idempotent by fileName via x-upsert). Fine for this
+// low-volume lane; a DB-backed store is the follow-up if volume grows.
+
+interface AudioJob {
+  status: 'processing' | 'done' | 'error';
+  startedAt: number;
+  finishedAt?: number;
+  audioUrl?: string;
+  segmentCount?: number;
+  bytes?: number;
+  elapsedMs?: number;
+  error?: string;
+}
+
+const audioJobs = new Map<string, AudioJob>();
+const AUDIO_JOB_TTL_MS = 60 * 60 * 1000; // forget finished jobs an hour after they finish
+
+function reapAudioJobs() {
+  const now = Date.now();
+  audioJobs.forEach((job, id) => {
+    if (job.finishedAt && now - job.finishedAt > AUDIO_JOB_TTL_MS) audioJobs.delete(id);
+  });
+}
+
+function isMarcusReport(v: unknown): v is MarcusReport {
+  if (!v || typeof v !== 'object') return false;
+  const r = v as Record<string, unknown>;
+  return typeof r.opening === 'string' && r.opening.length > 0
+    && typeof r.conclusion === 'string' && r.conclusion.length > 0;
+}
+
+/**
+ * Start an audio job. Body: { fileName, report, voiceUrl? }.
+ * `report` is the STRUCTURED reading (n8n passes it from the write-report stage);
+ * `fileName` is n8n's per-order name (we sanitise + force .mp3). Returns 202 + jobId.
+ */
+router.post('/:offer/generate-audio', (req: Request, res: Response) => {
+  const offer = offerOf(res);
+  const body = (req.body ?? {}) as Record<string, unknown>;
+
+  const fileName = typeof body.fileName === 'string' ? body.fileName.trim() : '';
+  if (!fileName) return res.status(400).json({ error: 'Missing fileName' });
+  if (!isMarcusReport(body.report)) {
+    return res.status(400).json({ error: 'Missing or invalid report (need at least opening + conclusion)' });
+  }
+  const voiceUrl = typeof body.voiceUrl === 'string' && /^https:\/\/\S+$/i.test(body.voiceUrl)
+    ? body.voiceUrl
+    : undefined;
+
+  reapAudioJobs();
+  const jobId = randomUUID();
+  audioJobs.set(jobId, { status: 'processing', startedAt: Date.now() });
+
+  // fire-and-forget; the outcome is read back via audio-status
+  void (async () => {
+    try {
+      const r = await generateMarcus08Audio({ report: body.report as MarcusReport, fileName, voiceUrl });
+      audioJobs.set(jobId, { status: 'done', startedAt: audioJobs.get(jobId)!.startedAt, finishedAt: Date.now(), ...r });
+      logger.info('be-fulfilment: audio job done', { offer: offer.key, jobId, segments: r.segmentCount, elapsedMs: r.elapsedMs });
+    } catch (err) {
+      audioJobs.set(jobId, { status: 'error', startedAt: audioJobs.get(jobId)!.startedAt, finishedAt: Date.now(), error: errMessage(err) });
+      logger.error('be-fulfilment: audio job FAILED — she paid and has no audio', { offer: offer.key, jobId, err: errMessage(err) });
+    }
+  })();
+
+  logger.info('be-fulfilment: audio job started', { offer: offer.key, jobId, fileName });
+  return res.status(202).json({ ok: true, jobId, statusPath: `/api/be/${offer.key}/audio-status/${jobId}` });
+});
+
+/** Poll an audio job. Returns processing | done (with audioUrl) | error. */
+router.get('/:offer/audio-status/:jobId', (req: Request, res: Response) => {
+  const job = audioJobs.get(String(req.params.jobId));
+  if (!job) return res.status(404).json({ error: 'Unknown or expired jobId' });
+  if (job.status === 'done') {
+    return res.json({ status: 'done', audioUrl: job.audioUrl, segmentCount: job.segmentCount, bytes: job.bytes, elapsedMs: job.elapsedMs });
+  }
+  if (job.status === 'error') return res.json({ status: 'error', error: job.error });
+  return res.json({ status: 'processing', elapsedMs: Date.now() - job.startedAt });
 });
 
 export default router;
