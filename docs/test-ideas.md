@@ -2127,7 +2127,7 @@ Covered by `server/lib/aweber.paidPhone.test.ts`:
 Not covered — needs a browser or a live walk:
 
 - [ ] Root `/chat` → checkout shows a required phone field; paying without it is blocked
-- [ ] `/fb-palm`, `/fb-read`, `/fb2`, `/gdn` checkouts show NO phone field (`/fb` + `/fb-tarot` gained it 2026-09-24 — see below)
+- [ ] ~~`/fb-palm`, `/fb-read`, `/fb2`, `/gdn` checkouts show NO phone field~~ — superseded 2026-09-24: every V1 reading funnel now collects it (see below)
 - [ ] Root downsell ($25) checkout also asks for phone
 - [ ] After a root test purchase: `conversations.phone` is set, and the AWeber paid-list subscriber has `phone`
 - [ ] Root `?noemail=1` purchase: phone still saved (row is created by the `/api/upsell/user-data` fallback)
@@ -2148,4 +2148,12 @@ Not covered — needs a live walk:
 - [ ] `/fb-tarot` love, money and soulmate landers each show a required phone field
 - [ ] `/fb-tarot` order-bump checkout still shows both line items AND the phone field
 - [ ] After an `/fb` and a `/fb-tarot` test purchase: `conversations.phone` set, AWeber paid-list `phone` filled, `-fb` / `-tarot` tags unchanged
-- [ ] `/fb-palm` checkout still has NO phone field (control)
+- [ ] ~~`/fb-palm` checkout still has NO phone field (control)~~ — superseded, see below
+### Extended to every V1 reading funnel (2026-09-24, later)
+
+`/fb2`, `/gdn`, `/fb-palm`, `/fb-read` added. All seven funnels now collect the phone; the
+allow-list test fails if a NEW funnel is registered without being placed in or out of it.
+
+- [ ] `/fb2`, `/gdn`, `/fb-palm`, `/fb-read` (tea AND coffee) checkouts show a required phone field
+- [ ] `/fb-palm` checkout still prices by sign correctly with the phone field present
+- [ ] After an `/fb-palm` and an `/fb-read` test purchase: `conversations.phone` set, AWeber paid-list `phone` filled

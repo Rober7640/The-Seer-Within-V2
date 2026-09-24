@@ -1157,10 +1157,9 @@ export async function registerRoutes(
         ...(customer
           ? { customer: customer.id }
           : { customer_creation: "always" }),
-        // Compulsory phone field on ROOT (theseerwithin.com — the one funnel that
-        // sends no `funnel`), /fb and /fb-tarot (every tarot lander, love, money
-        // and soulmate alike). Stripe won't let her pay without it. /fb2, /gdn,
-        // /fb-palm and /fb-read stay exactly as they were. The number is read
+        // Compulsory phone field on every V1 reading funnel: root (no `funnel`),
+        // /fb, /fb2, /gdn, /fb-palm, /fb-read and /fb-tarot — the allow-list is
+        // server/lib/checkoutPhone.ts. Stripe won't let her pay without it. The number is read
         // back from customer_details.phone by the purchase webhook (DB) and
         // /api/upsell/user-data (DB + AWeber paid list).
         ...(collectsPhoneAtCheckout(funnel) && {
@@ -2063,7 +2062,7 @@ export async function registerRoutes(
                 paidTags.push("noemail");
               }
 
-              // Checkout phone (root, /fb, /fb-tarot — see checkoutPhone.ts). Also
+              // Checkout phone (every V1 reading funnel — see checkoutPhone.ts). Also
               // saved to the row here, not only by the webhook, because the
               // no-email fallback above creates the row AFTER the webhook ran.
               const phone = session.customer_details?.phone || undefined;

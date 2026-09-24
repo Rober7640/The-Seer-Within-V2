@@ -1,5 +1,6 @@
 // Which funnels get the compulsory phone field on the main Stripe Checkout.
-// Root, /fb and /fb-tarot do; /fb2, /gdn, /fb-palm and /fb-read must NOT.
+// Since 2026-09-24 every V1 reading funnel does: root, /fb, /fb2, /gdn,
+// /fb-palm, /fb-read and /fb-tarot.
 //
 // Run:
 //   npx vitest run server/lib/checkoutPhone.test.ts
@@ -13,20 +14,16 @@ describe('collectsPhoneAtCheckout', () => {
     expect(collectsPhoneAtCheckout(undefined)).toBe(true);
   });
 
-  it('/fb and /fb-tarot collect the phone', () => {
-    expect(collectsPhoneAtCheckout('v1-fb')).toBe(true);
-    expect(collectsPhoneAtCheckout('v1-tarot')).toBe(true);
+  it('every ad funnel collects the phone', () => {
+    for (const f of ['v1-fb', 'v1-fb2', 'v1-gdn', 'v1-palm', 'v1-read', 'v1-tarot'] as const) {
+      expect(collectsPhoneAtCheckout(f), f).toBe(true);
+    }
   });
 
-  it('/fb2, /gdn, /fb-palm and /fb-read do NOT', () => {
-    expect(collectsPhoneAtCheckout('v1-fb2')).toBe(false);
-    expect(collectsPhoneAtCheckout('v1-gdn')).toBe(false);
-    expect(collectsPhoneAtCheckout('v1-palm')).toBe(false);
-    expect(collectsPhoneAtCheckout('v1-read')).toBe(false);
-  });
-
-  it('every registered funnel is exactly one of the two sets (no new funnel slips in)', () => {
-    const withPhone = FUNNELS.filter((f) => collectsPhoneAtCheckout(f.param)).map((f) => f.param);
-    expect(withPhone.sort()).toEqual(['v1-fb', 'v1-tarot']);
+  it('the allow-list is exactly the registered funnels (a new funnel must be placed deliberately)', () => {
+    const registered = FUNNELS.map((f) => f.param).sort();
+    const withPhone = FUNNELS.filter((f) => collectsPhoneAtCheckout(f.param)).map((f) => f.param).sort();
+    expect(registered).toEqual(['v1-fb', 'v1-fb2', 'v1-gdn', 'v1-palm', 'v1-read', 'v1-tarot']);
+    expect(withPhone).toEqual(registered);
   });
 });
