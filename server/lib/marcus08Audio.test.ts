@@ -5,7 +5,7 @@
 //   npx vitest run server/lib/marcus08Audio.test.ts
 
 import { describe, it, expect } from 'vitest';
-import { buildNarration, type MarcusReport } from './marcus08Audio';
+import { buildNarration, isMarcusReport, type MarcusReport } from './marcus08Audio';
 
 const longBody = ('This is a sentence about a blind spot. ').repeat(30); // ~1140 chars -> multi-piece
 
@@ -65,5 +65,30 @@ describe('buildNarration', () => {
 
   it('ends on "Marcus."', () => {
     expect(segs[segs.length - 1].text.trim().endsWith('Marcus.')).toBe(true);
+  });
+});
+
+describe('isMarcusReport', () => {
+  it('accepts a report with non-empty opening and conclusion', () => {
+    expect(isMarcusReport(report)).toBe(true);
+    expect(isMarcusReport({ opening: 'x', conclusion: 'y' })).toBe(true);
+  });
+
+  it('rejects a missing or empty opening', () => {
+    expect(isMarcusReport({ conclusion: 'y' })).toBe(false);
+    expect(isMarcusReport({ opening: '', conclusion: 'y' })).toBe(false);
+  });
+
+  it('rejects a missing or empty conclusion', () => {
+    expect(isMarcusReport({ opening: 'x' })).toBe(false);
+    expect(isMarcusReport({ opening: 'x', conclusion: '' })).toBe(false);
+  });
+
+  it('rejects non-objects', () => {
+    expect(isMarcusReport(null)).toBe(false);
+    expect(isMarcusReport(undefined)).toBe(false);
+    expect(isMarcusReport('report')).toBe(false);
+    expect(isMarcusReport(42)).toBe(false);
+    expect(isMarcusReport([])).toBe(false);
   });
 });

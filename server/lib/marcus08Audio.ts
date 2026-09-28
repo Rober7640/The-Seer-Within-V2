@@ -63,6 +63,19 @@ export interface AudioSegment {
   text: string;
 }
 
+/**
+ * The minimum a stored/POSTed value must have to be a usable report: a non-empty
+ * `opening` and `conclusion`. Everything else the narrator tolerates as optional.
+ * Shared by the audio generator (generate-audio) and the PDF flow's save-report so
+ * both agree on what "a report" is.
+ */
+export function isMarcusReport(v: unknown): v is MarcusReport {
+  if (!v || typeof v !== 'object' || Array.isArray(v)) return false;
+  const r = v as Record<string, unknown>;
+  return typeof r.opening === 'string' && r.opening.length > 0
+    && typeof r.conclusion === 'string' && r.conclusion.length > 0;
+}
+
 const NUM = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten'];
 const sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
 
