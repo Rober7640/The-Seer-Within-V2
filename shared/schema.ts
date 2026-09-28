@@ -1690,6 +1690,13 @@ export const beOrders = pgTable("be_orders", {
    *  (that table means a message). Support reads this; a retry that succeeds clears it.
    *  ⚠️ Add with migrations/2026-09-13-be-08-editions.sql, never db:push. */
   fulfilmentNote: text("fulfilment_note"),
+  /** ⭐ 08 audio fulfilment. The STRUCTURED report (the `MarcusReport` shape from
+   *  server/lib/marcus08Audio.ts) the PDF flow produced, saved so the LATER audio-upsell
+   *  flow can build narration without re-generating the reading. jsonb, NULL until the PDF
+   *  flow POSTs /save-report. ⛔ NOT reading_body — that holds the delivered PROSE written
+   *  by /delivered; this holds the machine-readable report the audio narrator consumes.
+   *  ⚠️ Add with migrations/2026-09-24-be-08-reading-report.sql, never db:push. */
+  readingReport: jsonb("reading_report"),
 
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
