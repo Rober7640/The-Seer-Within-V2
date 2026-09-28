@@ -18,6 +18,10 @@ export interface Be08Position {
   label: string;
   visibility: 'free' | 'paid';
   fixedCard?: Be08FixedCard;
+  /** Free (face-up) positions only: the recap of this card the buyer already saw in her
+   *  marketing email. The PDF fulfilment renders it as the "first seen in your email"
+   *  meaning; the reading pipeline requires it for every free position. */
+  emailMeaning?: string;
 }
 export interface Be08Edition {
   id: string;
