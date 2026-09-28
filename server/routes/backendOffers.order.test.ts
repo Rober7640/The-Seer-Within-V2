@@ -51,7 +51,16 @@ vi.mock('../lib/be08Draw', () => ({ BE_08_DECK: [] }));
 vi.mock('../lib/experiments', () => ({
   resolveBeBookingTreatment: vi.fn(async () => ({ treatment: 'page' })),
 }));
-vi.mock('../lib/backendCustomerList', () => ({ BACKEND_UPSELLS: {} }));
+vi.mock('../lib/backendCustomerList', () => ({
+  BACKEND_UPSELLS: { be_08_marcus_audio: { productKey: 'be_08_marcus_audio', priceCents: 1700 } },
+}));
+
+// The audio recording is a SEPARATE upsell PI, linked by booking_session_id. The receipt
+// reads its entitlement through this helper; default = not bought (returns null).
+const paidUpsellAmountCents = vi.fn(async (_s: string | null | undefined, _p: string) => null as number | null);
+vi.mock('../lib/beUpsellOrders', () => ({
+  paidUpsellAmountCents: (s: string | null | undefined, p: string) => paidUpsellAmountCents(s, p),
+}));
 
 const retrieve = vi.fn();
 const getStripe = vi.fn(() => ({ checkout: { sessions: { retrieve } } }));
@@ -117,6 +126,8 @@ beforeEach(() => {
   state.order = null;
   state.edition = null;
   state.editionThrows = false;
+  paidUpsellAmountCents.mockReset();
+  paidUpsellAmountCents.mockResolvedValue(null);
   for (const fn of [getBeOrderBySession, writeToCustomerList, recordBackendOrder, getBe08Edition, retrieve])
     fn.mockClear();
   for (const fn of Object.values(logged)) fn.mockClear();
@@ -166,6 +177,31 @@ describe('GET /api/backend/order/:sessionId — the public shape', () => {
     expect(getBe08Edition).toHaveBeenCalledWith('blind-spots-v1', 2);
     // Only the five public edition fields — never the positions / fixed cards.
     expect(Object.keys(res.body.order.edition).sort()).toEqual(['id', 'question', 'slug', 'theme', 'version']);
+  });
+
+  it('marks the audio recording purchased and itemises what she actually paid', async () => {
+    state.order = paidOrder();
+    paidUpsellAmountCents.mockResolvedValueOnce(1700);
+    const res = await request(app).get(`/api/backend/order/${SESSION}`);
+    expect(res.status).toBe(200);
+    expect(res.body.order.audio).toEqual({ available: false, priceCents: 1700, purchased: true });
+    expect(paidUpsellAmountCents).toHaveBeenCalledWith(SESSION, 'be_08_marcus_audio');
+  });
+
+  it('audio: not purchased when no upsell row exists (catalog price, purchased false)', async () => {
+    state.order = paidOrder();
+    paidUpsellAmountCents.mockResolvedValueOnce(null);
+    const res = await request(app).get(`/api/backend/order/${SESSION}`);
+    expect(res.status).toBe(200);
+    expect(res.body.order.audio).toEqual({ available: false, priceCents: 1700, purchased: false });
+  });
+
+  it('does not look the audio entitlement up for a non-08 offer', async () => {
+    state.order = paidOrder({ offer: 'twin-flame', offerNumber: '02', editionId: null, editionVersion: null, dueAt: null });
+    const res = await request(app).get(`/api/backend/order/${SESSION}`);
+    expect(res.status).toBe(200);
+    expect(paidUpsellAmountCents).not.toHaveBeenCalled();
+    expect(res.body.order.audio.purchased).toBe(false);
   });
 
   it('deliveryHours is 24 without the bump', async () => {
