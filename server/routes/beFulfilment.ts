@@ -14,7 +14,7 @@ import {
 import { BACKEND_OFFER_CATALOG, isBackendOfferKey, type BackendOffer } from '@shared/backendOffers';
 import { getBeOrderBySession, recordBackendOrder } from '../lib/beOrders';
 import { getStripe } from '../lib/stripeAccount';
-import { generateMarcus08Audio, type MarcusReport } from '../lib/marcus08Audio';
+import { generateMarcus08Audio, isMarcusReport, type MarcusReport } from '../lib/marcus08Audio';
 import logger from '../lib/logger';
 
 // n8n's door into backend-deck fulfilment. Four endpoints, one caller: the workflow
@@ -487,6 +487,87 @@ router.post('/:offer/send-attempt', async (req: Request, res: Response) => {
   }
 });
 
+// ─── Report handoff (08 Marcus): PDF flow writes, audio flow reads ─────────────
+//
+// The two Marcus-08 fulfilment workflows never hand data to each other. The PDF flow
+// (initial purchase) POSTs the STRUCTURED report here after it renders the reading; the
+// audio flow (the LATER audio-upsell purchase) GETs it back to build narration. Decoupled
+// through be_orders.reading_report (jsonb) — ⛔ NOT reading_body, which holds the delivered
+// PROSE written by /delivered; this holds the machine-readable report the narrator consumes.
+
+/**
+ * Save the structured report onto the order. Body: { sessionId, report }.
+ *
+ * Idempotent — a re-run overwrites (a re-render is still her reading). Validates the same
+ * shape generate-audio needs (opening + conclusion), so a report that saves here is a
+ * report the audio flow can narrate.
+ */
+router.post('/:offer/save-report', async (req: Request, res: Response) => {
+  const offer = offerOf(res);
+  const body = (req.body ?? {}) as Record<string, unknown>;
+
+  const sessionId = body.sessionId;
+  if (!isSessionId(sessionId)) return res.status(400).json({ error: 'Missing or invalid sessionId' });
+  if (!isMarcusReport(body.report)) {
+    return res.status(400).json({ error: 'Missing or invalid report (need at least opening + conclusion)' });
+  }
+  const report = body.report;
+
+  try {
+    const order = await resolveOrder(sessionId, offer, res);
+    if (!order) return;
+
+    const [row] = await db
+      .update(beOrders)
+      .set({ readingReport: report, updatedAt: new Date() })
+      .where(eq(beOrders.id, order.id))
+      .returning();
+
+    if (!row) return res.status(404).json({ error: 'Order not found.' });
+
+    // ⛔ Never log the report — it is the whole reading. Session + order only.
+    logger.info('be-fulfilment: report saved', {
+      session: sessionId, offer: offer.key, order: order.id,
+    });
+    return res.json({ ok: true });
+  } catch (err) {
+    logger.error('be-fulfilment: save-report failed — the audio flow will find no report', {
+      session: sessionId, offer: offer.key, err: errMessage(err),
+    });
+    return res.status(500).json({ error: 'Could not save the report' });
+  }
+});
+
+/**
+ * Read the saved report back for the audio flow. Returns { ready: true, report } once
+ * saved, else { ready: false } — a 200, meaning "not yet", so the audio flow can poll or
+ * proceed. A missing/other-offer order is still a 404 (resolveOrder). As audio is an
+ * upsell that fires after the PDF flow, the report should already be there.
+ */
+router.get('/:offer/report/:sessionId', async (req: Request, res: Response) => {
+  const offer = offerOf(res);
+  const sessionId = String(req.params.sessionId || '');
+  if (!isSessionId(sessionId)) return res.status(400).json({ error: 'Invalid session.' });
+
+  try {
+    const order = await resolveOrder(sessionId, offer, res);
+    if (!order) return;
+
+    const ready = order.readingReport != null;
+    // ⛔ No report content in the log line — it echoes the entire reading.
+    logger.info('be-fulfilment: report fetched', {
+      session: sessionId, offer: offer.key, order: order.id, ready,
+    });
+    if (!ready) return res.json({ ready: false });
+    return res.json({ ready: true, report: order.readingReport });
+  } catch (err) {
+    logger.error('be-fulfilment: get-report failed', {
+      session: sessionId, offer: offer.key, err: errMessage(err),
+    });
+    return res.status(500).json({ error: 'Could not load the report' });
+  }
+});
+
 // ─── Audio (08 Marcus): server generates + assembles + uploads to Supabase ─────
 
 // The audio run is long (~5 min for a full reading), so this is ASYNC: POST starts
@@ -518,13 +599,6 @@ function reapAudioJobs() {
   audioJobs.forEach((job, id) => {
     if (job.finishedAt && now - job.finishedAt > AUDIO_JOB_TTL_MS) audioJobs.delete(id);
   });
-}
-
-function isMarcusReport(v: unknown): v is MarcusReport {
-  if (!v || typeof v !== 'object') return false;
-  const r = v as Record<string, unknown>;
-  return typeof r.opening === 'string' && r.opening.length > 0
-    && typeof r.conclusion === 'string' && r.conclusion.length > 0;
 }
 
 /**

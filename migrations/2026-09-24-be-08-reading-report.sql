@@ -1,0 +1,15 @@
+-- 08 · Marcus audio fulfilment — the structured-report handoff column.
+--
+-- 🔴 RUN THIS INSTEAD OF `npm run db:push`.
+--    `db:push` diffs the WHOLE schema and applies everything it finds, so unrelated drift
+--    in schema.ts could reach a shared database with it. This file is scoped to one column.
+--
+-- WHY: the two Marcus-08 fulfilment n8n workflows are decoupled through the database. The
+-- PDF workflow (initial purchase) generates the reading and writes the STRUCTURED report
+-- here; the audio workflow (the later audio-upsell purchase) reads it back and narrates it.
+-- The report is the machine-readable `MarcusReport` shape (server/lib/marcus08Audio.ts),
+-- NOT the delivered prose in reading_body.
+--
+-- Purely additive: one nullable jsonb column, no default, no existing column altered, no
+-- row read or modified. Safe to re-run (IF NOT EXISTS).
+ALTER TABLE be_orders ADD COLUMN IF NOT EXISTS reading_report JSONB;
