@@ -241,7 +241,10 @@ function Receipt({ order }: { order: PublicMarcusOrder }) {
           ) : null}
           <div className="ledger-total" id="order-total">
             <span>Total</span>
-            <span className="num">{formatUsd(order.amountCents)}</span>
+            {/* amountCents is the reading checkout (reading + bump); the recording is a
+                separate 1-click payment, so add it here when bought or the ledger lines
+                won't sum to the total. */}
+            <span className="num">{formatUsd(order.amountCents + (audioBought ? order.audio.priceCents : 0))}</span>
           </div>
         </div>
         <p className="ledger-note">This covers {coversText}.</p>
