@@ -26,6 +26,7 @@ import { BE_08_DECK } from '../lib/be08Draw';
 import { parseDateOfBirth } from '../lib/be08Birth';
 import { resolveBeBookingTreatment } from '../lib/experiments';
 import { BACKEND_UPSELLS } from '../lib/backendCustomerList';
+import { paidUpsellAmountCents } from '../lib/beUpsellOrders';
 import logger from '../lib/logger';
 
 // Stripe Checkout for the one-time backend offers (02 Twin Flame, 03 Judgement Day, …).
@@ -1138,6 +1139,18 @@ async function publicOrder(
     }
   }
 
+  // 08 · the $17 audio recording — a SEPARATE upsell PaymentIntent, linked to this
+  // booking by booking_session_id (be_upsell_orders). Read the real entitlement so the
+  // receipt itemises what she actually paid; the exact charge wins over the catalog
+  // guess. Only 08 sells it; every other offer keeps the honest "not bought". A lookup
+  // miss is swallowed inside the helper, so the receipt never breaks on it.
+  const audioProductKey = BACKEND_UPSELLS.be_08_marcus_audio?.productKey ?? 'be_08_marcus_audio';
+  const audioCatalogCents = BACKEND_UPSELLS.be_08_marcus_audio?.priceCents ?? 1700;
+  let audioPaidCents: number | null = null;
+  if (row.offer === 'marcus-reading') {
+    audioPaidCents = await paidUpsellAmountCents(row.stripeSessionId, audioProductKey);
+  }
+
   return {
     reference: row.stripeSessionId.slice(-8).toUpperCase(),
     offer: row.offer,
@@ -1159,10 +1172,15 @@ async function publicOrder(
     editionId: row.editionId ?? null,
     editionVersion: row.editionVersion ?? null,
     edition,
-    // T8: read the real entitlement (be_upsell_orders for this session, product = the
-    // $17 recording) and the catalog price. Until then the receipt can only say,
-    // honestly, that no recording was bought. Price = PARALLEL-PLAN D3 ($17).
-    audio: { available: false, priceCents: 1700, purchased: false },
+    // T8: the real entitlement — be_upsell_orders for this booking session, product =
+    // the $17 recording. `purchased` is true only when such a row exists; `priceCents`
+    // is what she actually paid for it (falling back to the catalog price for the
+    // display-only "available" state). Price floor = PARALLEL-PLAN D3 ($17).
+    audio: {
+      available: false,
+      priceCents: audioPaidCents ?? audioCatalogCents,
+      purchased: audioPaidCents !== null,
+    },
 
     // ── additive (physical offers only) ───────────────────────────────────────────
     ...(collectsShipping(row.offer) ? publicShipping(shipment) : {}),

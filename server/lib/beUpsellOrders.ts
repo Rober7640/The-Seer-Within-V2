@@ -1,3 +1,4 @@
+import { and, eq } from 'drizzle-orm';
 import { BACKEND_OFFER_CATALOG, isBackendOfferKey } from '@shared/backendOffers';
 import { beUpsellOrders, type InsertBeUpsellOrder } from '@shared/schema';
 import { backendUpsellFor } from './backendCustomerList';
@@ -84,5 +85,41 @@ export async function recordBackendUpsellOrder(pi: UpsellPILike): Promise<void> 
       pi: pi.id,
       error: err instanceof Error ? err.message : String(err),
     });
+  }
+}
+
+/**
+ * Did this booking session buy the given upsell product? Read-only entitlement check
+ * for a receipt — the upsell is a SEPARATE PaymentIntent linked to the booking by
+ * `booking_session_id`, so a booking's receipt cannot see it from its own row.
+ *
+ * Returns the amount paid in cents (so the receipt can itemise the exact charge, not a
+ * catalog guess) or null when no such upsell exists. A DB miss returns null rather than
+ * throwing — a receipt must never break because an entitlement lookup hiccuped; the worst
+ * case is the line is omitted, never a broken page.
+ */
+export async function paidUpsellAmountCents(
+  bookingSessionId: string | null | undefined,
+  productKey: string,
+): Promise<number | null> {
+  if (!bookingSessionId) return null;
+  try {
+    const rows = await db
+      .select({ amountCents: beUpsellOrders.amountCents })
+      .from(beUpsellOrders)
+      .where(
+        and(
+          eq(beUpsellOrders.bookingSessionId, bookingSessionId),
+          eq(beUpsellOrders.product, productKey),
+        ),
+      )
+      .limit(1);
+    return rows[0]?.amountCents ?? null;
+  } catch (err) {
+    logger.warn('be_upsell_order: entitlement lookup failed; receipt renders without it', {
+      product: productKey,
+      error: err instanceof Error ? err.message : String(err),
+    });
+    return null;
   }
 }
