@@ -13,6 +13,7 @@ import {
 } from '@shared/schema';
 import { BACKEND_OFFER_CATALOG, isBackendOfferKey, type BackendOffer } from '@shared/backendOffers';
 import { getBeOrderBySession, recordBackendOrder } from '../lib/beOrders';
+import { getBe08Edition } from '../lib/be08Editions';
 import { getStripe } from '../lib/stripeAccount';
 import { generateMarcus08Audio, isMarcusReport, type MarcusReport } from '../lib/marcus08Audio';
 import logger from '../lib/logger';
@@ -225,6 +226,14 @@ router.get('/:offer/fulfilment/:sessionId', async (req: Request, res: Response) 
       }
     }
 
+    // The edition she booked, loaded FRESH from the editions table (the draw's edition
+    // snapshot predates any later edit and lacks the free-card emailMeaning). This is what
+    // the PDF pipeline reads for the "first seen in your email" recap + the labels. Hero art
+    // is not stored on the record — it follows the fixed per-slug convention below. 08 only.
+    const edition = is08 && order.editionId
+      ? await getBe08Edition(order.editionId, order.editionVersion)
+      : null;
+
     return res.json({
       offer: offer.key,
       offerNumber: offer.number,
@@ -263,6 +272,24 @@ router.get('/:offer/fulfilment/:sessionId', async (req: Request, res: Response) 
             drawMethodVersion: draw.drawMethodVersion,
             contextHash: draw.contextHash,
             createdAt: iso(draw.createdAt),
+          }
+        : null,
+      edition: edition
+        ? {
+            id: edition.id,
+            version: edition.version,
+            slug: edition.slug,
+            question: edition.question,
+            theme: edition.theme,
+            spread: edition.spread,
+            // Hero art by the fixed per-edition convention (not stored on the record).
+            heroImageUrl: `https://luna-assets-tsw.s3.ap-southeast-2.amazonaws.com/marcus/08/08-hero-${edition.slug}.jpg`,
+            positions: edition.positions.map((p) => ({
+              number: p.number,
+              label: p.label,
+              visibility: p.visibility,
+              emailMeaning: p.emailMeaning ?? null,
+            })),
           }
         : null,
     });
