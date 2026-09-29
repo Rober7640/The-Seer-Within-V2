@@ -66,6 +66,20 @@ describe('buildNarration', () => {
   it('ends on "Marcus."', () => {
     expect(segs[segs.length - 1].text.trim().endsWith('Marcus.')).toBe(true);
   });
+
+  it('normalizes every segment to ASCII (fal English TTS rejects non-ASCII)', () => {
+    const r: MarcusReport = {
+      opening: 'Ye Ying — this is your reading… with “curly” quotes.',
+      conclusion: 'To answer directly: it’s about over‑control at the café. Marcus.',
+      sections: [
+        { positionNumber: 1, cardName: 'The Moon', positionLabel: 'x', body: 'A résumé — naïve “test” with an ellipsis… and an en–dash.' },
+      ],
+    };
+    const out = buildNarration(r);
+    for (const s of out) expect(/^[\x00-\x7F]*$/.test(s.text)).toBe(true);
+    // and it should still be legible, not gutted
+    expect(out[0].text).toContain('this is your reading');
+  });
 });
 
 describe('isMarcusReport', () => {
