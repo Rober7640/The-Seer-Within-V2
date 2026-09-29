@@ -33,7 +33,7 @@ const state = {
 /** A thenable builder: every drizzle query here is awaited straight off the chain. */
 function query(resolve: () => unknown) {
   const b: Record<string, unknown> = {};
-  for (const m of ['where', 'limit', 'returning', 'values', 'set', 'onConflictDoUpdate', 'from']) {
+  for (const m of ['where', 'limit', 'orderBy', 'returning', 'values', 'set', 'onConflictDoUpdate', 'from']) {
     b[m] = () => b;
   }
   b.then = (ok: (v: unknown) => unknown, fail?: (e: unknown) => unknown) =>
@@ -316,6 +316,7 @@ describe('GET /:offer/fulfilment/:sessionId', () => {
         contextHash: 'abc123',
         createdAt: '2026-09-13T10:00:05.000Z',
       },
+      edition: null,
     });
   });
 
