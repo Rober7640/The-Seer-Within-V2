@@ -80,8 +80,24 @@ const NUM = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eig
 const sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
 
 // ── narration builder ───────────────────────────────────────────────────────
+// fal's English Chatterbox endpoint REJECTS non-ASCII text (422: "Text must contain
+// at least one ASCII character…"), and the model writes typographic Unicode
+// (em/en dashes, curly quotes, ellipses, accented words). Fold it all to ASCII before
+// TTS, or a single non-ASCII segment fails the whole reading.
+function asciiize(s: string): string {
+  return s
+    .replace(/[‘’‚‛′]/g, "'")   // ' ' ‚ ‛ ′ → '
+    .replace(/[“”„‟″]/g, '"')   // " " „ ‟ ″ → "
+    .replace(/[–—―]/g, '-')                // – — ― → -
+    .replace(/…/g, '...')                            // … → ...
+    .replace(/[    ]/g, ' ')          // non-breaking / thin spaces → space
+    .replace(/[•·]/g, '')                       // • · bullets → drop
+    .normalize('NFKD').replace(/[̀-ͯ]/g, '')    // café → cafe, naïve → naive
+    .replace(/[^\x00-\x7F]/g, '');                        // drop anything still non-ASCII
+}
+
 function flatten(s: string | undefined): string {
-  return String(s || '')
+  return asciiize(String(s || ''))
     .replace(/^\s*Image:\s*/i, '')
     .replace(/[*_#`>]/g, '')
     .replace(/^\s*[-•]\s*/gm, '')
