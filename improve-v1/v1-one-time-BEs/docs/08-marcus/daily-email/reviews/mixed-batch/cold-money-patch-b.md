@@ -1,0 +1,16 @@
+# First-pass sentence report
+
+Reading stance: woman over 55, reading once on a phone. Only the supplied passage was read.
+
+| Sentence | Plain sayback | Pronouns and referents | Reread, ambiguity, competing meanings, unclear people or double-use words |
+|---|---|---|---|
+| A hand reaches out from a cloud, holding one coin above a garden. | I picture a hand coming out of a cloud with a coin above a garden. | None. | Understood. No owner of the hand is named, but I read this as an image rather than a person I need to identify. |
+| Below it, a path leads towards an opening in a hedge. | There is a path underneath the pictured hand and coin, leading to a gap in a hedge. | “it”: could be the coin or the hand; not exact on first pass. | Brief uncertainty about what the path is below. The coin is my first reading, but the hand is also possible. |
+| Compare the open hand in the Ace of Pentacles with the man in the Four of Pentacles. | I am asked to compare an open hand in one named card with a man in another. | Implied “you”: me, the reader. | I take the names to be card titles. I have not been shown the man yet, so I need the following description to make the comparison. “Pentacles” is unfamiliar as an ordinary word but functions as part of the titles. |
+| The man clasps his coin against his body. | The man on the second card is holding his coin tightly against himself. | Both instances of “his”: the man in the Four of Pentacles. | Understood. The man is the one just mentioned. |
+| In the Ace, the coin rests on an open palm, where it can be seen and considered. | On the first card, the coin sits openly on the hand so someone can look at it and think about it. | “it”: the coin. “where”: on the open palm. | “The Ace” means the Ace of Pentacles. “Considered” leaves what I am considering about the coin unstated, but I understand the broad meaning as giving it attention. The person looking is unspecified; I read it as anyone viewing it. |
+| I'm reading that coin as a resource worth noticing. | The writer thinks the pictured coin represents something useful that I should pay attention to. | “I”: the writer. “that”: the coin on the Ace. | “Reading” means interpreting the image here. “Resource” is broad; I understand useful something, with the next sentences giving examples. |
+| It needn't be money. | The useful thing represented by the coin does not have to be actual money. | “It”: the resource represented by the coin, rather than the literal pictured coin. | The reference shifts from the coin to what it represents. I can follow that shift without rereading. |
+| It could be something you know how to do, useful information you haven't followed up, or support you haven't yet explored. | The useful thing might be a skill I have, information I have not acted on, or some help I have not looked into. | “It”: the resource represented by the coin. All three instances of “you”: me, the reader. | “Support” could mean money, practical help, or emotional help; no particular kind or person is identified. I understand it as a broad example. “Followed up” means acted on or investigated further; either fits. |
+
+Actual first-pass confusion: In sentence 2, “it” could refer to the hand or the coin. The rest was understood, with broad meanings left open for “considered,” “resource,” and “support.”

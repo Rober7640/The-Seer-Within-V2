@@ -1,0 +1,260 @@
+{
+  "what-part-of-me-needs-healing-v2": {
+    "question": "what part of myself needs the most healing right now",
+    "up": 2,
+    "down": 4,
+    "n_cards": 6,
+    "opening_paragraphs": 0,
+    "close_style": "letter",
+    "cards": [
+      [
+        "five-of-cups",
+        "The Five of Cups",
+        "The Five of Cups — a cloaked figure faces three fallen cups; two stand behind"
+      ],
+      [
+        "strength",
+        "Strength",
+        "Strength — a woman with flowers gently holds a lion's jaws"
+      ]
+    ],
+    "hero_alt": "Six Rider–Waite cards on a cloth — Five of Cups and Strength face up, four face down",
+    "panel_start": "I’d like to continue",
+    "crosshead_start": "Those are the two face-up cards",
+    "backs": 4,
+    "funnel": {
+      "id": "healing-v2",
+      "version": 2,
+      "slug": "what-part-of-me-needs-healing",
+      "status": "published",
+      "theme": "Recognizing emotional hurt without self-judgment and considering support",
+      "paid_labels": [
+        "What needs acknowledging",
+        "What you blame yourself for",
+        "What support you can accept",
+        "Where you can begin"
+      ],
+      "spread": {
+        "id": "six-questions",
+        "name": "The Six Questions (in-house adaptation)",
+        "version": 1
+      },
+      "booking_copy": {
+        "headline": "Let’s look at what needs your care now.",
+        "intro": "Continue your personal reading: What part of myself needs the most healing right now?",
+        "bridge": "The Five of Cups and Strength allow gratitude and hurt to coexist. The remaining reading explores what needs acknowledging and what accepting support could look like.",
+        "offer": "In your personal reading, I’ll explore what needs acknowledging, what you blame yourself for, what support you can accept, and where you can begin.",
+        "name": "I’ll begin with the strengths and challenges your birth date represents in the reading. Your full birth name identifies a personal tarot card. Its meaning helps me explore how you ask for care and respond when support is offered as I interpret your remaining cards."
+      }
+    },
+    "hero": "what-part-of-me-needs-healing"
+  },
+  "why-wont-he-commit-v2": {
+    "question": "why won't he commit",
+    "up": 2,
+    "down": 4,
+    "n_cards": 6,
+    "opening_paragraphs": 0,
+    "close_style": "letter",
+    "cards": [
+      [
+        "knight-of-cups",
+        "The Knight of Cups",
+        "The Knight of Cups — an armoured rider on a pale horse holding a gold cup forward"
+      ],
+      [
+        "two-of-wands",
+        "The Two of Wands",
+        "The Two of Wands — a man on a battlement holding a small globe and a staff"
+      ]
+    ],
+    "hero_alt": "Six Rider–Waite cards on a reading cloth — the Knight of Cups and Two of Wands face up, four face down",
+    "panel_start": "I’d like to continue",
+    "crosshead_start": "Those are the two face-up cards",
+    "backs": 4,
+    "funnel": {
+      "id": "commitment-v2",
+      "version": 2,
+      "slug": "why-wont-he-commit",
+      "status": "published",
+      "theme": "Distinguishing affection from commitment and considering what the buyer needs next",
+      "paid_labels": [
+        "What waiting costs you",
+        "What you need from him",
+        "What you have been accepting",
+        "What your next step is"
+      ],
+      "spread": {
+        "id": "six-questions",
+        "name": "The Six Questions (in-house adaptation)",
+        "version": 1
+      },
+      "booking_copy": {
+        "headline": "Let’s look at what you need from this relationship.",
+        "intro": "Continue your personal reading: Why won't he commit?",
+        "bridge": "The Knight of Cups and Two of Wands distinguish romantic attention from an agreed direction. The remaining reading explores what waiting costs you and what clarity you need.",
+        "offer": "In your personal reading, I’ll explore what waiting costs you, what you need from him, what you have been accepting, and what your next step is.",
+        "name": "I’ll begin with the strengths and challenges your birth date represents in the reading. Your full birth name identifies a personal tarot card. Its meaning helps me explore how you express what you need and consider your choices when commitment is uncertain as I interpret your remaining cards."
+      }
+    },
+    "hero": "why-wont-he-commit"
+  },
+  "what-is-my-higher-calling-v3": {
+    "question": "what is my higher calling",
+    "up": 2,
+    "down": 4,
+    "cards": [
+      [
+        "the-star",
+        "The Star",
+        "The Star &mdash; a woman kneeling at the edge of a pool, pouring from two jugs, one great eight-pointed star and seven smaller ones above her"
+      ],
+      [
+        "seven-of-pentacles",
+        "The Seven of Pentacles",
+        "The Seven of Pentacles &mdash; a man leaning on a long-handled hoe, both hands folded over the top of it, looking at seven gold discs on a bush"
+      ]
+    ],
+    "hero_alt": "Six Rider&ndash;Waite cards laid out on a table &mdash; two face up, four still face down",
+    "panel_start": "I’d like to continue",
+    "crosshead_start": "Those are the two face-up cards",
+    "funnel": {
+      "id": "higher-calling-v3",
+      "version": 3,
+      "slug": "what-is-my-higher-calling",
+      "status": "published",
+      "theme": "Giving a recurring interest a fair trial within the buyer’s existing life",
+      "paid_labels": [
+        "What gives you meaning",
+        "What needs room in your life",
+        "What makes beginning difficult",
+        "Where you can begin"
+      ],
+      "spread": {
+        "id": "six-questions",
+        "name": "The Six Questions (in-house adaptation)",
+        "version": 1
+      },
+      "booking_copy": {
+        "headline": "Let’s look at where your calling could begin.",
+        "intro": "Continue your personal reading: What is my higher calling?",
+        "bridge": "The Star and Seven of Pentacles connect inspiration with practical effort and reflection. The remaining reading explores what gives you meaning and how to make room for it.",
+        "offer": "In your personal reading, I’ll explore what gives you meaning, what needs room in your life, what makes beginning difficult, and where you can begin.",
+        "name": "I’ll begin with the strengths and challenges your birth date represents in the reading. Your full birth name identifies a personal tarot card. Its meaning helps me explore what helps you make room for a meaningful interest and what makes beginning difficult as I interpret your remaining cards."
+      }
+    },
+    "opening_paragraphs": 0,
+    "close_style": "letter",
+    "hero": "what-is-my-higher-calling",
+    "n_cards": 6
+  },
+  "why-they-go-quiet-v2": {
+    "question": "why he goes quiet",
+    "up": 2,
+    "down": 4,
+    "cards": [
+      [
+        "four-of-cups",
+        "The Four of Cups",
+        "The Four of Cups &mdash; a young man under a tree, arms folded, three cups on the grass and a fourth held out of a cloud"
+      ],
+      [
+        "eight-of-swords",
+        "The Eight of Swords",
+        "The Eight of Swords &mdash; a bound and blindfolded woman standing in wet ground, eight swords upright around her, a castle on the rock behind"
+      ]
+    ],
+    "hero_alt": "Six Rider–Waite cards on a raven cloth: Four of Cups and Eight of Swords face up, four face down.",
+    "panel_start": "I’d like to continue",
+    "crosshead_start": "Those are the two face-up cards",
+    "funnel": {
+      "id": "quiet-v2",
+      "version": 2,
+      "slug": "why-they-go-quiet",
+      "status": "published",
+      "theme": "Responding to silence without assuming hidden motives or suspending personal choices",
+      "paid_labels": [
+        "What you need to know",
+        "What waiting is costing you",
+        "What you can ask for",
+        "Where you can begin"
+      ],
+      "spread": {
+        "id": "six-questions",
+        "name": "The Six Questions (in-house adaptation)",
+        "version": 1
+      },
+      "booking_copy": {
+        "headline": "Let’s look at your next step while he’s quiet.",
+        "intro": "Continue your personal reading: Why he goes quiet?",
+        "bridge": "The Four of Cups and Eight of Swords separate an unanswered approach from the restrictions waiting can create. The remaining reading explores what you need to know, what you can ask for and where you can begin.",
+        "offer": "In your personal reading, I’ll explore what you need to know, what waiting is costing you, what you can ask for, and where you can begin.",
+        "name": "I’ll begin with the strengths and challenges your birth date represents in the reading. Your full birth name identifies a personal tarot card. Its meaning helps me explore how you ask for contact and express your needs while a reply is missing as I interpret your remaining cards."
+      }
+    },
+    "opening_paragraphs": 0,
+    "close_style": "letter",
+    "hero": "why-they-go-quiet-v2",
+    "n_cards": 6,
+    "backs": 4
+  },
+  "what-are-my-blind-spots-v2": {
+    "question": "what are my blind spots?",
+    "up": 3,
+    "down": 7,
+    "n_cards": 10,
+    "opening_paragraphs": 0,
+    "close_style": "letter",
+    "display_deck": true,
+    "cards": [
+      [
+        "the-moon",
+        "The Moon",
+        "The Moon — a full moon above two stone towers, a dog and wolf looking upward, a winding path, and a small crayfish emerging from the pool below"
+      ],
+      [
+        "two-of-swords",
+        "The Two of Swords",
+        "The Two of Swords — a blindfolded woman beside the sea holding two swords across her chest, with a crescent moon and rocks behind her"
+      ],
+      [
+        "three-of-pentacles",
+        "The Three of Pentacles",
+        "The Three of Pentacles — a craftsman on a bench faces two people inside a stone building; one of the other people holds the plan"
+      ]
+    ],
+    "hero_alt": "Ten Rider–Waite cards arranged as a Tree of Life — The Moon, Two of Swords, and Three of Pentacles face up; seven cards face down",
+    "panel_start": "I’d like to continue",
+    "crosshead_start": "Those are the three face-up cards",
+    "backs": "tree-of-life",
+    "funnel": {
+      "id": "blind-spots-v2",
+      "version": 2,
+      "slug": "what-are-my-blind-spots",
+      "status": "published",
+      "theme": "Noticing where familiar assumptions limit perspective across relationships, home and money",
+      "paid_labels": [
+        "What you forgive in others",
+        "What you expect from others",
+        "What your close relationships need",
+        "What you are trying to achieve",
+        "What impression you try to give",
+        "What life at home feels like",
+        "Where assumptions affect financial choices"
+      ],
+      "spread": {
+        "id": "tree-of-life",
+        "name": "The Tree of Life",
+        "version": 1
+      },
+      "booking_copy": {
+        "headline": "Let’s look at what you may be overlooking.",
+        "intro": "Continue your personal reading: What are my blind spots?",
+        "bridge": "The Moon, Two of Swords and Three of Pentacles explore uncertainty, repeated comparisons and the value of another point of view. The remaining reading considers where those habits may affect your relationships, home and financial choices.",
+        "offer": "In your personal reading, I’ll explore the behavior you forgive in others, the treatment you expect, and what your close relationships need. The reading also considers your goals, the impression you try to give, life at home and the effect assumptions may have on financial choices.",
+        "name": "I’ll begin with the strengths and challenges your birth date represents in the reading. Your full birth name identifies a personal tarot card. Its meaning helps me explore how you weigh advice, check assumptions and consider another point of view as I interpret your remaining cards."
+      }
+    },
+    "hero": "what-are-my-blind-spots"
+  }
+}

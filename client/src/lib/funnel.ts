@@ -236,8 +236,8 @@ export function funnelPath(v1Path: string, pathname?: string): string {
 
 export type PostHogFunnel =
   | "soulmate" | "fb" | "fb2" | "gdn" | "palm" | "tarot" | "read" | "v1" | "evelyn" | "aiden"
-  | "marcus" | "luna" | "nova" | "maren" | "seven-seven" | "twinflame" | "pixiu" | "judgement"
-  | "heartcleanser";
+  | "marcus" | "luna" | "nova" | "maren" | "seven-seven" | "twinflame" | "judgement" | "pixiu"
+  | "heartcleanser" | "marcusreading";
 
 // Generalized persona landers → their PostHog funnel name. One route each.
 const PERSONA_LANDER_FUNNELS: Record<string, PostHogFunnel> = {
@@ -263,6 +263,11 @@ export function getPostHogFunnel(pathname?: string): PostHogFunnel | null {
   // 09 Heart Cleanser Love Charm — same shape as 06 (booking root + /success, page
   // only). The label matches backendOfferFunnel('heart-cleanser') and the server map.
   if (p === HEART_CLEANSER_PREFIX || p.startsWith(`${HEART_CLEANSER_PREFIX}/`)) return "heartcleanser";
+  // 08 Marcus one-time reading. The offer lives under /marcus/reading/* — kept DISTINCT
+  // from the /marcus PERSONA lander below (exact "/marcus" → "marcus"). Its OWN upsell
+  // page is /marcus/reading/welcome1 (NOT the shared /offers/upsell/*), so it is matched
+  // by path here. Matches the server's BACKEND_FUNNEL['marcus-reading'] = 'marcusreading'.
+  if (p === "/marcus/reading" || p.startsWith("/marcus/reading/")) return "marcusreading";
   // 03 Judgement Day — booking (chat default at the root, page fallback at /page) +
   // /success under JUDGEMENT_PREFIX. Its upsells are on the SHARED /offers/upsell/*
   // pages, which self-report via backendOfferFunnel (session offer), not by path.
@@ -369,6 +374,14 @@ export function getPostHogStep(pathname?: string): string {
       if (sub === "/welcome2") return "upsell2";
       if (sub === "/success") return "thank_you";
       return "unknown";
+    }
+    case "marcusreading": {
+      // 08 offer chain: booking (root or /<editionId>) → bridge → welcome1 → success.
+      const sub = p.slice("/marcus/reading".length); // "" at the booking root
+      if (sub === "/bridge") return "bridge";
+      if (sub === "/welcome1") return "upsell1";
+      if (sub === "/success") return "thank_you";
+      return "booking"; // "" or "/<editionId>"
     }
     case "evelyn":
       return "landing";

@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Marcus booking form — over-55 phone mock</title>
+<style>
+/* Mock of ONE section only: the four-field booking form, sized for a reader over 55 on a phone.
+   Same palette + Georgia as local/08-marcus/index.html. Changes vs live are commented with "was:". */
+:root{--desk:#dbd1b9;--paper:#f4f1e6;--field:#fffdf7;--ink:#201c16;--muted:#665d4e;--rule:#bcb29e;--red:#8f2b1f;--soft:#ece6d8;--border:#776d5b;--focus:#a36b31;--font:Georgia,'Times New Roman',serif}
+*{box-sizing:border-box}
+body{margin:0;background:var(--desk);color:var(--ink);font:18px/1.6 var(--font);padding:16px 10px 32px} /* was: 17px on phones */
+button,input{font:inherit}
+button:focus-visible,input:focus-visible,label:focus-within{outline:3px solid var(--focus);outline-offset:3px}
+.paper{max-width:600px;margin:auto;background:var(--paper);padding:24px 20px 20px;border:1px solid #c8bda8;box-shadow:0 2px 10px #42382616}
+h2{font-size:28px;font-weight:normal;line-height:1.2;margin:0}
+p{margin:0}
+.price-row{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;gap:6px 16px} /* was: no wrap + h2 max-width:220px */
+.price{font-size:40px;line-height:1;white-space:nowrap}
+.offer-copy{margin:14px 0 8px}
+.why{margin:0 0 22px;padding:14px 16px;background:var(--soft);font-size:17px;line-height:1.55} /* was: 16px grey .name-note on bare paper */
+.why strong{font-weight:bold}
+.field{margin:0 0 22px}
+label,.legend{display:block;font-size:18px;line-height:1.35;margin-bottom:6px} /* was: 16px */
+.hint{font-size:17px;color:var(--muted);line-height:1.45;margin-bottom:8px} /* new: one plain line under each label */
+input[type=text],input[type=email]{width:100%;height:58px;padding:12px 14px;background:var(--field);color:var(--ink);border:2px solid var(--border);border-radius:0;font-size:19px} /* was: 54px, 1px #a99f8c (2.3:1), transparent */
+input::placeholder{color:#8a806d}
+/* Date of birth: three numeric boxes, Month / Day / Year — no picker, no wheel. */
+fieldset{border:0;padding:0;margin:0 0 22px;min-width:0}
+.dob{display:flex;gap:12px;align-items:flex-end}
+.dob div{flex:0 0 auto}
+.dob label{font-size:17px;margin-bottom:6px}
+.dob input{width:5.2ch;text-align:center;padding:12px 6px}
+.dob .year input{width:7.2ch}
+.err{display:none;color:var(--red);font-size:17px;line-height:1.45;margin:0 0 8px;font-weight:bold} /* was: 14px, one global <p> after the pay button */
+.is-error .err{display:block}
+.is-error input{border-color:var(--red);border-width:3px}
+.bump{border:2px solid var(--red);padding:18px 16px 12px;margin-top:8px}
+.eyebrow{display:inline-block;font-size:14px;letter-spacing:.8px;text-transform:uppercase;background:var(--soft);padding:4px 9px;margin-bottom:10px;color:var(--ink)} /* was: 12px */
+.bump h3{font-size:22px;font-weight:normal;line-height:1.25;margin:0}
+.bump .add{font-size:24px;white-space:nowrap}
+.extra-desc{color:var(--muted);font-size:17px;margin:12px 0 6px} /* was: 16px */
+.check{display:flex;gap:14px;align-items:flex-start;cursor:pointer;line-height:1.4;min-height:56px;padding:12px;margin:6px -12px 0;border-radius:4px} /* new: whole row is the tap zone (56px) */
+.check:active{background:var(--soft)}
+.check input{accent-color:var(--red);width:28px;height:28px;flex:0 0 28px;margin:1px 0 0} /* was: 22px */
+.check span{font-size:18px}
+.total{display:flex;flex-wrap:wrap;justify-content:space-between;gap:4px 16px;align-items:baseline;border-top:1px solid var(--rule);margin-top:22px;padding:20px 0 6px;font-size:26px}
+.total small{display:block;width:100%;font-size:17px;color:var(--muted);line-height:1.45}
+.primary{display:block;width:100%;min-height:60px;border:0;background:var(--red);color:#fffaf0;padding:16px 14px;font-size:19px;line-height:1.35;cursor:pointer;margin-top:18px}
+.primary:hover{background:#742318}
+.under{text-align:center;color:var(--muted);font-size:16px;margin-top:12px}
+.demo{max-width:600px;margin:0 auto 14px;font:15px/1.5 system-ui;color:#423b2f}
+.demo button{font:inherit;padding:6px 10px;margin-right:8px}
+</style>
+</head>
+<body>
+<div class="demo"><strong>Mock only — four-field form.</strong> Not wired. <button type="button" id="show-errors">Show error state</button><button type="button" id="hide-errors">Clear</button></div>
+<main class="paper">
+  <div class="price-row"><h2>Your personal reading</h2><span class="price">$35</span></div>
+  <p class="offer-copy">In your full reading, I’ll bring these cards together around your question: which part of your life is carrying the blind spot, what it has already cost you there, and the one question or fact that would settle it.</p>
+  <p class="why"><strong>Why I ask for your name and birthday:</strong> your full name at birth and your date of birth are what I use to find your personal card. I read the other cards through it.</p>
+
+  <form id="booking" novalidate>
+    <div class="field" id="f-first">
+      <label for="first-name">What should I call you?</label>
+      <p class="hint">Your first name is fine.</p>
+      <p class="err" id="e-first">Error: please enter your first name.</p>
+      <input id="first-name" type="text" autocomplete="given-name" autocapitalize="words" maxlength="100" aria-describedby="e-first">
+    </div>
+
+    <div class="field" id="f-full">
+      <label for="full-name">Your full name as it was given at birth</label>
+      <p class="hint">The name on your birth certificate, before any marriage.</p>
+      <p class="err" id="e-full">Error: please enter your full name at birth.</p>
+      <input id="full-name" type="text" name="birth-name" autocomplete="off" autocapitalize="words" maxlength="160" aria-describedby="e-full">
+    </div>
+
+    <fieldset class="field" id="f-dob" aria-describedby="dob-hint e-dob">
+      <legend class="legend">Your date of birth</legend>
+      <p class="hint" id="dob-hint">For example, 3 14 1961</p>
+      <p class="err" id="e-dob">Error: the year should have four numbers, for example 1961.</p>
+      <div class="dob">
+        <div><label for="dob-m">Month</label><input id="dob-m" type="text" inputmode="numeric" pattern="[0-9]*" autocomplete="bday-month" maxlength="2"></div>
+        <div><label for="dob-d">Day</label><input id="dob-d" type="text" inputmode="numeric" pattern="[0-9]*" autocomplete="bday-day" maxlength="2"></div>
+        <div class="year"><label for="dob-y">Year</label><input id="dob-y" type="text" inputmode="numeric" pattern="[0-9]*" autocomplete="bday-year" maxlength="4"></div>
+      </div>
+    </fieldset>
+
+    <div class="field" id="f-email">
+      <label for="email">Where should I send your reading?</label>
+      <p class="hint">Your email address. Check it once — this is where the reading goes.</p>
+      <p class="err" id="e-email">Error: that email address is missing the part after the @.</p>
+      <input id="email" type="email" autocomplete="email" inputmode="email" autocapitalize="none" spellcheck="false" value="reader@example.test" aria-describedby="e-email">
+    </div>
+
+    <div class="bump">
+      <span class="eyebrow">Optional</span>
+      <div class="price-row"><h3>Receive it within 12 hours</h3><span class="add">+$12.77</span></div>
+      <p class="extra-desc">Your written reading normally arrives within 24 hours. Tick this to receive it within 12 hours.</p>
+      <label class="check"><input type="checkbox" id="same-day"><span>Yes, prepare my reading within 12 hours</span></label>
+    </div>
+
+    <div class="total"><span>Total</span><strong id="total">$35.00</strong><small id="total-note">Personal reading $35.00</small></div>
+    <button class="primary" id="pay" type="submit">Pay $35.00 and start my reading</button>
+    <p class="under">Secure payment. Your reading is sent by email.</p>
+  </form>
+</main>
+<script>
+const $=id=>document.getElementById(id);
+$('same-day').addEventListener('change',()=>{const on=$('same-day').checked;$('total').textContent=on?'$47.77':'$35.00';$('total-note').textContent=on?'Personal reading $35.00 + 12-hour delivery $12.77':'Personal reading $35.00';$('pay').textContent='Pay '+(on?'$47.77':'$35.00')+' and start my reading'});
+$('show-errors').addEventListener('click',()=>{for(const id of ['f-first','f-dob','f-email'])$(id).classList.add('is-error');$('f-first').scrollIntoView({block:'start'})});
+$('hide-errors').addEventListener('click',()=>{for(const id of ['f-first','f-full','f-dob','f-email'])$(id).classList.remove('is-error')});
+$('booking').addEventListener('submit',e=>{e.preventDefault();$('show-errors').click()});
+</script>
+</body>
+</html>

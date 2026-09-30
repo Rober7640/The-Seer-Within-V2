@@ -1,0 +1,309 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Marcus Stone · Broadsheet &amp; Ledger — identity sheet</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400;0,6..96,700;1,6..96,400&family=Spectral:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+/* ── tokens ─────────────────────────────────────────────────────────── */
+:root{
+  --desk:#dbd1b9;--paper:#f4f1e6;--stock:#eae4d2;--stock-rule:#b8ab8e;
+  --ink:#14120f;--headink:#0d0c0a;--muted:#5b5343;--hair:#c4b9a1;--edge:#c8bda8;
+  --red:#8f2b1f;--red-press:#742318;--on-red:#fffaf0;--field:#a99f8c;--focus:#a36b31;
+  --display:'Bodoni Moda','Bodoni MT',Didot,'Didot LT STD','Hoefler Text',Garamond,'Times New Roman',serif;
+  --text:'Spectral',Georgia,Cambria,'Times New Roman',Times,serif;
+  --s1:4px;--s2:8px;--s3:12px;--s4:16px;--s5:24px;--s6:32px;--s7:48px;--s8:64px;
+  --measure:620px;
+}
+*{box-sizing:border-box}
+body{margin:0;color:var(--ink);font:18px/1.62 var(--text);padding:30px 16px 46px;
+  background:radial-gradient(120% 60% at 50% 0,#e4dbc6,var(--desk) 55%,#d3c8ad) no-repeat,var(--desk)}
+html{background:var(--desk)}
+h1,h2,h3,p,figure{margin:0}
+button,input{font:inherit}
+button{cursor:pointer}
+a:focus-visible,button:focus-visible,input:focus-visible{outline:3px solid var(--focus);outline-offset:4px}
+
+/* the sheet */
+.sheet{position:relative;max-width:880px;margin:auto;background:var(--paper);border:1px solid var(--edge);
+  padding:32px 52px 28px;box-shadow:0 2px 10px rgba(66,56,22,.09)}
+.sheet::before{content:"";position:absolute;inset:0;pointer-events:none;opacity:.04;
+  background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+.sheet>*{position:relative}
+
+/* rules */
+.rule-scotch{height:9px;background:linear-gradient(var(--ink) 0 5px,var(--paper) 5px 8px,var(--ink) 8px 9px)}
+.rule-double{height:7px;background:linear-gradient(var(--ink) 0 3px,var(--paper) 3px 6px,var(--ink) 6px 7px)}
+.rule-folio{height:6px;background:linear-gradient(var(--ink) 0 1px,var(--paper) 1px 3px,var(--ink) 3px 6px)}
+.hair{border-bottom:1px solid var(--hair)}
+
+/* labels */
+.label{font:12px/1.3 var(--text);letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.label.ink{color:var(--ink)}
+
+/* masthead */
+.mast{text-align:center;padding-top:var(--s2)}
+.mast img{display:block;width:64px;height:64px;margin:0 auto;border:1px solid var(--ink);object-fit:cover}
+.mast-name{font:400 30px/1.1 var(--display);letter-spacing:.14em;padding-left:.14em;color:var(--headink);margin-top:var(--s3)}
+.mast-role{display:flex;align-items:center;justify-content:center;gap:var(--s3);margin-top:var(--s2);
+  font:italic 13px/1.2 var(--text);letter-spacing:.12em;color:var(--muted)}
+.mast-role::before,.mast-role::after{content:"";width:34px;height:1px;background:var(--ink)}
+.mast .rule-scotch{margin-top:var(--s4)}
+.dateline{display:flex;justify-content:space-between;gap:var(--s3);padding:var(--s2) 0;border-bottom:1px solid var(--hair)}
+
+/* specimen scaffolding (the sheet's own labels, not part of the system) */
+.spec{margin-top:var(--s7);padding-top:var(--s3);border-top:1px dotted var(--hair)}
+.spec>.label{margin-bottom:var(--s4);color:#8a7d64}
+.spec>.label::before{content:"specimen · "}
+.col{max-width:var(--measure)}
+.note{font-size:15px;line-height:1.5;color:var(--muted)}
+
+/* type */
+h1{font:400 46px/1.08 var(--display);color:var(--headink);letter-spacing:0;text-wrap:balance}
+h2{font:400 30px/1.15 var(--display);color:var(--headink)}
+h3{font:600 21px/1.3 var(--text)}
+.deck{font:400 22px/1.45 var(--display);color:var(--headink);margin-top:var(--s4)}
+p+p{margin-top:var(--s4)}
+.eyebrow{position:relative;padding-bottom:var(--s2);margin-bottom:var(--s4)}
+.eyebrow::after{content:"";display:block;height:1px;background:var(--ink);margin-top:var(--s2)}
+a{color:var(--red)}
+
+/* cards */
+.cards{display:grid;grid-template-columns:repeat(2,minmax(0,190px));gap:var(--s7);margin-top:var(--s2)}
+figure{text-align:left}
+.cut{display:block;width:100%;max-width:173px}
+.cut img,.cut .back{display:block;width:100%;height:auto;aspect-ratio:7/12}
+.up .cut{border:1px solid var(--ink)}
+.down .cut{border:1px solid var(--hair)}
+.back{background:
+  radial-gradient(circle at 50% 50%,#cfc4a6 0 3px,transparent 4px) 0 0/28px 28px,
+  repeating-linear-gradient(45deg,transparent 0 12px,#8093a8 12px 13px),
+  repeating-linear-gradient(-45deg,transparent 0 12px,#8093a8 12px 13px),#5b6f8a;
+  border-radius:9px;box-shadow:inset 0 0 0 6px #d9cfb6}
+.fig{max-width:173px;margin-top:var(--s2);border-top:1px solid var(--hair);padding-top:var(--s2)}
+.fig-pos{font-size:17px;line-height:1.35;margin-top:var(--s1)}
+.fig-name{font:italic 15px/1.4 var(--text);color:var(--muted);margin-top:3px}
+
+/* ledger */
+.row{display:flex;justify-content:space-between;gap:var(--s4);padding:10px 0;border-bottom:1px solid var(--hair);font-size:17px}
+.num{font-variant-numeric:lining-nums tabular-nums;white-space:nowrap}
+.total{position:relative;display:flex;justify-content:space-between;gap:var(--s5);padding:var(--s4) 0 0;margin-top:2px;
+  font:400 32px/1 var(--display);color:var(--headink)}
+.total::before{content:"";position:absolute;top:0;left:0;right:0;height:1px;background:var(--ink)}
+.price-row{display:flex;justify-content:space-between;align-items:baseline;gap:var(--s5)}
+.price{font:400 42px/1 var(--display);color:var(--headink)}
+
+/* button + links */
+.btn{display:block;width:100%;max-width:var(--measure);background:var(--red);color:var(--on-red);border:0;
+  padding:17px 20px;font:600 18px/1.35 var(--text);letter-spacing:.01em;
+  box-shadow:inset 0 0 0 3px var(--red),inset 0 0 0 4px rgba(244,241,230,.5);transition:background .15s,transform .08s}
+.btn:hover{background:var(--red-press)}
+.btn:active{transform:translateY(1px);background:var(--red-press);
+  box-shadow:inset 0 0 0 3px var(--red-press),inset 0 0 0 5px rgba(244,241,230,.55)}
+.decline{display:inline-block;margin-top:var(--s5);color:var(--red);font-size:17px;text-decoration:none;
+  border-bottom:1px solid currentColor;padding-bottom:2px}
+.under{font-size:15px;color:var(--muted);margin-top:10px;text-align:center;max-width:var(--measure)}
+.back-link{color:var(--muted);font-size:16px}
+
+/* insert / bump box */
+.insert{background:var(--stock);border:1px solid var(--stock-rule);padding:20px 22px;max-width:var(--measure)}
+.insert h3{display:flex;justify-content:space-between;gap:var(--s3);margin-top:var(--s2)}
+.insert .add{font:400 26px/1 var(--display);color:var(--headink);white-space:nowrap;align-self:baseline}
+.insert p{font-size:16px;color:var(--muted);margin-top:10px}
+.check{display:flex;gap:var(--s3);align-items:flex-start;margin-top:var(--s4);font-size:17px;line-height:1.4;cursor:pointer}
+.check input{accent-color:var(--red);width:22px;height:22px;flex:0 0 22px;margin:2px 0 0}
+
+/* inputs */
+label{display:block;font-size:16px;margin-bottom:7px}
+input[type=text]{width:100%;max-width:300px;background:transparent;border:1px solid var(--field);border-radius:0;color:var(--ink);padding:12px 14px;height:54px}
+
+/* swatches */
+.swatches{display:grid;grid-template-columns:repeat(auto-fill,minmax(112px,1fr));gap:var(--s3)}
+.sw{font-size:13px;line-height:1.35;color:var(--muted)}
+.sw i{display:block;height:44px;border:1px solid var(--hair);margin-bottom:var(--s1)}
+.sw b{display:block;color:var(--ink);font-weight:400}
+
+/* footer */
+.foot{margin-top:var(--s7)}
+.foot .dateline{border-bottom:0;padding-top:var(--s2)}
+
+/* ── the motion moments ─────────────────────────────────────────────── */
+@media (prefers-reduced-motion:no-preference){
+  @keyframes deal{from{opacity:0;transform:translateY(14px) rotate(-1.5deg)}to{opacity:1;transform:none}}
+  @keyframes rise{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+  @keyframes draw{to{transform:scaleX(1)}}
+  .up{animation:deal .38s cubic-bezier(.2,.7,.2,1) both}
+  .up:nth-child(2){animation-delay:.12s}
+  .eyebrow::after{transform:scaleX(0);transform-origin:left;animation:draw .6s ease-out .1s forwards}
+  .eyebrow+h1{animation:rise .4s ease-out .3s both}
+  .ledger .row{animation:rise .3s ease-out both}
+  .ledger .row:nth-child(2){animation-delay:.09s}
+  .ledger .row:nth-child(3){animation-delay:.18s}
+  .ledger .total::before{transform:scaleX(0);transform-origin:left;animation:draw .45s ease-out .35s forwards}
+  .ledger .total span{animation:rise .3s ease-out .6s both}
+}
+
+/* ── phone ─────────────────────────────────────────────────────────── */
+@media (max-width:620px){
+  body{padding:12px 12px 24px;font-size:17px;line-height:1.65}
+  .sheet{padding:22px 20px 20px}
+  .mast img{width:52px;height:52px}
+  .mast-name{font-size:24px}
+  .dateline{font-size:11px;letter-spacing:.08em}
+  h1{font-size:34px}
+  h2{font-size:26px}
+  h3{font-size:20px}
+  .deck{font-size:20px}
+  .spec{margin-top:var(--s6)}
+  .cards{grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--s5)}
+  .cut,.fig{max-width:145px}
+  .price{font-size:34px}
+  .total{font-size:28px}
+  .insert{padding:18px}
+  .insert .add{font-size:22px}
+  .btn{font-size:17px;padding:16px 14px}
+}
+</style>
+</head>
+<body>
+<main class="sheet">
+
+  <!-- MASTHEAD -->
+  <header class="mast">
+    <img src="https://luna-assets-tsw.s3.ap-southeast-2.amazonaws.com/marcus/08/08-headshot.jpg" alt="Marcus Stone" width="64" height="64">
+    <div class="mast-name">Marcus Stone</div>
+    <div class="mast-role">Daily Tarot Reader</div>
+    <div class="rule-scotch"></div>
+    <div class="dateline label"><span>Order form</span><span>The Seer Within</span></div>
+  </header>
+
+  <!-- HEADLINE + BODY -->
+  <section class="spec col">
+    <div class="label">Headline, deck, body</div>
+    <div class="eyebrow label ink">Order confirmed</div>
+    <h1>Let’s look at where it’s costing you most.</h1>
+    <p class="deck">Continue your reading on your blind spots — and which part of your life they are reaching into.</p>
+    <p style="margin-top:var(--s5)">In your full reading, I’ll bring these cards together around your question: which part of your life is carrying the blind spot, what it has already cost you there, and the one question or fact that would settle it.</p>
+    <p>Enter your first and last name so I can identify your personal tarot card. I’ll use the strengths and habits your personal card represents as another way to explore where your attention drifts. <a href="#">A link in running text looks like this.</a></p>
+    <p class="note" style="margin-top:var(--s4)">Bodoni Moda 46/34 · Spectral 18/17 on a 620px measure · the eyebrow’s rule draws itself on load (the bridge page’s moment).</p>
+  </section>
+
+  <!-- CARDS -->
+  <section class="spec">
+    <div class="label">Card frames — turned and still down</div>
+    <div class="cards">
+      <figure class="up">
+        <span class="cut"><img src="https://luna-assets-tsw.s3.ap-southeast-2.amazonaws.com/evelyn/tarot-rws/the-moon.jpg" alt="The Moon — a full moon above two towers, a dog and a wolf, a crayfish climbing from the pool" width="173" height="296"></span>
+        <figcaption class="fig">
+          <span class="label ink">Fig. I · Position one</span>
+          <div class="fig-pos">How a blind spot affects you</div>
+          <div class="fig-name">The Moon</div>
+        </figcaption>
+      </figure>
+      <figure class="down">
+        <span class="cut"><span class="back" role="img" aria-label="Card face down"></span></span>
+        <figcaption class="fig">
+          <span class="label">Position four</span>
+          <div class="fig-pos">What you keep excusing</div>
+        </figcaption>
+      </figure>
+    </div>
+    <p class="note" style="margin-top:var(--s5);max-width:var(--measure)">Face-up: 1px ink frame, no radius, no shadow, Roman figure. Face-down: 1px hairline frame, no figure. The art is untouched. The blue back here is a CSS stand-in for the page’s real 408×700 rose-lattice back (173 KB, too big for this sheet); on the page the frame goes round that image the same way. Turned cards are dealt on load (the booking page’s moment).</p>
+  </section>
+
+  <!-- RULES -->
+  <section class="spec col">
+    <div class="label">The ruling system</div>
+    <div class="rule-scotch"></div><p class="note" style="margin:6px 0 18px">Scotch 5 / 3 / 1 — under the masthead, once.</p>
+    <div class="rule-double"></div><p class="note" style="margin:6px 0 18px">Double 3 / 3 / 1 — above a section.</p>
+    <div class="rule-folio"></div><p class="note" style="margin:6px 0 18px">Folio 1 / 2 / 3 — above the footer, once.</p>
+    <div class="hair"></div><p class="note" style="margin:6px 0 0">Hairline — ledger rows, under captions, under the dateline.</p>
+  </section>
+
+  <!-- OFFER ROW + LEDGER -->
+  <section class="spec col">
+    <div class="label">Offer row and receipt ledger</div>
+    <div class="rule-double"></div>
+    <div class="price-row" style="margin-top:var(--s4)"><h2>Your personal reading</h2><span class="price num">$35</span></div>
+    <div class="ledger" style="margin-top:var(--s5)">
+      <div class="row"><span>Personal reading</span><span class="num">$35.00</span></div>
+      <div class="row"><span>12-hour delivery</span><span class="num">$12.77</span></div>
+      <div class="row"><span>Audio version</span><span class="num">$17.00</span></div>
+      <div class="total"><span>Total USD</span><span class="num">$64.77</span></div>
+    </div>
+    <p class="note" style="margin-top:var(--s4)">Lining, tabular figures on every price. The receipt prints top to bottom and the ink rule draws before the total (the thank-you page’s moment).</p>
+  </section>
+
+  <!-- BUMP BOX -->
+  <section class="spec">
+    <div class="label">Insert — the speed-upgrade bump</div>
+    <div class="insert">
+      <span class="label">Optional speed upgrade</span>
+      <h3><span>Receive it within 12 hours</span><span class="add num">+$12.77</span></h3>
+      <p>Your written reading normally arrives within 24 hours of payment. Add this to receive it within 12 hours.</p>
+      <label class="check"><input type="checkbox" checked><span>Yes, prepare my reading within 12 hours — add $12.77</span></label>
+    </div>
+    <p class="note" style="margin-top:var(--s4);max-width:var(--measure)">Darker stock, ruled all round in #b8ab8e, tracked kicker. No red border — red is for the button and the way out only. The same box serves the status note on the bridge and the “includes” list on the upsell.</p>
+  </section>
+
+  <!-- FIELD -->
+  <section class="spec col">
+    <div class="label">Field</div>
+    <label for="fn">First name</label>
+    <input type="text" id="fn" name="fn" value="Karen">
+  </section>
+
+  <!-- BUTTON + DECLINE -->
+  <section class="spec col">
+    <div class="label">Primary button and the way out</div>
+    <button class="btn" type="button">Yes — add my audio reading for $17</button>
+    <p class="under">One additional payment. Your written order is already confirmed.</p>
+    <a class="decline" href="#">No thanks — I’ll read it on my own.</a>
+    <p class="note" style="margin-top:var(--s5)">The stamp: square, flat red, an inner hairline in paper at 50%. Press it — it sinks 1px and the hairline thickens. Decline stays red at 17px with 24px clear above. <a class="back-link" href="#">A secondary/back link looks like this.</a></p>
+  </section>
+
+  <!-- PALETTE -->
+  <section class="spec">
+    <div class="label">Palette</div>
+    <div class="swatches">
+      <div class="sw"><i style="background:#dbd1b9"></i><b>desk</b>#dbd1b9</div>
+      <div class="sw"><i style="background:#f4f1e6"></i><b>paper</b>#f4f1e6</div>
+      <div class="sw"><i style="background:#eae4d2"></i><b>stock</b>#eae4d2</div>
+      <div class="sw"><i style="background:#b8ab8e"></i><b>stock-rule</b>#b8ab8e</div>
+      <div class="sw"><i style="background:#c4b9a1"></i><b>hair</b>#c4b9a1</div>
+      <div class="sw"><i style="background:#c8bda8"></i><b>edge</b>#c8bda8</div>
+      <div class="sw"><i style="background:#5b5343"></i><b>muted</b>#5b5343</div>
+      <div class="sw"><i style="background:#14120f"></i><b>ink</b>#14120f</div>
+      <div class="sw"><i style="background:#0d0c0a"></i><b>headink</b>#0d0c0a</div>
+      <div class="sw"><i style="background:#8f2b1f"></i><b>red</b>#8f2b1f</div>
+      <div class="sw"><i style="background:#742318"></i><b>red-press</b>#742318</div>
+      <div class="sw"><i style="background:#a36b31"></i><b>focus</b>#a36b31</div>
+    </div>
+  </section>
+
+  <!-- TYPE SCALE -->
+  <section class="spec col">
+    <div class="label">Type scale (desktop / phone)</div>
+    <div class="row"><span>Nameplate · Bodoni 400 · tracked .14em</span><span class="num">30 / 24</span></div>
+    <div class="row"><span>H1 · Bodoni 400</span><span class="num">46 / 34</span></div>
+    <div class="row"><span>H2 · Bodoni 400</span><span class="num">30 / 26</span></div>
+    <div class="row"><span>Price · Bodoni 400</span><span class="num">42 / 34</span></div>
+    <div class="row"><span>Total · Bodoni 400</span><span class="num">32 / 28</span></div>
+    <div class="row"><span>H3 · Spectral 600</span><span class="num">21 / 20</span></div>
+    <div class="row"><span>Body · Spectral 400 · 1.62 / 1.65</span><span class="num">18 / 17</span></div>
+    <div class="row"><span>Small · Spectral 400</span><span class="num">16 / 15</span></div>
+    <div class="row"><span>Label · Spectral caps · .14em</span><span class="num">12 / 12</span></div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer class="foot">
+    <div class="rule-folio"></div>
+    <div class="dateline label"><span>Marcus Stone · The Seer Within</span><span>Order form</span></div>
+  </footer>
+
+</main>
+</body>
+</html>

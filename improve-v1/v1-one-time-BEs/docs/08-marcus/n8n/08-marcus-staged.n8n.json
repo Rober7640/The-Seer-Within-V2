@@ -1,0 +1,326 @@
+{
+  "name": "08 Marcus — Stage 1 Manual PDF Test / Stage 2 Parked",
+  "nodes": [
+    {
+      "id": "d67a9468-7564-552c-a1fa-9165c0e0a0ce",
+      "name": "HOW TO TEST — STAGE 1",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -920,
+        -420
+      ],
+      "parameters": {
+        "content": "# STAGE 1 · MANUAL PDF TEST\n\n1. Open **2 · TEST INPUTS — EDIT ME**.\n2. Enter the question, spread type, first name and last name.\n3. Click **Execute workflow**.\n4. Open **9 · REPORT READY — DOWNLOAD PDF**, choose **Binary**, then download `data`.\n\nThe workflow stays inactive: the Manual Trigger still works in the editor. No Supabase record, payment, email or customer delivery is touched.\n\n**Spread types:** `three`, `six_questions`, `adaptive_eight`, `tree_of_life`, `twelve_houses`."
+      }
+    },
+    {
+      "id": "8a29758e-d398-5f75-a4c9-d793bd4d2245",
+      "name": "1 · Manual test trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -820,
+        40
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "52dd0a04-0b01-5808-a881-23ce0992b072",
+      "name": "2 · TEST INPUTS — EDIT ME",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -600,
+        40
+      ],
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "question",
+              "name": "question",
+              "value": "What is my higher calling?",
+              "type": "string"
+            },
+            {
+              "id": "spreadType",
+              "name": "spreadType",
+              "value": "six_questions",
+              "type": "string"
+            },
+            {
+              "id": "firstName",
+              "name": "firstName",
+              "value": "Maya",
+              "type": "string"
+            },
+            {
+              "id": "lastName",
+              "name": "lastName",
+              "value": "Lewis",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "notes": "Edit only these four values for a Stage 1 test. Supported spreadType values are listed in the nearby note."
+    },
+    {
+      "id": "aa6c1c84-5a25-5cd1-988b-fd1cdaee818b",
+      "name": "3 · Prepare cards and personal card",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -350,
+        40
+      ],
+      "parameters": {
+        "jsCode": "const input = $input.first().json;\nconst question = String(input.question || '').trim();\nconst spreadType = String(input.spreadType || '').trim().toLowerCase();\nconst firstName = String(input.firstName || '').trim();\nconst lastName = String(input.lastName || '').trim();\n\nif (!question) throw new Error('question is required');\nif (!firstName || !lastName) throw new Error('firstName and lastName are required');\nfor (const value of [firstName, lastName]) {\n  if (/[^\\x00-\\x7F]/.test(value)) throw new Error('Stage 1 uses the current ASCII-only name policy.');\n  if (!/^[A-Za-z]+(?:[ '\\-]+[A-Za-z]+)*$/.test(value)) throw new Error('Names may use letters, spaces, apostrophes and hyphens.');\n}\n\nconst spreads = {\n  three: {\n    name: 'The Three', free: 1,\n    labels: ['what shaped this', 'where it stands now', 'where it can lead'],\n  },\n  six_questions: {\n    name: 'The Six Questions', free: 2,\n    labels: ['what is already visible', 'what complicates it', 'what you have not named', 'what you need now', 'what can change', 'where to begin'],\n  },\n  adaptive_eight: {\n    name: 'The Eight-Part Reading', free: 4,\n    labels: ['what brought you here', 'what is clear now', 'what keeps returning', 'what deserves attention', 'what you are carrying', 'what needs to change', 'what can help', 'where to begin'],\n  },\n  tree_of_life: {\n    name: 'The Tree of Life', free: 3,\n    labels: ['what is asking to be seen', 'what is driving it', 'what holds it in place', 'what you are protecting', 'what you are learning', 'what supports you', 'what drains you', 'what must be chosen', 'what can grow', 'where this leads'],\n  },\n  twelve_houses: {\n    name: 'The Twelve Houses', free: 4,\n    labels: ['what defines this moment', 'what you value', 'what needs saying', 'where you seek safety', 'what wants expression', 'what needs tending', 'what partnership shows you', 'what must change', 'what expands your view', 'what asks for commitment', 'what future you imagine', 'what remains hidden'],\n  },\n};\nconst spread = spreads[spreadType];\nif (!spread) throw new Error(`Unsupported spreadType \"${spreadType}\". Use three, six_questions, adaptive_eight, tree_of_life, or twelve_houses.`);\n\nconst deck = [\n  'The Fool','The Magician','The High Priestess','The Empress','The Emperor','The Hierophant','The Lovers','The Chariot','Strength','The Hermit','Wheel of Fortune','Justice','The Hanged Man','Death','Temperance','The Devil','The Tower','The Star','The Moon','The Sun','Judgement','The World',\n  'Ace of Wands','Two of Wands','Three of Wands','Four of Wands','Five of Wands','Six of Wands','Seven of Wands','Eight of Wands','Nine of Wands','Ten of Wands','Page of Wands','Knight of Wands','Queen of Wands','King of Wands',\n  'Ace of Cups','Two of Cups','Three of Cups','Four of Cups','Five of Cups','Six of Cups','Seven of Cups','Eight of Cups','Nine of Cups','Ten of Cups','Page of Cups','Knight of Cups','Queen of Cups','King of Cups',\n  'Ace of Swords','Two of Swords','Three of Swords','Four of Swords','Five of Swords','Six of Swords','Seven of Swords','Eight of Swords','Nine of Swords','Ten of Swords','Page of Swords','Knight of Swords','Queen of Swords','King of Swords',\n  'Ace of Pentacles','Two of Pentacles','Three of Pentacles','Four of Pentacles','Five of Pentacles','Six of Pentacles','Seven of Pentacles','Eight of Pentacles','Nine of Pentacles','Ten of Pentacles','Page of Pentacles','Knight of Pentacles','Queen of Pentacles','King of Pentacles',\n];\n\nfunction hash(text) {\n  let h = 2166136261;\n  for (let i = 0; i < text.length; i++) {\n    h ^= text.charCodeAt(i);\n    h = Math.imul(h, 16777619);\n  }\n  return h >>> 0;\n}\nfunction rng(seed) {\n  let x = seed || 1;\n  return () => {\n    x ^= x << 13; x ^= x >>> 17; x ^= x << 5;\n    return (x >>> 0) / 4294967296;\n  };\n}\nfunction shuffled(values, seed) {\n  const out = [...values];\n  const random = rng(seed);\n  for (let i = out.length - 1; i > 0; i--) {\n    const j = Math.floor(random() * (i + 1));\n    [out[i], out[j]] = [out[j], out[i]];\n  }\n  return out;\n}\n\n// The question + spread fixes the free cards, matching the daily-edition rule.\nconst fixedPool = shuffled(deck, hash(`edition|${question.toLowerCase()}|${spreadType}`));\nconst fixedCards = fixedPool.slice(0, spread.free);\nconst remaining = deck.filter(card => !fixedCards.includes(card));\n// Name plus execution time creates a separate buyer test draw for the paid positions.\nconst testRunId = `${new Date().toISOString()}-${Math.random().toString(36).slice(2, 10)}`;\nconst paidCards = shuffled(remaining, hash(`buyer|${question.toLowerCase()}|${spreadType}|${firstName.toLowerCase()}|${lastName.toLowerCase()}|${testRunId}`))\n  .slice(0, spread.labels.length - spread.free);\n\nconst letterValues = {a:1,j:1,s:1,b:2,k:2,t:2,c:3,l:3,u:3,d:4,m:4,v:4,e:5,n:5,w:5,f:6,o:6,x:6,g:7,p:7,y:7,h:8,q:8,z:8,i:9,r:9};\nlet expressionNumber = `${firstName} ${lastName}`.toLowerCase().replace(/[^a-z]/g, '').split('').reduce((sum, c) => sum + letterValues[c], 0);\nwhile (expressionNumber > 9 && ![11,22,33].includes(expressionNumber)) expressionNumber = String(expressionNumber).split('').reduce((sum, d) => sum + Number(d), 0);\nconst personalCards = {1:'The Magician',2:'The High Priestess',3:'The Empress',4:'The Emperor',5:'The Hierophant',6:'The Lovers',7:'The Chariot',8:'Strength',9:'The Hermit',11:'Justice',22:'The Fool'};\nconst personalCard = personalCards[expressionNumber];\nif (!personalCard) throw new Error(`Expression number ${expressionNumber} has no approved personal-card mapping. Use another test name; number 33 remains a product decision.`);\n\nconst positions = spread.labels.map((label, index) => ({\n  number: index + 1,\n  label,\n  visibility: index < spread.free ? 'face_up_fixed' : 'face_down_buyer_draw',\n  cardName: index < spread.free ? fixedCards[index] : paidCards[index - spread.free],\n  reversed: false,\n}));\n\nreturn [{json:{\n  stage: 1, testRunId, question, spreadType, spreadName: spread.name,\n  firstName, lastName, expressionNumber, personalCard,\n  faceUpCount: spread.free, faceDownCount: spread.labels.length - spread.free,\n  positions,\n  fixedFaceUp: positions.filter(p => p.visibility === 'face_up_fixed'),\n  buyerFaceDown: positions.filter(p => p.visibility === 'face_down_buyer_draw'),\n  drawMethod: 'stage1-fixed-edition-plus-buyer-test-v1',\n  personalCardMethod: 'expression-existing-engine-v1',\n}}];"
+      },
+      "notes": "Free cards are deterministic from question + spread. Face-down cards are drawn separately for this test execution. The personal-card arithmetic mirrors server/lib/numerologyEngine.ts and fails explicitly for unsupported names/33."
+    },
+    {
+      "id": "e66ac993-63ac-53fe-8382-2dfb49d61ef2",
+      "name": "4 · Build adaptive writing request",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -100,
+        40
+      ],
+      "parameters": {
+        "jsCode": "const c = $input.first().json;\nconst system = `You are Marcus Stone, a warm, observant tarot reader writing a paid personal reading.\n\nWrite clearly. Avoid riddles, fortune-cookie language, melodrama, therapy jargon, and claims of certainty. Treat the cards as a way to understand patterns and choices. Never claim to know another person's private thoughts as fact. Use the Rider-Waite imagery accurately, but keep the prose human and easy to follow.\n\nThe face-up cards came from the daily reading and must remain fixed. The face-down cards were drawn separately for this buyer. The personal card is a lens: explain how its strengths and familiar habits change the interpretation of this question. It is not another spread position.\n\nGive every paid position a complete answer. Each section should move from a concrete image in the card, to what it suggests here, to a practical implication for the buyer. Connect the paid cards to each other and to the fixed face-up cards. Do not repeat the same insight in several sections. End with a grounded conclusion that answers the question while leaving room for the buyer's judgment.\n\nEvery field must contain finished reader-facing copy. Never write a placeholder, \"continued,\" \"see above,\" \"see below,\" or an empty string. The connections field must synthesize the fixed face-up cards with the buyer-specific cards. The conclusion must directly answer the buyer's question in two or three substantial paragraphs.\n\nReturn only JSON matching the supplied schema.`;\n\nconst facts = {\n  question: c.question,\n  buyer: {firstName: c.firstName, lastName: c.lastName},\n  spread: {type: c.spreadType, name: c.spreadName, faceUpCount: c.faceUpCount, faceDownCount: c.faceDownCount},\n  personalCard: {name: c.personalCard, expressionNumber: c.expressionNumber},\n  fixedFaceUpCardsFromDaily: c.fixedFaceUp,\n  buyerSpecificPaidCardsToInterpret: c.buyerFaceDown,\n};\n\nconst sectionSchema = {\n  type:'object', additionalProperties:false,\n  properties:{\n    heading:{type:'string',minLength:8}, body:{type:'string',minLength:350}, practicalMeaning:{type:'string',minLength:90},\n  },\n  required:['heading','body','practicalMeaning'],\n};\n\nreturn [{json:{...c, openAiBody:{\n  model:'gpt-5.1',\n  messages:[\n    {role:'system',content:system},\n    {role:'user',content:`Write the complete personalized reading from these exact facts. Do not change a position, card, name, or count.\\n\\n${JSON.stringify(facts, null, 2)}`},\n  ],\n  response_format:{type:'json_schema',json_schema:{name:'marcus_paid_reading',strict:true,schema:{\n    type:'object', additionalProperties:false,\n    properties:{\n      title:{type:'string',minLength:8}, theme:{type:'string',minLength:20}, opening:{type:'string',minLength:150},\n      personalCardHeading:{type:'string',minLength:8}, personalCardReading:{type:'string',minLength:220},\n      sections:{type:'array',minItems:c.faceDownCount,maxItems:c.faceDownCount,items:sectionSchema},\n      connections:{type:'string',minLength:260}, conclusion:{type:'string',minLength:260},\n    },\n    required:['title','theme','opening','personalCardHeading','personalCardReading','sections','connections','conclusion'],\n  }}},\n  max_completion_tokens:5000,\n}}}];"
+      }
+    },
+    {
+      "id": "953ef678-8d9a-59fb-95d7-d11089ae047e",
+      "name": "5 · OpenAI writes the reading",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        160,
+        40
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.openai.com/v1/chat/completions",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "openAiApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json.openAiBody) }}",
+        "options": {
+          "timeout": 600000,
+          "response": {
+            "response": {
+              "neverError": false
+            }
+          }
+        }
+      },
+      "credentials": {
+        "openAiApi": {
+          "id": "de6vaPn0hPs3icyh",
+          "name": "OpenAi account"
+        }
+      },
+      "notes": "Uses the same stored OpenAI credential already wired to the 02 inactive test drive. One report-generation call per manual execution."
+    },
+    {
+      "id": "469a990f-ebbb-59ee-91e6-45fb5b7e058d",
+      "name": "6 · Validate structure and exact draw",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        420,
+        40
+      ],
+      "parameters": {
+        "jsCode": "const source = $('3 · Prepare cards and personal card').first().json;\nlet raw = $json.choices?.[0]?.message?.content;\nif (Array.isArray(raw)) raw = raw.map(part => part.text || '').join('');\nif (typeof raw !== 'string' || !raw.trim()) throw new Error('OpenAI returned no report text.');\nraw = raw.trim().replace(/^```(?:json)?\\s*/i, '').replace(/\\s*```$/, '');\nlet report;\ntry { report = JSON.parse(raw); } catch (error) { throw new Error(`OpenAI report was not valid JSON: ${error.message}`); }\nfor (const field of ['title','theme','opening','personalCardHeading','personalCardReading','connections','conclusion']) {\n  if (typeof report[field] !== 'string' || !report[field].trim()) throw new Error(`Report is missing ${field}.`);\n}\nfor (const field of ['connections','conclusion']) {\n  if (report[field].trim().length < 260 || /\\b(?:continued|see above|see below|placeholder)\\b/i.test(report[field])) {\n    throw new Error(`Report ${field} is incomplete or contains a placeholder.`);\n  }\n}\nif (!Array.isArray(report.sections) || report.sections.length !== source.faceDownCount) {\n  throw new Error(`Expected ${source.faceDownCount} paid sections; received ${report.sections?.length ?? 0}.`);\n}\nconst expected = source.buyerFaceDown;\nfor (let i = 0; i < expected.length; i++) {\n  const got = report.sections[i];\n  for (const field of ['heading','body','practicalMeaning']) {\n    if (typeof got[field] !== 'string' || !got[field].trim()) throw new Error(`Section ${i + 1} is missing ${field}.`);\n  }\n  if (got.body.trim().length < 350 || got.practicalMeaning.trim().length < 90) {\n    throw new Error(`Section ${i + 1} is too thin to be a complete paid interpretation.`);\n  }\n}\n// Structural facts never come from the writer. Bind its ordered prose slots to the saved draw here.\nreport.sections = report.sections.map((section, index) => ({\n  ...section,\n  positionNumber: expected[index].number,\n  positionLabel: expected[index].label,\n  cardName: expected[index].cardName,\n}));\nreturn [{json:{...source, report, qa:{passed:true, paidSections:report.sections.length, exactDrawPreserved:true, structureSource:'saved-n8n-draw'}}}];"
+      },
+      "notes": "The model returns prose slots only. This node binds them to authoritative saved cards and positions, and fails on missing or extra sections."
+    },
+    {
+      "id": "a6bd99c1-1a4b-5857-b896-438caf88d325",
+      "name": "7 · Render print HTML",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        680,
+        40
+      ],
+      "parameters": {
+        "jsCode": "const c = $input.first().json;\nconst r = c.report;\nconst esc = value => String(value ?? '').replace(/[&<>\"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',\"'\":'&#39;'}[ch]));\nconst paras = value => esc(value).split(/\\n\\s*\\n/).map(p => `<p>${p.replace(/\\n/g,'<br>')}</p>`).join('');\nconst fixed = c.fixedFaceUp.map(p => `<li><span>Position ${p.number} · ${esc(p.label)}</span><strong>${esc(p.cardName)}</strong></li>`).join('');\nconst sections = r.sections.map(s => `<section class=\"reading\"><div class=\"ordinal\">POSITION ${s.positionNumber}</div><h2>${esc(s.heading)}</h2><div class=\"cardline\">${esc(s.cardName)} · ${esc(s.positionLabel)}</div>${paras(s.body)}<p class=\"practical\"><strong>What this asks of you:</strong> ${esc(s.practicalMeaning)}</p></section>`).join('');\nconst html = `<!doctype html><html><head><meta charset=\"utf-8\"><style>\n@page{size:Letter;margin:0}*{box-sizing:border-box}body{margin:0;background:#f4efe5;color:#29251f;font-family:Georgia,'Times New Roman',serif;line-height:1.62}.page{width:100%;padding:54px 60px 64px}.mast{font-family:Arial,sans-serif;letter-spacing:.22em;font-size:10px;color:#725b39;text-transform:uppercase;border-bottom:1px solid #cbbd9d;padding-bottom:13px}.eyebrow{font-family:Arial,sans-serif;font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:#80653c;margin-top:34px}.hero h1{font-size:36px;line-height:1.12;font-weight:normal;margin:10px 0 12px}.theme{font-size:17px;font-style:italic;color:#655845;margin:0 0 28px}.meta{font:11px/1.5 Arial,sans-serif;color:#6f685e;background:#eee5d5;padding:12px 15px;margin:22px 0}.opening{font-size:17px}.cards{border:1px solid #cbbd9d;padding:18px 22px;margin:28px 0}.cards h3{font:11px Arial,sans-serif;letter-spacing:.15em;text-transform:uppercase;margin:0 0 12px;color:#725b39}.cards ul{list-style:none;margin:0;padding:0}.cards li{display:flex;justify-content:space-between;gap:20px;padding:8px 0;border-top:1px solid #ddd1b9;font-size:13px}.cards li span{color:#655845}.lens{background:#28251f;color:#f6efe2;padding:25px 28px;margin:30px 0}.lens .eyebrow{color:#d7bd83;margin:0}.lens h2{font-size:24px;font-weight:normal;margin:7px 0 10px}.lens p{margin:0;color:#eee4d2}.reading{page-break-inside:avoid;border-top:1px solid #b9aa89;padding:28px 0 18px}.ordinal{font:10px Arial,sans-serif;letter-spacing:.18em;color:#80653c}.reading h2{font-size:25px;line-height:1.2;font-weight:normal;margin:7px 0 3px}.cardline{font-size:13px;font-style:italic;color:#6d604f;margin-bottom:14px}.reading p{font-size:15px;margin:0 0 13px}.practical{background:#e9dfcc;padding:12px 15px}.closing{page-break-inside:avoid;background:#fffaf0;border-left:4px solid #92733f;padding:22px 25px;margin-top:24px}.closing h2{font-size:22px;font-weight:normal;margin:0 0 10px}.signature{font-size:20px;font-style:italic;margin-top:24px}.foot{font:9px Arial,sans-serif;color:#766f65;border-top:1px solid #cbbd9d;margin-top:35px;padding-top:12px}\n</style></head><body><main class=\"page\"><div class=\"mast\">Marcus Stone · Personal Tarot Reading</div><header class=\"hero\"><div class=\"eyebrow\">Prepared for ${esc(c.firstName)} ${esc(c.lastName)}</div><h1>${esc(r.title)}</h1><p class=\"theme\">${esc(r.theme)}</p><div class=\"meta\">${esc(c.spreadName)} · ${c.faceUpCount} fixed face-up cards · ${c.faceDownCount} buyer-specific cards · Test ${esc(c.testRunId)}</div><div class=\"opening\">${paras(r.opening)}</div></header><aside class=\"cards\"><h3>The cards already face up</h3><ul>${fixed}</ul></aside><aside class=\"lens\"><div class=\"eyebrow\">Your personal card</div><h2>${esc(c.personalCard)} · ${esc(r.personalCardHeading)}</h2>${paras(r.personalCardReading)}</aside>${sections}<section class=\"closing\"><h2>How the reading comes together</h2>${paras(r.connections)}${paras(r.conclusion)}<div class=\"signature\">Marcus</div></section><div class=\"foot\">STAGE 1 MANUAL TEST · No payment, customer record or delivery was created. Draw method ${esc(c.drawMethod)}; personal-card method ${esc(c.personalCardMethod)}.</div></main></body></html>`;\nreturn [{json:{...c, html, fileName:`marcus-stage1-${c.firstName.toLowerCase()}-${c.lastName.toLowerCase()}-${c.spreadType}.pdf`}}];"
+      }
+    },
+    {
+      "id": "566f1a8a-b91a-58b9-86a1-e46855fff856",
+      "name": "8 · PDFShift creates the PDF",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        940,
+        40
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.pdfshift.io/v3/convert/pdf",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"source\": {{ JSON.stringify($json.html) }},\n  \"format\": \"Letter\",\n  \"margin\": \"0\",\n  \"use_print\": true,\n  \"sandbox\": false\n}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file"
+            }
+          },
+          "timeout": 120000
+        }
+      },
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "8TelHH6oJEzYzw2r",
+          "name": "pdfshift-header-auth"
+        }
+      },
+      "notes": "Uses the stored PDFShift header credential. The output binary property is data."
+    },
+    {
+      "id": "452bb78e-1895-5a8d-8785-33682ea3b6a4",
+      "name": "9 · REPORT READY — DOWNLOAD PDF",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1200,
+        40
+      ],
+      "parameters": {
+        "jsCode": "const pdf = $input.first();\nconst c = $('7 · Render print HTML').first().json;\nif (!pdf.binary?.data) throw new Error('PDFShift returned no binary data.');\npdf.binary.data.fileName = c.fileName;\npdf.binary.data.mimeType = 'application/pdf';\nreturn [{\n  json:{\n    status:'REPORT_READY', stage:1, testRunId:c.testRunId,\n    question:c.question, spreadType:c.spreadType, spreadName:c.spreadName,\n    firstName:c.firstName, lastName:c.lastName, personalCard:c.personalCard,\n    faceUpCount:c.faceUpCount, faceDownCount:c.faceDownCount,\n    fixedFaceUp:c.fixedFaceUp, buyerFaceDown:c.buyerFaceDown,\n    qa:c.qa, fileName:c.fileName,\n    download:'Open this node output, select Binary, and download data.',\n  },\n  binary:pdf.binary,\n}];"
+      },
+      "notes": "Successful final node. Open its Binary output and download the data property."
+    },
+    {
+      "id": "de7a2b4c-54fd-55f1-981a-23a1b2e99af5",
+      "name": "STAGE 2 — PRODUCTION LANE (PARKED)",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -600,
+        390
+      ],
+      "parameters": {
+        "content": "# STAGE 2 · SUPABASE + REAL ORDERS\n\nBuild after Stage 1 output is approved. This lane will:\n\n1. accept a server-verified paid-order event;\n2. load the immutable edition and fixed face-up cards from Supabase;\n3. load or atomically save one buyer-specific face-down draw;\n4. calculate and persist the personal card from first + last name;\n5. generate, grade, render and store the private PDF;\n6. queue written delivery for 24h or 12h with the +$12.77 speed bump;\n7. chain the optional audio job from the accepted written report.\n\nThe database tables and payment event contract have not been approved, so this lane is intentionally not wired. Stage 1 does not write to Supabase."
+      }
+    }
+  ],
+  "connections": {
+    "1 · Manual test trigger": {
+      "main": [
+        [
+          {
+            "node": "2 · TEST INPUTS — EDIT ME",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "2 · TEST INPUTS — EDIT ME": {
+      "main": [
+        [
+          {
+            "node": "3 · Prepare cards and personal card",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "3 · Prepare cards and personal card": {
+      "main": [
+        [
+          {
+            "node": "4 · Build adaptive writing request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "4 · Build adaptive writing request": {
+      "main": [
+        [
+          {
+            "node": "5 · OpenAI writes the reading",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "5 · OpenAI writes the reading": {
+      "main": [
+        [
+          {
+            "node": "6 · Validate structure and exact draw",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "6 · Validate structure and exact draw": {
+      "main": [
+        [
+          {
+            "node": "7 · Render print HTML",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "7 · Render print HTML": {
+      "main": [
+        [
+          {
+            "node": "8 · PDFShift creates the PDF",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "8 · PDFShift creates the PDF": {
+      "main": [
+        [
+          {
+            "node": "9 · REPORT READY — DOWNLOAD PDF",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "all"
+  }
+}

@@ -1,0 +1,49 @@
+Subject: Is it time for a new chapter?
+
+%FIRSTNAME%,
+
+You don't have to dislike the life you've built to wonder whether part of it has run its course. That can make the question harder: if something mattered to you, how do you know when it's time to change it?
+
+I've turned two of six Rider–Waite cards on that question this morning. The first carries a name that needs a little care.
+
+**One — what an ending can hold. Death.**
+
+A rider in black armour sits on a white horse. He carries a black banner, and on that banner is a rose.
+
+I'm reading this card as a symbol of change, not a prediction of physical death. Look at the flower: Waite described that rose as a sign of life. He put it on the banner of the card called Death.
+
+That detail matters when you think an ending would cancel everything that came before it.
+
+Perhaps you once wanted exactly what you have now. You chose it carefully. It gave you something you needed. Admitting that your needs have changed can feel like admitting you made a mistake.
+
+But something can have been right for an earlier part of your life and still have reached its end. You can value what it gave you without promising to keep it forever.
+
+The rose leaves room for that. What follows an ending can grow from the life you've already lived.
+
+**Two — what a crossing requires. The Six of Swords.**
+
+A ferryman stands at the back of a small boat, guiding two seated passengers toward another shore. Six swords travel upright in the boat with them.
+
+Notice that the passengers have someone helping them across. They haven't had to become ferrymen before they can leave.
+
+If you've been imagining a new chapter as something you must arrange entirely on your own, this picture offers a more workable beginning. You might need advice, practical help, or someone willing to stay beside you while you learn a different way of living.
+
+And the boat carries something from the old shore. A transition needn't require you to abandon every responsibility, skill, or relationship you value. Part of making a change is deciding what belongs in the life you're moving toward.
+
+Together, these cards separate two questions that can become tangled: has something ended, and how do you move from here?
+
+You could recognize that a familiar arrangement no longer fits and still need time to work out the crossing. Having no complete plan doesn't settle whether change is needed. It tells you which question to consider next.
+
+Those are the two face-up cards in this morning’s reading.
+
+The remaining reading is where I'd explore what has run its course for you, what you want to carry forward, what support you can accept, and where your next step begins.
+
+I'll need your first and last name and your date of birth to continue. Your name identifies your personal tarot card. Its meaning helps me interpret those four cards with attention to how you approach change: the strengths you can bring with you, and familiar habits that might make a new beginning harder.
+
+You don't need to turn your whole life upside down to take this question seriously. We can begin by looking at what you want to preserve, and what you may be ready to change.
+
+[Let's explore your next chapter](BOOKING).
+
+Marcus
+
+P.S. The passengers don't make the crossing alone. You can accept help with yours.

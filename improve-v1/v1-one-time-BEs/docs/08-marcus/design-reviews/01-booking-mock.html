@@ -1,0 +1,293 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="color-scheme" content="light">
+<title>Your personal reading — Marcus Stone</title>
+<!-- Design-review mock. Not wired to anything. See 01-booking.md. -->
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400;0,6..96,700;1,6..96,400&family=Spectral:ital,wght@0,400;0,600;1,400&display=swap">
+<style>
+:root{
+  /* the email's own tokens (scripts/build-08-daily.py) — not the SPA's */
+  --desk:#dbd1b9;--paper:#f4f1e6;--ink:#14120f;--head:#0d0c0a;--muted:#5b5343;
+  --hair:#c4b9a1;--red:#8f2b1f;--red-deep:#701f16;--box:#eae4d2;--boxhair:#b8ab8e;
+  --field:#fbf9f2;--focus:#a36b31;
+  --display:'Bodoni Moda','Bodoni MT',Didot,'Hoefler Text',Garamond,'Times New Roman',serif;
+  --text:'Spectral',Georgia,Cambria,'Times New Roman',serif;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--desk);color:var(--ink);font:18px/1.65 var(--text);padding:28px 16px 48px}
+button,input,select{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:3px solid var(--focus);outline-offset:3px}
+[hidden]{display:none!important}
+img{max-width:100%}
+h1,h2,h3,p,figure,fieldset,ol{margin:0;padding:0}
+fieldset{border:0;min-inline-size:0}
+
+/* the sheet */
+.paper{max-width:680px;margin:auto;background:var(--paper);padding:34px 44px 30px;border:1px solid #c8bda8;box-shadow:0 2px 14px #42382618}
+
+/* masthead — the email's, reduced by a third */
+.masthead{text-align:center}
+.portrait{width:64px;height:64px;object-fit:cover;display:block;margin:0 auto 10px;border:1px solid var(--boxhair)}
+.nameplate{font:400 30px/1.05 var(--display);color:var(--head);letter-spacing:.06em}
+.role{display:flex;align-items:center;justify-content:center;gap:12px;margin-top:8px;font:italic 400 14px/1 var(--text);letter-spacing:.14em;color:var(--muted)}
+.role::before,.role::after{content:"";width:44px;height:1px;background:var(--ink)}
+.scotch{border:0;border-top:3px solid var(--ink);border-bottom:1px solid var(--ink);height:3px;margin:18px 0 0}
+.dateline{display:flex;justify-content:space-between;gap:12px;padding:9px 0 0;font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
+
+/* headline — continues the letter, so it sits left like the letter */
+.lead{margin-top:34px}
+h1{font:700 40px/1.12 var(--display);color:var(--head);letter-spacing:-.01em;text-wrap:balance}
+.lead p{margin-top:16px;font-size:20px;line-height:1.5}
+
+/* the three turned */
+.turned{margin-top:30px;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px}
+.turned figure{animation:settle .75s cubic-bezier(.2,.7,.2,1) both}
+.turned figure:nth-child(2){animation-delay:.14s}.turned figure:nth-child(3){animation-delay:.28s}
+@keyframes settle{from{opacity:0;transform:translateY(16px) rotate(-1.2deg)}to{opacity:1;transform:none}}
+.card{display:block;width:100%;height:auto;aspect-ratio:7/12;object-fit:cover;background:#dfd7c4;border:1px solid #ffffff;outline:1px solid var(--hair);box-shadow:0 2px 6px #302a1926}
+.fig{display:block;margin-top:12px;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.turned figcaption b{display:block;font-weight:600;font-size:17px;line-height:1.3;margin-top:4px}
+.turned figcaption i{display:block;font-size:14px;color:var(--muted);margin-top:3px}
+
+/* the seven still down */
+.rule{border:0;border-top:3px solid var(--ink);border-bottom:1px solid var(--ink);height:3px;margin:38px 0 26px}
+h2{font:700 28px/1.15 var(--display);color:var(--head);letter-spacing:-.005em}
+.bridge{margin-top:14px}
+.table{margin-top:22px}
+.table img{display:block;width:100%;height:auto;border:1px solid var(--hair)}
+.table figcaption{font-size:14px;line-height:1.45;color:var(--muted);margin-top:8px}
+.table figcaption b{font-weight:600;letter-spacing:.12em;text-transform:uppercase;font-size:11px;color:var(--ink)}
+.ledger{list-style:none;margin-top:22px;display:grid;grid-template-columns:1fr 1fr;gap:0 32px;border-top:1px solid var(--hair)}
+.ledger li{display:flex;gap:16px;align-items:center;padding:12px 0;border-bottom:1px solid var(--hair)}
+.back{flex:0 0 52px;width:52px;height:89px;border:1px solid #f7f3e8;outline:1px solid var(--hair);box-shadow:0 1px 4px #302a1926;overflow:hidden;
+  background:#5d6c80 repeating-radial-gradient(circle at 50% 50%,#7a889a 0 1px,transparent 1px 7px)}
+.back img{display:block;width:100%;height:100%;object-fit:cover}
+.ledger .fig{margin-top:0}
+.ledger .q{font-size:19px;line-height:1.3;margin-top:3px}
+
+/* the offer */
+.offer{margin-top:0}
+.pricerow{display:flex;justify-content:space-between;align-items:flex-end;gap:16px}
+.price{font:400 58px/0.9 var(--display);color:var(--head);letter-spacing:-.02em;white-space:nowrap}
+.price small{font:italic 400 14px/1 var(--text);letter-spacing:.08em;color:var(--muted);display:block;text-align:right;margin-top:8px}
+.offer-copy{margin-top:18px}
+.delivery{margin-top:14px;padding:12px 16px;background:var(--box);border-left:3px solid var(--boxhair);font-size:16.5px;line-height:1.5}
+.sig{display:block;height:44px;width:auto;margin:16px 0 0 -6px}
+
+/* the form — a letter's reply slip, not a government form */
+form{margin-top:26px}
+.why{color:var(--ink);margin-bottom:22px}
+.f{margin-top:18px}
+label,.legend{display:block;font-weight:600;font-size:17px;line-height:1.3}
+.hint{display:block;font-weight:400;font-size:15px;color:var(--muted);margin-top:2px}
+input[type=text],input[type=email],select{width:100%;height:56px;padding:10px 14px;margin-top:8px;background:var(--field);border:1px solid var(--boxhair);border-radius:0;font-size:19px;color:var(--ink);appearance:none;-webkit-appearance:none}
+select{background-image:linear-gradient(45deg,transparent 50%,var(--muted) 50%),linear-gradient(135deg,var(--muted) 50%,transparent 50%);background-position:calc(100% - 20px) 26px,calc(100% - 14px) 26px;background-size:6px 6px;background-repeat:no-repeat;padding-right:36px}
+input:focus,select:focus{border-color:var(--ink);outline:3px solid var(--focus);outline-offset:2px}
+.dob{display:grid;grid-template-columns:84px 1fr 108px;gap:10px;margin-top:0}
+.dob label{font-size:14px;font-weight:400;color:var(--muted);letter-spacing:.06em;text-transform:uppercase}
+.dob input,.dob select{margin-top:6px}
+.privacy{margin-top:12px;font-size:15px;line-height:1.5;color:var(--muted);font-style:italic}
+.err{display:none;margin-top:8px;font-size:15.5px;line-height:1.4;color:var(--red);font-style:normal}
+.f.bad .err{display:block}
+.f.bad input,.f.bad select{border:2px solid var(--red);padding:9px 13px}
+
+/* the bump — one hairline box, no red */
+.bump{margin-top:28px;border:1px solid var(--boxhair);background:var(--box);padding:18px 20px}
+.bump .fig{margin:0 0 6px}
+.bump .row{display:flex;justify-content:space-between;align-items:baseline;gap:12px}
+.bump h3{font:600 20px/1.3 var(--text)}
+.bump .plus{font:400 26px/1 var(--display);white-space:nowrap}
+.bump p{font-size:16px;line-height:1.5;color:var(--muted);margin-top:8px}
+.opt{display:flex;gap:14px;align-items:flex-start;margin-top:14px;padding:12px 12px 12px 10px;background:var(--paper);border:1px solid var(--boxhair);cursor:pointer;line-height:1.35;font-size:17px;font-weight:400}
+.opt input{width:26px;height:26px;flex:0 0 26px;margin:1px 0 0;accent-color:var(--ink);cursor:pointer}
+
+.total{display:flex;justify-content:space-between;align-items:baseline;gap:16px;margin-top:24px;padding-top:16px;border-top:1px solid var(--ink);font-size:20px}
+.total strong{font:400 34px/1 var(--display)}
+.arrives{font-size:16px;color:var(--muted);margin-top:6px}
+.primary{display:block;width:100%;margin-top:18px;padding:17px 18px;background:var(--red);color:#fffaf0;border:0;border-radius:0;font:600 19px/1.35 var(--text);transition:background .15s}
+.primary:hover{background:var(--red-deep)}
+.primary:active{transform:translateY(1px)}
+.under{text-align:center;font-size:15px;color:var(--muted);margin-top:12px}
+.done{margin-top:18px;padding:16px 18px;background:var(--box);border:1px solid var(--boxhair)}
+
+/* folio */
+.folio{margin-top:40px;border-top:3px solid var(--ink);padding-top:8px;display:flex;justify-content:space-between;font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
+.imprint{margin-top:14px;font-size:13px;line-height:1.6;color:var(--muted)}
+
+@media(max-width:640px){
+  body{padding:12px 10px 32px}
+  .paper{padding:24px 18px 24px}
+  .portrait{width:56px;height:56px}
+  .nameplate{font-size:26px}
+  .dateline{font-size:10px;justify-content:center}.dateline span+span,.figno{display:none}
+  .lead{margin-top:26px}
+  h1{font-size:32px}
+  .lead p{font-size:18px}
+  .turned{gap:10px;margin-top:24px}
+  .turned figcaption b{font-size:15px}
+  .turned figcaption i{font-size:13px}
+  .fig{font-size:10px;letter-spacing:.12em}
+  .turned .fig{letter-spacing:.06em;white-space:nowrap}
+  h2{font-size:25px}
+  .ledger{grid-template-columns:1fr;gap:0}
+  .ledger .q{font-size:18px}
+  .price{font-size:50px}
+  .dob{grid-template-columns:76px 1fr 96px;gap:8px}
+  .bump{padding:16px 14px}
+  .bump .plus{font-size:24px}
+}
+@media(prefers-reduced-motion:reduce){.turned figure{animation:none}.primary{transition:none}}
+@media(max-width:640px){.primary{font-size:18px;padding:16px 12px}.bump h3{font-size:19px}}
+</style>
+</head>
+<body>
+<main class="paper">
+
+<header class="masthead">
+  <img class="portrait" src="https://luna-assets-tsw.s3.ap-southeast-2.amazonaws.com/marcus/08/08-headshot.jpg" alt="Marcus Stone" width="64" height="64">
+  <div class="nameplate">Marcus Stone</div>
+  <div class="role">Daily Tarot Reader</div>
+  <hr class="scotch">
+  <div class="dateline"><span>Morning edition · Page two</span><span>Ten cards · One question</span></div>
+</header>
+
+<section class="lead" aria-labelledby="headline">
+  <h1 id="headline">Let’s look at where it’s costing you most.</h1>
+  <p>Continue your reading on your blind spots—and which part of your life they are reaching into.</p>
+</section>
+
+<div class="turned" aria-label="The three cards already turned">
+  <figure>
+    <img class="card" src="https://luna-assets-tsw.s3.ap-southeast-2.amazonaws.com/evelyn/tarot-rws/the-moon.jpg" alt="The Moon" width="350" height="600">
+    <figcaption><span class="fig"><span class="figno">Fig. I · </span>Position one</span><b>How a blind spot affects you</b><i>The Moon</i></figcaption>
+  </figure>
+  <figure>
+    <img class="card" src="https://luna-assets-tsw.s3.ap-southeast-2.amazonaws.com/evelyn/tarot-rws/two-of-swords.jpg" alt="Two of Swords" width="350" height="600">
+    <figcaption><span class="fig"><span class="figno">Fig. II · </span>Position two</span><b>What you already understand</b><i>Two of Swords</i></figcaption>
+  </figure>
+  <figure>
+    <img class="card" src="https://luna-assets-tsw.s3.ap-southeast-2.amazonaws.com/evelyn/tarot-rws/three-of-pentacles.jpg" alt="Three of Pentacles" width="350" height="600">
+    <figcaption><span class="fig"><span class="figno">Fig. III · </span>Position three</span><b>What you have concluded</b><i>Three of Pentacles</i></figcaption>
+  </figure>
+</div>
+
+<hr class="rule">
+<section aria-labelledby="next">
+  <h2 id="next">What we’ll look at next</h2>
+  <p class="bridge">The Moon, the Two of Swords and the Three of Pentacles showed the pattern: attention pulled into the distance, a decision held between the same two options, and a conclusion nobody else has checked. The next seven cards show where that pattern is reaching—what you keep excusing, what you feel you are owed, your love, your home and your money.</p>
+
+  <figure class="table">
+    <img src="https://luna-assets-tsw.s3.ap-southeast-2.amazonaws.com/marcus/08/08-backs-tree-of-life.jpg" alt="The Tree of Life spread on the table, seven cards still face down" width="494" height="329">
+    <figcaption><b>Fig. IV · The table</b> — the seven still face down, as they lie this morning.</figcaption>
+  </figure>
+
+  <ol class="ledger" aria-label="The seven positions still face down">
+    <li><div class="back"><img src="../../../assets/email/08-booking-card-back.jpg" alt="" onerror="this.remove()"></div><div><span class="fig">Position four</span><div class="q">What you keep excusing</div></div></li>
+    <li><div class="back"><img src="../../../assets/email/08-booking-card-back.jpg" alt="" onerror="this.remove()"></div><div><span class="fig">Position five</span><div class="q">What you feel you are owed</div></div></li>
+    <li><div class="back"><img src="../../../assets/email/08-booking-card-back.jpg" alt="" onerror="this.remove()"></div><div><span class="fig">Position six</span><div class="q">What’s left of the love</div></div></li>
+    <li><div class="back"><img src="../../../assets/email/08-booking-card-back.jpg" alt="" onerror="this.remove()"></div><div><span class="fig">Position seven</span><div class="q">What you want to win</div></div></li>
+    <li><div class="back"><img src="../../../assets/email/08-booking-card-back.jpg" alt="" onerror="this.remove()"></div><div><span class="fig">Position eight</span><div class="q">What you show people</div></div></li>
+    <li><div class="back"><img src="../../../assets/email/08-booking-card-back.jpg" alt="" onerror="this.remove()"></div><div><span class="fig">Position nine</span><div class="q">What home feels like</div></div></li>
+    <li><div class="back"><img src="../../../assets/email/08-booking-card-back.jpg" alt="" onerror="this.remove()"></div><div><span class="fig">Position ten</span><div class="q">What it costs in money</div></div></li>
+  </ol>
+</section>
+
+<hr class="rule">
+<section class="offer" aria-labelledby="offer-title">
+  <div class="pricerow">
+    <h2 id="offer-title">Your personal reading</h2>
+    <div class="price">$35<small>one reading · one payment</small></div>
+  </div>
+  <p class="offer-copy">In your full reading, I’ll bring these cards together around your question: which part of your life is carrying the blind spot, what it has already cost you there, and the one question or fact that would settle it.</p>
+  <p class="delivery">A written reading, sent as a PDF link to your email within 24 hours of payment.</p>
+  <img class="sig" src="https://luna-assets-tsw.s3.ap-southeast-2.amazonaws.com/marcus/08/08-signature.jpg" alt="Marcus Stone" width="560" height="185">
+
+  <form id="f" novalidate>
+    <p class="why">I’ll use the strengths and habits your personal card represents as another way to explore where your attention drifts and which facts you tend to leave unchecked—so along with your first name, I’ll need your full name as it was given at birth and your date of birth.</p>
+
+    <div class="f" id="f-first">
+      <label for="first">First name <span class="hint">What I’ll call you in the reading</span></label>
+      <input id="first" type="text" autocomplete="given-name" autocapitalize="words" maxlength="100" required>
+      <p class="err" id="e-first">Enter the first name you’d like me to use.</p>
+    </div>
+
+    <div class="f" id="f-birth">
+      <label for="birth">Full birth name <span class="hint">As written on your birth certificate</span></label>
+      <input id="birth" type="text" autocomplete="name" autocapitalize="words" maxlength="160" required>
+      <p class="err" id="e-birth">Enter your full name as it was given at birth.</p>
+    </div>
+
+    <fieldset class="f" id="f-dob" aria-describedby="privacy">
+      <span class="legend">Date of birth</span>
+      <div class="dob">
+        <div><label for="dd">Day</label><input id="dd" type="text" inputmode="numeric" autocomplete="bday-day" maxlength="2" placeholder="DD"></div>
+        <div><label for="mm">Month</label><select id="mm" autocomplete="bday-month"><option value="">Month</option><option value="1">January</option><option value="2">February</option><option value="3">March</option><option value="4">April</option><option value="5">May</option><option value="6">June</option><option value="7">July</option><option value="8">August</option><option value="9">September</option><option value="10">October</option><option value="11">November</option><option value="12">December</option></select></div>
+        <div><label for="yy">Year</label><input id="yy" type="text" inputmode="numeric" autocomplete="bday-year" maxlength="4" placeholder="YYYY"></div>
+      </div>
+      <p class="err" id="e-dob">Enter the day, month and year you were born.</p>
+      <p class="privacy" id="privacy">Your birth name and date of birth are used for this reading only. They are kept private, never shown to anyone else, and never used for marketing.</p>
+    </fieldset>
+
+    <div class="f" id="f-email">
+      <label for="email">Delivery email <span class="hint">Where I’ll send the link to your reading</span></label>
+      <input id="email" type="email" inputmode="email" autocomplete="email" autocapitalize="off" spellcheck="false" required>
+      <p class="err" id="e-email">Enter the email address the reading should go to.</p>
+    </div>
+
+    <div class="bump">
+      <span class="fig">Optional</span>
+      <div class="row"><h3>Receive it within 12 hours</h3><span class="plus">+$12.77</span></div>
+      <p>Your written reading normally arrives within 24 hours of payment. Add this to receive it within 12 hours.</p>
+      <label class="opt" for="bump"><input type="checkbox" id="bump"><span>Yes, prepare my reading within 12 hours — add $12.77</span></label>
+    </div>
+
+    <div class="total"><span>Total <span style="font-size:14px;color:var(--muted)">USD</span></span><strong id="total" aria-live="polite">$35.00</strong></div>
+    <p class="arrives" id="arrives">Arrives within 24 hours of payment.</p>
+    <button class="primary" id="pay" type="submit">Continue to secure payment — $35.00</button>
+    <p class="under">One payment. Nothing recurring.</p>
+    <div class="done" id="done" hidden><b>Design mock.</b> Nothing was sent or charged. In the real page this hands the selected order to Stripe Checkout.</div>
+  </form>
+</section>
+
+<footer>
+  <div class="folio"><span>The Seer Within</span><span>Page two</span></div>
+  <p class="imprint">Marcus Stone · The Seer Within · Design-review mock, no payment will be taken.</p>
+</footer>
+</main>
+
+<script>
+(function(){
+  'use strict';
+  var $=function(id){return document.getElementById(id)};
+  var money=function(c){return '$'+(c/100).toFixed(2)};
+  function setTotal(){
+    var on=$('bump').checked, cents=on?4777:3500;
+    $('total').textContent=money(cents);
+    $('pay').textContent='Continue to secure payment — '+money(cents);
+    $('arrives').textContent='Arrives within '+(on?'12':'24')+' hours of payment.';
+  }
+  $('bump').addEventListener('change',setTotal);
+  var wraps=['f-first','f-birth','f-dob','f-email'];
+  wraps.forEach(function(id){ $(id).addEventListener('input',function(){ $(id).classList.remove('bad'); }); });
+  function bad(id){ $(id).classList.add('bad'); return $(id); }
+  $('f').addEventListener('submit',function(e){
+    e.preventDefault();
+    var first=null, mark=function(id){ var el=bad(id); first=first||el; };
+    if(!$('first').value.trim()) mark('f-first');
+    if(!$('birth').value.trim()) mark('f-birth');
+    var d=+$('dd').value, m=+$('mm').value, y=+$('yy').value, now=new Date().getFullYear();
+    if(!(d>=1&&d<=31&&m>=1&&y>=1900&&y<=now-16)) mark('f-dob');
+    if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test($('email').value.trim())) mark('f-email');
+    if(first){ var el=first.querySelector('input,select'); el.focus({preventScroll:true}); first.scrollIntoView({block:'center',behavior:'smooth'}); return; }
+    $('done').hidden=false; $('done').scrollIntoView({block:'nearest',behavior:'smooth'});
+  });
+})();
+</script>
+</body>
+</html>

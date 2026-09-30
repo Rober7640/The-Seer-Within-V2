@@ -1,0 +1,71 @@
+/* bridge page — page-specific rules only; tokens live in ../styles.css
+   Source: design-reviews/02-bridge-thank-you.md §3a (B1–B9) + 04-visual-identity.md §4 (the one
+   motion: the rule draws under ORDER CONFIRMED) + ruling 1 (auto-redirect with a countdown).
+   Floors: body 18px on phones, nothing under 13px, the action and the reassurance inside the
+   first 390×844 screen. */
+
+/* head: eyebrow + headline centred, the rest left-aligned (B5) */
+.bridge-page{text-align:left}
+.bridge-head{text-align:center}
+.bridge-page .eyebrow{display:block;margin:0 auto;letter-spacing:.18em}
+/* the rule the motion draws — full width of the column, ink, one hairline */
+.bridge-page .eyebrow::after{content:"";display:block;height:1px;background:var(--ink);margin-top:var(--s3)}
+.bridge-page h1{margin-top:var(--s4)}
+.bridge-page .nowrap{white-space:nowrap}
+.bridge-page .thanks{margin:var(--s5) 0 0;max-width:34em}
+
+/* the order facts — ruled paper, not a grey box (B2, B4) */
+.bridge-page .facts{margin-top:var(--s5)}
+.bridge-page .facts .rule-double{margin-bottom:var(--s4)}
+.bridge-page .facts>p{max-width:34em}
+.bridge-page .facts .email{overflow-wrap:anywhere}
+.bridge-page .facts dl{display:grid;grid-template-columns:1fr 1fr;gap:var(--s4) var(--s6);margin:var(--s4) 0 0}
+.bridge-page .facts dt{margin-bottom:var(--s1)}
+.bridge-page .facts dd{margin:0;font-size:21px;line-height:1.35;font-weight:600;overflow-wrap:anywhere}
+.bridge-page .facts dd small{display:block;font-size:var(--t-small);font-weight:400;color:var(--muted);margin-top:2px}
+.bridge-page .facts .hair{height:0;margin-top:var(--s4)}
+
+.bridge-page .next{margin:var(--s5) 0 0;max-width:34em}
+
+/* the action: countdown in body type, a thin rule that fills, one plain link (ruling 1) */
+.bridge-page .action{margin-top:var(--s4)}
+.bridge-page .count-line{font-size:var(--t-body);color:var(--ink)}
+.bridge-page .count-rule{height:2px;background:var(--hair);margin-top:var(--s3);overflow:hidden}
+.bridge-page .count-rule i{display:block;height:100%;background:var(--ink);transform:scaleX(0);transform-origin:left center;transition:transform 7s linear}
+.bridge-page .count-rule i.run{transform:scaleX(1)}
+.bridge-page #to-upsell{margin-top:var(--s2)}
+
+/* the reassurance: directly under the action, ink not muted, left with the body (B3) */
+.bridge-page .under{margin-top:var(--s3);font-size:17px;color:var(--ink);text-align:left}
+
+/* the one motion (04 §4): the rule draws under ORDER CONFIRMED, the headline rises behind it.
+   Initial states live inside the same query so reduced-motion readers see everything at once. */
+@media (prefers-reduced-motion:no-preference){
+  .bridge-page .eyebrow::after{transform:scaleX(0);transform-origin:left;animation:draw .6s ease-out .1s forwards}
+  .bridge-page h1{animation:rise .4s ease-out .3s both}
+}
+@media (prefers-reduced-motion:reduce){
+  .bridge-page .count-rule{display:none}
+}
+
+/* phone: the action and the reassurance must sit inside the first 390×844 screen (review 02 B1).
+   The shared masthead alone takes 181px there, so the page trades the label-over-value list
+   (130px) and the fill-rule for the approved sentence with the address inline in bold. */
+@media (max-width:620px){
+  .bridge-page{--lh-body:1.58}
+  .bridge-page .eyebrow{letter-spacing:.14em}
+  .bridge-page .eyebrow::after{margin-top:var(--s2)}
+  .bridge-page h1{font-size:31px;margin-top:var(--s2)}
+  .bridge-page .nowrap{white-space:normal}
+  .bridge-page .thanks{margin-top:var(--s3);line-height:var(--lh-body)}
+  .bridge-page .facts{margin-top:var(--s3)}
+  .bridge-page .facts .rule-double{margin-bottom:var(--s2)}
+  .bridge-page .facts>p{line-height:var(--lh-body)}
+  .bridge-page .facts dl{display:none}
+  .bridge-page .facts .hair{margin-top:var(--s2)}
+  .bridge-page .next{margin-top:var(--s3);line-height:var(--lh-body)}
+  .bridge-page .action{margin-top:var(--s2)}
+  .bridge-page .count-rule{display:none}
+  .bridge-page #to-upsell{margin-top:var(--s1)}
+  .bridge-page .under{margin-top:var(--s1);line-height:1.5}
+}

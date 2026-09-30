@@ -1,0 +1,129 @@
+{
+  "readerName": "Sample Reader",
+  "question": "What needs my attention as I decide what comes next?",
+  "theme": "Moving from uncertainty toward a grounded choice",
+  "spread": {
+    "id": "eight-paths",
+    "name": "The Eight Paths"
+  },
+  "opening": "This eight-card reading follows the movement from uncertainty toward a grounded choice. The first four cards hold the context established in the daily letter. The four cards that were face down now examine what hesitation is doing, what can become real, what belongs in the next chapter, and the step that brings the choice into motion.",
+  "personalCard": {
+    "cardId": "high-priestess",
+    "name": "The High Priestess",
+    "text": "The High Priestess gives this reading its personal lens. Its strength is the ability to notice what does not need to be forced. Its familiar habit is staying with an inner answer for so long that discernment turns into delay. In this spread, intuition is most useful when it helps you recognize the next honest action."
+  },
+  "positions": [
+    {
+      "id": "p1",
+      "number": 1,
+      "label": "What brought you here",
+      "visibility": "free",
+      "cardId": "star",
+      "cardName": "The Star",
+      "reversed": false
+    },
+    {
+      "id": "p2",
+      "number": 2,
+      "label": "What you already know",
+      "visibility": "free",
+      "cardId": "strength",
+      "cardName": "Strength",
+      "reversed": false
+    },
+    {
+      "id": "p3",
+      "number": 3,
+      "label": "What is asking for attention",
+      "visibility": "free",
+      "cardId": "hermit",
+      "cardName": "The Hermit",
+      "reversed": false
+    },
+    {
+      "id": "p4",
+      "number": 4,
+      "label": "What can guide the choice",
+      "visibility": "free",
+      "cardId": "sun",
+      "cardName": "The Sun",
+      "reversed": false
+    },
+    {
+      "id": "p5",
+      "number": 5,
+      "label": "What uncertainty is protecting",
+      "visibility": "paid",
+      "cardId": "two-of-swords",
+      "cardName": "Two of Swords",
+      "reversed": false
+    },
+    {
+      "id": "p6",
+      "number": 6,
+      "label": "What becomes possible",
+      "visibility": "paid",
+      "cardId": "ace-of-pentacles",
+      "cardName": "Ace of Pentacles",
+      "reversed": false
+    },
+    {
+      "id": "p7",
+      "number": 7,
+      "label": "What to carry forward",
+      "visibility": "paid",
+      "cardId": "six-of-swords",
+      "cardName": "Six of Swords",
+      "reversed": false
+    },
+    {
+      "id": "p8",
+      "number": 8,
+      "label": "The grounded next step",
+      "visibility": "paid",
+      "cardId": "chariot",
+      "cardName": "The Chariot",
+      "reversed": false
+    }
+  ],
+  "sections": [
+    {
+      "positionId": "p5",
+      "number": 5,
+      "title": "What uncertainty is protecting",
+      "cardId": "two-of-swords",
+      "cardName": "Two of Swords",
+      "reversed": false,
+      "text": "The Two of Swords shows a figure holding two equal blades while a blindfold keeps the wider landscape out of view. In this position, uncertainty may be protecting you from the discomfort of choosing one path and letting another go. That pause once gave you room to think. Now it may be keeping every option theoretical. Through the High Priestess lens, the question is whether you are still listening for an answer or avoiding the answer you have already heard."
+    },
+    {
+      "positionId": "p6",
+      "number": 6,
+      "title": "What becomes possible",
+      "cardId": "ace-of-pentacles",
+      "cardName": "Ace of Pentacles",
+      "reversed": false,
+      "text": "The Ace of Pentacles places one solid coin in an open hand. It does not ask you to solve the entire future. It asks for something you can begin, hold, schedule, or measure. What becomes possible is a small commitment with real weight: a first lesson, one protected hour, one application, or one honest conversation. The theme of this spread becomes practical here. Clarity may arrive after you give the choice a place in your life."
+    },
+    {
+      "positionId": "p7",
+      "number": 7,
+      "title": "What to carry forward",
+      "cardId": "six-of-swords",
+      "cardName": "Six of Swords",
+      "reversed": false,
+      "text": "The Six of Swords depicts a crossing. The figures take their swords with them; movement does not require pretending the past never happened. Carry forward what your earlier cards established: the Star's hope, Strength's patience, the Hermit's self-knowledge, and the Sun's preference for what is clear. Leave behind the belief that a grounded choice must feel free of doubt. This card suggests that direction can be sound even while your feelings are still catching up."
+    },
+    {
+      "positionId": "p8",
+      "number": 8,
+      "title": "The grounded next step",
+      "cardId": "chariot",
+      "cardName": "The Chariot",
+      "reversed": false,
+      "text": "The Chariot gathers opposing forces under one direction. Its next step is specific: choose the action that can be completed soon and give it a boundary. Decide when it begins, how long you will try it, and what evidence you will review afterward. The High Priestess keeps that action aligned with what you know inwardly; the Chariot keeps inner knowing from remaining private and unused."
+    }
+  ],
+  "closing": "These eight cards form one movement. The Star, Strength, the Hermit, and the Sun establish hope, patience, reflection, and clarity. The Two of Swords shows why the decision has remained suspended. The Ace of Pentacles offers a real beginning, the Six of Swords permits movement before every feeling is settled, and the Chariot asks you to direct your energy deliberately. Your personal card, the High Priestess, explains why quiet knowing matters here and why it now needs a visible next step.",
+  "notice": "LOCAL ADAPTIVE SAMPLE - NOT A CUSTOMER READING"
+}
