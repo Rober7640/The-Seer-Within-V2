@@ -506,17 +506,15 @@ export const BACKEND_OFFER_CATALOG: Record<BackendOfferKey, BackendOffer> = {
     // `session.custom_fields` only for sessions created before this change.
     checkoutCustomFields: [],
     //
-    // 🔴 FALSE. Three separate reasons, any one sufficient:
-    //   1. NO POST-PAYMENT PATH. `/marcus/reading/bridge` and `/marcus/reading/success`
-    //      are not routes; a paid woman would land on a 404.
-    //   2. NO FULFILMENT. Nothing draws the cards on payment, nothing stamps `due_at`,
-    //      and the n8n Stage 2 workflow is not wired to an order (only Stage 1's writing
-    //      nodes exist, driven by a manual input node).
-    //   3. THE EMAILS ARE UNPROVEN. No transactional send helper exists for any BE offer,
-    //      and the four 08 letters (order confirmation, audio confirmation, written
-    //      delivery, audio delivery) have not been sent to a test inbox.
-    // ⛔ Flip this in the same commit that closes all three, never before.
-    readyForMoney: false,
+    // ✅ LIVE (2026-09-30). The three original blockers are all closed:
+    //   1. POST-PAYMENT PATH exists — /marcus/reading/bridge and /marcus/reading/success
+    //      are real routes (client/src/pages/marcus/).
+    //   2. FULFILMENT is wired — the paid webhook draws the cards + stamps due_at, and the
+    //      two n8n workflows (PDF + audio) call the server endpoints on theseerwithin.com,
+    //      driven by LIVE Stripe webhooks.
+    //   3. THE EMAILS ARE PROVEN — AWeber delivery + confirmation campaigns are built and
+    //      the four 08 letters were validated end-to-end on dev.
+    readyForMoney: true,
   },
 };
 
