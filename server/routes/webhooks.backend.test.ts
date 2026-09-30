@@ -36,7 +36,11 @@ vi.mock('../lib/purchaseAnalytics', () => ({ buildPurchaseEvent: vi.fn(() => nul
 vi.mock('../lib/braceletOrders', () => ({ recordBraceletOrder: vi.fn(async () => null) }));
 
 const recordBackendOrder = vi.fn();
-vi.mock('../lib/beOrders', () => ({ recordBackendOrder: (s: unknown) => recordBackendOrder(s) }));
+const marcusAudioContentFields = vi.fn(async () => ({}));
+vi.mock('../lib/beOrders', () => ({
+  recordBackendOrder: (s: unknown) => recordBackendOrder(s),
+  marcusAudioContentFields: (...a: unknown[]) => marcusAudioContentFields(...(a as [])),
+}));
 
 const addBackendUpsellCustomer = vi.fn(async () => ({ success: true }));
 vi.mock('../lib/aweber', () => ({
@@ -46,7 +50,8 @@ vi.mock('../lib/aweber', () => ({
   addSoulmateUpsell2Subscriber: vi.fn(async () => ({ success: true })),
   addBumpPaidSubscriber: vi.fn(async () => ({ success: true })),
 }));
-vi.mock('../lib/beUpsellOrders', () => ({ recordBackendUpsellOrder: vi.fn(async () => undefined) }));
+const recordBackendUpsellOrder = vi.fn(async () => undefined);
+vi.mock('../lib/beUpsellOrders', () => ({ recordBackendUpsellOrder: (...a: unknown[]) => recordBackendUpsellOrder(...(a as [])) }));
 vi.mock('../lib/funnelMigrationEmail', () => ({ migrateAndEmailFunnelUser: vi.fn(async () => undefined) }));
 vi.mock('../lib/googleAds', () => ({
   fireGoogleAdsConversion: vi.fn(async () => undefined),
@@ -89,7 +94,7 @@ function completed(product: string, extra: Record<string, unknown> = {}) {
 
 beforeEach(() => {
   state.event = null;
-  for (const fn of [recordBackendOrder, recordBackendShipment, handleBackendRefund, addBackendUpsellCustomer, capture, fireStripePurchaseEvent, piRetrieve]) {
+  for (const fn of [recordBackendOrder, recordBackendShipment, handleBackendRefund, addBackendUpsellCustomer, capture, fireStripePurchaseEvent, piRetrieve, recordBackendUpsellOrder, marcusAudioContentFields]) {
     fn.mockClear();
   }
   recordBackendOrder.mockReset();
@@ -148,6 +153,37 @@ describe('checkout.session.completed — the be_ booking branch', () => {
     expect(addBackendUpsellCustomer).toHaveBeenCalledTimes(1);
     expect(recordBackendOrder).not.toHaveBeenCalled();
     expect(recordBackendShipment).not.toHaveBeenCalled();
+  });
+
+  it('a fallback (hosted-checkout) 08 audio upsell ALSO records the be_upsell_orders entitlement row', async () => {
+    completed('be_08_marcus_audio', {
+      amount_total: 1700,
+      payment_intent: 'pi_fallback_audio_1',
+      metadata: { product: 'be_08_marcus_audio', offer: 'marcus-reading', originalSession: 'cs_reading_1' },
+    });
+    await post();
+    expect(recordBackendUpsellOrder).toHaveBeenCalledTimes(1);
+    expect(recordBackendUpsellOrder).toHaveBeenCalledWith(
+      expect.objectContaining({
+        id: 'pi_fallback_audio_1',
+        amount_received: 1700,
+        metadata: expect.objectContaining({
+          product: 'be_08_marcus_audio',
+          offer: 'marcus-reading',
+          originalSession: 'cs_reading_1',
+        }),
+      }),
+    );
+  });
+
+  it('SCOPE: a fallback bracelet/protection upsell does NOT record be_upsell_orders (08-audio only)', async () => {
+    completed('be_bracelet', {
+      amount_total: 4700,
+      payment_intent: 'pi_fallback_bracelet_1',
+      metadata: { product: 'be_bracelet', offer: 'twin-flame', originalSession: 'cs_tf_1' },
+    });
+    await post();
+    expect(recordBackendUpsellOrder).not.toHaveBeenCalled();
   });
 });
 
