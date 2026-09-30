@@ -1,5 +1,18 @@
-import { describe, expect, it } from 'vitest';
-import { upsellOrderValuesFromPI } from './beUpsellOrders';
+import { describe, expect, it, vi } from 'vitest';
+
+// The DB is the only thing the read helper touches; mock it so the mapping/guard logic
+// is testable without a database (same spirit as the pure-function tests below).
+const select = vi.fn();
+vi.mock('./db', () => ({ db: { select: (...a: unknown[]) => select(...a) } }));
+vi.mock('./logger', () => ({ default: { warn: vi.fn(), error: vi.fn(), info: vi.fn(), debug: vi.fn() } }));
+
+const { upsellOrderValuesFromPI, paidUpsellAmountCents } = await import('./beUpsellOrders');
+
+/** A drizzle-style chainable that resolves `.limit()` to `rows`. */
+function chain(rows: unknown[]) {
+  const q = { from: () => q, where: () => q, limit: async () => rows } as Record<string, unknown>;
+  return q;
+}
 
 const basePI = {
   id: 'pi_123',
@@ -127,5 +140,32 @@ describe('upsellOrderValuesFromPI — the shipping address on the record', () =>
       postalCode: null,
       country: 'GB',
     });
+  });
+});
+
+// The read-only entitlement lookup a receipt uses to itemise a bought audio upsell.
+describe('paidUpsellAmountCents', () => {
+  it('returns null (and does not touch the DB) without a booking session', async () => {
+    select.mockClear();
+    expect(await paidUpsellAmountCents(null, 'be_08_marcus_audio')).toBeNull();
+    expect(await paidUpsellAmountCents('', 'be_08_marcus_audio')).toBeNull();
+    expect(select).not.toHaveBeenCalled();
+  });
+
+  it('returns the amount paid when a matching upsell row exists', async () => {
+    select.mockReturnValueOnce(chain([{ amountCents: 1700 }]));
+    expect(await paidUpsellAmountCents('cs_booking_1', 'be_08_marcus_audio')).toBe(1700);
+  });
+
+  it('returns null when no matching upsell row exists', async () => {
+    select.mockReturnValueOnce(chain([]));
+    expect(await paidUpsellAmountCents('cs_booking_1', 'be_08_marcus_audio')).toBeNull();
+  });
+
+  it('swallows a DB error and returns null — a receipt must never break on it', async () => {
+    select.mockImplementationOnce(() => {
+      throw new Error('relation "be_upsell_orders" does not exist');
+    });
+    expect(await paidUpsellAmountCents('cs_booking_1', 'be_08_marcus_audio')).toBeNull();
   });
 });
