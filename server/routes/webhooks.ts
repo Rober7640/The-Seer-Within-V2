@@ -1064,6 +1064,34 @@ router.post('/stripe', async (req: Request, res: Response) => {
         // A BE UPSELL bought via HOSTED checkout (the 1-click fallback). The 1-click
         // happy path writes from payment_intent.succeeded; this covers the fallback.
         // recordBackendOrder is for BOOKING offers only and does not know upsell keys.
+
+        // 08 audio ONLY: also record the be_upsell_orders entitlement row so the reading
+        // receipt can itemise the recording + total. The 1-click path writes this from
+        // payment_intent.succeeded; a fallback (cards that reject off-session — e.g. Indian
+        // cards under RBI rules) never did, so a fallback audio buyer's receipt was blind to
+        // it. Idempotent (onConflictDoNothing on the PI id). ⛔ Scoped strictly to
+        // be_08_marcus_audio — no other offer's upsell recording changes.
+        if (beUpsell.productKey === 'be_08_marcus_audio') {
+          const audioPiId =
+            typeof session.payment_intent === 'string'
+              ? session.payment_intent
+              : session.payment_intent?.id;
+          if (audioPiId) {
+            await recordBackendUpsellOrder({
+              id: audioPiId,
+              metadata: {
+                product: beUpsell.productKey,
+                offer: metadata.offer,
+                originalSession: metadata.originalSession,
+              },
+              amount_received: session.amount_total ?? 0,
+              amount: session.amount_total ?? 0,
+            }).catch((err) =>
+              logger.error('BE08 audio fallback be_upsell_orders write FAILED — buyer paid:', err),
+            );
+          }
+        }
+
         const upsellEmail =
           session.customer_details?.email || session.customer_email || metadata.email || null;
         if (upsellEmail) {
