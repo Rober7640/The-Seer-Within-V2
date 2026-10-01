@@ -2157,3 +2157,25 @@ allow-list test fails if a NEW funnel is registered without being placed in or o
 - [ ] `/fb2`, `/gdn`, `/fb-palm`, `/fb-read` (tea AND coffee) checkouts show a required phone field
 - [ ] `/fb-palm` checkout still prices by sign correctly with the phone field present
 - [ ] After an `/fb-palm` and an `/fb-read` test purchase: `conversations.phone` set, AWeber paid-list `phone` filled
+
+### SMS consent question at checkout (2026-10-01, DEV only)
+
+Optional "Get texts from The Seer Within?" dropdown (Yes / No, nothing pre-selected) plus
+the US opt-in disclosure above the Pay button. OFF unless the funnel is listed in
+`SMS_CONSENT_FUNNELS` (dev: `v1-read`). Record → `sms_consents` table via the webhook.
+
+Covered by `server/lib/smsConsent.test.ts`:
+
+- [x] env unset ⇒ no funnel shows it; `v1-read` ⇒ only `/fb-read`; a typo turns nothing on
+- [x] optional, no default, values `yes`/`no`; Stripe limits (label ≤ 50, text ≤ 1200, alphanumeric key)
+- [x] disclosure has brand, "recurring automated marketing", not a condition of purchase, frequency, rates, STOP, HELP, Terms + Privacy links
+- [x] blank or "No" ⇒ false; never shown ⇒ null (no record)
+
+Not covered — needs a live walk on DEV (test card):
+
+- [ ] `/fb-read` tea AND coffee checkout show the question + disclosure; root, `/fb-tarot`, `/fb-palm` do NOT
+- [ ] Paying with the question left blank works; `sms_consents` row has `consented = false`
+- [ ] Paying with "Yes, text me" ⇒ row has `consented = true`, phone, IP, consent_text, conversation_id
+- [ ] Downsell ($25) checkout on `/fb-read` shows it too
+- [ ] Webhook retry (resend the event from Stripe) does NOT add a second row or change the first
+- [ ] Terms + Privacy links in the disclosure open the pages with the new SMS sections

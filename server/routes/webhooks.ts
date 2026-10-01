@@ -4,7 +4,8 @@ import { Router, Request, Response } from 'express';
 import { Webhook } from 'svix';
 import Stripe from 'stripe';
 import { getStripe, verifyStripeWebhook } from '../lib/stripeAccount';
-import { db, markMainPaid, savePhoneForSession } from '../lib/db';
+import { db, markMainPaid, savePhoneForSession, recordSmsConsent } from '../lib/db';
+import { readSmsConsent, smsConsentRecordText } from '../lib/smsConsent';
 import { followUpEmails, userFollowUpPreferences, migrationDripEmails, topupEmails, aidenFollowupEmails, personaFollowupEmails, evelynFollowupEmails, users, emailSuppression, creditPurchases, soulmateLanderSessions } from '@shared/schema';
 import { and, eq, sql } from 'drizzle-orm';
 import logger from '../lib/logger';
@@ -1075,6 +1076,26 @@ router.post('/stripe', async (req: Request, res: Response) => {
         savePhoneForSession(session.id, phone).catch((err) =>
           logger.error('savePhoneForSession failed (non-blocking):', err),
         );
+      }
+
+      // SMS consent record (server/lib/smsConsent.ts). null = the question was
+      // never shown on this checkout ⇒ write nothing. Yes AND no/skip are both
+      // recorded, with the exact wording she saw. Only `consented` rows may be texted.
+      const smsConsent = readSmsConsent(session);
+      if (smsConsent !== null && phone) {
+        recordSmsConsent({
+          stripeSessionId: session.id,
+          email: session.customer_details?.email || session.customer_email || metadata.email || null,
+          phone,
+          consented: smsConsent,
+          consentText: smsConsentRecordText(metadata.smsConsentBase || ''),
+          consentVersion: metadata.smsConsentVersion!,
+          ip: metadata.smsConsentIp || null,
+          funnel: metadata.funnel || 'root',
+          // The event's own timestamp = when she paid, i.e. submitted the answer
+          // (stable across Stripe retries, unlike "now").
+          consentedAt: new Date(event.created * 1000),
+        }).catch((err) => logger.error('recordSmsConsent failed (non-blocking):', err));
       }
     }
 

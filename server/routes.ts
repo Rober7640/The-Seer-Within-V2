@@ -138,6 +138,7 @@ import {
   tagSoulmateDeclinedUpsell,
 } from "./lib/aweber";
 import { collectsPhoneAtCheckout } from "./lib/checkoutPhone";
+import { smsConsentSessionParams, smsConsentSessionMetadata } from "./lib/smsConsent";
 import { addLeadToKit } from "./lib/kit";
 import { resolveLunaTyHandoff } from "./lib/lunaThankyouGift";
 import { addContactToResendAudience } from "./lib/resendAudience";
@@ -1163,10 +1164,20 @@ export async function registerRoutes(
         }
       }
 
+      // Optional "Can we text you?" question — OFF unless this funnel is listed in
+      // SMS_CONSENT_FUNNELS (server/lib/smsConsent.ts). Policy links use BASE_URL
+      // so the wording points at the public site, falling back to this request's
+      // host (e.g. a dev deploy without BASE_URL).
+      const smsPolicyBase = process.env.BASE_URL || getBaseUrl(req);
+      const smsClientIp =
+        req.ip || (req.headers["x-forwarded-for"] as string | undefined)?.split(",")[0]?.trim();
+
       const session = await stripe.checkout.sessions.create({
         ...(customer
           ? { customer: customer.id }
           : { customer_creation: "always" }),
+        // Empty on every funnel not switched on, so those sessions are unchanged.
+        ...smsConsentSessionParams(funnel, smsPolicyBase),
         // Compulsory phone field on every V1 reading funnel: root (no `funnel`),
         // /fb, /fb2, /gdn, /fb-palm, /fb-read and /fb-tarot — the allow-list is
         // server/lib/checkoutPhone.ts. Stripe won't let her pay without it. The number is read
@@ -1287,6 +1298,9 @@ export async function registerRoutes(
           // See the note on the PaymentIntent metadata above — same value, same reason.
           ...(readDevice && { readDevice }),
           ...(trackdeskClickId && { trackdeskClickId }),
+          // Which consent wording was shown + her IP — read by the purchase webhook
+          // to write the sms_consents record. Absent when the question wasn't shown.
+          ...smsConsentSessionMetadata(funnel, smsPolicyBase, smsClientIp),
           // Browser PostHog id so the server-side purchase_completed event is
           // attributed to the SAME visitor as the funnel events (email_gate_*),
           // enabling a connected conversion funnel incl. the no-optin arm.

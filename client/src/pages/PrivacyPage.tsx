@@ -18,7 +18,7 @@ export default function PrivacyPage() {
         </Link>
 
         <h1 className="font-serif text-3xl font-bold mb-2" data-testid="heading-privacy">Privacy Policy</h1>
-        <p className="text-purple-300 mb-8">Last updated: February 2026</p>
+        <p className="text-purple-300 mb-8">Last updated: October 2026</p>
 
         <div className="space-y-6 text-purple-100 leading-relaxed">
 
@@ -75,6 +75,7 @@ export default function PrivacyPage() {
               <li>Minute purchase history and amounts</li>
               <li>Payment status and Stripe transaction identifiers (we do not store full card numbers)</li>
               <li>Shipping address (for physical product purchases only)</li>
+              <li>Mobile phone number (collected at checkout)</li>
             </ul>
 
             <h3 className="text-base font-semibold text-purple-200 mb-2">Technical Data</h3>
@@ -90,6 +91,13 @@ export default function PrivacyPage() {
               <li>Email marketing preferences and subscription status</li>
               <li>Email open and click tracking data</li>
             </ul>
+
+            <h3 className="text-base font-semibold text-purple-200 mb-2 mt-4">Text Message (SMS) Data (where you have opted in)</h3>
+            <ul className="list-disc list-inside space-y-1 ml-4">
+              <li>Your mobile phone number and your consent to receive text messages, including the date and time you gave it, the consent wording shown to you, and your IP address</li>
+              <li>Text messages we send you and any replies you send us (such as STOP or HELP)</li>
+              <li>Delivery status and link-click data for the text messages we send</li>
+            </ul>
           </section>
 
           <section>
@@ -102,7 +110,7 @@ export default function PrivacyPage() {
               <li><strong>Providing our services</strong> — registering your account, enabling AI guide sessions, and processing payments.</li>
               <li><strong>Personalising your experience</strong> — using session memory to provide contextually relevant readings in future sessions.</li>
               <li><strong>Processing transactions</strong> — managing minutes, purchases, and refunds.</li>
-              <li><strong>Communications</strong> — sending transactional emails (receipts, minutes expiry reminders, account notices) and, where you have consented, promotional emails.</li>
+              <li><strong>Communications</strong> — sending transactional emails (receipts, minutes expiry reminders, account notices) and, where you have consented, promotional emails and text messages.</li>
               <li><strong>Safety and security</strong> — detecting and preventing fraud, abuse, and unauthorised account access.</li>
               <li><strong>Service improvement</strong> — analysing aggregated usage patterns to improve our platform.</li>
               <li><strong>Legal compliance</strong> — complying with applicable Singapore laws and responding to lawful requests from authorities.</li>
@@ -142,8 +150,17 @@ export default function PrivacyPage() {
               <div className="bg-purple-900/40 rounded-lg p-3 border border-purple-800">
                 <p className="font-semibold text-white">AWeber Communications (Chalfont, Pennsylvania, USA)</p>
                 <p className="text-sm mt-1">
-                  Manages our email marketing list. Your email address is shared with AWeber only
-                  if you have opted in to marketing communications.
+                  Manages our email list. Your email address and, if you provided it at checkout,
+                  your phone number are shared with AWeber to deliver your purchase and, where you
+                  have opted in, marketing communications.
+                </p>
+              </div>
+              <div className="bg-purple-900/40 rounded-lg p-3 border border-purple-800">
+                <p className="font-semibold text-white">Twilio Inc. (San Francisco, USA)</p>
+                <p className="text-sm mt-1">
+                  Sends our text messages. If you have agreed to receive texts, your mobile number and
+                  the content of the messages we exchange with you are processed by Twilio for this
+                  purpose only.
                 </p>
               </div>
             </div>
@@ -199,6 +216,7 @@ export default function PrivacyPage() {
               <li><strong>Session and reading history:</strong> Retained for 24 months from the date of each session to support session memory features and dispute resolution.</li>
               <li><strong>Transaction records:</strong> Retained for 7 years from the date of transaction for accounting and tax compliance purposes.</li>
               <li><strong>Marketing preferences:</strong> Retained until you unsubscribe or withdraw consent.</li>
+              <li><strong>Text-message consent records:</strong> Retained for as long as you are subscribed to text messages and for 5 years after you opt out, so that we can show when and how consent was given.</li>
               <li><strong>Closed accounts:</strong> Account data is deleted or anonymised within 90 days of account closure, subject to the retention periods above for transaction records.</li>
             </ul>
           </section>
@@ -283,7 +301,36 @@ export default function PrivacyPage() {
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-white mb-3">13. Changes to This Policy</h2>
+            <h2 className="text-xl font-semibold text-white mb-3">13. Text Messages (SMS)</h2>
+            <p className="mb-3">
+              If you give us your mobile number and agree to receive text messages, The Seer Within
+              will send you recurring automated marketing text messages, such as invitations to
+              continue your readings with our guides and related offers. Consent to receive text
+              messages is not a condition of any purchase. Message frequency varies. Message and data
+              rates may apply.
+            </p>
+            <p className="mb-3">
+              You can stop text messages at any time by replying <strong>STOP</strong> to any message.
+              You will receive one final message confirming you have been unsubscribed. Reply{' '}
+              <strong>HELP</strong> for help, or email us at{' '}
+              <a href="mailto:hi@theseerwithin.com" className="text-purple-300 hover:text-white underline">
+                hi@theseerwithin.com
+              </a>
+              .
+            </p>
+            <p>
+              <strong>
+                We do not sell, rent or share your mobile number or your text-message consent with any
+                third party or affiliate for their marketing or promotional purposes.
+              </strong>{' '}
+              Text-messaging opt-in data and consent are excluded from all other categories of sharing
+              described in this Privacy Policy and will not be shared with any third party, except with
+              the service providers (such as Twilio) that send messages on our behalf.
+            </p>
+          </section>
+
+          <section>
+            <h2 className="text-xl font-semibold text-white mb-3">14. Changes to This Policy</h2>
             <p>
               We may update this Privacy Policy from time to time to reflect changes in our practices
               or applicable law. We will notify you of material changes by email (if you have an account)
@@ -293,7 +340,7 @@ export default function PrivacyPage() {
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-white mb-3">14. Complaints</h2>
+            <h2 className="text-xl font-semibold text-white mb-3">15. Complaints</h2>
             <p className="mb-3">
               If you have concerns about how we handle your personal data and are not satisfied with
               our response, you may lodge a complaint with the Personal Data Protection Commission (PDPC):
@@ -309,7 +356,7 @@ export default function PrivacyPage() {
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-white mb-3">15. Contact Us</h2>
+            <h2 className="text-xl font-semibold text-white mb-3">16. Contact Us</h2>
             <p className="mb-3">
               For any questions about this Privacy Policy or to exercise your data rights, please contact us:
             </p>
