@@ -137,9 +137,9 @@ describe('09 booking copy', () => {
     expect(CHECKOUT.reassurance).toContain('shipping address');
   });
 
-  it('page copy never says "Stripe" or "One payment of $59"', () => {
+  it('page copy never says "Stripe" or "One payment of $55"', () => {
     expect(ALL_COPY).not.toMatch(/stripe/i);
-    expect(ALL_COPY).not.toMatch(/one payment of \$59/i);
+    expect(ALL_COPY).not.toMatch(/one payment of \$55/i);
     expect(ALL_COPY).not.toMatch(/one payment of/i);
   });
 
@@ -177,11 +177,11 @@ describe('09 booking copy', () => {
 });
 
 describe('09 price', () => {
-  it('the page’s $59.00 total is the catalog’s price', () => {
+  it('the page’s $55.00 total is the catalog’s price', () => {
     const offer = BACKEND_OFFER_CATALOG['heart-cleanser'];
     expect(offer.pricing).toEqual({ model: 'fixed', priceCents: HEART_CLEANSER_PRICE_CENTS });
-    expect(HEART_CLEANSER_PRICE_CENTS).toBe(5900);
-    expect(formatTotal(HEART_CLEANSER_PRICE_CENTS)).toBe('$59.00');
+    expect(HEART_CLEANSER_PRICE_CENTS).toBe(5500);
+    expect(formatTotal(HEART_CLEANSER_PRICE_CENTS)).toBe('$55.00');
     expect(CHECKOUT.totalLabel).toBe('Total');
   });
 
@@ -219,11 +219,11 @@ describe('09 order bump (09-C3) — Reiki charging by Evelyn before packing', ()
 });
 
 describe('heartCleanserTotalCents', () => {
-  it('is $59.00 unticked and $70.11 ticked — both from the catalog', () => {
+  it('is $55.00 unticked and $66.11 ticked — both from the catalog', () => {
     expect(heartCleanserTotalCents(false)).toBe(HEART_CLEANSER_PRICE_CENTS);
     expect(heartCleanserTotalCents(true)).toBe(HEART_CLEANSER_PRICE_CENTS + HEART_CLEANSER_BUMP_CENTS);
-    expect(formatTotal(heartCleanserTotalCents(false))).toBe('$59.00');
-    expect(formatTotal(heartCleanserTotalCents(true))).toBe('$70.11');
+    expect(formatTotal(heartCleanserTotalCents(false))).toBe('$55.00');
+    expect(formatTotal(heartCleanserTotalCents(true))).toBe('$66.11');
   });
 });
 

@@ -24,7 +24,7 @@ export const EMAIL_SUBJECTS = {
   shipped: 'Your Heart Cleanser Love Charm has shipped',
 } as const;
 
-// "Paid: $59 (free shipping)" — the charm only; U1/U2 have their own charges.
+// "Paid: $55 (free shipping)" — the charm only; U1/U2 have their own charges.
 export const RECEIPT_PAID_LABEL = `$${
   HEART_CLEANSER_PRICE_CENTS % 100 === 0
     ? HEART_CLEANSER_PRICE_CENTS / 100

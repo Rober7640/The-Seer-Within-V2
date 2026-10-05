@@ -102,7 +102,7 @@ export const CHECKOUT = {
   button: 'SEND ME MY LOVE CHARM',
   lockedHint: 'Tick all four boxes above to show the button.',
   // Under the button, small. Box contents and every logistic live here, not in a tick.
-  // ⛔ No "$59" and no "one payment of" — the order bump sits beside the total and changes it.
+  // ⛔ No "$55" and no "one payment of" — the order bump sits beside the total and changes it.
   // ⛔ No "Stripe" — most readers didn't know the name.
   // Shipping wording word for word against 09-T1/T3/T4 and copy-check OFFERS['09'].sla.
   // Windows count from dispatch.
@@ -135,7 +135,7 @@ export function heartCleanserTotalCents(bumpTaken: boolean): number {
 
 /**
  * What the button sends to beginBackendCheckout. ⛔ Posts NO price — only whether she ticked
- * the bump; the server charges the catalog's 5900, plus 1111 for the bump. Carries the
+ * the bump; the server charges the catalog's 5500, plus 1111 for the bump. Carries the
  * letter's ?c= (09-E2 sends 1–4, 09-E3 sends 21–24) so fulfilment and reporting know
  * which letter she bought from — the pixiu page forgets this; 09 must not.
  */
