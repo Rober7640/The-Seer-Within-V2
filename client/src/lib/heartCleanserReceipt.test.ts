@@ -32,7 +32,7 @@ const ORDER_09 = {
   offer: 'heart-cleanser',
   firstName: 'Sarah',
   email: 'sarah@example.com',
-  amountCents: 5900,
+  amountCents: 5500,
   shipping: 'Sarah Lee\n1 Main St\nAustin, TX 78701\nUS',
 };
 
@@ -75,7 +75,7 @@ describe('loadHeartCleanserReceipt', () => {
   it('a 09 order with the Reiki bump → bumpPurchased true (the page prints the Added line)', async () => {
     const state = await loadHeartCleanserReceipt(
       'cs_test_1',
-      respond(200, { order: { ...ORDER_09, amountCents: 7011, bumpPurchased: true, bumpProductKey: 'reiki_charge' } }),
+      respond(200, { order: { ...ORDER_09, amountCents: 6611, bumpPurchased: true, bumpProductKey: 'reiki_charge' } }),
     );
     expect(state).toEqual({
       kind: 'verified',
@@ -164,7 +164,7 @@ describe('receipt constants', () => {
   });
 
   it('the paid line is the catalog price with free shipping', () => {
-    expect(RECEIPT_PAID_LABEL).toBe('$59 (free shipping)');
+    expect(RECEIPT_PAID_LABEL).toBe('$55 (free shipping)');
   });
 
   it('the bump line is 09-T1’s conditional line word for word, named as the Stripe line item', () => {

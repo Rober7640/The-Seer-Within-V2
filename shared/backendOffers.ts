@@ -80,7 +80,7 @@ export const PIXIU_BRACELET_BUMP_PRODUCT_KEY = 'closed_purse';
 // 09 — the Heart Cleanser Love Charm (operator, 2026-09-15). A PHYSICAL object from our
 // own stock, packed and shipped by us, free shipping worldwide, ships within 2 business
 // days (dispatch — the delivery clock starts after that). Fixed price, quantity one.
-export const HEART_CLEANSER_PRICE_CENTS = 5900;
+export const HEART_CLEANSER_PRICE_CENTS = 5500;
 
 // 09's bump — Reiki charging by Evelyn before the charm is packed, $11.11 (09-C3; Joel,
 // 2026-09-15, superseding "no order bump"). ⭐ The deck's first bump that is a REAL SERVICE
