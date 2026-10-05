@@ -30,7 +30,7 @@ import {
 // paragraph (09-C1-ticks-rewrite): the statements run straight into the bump.
 //
 // ⛔ Posts NO price — only whether the bump is ticked. The server charges the catalog's
-// ($59, plus $11.11 for the bump). While BACKEND_CHECKOUT_LIVE is false the button LOGS and
+// ($55, plus $11.11 for the bump). While BACKEND_CHECKOUT_LIVE is false the button LOGS and
 // stops (preview).
 //
 // ⚠ VOICE: the buyer's, first person, in every statement. Evelyn is named in the third

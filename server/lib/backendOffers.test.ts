@@ -495,8 +495,8 @@ describe('a fixed-price PHYSICAL offer whose bump is done by hand (09 · Heart C
     expect(CHARM.number).toBe('09');
     expect(CHARM.stripeProduct).toBe('be_heart_cleanser');
     expect(CHARM.stripeName).toBe('Heart Cleanser Love Charm');
-    expect(CHARM.pricing).toEqual({ model: 'fixed', priceCents: 5900 });
-    expect(HEART_CLEANSER_PRICE_CENTS).toBe(5900);
+    expect(CHARM.pricing).toEqual({ model: 'fixed', priceCents: 5500 });
+    expect(HEART_CLEANSER_PRICE_CENTS).toBe(5500);
     expect(CHARM.collectsShipping).toBe(true);
     expect(CHARM.bookingPath).toEqual({ page: '/offers/heart-cleanser', chat: '/offers/heart-cleanser' });
     expect(CHARM.successPath).toBe('/offers/heart-cleanser/success');
@@ -505,17 +505,17 @@ describe('a fixed-price PHYSICAL offer whose bump is done by hand (09 · Heart C
     expect(isBackendOfferKey('heart-cleanser')).toBe(true);
   });
 
-  it('charges $59.00, quantity one line, and ignores a browser-posted amount', () => {
+  it('charges $55.00, quantity one line, and ignores a browser-posted amount', () => {
     const r = charged(priceCharm({}));
-    expect(r.readingCents).toBe(5900);
+    expect(r.readingCents).toBe(5500);
     expect(r.bumpCents).toBe(0);
-    expect(r.totalCents).toBe(5900);
+    expect(r.totalCents).toBe(5500);
     expect(r.bumpPurchased).toBe(false);
     expect(r.lines).toEqual([
-      { name: 'Heart Cleanser Love Charm', description: CHARM.stripeDescription, amountCents: 5900 },
+      { name: 'Heart Cleanser Love Charm', description: CHARM.stripeDescription, amountCents: 5500 },
     ]);
-    expect(charged(priceCharm({ amountCents: 1 })).totalCents).toBe(5900);
-    expect(charged(priceCharm({ bump: false })).totalCents).toBe(5900);
+    expect(charged(priceCharm({ amountCents: 1 })).totalCents).toBe(5500);
+    expect(charged(priceCharm({ bump: false })).totalCents).toBe(5500);
   });
 
   it('has its own bump: Reiki charging before packing, $11.11, key reiki_charge, flagged for the packer', () => {
@@ -531,14 +531,14 @@ describe('a fixed-price PHYSICAL offer whose bump is done by hand (09 · Heart C
     expect(HEART_CLEANSER_BUMP_PRODUCT_KEY).not.toBe(PIXIU_BRACELET_BUMP_PRODUCT_KEY);
   });
 
-  it('bump: true adds Reiki charging as a second line — $70.11 in all, amount from the catalog', () => {
+  it('bump: true adds Reiki charging as a second line — $66.11 in all, amount from the catalog', () => {
     const r = charged(priceCharm({ bump: true, amountCents: 1 }));
-    expect(r.readingCents).toBe(5900);
+    expect(r.readingCents).toBe(5500);
     expect(r.bumpCents).toBe(1111);
-    expect(r.totalCents).toBe(7011);
+    expect(r.totalCents).toBe(6611);
     expect(r.bumpPurchased).toBe(true);
     expect(r.lines).toEqual([
-      { name: 'Heart Cleanser Love Charm', description: CHARM.stripeDescription, amountCents: 5900 },
+      { name: 'Heart Cleanser Love Charm', description: CHARM.stripeDescription, amountCents: 5500 },
       { name: '+ Reiki charging by Evelyn before packing', amountCents: 1111 },
     ]);
   });
@@ -547,7 +547,7 @@ describe('a fixed-price PHYSICAL offer whose bump is done by hand (09 · Heart C
     for (const bump of [undefined, false]) {
       const r = charged(priceCharm({ bump }));
       expect(r.bumpPurchased).toBe(false);
-      expect(r.totalCents).toBe(5900);
+      expect(r.totalCents).toBe(5500);
     }
   });
 
@@ -559,7 +559,7 @@ describe('a fixed-price PHYSICAL offer whose bump is done by hand (09 · Heart C
       expect(r.code).toBe('bump_unavailable');
       expect(r.message).toBeTruthy();
     }
-    expect(charged(priceBackendOffer(noBump, { bump: false })).totalCents).toBe(5900);
+    expect(charged(priceBackendOffer(noBump, { bump: false })).totalCents).toBe(5500);
   });
 
   it('only a bump someone performs before packing carries a packing alert (not 06\'s instructional)', () => {

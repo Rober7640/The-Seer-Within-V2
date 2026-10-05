@@ -103,8 +103,8 @@ function paidRow(overrides: Record<string, unknown> = {}) {
     status: 'paid',
     email: 'she@example.com',
     firstName: 'Sarah',
-    amountCents: 5900,
-    readingCents: 5900,
+    amountCents: 5500,
+    readingCents: 5500,
     bumpPurchased: false,
     bumpCents: 0,
     bumpProductKey: null,
@@ -166,9 +166,9 @@ describe('POST /api/backend/checkout — 09', () => {
     expect(p.line_items).toHaveLength(1);
     expect(p.line_items[0]).toMatchObject({
       quantity: 1,
-      price_data: { currency: 'usd', unit_amount: 5900, product_data: { name: 'Heart Cleanser Love Charm' } },
+      price_data: { currency: 'usd', unit_amount: 5500, product_data: { name: 'Heart Cleanser Love Charm' } },
     });
-    expect(p.metadata).toMatchObject({ product: 'be_heart_cleanser', offer: 'heart-cleanser', bump: '0', readingCents: '5900' });
+    expect(p.metadata).toMatchObject({ product: 'be_heart_cleanser', offer: 'heart-cleanser', bump: '0', readingCents: '5500' });
     expect(p.metadata).not.toHaveProperty('bumpProduct');
     expect(p.payment_intent_data.description).toBe('BE 09 · Heart Cleanser Love Charm');
     expect(p.payment_intent_data.metadata).toEqual({ product: 'be_heart_cleanser', offer: 'heart-cleanser' });
@@ -182,13 +182,13 @@ describe('POST /api/backend/checkout — 09', () => {
     expect(res.status).toBe(200);
     const p = state.created as any;
     expect(p.line_items).toHaveLength(2);
-    expect(p.line_items[0].price_data).toMatchObject({ unit_amount: 5900, product_data: { name: 'Heart Cleanser Love Charm' } });
+    expect(p.line_items[0].price_data).toMatchObject({ unit_amount: 5500, product_data: { name: 'Heart Cleanser Love Charm' } });
     expect(p.line_items[1]).toMatchObject({
       quantity: 1,
       price_data: { currency: 'usd', unit_amount: 1111, product_data: { name: '+ Reiki charging by Evelyn before packing' } },
     });
     // The webhook and be_shipments read these two keys to flag the parcel.
-    expect(p.metadata).toMatchObject({ product: 'be_heart_cleanser', offer: 'heart-cleanser', bump: '1', bumpProduct: 'reiki_charge', readingCents: '5900' });
+    expect(p.metadata).toMatchObject({ product: 'be_heart_cleanser', offer: 'heart-cleanser', bump: '1', bumpProduct: 'reiki_charge', readingCents: '5500' });
     expect(p.payment_intent_data.description).toBe('BE 09 · Heart Cleanser Love Charm + Reiki charging by Evelyn before packing');
     // Still the one worldwide address collection — the bump ships inside the same parcel.
     expect(p.shipping_address_collection).toEqual({ allowed_countries: [...STRIPE_CHECKOUT_SHIPPING_COUNTRIES] });
@@ -199,7 +199,7 @@ describe('POST /api/backend/checkout — 09', () => {
       .post('/api/backend/checkout')
       .send({ offer: 'heart-cleanser', treatment: 'page', bump: true, amountCents: 1 });
     expect(res.status).toBe(200);
-    expect((state.created as any).line_items.map((l: any) => l.price_data.unit_amount)).toEqual([5900, 1111]);
+    expect((state.created as any).line_items.map((l: any) => l.price_data.unit_amount)).toEqual([5500, 1111]);
   });
 
   it('is refused outright by committed code — readyForMoney is false', async () => {
@@ -238,7 +238,7 @@ describe('POST /api/backend/checkout — 09 test-mode gate', () => {
     const res = await request(app).post('/api/backend/checkout').send({ offer: 'heart-cleanser', treatment: 'page' });
     expect(res.status).toBe(200);
     expect(create).toHaveBeenCalledTimes(1);
-    expect((state.created as any).line_items[0].price_data.unit_amount).toBe(5900);
+    expect((state.created as any).line_items[0].price_data.unit_amount).toBe(5500);
   });
 
   it('also opens under NODE_ENV=development with a TEST key (NODE_ENV is irrelevant)', async () => {
