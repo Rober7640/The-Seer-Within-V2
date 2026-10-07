@@ -1,0 +1,9 @@
+# Pencil-sketch prompt template for codex image_gen (Evelyn notebook style).
+# Replace the SUBJECT paragraph; keep the STYLE paragraph. Proven 2026-10-07 on 02-apple-peel (1 try, ~60s).
+# Run: perl -e 'alarm shift; exec @ARGV' 330 codex exec --skip-git-repo-check -s workspace-write -C <outdir> - < this-file > codex.log 2>&1
+
+Use your built-in image_gen tool to create ONE image and save it in the current directory as apple-peel-sketch.png. Do not write any code or other files.
+
+The image: a hand-drawn pencil sketch on a page of plain off-white notebook paper. Subject: an apple in the middle of being peeled. An older woman's left hand holds a round apple; her right hand holds a small paring knife against it, mid-cut. The peel is coming off in ONE single, long, unbroken strip that curls down from the apple in a loose spiral and dangles below her hands, still attached to the apple — the peeling is clearly still in progress (the top half of the apple is peeled and pale, the bottom half still has its skin). No other objects.
+
+Style: graphite pencil only, no colour at all. The look of an untrained but careful hand sketching quickly in a personal notebook: naive, slightly wobbly linework, light graphite shading, a few loose hatching strokes, visible paper grain, one faint eraser smudge. Not photorealistic, not a polished illustration, not digital-looking. Vertical (portrait) orientation, the drawing roughly centred with a plain margin of paper around it. No text, no lettering, no signature, no border, no watermark.
