@@ -1,6 +1,6 @@
 # C · The Riddle
 
-**Status:** 🧪 NEXT TO BUILD — stress test #1
+**Status:** 🧪 Stress test #1 BUILT as a preview — [`../emails/03-five-frogs.md`](../emails/03-five-frogs.md) (2026-10-07). Waiting on the operator's read + a chat test. See `## Stress test result`.
 **In one line:** an old trick riddle → its answer IS the lesson → turn it onto love → her version → the chat.
 **Source:** Matt Furey, *Tao of Email Copywriting*, PDF p.36 — "Why Frogs are Fat", an email by a MasterMind member, with Furey's critique.
 **Best for:** a laugh + a quick, sharp point (Furey: *"one laugh per email is good. Two or more and you're doing great"*, p.30). Short emails. **Repeatability:** high — there are hundreds of old riddles; the work is finding ones whose answer turns cleanly onto love.
@@ -78,3 +78,35 @@ Optional. If used: a pencil sketch of the riddle's scene (five frogs on a log) �
 | What gets bigger the more you take away from it? | A hole | The more you avoid the conversation, the bigger the gap |
 | What can you keep after giving it to someone? | Your word | Trust; the promise he made / the one you made yourself |
 | What has to be broken before you can use it? | An egg | Careful — risks "a broken heart is useful" glibness |
+
+**Added 2026-10-07 (stress test, Repeatable).** Each one checked as a real, widely-told riddle in at least one independent collection. Same rule as the frogs: say nothing about origin unless the source column supports it.
+
+| Riddle | Answer | Possible turn (love first) | Verified in |
+|---|---|---|---|
+| What is it that never asks any questions, yet needs many answers? | The doorbell (newer tellings: the telephone) | Some people are doorbells: they never ask you a single question, and you still run to answer. Who asks about *you*? | Dúchas Schools' Collection, Convent of Mercy, Athlone, Co. Westmeath, "Riddles" (1937–39), verbatim — https://duchas.ie/en/cbes/5009133/4989795 · ✅ the only one we can call *old* ("Irish schoolchildren wrote it down in the 1930s") |
+| What gets wetter the more it dries? | A towel | The woman who dries everyone else's tears ends up soaked. Who dries hers? (giving more in love than she gets) | USU Student Folklore Fieldwork, "Drying Towel Riddle", collected 1 Dec 2017 — https://digitalcommons.usu.edu/student_folklore_all/221 |
+| What is always coming, but never arrives? | Tomorrow | "I'll tell him tomorrow." The message she'll send tomorrow. ⚠ Same moral family as the frogs (putting it off) — space them weeks apart | USC Digital Folklore Archives, "Riddle about the Future", performed 3 Apr 2018 — https://folklore.usc.edu/?p=41368 |
+| What has a heart that doesn't beat? | An artichoke | Some hearts sit under a lot of leaves. You have to get through them, one at a time — hers, or his | GWU Honors Program "Riddle of the Day", 23 Apr 2020 — https://blogs.gwu.edu/honorsprogram/?p=16849 · ⚠ the French idiom *cœur d'artichaut* (falls in love easily) came up in a search summary only — verify before using it |
+| What belongs to you, but everyone else uses it more than you? | Your name | Whose voice do you still hear saying it? How does *he* say it? | Bustle, "riddles for adults" (M. Sylvester, 27 Jun 2024) — https://www.bustle.com/life/riddles-for-adults · also in many school riddle lists |
+| What is so fragile that saying its name breaks it? | Silence | The silence between you and him. Someone has to say the first word | Bustle, same list — https://www.bustle.com/life/riddles-for-adults · ⚠ reader-echo: "breaks" sits next to "broke" (price-objection rule) — tell it as "say its name and it's gone" |
+
+## Stress test result
+
+**Email:** [`../emails/03-five-frogs.md`](../emails/03-five-frogs.md) · preview `../emails/03-five-frogs.html` · built 2026-10-07 · 311 words, content/pitch 49/51 · not minted, not on S3, not scheduled.
+
+| Test | Score | Why |
+|---|---|---|
+| **Read** | pending — operator | — |
+| **Truth** | ✅ | Every line sources cleanly. The one trap was the riddle's origin: it is widely told (Furey 2006 "three of five"; Feldman & Spratt's 1999 business book *Five Frogs on a Log* opens with "four of five"; a 2026 sermon blog tells "three frogs on a limb, one decides") but **no source says where it started**. So the email opens on the riddle cold and makes **no** origin claim — not "an old riddle", not "a folk riddle", no credit to the 1999 book (it used the riddle; nothing shows it started it). Rule for this format: the cold open means you rarely need an origin line at all; add one only when a source supports it (e.g. the doorbell riddle in the 1930s Dúchas records). |
+| **Chat** | pending — chat test | Needs the short link minted first. Test lines: "five!" · "I said two" · "I've been deciding whether to text my ex for 3 months" · "I'm still on the log" |
+| **Repeatable** | ✅ | 6 more riddles with a love turn found and checked in independent collections (bank above): doorbell, towel, tomorrow, artichoke, your name, silence. With the 6 older candidates that's 12. Watch two things: "tomorrow" repeats the frogs' moral, and "silence" needs rewording to keep "breaks" out of what she types back. |
+| **Effort** | ✅ Low | Riddle = no research beyond the origin check (~15 min of searching to prove a negative). Sketch: 1 `codex exec` try, ~60s, free. Writing: one pass inside the band. Most of the time went on the origin check and the riddle bank, not the email. |
+
+**Stress-test questions, answered:**
+1. *Answer kept out of the subject/preheader?* Yes. Subject = first half of the riddle; preheader = the second half ("Three decide to jump off. How many are left?"). The picture sits AFTER the answer — five frogs on a log in the hero spot would give it away.
+2. *Love in ≤2 lines?* Yes: "Deciding isn't jumping. It just feels like it, after a while." → "So let me ask you." → **How long have you been "deciding" about him?** Didn't feel forced, because "deciding" is the bridge word.
+3. *Does ~300 words carry a strong pitch?* Pitch is 51% with the full gold CTA set (invitation, 3 ➤, text link, honest line, free minutes, riddle callback, button, P.S.). Whether it's *strong enough* = operator's read.
+4. *≥5 more love-turning riddles?* Yes, 6 (above).
+
+**Learned while building:** a short format runs under the floor fast (v0 was 294 words). The fix was another love version for single readers ("Or whether to let anyone new get close at all.") — not more explaining, which Furey's rules ban.
+
