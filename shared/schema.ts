@@ -2148,3 +2148,45 @@ export const beSendAttempts = pgTable("be_send_attempts", {
 
 export type BeSendAttempt = typeof beSendAttempts.$inferSelect;
 export type InsertBeSendAttempt = typeof beSendAttempts.$inferInsert;
+
+// ── SMS consent records (Joel's consent table) ─────────────────────────────────
+// One row per paid V1 order whose checkout SHOWED the optional "Can we text you?"
+// question (server/lib/smsConsent.ts) — whether she said yes, no, or skipped it.
+// Written by the Stripe checkout.session.completed webhook. Only `consented = true`
+// rows may ever be texted, and never once `opted_out_at` is set (STOP).
+//
+// 🔴 Created by improve-v1/add-sms-consents-table-2026-10-01.sql. A separate table,
+// NOT new conversations columns, on purpose: Drizzle names every schema column in
+// its SELECTs, so a new conversations column breaks every conversations read on a
+// database that hasn't had the migration. This table is only touched by the
+// consent insert, which is non-blocking.
+//
+// 🔴 UNIQUE stripe_session_id: Stripe retries the webhook; a retry is a no-op.
+export const smsConsents = pgTable("sms_consents", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  stripeSessionId: text("stripe_session_id").notNull(),
+  conversationId: varchar("conversation_id"),
+  email: text("email"),
+  /** E.164 as Stripe Checkout collected it. */
+  phone: text("phone").notNull(),
+  /** true only when she actively chose "Yes". Skipped or "No" = false. */
+  consented: boolean("consented").notNull(),
+  /** The exact wording she was shown (label + options + disclosure). */
+  consentText: text("consent_text").notNull(),
+  consentVersion: text("consent_version").notNull(),
+  /** Her IP at /api/checkout, when the question was put to her. */
+  ip: text("ip"),
+  funnel: text("funnel"),
+  source: text("source").notNull().default("stripe_checkout"),
+  /** When she paid (= when the answer was submitted). */
+  consentedAt: timestamp("consented_at", { withTimezone: true }).notNull(),
+  /** Set on STOP. Reserved for the sending side; nothing writes it yet. */
+  optedOutAt: timestamp("opted_out_at", { withTimezone: true }),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+}, (table) => [
+  uniqueIndex("uq_sms_consents_stripe_session").on(table.stripeSessionId),
+  index("idx_sms_consents_phone").on(table.phone),
+]);
+
+export type SmsConsent = typeof smsConsents.$inferSelect;
+export type InsertSmsConsent = typeof smsConsents.$inferInsert;

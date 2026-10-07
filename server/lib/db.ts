@@ -1,6 +1,6 @@
 import { drizzle } from "drizzle-orm/node-postgres";
 import pg from "pg";
-import { conversations, type Conversation, type InsertConversation } from "@shared/schema";
+import { conversations, smsConsents, type Conversation, type InsertConversation, type InsertSmsConsent } from "@shared/schema";
 import { eq, desc, sql } from "drizzle-orm";
 import logger from "./logger";
 import { activeStripeAccountTag } from "./stripeAccount";
@@ -368,6 +368,29 @@ export async function savePhoneForSession(sessionId: string, phone: string): Pro
       .where(eq(conversations.stripeSessionId, sessionId));
   } catch (error) {
     logger.error("Database savePhoneForSession update error:", error);
+  }
+}
+
+// Write the buyer's SMS consent answer (see server/lib/smsConsent.ts). One row per
+// checkout session — a Stripe webhook retry hits the unique index and does nothing,
+// so the FIRST answer recorded is never overwritten. The conversation id is looked
+// up the same way savePhoneForSession matches its row. Non-throwing: a failure here
+// must never break the purchase webhook (the answer is still on the Stripe session).
+export async function recordSmsConsent(
+  record: Omit<InsertSmsConsent, "conversationId">,
+): Promise<void> {
+  try {
+    const [convo] = await db
+      .select({ id: conversations.id })
+      .from(conversations)
+      .where(eq(conversations.stripeSessionId, record.stripeSessionId))
+      .limit(1);
+    await db
+      .insert(smsConsents)
+      .values({ ...record, phone: record.phone.slice(0, 40), conversationId: convo?.id ?? null })
+      .onConflictDoNothing({ target: smsConsents.stripeSessionId });
+  } catch (error) {
+    logger.error("Database recordSmsConsent insert error:", error);
   }
 }
 

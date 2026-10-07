@@ -18,7 +18,7 @@ export default function TermsPage() {
         </Link>
 
         <h1 className="font-serif text-3xl font-bold mb-2" data-testid="heading-terms">Terms of Service</h1>
-        <p className="text-purple-300 mb-8">Last updated: February 2026</p>
+        <p className="text-purple-300 mb-8">Last updated: October 2026</p>
 
         <div className="space-y-6 text-purple-100 leading-relaxed">
 
@@ -194,7 +194,29 @@ export default function TermsPage() {
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-white mb-3">11. Intellectual Property</h2>
+            <h2 className="text-xl font-semibold text-white mb-3">11. Text Message Program</h2>
+            <ul className="list-disc list-inside space-y-2 ml-4">
+              <li><strong>Program:</strong> The Seer Within text messages, sent by Cosmo Numerology Pte Ltd.</li>
+              <li><strong>What we send:</strong> Recurring automated marketing text messages, such as invitations to continue your readings with our guides and offers for further readings and related products.</li>
+              <li><strong>How you join:</strong> By giving your mobile number at checkout and choosing "Yes, text me" in the optional text-message question. Consent is not a condition of purchase.</li>
+              <li><strong>Frequency:</strong> Message frequency varies.</li>
+              <li><strong>Cost:</strong> Message and data rates may apply, depending on your mobile plan.</li>
+              <li><strong>To stop:</strong> Reply <strong>STOP</strong> to any message. You will receive one message confirming you are unsubscribed, and no further messages after that. You can also email{' '}
+                <a href="mailto:hi@theseerwithin.com" className="text-purple-300 hover:text-white underline">hi@theseerwithin.com</a>.
+              </li>
+              <li><strong>For help:</strong> Reply <strong>HELP</strong> to any message, or email{' '}
+                <a href="mailto:hi@theseerwithin.com" className="text-purple-300 hover:text-white underline">hi@theseerwithin.com</a>.
+              </li>
+              <li><strong>Carriers:</strong> Mobile carriers are not liable for delayed or undelivered messages.</li>
+              <li><strong>Eligibility:</strong> You must be 18 or older and the account holder of the mobile number, or have the account holder's permission.</li>
+              <li><strong>Privacy:</strong> See section 13 of our{' '}
+                <a href="/privacy" className="text-purple-300 hover:text-white underline">Privacy Policy</a>. We never share your mobile number or text-message consent with third parties for their marketing.
+              </li>
+            </ul>
+          </section>
+
+          <section>
+            <h2 className="text-xl font-semibold text-white mb-3">12. Intellectual Property</h2>
             <p>
               All content on our platform — including text, graphics, logos, AI persona designs,
               prompt architecture, and software — is the property of Cosmo Numerology Pte Ltd or its
@@ -206,7 +228,7 @@ export default function TermsPage() {
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-white mb-3">12. Service Availability</h2>
+            <h2 className="text-xl font-semibold text-white mb-3">13. Service Availability</h2>
             <p>
               We aim to provide continuous access to our services but do not guarantee uninterrupted
               availability. We may suspend or discontinue the service (in whole or in part) for maintenance,
@@ -217,7 +239,7 @@ export default function TermsPage() {
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-white mb-3">13. Disclaimer of Warranties</h2>
+            <h2 className="text-xl font-semibold text-white mb-3">14. Disclaimer of Warranties</h2>
             <p>
               Our services are provided on an "as is" and "as available" basis without warranties of any
               kind, whether express or implied, including but not limited to warranties of merchantability,
@@ -229,7 +251,7 @@ export default function TermsPage() {
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-white mb-3">14. Limitation of Liability</h2>
+            <h2 className="text-xl font-semibold text-white mb-3">15. Limitation of Liability</h2>
             <p className="mb-3">
               To the fullest extent permitted by the laws of Singapore, Cosmo Numerology Pte Ltd, its
               directors, employees, and agents shall not be liable for any indirect, incidental, special,
@@ -252,7 +274,7 @@ export default function TermsPage() {
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-white mb-3">15. Governing Law and Dispute Resolution</h2>
+            <h2 className="text-xl font-semibold text-white mb-3">16. Governing Law and Dispute Resolution</h2>
             <p className="mb-3">
               These Terms of Service are governed by and construed in accordance with the laws of the
               Republic of Singapore, without regard to its conflict of law provisions.
@@ -266,7 +288,7 @@ export default function TermsPage() {
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-white mb-3">16. Changes to Terms</h2>
+            <h2 className="text-xl font-semibold text-white mb-3">17. Changes to Terms</h2>
             <p>
               We reserve the right to modify these Terms of Service at any time. Where changes are
               material, we will notify registered users by email or via a prominent notice on the
@@ -277,7 +299,7 @@ export default function TermsPage() {
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-white mb-3">17. Severability</h2>
+            <h2 className="text-xl font-semibold text-white mb-3">18. Severability</h2>
             <p>
               If any provision of these Terms is found to be unenforceable or invalid under applicable
               law, that provision will be limited or severed to the minimum extent necessary, and the
@@ -286,7 +308,7 @@ export default function TermsPage() {
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-white mb-3">18. Contact Us</h2>
+            <h2 className="text-xl font-semibold text-white mb-3">19. Contact Us</h2>
             <p className="mb-3">For questions about these Terms of Service, please contact us:</p>
             <div className="bg-purple-900/50 rounded-lg p-4 border border-purple-700">
               <p className="font-semibold text-white">Cosmo Numerology Pte Ltd</p>
