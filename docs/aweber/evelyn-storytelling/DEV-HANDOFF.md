@@ -1,4 +1,4 @@
-# DEV HANDOFF — Evelyn V2 daily emails 01–07
+# DEV HANDOFF — Evelyn V2 daily emails 01–07 + 09
 
 **For: the developer.** The operator has approved the copy for all 7 emails (2026-10-08: "All good"). The remaining technical steps are **yours** — the operator won't do them. Branch: `daily-evelyn-7oct`. Folder: `docs/aweber/evelyn-storytelling/`. Read `README.md` (workflow) first.
 
@@ -15,6 +15,7 @@
 | 05 | `05-tuesday-rose` | ✅ (minted 2026-10-08) | `/e/g4UKAUY` — **not yet in the file** | ❌ | ❌ |
 | 06 | `06-north-wind-sun` | ✅ (minted 2026-10-08) | `/e/K4T6TCI` — **not yet in the file** | ❌ | ❌ |
 | 07 | `07-burning-ears` | ✅ (minted 2026-10-08) | `/e/e0LSkBI` — **not yet in the file** | ❌ | ❌ |
+| 09 | `09-fifty-words` (🔒 locked 2026-10-08) | ❌ **not minted** — brief text operator-approved in the file | — (you mint it) | ❌ | ❌ |
 
 All 7 reading briefs are rows in **production** `email_link_codes` (persona `evelyn-cross`, campaigns `story-0N-<slug>`). The "reading brief" is what lets Evelyn's chat continue the email instead of greeting the reader cold — see README "Reading brief + short link". It only reaches the chat if the reader arrived within 24 h and only for the first 4 messages (`server/lib/arrivalReading.ts`).
 
@@ -39,6 +40,15 @@ All 7 reading briefs are rows in **production** `email_link_codes` (persona `eve
    → `0N-<slug>.send.html` + `.send.txt`. Check: every link is `/e/<code>`, no grey preview strip, image loads.
 5. **Chat test** (owed for every email, most important for 02 apple peel, 03 riddle, 07 signs): click the short link, type 2–3 likely first messages (e.g. 03: "five!", "I've been deciding about him for a year"; 07: "my ears were burning yesterday"), confirm Evelyn continues the email's topic, makes no promises, and doesn't deny sending it. Note: a reader typing "broke" trips the chat's price-objection rule — the emails avoid that word.
 6. **Schedule in AWeber only after the operator's explicit "go"** — subject = `**Subject:**` in each file; the challenger for an optional 50/50 subject split is in each file's `_Subject history_` line. Body = `.send.html` + `.send.txt`. Log the AWeber broadcast ids in the README sends log.
+
+## Email 09 (added 2026-10-08) — one extra step: mint its reading brief
+09 (the Dr. Seuss "50 words" dare) is locked and its reading brief is operator-approved, but **not yet saved**. Before steps 1–6 above:
+- From the repo root: `npx tsx --env-file=<.env> docs/aweber/evelyn-storytelling/scripts/mint-short-links.mts docs/aweber/evelyn-storytelling/emails/09-fifty-words.md` → it prints the target DB first, then the `/e/<code>` link. Paste it as `**Short Link:**` (step 2).
+- Picture: `assets/fifty-words-sketch.jpg` → `evelyn/story/09-fifty-words.jpg`.
+- Chat test messages: "Here's my question in under 50 words: does he still think about me?" and "I can't get it under 50".
+- Its pitch is a **Columbo close** — most of the pitch is in a long P.S.; `build-email.py` now renders every P.S. paragraph (fixed 2026-10-08), so check the whole P.S. appears in the send HTML.
+
+Emails 08 and 10 are drafts still awaiting the operator's read — not yet part of this handoff.
 
 ## Already done — don't redo
 - Copy, subjects, preheaders: operator-approved. Don't change copy without the operator.

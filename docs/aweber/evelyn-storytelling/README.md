@@ -16,8 +16,8 @@ Every email uses one **format** from [`formats/`](formats/). Each file says what
 | F | [The Fable](formats/F-fable.md) | An old fable → "Moral of the story" → onto love (variant of A) | 🧪 To test |
 | G | [The List](formats/G-list.md) | "3 signs…" — the WHAT as a list; which one is hers is the chat (variant of B) | 🧪 To test |
 | K | [What's Inside](formats/K-whats-inside.md) | Curiosity bullets about what she gets in the chat + two ways in (real scarcity only) | 🧪 To test |
-| L | [The Dare](formats/L-dare.md) | "I dare you to…" — maybe a closer, not a full format | 🧪 To test |
-| M | [Guest Voice](formats/M-guest-voice.md) | Evelyn hands the email to another persona for a day | 🧪 To test |
+| L | [The Dare](formats/L-dare.md) | "I dare you to…" — a true bet/dare story → her dare | ✅ Kept — 09 fifty words ("very well written") |
+| M | [Guest Voice](formats/M-guest-voice.md) | Evelyn hands the email to another persona for a day | ❌ Dropped — "very confusing" (tested: 10 Marcus) |
 | H | [Personal Story](formats/H-personal-story.md) | Furey's main format — "something that happened to me" | ⛔ Needs a decision on Evelyn's own life (canon) |
 | I | [The Session](formats/I-the-session.md) | One reading told as a scene, with a result | ⛔ Needs a real client + permission |
 | J | [Reader Letters](formats/J-reader-letters.md) | Real reader messages with Evelyn's replies | ⛔ Needs real letters + permission |
@@ -225,6 +225,7 @@ npx tsx --env-file=<.env> docs/aweber/evelyn-storytelling/scripts/mint-short-lin
 | "custom" | → "ritual" | Ritual sounds like something she can do |
 | Plain `utm_campaign` links | Chat disowned the email | Reading brief + `/e/` short link on every send |
 | Every pitch: "So here's my invitation" + "one to one" + ➤ + "I won't promise" + the same button | "every email seems to say here's the invitation" | Pitch shapes menu; rotate; vary the button |
+| Guest Voice (10 — Evelyn hands over to Marcus) | "very confusing" | Dropped M; one voice per email; use the Higher-authority device instead |
 | Writer-picked subjects describing the object ("the 1822 book that answered 'does he love me?'") | "terrible… as usual" | Subjects lead with her pain/desire; brainstorm 3–4 very different DR options with the operator |
 
 ---
@@ -240,3 +241,6 @@ npx tsx --env-file=<.env> docs/aweber/evelyn-storytelling/scripts/mint-short-lin
 | 05 | E · Today's News | Maureen (79) & Ken (89), the Tuesday rose (People, 4 Oct 2026) | Real love is easy to read | Ask yourself (3 questions) | 📱 {name}, does he keep you waiting by the phone? · *🌹 Real love isn't hard to read* | ✅ Copy approved · **send by 18 Oct** · brief minted `/e/g4UKAUY` · S3 + send build + chat test + scheduling → **dev** (see DEV-HANDOFF.md) |
 | 06 | F · Fable | Aesop's *The North Wind and the Sun* (Perry 46) | You can't force anyone to open up | Myth vs truth (2 pairs) | ☀️ {name}, why won't he open up? · *🌬️ The mistake most of us make when he goes quiet (no name)* | ✅ Copy approved · brief minted `/e/K4T6TCI` · S3 + send build + chat test + scheduling → **dev** (see DEV-HANDOFF.md) |
 | 07 | G · List | The old signs that someone is thinking of you (ears burning, a sneeze, an itchy nose… 7 items, each sourced) | The signs say *someone* is — never who, or whether it's him | The list — 7 items | 💭 Is he thinking about you right now? *(no name)* · *👂 {name}, are your ears burning?* | ✅ Copy approved · brief minted `/e/e0LSkBI` · S3 + send build + chat test + scheduling → **dev** (see DEV-HANDOFF.md) |
+| 08 | K · What's Inside | "Is it real, or are you just waiting?" — 4 signs each way, then 5 curiosity bullets about what the chat does (incl. a card pull — verified in the live prompt) | Know which list you're on before you wait longer | Signs it's real / signs you're waiting | 💔 {name}, is it real, or are you just waiting? · *📝 4 signs it's real, and 4 signs you're just waiting* | Draft · pitch shape: Two doors · brief not minted |
+| 09 | L · Dare | Cerf bet Seuss $50 he couldn't write a book with only 50 words → *Green Eggs and Ham*. Her dare: ask your love question in 50 words or fewer | Short words force the real question out | One question to carry | 💭 Overthinking him? Try the $50 dare *(no name)* · *🎲 {name}, I dare you to say what you want in 50 words* | 🔒 Locked 2026-10-08 · pitch shape: Columbo close · brief → operator OK, then dev (DEV-HANDOFF) |
+| 10 | D · Old Book (old-deck variant) | The Lovers card then (1751 Marseille-style "L'Amoureux": a man between two women) vs now (1909 Rider-Waite-Smith: he looks at her, she looks up). Her question: "Where am I looking?" | Being chosen starts with where you're looking | Then vs now | 🃏 Waiting for him to choose you? *(no name)* · *{name}, there's a better question than "will he choose me?"* | Draft (rewritten Evelyn-only after Guest Voice was dropped) · pitch shape: Candor · brief not minted |

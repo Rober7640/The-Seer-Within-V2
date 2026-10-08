@@ -52,6 +52,8 @@
 
 Email: `../emails/04-book-of-fate.md` — *The Book of Fate* (London, 1822; read in the free scan of the 1826 twelfth edition), question 26 → **"Thou art more beloved than thou canst be now aware of."** (folio 9). 548 words, 56/44. Draft only: no short link, nothing on S3, not sent.
 
+Second test: `../emails/10-the-lovers.md` — the Lovers card (old deck variant): the 1751 Marseille-style *L'Amoureux* vs Pamela Colman Smith's 1909 *The Lovers*, Waite's "The old meanings fall to pieces of necessity with the old pictures." 432 words, 70/30. Draft only; Read + Chat pending.
+
 | Test | Result |
 |---|---|
 | **Read** | ✅ content "fantastic" (operator 2026-10-08); subject was "terrible" → replaced with a DR pain-question ("💔 Does he love you more than he shows?") |

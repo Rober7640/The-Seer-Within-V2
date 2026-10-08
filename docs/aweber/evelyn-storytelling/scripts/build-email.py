@@ -13,7 +13,7 @@ Source format (see ../README.md, "Source file format"):
            [LINK] first-person text-link label
            ➤ outcome line · **1. Lesson lead.** rest · Here are 3 things ... (heading)
   Inline:  **bold**  __underline__  "quotes" → curly
-Everything after the P.S. paragraph (sources, notes) is ignored.
+Everything after the P.S. (from the `---` / `## Sources` divider on) is ignored. The P.S. may run several paragraphs.
 """
 import argparse, html, os, re, sys
 
@@ -76,6 +76,20 @@ def blocks(text, url, image_url):
     return '\n\n'.join(out)
 
 
+def ps_html(paras, url):
+    """Render every P.S. paragraph: 'P.S.' on the first, the 'Start here' link on the last."""
+    out = []
+    for i, p in enumerate(paras):
+        if p.startswith('[LINK]') or p.startswith('➤'):
+            out.append(blocks(p, url, None))
+            continue
+        pre = '<strong>P.S.</strong> ' if i == 0 else ''
+        post = (f' <a href="{url}" target="_blank" rel="noopener noreferrer" style="color:{LINK};'
+                f'text-decoration:underline;">Start here</a>.') if i == len(paras) - 1 else ''
+        out.append(f'        <p style="margin:0 0 16px;">{pre}{inline(p)}{post}</p>')
+    return '\n'.join(out)
+
+
 def plain(content, pitch, label, ps, url):
     """Plain-text alternative for AWeber body_text."""
     raw = html.unescape(url)
@@ -87,7 +101,7 @@ def plain(content, pitch, label, ps, url):
             lines.append(p[len('[LINK]'):].strip() + ': ' + raw)
             continue
         lines.append(re.sub(r'\*\*|__', '', p))
-    lines += [label + ': ' + raw, '— Evelyn', 'P.S. ' + re.sub(r'\*\*|__', '', ps) + ' ' + raw]
+    lines += [label + ': ' + raw, '— Evelyn', 'P.S. ' + re.sub(r'\*\*|__|\[LINK\]\s*', '', ps) + ' ' + raw]
     return '\n\n'.join(lines) + '\n'
 
 
@@ -122,7 +136,11 @@ def main():
     rest = src.split('**Pitch:**', 1)[1]
     pitch = rest.split('**→', 1)[0]
     label = re.search(r'\*\*→ (.+?)\*\*', rest).group(1)
-    ps = rest.split('**P.S.**', 1)[1].strip().split('\n\n', 1)[0].strip()
+    # The whole P.S. — every paragraph up to the `---` / `## Sources` divider (a Columbo close
+    # carries the real pitch in a multi-paragraph P.S.).
+    ps_block = re.split(r'\n---\s*\n|\n## ', rest.split('**P.S.**', 1)[1], maxsplit=1)[0].strip()
+    ps_paras = [p.strip() for p in ps_block.split('\n\n') if p.strip()]
+    ps = '\n\n'.join(ps_paras)
 
     image_url = a.image_url
     if not a.send and not image_url:
@@ -184,7 +202,7 @@ def main():
 
         <p style="margin:0 0 20px;">&mdash; Evelyn</p>
 
-        <p style="margin:0 0 16px;"><strong>P.S.</strong> {inline(ps)} <a href="{url}" target="_blank" rel="noopener noreferrer" style="color:{LINK};text-decoration:underline;">Start here</a>.</p>
+{ps_html(ps_paras, url)}
       </td></tr>
       <tr><td align="center" style="padding:24px 8px;font-family:Helvetica,Arial,sans-serif;font-size:12px;line-height:16px;color:#000000;">
         140 Broadway, Manhattan,<br>New York New York 10005<br>USA<br><br>
