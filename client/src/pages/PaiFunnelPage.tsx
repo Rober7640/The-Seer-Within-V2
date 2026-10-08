@@ -72,7 +72,18 @@ interface ChargeResult {
   note?: string;
   error?: string;
   detail?: string;
+  /** 3DS: the card wants a challenge — send the buyer to approvalLink. */
+  needs3ds?: boolean;
+  approvalLink?: string;
+  /** Where Payments.AI says it will send the buyer back to after the challenge. */
+  redirectUrl?: string | null;
+  /** Back from the challenge, but Payments.AI has not decided yet. */
+  stillWaiting?: boolean;
+  completedAfter3ds?: boolean;
 }
+
+/** The transaction waiting on a 3DS challenge, kept across the redirect. */
+const PENDING_3DS_KEY = 'pai-3ds-pending';
 
 declare global {
   interface Window {
@@ -193,6 +204,76 @@ export default function PaiFunnelPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // ── back from a 3DS challenge ───────────────────────────────────────────────
+  // Payments.AI returns the buyer to ?pai3ds=1. The server re-reads the transaction
+  // and fires the purchase side effects once, only if it now reads approved.
+  useEffect(() => {
+    if (new URLSearchParams(window.location.search).get('pai3ds') !== '1') return;
+    let pendingTxn: string | null = null;
+    try {
+      pendingTxn = sessionStorage.getItem(PENDING_3DS_KEY);
+    } catch {
+      /* storage blocked — fall through to the message below */
+    }
+    if (!pendingTxn) {
+      say('back from 3DS, but no pending transaction in this tab — start a new purchase');
+      return;
+    }
+    (async () => {
+      setBusy(true);
+      setStage('charging');
+      say(`back from 3DS — completing ${pendingTxn}…`);
+      try {
+        const res = await fetch('/api/pai/checkout/complete', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ transactionId: pendingTxn }),
+        });
+        const data: ChargeResult = await res.json();
+        // Decided either way ⇒ never complete it again from this tab.
+        if (!data.stillWaiting) {
+          try {
+            sessionStorage.removeItem(PENDING_3DS_KEY);
+          } catch {
+            /* ignore */
+          }
+        }
+        onMainResult(data);
+      } catch (err) {
+        say(`3DS completion failed: ${String(err)}`);
+        setStage('error');
+      } finally {
+        setBusy(false);
+      }
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  /** Render a main-purchase result and, if approved, fire the browser Purchase. */
+  function onMainResult(data: ChargeResult) {
+    setMain(data);
+    say(
+      data.stillWaiting
+        ? 'main -> still waiting on 3DS — reload this page in a few seconds'
+        : `main -> ${data.result ?? data.error ?? 'no result'}${data.completedAfter3ds ? ' (after 3DS)' : ''}`,
+    );
+    if (data.ok && data.transactionId) {
+      // Facebook Purchase — what UpsellPage fires on /welcome1: the order TOTAL
+      // (bump included), event_id purchase_<main txn>. skipServerRelay because the
+      // server already fired the CAPI half with the same id; Facebook dedups them.
+      trackPurchase(
+        (data.amountSentCents ?? 3500) / 100,
+        'USD',
+        data.email,
+        'Energy Clearing Ritual',
+        data.transactionId,
+        { skipServerRelay: true },
+      );
+      say(`facebook Purchase (browser) purchase_${data.transactionId}`);
+    }
+    setStage(data.ok ? 'main-done' : 'error');
+  }
+
   // ── main + bump (customer-initiated) ────────────────────────────────────────
   async function payMain(e: React.FormEvent) {
     e.preventDefault();
@@ -229,23 +310,20 @@ export default function PaiFunnelPage() {
         }),
       });
       const data: ChargeResult = await res.json();
-      setMain(data);
-      say(`main -> ${data.result ?? data.error ?? 'no result'}`);
-      if (data.ok && data.transactionId) {
-        // Facebook Purchase — what UpsellPage fires on /welcome1: the order TOTAL
-        // (bump included), event_id purchase_<main txn>. skipServerRelay because the
-        // server already fired the CAPI half with the same id; Facebook dedups them.
-        trackPurchase(
-          (data.amountSentCents ?? 3500) / 100,
-          'USD',
-          data.email,
-          'Energy Clearing Ritual',
-          data.transactionId,
-          { skipServerRelay: true },
-        );
-        say(`facebook Purchase (browser) purchase_${data.transactionId}`);
+      if (data.needs3ds && data.approvalLink && data.transactionId) {
+        // The card wants a challenge. Nothing is charged or fired yet: send the
+        // buyer to it; Payments.AI brings them back here with ?pai3ds=1.
+        setMain(data);
+        say(`main -> 3DS challenge required; returning to ${data.redirectUrl ?? '(not set)'}`);
+        try {
+          sessionStorage.setItem(PENDING_3DS_KEY, data.transactionId);
+        } catch {
+          say('could not remember the transaction (storage blocked) — the return will not complete');
+        }
+        window.location.href = data.approvalLink;
+        return;
       }
-      setStage(data.ok ? 'main-done' : 'error');
+      onMainResult(data);
     } catch (err) {
       say(`main charge failed: ${String(err)}`);
       setStage('error');
@@ -461,8 +539,18 @@ function ResultBlock({ label, r }: { label: string; r: ChargeResult }) {
     >
       <div>
         <strong>{label}</strong>{' '}
-        {r.blockedByGuard ? 'BLOCKED BY GUARD' : good ? 'approved' : `failed — ${r.error ?? r.result ?? ''}`}
+        {r.blockedByGuard
+          ? 'BLOCKED BY GUARD'
+          : good
+            ? 'approved'
+            : r.needs3ds
+              ? '3DS challenge required — opening it…'
+              : r.stillWaiting
+                ? 'still waiting on 3DS'
+                : `failed — ${r.error ?? r.result ?? ''}`}
       </div>
+      {r.completedAfter3ds && <div>completed after the 3DS challenge</div>}
+      {r.needs3ds && <div>returns to: {r.redirectUrl ?? '(not set)'}</div>}
       {r.reason && <div style={{ opacity: 0.8 }}>reason: {r.reason}</div>}
       {r.note && <div style={{ opacity: 0.7 }}>{r.note}</div>}
       {r.transactionId && <div>txn: {r.transactionId}</div>}

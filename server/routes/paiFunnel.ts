@@ -48,6 +48,7 @@ import {
   instrumentIdOf,
   auditMetadata,
   paymentsAiReady,
+  pendingChallengeLink,
   type PaiTransaction,
 } from '../lib/paymentsai';
 import {
@@ -734,6 +735,216 @@ router.get('/webhook/received', (req: Request, res: Response) => {
  * the bump's share. That keeps `mainPurchaseAmount` clean for the price test,
  * exactly as the live path does.
  */
+/** Everything the main purchase's side effects need, kept across a 3DS round trip. */
+interface MainContext {
+  lander: PaiLander;
+  bucket: string;
+  bumpProduct: string;
+  email: string;
+  firstName: string;
+  metadata: Record<string, string>;
+  mainCents: number;
+  totalCents: number;
+  bumpApplied: boolean;
+  bumpCents: number;
+  bumpBucket: unknown;
+  gclid?: unknown;
+  trackdeskClickId?: unknown;
+  customerId: string;
+}
+
+/**
+ * The main purchase's side effects (DB, PostHog, Facebook, Google Ads, Trackdesk,
+ * AWeber) — run ONLY on an approved settlement — and the body the page renders.
+ * Shared by the straight-through path and the post-3DS completion, so a buyer who
+ * passed a challenge gets exactly what a frictionless buyer gets.
+ */
+async function finalizeMain(ctx: MainContext, settled: PaiTransaction): Promise<Record<string, unknown>> {
+  const {
+    lander, bucket, bumpProduct, email, firstName, metadata,
+    mainCents, totalCents, bumpApplied, bumpCents, bumpBucket, gclid, trackdeskClickId,
+  } = ctx;
+  const approved = String(settled.result ?? '').toLowerCase() === 'approved';
+  const audit = auditMetadata(metadata, settled.metadata);
+  const instrumentId = instrumentIdOf(settled);
+  // Reported in the response so a chain run can PROVE the AWeber write landed.
+  // Without this the only evidence is a server log nobody outside Railway sees.
+  let aweber: AweberResult = {
+    success: false,
+    error: 'not attempted',
+  };
+  const stageArgs: StageArgs = { email, name: firstName, orderId: settled.id, cents: totalCents };
+  const mainStage = lander.main(stageArgs);
+  // Written exactly when the live webhook writes it: a bump order whose stamped key
+  // is not on the exclusion list — and only for a dummy that mirrors a lander
+  // whose bump buyers go there at all.
+  const bumpStage =
+    bumpApplied && lander.bump && bumpPaidListWanted(bumpProduct) ? lander.bump(stageArgs) : null;
+  let bumpAweber: AweberResult = { success: false, error: 'not attempted' };
+  let facebook: PaiFbResult | null = null;
+  let gads: PaiGAdsResult | null = null;
+  let trackdesk: PaiTrackdeskResult | null = null;
+  let dbWritten = false;
+
+  // DB row — dev Supabase, separate from production.
+  if (approved) {
+    try {
+      await updateStripeData(
+        email,
+        {
+          // 🔴 THE DISCRIMINATOR. Without it this row cannot be told from a Stripe
+          // one: the three id columns below are shared by both processors, and
+          // Payments.AI customer ids are ALSO `cus_`-prefixed. The 50/50 revenue
+          // comparison reads this column and nothing else.
+          paymentGateway: 'paymentsai',
+          // Payments.AI has no session object; the transaction id is the only
+          // durable handle, so it takes the session column's place.
+          stripeSessionId: settled.id,
+          stripeCustomerId: ctx.customerId,
+          ...(instrumentId ? { stripePaymentMethodId: instrumentId } : {}),
+          mainPurchaseAmount: mainCents,
+          ...(bumpApplied
+            ? {
+                bumpOffered: true,
+                bumpPurchased: true,
+                bumpBucket: String(bumpBucket),
+                bumpAmountCents: bumpCents,
+              }
+            : { bumpOffered: true, bumpPurchased: false }),
+        },
+        { firstName, bucket },
+      );
+      dbWritten = true;
+    } catch (err) {
+      logger.error(`[pai] DB write failed: ${String(err)}`);
+    }
+
+    // PostHog — the 50/50 test's revenue for this arm. amountCents is what was
+    // ACTUALLY charged (bump included), matching session.amount_total on the
+    // Stripe side so the two arms are comparable.
+    capturePaiPurchase({
+      metadata,
+      amountCents: totalCents,
+      transactionId: settled.id,
+      email,
+    });
+
+    // Facebook — the order total (bump included), as Stripe's amount_total is.
+    facebook = await firePaiFbPurchase({
+      product: 'energy_clearing_ritual',
+      transactionId: settled.id,
+      mainTransactionId: settled.id,
+      amountCents: totalCents,
+      email,
+      firstName,
+    });
+
+    // Google Ads + Trackdesk — the two side effects that live on the Stripe
+    // WEBHOOK, which a Payments.AI charge never reaches. This transaction IS the
+    // main one, so it is its own dedup key.
+    gads = await firePaiGAdsConversion({
+      product: 'energy_clearing_ritual',
+      mainTransactionId: settled.id,
+      amountCents: totalCents,
+      gclid: gclid ? String(gclid) : undefined,
+      email,
+    });
+    trackdesk = await firePaiTrackdeskConversion({
+      product: 'energy_clearing_ritual',
+      mainTransactionId: settled.id,
+      amountCents: totalCents,
+      clickId: trackdeskClickId ? String(trackdeskClickId) : undefined,
+      email,
+    });
+
+    // AWeber — the REAL lists this lander's live counterpart writes, with the
+    // paymentsAI tag added alongside the live ones. The address is always +pai on
+    // a domain we own, so it can never collide with a real subscriber.
+    aweber = await timedWrite(mainStage, 'main');
+    if (bumpStage) bumpAweber = await timedWrite(bumpStage, 'bump');
+  }
+
+  return {
+    ok: approved,
+    hook: lander.hook,
+    family: lander.family,
+    bumpProduct: bumpApplied ? bumpProduct : null,
+    transactionId: settled.id,
+    result: settled.result,
+    status: settled.status,
+    amountReturned: settled.amount,
+    amountSentCents: totalCents,
+    instrumentId,
+    customerId: ctx.customerId,
+    email,
+    gateway: { name: settled.gatewayName, slug: settled.gatewaySlug },
+    metadataAudit: audit,
+    dbWritten,
+    // Server-side (CAPI) half of the Facebook Purchase; null ⇒ not approved, not sent.
+    facebook,
+    // null ⇒ not approved. `attempted:false` ⇒ approved but skipped, with the reason.
+    gads,
+    trackdesk,
+    aweber: {
+      attempted: approved,
+      ...aweber,
+      listConfigured: Boolean(mainStage.listId),
+      listId: mainStage.listId,
+      tags: mainStage.tags,
+    },
+    // null ⇒ this order is not one the live path puts on the order-bump list.
+    bumpList: bumpStage
+      ? {
+          attempted: approved,
+          ...bumpAweber,
+          listId: bumpStage.listId,
+          tags: bumpStage.tags,
+        }
+      : null,
+  };
+}
+
+/**
+ * 3DS ROUND TRIP. A card that needs a challenge settles `waiting`, not approved or
+ * declined, and nothing may fire yet. We send the buyer to the challenge, Payments.AI
+ * sends them back here, and `/checkout/complete` re-reads the transaction and runs
+ * the side effects once — if, and only if, it then reads approved.
+ *
+ * In memory, like the webhook log: a dev harness. A restart between the challenge
+ * and the return loses the context, and the page says so instead of guessing.
+ * `done` makes completion idempotent — a refresh or double click on the return
+ * page must never write the DB or fire Facebook a second time.
+ */
+const PENDING_3DS = new Map<string, { ctx: MainContext; done?: Promise<Record<string, unknown>> }>();
+const MAX_PENDING_3DS = 100;
+
+/** Where the challenge sends the buyer back to: this page, flagged to finish the purchase. */
+export function paiReturnUrl(origin: string, hook: string, email: string): string {
+  const q = new URLSearchParams({ hook, email, pai3ds: '1' });
+  return `${origin.replace(/\/$/, '')}/fb-tarot/pai?${q.toString()}`;
+}
+
+/** The origin the buyer is on. Railway terminates TLS, so trust its forwarded proto. */
+function requestOrigin(req: Request): string {
+  const proto = String(req.headers['x-forwarded-proto'] ?? req.protocol).split(',')[0].trim();
+  return `${proto}://${req.get('host')}`;
+}
+
+/** The fields every main-purchase response carries, approved or not. */
+function mainSummary(ctx: MainContext, settled: PaiTransaction) {
+  return {
+    hook: ctx.lander.hook,
+    family: ctx.lander.family,
+    transactionId: settled.id,
+    result: settled.result,
+    status: settled.status,
+    amountSentCents: ctx.totalCents,
+    customerId: ctx.customerId,
+    email: ctx.email,
+    gateway: { name: settled.gatewayName, slug: settled.gatewaySlug },
+  };
+}
+
 router.post('/checkout', async (req: Request, res: Response) => {
   const {
     token,
@@ -798,153 +1009,94 @@ router.post('/checkout', async (req: Request, res: Response) => {
       idempotencyKey: idem('main'),
       token,
       isMerchantInitiated: false,
+      // 3DS: bring the buyer back to THIS page, not the website record's URL.
+      redirectUrl: paiReturnUrl(requestOrigin(req), lander.hook, email),
     });
     if (!tx.ok || !tx.data?.id) {
       return res.status(502).json({ error: 'charge failed', detail: tx.error, raw: tx.raw });
     }
 
     const settled = (await settleTransaction(tx.data.id)) ?? tx.data;
-    const approved = String(settled.result ?? '').toLowerCase() === 'approved';
-    const audit = auditMetadata(metadata, settled.metadata);
-    const instrumentId = instrumentIdOf(settled);
-    // Reported in the response so a chain run can PROVE the AWeber write landed.
-    // Without this the only evidence is a server log nobody outside Railway sees.
-    let aweber: AweberResult = {
-      success: false,
-      error: 'not attempted',
+    const ctx: MainContext = {
+      lander, bucket, bumpProduct, email, firstName, metadata,
+      mainCents, totalCents, bumpApplied, bumpCents, bumpBucket, gclid, trackdeskClickId,
+      customerId: cust.data.id,
     };
-    const stageArgs: StageArgs = { email, name: firstName, orderId: settled.id, cents: totalCents };
-    const mainStage = lander.main(stageArgs);
-    // Written exactly when the live webhook writes it: a bump order whose stamped key
-    // is not on the exclusion list — and only for a dummy that mirrors a lander
-    // whose bump buyers go there at all.
-    const bumpStage =
-      bumpApplied && lander.bump && bumpPaidListWanted(bumpProduct) ? lander.bump(stageArgs) : null;
-    let bumpAweber: AweberResult = { success: false, error: 'not attempted' };
-    let facebook: PaiFbResult | null = null;
-    let gads: PaiGAdsResult | null = null;
-    let trackdesk: PaiTrackdeskResult | null = null;
-    let dbWritten = false;
 
-    // DB row — dev Supabase, separate from production.
-    if (approved) {
-      try {
-        await updateStripeData(
-          email,
-          {
-            // 🔴 THE DISCRIMINATOR. Without it this row cannot be told from a Stripe
-            // one: the three id columns below are shared by both processors, and
-            // Payments.AI customer ids are ALSO `cus_`-prefixed. The 50/50 revenue
-            // comparison reads this column and nothing else.
-            paymentGateway: 'paymentsai',
-            // Payments.AI has no session object; the transaction id is the only
-            // durable handle, so it takes the session column's place.
-            stripeSessionId: settled.id,
-            stripeCustomerId: cust.data.id,
-            ...(instrumentId ? { stripePaymentMethodId: instrumentId } : {}),
-            mainPurchaseAmount: mainCents,
-            ...(bumpApplied
-              ? {
-                  bumpOffered: true,
-                  bumpPurchased: true,
-                  bumpBucket: String(bumpBucket),
-                  bumpAmountCents: bumpCents,
-                }
-              : { bumpOffered: true, bumpPurchased: false }),
-          },
-          { firstName, bucket },
-        );
-        dbWritten = true;
-      } catch (err) {
-        logger.error(`[pai] DB write failed: ${String(err)}`);
+    // 3DS: the card wants a challenge. The money is not taken yet and nothing
+    // fires — the page sends the buyer to the challenge and finishes on return.
+    const approvalLink = pendingChallengeLink(settled);
+    if (approvalLink) {
+      if (PENDING_3DS.size >= MAX_PENDING_3DS) {
+        PENDING_3DS.delete(PENDING_3DS.keys().next().value as string);
       }
-
-      // PostHog — the 50/50 test's revenue for this arm. amountCents is what was
-      // ACTUALLY charged (bump included), matching session.amount_total on the
-      // Stripe side so the two arms are comparable.
-      capturePaiPurchase({
-        metadata,
-        amountCents: totalCents,
-        transactionId: settled.id,
-        email,
+      PENDING_3DS.set(settled.id, { ctx });
+      logger.info(`[pai] main ${settled.id} waiting on 3DS — buyer sent to the challenge`);
+      return res.json({
+        ok: false,
+        needs3ds: true,
+        approvalLink,
+        // What Payments.AI stored, so a run can prove the override was kept.
+        redirectUrl: settled.redirectUrl ?? null,
+        ...mainSummary(ctx, settled),
       });
-
-      // Facebook — the order total (bump included), as Stripe's amount_total is.
-      facebook = await firePaiFbPurchase({
-        product: 'energy_clearing_ritual',
-        transactionId: settled.id,
-        mainTransactionId: settled.id,
-        amountCents: totalCents,
-        email,
-        firstName,
-      });
-
-      // Google Ads + Trackdesk — the two side effects that live on the Stripe
-      // WEBHOOK, which a Payments.AI charge never reaches. This transaction IS the
-      // main one, so it is its own dedup key.
-      gads = await firePaiGAdsConversion({
-        product: 'energy_clearing_ritual',
-        mainTransactionId: settled.id,
-        amountCents: totalCents,
-        gclid: gclid ? String(gclid) : undefined,
-        email,
-      });
-      trackdesk = await firePaiTrackdeskConversion({
-        product: 'energy_clearing_ritual',
-        mainTransactionId: settled.id,
-        amountCents: totalCents,
-        clickId: trackdeskClickId ? String(trackdeskClickId) : undefined,
-        email,
-      });
-
-      // AWeber — the REAL lists this lander's live counterpart writes, with the
-      // paymentsAI tag added alongside the live ones. The address is always +pai on
-      // a domain we own, so it can never collide with a real subscriber.
-      aweber = await timedWrite(mainStage, 'main');
-      if (bumpStage) bumpAweber = await timedWrite(bumpStage, 'bump');
     }
 
-    res.json({
-      ok: approved,
-      hook: lander.hook,
-      family: lander.family,
-      bumpProduct: bumpApplied ? bumpProduct : null,
-      transactionId: settled.id,
-      result: settled.result,
-      status: settled.status,
-      amountReturned: settled.amount,
-      amountSentCents: totalCents,
-      instrumentId,
-      customerId: cust.data.id,
-      email,
-      gateway: { name: settled.gatewayName, slug: settled.gatewaySlug },
-      metadataAudit: audit,
-      dbWritten,
-      // Server-side (CAPI) half of the Facebook Purchase; null ⇒ not approved, not sent.
-      facebook,
-      // null ⇒ not approved. `attempted:false` ⇒ approved but skipped, with the reason.
-      gads,
-      trackdesk,
-      aweber: {
-        attempted: approved,
-        ...aweber,
-        listConfigured: Boolean(mainStage.listId),
-        listId: mainStage.listId,
-        tags: mainStage.tags,
-      },
-      // null ⇒ this order is not one the live path puts on the order-bump list.
-      bumpList: bumpStage
-        ? {
-            attempted: approved,
-            ...bumpAweber,
-            listId: bumpStage.listId,
-            tags: bumpStage.tags,
-          }
-        : null,
-    });
+    res.json(await finalizeMain(ctx, settled));
   } catch (err) {
     logger.error(`[pai] checkout error: ${String(err)}`);
     res.status(500).json({ error: String(err) });
+  }
+});
+
+/**
+ * The buyer is back from the 3DS challenge. Re-read the transaction from
+ * Payments.AI — never trust the return URL — and finish exactly once.
+ */
+router.post('/checkout/complete', async (req: Request, res: Response) => {
+  const transactionId = String(req.body?.transactionId ?? '');
+  const pending = PENDING_3DS.get(transactionId);
+  if (!pending) {
+    return res.status(410).json({
+      ok: false,
+      transactionId,
+      error: 'no pending 3DS purchase for this transaction (the server may have restarted) — start a new one',
+    });
+  }
+
+  if (!pending.done) {
+    const attempt = (async (): Promise<Record<string, unknown>> => {
+      // The challenge has finished by the time they are redirected, but settlement
+      // can lag a moment behind; keep reading while the result is undecided.
+      let settled: PaiTransaction | null = null;
+      for (let i = 0; i < 6; i++) {
+        settled = await settleTransaction(transactionId, 1, i === 0 ? 0 : 1500);
+        const r = String(settled?.result ?? '').toLowerCase();
+        if (r && r !== 'pending' && r !== 'unknown') break;
+      }
+      if (!settled) throw new Error('could not read the transaction back from Payments.AI');
+      const r = String(settled.result ?? '').toLowerCase();
+      if (r !== 'approved' && r !== 'declined') {
+        // Still undecided — report it, and let a later call try again.
+        return { ok: false, stillWaiting: true, ...mainSummary(pending.ctx, settled) };
+      }
+      return finalizeMain(pending.ctx, settled);
+    })();
+    pending.done = attempt;
+    attempt
+      .then((body) => {
+        if (body.stillWaiting) pending.done = undefined;
+      })
+      .catch(() => {
+        pending.done = undefined;
+      });
+  }
+
+  try {
+    res.json({ ...(await pending.done!), completedAfter3ds: true });
+  } catch (err) {
+    logger.error(`[pai] 3DS completion error: ${String(err)}`);
+    res.status(502).json({ ok: false, transactionId, error: String(err) });
   }
 });
 

@@ -602,3 +602,119 @@ describe('pai conversion reporting', () => {
     assert.match(r.reason ?? '', /click id/);
   });
 });
+
+// ── 3DS round trip ───────────────────────────────────────────────────────────────
+// 8 Oct: cards that need a challenge settled `waiting` and the page stopped there —
+// the buyer was never shown the challenge, so the purchase could never finish.
+// Payments.AI is faked below; anything else that reaches fetch (Facebook, AWeber,
+// Google Ads, Trackdesk) is recorded, so "nothing fired" is checked, not assumed.
+describe('pendingChallengeLink', async () => {
+  const { pendingChallengeLink } = await import('../lib/paymentsai');
+  it('is the approvalLink only while the transaction is waiting', () => {
+    assert.equal(pendingChallengeLink({ id: 't', status: 'waiting', approvalLink: 'https://x/3ds' }), 'https://x/3ds');
+    assert.equal(pendingChallengeLink({ id: 't', status: 'completed', approvalLink: 'https://x/3ds' }), null);
+    assert.equal(pendingChallengeLink({ id: 't', status: 'waiting' }), null);
+    assert.equal(pendingChallengeLink(null), null);
+  });
+});
+
+describe('paiReturnUrl', async () => {
+  const { paiReturnUrl } = await import('./paiFunnel');
+  it('brings the buyer back to this page, flagged, with the + in the email kept', () => {
+    const u = new URL(paiReturnUrl('https://dev.example/', 'cards-meant-alone', 'a+pai@b.com'));
+    assert.equal(u.origin + u.pathname, 'https://dev.example/fb-tarot/pai');
+    assert.equal(u.searchParams.get('pai3ds'), '1');
+    assert.equal(u.searchParams.get('hook'), 'cards-meant-alone');
+    assert.equal(u.searchParams.get('email'), 'a+pai@b.com');
+  });
+});
+
+describe('pai 3DS checkout', () => {
+  const app = express();
+  app.use(express.json());
+  app.use('/api/pai', paiFunnelRouter);
+  const realFetch = globalThis.fetch;
+  let server: http.Server;
+  let port = 0;
+  /** What the fake Payments.AI answers for GET /transactions/:id. */
+  let txState: Record<string, unknown> = {};
+  let saleBody: any = null;
+  let txGets = 0;
+  const elsewhere: string[] = [];
+
+  const json = (data: unknown, status = 200) =>
+    new Response(JSON.stringify({ data }), { status, headers: { 'Content-Type': 'application/json' } });
+
+  before(async () => {
+    globalThis.fetch = (async (input: any, init?: any) => {
+      const url = String(input?.url ?? input);
+      const method = String(init?.method ?? 'GET');
+      if (!url.startsWith('https://staging-api.payments.ai/')) {
+        elsewhere.push(url);
+        throw new Error(`unexpected outbound call: ${url}`);
+      }
+      if (url.endsWith('/customers') && method === 'POST') return json({ id: 'cus_3ds' }, 201);
+      if (url.endsWith('/transactions') && method === 'POST') {
+        saleBody = JSON.parse(init.body);
+        return json({ id: 'txn_3ds', status: 'waiting', result: 'unknown' }, 201);
+      }
+      if (url.includes('/transactions/txn_3ds') && method === 'GET') {
+        txGets++;
+        return json({ id: 'txn_3ds', amount: 44.77, gatewayName: 'Payments AI', ...txState });
+      }
+      throw new Error(`fake Payments.AI has no route for ${method} ${url}`);
+    }) as typeof fetch;
+    server = app.listen(0, '127.0.0.1');
+    await new Promise<void>((r) => server.once('listening', () => r()));
+    port = (server.address() as AddressInfo).port;
+  });
+  after(async () => {
+    globalThis.fetch = realFetch;
+    await new Promise<void>((r) => server.close(() => r()));
+  });
+
+  it('sends a waiting card to its challenge, returning here, and fires nothing', async () => {
+    txState = { status: 'waiting', result: 'unknown', approvalLink: 'https://pai.example/3ds/abc', redirectUrl: 'stored' };
+    const res = await call(port, 'POST', '/api/pai/checkout', {
+      body: { token: 'tok_3ds', hook: 'cards-meant-alone', email: 'lewis+3ds@theseerwithin.com', bumpApplied: true },
+    });
+    assert.equal(res.status, 200);
+    assert.equal(res.body.ok, false);
+    assert.equal(res.body.needs3ds, true);
+    assert.equal(res.body.approvalLink, 'https://pai.example/3ds/abc');
+    assert.equal(res.body.transactionId, 'txn_3ds');
+    assert.equal(res.body.dbWritten, undefined, 'no DB write before the challenge');
+    // The return address went to Payments.AI on the sale itself.
+    const back = new URL(saleBody.redirectUrl);
+    assert.equal(back.origin, `http://127.0.0.1:${port}`);
+    assert.equal(back.pathname, '/fb-tarot/pai');
+    assert.equal(back.searchParams.get('pai3ds'), '1');
+    assert.equal(back.searchParams.get('hook'), 'cards-meant-alone');
+    assert.deepEqual(elsewhere, [], 'nothing outside Payments.AI was called');
+  });
+
+  it('refuses to complete a transaction it never sent to a challenge', async () => {
+    const res = await call(port, 'POST', '/api/pai/checkout/complete', { body: { transactionId: 'txn_other' } });
+    assert.equal(res.status, 410);
+    assert.equal(res.body.ok, false);
+  });
+
+  it('completes a declined challenge once — no side effects, and a repeat does not re-read', async () => {
+    txState = { status: 'completed', result: 'declined' };
+    const before = txGets;
+    const first = await call(port, 'POST', '/api/pai/checkout/complete', { body: { transactionId: 'txn_3ds' } });
+    assert.equal(first.status, 200);
+    assert.equal(first.body.ok, false);
+    assert.equal(first.body.result, 'declined');
+    assert.equal(first.body.completedAfter3ds, true);
+    assert.equal(first.body.dbWritten, false);
+    const reads = txGets - before;
+    assert.ok(reads >= 1);
+
+    // A refresh of the return page: the same answer, no second pass.
+    const again = await call(port, 'POST', '/api/pai/checkout/complete', { body: { transactionId: 'txn_3ds' } });
+    assert.equal(again.body.result, 'declined');
+    assert.equal(txGets - before, reads, 'completion ran once');
+    assert.deepEqual(elsewhere, []);
+  });
+});

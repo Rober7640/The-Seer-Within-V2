@@ -47,6 +47,12 @@ export interface PaiTransaction {
   gatewayName?: string;
   gatewaySlug?: string;
   parentTransactionId?: string | null;
+  /** Where the buyer completes a 3DS challenge — present while status is `waiting`. */
+  approvalLink?: string;
+  /** Where Payments.AI sends the buyer back to after the challenge. */
+  redirectUrl?: string;
+  has3ds?: boolean;
+  data3ds?: Record<string, unknown>;
 }
 
 export interface PaiResult<T> {
@@ -179,6 +185,12 @@ export interface ChargeParams {
   paymentInstrumentId?: string;
   isMerchantInitiated: boolean;
   currency?: string;
+  /**
+   * Where the buyer lands after a 3DS challenge. Accepted per transaction (proven
+   * 21 Aug, rounds 1-18 archive); without it they go to the website record's URL,
+   * which is the LIVE site, not the page that started the payment.
+   */
+  redirectUrl?: string;
 }
 
 export async function charge(params: ChargeParams): Promise<PaiResult<PaiTransaction>> {
@@ -196,7 +208,20 @@ export async function charge(params: ChargeParams): Promise<PaiResult<PaiTransac
       ? { token: params.token }
       : { paymentInstrumentId: params.paymentInstrumentId },
     metadata: params.metadata,
+    ...(params.redirectUrl ? { redirectUrl: params.redirectUrl } : {}),
   });
+}
+
+/**
+ * The 3DS challenge link, if this transaction is waiting on the buyer — else null.
+ *
+ * ⭐ `status: waiting` + `approvalLink` is the ONLY reliable signal (sandbox, 16 Aug):
+ * at create time `has3ds` is false and `data3ds` is {} even while a challenge is
+ * genuinely pending, and `redirectUrl` is not the challenge.
+ */
+export function pendingChallengeLink(tx: PaiTransaction | null | undefined): string | null {
+  if (String(tx?.status ?? '').toLowerCase() !== 'waiting') return null;
+  return typeof tx?.approvalLink === 'string' && tx.approvalLink ? tx.approvalLink : null;
 }
 
 /**
