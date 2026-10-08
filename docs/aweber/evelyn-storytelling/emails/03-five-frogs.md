@@ -1,6 +1,8 @@
 # 03 · Five frogs — deciding isn't jumping
 
-📝 **DRAFT 2026-10-07 — not reviewed, not scheduled, not sent. No short link minted, nothing on S3.** Format C · The Riddle — stress test #1 (`../formats/C-riddle.md`). Voice, formatting density and CTA mechanics follow the locked gold (`01-grandma-moses.md`) and `02-apple-peel.md`. Build HTML with `scripts/build-email.py`.
+🔒 **LOCKED 2026-10-08** — operator: "Let's lock the riddle" (read: "not bad", no changes). Copy below is the source of truth. Not yet sent.
+
+✏️ **Pitch rewritten after the lock, operator-approved 2026-10-08** (de-templating pass across 03–07: "every email seems to say 'here's the invitation'"). Only the **Pitch** section (pitch, button, P.S.) and the chat notes that describe it changed — Content, subject and preheader are untouched. Shape: **Permission**, built from the operator's own draft.
 
 **Subject:** `🐸 {{ subscriber.first_name | capitalize }}, five frogs are sitting on a log…`
 
@@ -12,11 +14,13 @@ _Subject history (v1, 2026-10-07; bytes measured with `len(s.encode())`, emoji +
 
 **Bucket:** love
 
+**Short Link:** `https://www.theseerwithin.com/e/BwaUehg?email={!email}` (minted 2026-10-08 into PRODUCTION email_link_codes via scripts/mint-short-links.mts; tested 302 → /evelyn with campaign + bucket + src)
+
 **Big Idea:** the five frogs — deciding isn't jumping
 
-**Reading Recap:** You opened with a riddle: five frogs are sitting on a log, three decide to jump off, how many are left? Five — they only decided to jump. You turned it onto love: how long have they been "deciding" about him — whether to text him first, tell him how they really feel, stay or finally go, or let anyone new get close at all (and for some people, a job they keep meaning to leave). You said the log is hard to leave because while you're still deciding nothing can go wrong — he can't say no — but the log doesn't go anywhere. You offered to look at what's been keeping them on the log, what each choice could bring, and the first small step if they want one. You said you won't push them off the log or promise a soft landing.
+**Reading Recap:** You opened with a riddle: five frogs are sitting on a log, three decide to jump off, how many are left? Five — they only decided to jump. You turned it onto love: how long have they been "deciding" about him — whether to text him first, tell him how they really feel, stay or finally go, or let anyone new get close at all (and for some people, a job they keep meaning to leave). You said the log is hard to leave because while you're still deciding nothing can go wrong — he can't say no — but the log doesn't go anywhere. You told them they don't have to jump today, or even decide today — just tell you what they've been deciding about (him, the text they haven't sent, the door they keep looking at), the way it sits in their head; messy is fine. You offered to look at one thing together: what's been keeping them on the log. Not a lecture, not a push — just a clear look at the water.
 
-**Open Loop:** You asked them to tell you what they've been "deciding" about for too long — about him, or anything else — and what's been stopping them.
+**Open Loop:** You asked them to tell you what they've been "deciding" about for too long — him, a text they haven't sent, a door they keep looking at, or anything else — said the way it sits in their head, messy is fine. They don't have to have decided anything.
 
 **Continue Seed:** You came from my letter about the five frogs who decided to jump off a log, and never did. I'd like to hear yours. What have you been "deciding" about for too long? Him, or anything else.
 
@@ -54,31 +58,27 @@ The log is safe. It just __doesn't go anywhere.__
 
 **Pitch:**
 
-So here's my invitation.
+**You don't have to jump today.**
 
-Come and tell me what you've been deciding about. **Just you and me, one to one.** Type it the way you'd say it to a friend. You don't have to have decided anything first.
+You don't even have to decide today. All I'm asking is that you tell me what you've been deciding about.
 
-Then I'll tell you plainly what I see:
+Him. The text you haven't sent. The door you keep looking at.
 
-➤ what's really been keeping you on the log
-
-➤ what each choice could bring, the good and the hard
-
-➤ the first small step, if you want to take one
+Say it the way it sits in your head. Messy is fine.
 
 [LINK] Evelyn, I've been deciding for too long. Help me see what's stopping me
 
-I won't push you off the log, and I won't promise you a soft landing. I'll give you an honest look, from someone who isn't sitting on it with you.
+We'll look at one thing together: what's been keeping you on the log. Not a lecture. Not a push. Just a clear look at the water.
 
-And if you've never talked to me before, **your first 3 minutes are on me.** That's plenty of time to tell me what you've been deciding about.
+New here? **The first 3 minutes are on me.**
 
 Those five frogs are still on their log. __You don't have to stay on yours.__
 
-**→ Start my 1:1 conversation with Evelyn**
+**→ Tell Evelyn what's on your log**
 
 — Evelyn
 
-**P.S.** Talking to me isn't jumping off the log. It's just a good look at the water first. Come and tell me what you've been deciding about.
+**P.S.** Three frogs decided to jump. Not one of them did. Telling me about your log isn't jumping either. It's just saying it out loud.
 
 ---
 
@@ -97,8 +97,9 @@ Those five frogs are still on their log. __You don't have to stay on yours.__
 | "As far as I know, they're still sitting there" / "still on their log" | Playful, about the riddle's frogs — not a factual claim |
 | "Whether to text him first… stay, or finally go"; "the job they keep meaning to leave" | Examples, asked of her / said of "some people" — no claim about her life |
 | "While you're still deciding, nothing can go wrong" | Evelyn's observation, not a fact claim or a promise |
-| "I won't push you… won't promise you a soft landing" | No promise of an outcome |
-| "Your first 3 minutes are on me" (new users only) | Product: `server/lib/personaLanderConfig.ts` "3 free minutes when you join." |
+| "We'll look at one thing together… Not a lecture. Not a push. Just a clear look at the water." | Says what the chat does, not what will come of it — no promise of an outcome |
+| "Three frogs decided to jump. Not one of them did." (P.S.) | The riddle's own answer ([FUREY]: "They decided to jump, but never jumped") |
+| "New here? The first 3 minutes are on me." (new users only) | Product: `server/lib/personaLanderConfig.ts` "3 free minutes when you join." "New here?" scopes it to new users |
 
 **Picture:** pencil sketch made free with `codex exec` (built-in image_gen) from `scripts/sketch-prompt-template.txt` — STYLE paragraph kept, SUBJECT = five frogs sitting still on a fallen log by water, none jumping, no text. 1 try. Checked by eye: exactly five frogs, all sitting, no text. Original `assets/five-frogs-sketch-original.png` (1536×1024); email copy `assets/five-frogs-sketch.jpg` (cropped empty paper top/bottom → 560×262, JPEG q72), shown at 260px, no border, no caption. It sits AFTER the answer on purpose: a picture of five frogs before the answer would give it away. ⚠ It came out more polished than the "slightly wobbly" notebook style asked for — operator to judge.
 
@@ -108,7 +109,9 @@ Those five frogs are still on their log. __You don't have to stay on yours.__
 
 **Furey's rules, checked:** one riddle only (no second riddle, not even in the P.S.) · the joke is not explained (no "the point is…" paragraph) · no tips after the riddle (no "how to jump" list) · it sells: the pitch is ~half the email, with a text link, a button and a P.S. that calls back the log.
 
-**CTA:** text link "Evelyn, I've been deciding for too long. Help me see what's stopping me" — first person, no precondition (she doesn't have to have done anything, or even solved the riddle). Body line "You don't have to have decided anything first." doubles as the no-precondition line and a small callback. One button at the end. Reason not to wait = riddle callback ("Those five frogs are still on their log. You don't have to stay on yours."), no fake urgency. P.S. = Columbo-style new point: talking isn't jumping, it's a look at the water — lowers the bar to click, calls back the riddle.
+**Pitch shape:** Permission (operator 2026-10-08: "every email seems to say 'here's the invitation'"). Built from the operator's draft, tightened: bold "You don't have to jump today." → don't even have to decide → just tell me what you've been deciding about (him / the text / the door) → "Messy is fine." → link → what we'll do (one thing: what's keeping you on the log; not a lecture, not a push) → free minutes → callback → button → P.S. No ➤ list (dropped on purpose; 04 and 06 keep one, 05 uses steps). None of the five retired lines ("here's my invitation", "Just you and me, one to one", "Type it the way you'd say it to a friend", "tell you plainly what I see", "I won't promise").
+
+**CTA:** text link "Evelyn, I've been deciding for too long. Help me see what's stopping me" — first person, no precondition (she doesn't have to have done anything, or even solved the riddle). "You don't even have to decide today" now carries the no-precondition line. Button "Tell Evelyn what's on your log" (was "Start my 1:1 conversation with Evelyn"). Free minutes reworded "New here? The first 3 minutes are on me." Reason not to wait = riddle callback ("Those five frogs are still on their log. You don't have to stay on yours."), no fake urgency. P.S. = the riddle's answer again (three decided, none jumped) + telling me isn't jumping either — lowers the bar to click. The old P.S. ("a good look at the water first") moved into the body as "Just a clear look at the water."
 
 **Reader-echo words:** no "broke"/"break" anywhere. Words she's likely to type back: "five", "deciding", "the log", "him" — none trip the price-objection rule.
 
@@ -116,6 +119,6 @@ Those five frogs are still on their log. __You don't have to stay on yours.__
 
 **Chat test (pending — owed before send):** per the format file, send (1) "five!" (2) "haha I got it wrong, I said two" (3) "I've been deciding whether to text my ex for 3 months" (4) "I'm still on the log" — check Evelyn plays along with the riddle, makes no promise, and asks about her life. Needs the short link minted first (chat notes above are drafts, NOT minted — no DB writes in this pass).
 
-**Word count + split:** 311 body words (build count: content + pitch, excluding button, sign-off and P.S.) · content/pitch 49/51. Inside the 300–420 band. v0 was 294 (46/54); added "Or whether to let anyone new get close at all." (covers single readers, who have no "him" to text) and "Every door stays a little bit open."
+**Word count + split:** **265** body words after the 2026-10-08 Permission pitch (build count: content + pitch, excluding button, sign-off and P.S.) · content/pitch 57/43 · pitch 159 → 113 words. Now under the old 300–420 band — the brief asked for a pitch the same length or shorter, and the riddle format is short by nature. Locked v1 was 311 (49/51); v0 294 (46/54).
 
-**Formatting:** bold 6 (riddle, "Five.", the love question, the reason line, "Just you and me, one to one.", free minutes) · underline 3 ("decided", "doesn't go anywhere.", "You don't have to stay on yours.").
+**Formatting:** bold 6 (riddle, "Five.", the love question, the reason line, "You don't have to jump today.", free minutes) · underline 3 ("decided", "doesn't go anywhere.", "You don't have to stay on yours.").

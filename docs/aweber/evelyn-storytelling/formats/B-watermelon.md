@@ -36,7 +36,7 @@ From Matt Furey's "illusion of teaching" (*Tao of Email Copywriting*): give the 
 |---|---|
 | Read | ✅ after rounds on the hook ("Who is he?" first), the name ("the One-Strip Ritual"), "custom"→"ritual", and the CTA (no precondition) |
 | Truth | ✅ 5 Irish folklore records (1937–39) + Gay 1714; sources disagree on the shoulder → "most say left" |
-| Chat | ⚠ **failed without notes** (Evelyn: *"I've never asked you to peel an apple"*, 6/6; "banana peel"); fixed with chat notes (`/e/5aDhlv8`); "broke" → "snapped" |
+| Chat | ⚠ **failed without notes** (Evelyn: *"I've never asked you to peel an apple"*, 6/6; "banana peel"); fixed with reading brief (`/e/5aDhlv8`); "broke" → "snapped" |
 | Repeatable | 🔧 medium — needs a documented ritual each time (candidates: cherry stones "Tinker, tailor…", playing cards, coffee cup, dreams) |
 | Effort | Medium–high — folklore sourcing + a sketch + a chat test every time |
 | **Verdict** | 🔧 **Keep, with a chat test on every send** |

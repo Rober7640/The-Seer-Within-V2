@@ -1,6 +1,6 @@
 # C · The Riddle
 
-**Status:** 🧪 Stress test #1 BUILT as a preview — [`../emails/03-five-frogs.md`](../emails/03-five-frogs.md) (2026-10-07). Waiting on the operator's read + a chat test. See `## Stress test result`.
+**Status:** ✅ LOCKED — [`../emails/03-five-frogs.md`](../emails/03-five-frogs.md) (operator, 2026-10-08). Short link + send build pending.
 **In one line:** an old trick riddle → its answer IS the lesson → turn it onto love → her version → the chat.
 **Source:** Matt Furey, *Tao of Email Copywriting*, PDF p.36 — "Why Frogs are Fat", an email by a MasterMind member, with Furey's critique.
 **Best for:** a laugh + a quick, sharp point (Furey: *"one laugh per email is good. Two or more and you're doing great"*, p.30). Short emails. **Repeatability:** high — there are hundreds of old riddles; the work is finding ones whose answer turns cleanly onto love.
@@ -54,7 +54,7 @@ Furey's note: **"Beautiful opener."** Then the email went wrong, and his critiqu
 
 Optional. If used: a pencil sketch of the riddle's scene (five frogs on a log) — `../scripts/sketch-prompt-template.txt`. Keep it small; the riddle should do the work.
 
-## Chat notes
+## Reading brief
 
 - **Big Idea:** the riddle's lesson in a phrase (e.g. "the five frogs — deciding isn't jumping").
 - **Continue Seed:** asks the open question the email ended on (e.g. "What have you been deciding about for too long?"), and must work if she skipped the riddle.
@@ -96,7 +96,7 @@ Optional. If used: a pencil sketch of the riddle's scene (five frogs on a log) �
 
 | Test | Score | Why |
 |---|---|---|
-| **Read** | pending — operator | — |
+| **Read** | 🔧 operator 2026-10-08: "not bad" — no changes asked |
 | **Truth** | ✅ | Every line sources cleanly. The one trap was the riddle's origin: it is widely told (Furey 2006 "three of five"; Feldman & Spratt's 1999 business book *Five Frogs on a Log* opens with "four of five"; a 2026 sermon blog tells "three frogs on a limb, one decides") but **no source says where it started**. So the email opens on the riddle cold and makes **no** origin claim — not "an old riddle", not "a folk riddle", no credit to the 1999 book (it used the riddle; nothing shows it started it). Rule for this format: the cold open means you rarely need an origin line at all; add one only when a source supports it (e.g. the doorbell riddle in the 1930s Dúchas records). |
 | **Chat** | pending — chat test | Needs the short link minted first. Test lines: "five!" · "I said two" · "I've been deciding whether to text my ex for 3 months" · "I'm still on the log" |
 | **Repeatable** | ✅ | 6 more riddles with a love turn found and checked in independent collections (bank above): doorbell, towel, tomorrow, artichoke, your name, silence. With the 6 older candidates that's 12. Watch two things: "tomorrow" repeats the frogs' moral, and "silence" needs rewording to keep "breaks" out of what she types back. |

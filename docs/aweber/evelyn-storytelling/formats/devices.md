@@ -14,6 +14,8 @@ From Matt Furey, *Tao of Email Copywriting* (PDF pages in brackets).
 | **Sensory tease subject** (p.53) | "She licked the white creamy drops…" → it's a doughnut | ⚠ Only if tasteful for this list |
 | **Quote as subject** (p.64) | Kipling's "6,000,000 reasons — not a single excuse", explained in the P.S. | 🧪 |
 | **Higher authority** (p.55) | Share another trusted voice's view (Doug → Frank McKinney) | 🧪 |
-| ⚠ **Name in every subject** (p.6, Mistake #1) | *"A strength over-extended becomes a weakness."* | We use name-first (proven on this list) — **watch open rates for wear** |
+| ⚠ **Name in every subject** (p.6, Mistake #1) | *"A strength over-extended becomes a weakness."* | **Rule changed 2026-10-08: name optional.** First if used; mix sends with/without and compare opens |
 | ⛔ **Table of contents at the top** (p.6, Mistake #2) | Lists the email's contents first | Never |
 | ⛔ **Over-teaching** (p.7, Mistake #4) | Satisfies her, so she doesn't need the chat | Never |
+
+**Substance devices** (3/5/7 things · Ask yourself · Myth vs truth · Then vs now · The one rule · The timeline · Signs lists · One question to carry · Her own words) — the menu and rotation rule live in the README, "Substance devices".
