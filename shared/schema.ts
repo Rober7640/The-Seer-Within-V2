@@ -2269,3 +2269,28 @@ export const paymentAttempts = pgTable("payment_attempts", {
 
 export type PaymentAttempt = typeof paymentAttempts.$inferSelect;
 export type InsertPaymentAttempt = typeof paymentAttempts.$inferInsert;
+// One row per text the SMS sender (server/lib/smsSender.ts) has sent, or tried to.
+// The row is written BEFORE the Twilio call, and (phone, step) is unique — so a
+// number can never get the same step twice, even across two purchases, a crash
+// mid-send, or two servers ticking at once.
+export const smsSends = pgTable("sms_sends", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  consentId: varchar("consent_id").notNull(),
+  phone: text("phone").notNull(),
+  /** 1 = thank-you right after purchase, 2 = day 4, 3 = day 7. */
+  step: integer("step").notNull(),
+  /** sending → sent | failed | skipped. */
+  status: text("status").notNull(),
+  body: text("body"),
+  twilioSid: text("twilio_sid"),
+  errorCode: text("error_code"),
+  /** Why a step was skipped (late, has a V2 account, opted out ...). */
+  note: text("note"),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+}, (table) => [
+  uniqueIndex("uq_sms_sends_phone_step").on(table.phone, table.step),
+  index("idx_sms_sends_consent").on(table.consentId),
+]);
+
+export type SmsSend = typeof smsSends.$inferSelect;
