@@ -64,6 +64,7 @@ import {
   markUpsell2Purchased,
   savePhoneForSession,
   recordSmsConsent,
+  getConversationByStripeSession,
 } from '../lib/db';
 import {
   SMS_CONSENT_LABEL,
@@ -1218,10 +1219,7 @@ router.post('/checkout/complete', async (req: Request, res: Response) => {
 });
 
 /** Shared by both upsells — the only difference is product, price and DB call. */
-async function chargeUpsell(
-  req: Request,
-  res: Response,
-  opts: {
+interface UpsellOpts {
     product: string;
     defaultCents: number;
     label: string;
@@ -1236,8 +1234,78 @@ async function chargeUpsell(
      * replaced by upsell 2's $47 / manifestation_bracelet.
      */
     stage: (lander: PaiLander) => PaiLander['upsell1'];
-  },
-) {
+    /** The upsell's transaction id if this order already bought it (DB), else null. */
+    alreadyBought: (mainTxId: string) => Promise<string | null>;
+}
+
+/** A finished upsell request: what the route sends back. */
+interface UpsellReply {
+  status: number;
+  body: Record<string, unknown>;
+}
+
+/**
+ * 🔴 ONE CHARGE PER UPSELL PER ORDER. 9 Oct: a second click on the dev page charged
+ * upsell 1 twice — the server took every request as a new sale (fresh idempotency
+ * key each time). Two layers, both Payments.AI-only:
+ *   1. in memory — a request for the same (upsell, main order) while one is in
+ *      flight, or after one was approved, gets THAT answer instead of a new sale;
+ *   2. the DB — after a restart, an order already marked as having bought it.
+ * A declined or failed attempt is forgotten, so the buyer may try again.
+ */
+const UPSELL_ONCE = new Map<string, Promise<UpsellReply>>();
+const MAX_UPSELL_ONCE = 500;
+
+async function chargeUpsell(req: Request, res: Response, opts: UpsellOpts) {
+  const mainTransactionId = String(req.body?.mainTransactionId ?? '');
+  // Missing ids fall through to the validation inside runUpsell (400).
+  if (!mainTransactionId) {
+    const r = await runUpsell(req, opts);
+    return res.status(r.status).json(r.body);
+  }
+
+  const key = `${opts.label}:${mainTransactionId}`;
+  const prior = UPSELL_ONCE.get(key);
+  if (prior) {
+    const r = await prior;
+    logger.warn(`[pai] ${opts.label} repeat for ${mainTransactionId} — NOT charged again`);
+    return res.status(r.status).json(r.body.ok === true ? { ...r.body, alreadyPurchased: true } : r.body);
+  }
+
+  const pending = (async (): Promise<UpsellReply> => {
+    const existing = await opts.alreadyBought(mainTransactionId);
+    if (existing) {
+      return {
+        status: 200,
+        body: {
+          ok: true,
+          alreadyPurchased: true,
+          transactionId: existing,
+          note: 'already bought on this order — not charged again',
+        },
+      };
+    }
+    return runUpsell(req, opts);
+  })();
+  if (UPSELL_ONCE.size >= MAX_UPSELL_ONCE) {
+    UPSELL_ONCE.delete(UPSELL_ONCE.keys().next().value as string);
+  }
+  UPSELL_ONCE.set(key, pending);
+
+  let r: UpsellReply;
+  try {
+    r = await pending;
+  } catch (err) {
+    UPSELL_ONCE.delete(key);
+    logger.error(`[pai] ${opts.label} error: ${String(err)}`);
+    return res.status(500).json({ ok: false, error: String(err) });
+  }
+  // Only an approved charge is final. Declined / refused / failed ⇒ she may retry.
+  if (r.body.ok !== true) UPSELL_ONCE.delete(key);
+  return res.status(r.status).json(r.body);
+}
+
+async function runUpsell(req: Request, opts: UpsellOpts): Promise<UpsellReply> {
   const {
     customerId, instrumentId, mainTransactionId, amountCents, hook,
     firstName = 'PaiTest', email: rawEmail,
@@ -1247,28 +1315,28 @@ async function chargeUpsell(
   } = req.body ?? {};
 
   if (!customerId || !instrumentId || !mainTransactionId) {
-    return res
-      .status(400)
-      .json({ error: 'need customerId, instrumentId and mainTransactionId' });
+    return { status: 400, body: { error: 'need customerId, instrumentId and mainTransactionId' } };
   }
 
   // Before the charge, same as /checkout. The page sends the hook the main
   // purchase used; with none, this is the original soulmate dummy.
   const lander = resolvePaiLander(hook);
-  if (!lander) return unknownHook(res, hook);
+  if (!lander) {
+    return { status: 400, body: { error: `unknown hook ${JSON.stringify(hook)}`, hooks: Object.keys(PAI_LANDERS) } };
+  }
 
   // 🔴 THE 23-OCTOBER GUARD. Their platform does not enforce this — Tim
   // reproduced a declined CIT still allowing an approved MIT on production.
   const guard = await assertCitApproved(mainTransactionId);
   if (!guard.approved) {
     logger.warn(`[pai] ${opts.label} BLOCKED by MIT guard: ${guard.reason}`);
-    return res.status(409).json({
+    return { status: 409, body: {
       ok: false,
       blockedByGuard: true,
       reason: guard.reason,
       note: 'Refused because the originating customer-initiated transaction was not approved. '
         + 'Payments.AI does not enforce this today; MasterCard begins enforcing 23 October.',
-    });
+    } };
   }
 
   const email = paiTestEmail(rawEmail);
@@ -1296,7 +1364,7 @@ async function chargeUpsell(
     isMerchantInitiated: true,
   });
   if (!tx.ok || !tx.data?.id) {
-    return res.status(502).json({ ok: false, error: tx.error, raw: tx.raw });
+    return { status: 502, body: { ok: false, error: tx.error, raw: tx.raw } };
   }
 
   const settled = (await settleTransaction(tx.data.id)) ?? tx.data;
@@ -1355,7 +1423,7 @@ async function chargeUpsell(
     aweber = await timedWrite(stage, opts.label);
   }
 
-  res.json({
+  return { status: 200, body: {
     ok: approved,
     hook: lander.hook,
     transactionId: settled.id,
@@ -1376,7 +1444,7 @@ async function chargeUpsell(
       listId: stage.listId,
       tags: stage.tags,
     },
-  });
+  } };
 }
 
 router.post('/upsell/charge', (req, res) =>
@@ -1385,6 +1453,10 @@ router.post('/upsell/charge', (req, res) =>
     defaultCents: 4700,
     label: 'upsell1',
     markPurchased: (txId, cents, mainTxId) => markUpsellPurchased(mainTxId, txId, cents),
+    alreadyBought: async (mainTxId) => {
+      const c = await getConversationByStripeSession(mainTxId);
+      return c?.upsellPurchased && c.upsellPaymentId ? c.upsellPaymentId : null;
+    },
     // Its OWN list and the live tag — see the note on `stage` above.
     stage: (l) => l.upsell1,
   }),
@@ -1397,6 +1469,10 @@ router.post('/upsell2/charge', (req, res) =>
     label: 'upsell2',
     markPurchased: (txId, cents, mainTxId) =>
       markUpsell2Purchased(mainTxId, txId, cents, 'manifestation_bracelet'),
+    alreadyBought: async (mainTxId) => {
+      const c = await getConversationByStripeSession(mainTxId);
+      return c?.upsell2Purchased && c.upsell2PaymentId ? c.upsell2PaymentId : null;
+    },
     stage: (l) => l.upsell2,
   }),
 );
