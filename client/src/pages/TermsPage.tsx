@@ -199,7 +199,7 @@ export default function TermsPage() {
               <li><strong>Program:</strong> The Seer Within text messages, sent by Cosmo Numerology Pte Ltd.</li>
               <li><strong>What we send:</strong> Recurring automated marketing text messages, such as invitations to continue your readings with our guides and offers for further readings and related products.</li>
               <li><strong>How you join:</strong> By giving your mobile number at checkout and choosing "Yes, text me" in the optional text-message question. Consent is not a condition of purchase.</li>
-              <li><strong>Frequency:</strong> Message frequency varies.</li>
+              <li><strong>Frequency:</strong> Up to 3 messages per week.</li>
               <li><strong>Cost:</strong> Message and data rates may apply, depending on your mobile plan.</li>
               <li><strong>To stop:</strong> Reply <strong>STOP</strong> to any message. You will receive one message confirming you are unsubscribed, and no further messages after that. You can also email{' '}
                 <a href="mailto:hi@theseerwithin.com" className="text-purple-300 hover:text-white underline">hi@theseerwithin.com</a>.

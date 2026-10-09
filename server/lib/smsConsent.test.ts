@@ -83,9 +83,9 @@ describe('SMS consent — the question meets the opt-in rules', () => {
     expect(text).toContain('The Seer Within'); // brand, matches the website
     expect(text).toContain('recurring automated marketing text messages');
     expect(text).toContain('Consent is not a condition of purchase');
-    expect(text).toContain('Msg frequency varies');
+    expect(text).toContain('Up to 3 msgs/week');
     expect(text).toContain('Msg & data rates may apply');
-    expect(text).toContain('STOP');
+    expect(text).toContain('Reply STOP to opt out, HELP for help');
     expect(text).toContain('HELP');
     expect(text).toContain(`[Terms](${BASE}/terms)`);
     expect(text).toContain(`[Privacy Policy](${BASE}/privacy)`);

@@ -306,7 +306,7 @@ export default function PrivacyPage() {
               If you give us your mobile number and agree to receive text messages, The Seer Within
               will send you recurring automated marketing text messages, such as invitations to
               continue your readings with our guides and related offers. Consent to receive text
-              messages is not a condition of any purchase. Message frequency varies. Message and data
+              messages is not a condition of any purchase. Up to 3 messages per week. Message and data
               rates may apply.
             </p>
             <p className="mb-3">

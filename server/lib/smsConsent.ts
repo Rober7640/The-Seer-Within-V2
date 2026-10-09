@@ -35,7 +35,7 @@ export const SMS_CONSENT_FIELD_KEY = "smsconsent";
 
 // Bump this whenever ANY customer-facing wording below changes, so each stored
 // record says which wording that buyer actually saw.
-export const SMS_CONSENT_VERSION = "2026-10-01-v1";
+export const SMS_CONSENT_VERSION = "2026-10-08-v2";
 
 // Brand as it appears on the website and in the policies. Twilio's reviewers
 // check that the brand in the opt-in, the policies and the texts all match.
@@ -55,8 +55,8 @@ export function smsConsentDisclosure(baseUrl: string): string {
   return (
     `**Text messages (optional):** By choosing "${SMS_CONSENT_YES_LABEL}" above, you agree to receive ` +
     `recurring automated marketing text messages from ${SMS_BRAND} at the phone number provided. ` +
-    `Consent is not a condition of purchase. Msg frequency varies. Msg & data rates may apply. ` +
-    `Reply STOP to cancel, HELP for help. ` +
+    `Consent is not a condition of purchase. Up to 3 msgs/week. Msg & data rates may apply. ` +
+    `Reply STOP to opt out, HELP for help. ` +
     `[Terms](${base}/terms) · [Privacy Policy](${base}/privacy)`
   );
 }
