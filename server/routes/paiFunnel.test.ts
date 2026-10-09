@@ -711,6 +711,7 @@ describe('pai 3DS checkout', () => {
   /** What the fake Payments.AI answers for GET /transactions/:id. */
   let txState: Record<string, unknown> = {};
   let saleBody: any = null;
+  let customerBody: any = null;
   let txGets = 0;
   const elsewhere: string[] = [];
 
@@ -725,7 +726,10 @@ describe('pai 3DS checkout', () => {
         elsewhere.push(url);
         throw new Error(`unexpected outbound call: ${url}`);
       }
-      if (url.endsWith('/customers') && method === 'POST') return json({ id: 'cus_3ds' }, 201);
+      if (url.endsWith('/customers') && method === 'POST') {
+        customerBody = JSON.parse(init.body);
+        return json({ id: 'cus_3ds' }, 201);
+      }
       if (url.endsWith('/transactions') && method === 'POST') {
         saleBody = JSON.parse(init.body);
         return json({ id: 'txn_3ds', status: 'waiting', result: 'unknown' }, 201);
@@ -756,6 +760,8 @@ describe('pai 3DS checkout', () => {
     assert.equal(res.body.approvalLink, 'https://pai.example/3ds/abc');
     assert.equal(res.body.transactionId, 'txn_3ds');
     assert.equal(res.body.dbWritten, undefined, 'no DB write before the challenge');
+    // The phone goes on the customer too — the copy the dashboard shows.
+    assert.equal(customerBody.phoneNumber, '+447700900123');
     // The return address went to Payments.AI on the sale itself.
     const back = new URL(saleBody.redirectUrl);
     assert.equal(back.origin, `http://127.0.0.1:${port}`);

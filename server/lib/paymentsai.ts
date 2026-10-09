@@ -141,11 +141,18 @@ export async function createCustomer(params: {
   email: string;
   firstName?: string;
   lastName?: string;
+  /**
+   * E.164. Shown as "Phone number" on the dashboard's customer page. FramePay also
+   * puts it on the saved card, but the dashboard does not show that copy. Their
+   * spec says maxLength 10; support (29 Sep) says up to 50 with the country code.
+   */
+  phoneNumber?: string;
 }): Promise<PaiResult<{ id: string }>> {
   return call('POST', '/customers', {
     email: params.email,
     ...(params.firstName ? { firstName: params.firstName } : {}),
     ...(params.lastName ? { lastName: params.lastName } : {}),
+    ...(params.phoneNumber ? { phoneNumber: params.phoneNumber } : {}),
   });
 }
 
