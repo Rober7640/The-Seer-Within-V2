@@ -1110,7 +1110,7 @@ router.post('/checkout', async (req: Request, res: Response) => {
   };
 
   try {
-    const cust = await createCustomer({ email, firstName, lastName: 'PaiDev' });
+    const cust = await createCustomer({ email, firstName, lastName: 'PaiDev', phoneNumber: phone });
     if (!cust.ok || !cust.data?.id) {
       return res.status(502).json({ error: 'createCustomer failed', detail: cust.error, raw: cust.raw });
     }
