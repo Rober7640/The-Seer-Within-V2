@@ -16,6 +16,7 @@ import { processEvelynPostPurchaseDripQueue } from './evelynPostPurchaseDripGene
 import { processAidenPostPurchaseDripQueue } from './aidenPostPurchaseDripGenerator';
 import { reconcilePendingPurchases } from './reconciliationProcessor';
 import { startBe04DeliveryJob } from './be04Delivery';
+import { processSmsQueue } from './smsSender';
 import logger from './logger';
 
 // Per-job concurrency guards — prevent overlapping runs if a job takes longer than its interval
@@ -32,6 +33,7 @@ let isPersonaVerifiedDripProcessing = false;
 let isEvelynPostPurchaseDripProcessing = false;
 let isAidenPostPurchaseDripProcessing = false;
 let isReconciliationProcessing = false;
+let isSmsProcessing = false;
 
 /**
  * Initialize all cron jobs.
@@ -383,6 +385,31 @@ export function initializeCronJobs(): void {
   // BE04_DELIVERY_ENABLED=true: the timer is not even registered otherwise. Overlap-guarded
   // inside. See server/lib/be04Delivery.ts.
   startBe04DeliveryJob((expression, task) => cron.schedule(expression, task, { timezone }));
+  // SMS sender — every 15 minutes, offset to :07/:22/:37/:52. Texts V1 buyers who
+  // said "Yes, text me" at checkout (server/lib/smsSender.ts). Sends nothing unless
+  // SMS_SENDING_ENABLED=true plus SMS_ALLOWED_NUMBERS (test) or SMS_SEND_TO_ALL=true.
+  cron.schedule(
+    '7-59/15 * * * *',
+    async () => {
+      if (process.env.SMS_SENDING_ENABLED !== 'true') return;
+      if (isSmsProcessing) {
+        logger.info('Cron: SMS sender already running, skipping');
+        return;
+      }
+      isSmsProcessing = true;
+      try {
+        const stats = await processSmsQueue();
+        if (stats.sent > 0 || stats.failed > 0 || stats.skipped > 0) {
+          logger.info('Cron: SMS sender tick complete', stats);
+        }
+      } catch (error) {
+        logger.error('Cron: SMS sender failed', { error: (error as Error).message });
+      } finally {
+        isSmsProcessing = false;
+      }
+    },
+    { timezone },
+  );
 
   logger.info('Cron jobs initialized', { timezone });
 }
