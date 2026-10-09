@@ -796,3 +796,97 @@ describe('pai 3DS checkout', () => {
     assert.deepEqual(elsewhere, []);
   });
 });
+
+// ── one charge per upsell per order ─────────────────────────────────────────────
+// 9 Oct: a second click on the dev page charged upsell 1 twice. The server must
+// answer a repeat with the FIRST result, never a new sale — but a DECLINED attempt
+// must stay retryable. Payments.AI is faked; every sale it receives is counted.
+describe('pai upsell charges once per order', () => {
+  const app = express();
+  app.use(express.json());
+  app.use('/api/pai', paiFunnelRouter);
+  const realFetch = globalThis.fetch;
+  let server: http.Server;
+  let port = 0;
+  const sales: any[] = [];
+  /** What the next sale settles as. */
+  let nextResult = 'approved';
+  const settledAs = new Map<string, string>();
+
+  const json = (data: unknown, status = 200) =>
+    new Response(JSON.stringify({ data }), { status, headers: { 'Content-Type': 'application/json' } });
+
+  before(async () => {
+    globalThis.fetch = (async (input: any, init?: any) => {
+      const url = String(input?.url ?? input);
+      const method = String(init?.method ?? 'GET');
+      // Facebook / Google Ads / Trackdesk / AWeber are not what is under test here.
+      if (!url.startsWith('https://staging-api.payments.ai/')) throw new Error(`offline: ${url}`);
+      if (url.endsWith('/transactions') && method === 'POST') {
+        const id = `txn_sale_${sales.length + 1}`;
+        sales.push(JSON.parse(init.body));
+        settledAs.set(id, nextResult);
+        return json({ id, status: 'pending', result: 'pending' }, 201);
+      }
+      const m = url.match(/\/transactions\/([^/?]+)$/);
+      if (m && method === 'GET') {
+        const id = m[1];
+        // The main purchases are approved CITs; a sale settles as it was told to.
+        const result = id.startsWith('txn_main') ? 'approved' : settledAs.get(id) ?? 'declined';
+        return json({ id, status: 'completed', result, amount: 47 });
+      }
+      throw new Error(`fake Payments.AI has no route for ${method} ${url}`);
+    }) as typeof fetch;
+    server = app.listen(0, '127.0.0.1');
+    await new Promise<void>((r) => server.once('listening', () => r()));
+    port = (server.address() as AddressInfo).port;
+  });
+  after(async () => {
+    globalThis.fetch = realFetch;
+    await new Promise<void>((r) => server.close(() => r()));
+  });
+
+  const body = (main: string) => ({
+    customerId: 'cus_x', instrumentId: 'inst_x', mainTransactionId: main,
+    hook: 'cards-meant-alone', email: 'lewis+once@theseerwithin.com',
+  });
+
+  it('a double click and a later repeat make ONE sale, and say so', async () => {
+    nextResult = 'approved';
+    const before = sales.length;
+    const [a, b] = await Promise.all([
+      call(port, 'POST', '/api/pai/upsell/charge', { body: body('txn_main_1') }),
+      call(port, 'POST', '/api/pai/upsell/charge', { body: body('txn_main_1') }),
+    ]);
+    const later = await call(port, 'POST', '/api/pai/upsell/charge', { body: body('txn_main_1') });
+    assert.equal(sales.length - before, 1, 'exactly one sale reached Payments.AI');
+    for (const r of [a, b, later]) {
+      assert.equal(r.status, 200);
+      assert.equal(r.body.ok, true);
+      assert.equal(r.body.transactionId, a.body.transactionId);
+    }
+    assert.equal([a, b].filter((r) => r.body.alreadyPurchased).length, 1, 'one of the pair is the repeat');
+    assert.equal(later.body.alreadyPurchased, true);
+  });
+
+  it('upsell 2 on the same order is its own charge', async () => {
+    nextResult = 'approved';
+    const before = sales.length;
+    const r = await call(port, 'POST', '/api/pai/upsell2/charge', { body: body('txn_main_1') });
+    assert.equal(r.body.ok, true);
+    assert.equal(r.body.alreadyPurchased, undefined);
+    assert.equal(sales.length - before, 1);
+  });
+
+  it('a declined upsell can be tried again', async () => {
+    const before = sales.length;
+    nextResult = 'declined';
+    const first = await call(port, 'POST', '/api/pai/upsell/charge', { body: body('txn_main_2') });
+    assert.equal(first.body.ok, false);
+    nextResult = 'approved';
+    const retry = await call(port, 'POST', '/api/pai/upsell/charge', { body: body('txn_main_2') });
+    assert.equal(retry.body.ok, true);
+    assert.equal(retry.body.alreadyPurchased, undefined);
+    assert.equal(sales.length - before, 2, 'the retry was a real second attempt');
+  });
+});

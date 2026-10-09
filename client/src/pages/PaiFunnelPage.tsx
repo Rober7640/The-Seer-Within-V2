@@ -82,6 +82,8 @@ interface ChargeResult {
   completedAfter3ds?: boolean;
   phone?: string;
   phoneSaved?: boolean;
+  /** The server refused a second charge for an upsell this order already bought. */
+  alreadyPurchased?: boolean;
   smsConsent?: { answer: string; recorded: boolean };
 }
 
@@ -381,8 +383,11 @@ export default function PaiFunnelPage() {
   }
 
   // ── upsells (merchant-initiated, behind the guard) ──────────────────────────
-  async function payUpsell(which: 1 | 2) {
+  // `repeat` = the test button that re-sends a bought upsell on purpose, to prove
+  // the SERVER refuses it (the normal button is locked once it is bought).
+  async function payUpsell(which: 1 | 2, repeat = false) {
     if (busy || !main?.ok) return;
+    if (!repeat && (which === 1 ? u1 : u2)?.ok) return;
     setBusy(true);
     try {
       const res = await fetch(`/api/pai/${which === 1 ? 'upsell' : 'upsell2'}/charge`, {
@@ -404,8 +409,9 @@ export default function PaiFunnelPage() {
         }),
       });
       const data: ChargeResult = await res.json();
-      (which === 1 ? setU1 : setU2)(data);
-      if (data.ok && main.transactionId) {
+      // A refused repeat keeps the FIRST result on screen; the log says what happened.
+      if (!data.alreadyPurchased) (which === 1 ? setU1 : setU2)(data);
+      if (data.ok && !data.alreadyPurchased && main.transactionId) {
         // Facebook Purchase — what Upsell2Page (u1) and SuccessPage (u2) fire, keyed on
         // the MAIN transaction. Upsell 2 uses trackUpsell2Purchase (upsell2_<main>)
         // because this is a recognised ad funnel — the server's id for it is the same.
@@ -420,7 +426,9 @@ export default function PaiFunnelPage() {
         say(`facebook Purchase (browser) ${which === 1 ? 'upsell_u1_' : 'upsell2_'}${main.transactionId}`);
       }
       say(
-        data.blockedByGuard
+        data.alreadyPurchased
+          ? `upsell ${which} REPEAT refused by the server — NOT charged again (first: ${data.transactionId})`
+          : data.blockedByGuard
           ? `upsell ${which} BLOCKED by MIT guard — ${data.reason}`
           : `upsell ${which} -> ${data.result ?? data.error ?? 'no result'}`,
       );
@@ -558,17 +566,35 @@ export default function PaiFunnelPage() {
           Refuses unless the originating transaction reads <code>approved</code>. Their
           platform does not enforce this; MasterCard does from 23 October.
         </p>
-        <button onClick={() => payUpsell(1)} disabled={!main?.ok || busy} style={btn(!!main?.ok && !busy)}>
-          Charge upsell 1
+        <button
+          onClick={() => payUpsell(1)}
+          disabled={!main?.ok || busy || !!u1?.ok}
+          style={btn(!!main?.ok && !busy && !u1?.ok)}
+        >
+          {u1?.ok ? 'Upsell 1 bought' : 'Charge upsell 1'}
         </button>
+        {u1?.ok && (
+          <button onClick={() => payUpsell(1, true)} disabled={busy} style={{ ...btn(!busy), marginLeft: 8 }}>
+            TEST: send upsell 1 again (must NOT charge)
+          </button>
+        )}
         {u1 && <ResultBlock label="upsell1" r={u1} />}
       </div>
 
       <div style={{ ...box, opacity: main?.ok ? 1 : 0.45 }}>
         <strong>3 · Upsell 2 — $47, one click (merchant-initiated)</strong>
-        <button onClick={() => payUpsell(2)} disabled={!main?.ok || busy} style={btn(!!main?.ok && !busy)}>
-          Charge upsell 2
+        <button
+          onClick={() => payUpsell(2)}
+          disabled={!main?.ok || busy || !!u2?.ok}
+          style={btn(!!main?.ok && !busy && !u2?.ok)}
+        >
+          {u2?.ok ? 'Upsell 2 bought' : 'Charge upsell 2'}
         </button>
+        {u2?.ok && (
+          <button onClick={() => payUpsell(2, true)} disabled={busy} style={{ ...btn(!busy), marginLeft: 8 }}>
+            TEST: send upsell 2 again (must NOT charge)
+          </button>
+        )}
         {u2 && <ResultBlock label="upsell2" r={u2} />}
       </div>
 
