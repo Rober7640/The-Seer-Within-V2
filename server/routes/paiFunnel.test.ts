@@ -629,6 +629,78 @@ describe('paiReturnUrl', async () => {
   });
 });
 
+// ── phone + SMS consent ──────────────────────────────────────────────────────────
+// 9 Oct: FramePay draws only the card inputs, so the compulsory phone and the SMS
+// question live on our page, exactly as on the Stripe checkout.
+describe('normalizePaiPhone', async () => {
+  const { normalizePaiPhone } = await import('./paiFunnel');
+  it('keeps E.164 and forgives spaces, dashes and brackets', () => {
+    assert.equal(normalizePaiPhone('+447700900123'), '+447700900123');
+    assert.equal(normalizePaiPhone(' +1 (555) 555-0123 '), '+15555550123');
+    assert.equal(normalizePaiPhone('+91 98765 43210'), '+919876543210');
+  });
+  it('refuses a number without its country code, or no number at all', () => {
+    assert.equal(normalizePaiPhone('07700900123'), null);
+    assert.equal(normalizePaiPhone('+0123456789'), null);
+    assert.equal(normalizePaiPhone('+12345'), null);
+    assert.equal(normalizePaiPhone(''), null);
+    assert.equal(normalizePaiPhone(undefined), null);
+  });
+});
+
+describe('paiSmsConsentRecord', async () => {
+  const { paiSmsConsentRecord } = await import('./paiFunnel');
+  const { SMS_CONSENT_VERSION, smsConsentRecordText } = await import('../lib/smsConsent');
+  const base = { transactionId: 'txn_1', email: 'a+pai@b.com', phone: '+447700900123', policyBase: 'https://x.example', ip: '1.2.3.4' };
+  it('is consent only on an active yes', () => {
+    assert.equal(paiSmsConsentRecord({ ...base, answer: 'yes' }).consented, true);
+    assert.equal(paiSmsConsentRecord({ ...base, answer: 'no' }).consented, false);
+    assert.equal(paiSmsConsentRecord({ ...base, answer: undefined }).consented, false);
+    assert.equal(paiSmsConsentRecord({ ...base, answer: 'YES' }).consented, false);
+  });
+  it('stores the Stripe checkout wording and version, keyed on the transaction', () => {
+    const r = paiSmsConsentRecord({ ...base, answer: 'yes' });
+    assert.equal(r.stripeSessionId, 'txn_1');
+    assert.equal(r.consentVersion, SMS_CONSENT_VERSION);
+    assert.equal(r.consentText, smsConsentRecordText('https://x.example'));
+    assert.equal(r.source, 'paymentsai_framepay');
+    assert.equal(r.ip, '1.2.3.4');
+  });
+});
+
+describe('pai checkout requires a phone', () => {
+  const app = express();
+  app.use(express.json());
+  app.use('/api/pai', paiFunnelRouter);
+  const realFetch = globalThis.fetch;
+  const calls: string[] = [];
+  let server: http.Server;
+  let port = 0;
+  before(async () => {
+    globalThis.fetch = (async (input: any) => {
+      calls.push(String(input?.url ?? input));
+      throw new Error('no outbound call expected');
+    }) as typeof fetch;
+    server = app.listen(0, '127.0.0.1');
+    await new Promise<void>((r) => server.once('listening', () => r()));
+    port = (server.address() as AddressInfo).port;
+  });
+  after(async () => {
+    globalThis.fetch = realFetch;
+    await new Promise<void>((r) => server.close(() => r()));
+  });
+  for (const phone of [undefined, '', '07700900123']) {
+    it(`refuses ${JSON.stringify(phone)} before any money moves`, async () => {
+      const res = await call(port, 'POST', '/api/pai/checkout', {
+        body: { token: 'tok_x', hook: 'cards-meant-alone', ...(phone === undefined ? {} : { phone }) },
+      });
+      assert.equal(res.status, 400);
+      assert.match(res.body.error, /phone/);
+      assert.deepEqual(calls, [], 'Payments.AI was never called');
+    });
+  }
+});
+
 describe('pai 3DS checkout', () => {
   const app = express();
   app.use(express.json());
@@ -676,7 +748,7 @@ describe('pai 3DS checkout', () => {
   it('sends a waiting card to its challenge, returning here, and fires nothing', async () => {
     txState = { status: 'waiting', result: 'unknown', approvalLink: 'https://pai.example/3ds/abc', redirectUrl: 'stored' };
     const res = await call(port, 'POST', '/api/pai/checkout', {
-      body: { token: 'tok_3ds', hook: 'cards-meant-alone', email: 'lewis+3ds@theseerwithin.com', bumpApplied: true },
+      body: { token: 'tok_3ds', hook: 'cards-meant-alone', email: 'lewis+3ds@theseerwithin.com', bumpApplied: true, phone: '+447700900123' },
     });
     assert.equal(res.status, 200);
     assert.equal(res.body.ok, false);

@@ -80,6 +80,39 @@ interface ChargeResult {
   /** Back from the challenge, but Payments.AI has not decided yet. */
   stillWaiting?: boolean;
   completedAfter3ds?: boolean;
+  phone?: string;
+  phoneSaved?: boolean;
+  smsConsent?: { answer: string; recorded: boolean };
+}
+
+/** The SMS question as the server words it (the Stripe checkout's wording). */
+interface SmsCopy {
+  label: string;
+  yesLabel: string;
+  noLabel: string;
+  /** Markdown: **bold** and [text](url) only. */
+  disclosure: string;
+}
+
+/** Just enough markdown for the disclosure: **bold** and [links](url). */
+function Disclosure({ md }: { md: string }) {
+  const parts = md.split(/(\*\*[^*]+\*\*|\[[^\]]+\]\([^)]+\))/g).filter(Boolean);
+  return (
+    <>
+      {parts.map((p, i) => {
+        const bold = p.match(/^\*\*(.+)\*\*$/);
+        if (bold) return <strong key={i}>{bold[1]}</strong>;
+        const link = p.match(/^\[(.+)\]\((.+)\)$/);
+        if (link)
+          return (
+            <a key={i} href={link[2]} target="_blank" rel="noreferrer" style={{ color: '#9db4ff' }}>
+              {link[1]}
+            </a>
+          );
+        return <span key={i}>{p}</span>;
+      })}
+    </>
+  );
 }
 
 /** The transaction waiting on a 3DS challenge, kept across the redirect. */
@@ -107,6 +140,11 @@ export default function PaiFunnelPage() {
   // email and UPDATES the newest row. The server still forces the +pai tag.
   const [urlEmail] = useState(() => new URLSearchParams(window.location.search).get('email'));
   const [lander, setLander] = useState<LanderConfig | null>(null);
+  const [sms, setSms] = useState<SmsCopy | null>(null);
+  // Compulsory, as on the live checkout; FramePay draws only the card inputs.
+  const [phone, setPhone] = useState('');
+  // Optional, nothing pre-selected — '' means she skipped it.
+  const [smsAnswer, setSmsAnswer] = useState<'' | 'yes' | 'no'>('');
   const [log, setLog] = useState<string[]>([]);
   const [bumpApplied, setBumpApplied] = useState(true);
   const [main, setMain] = useState<ChargeResult | null>(null);
@@ -138,6 +176,7 @@ export default function PaiFunnelPage() {
           return;
         }
         setLander({ hook: cfg.hook, family: cfg.family, bucket: cfg.bucket, hooks: cfg.hooks ?? [] });
+        if (cfg.sms) setSms(cfg.sms);
         say(`lander ${cfg.hook} (${cfg.family}, bucket ${cfg.bucket})`);
         if (!cfg.publishableKey) {
           setStage('error');
@@ -285,8 +324,15 @@ export default function PaiFunnelPage() {
     trackInitiateCheckout(35, 'USD');
     try {
       say('createToken()…');
+      // Payments.AI's shape (support, 9 Oct): phoneNumbers is an ARRAY on the token;
+      // it comes back as a single phoneNumber string on the saved card.
       const token = await window.Framepay.createToken(formRef.current, {
-        billingAddress: { firstName: 'PaiTest', lastName: 'PaiDev' },
+        method: 'payment-card',
+        billingAddress: {
+          firstName: 'PaiTest',
+          lastName: 'PaiDev',
+          phoneNumbers: [{ label: 'main', value: phone.trim() }],
+        },
       });
       const tokenId = token?.id ?? token?.token ?? token;
       say(`token: ${String(tokenId).slice(0, 24)}…`);
@@ -304,6 +350,8 @@ export default function PaiFunnelPage() {
           bumpCents: 977,
           bumpBucket: 'money',
           priceVariant: '35',
+          phone: phone.trim(),
+          ...(smsAnswer ? { smsConsent: smsAnswer } : {}),
           posthogDistinctId: 'pai-dev-distinct',
           trackdeskClickId: 'pai-dev-td',
           gclid: 'pai-dev-gclid',
@@ -445,6 +493,39 @@ export default function PaiFunnelPage() {
             }}
           />
           <label style={{ display: 'block', fontSize: 13, marginBottom: 10 }}>
+            Phone (with country code)
+            <input
+              type="tel"
+              name="phone"
+              required
+              autoComplete="tel"
+              placeholder="+447700900123"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              style={{ display: 'block', width: '100%', padding: 8, borderRadius: 6, border: 0, marginTop: 4 }}
+            />
+          </label>
+          {sms && (
+            <div style={{ fontSize: 13, marginBottom: 10 }}>
+              <label style={{ display: 'block' }}>
+                {sms.label} <span style={{ opacity: 0.6 }}>(optional)</span>
+                <select
+                  name="smsConsent"
+                  value={smsAnswer}
+                  onChange={(e) => setSmsAnswer(e.target.value as '' | 'yes' | 'no')}
+                  style={{ display: 'block', padding: 8, borderRadius: 6, border: 0, marginTop: 4 }}
+                >
+                  <option value="">Select…</option>
+                  <option value="yes">{sms.yesLabel}</option>
+                  <option value="no">{sms.noLabel}</option>
+                </select>
+              </label>
+              <p style={{ fontSize: 11, opacity: 0.75, marginTop: 6 }}>
+                <Disclosure md={sms.disclosure} />
+              </p>
+            </div>
+          )}
+          <label style={{ display: 'block', fontSize: 13, marginBottom: 10 }}>
             <input
               type="checkbox"
               checked={bumpApplied}
@@ -581,6 +662,16 @@ function ResultBlock({ label, r }: { label: string; r: ChargeResult }) {
       {typeof r.dbWritten === 'boolean' && (
         <div style={{ color: r.dbWritten ? undefined : '#ff6b6b' }}>
           DB row written: {r.dbWritten ? 'yes' : 'NO'}
+        </div>
+      )}
+      {typeof r.phoneSaved === 'boolean' && (
+        <div style={{ color: r.phoneSaved ? undefined : '#ff6b6b' }}>
+          Phone saved: {r.phoneSaved ? `yes · ${r.phone}` : 'NO'}
+        </div>
+      )}
+      {r.smsConsent && (
+        <div style={{ color: r.smsConsent.recorded ? undefined : '#ff6b6b' }}>
+          SMS answer: {r.smsConsent.answer} · recorded: {r.smsConsent.recorded ? 'yes' : 'NO'}
         </div>
       )}
       {r.facebook && (
