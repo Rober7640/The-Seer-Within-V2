@@ -58,7 +58,22 @@ import {
   addUpsellSubscriber,
   addUpsell2Subscriber,
 } from '../lib/aweber';
-import { updateStripeData, markUpsellPurchased, markUpsell2Purchased } from '../lib/db';
+import {
+  updateStripeData,
+  markUpsellPurchased,
+  markUpsell2Purchased,
+  savePhoneForSession,
+  recordSmsConsent,
+} from '../lib/db';
+import {
+  SMS_CONSENT_LABEL,
+  SMS_CONSENT_NO_LABEL,
+  SMS_CONSENT_VERSION,
+  SMS_CONSENT_YES_LABEL,
+  smsConsentDisclosure,
+  smsConsentRecordText,
+} from '../lib/smsConsent';
+import type { InsertSmsConsent } from '@shared/schema';
 import { posthog } from '../lib/posthog';
 import { buildPurchaseEvent } from '../lib/purchaseAnalytics';
 import { fireStripePurchaseEvent, type StripeFbEventResult } from '../lib/facebook';
@@ -538,6 +553,60 @@ function idem(prefix: string): string {
 }
 
 /** Everything the FramePay page needs to boot. Never returns the secret API key. */
+/**
+ * PHONE. Compulsory, as on every live Stripe checkout (checkoutPhone.ts). FramePay
+ * draws only the card inputs, so the field is ours; the page hands the number to
+ * FramePay.createToken and Payments.AI attaches it to the saved card. E.164 with
+ * the country code — what their support asked for (up to 50 chars; their docs'
+ * 10-char limit is wrong). Spaces, dashes, dots and brackets are forgiven.
+ */
+export function normalizePaiPhone(raw: unknown): string | null {
+  const s = String(raw ?? '').replace(/[\s\-().]/g, '');
+  return /^\+[1-9]\d{7,14}$/.test(s) ? s : null;
+}
+
+/**
+ * SMS CONSENT. The same optional question, wording and version as the Stripe
+ * checkout (smsConsent.ts) — on our page, because FramePay renders card inputs
+ * only. Only an active "yes" is consent; "no" and skipped both record false.
+ * Kept in OUR sms_consents table. Not sent to Payments.AI: that needs a custom
+ * field they have not added.
+ */
+export function paiSmsConsentRecord(args: {
+  transactionId: string;
+  email: string;
+  phone: string;
+  answer: unknown;
+  ip?: string;
+  policyBase: string;
+  at?: Date;
+}): Omit<InsertSmsConsent, 'conversationId'> {
+  return {
+    // The Payments.AI transaction takes the session's place, as it does on the
+    // conversations row — so recordSmsConsent finds the same conversation.
+    stripeSessionId: args.transactionId,
+    email: args.email,
+    phone: args.phone,
+    consented: args.answer === 'yes',
+    consentText: smsConsentRecordText(args.policyBase),
+    consentVersion: SMS_CONSENT_VERSION,
+    ip: args.ip ? args.ip.slice(0, 64) : null,
+    funnel: 'v1-tarot',
+    source: 'paymentsai_framepay',
+    consentedAt: args.at ?? new Date(),
+  };
+}
+
+/** Policy links in the disclosure point at the public site, as the Stripe path's do. */
+function smsPolicyBase(req: Request): string {
+  return process.env.BASE_URL || requestOrigin(req);
+}
+
+function clientIp(req: Request): string | undefined {
+  const fwd = String(req.headers['x-forwarded-for'] ?? '').split(',')[0].trim();
+  return fwd || req.socket.remoteAddress || undefined;
+}
+
 router.get('/config', async (req: Request, res: Response) => {
   const lander = resolvePaiLander(req.query.hook);
   if (!lander) return unknownHook(res, req.query.hook);
@@ -580,6 +649,14 @@ router.get('/config', async (req: Request, res: Response) => {
     bucket: lander.bucket,
     hooks: Object.keys(PAI_LANDERS),
     funnel: PAI_FUNNEL,
+    // The SMS question exactly as the Stripe checkout words it.
+    sms: {
+      label: SMS_CONSENT_LABEL,
+      yesLabel: SMS_CONSENT_YES_LABEL,
+      noLabel: SMS_CONSENT_NO_LABEL,
+      disclosure: smsConsentDisclosure(smsPolicyBase(req)),
+      version: SMS_CONSENT_VERSION,
+    },
   });
 });
 
@@ -751,6 +828,12 @@ interface MainContext {
   gclid?: unknown;
   trackdeskClickId?: unknown;
   customerId: string;
+  /** E.164, already validated. */
+  phone: string;
+  /** The SMS answer as sent: 'yes', 'no', or anything else = skipped. */
+  smsAnswer: unknown;
+  smsIp?: string;
+  smsPolicyBase: string;
 }
 
 /**
@@ -785,6 +868,8 @@ async function finalizeMain(ctx: MainContext, settled: PaiTransaction): Promise<
   let gads: PaiGAdsResult | null = null;
   let trackdesk: PaiTrackdeskResult | null = null;
   let dbWritten = false;
+  let phoneSaved = false;
+  let smsConsentRecorded = false;
 
   // DB row — dev Supabase, separate from production.
   if (approved) {
@@ -817,6 +902,24 @@ async function finalizeMain(ctx: MainContext, settled: PaiTransaction): Promise<
       dbWritten = true;
     } catch (err) {
       logger.error(`[pai] DB write failed: ${String(err)}`);
+    }
+
+    // Phone + SMS answer — what the Stripe webhook writes from the Checkout
+    // session. Both match the row on the transaction id written just above.
+    if (dbWritten) {
+      await savePhoneForSession(settled.id, ctx.phone);
+      phoneSaved = true;
+      await recordSmsConsent(
+        paiSmsConsentRecord({
+          transactionId: settled.id,
+          email,
+          phone: ctx.phone,
+          answer: ctx.smsAnswer,
+          ip: ctx.smsIp,
+          policyBase: ctx.smsPolicyBase,
+        }),
+      );
+      smsConsentRecorded = true;
     }
 
     // PostHog — the 50/50 test's revenue for this arm. amountCents is what was
@@ -880,6 +983,9 @@ async function finalizeMain(ctx: MainContext, settled: PaiTransaction): Promise<
     gateway: { name: settled.gatewayName, slug: settled.gatewaySlug },
     metadataAudit: audit,
     dbWritten,
+    phone: ctx.phone,
+    phoneSaved,
+    smsConsent: { answer: ctx.smsAnswer === 'yes' ? 'yes' : ctx.smsAnswer === 'no' ? 'no' : 'skipped', recorded: smsConsentRecorded },
     // Server-side (CAPI) half of the Facebook Purchase; null ⇒ not approved, not sent.
     facebook,
     // null ⇒ not approved. `attempted:false` ⇒ approved but skipped, with the reason.
@@ -959,6 +1065,8 @@ router.post('/checkout', async (req: Request, res: Response) => {
     posthogDistinctId,
     trackdeskClickId,
     gclid,
+    phone: rawPhone,
+    smsConsent: smsAnswer,
   } = req.body ?? {};
 
   if (!token) return res.status(400).json({ error: 'missing FramePay token' });
@@ -967,6 +1075,11 @@ router.post('/checkout', async (req: Request, res: Response) => {
   // filed to the wrong lists.
   const lander = resolvePaiLander(hook);
   if (!lander) return unknownHook(res, hook);
+  // Compulsory, as on the live checkout — refused before any money moves.
+  const phone = normalizePaiPhone(rawPhone);
+  if (!phone) {
+    return res.status(400).json({ error: 'a phone number with country code is required, e.g. +447700900123' });
+  }
   // The lander's bucket, as the live path derives it from the hook — not the body's.
   const bucket = lander.bucket;
   const bumpProduct = lander.bumpProduct();
@@ -1021,6 +1134,10 @@ router.post('/checkout', async (req: Request, res: Response) => {
       lander, bucket, bumpProduct, email, firstName, metadata,
       mainCents, totalCents, bumpApplied, bumpCents, bumpBucket, gclid, trackdeskClickId,
       customerId: cust.data.id,
+      phone,
+      smsAnswer,
+      smsIp: clientIp(req),
+      smsPolicyBase: smsPolicyBase(req),
     };
 
     // 3DS: the card wants a challenge. The money is not taken yet and nothing
