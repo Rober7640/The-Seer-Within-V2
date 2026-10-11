@@ -2179,3 +2179,15 @@ Not covered — needs a live walk on DEV (test card):
 - [ ] Downsell ($25) checkout on `/fb-read` shows it too
 - [ ] Webhook retry (resend the event from Stripe) does NOT add a second row or change the first
 - [ ] Terms + Privacy links in the disclosure open the pages with the new SMS sections
+
+### Bonus-minute pack tiles + repeat-buyer six-option paywall (2026-10-11, PREVIEW only)
+
+`/paywall-preview?surface=longcopy` (first-timer, 3 packs) and `?surface=repeat` (repeat buyer,
+$10/$20/$30/$50/$100 + Custom). Pack claims live in `shared/paywall.ts`
+(`FIRST_TIMER_LADDER`, `REPEAT_BUYER_LADDER`, `quoteCustomAmount`); the number check is
+`npx tsx scripts/check-paywall-bonus-honesty.ts`. Nothing live reads any of it yet.
+
+- [ ] Honesty script runs in CI and exits 0: for every pack and custom $10–$200 on both screens, `floor(totalCoins/299)` ≥ shown total and bonus coins ≥ shown free × 299
+- [ ] Tiles show price → "+N min FREE" → "N min total" ($10 shows just "3 min"); no `m:ss` clock text anywhere on either card; $20 is pre-selected with MOST POPULAR
+- [ ] Custom amount copies the bonus of the largest pack at or below it: repeat $60 → "+13 min FREE · 33 min total"; first-timer $40 → "+5 min FREE · 18 min total"; $5 and $250 disable the buy button with the min/max hint
+- [ ] At 375×667 the buy button ("Continue my reading" / "Continue") is fully on screen without scrolling, and no badge or selected tick overlaps another tile (repeat 3×2 grid included)

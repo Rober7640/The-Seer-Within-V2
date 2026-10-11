@@ -9,6 +9,9 @@
 //   /paywall-preview?surface=modal|store|banner|payment   → one surface
 //   /paywall-preview?slug=marcus-stone     → preselect a persona
 //   /paywall-preview?variant=A             → today's copy, for comparison
+//   /paywall-preview?surface=longcopy|exit → the long-copy first-timer test
+//                                             (see LongCopyPreviewScene for its params)
+//   /paywall-preview?surface=repeat        → the repeat-buyer six-option paywall
 
 import { useEffect, useMemo, useState } from "react";
 import { CosmicBackground } from "@/components/CosmicBackground";
@@ -16,6 +19,7 @@ import PaywallCard from "@/components/paywall/PaywallCard";
 import LowBalanceBanner from "@/components/paywall/LowBalanceBanner";
 import CreditsStoreView from "@/components/paywall/CreditsStoreView";
 import PaymentSheetView from "@/components/paywall/PaymentSheetView";
+import LongCopyPreviewScene from "@/components/paywall/LongCopyPreviewScene";
 import {
   applyBVariantBadges,
   defaultTier,
@@ -81,6 +85,12 @@ const FALLBACK: LoadedPersona = {
 };
 
 export default function PaywallPreviewPage() {
+  const surface = new URLSearchParams(window.location.search).get("surface");
+  if (surface === "longcopy" || surface === "exit" || surface === "repeat") return <LongCopyPreviewScene surface={surface} />;
+  return <ClassicPaywallPreview />;
+}
+
+function ClassicPaywallPreview() {
   const params = new URLSearchParams(window.location.search);
   const surface = params.get("surface") || "all";
   const variant = (params.get("variant") === "A" ? "A" : "B") as PaywallVariant;
