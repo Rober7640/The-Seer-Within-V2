@@ -2,10 +2,10 @@
 
 | | |
 |---|---|
-| **Offer** | 04 The Turn — READING · price ladder by day since the letter · 24h · **no reply needed** |
+| **Offer** | 04 The Turn — READING · one fixed price, split-tested `$35` vs `$45` · 24h · **no reply needed** |
 | **URL** | `https://theseerwithin.com/offers/wiccan/tea-reading/chat` · the page treatment is [`04-C1` v2](04-C1-booking-page-v2.md) at the offer root |
 | **Treatment** | Chat — built from 03's chat (`JudgementBookingChat`), not 02's |
-| **Price** | `{{TODAYS_RUNG}}` — the same price endpoint as the page. Never hard-coded, never guessed |
+| **Price** | `{{PRICE}}` — her arm's price from the same price endpoint as the page: `$35` (arm A, the control) or `$45` (arm B) in the split test `be_04_price_2026`, sticky per visitor; `$35` for everyone until the test is started. Never hard-coded, never guessed |
 | **Voice** | Evelyn speaks **only in the stream**. Inside the card it is **her** voice, first person, talking to Evelyn |
 | **Pace** | one sentence per turn, typing indicator first, paced on length with variance (`chatPace.ts`, ~18ms a character, 0.65–2s a line). The card gets its own beat |
 | **Component** | [00e §3](../../docs/00e-FRAMEWORK-BEs.md) · workflow A2 *"How it is paced"* |
@@ -40,20 +40,19 @@
 
 - **☐** Yes — you had it right, Evelyn. He's pulling away, and I've felt it for a while.
 - **☐** Yes — turn my cup. I want my 21 days: when to speak, and when to stay quiet.
-- **☐** Yes — I'll pay `{{TODAYS_RUNG}}`, once. I know why it's today's price: as the leaves dry,
-  turning them takes more of your night.
+- **☐** Yes — I'll pay `{{PRICE}}`, once.
 
-**Total today** · `{{TODAYS_RUNG}}`
+**Total today** · `{{PRICE}}`
 
 > ### TURN MY CUP
 
 **Until all three are ticked:** *Tick all three to continue* — the button is not there yet.
 
-**Small print:** *Paid once, at today's price. Your reading arrives within 24 hours. You don't need
-to send anything.*
+**Small print:** *Paid once. Your reading arrives within 24 hours. You don't need to send
+anything.*
 
 **If the price hasn't loaded:** statement 3 shows a blank grey bar where the price goes, and the
-button stays away. **If it failed:** *Today's price didn't load.* **Try again**
+button stays away. **If it failed:** *The price didn't load.* **Try again**
 
 ---
 
@@ -68,7 +67,7 @@ button stays away. **If it failed:** *Today's price didn't load.* **Try again**
 I can read your cup a second time, to put twice the strength into your reading.
 Same reading, same twenty-one days, just working twice as hard for you. Shall I do that?
 
-**+ $12.77** · *`{{TODAYS_RUNG}}` + $12.77 total, computed*
+**+ $12.77** · *`{{PRICE}}` + $12.77 total, computed*
 
 > **Yes, double the strength**
 
@@ -77,10 +76,10 @@ Same reading, same twenty-one days, just working twice as hard for you. Shall I 
 Both buttons go straight to the secure checkout page. ⛔ No third confirm step. The decline is full
 width and as easy to read as the accept.
 
-**If the price moved on while she was here** *(checkout answers `409 price_changed`)*, under the
-buttons: *Today's price moved to `{{NEW_RUNG}}` while we were talking. Press your answer again to go
-on at `{{NEW_RUNG}}`.* Statement 3 and the total change to the new price. The next press sends the
-new day.
+**If the price changed while she was here** *(checkout answers `409 price_changed`: the test was
+started, paused or re-weighted after the chat loaded)*, under the buttons: *The price moved to
+`{{NEW_PRICE}}` while we were talking. Press your answer again to go on at `{{NEW_PRICE}}`.*
+Statement 3 and the total change to the new price. The next press sends the new arm.
 
 ---
 
@@ -107,12 +106,16 @@ and her live question is whether she's been charged):
 ## Build notes
 
 - **Three statements, price third.** The page keeps one tick (D11); the chat is the 3-point gate:
-  *you had it right* (P8, the cheapest yes), the permission with the promise in it, then the money
-  with its reason-why. 04 is a READING with no reply, so no fourth (intake) statement.
-- **Statement 3 is the ladder's defence in her voice** (`04-C1` statement 6, cut to a line): the rise
-  is the leaves drying, not a penalty for waiting. ⛔ It never names another rung.
-- **"Your cup's on my table, and I haven't turned it yet"** is true at every rung. ⛔ Not "still
-  soft": by day 3 the ladder emails tell her the leaves have lifted.
+  *you had it right* (P8, the cheapest yes), the permission with the promise in it, then the money.
+  04 is a READING with no reply, so no fourth (intake) statement.
+- **Statement 3 is just the price** (operator, 2026-10-11: no price hike). The day ladder is gone,
+  and with it the reason-why that rode on this statement (*"I know why it's today's price: as the
+  leaves dry…"*). The price is her arm of the 50/50 split test `be_04_price_2026` — `$35` (A, the
+  control) or `$45` (B), decided by the server and sticky per visitor; a draft test, so `$35` for
+  everyone until it is started. The chat posts the arm it printed (`quotedArm`); a mismatch at
+  checkout is the 409 above. ⛔ It never names the other arm's price.
+- **"Your cup's on my table, and I haven't turned it yet"** is true whenever she arrives. ⛔ Not
+  "still soft": nothing on this screen should promise how fresh the cup is.
 - **No cup question — the reading is drawn** (operator, 2026-10-11). Which of the three
   interpretations she gets is drawn at random on the server at checkout (Stripe metadata `cup`,
   with `cupDrawn: '1'`), exactly as on the page. So the chat runs greeting → card → *"Good."* →

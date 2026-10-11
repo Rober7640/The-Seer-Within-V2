@@ -29,9 +29,12 @@ const OFFERS = {
   // 03/05 are PWYW: 300 and 250 are the ANCHORS quoted on the booking page (what others pay,
   // what she was urged to hold it at), not charges. They are valid copy; the charge is the bump.
   '03': { name: 'Judgement Day',    sla: /\b(three|3) (days|nights)\b/i, prices: ['12.77', '300', '250'] },
-  // 04's ladder rungs + bump, plus the shared upsell chain's prices its U spec quotes
-  // (Protection Ritual / Manifestation Bracelet $47, bracelet downsell $30).
-  '04': { name: 'The Turn',         sla: /\b24 hours?\b/i, prices: ['35', '47', '57', '67', '12.77', '30'] },
+  // 04 is one fixed price under a split test (operator 2026-10-11: no price hike) — $35 (A) vs
+  // $45 (B) — plus the bump and the shared upsell chain's prices its U spec quotes (Protection
+  // Ritual / Manifestation Bracelet $47, bracelet downsell $30). ⚠ '57' / '67' are the RETIRED day
+  // ladder's top rungs; they stay only because docs/04/04-DELIVERABLES.md (D4, S9) and
+  // 0-WORKFLOW-04's B1 note still record the old ladder in body text. Drop them once those do.
+  '04': { name: 'The Turn',         sla: /\b24 hours?\b/i, prices: ['35', '45', '47', '57', '67', '12.77', '30'] },
   '05': { name: 'Cut the Cord',     sla: /\b24 hours?\b/i, prices: ['12.77'] },
   // 06 is the deck's first physical offer — real manufacturing + shipping, not a digital SLA.
   // Main price is `{{PRICE}}` (merge field, genuinely undecided — see docs/06/0-WORKFLOW-06.md),
@@ -50,7 +53,7 @@ const OFFERS = {
   // $11.11 — Reiki charging by Evelyn before packing (09-C3, Joel 2026-09-15).
   '09': { name: 'Heart Cleanser Love Charm', sla: /\b(2 business days|7[-–]14 days|2[-–]4 weeks)\b/i, prices: ['59', '59.00', '11.11'] },
 };
-const ALL_PRICES = ['35.00', '35', '47', '57', '67', '87', '12.77', '300', '250', '11.11', '59', '59.00', '30'];
+const ALL_PRICES = ['35.00', '35', '45', '47', '57', '67', '87', '12.77', '300', '250', '11.11', '59', '59.00', '30'];
 
 // ── per-file rules ─────────────────────────────────────────────────────────────────────────
 const BANNED = [
@@ -206,8 +209,9 @@ for (const file of files) {
   }
 
   // 5 — a booking page must state both, or the ladder has no top rung.
-  //     A ladder offer states it as a MERGE FIELD ({{TODAYS_RUNG}}) resolved server-side per S9 —
-  //     hard-coding a number there breaks silently for anyone arriving from an older email.
+  //     A server-priced offer states it as a MERGE FIELD — {{PRICE}} (06's undecided price, 04's
+  //     split-test arm) or the retired ladder's {{TODAYS_RUNG}} (04-C1 v1, superseded) — because
+  //     hard-coding a number there breaks silently for anyone the server prices differently.
   if (isBookingPage(id)) {
     const statesPrice = /\$ ?[\d,]/.test(body) || /\{\{\s*(TODAYS_RUNG|PRICE)\s*\}\}/.test(body);
     if (!statesPrice) findings.push({ file: rel, line: 0, rule: 'booking page states no price', detail: 'statement 6' });

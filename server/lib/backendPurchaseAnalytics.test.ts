@@ -137,6 +137,30 @@ describe('buildBackendPurchaseEvent', () => {
     assert.equal(u2.properties.step, 'upsell2');
   });
 
+  it('04 price test: price_arm rides the booking and its upsells; null on every other event', () => {
+    const booking = buildBackendPurchaseEvent({
+      product: 'be_tea_reading', offer: 'tea-reading',
+      amountCents: 5777, email: 'x@y.com', dedupeId: 'cs_tr_b', bumpProduct: 'double_turning', priceArm: 'B',
+    });
+    assert.equal(booking.properties.price_arm, 'B');
+    assert.equal(booking.properties.amount_cents, 5777);
+    const u1 = buildBackendPurchaseEvent({
+      product: 'be_protection_ritual', offer: 'tea-reading',
+      amountCents: 4700, email: 'x@y.com', dedupeId: 'pi_tr_b1', priceArm: 'B',
+    });
+    assert.equal(u1.properties.price_arm, 'B');
+    // Present-or-null, never missing: an offer with no price test still carries the key.
+    const twin = buildBackendPurchaseEvent({
+      product: 'be_twin_flame', offer: 'twin-flame', amountCents: 3500, email: 'x@y.com', dedupeId: 'cs_tf',
+    });
+    assert.ok('price_arm' in twin.properties);
+    assert.equal(twin.properties.price_arm, null);
+    const blank = buildBackendPurchaseEvent({
+      product: 'be_tea_reading', offer: 'tea-reading', amountCents: 3500, email: 'x@y.com', dedupeId: 'cs_e', priceArm: '',
+    });
+    assert.equal(blank.properties.price_arm, null);
+  });
+
   it('falls back to email as distinctId when none threaded', () => {
     const ev = buildBackendPurchaseEvent({
       product: 'be_twin_flame', offer: 'twin-flame',

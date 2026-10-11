@@ -10,7 +10,7 @@ import {
   type BackendOffer,
 } from '@shared/backendOffers';
 import { addBackendCustomer } from './aweber';
-import { logBeBookingConversion } from './experiments';
+import { BE_04_BOOKING_EVENT, BE_04_PRICE_KEY, logBeBookingConversion } from './experiments';
 import logger from './logger';
 import { getBe08Edition } from './be08Editions';
 import { parseDateOfBirth, readBe08CustomFields, splitBirthName, type Be08CustomFields } from './be08Birth';
@@ -58,8 +58,11 @@ interface BackendSessionMeta {
   readingCents?: string;
   bump?: string;
   bumpProduct?: string;
-  /** The booking-treatment A/B visitor subject, for purchase attribution. */
+  /** The A/B visitor subject (02's booking treatment, 04's price test), for purchase attribution. */
   expSubject?: string;
+  /** 04 only: the price experiment she was quoted under (`be_04_price_2026`) and her arm. */
+  priceExp?: string;
+  priceArm?: string;
   /** 08 backstop only — the intake row is the source; these are read when it is missing. */
   editionId?: string;
   editionVersion?: string;
@@ -313,6 +316,16 @@ export async function recordBackendOrder(
   if (offer.key === 'twin-flame' && metadata.expSubject) {
     await logBeBookingConversion(metadata.expSubject, amountCents).catch((err) =>
       logger.error('be_order: booking-conversion log failed (order still recorded)', {
+        session: session.id,
+        error: err instanceof Error ? err.message : String(err),
+      }),
+    );
+  }
+  // 04's price split test: the booking's amount_total (the bump included) is this arm's
+  // revenue. Each upsell adds its own conversion from the webhook. Same guarantees as above.
+  if (offer.key === 'tea-reading' && metadata.priceExp === BE_04_PRICE_KEY && metadata.expSubject) {
+    await logBeBookingConversion(metadata.expSubject, amountCents, BE_04_PRICE_KEY, BE_04_BOOKING_EVENT).catch((err) =>
+      logger.error('be_order: 04 price-test conversion log failed (order still recorded)', {
         session: session.id,
         error: err instanceof Error ? err.message : String(err),
       }),

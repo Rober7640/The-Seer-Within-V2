@@ -4,20 +4,18 @@ import { getStripe, getActiveStripeSecretKey } from '../lib/stripeAccount';
 import {
   BACKEND_OFFER_CATALOG,
   TEA_READING_DELIVERY_HOURS,
+  TEA_READING_PRICE_ARMS,
   backendOfferForStripeProduct,
   backendOrderDescriptor,
   isBackendOfferKey,
   isBookingTreatment,
-  ladderCentsForDay,
-  ladderRungAt,
-  parseLadderStart,
+  isTeaReadingPriceArm,
   priceBackendOffer,
   priceLabel,
   resolveBackendCharge,
   upsellChargeFields,
   type BackendOffer,
   type BookingTreatment,
-  type LadderClock,
 } from '@shared/backendOffers';
 import {
   STRIPE_CHECKOUT_SHIPPING_COUNTRIES,
@@ -31,7 +29,7 @@ import { getBe08Edition, listPublishedBe08Editions, type Be08Edition } from '../
 import { BE_08_DECK } from '../lib/be08Draw';
 import { parseDateOfBirth } from '../lib/be08Birth';
 import { drawTeaCup } from '../lib/be04Draw';
-import { resolveBeBookingTreatment } from '../lib/experiments';
+import { resolveBe04Price, resolveBeBookingTreatment } from '../lib/experiments';
 import { BACKEND_UPSELLS } from '../lib/backendCustomerList';
 import { paidUpsellAmountCents } from '../lib/beUpsellOrders';
 import logger from '../lib/logger';
@@ -47,8 +45,8 @@ import logger from '../lib/logger';
 // sets a price. A fixed offer's price is looked up server-side; a pay-what-you-want
 // amount is the only number the buyer supplies, and `resolveBackendCharge` floor-checks
 // it here. If the client could send a price, anyone could buy a $35 reading for a cent.
-// A ladder offer (04) also posts `quotedDay` — the day its page DISPLAYED, not a price —
-// and the server's clock decides what it costs (`ladderClockFor` below).
+// The price-tested offer (04) also posts `quotedArm` — the split-test arm its page PRINTED,
+// not a price. Checkout re-resolves her arm on the server (resolveBe04Price) and charges that.
 //
 // ── Why this cannot disturb the live funnels ─────────────────────────────────────
 // `metadata.product` is `be_*`, a value no branch of the shared Stripe webhook knows:
@@ -169,13 +167,18 @@ function backendCheckoutTestModeOpen(): boolean {
 }
 
 /**
- * A ladder offer's clock: now, and its start moment read from the catalog's env var AT CALL
- * TIME (not import time), so tests can vary it. Undefined for every other pricing model.
- * ⛔ Never from the request — this is what makes the ladder the server's decision.
+ * 04's price-test attribution, copied off the BOOKING session onto an upsell charge, so the
+ * webhook can credit upsell revenue to the arm she booked under (logBe04UpsellConversion) and
+ * PostHog can break it down by `price_arm`. Empty unless the booking carried `priceExp` —
+ * every other offer's upsell metadata is exactly what it was.
  */
-function ladderClockFor(offer: BackendOffer, nowMs: number = Date.now()): LadderClock | undefined {
-  if (offer.pricing.model !== 'ladder') return undefined;
-  return { startIso: process.env[offer.pricing.startEnv] ?? null, nowMs };
+function priceTestMetaFromStripe(meta: Record<string, string | undefined> | null | undefined): Record<string, string> {
+  const m = meta ?? {};
+  if (typeof m.priceExp !== 'string' || !m.priceExp) return {};
+  const out: Record<string, string> = { priceExp: m.priceExp };
+  if (typeof m.priceArm === 'string' && m.priceArm) out.priceArm = m.priceArm;
+  if (typeof m.expSubject === 'string' && m.expSubject) out.expSubject = m.expSubject;
+  return out;
 }
 
 function baseUrl(req: Request): string {
@@ -431,6 +434,9 @@ router.post('/upsell/charge', async (req: Request, res: Response) => {
         // Attribution copied off the booking session so payment_intent.succeeded can
         // fire the BE revenue event with the same distinct id + UTM as the booking.
         ...posthogMetaFromStripe(session.metadata),
+        // 04: the price arm she booked under (+ its visitor subject), so this upsell's
+        // revenue lands on that arm. Absent for every other offer.
+        ...priceTestMetaFromStripe(session.metadata),
       },
     });
 
@@ -527,6 +533,9 @@ router.post('/upsell/fallback-checkout', async (req: Request, res: Response) => 
     // fallback purchase still attributes to her originating link. Reuses the helper the
     // booking + 1-click paths already use.
     const phMeta = posthogMetaFromStripe(booking.metadata);
+    // 04: the price arm she booked under, read back off this session by the webhook's hosted-
+    // upsell branch so the upsell's revenue lands on that arm. Empty for every other offer.
+    const priceTestMeta = priceTestMetaFromStripe(booking.metadata);
 
     const beMeta: Record<string, string> = {
       product: productKey,
@@ -567,7 +576,7 @@ router.post('/upsell/fallback-checkout', async (req: Request, res: Response) => 
       cancel_url: cancelUrl,
       payment_intent_data: { description, metadata: beMeta },
       // ⛔ `be_` product → unknown to every V1 webhook branch. 🔴 NEVER trackdeskClickId.
-      metadata: { app: 'the-seer-within', ...beMeta, ...phMeta },
+      metadata: { app: 'the-seer-within', ...beMeta, ...phMeta, ...priceTestMeta },
     });
 
     if (!session.url) {
@@ -699,42 +708,34 @@ router.get('/marcus/editions/:id', async (req: Request, res: Response) => {
   }
 });
 
-// ── Ladder offers (04) · today's price, for the booking page to PRINT ────────────────
-// GET /api/backend/offers/:offer/price → { offer, day, cents, label, startSet, preview? }
+// ── The price-tested offer (04) · her arm's price, for the booking page to PRINT ─────
+// GET /api/backend/offers/tea-reading/price?subject=<visitorId> → { offer, arm, cents, label, preview? }
 //
-// The page shows this price and posts `day` back to /checkout as `quotedDay`. Checkout
-// re-decides the price from the server's clock (resolveLadderCharge), so nothing this route
-// answers can change what she is charged. `no-store`: a cached day-1 price is a wrong price.
+// The page shows this price and posts `arm` back to /checkout as `quotedArm`. Checkout
+// re-resolves her arm itself (resolveBe04Price), so nothing this route answers can change what
+// she is charged. This call is also where she is ENROLLED: an exposure is logged when the
+// `be_04_price_2026` test is running. Draft (as shipped), paused or any failure ⇒ arm A, $35.
+// `no-store`: a cached arm is a wrong price the moment the test starts or stops.
 //
-// `?day=N` is a PREVIEW aid — display only, honoured only while the offer is NOT open for
-// money (`readyForMoney: false`), and flagged `preview: true`. ⛔ Checkout never reads it.
-router.get('/offers/:offer/price', (req: Request, res: Response) => {
+// `?arm=A|B` is a PREVIEW aid — display only, honoured only while the offer is NOT open for
+// money (`readyForMoney: false`), flagged `preview: true`, and it enrols nobody.
+// ⛔ Checkout never reads it: a previewed arm-B page is charged the server's own arm.
+router.get('/offers/:offer/price', async (req: Request, res: Response) => {
   const key = String(req.params.offer || '');
   if (!isBackendOfferKey(key)) return res.status(404).json({ error: 'That offer does not exist.' });
+  if (key !== 'tea-reading') return res.status(404).json({ error: 'That offer has no price test.' });
   const offer = BACKEND_OFFER_CATALOG[key];
-  if (offer.pricing.model !== 'ladder') {
-    return res.status(404).json({ error: 'That offer has no daily price.' });
-  }
-
-  const { rungs } = offer.pricing;
-  const clock = ladderClockFor(offer)!;
-  const today = ladderRungAt(rungs, clock.startIso, clock.nowMs);
-
-  const rawDay = typeof req.query.day === 'string' ? Number(req.query.day) : Number.NaN;
-  const preview = !offer.readyForMoney && Number.isInteger(rawDay) && rawDay >= 1;
-  const day = preview ? Math.min(rawDay, rungs[rungs.length - 1].day) : today.day;
-  const cents = preview ? ladderCentsForDay(rungs, day) : today.cents;
 
   res.set('Cache-Control', 'no-store');
-  return res.json({
-    offer: offer.key,
-    day,
-    cents,
-    label: priceLabel(cents),
-    // False ⇒ BE04_LADDER_START is unset or unparseable and the ladder stands on day 1.
-    startSet: today.startSet,
-    ...(preview ? { preview: true } : {}),
-  });
+  const rawArm = typeof req.query.arm === 'string' ? req.query.arm.trim().toUpperCase() : '';
+  if (!offer.readyForMoney && isTeaReadingPriceArm(rawArm)) {
+    const cents = TEA_READING_PRICE_ARMS[rawArm];
+    return res.json({ offer: offer.key, arm: rawArm, cents, label: priceLabel(cents), preview: true });
+  }
+
+  const subject = typeof req.query.subject === 'string' ? req.query.subject : null;
+  const price = await resolveBe04Price(subject);
+  return res.json({ offer: offer.key, arm: price.arm, cents: price.cents, label: priceLabel(price.cents) });
 });
 
 router.post('/checkout', async (req: Request, res: Response) => {
@@ -804,6 +805,12 @@ router.post('/checkout', async (req: Request, res: Response) => {
         ? null
         : Number(rawAmount);
 
+    // ── 04's price arm ───────────────────────────────────────────────────────────────
+    // RE-RESOLVED here, on the server, for the same visitor subject the price endpoint saw
+    // (the browser posts it as `expSubject`). ⛔ Never a price from the request: `quotedArm`
+    // below only proves the page printed this arm. Draft / paused / any failure ⇒ A, $35.
+    const be04Price = offerKey === 'tea-reading' ? await resolveBe04Price(req.body?.expSubject) : null;
+
     const chargeReq = {
       offer: offerKey,
       bump: req.body?.bump === true,
@@ -811,11 +818,9 @@ router.post('/checkout', async (req: Request, res: Response) => {
       // ⛔ A tier KEY, never a tier price. `resolveBackendCharge` validates it against the
       //    catalog and looks the cents up server-side; an unknown rung is refused outright.
       tier: req.body?.tier,
-      // ⛔ Ladder offers (04): the day her page DISPLAYED, never a price. The price comes from
-      //    the server's clock below; quotedDay only keeps a just-expired price inside the
-      //    grace window (resolveLadderCharge). Ignored by every other pricing model.
-      quotedDay: req.body?.quotedDay,
-      ladderClock: ladderClockFor(BACKEND_OFFER_CATALOG[offerKey]),
+      // ⛔ 04 only: the SERVER's arm price, honoured only if it is in the catalog's closed
+      //    `testCents` set. Undefined (and ignored) for every other offer.
+      ...(be04Price ? { armCents: be04Price.cents } : {}),
     };
     let charge = resolveBackendCharge(chargeReq);
 
@@ -831,22 +836,6 @@ router.post('/checkout', async (req: Request, res: Response) => {
     }
 
     if (!charge.ok) {
-      // 04's ladder moved on since her page loaded, past the grace window. 409, not 400: her
-      // request was fine when the page made it. `current` is today's rung, so the page can
-      // show the new price and ask her to press again — never charge a number she was not shown.
-      if (charge.code === 'price_changed' && charge.current) {
-        logger.info('backend/checkout: refused — the price ladder moved on', {
-          offer: offerKey,
-          code: charge.code,
-          quotedDay: req.body?.quotedDay,
-          currentDay: charge.current.day,
-        });
-        return res.status(409).json({
-          error: charge.message,
-          code: charge.code,
-          current: { ...charge.current, label: priceLabel(charge.current.cents) },
-        });
-      }
       // 400 with her own message — a checkout that silently does nothing is worse than
       // one that says what to change. ⛔ The floor message never names the floor.
       if (charge.code === 'not_ready') {
@@ -861,12 +850,22 @@ router.post('/checkout', async (req: Request, res: Response) => {
 
     const { offer } = charge;
 
-    // 04: a ladder with no usable start stands on day 1. That undercharges, which is the safe
-    // direction — but it is a setting someone forgot, so say so on every sale it touches.
-    if (chargeReq.ladderClock && parseLadderStart(chargeReq.ladderClock.startIso) === null) {
-      logger.warn('backend/checkout: ladder start is unset or unparseable — charging day 1', {
+    // 04: the arm her page PRINTED must be the arm the server charges. They differ when the
+    // test was started, paused or re-weighted while her page was open, on a `?arm=` preview,
+    // or when a page sent no arm at all. 409, not 400: her request was fine when the page made
+    // it. `current` is the server's price, so the page shows it and asks her to press again —
+    // ⛔ nobody is ever charged a price she was not shown. Before the cup draw: a refusal draws nothing.
+    if (be04Price && req.body?.quotedArm !== be04Price.arm) {
+      logger.info('backend/checkout: refused — the page printed another price arm', {
         offer: offer.key,
-        env: offer.pricing.model === 'ladder' ? offer.pricing.startEnv : undefined,
+        code: 'price_changed',
+        quotedArm: typeof req.body?.quotedArm === 'string' ? req.body.quotedArm.slice(0, 8) : null,
+        arm: be04Price.arm,
+      });
+      return res.status(409).json({
+        error: 'The price has changed since this page was opened. Please check it and press the button again.',
+        code: 'price_changed',
+        current: { arm: be04Price.arm, cents: charge.readingCents, label: priceLabel(charge.readingCents) },
       });
     }
 
@@ -1010,9 +1009,11 @@ router.post('/checkout', async (req: Request, res: Response) => {
         // fixed-shape; a backstop for the intake row. ⛔ Her birth name and birth date are
         // NOT here (PII) — they live on be_order_intake only.
         ...(edition ? { editionId: edition.id, editionVersion: String(edition.version) } : {}),
-        // 04: the ladder rung the SERVER charged ('1'..'4'), and her cup — the delivery job
-        // sends the reading named by `cup`; `cupDrawn: '1'` says the server drew it (no pick).
-        ...(charge.rung ? { rung: String(charge.rung) } : {}),
+        // 04: the price experiment and the arm the SERVER charged ('A' $35 / 'B' $45) — read by
+        // the webhook (conversions + PostHog `price_arm`) and copied onto every upsell charge —
+        // and her cup: the delivery job sends the reading named by `cup`; `cupDrawn: '1'` says
+        // the server drew it (no pick).
+        ...(be04Price ? { priceExp: be04Price.key, priceArm: be04Price.arm } : {}),
         ...(teaCup ? { cup: teaCup, cupDrawn: '1' } : {}),
       },
       payment_intent_data: {
@@ -1073,7 +1074,7 @@ router.post('/checkout', async (req: Request, res: Response) => {
       session: session.id,
       ...(charge.tier ? { tier: charge.tier, spreadKey, drawDate } : {}),
       ...(edition ? { editionId: edition.id, editionVersion: edition.version } : {}),
-      ...(charge.rung ? { rung: charge.rung } : {}),
+      ...(be04Price ? { priceArm: be04Price.arm, priceEnrolled: be04Price.enrolled } : {}),
       ...(teaCup ? { cup: teaCup } : {}),
     });
 

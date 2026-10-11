@@ -3,7 +3,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-// Smoke walk for offer 04 (The Turn — a tea-leaf reading on a price ladder). Workflow step A8.
+// Smoke walk for offer 04 (The Turn — a tea-leaf reading at one fixed price under a $35 / $45
+// split test; operator 2026-10-11: no price hike, the day ladder is gone). Workflow step A8.
 //
 //   BASE=http://localhost:5094 LIVE_BASE=http://localhost:5095 \
 //     node improve-v1/v1-one-time-BEs/scripts/walk-04-smoke.mjs [evidence-folder]
@@ -29,16 +30,20 @@ import { fileURLToPath } from 'node:url';
 //       Double Turning word for word (intangible — operator 2026-10-11)
 //     - ⛔ NO CUP PICK, ticked or not (operator 2026-10-11: the server draws the cup) — no picker,
 //       no cup names, no "which sounds like" question
-//     - only today's rung, $12.77 and their total ever appear as prices
-//     - ?day=1..4 shows $35/$47/$57/$67, and the click carries quotedDay = the day shown
-//     - the click logs [preview] with offer/treatment/bump/quotedDay/fn/c and NO price, NO cup
+//     - only her arm's price, $12.77 and their total ever appear as prices; NO ladder copy
+//       ("today's price", "went up", the drying-leaves reason-why section)
+//     - the price request carries her visitor id (?subject=)
+//     - ?arm=A / ?arm=B shows $35 / $45 (each screenshotted on the first screen), and the click
+//       carries quotedArm = the arm shown
+//     - the click logs [preview] with offer/treatment/bump/quotedArm/fn/c and NO price, NO cup
 //     - a price that fails to load shows a retry line and keeps the button disabled; retry works
 //     - ?cancelled=1 says nothing has been taken
-//     - LIVE_BASE: 409 price_changed shows the new price + "press again", and the re-press sends
-//       the new quotedDay
+//     - LIVE_BASE: the checkout's expSubject is the SAME id the price request carried; 409
+//       price_changed shows the server's price + "press again", and the re-press sends its arm
 //   booking chat  /offers/wiccan/tea-reading/chat
 //     - opens on the typing indicator; one line at a time; the long line + card ≥ 1.2s
-//     - three statements, price third; button absent until all ticked
+//     - three statements, price third ("Yes — I'll pay $35, once." — no reason-why); button absent
+//       until all ticked
 //     - after the card: "Good." → "One more thing before I start." → the bump turn, BELOW the card;
 //       ⛔ no cup question, no quick replies, no bubble of hers
 //     - the bump turn is the Double Turning question, ending "?"; "Yes, double the strength" /
@@ -74,7 +79,7 @@ for (const b of [BASE, LIVE_BASE]) {
 }
 fs.mkdirSync(OUT, { recursive: true });
 
-const RUNGS = { 1: 3500, 2: 4700, 3: 5700, 4: 6700 };
+const ARMS = { A: 3500, B: 4500 };
 const label = (cents) => (cents % 100 === 0 ? `$${cents / 100}` : `$${(cents / 100).toFixed(2)}`);
 const BUMP_CENTS = 1277;
 // The Double Turning (operator 2026-10-11), word for word — 04-C1 v2, 04-C2 and 04-T1.
@@ -101,6 +106,8 @@ const dollars = (text) => [...new Set(text.match(/\$\d+(?:,\d{3})*(?:\.\d{2})?/g
 // The three interpretations' names and the old pick's words — none may appear on any 04 screen.
 const CUP_NAMES = /Turned Handle|Divided Rim|Sunken Leaf/;
 const PICK_WORDS = /Which sounds like|which cup is yours|you choose|decides which reading/i;
+// The retired day ladder's copy (operator 2026-10-11: no price hike) — none may appear on any 04 screen.
+const LADDER_COPY = /today'?s price|today'?s rung|\brungs?\b|price ladder|went up|goes up|as the leaves dry|takes more of your night/i;
 /** No picker of any kind on the page: neither the page's fieldset nor the chat's quick replies. */
 async function noCupPick(page) {
   const pickers = await page.locator('[data-testid="cup-pick"], [data-testid^="cup-reply"], [data-testid^="cup-turned"], [data-testid^="cup-divided"], [data-testid^="cup-sunken"], [data-testid="cup-replies"]').count();
@@ -133,6 +140,7 @@ const ORDERS = {
 function makeStubs(origin) {
   const state = {
     priceMode: 'ok', // 'ok' | 'fail' | 'slow'
+    priceSubjects: [], // the ?subject= each price request carried
     checkoutBodies: [],
     checkoutAnswers: [], // queue of { status, body }
     pendingCalls: 0,
@@ -149,9 +157,11 @@ function makeStubs(origin) {
     if (url.pathname === `/api/backend/offers/tea-reading/price`) {
       if (state.priceMode === 'fail') return route.fulfill({ status: 500, contentType: 'application/json', body: '{"error":"x"}' });
       if (state.priceMode === 'slow') await sleep(2500);
-      const asked = Number(url.searchParams.get('day'));
-      const day = Number.isInteger(asked) && asked >= 1 ? Math.min(asked, 4) : 1;
-      const body = { offer: 'tea-reading', day, cents: RUNGS[day], label: label(RUNGS[day]), startSet: true, ...(asked ? { preview: true } : {}) };
+      state.priceSubjects.push(url.searchParams.get('subject'));
+      // The real endpoint resolves her arm from ?subject= (a draft test ⇒ A); ?arm= is the preview.
+      const asked = (url.searchParams.get('arm') || '').toUpperCase();
+      const arm = asked in ARMS ? asked : 'A';
+      const body = { offer: 'tea-reading', arm, cents: ARMS[arm], label: label(ARMS[arm]), ...(asked in ARMS ? { preview: true } : {}) };
       return route.fulfill({ status: 200, contentType: 'application/json', headers: { 'cache-control': 'no-store' }, body: JSON.stringify(body) });
     }
     if (url.pathname === '/api/backend/checkout' && req.method() === 'POST') {
@@ -233,7 +243,18 @@ try {
 
       const h1 = page.locator('h1');
       check(`${vp.label}: booking renders its claim headline`, flat(await h1.innerText().catch(() => '')) === 'Your cup knows which week to speak in');
-      check(`${vp.label}: day-1 price $35 from the price endpoint`, flat(await price.innerText().catch(() => '')) === '$35');
+      check(`${vp.label}: arm A's $35 from the price endpoint`, flat(await price.innerText().catch(() => '')) === '$35');
+      const subject = stubs.state.priceSubjects[0];
+      check(`${vp.label}: the price request carries her visitor id (?subject=)`, typeof subject === 'string' && subject.length > 8, String(subject));
+      const priceLine = flat(await page.getByTestId('text-price-line').innerText().catch(() => ''));
+      check(`${vp.label}: the price line reads "$35 | Paid once / Your reading within 24 hours" — no "today's price"`, priceLine === '$35 Paid once Your reading within 24 hours', priceLine);
+      const fullText = await page.locator('body').innerText();
+      check(
+        `${vp.label}: NO ladder copy anywhere on the page, and no "Why today's price" section`,
+        !LADDER_COPY.test(fullText) && (await page.getByTestId('section-why-the-price').count()) === 0,
+        fullText.match(LADDER_COPY)?.[0] ?? '',
+      );
+      check(`${vp.label}: the small print starts "Paid once · Within 24 hours"`, flat(await page.getByTestId('text-small-print').innerText()).startsWith('Paid once · Within 24 hours ·'));
       const imgOk = await page.locator('[data-testid="figure-cup"] img').evaluate((el) => el.naturalWidth > 0 && el.src.endsWith('/tea-reading/esl-cup-3x2.jpg')).catch(() => false);
       check(`${vp.label}: the letter's cup photo loads`, imgOk);
 
@@ -264,7 +285,7 @@ try {
       let pick = await noCupPick(page);
       check(`${vp.label}: no cup pick on the page (unticked) — no picker, no cup names, no question`, pick.ok, JSON.stringify(pick));
       const unticked = dollars(await page.locator('body').innerText());
-      check(`${vp.label}: unticked, the only price on the page is today's rung`, unticked.length === 1 && unticked[0] === '$35', unticked.join(' '));
+      check(`${vp.label}: unticked, the only price on the page is her arm's`, unticked.length === 1 && unticked[0] === '$35', unticked.join(' '));
       let hs = await noHorizontalScroll(page);
       check(`${vp.label}: no horizontal scroll (unticked)`, hs.ok, `scrollWidth=${hs.scrollWidth}`);
       await shot('booking-unticked-first-screen', page);
@@ -303,8 +324,8 @@ try {
       await waitForCount(previews, 1);
       const p1 = previews[0];
       check(
-        `${vp.label}: click logs [preview] — tea-reading, page, bump false, quotedDay 1, fn + c, no price, NO cup`,
-        !!p1 && p1.offer === 'tea-reading' && p1.treatment === 'page' && p1.bump === false && p1.quotedDay === 1 && !('cup' in p1) && p1.firstName === 'Smoke' && p1.letterCode === '61' && p1.amountCents == null,
+        `${vp.label}: click logs [preview] — tea-reading, page, bump false, quotedArm A, fn + c, no price, no day, NO cup`,
+        !!p1 && p1.offer === 'tea-reading' && p1.treatment === 'page' && p1.bump === false && p1.quotedArm === 'A' && !('quotedDay' in p1) && !('cup' in p1) && p1.firstName === 'Smoke' && p1.letterCode === '61' && p1.amountCents == null,
         JSON.stringify(p1),
       );
       check(`${vp.label}: click does not navigate`, page.url().startsWith(`${BASE}${ROOT}`));
@@ -313,15 +334,15 @@ try {
       await bumpBox.check();
       check(`${vp.label}: with the bump ticked the total is $47.77`, flat(await page.getByTestId('text-total').innerText()) === '$47.77');
       const ticked = dollars(await page.locator('body').innerText()).sort();
-      const allowed = new Set([label(RUNGS[1]), label(BUMP_CENTS), label(RUNGS[1] + BUMP_CENTS)]);
-      check(`${vp.label}: ticked, the only prices are the rung, $12.77 and their total`, ticked.every((d) => allowed.has(d)), ticked.join(' '));
+      const allowed = new Set([label(ARMS.A), label(BUMP_CENTS), label(ARMS.A + BUMP_CENTS)]);
+      check(`${vp.label}: ticked, the only prices are her arm's, $12.77 and their total`, ticked.every((d) => allowed.has(d)), ticked.join(' '));
       await button.scrollIntoViewIfNeeded();
       await shot('booking-ticked-with-bump', page);
       await shot('booking-ticked-with-bump-fullpage', page, { fullPage: true });
       await button.click();
       await waitForCount(previews, 2);
       const p2 = previews[1];
-      check(`${vp.label}: the next click carries bump true, and still no cup`, !!p2 && p2.bump === true && !('cup' in p2) && p2.quotedDay === 1, JSON.stringify(p2));
+      check(`${vp.label}: the next click carries bump true, and still no cup`, !!p2 && p2.bump === true && !('cup' in p2) && p2.quotedArm === 'A', JSON.stringify(p2));
 
       await tick.locator('input').uncheck();
       check(`${vp.label}: unticking hides the bump and disables the button`, (await bump.count()) === 0 && (await button.getAttribute('aria-disabled')) === 'true');
@@ -331,24 +352,38 @@ try {
       check(`${vp.label}: no horizontal scroll (ticked)`, hs.ok, `scrollWidth=${hs.scrollWidth}`);
       measurements[vp.label].pageHeightTicked = await page.evaluate(() => document.documentElement.scrollHeight);
 
-      // ── each rung, via ?day= (a preview of the display only) ──
-      for (const day of [1, 2, 3, 4]) {
+      // ── each arm, via ?arm= (a preview of the display only — the server honours it only while
+      //    the offer is dark, and checkout never reads it) ──
+      for (const arm of ['A', 'B']) {
         const p = await context.newPage();
         const pv = watchPreviews(p);
-        await p.goto(`${BASE}${ROOT}?day=${day}&c=81`, { waitUntil: 'domcontentloaded' });
+        await p.goto(`${BASE}${ROOT}?arm=${arm}&c=61&fn=Smoke`, { waitUntil: 'domcontentloaded' });
         await p.getByTestId('text-price').waitFor({ timeout: 15000 }).catch(() => {});
-        const shown = flat(await p.getByTestId('text-price').innerText().catch(() => ''));
-        const lineDay = await p.getByTestId('text-price-line').getAttribute('data-day');
         await p.waitForFunction(() => document.querySelector('[data-testid="figure-cup"] img')?.complete, null, { timeout: 10000 }).catch(() => {});
-        await p.screenshot({ path: path.join(OUT, `booking-rung-day${day}-${vp.label}.png`) });
+        await p.evaluate(() => window.scrollTo(0, 0));
+        const shown = flat(await p.getByTestId('text-price').innerText().catch(() => ''));
+        const lineArm = await p.getByTestId('text-price-line').getAttribute('data-arm');
+        const armButtonBottom = await bottomY(p.getByTestId('button-checkout'));
+        measurements[vp.label][`arm${arm}ButtonBottom`] = armButtonBottom;
+        info(`${vp.label}: ?arm=${arm} — unticked button bottom ${armButtonBottom}px`);
+        if (vp.label === 'phone') check(`phone: ?arm=${arm} keeps the button inside the first ${vp.height}px (unticked)`, armButtonBottom !== null && armButtonBottom <= vp.height, `${armButtonBottom}px`);
+        const armText = await p.locator('body').innerText();
+        check(`${vp.label}: ?arm=${arm} — no ladder copy`, !LADDER_COPY.test(armText), armText.match(LADDER_COPY)?.[0] ?? '');
+        await p.screenshot({ path: path.join(OUT, `booking-arm-${arm}-${vp.label}.png`) });
         await p.getByTestId('checkbox-ready').locator('input').check();
+        const total = flat(await p.getByTestId('text-total').innerText());
+        await p.getByTestId('checkbox-bump').locator('input').check();
+        const totalWithBump = flat(await p.getByTestId('text-total').innerText());
         await p.getByTestId('button-checkout').click();
         await waitForCount(pv, 1);
         const pageDollars = dollars(await p.locator('body').innerText());
+        const other = label(ARMS[arm === 'A' ? 'B' : 'A']);
         check(
-          `${vp.label}: ?day=${day} shows ${label(RUNGS[day])}, sends quotedDay ${day}, prints no other rung`,
-          shown === label(RUNGS[day]) && lineDay === String(day) && pv[0]?.quotedDay === day && pageDollars.every((d) => d === label(RUNGS[day]) || d === '$12.77' || d === label(RUNGS[day] + BUMP_CENTS)),
-          `${shown} day=${lineDay} quotedDay=${pv[0]?.quotedDay} prices=${pageDollars.join(' ')}`,
+          `${vp.label}: ?arm=${arm} shows ${label(ARMS[arm])} (total ${label(ARMS[arm])}, ${label(ARMS[arm] + BUMP_CENTS)} with the bump), sends quotedArm ${arm}, never prints ${other}`,
+          shown === label(ARMS[arm]) && lineArm === arm && total === label(ARMS[arm]) && totalWithBump === label(ARMS[arm] + BUMP_CENTS) &&
+            pv[0]?.quotedArm === arm && pv[0]?.bump === true &&
+            pageDollars.every((d) => d === label(ARMS[arm]) || d === '$12.77' || d === label(ARMS[arm] + BUMP_CENTS)) && !pageDollars.includes(other),
+          `${shown} arm=${lineArm} total=${total}/${totalWithBump} quotedArm=${pv[0]?.quotedArm} prices=${pageDollars.join(' ')}`,
         );
         await p.close();
       }
@@ -406,8 +441,9 @@ try {
       const page = await context.newPage();
       const errors = [];
       page.on('pageerror', (e) => errors.push(e.message));
+      // The server would charge arm B (the test started while her page showed A): 409 once, with $45.
       stubs.state.checkoutAnswers.push(
-        { status: 409, body: { error: 'The price changed while your page was open.', code: 'price_changed', current: { day: 2, cents: 4700, startSet: true, label: '$47' } } },
+        { status: 409, body: { error: 'The price has changed since this page was opened. Please check it and press the button again.', code: 'price_changed', current: { arm: 'B', cents: 4500, label: '$45' } } },
         { status: 200, body: { url: `${LIVE_BASE}/__stripe_stub` } },
       );
       await page.goto(`${LIVE_BASE}${ROOT}?c=61&fn=Smoke`, { waitUntil: 'domcontentloaded' });
@@ -418,16 +454,18 @@ try {
       await page.getByTestId('text-price-changed').waitFor({ timeout: 10000 }).catch(() => {});
       const notice = flat(await page.getByTestId('text-price-changed').innerText().catch(() => ''));
       const first = stubs.state.checkoutBodies[0];
-      check(`${vp.label}: live — the first press posted quotedDay 1, no cup, no price`, !!first && first.offer === 'tea-reading' && first.quotedDay === 1 && first.cup === undefined && first.amountCents === undefined && first.treatment === 'page', JSON.stringify(first));
-      check(`${vp.label}: live — 409 shows the new price and asks her to press again`, notice.includes('$47') && /press TURN MY CUP again/i.test(notice), notice);
-      check(`${vp.label}: live — the price line and total now read $47`, flat(await page.getByTestId('text-price').innerText()) === '$47' && flat(await page.getByTestId('text-total').innerText()) === '$47');
+      check(`${vp.label}: live — the first press posted quotedArm A, no day, no cup, no price`, !!first && first.offer === 'tea-reading' && first.quotedArm === 'A' && first.quotedDay === undefined && first.cup === undefined && first.amountCents === undefined && first.treatment === 'page', JSON.stringify(first));
+      const priceSubject = stubs.state.priceSubjects[0];
+      check(`${vp.label}: live — checkout's expSubject is the SAME visitor id the price request carried`, typeof priceSubject === 'string' && priceSubject.length > 8 && first?.expSubject === priceSubject, `${priceSubject} vs ${first?.expSubject}`);
+      check(`${vp.label}: live — 409 shows the server's price and asks her to press again (no "today", no "went up")`, notice.includes('$45') && /press TURN MY CUP again/i.test(notice) && !LADDER_COPY.test(notice), notice);
+      check(`${vp.label}: live — the price line and total now read $45`, flat(await page.getByTestId('text-price').innerText()) === '$45' && flat(await page.getByTestId('text-total').innerText()) === '$45');
       check(`${vp.label}: live — still on the booking page (nothing charged)`, page.url().startsWith(`${LIVE_BASE}${ROOT}`));
       await page.getByTestId('text-price-changed').evaluate((el) => el.scrollIntoView({ block: 'center' }));
       await shot('booking-price-changed', page);
       await page.getByTestId('button-checkout').click();
       await page.waitForURL(`${LIVE_BASE}/__stripe_stub`, { timeout: 10000 }).catch(() => {});
       const second = stubs.state.checkoutBodies[1];
-      check(`${vp.label}: live — the re-press sends the NEW quotedDay (2) and goes on`, !!second && second.quotedDay === 2 && page.url() === `${LIVE_BASE}/__stripe_stub`, JSON.stringify(second));
+      check(`${vp.label}: live — the re-press sends the server's arm (B), the same visitor id, and goes on`, !!second && second.quotedArm === 'B' && second.expSubject === first?.expSubject && page.url() === `${LIVE_BASE}/__stripe_stub`, JSON.stringify(second));
       check(`${vp.label}: live — no page errors`, errors.length === 0, errors.slice(0, 2).join(' | '));
       await context.close();
     }
@@ -504,14 +542,19 @@ try {
       check(`${vp.label}: thread title says confirm, never confirmed`, /confirm your booking/i.test(title) && !/confirmed|receipt/i.test(title), title);
       const statements = page.locator('[data-testid^="checkbox-statement-"]');
       check(`${vp.label}: three statements`, (await statements.count()) === 3);
-      check(`${vp.label}: the price is the third statement, today's rung`, flat(await page.getByTestId('checkbox-statement-2').innerText()).includes('$35'));
+      const statement3 = flat(await page.getByTestId('checkbox-statement-2').innerText());
+      check(`${vp.label}: the price is the third statement — "Yes — I'll pay $35, once." and nothing more`, statement3 === "Yes — I'll pay $35, once.", statement3);
+      const smallPrint = flat(await page.getByTestId('text-small-print').innerText());
+      check(`${vp.label}: the card's small print is "Paid once. …" — no "at today's price"`, smallPrint === "Paid once. Your reading arrives within 24 hours. You don't need to send anything.", smallPrint);
+      const cardText = await page.locator('body').innerText();
+      check(`${vp.label}: NO ladder copy anywhere in the chat`, !LADDER_COPY.test(cardText), cardText.match(LADDER_COPY)?.[0] ?? '');
       check(`${vp.label}: the button is absent until every box is ticked`, (await page.getByTestId('button-checkout').count()) === 0);
       await sleep(400);
       await shot('chat-card', page);
       for (let i = 0; i < 3; i++) await statements.nth(i).locator('input').check();
       check(`${vp.label}: the button appears once all three are ticked`, (await page.getByTestId('button-checkout').count()) === 1);
       const chatDollars = dollars(await page.locator('body').innerText());
-      check(`${vp.label}: the card prints only today's rung`, chatDollars.every((d) => d === '$35'), chatDollars.join(' '));
+      check(`${vp.label}: the card prints only her arm's price`, chatDollars.every((d) => d === '$35'), chatDollars.join(' '));
       await page.getByTestId('button-checkout').click();
 
       await page.waitForSelector('[data-testid="order-bump"]', { timeout: 15000 });
@@ -542,7 +585,7 @@ try {
       await page.getByTestId('button-bump-decline').click();
       await waitForCount(previews, 1);
       const d = previews[0];
-      check(`${vp.label}: "No, just my reading" logs [preview] — chat, bump false, quotedDay 1, fn + c, NO cup`, !!d && d.offer === 'tea-reading' && d.treatment === 'chat' && d.bump === false && d.quotedDay === 1 && !('cup' in d) && d.firstName === 'Smoke' && d.letterCode === '61', JSON.stringify(d));
+      check(`${vp.label}: "No, just my reading" logs [preview] — chat, bump false, quotedArm A, fn + c, NO cup`, !!d && d.offer === 'tea-reading' && d.treatment === 'chat' && d.bump === false && d.quotedArm === 'A' && !('quotedDay' in d) && !('cup' in d) && d.firstName === 'Smoke' && d.letterCode === '61', JSON.stringify(d));
       await page.getByTestId('button-bump-accept').click();
       await waitForCount(previews, 2);
       check(`${vp.label}: "${BUMP_CHAT.accept}" logs bump true, NO cup`, previews[1]?.bump === true && previews[1]?.treatment === 'chat' && !('cup' in (previews[1] ?? {})), JSON.stringify(previews[1]));
@@ -588,7 +631,7 @@ try {
       const stubs = makeStubs(new URL(LIVE_BASE).origin);
       await context.route('**/*', stubs.handler);
       stubs.state.checkoutAnswers.push(
-        { status: 409, body: { error: 'moved', code: 'price_changed', current: { day: 3, cents: 5700, startSet: true, label: '$57' } } },
+        { status: 409, body: { error: 'moved', code: 'price_changed', current: { arm: 'B', cents: 4500, label: '$45' } } },
         { status: 200, body: { url: `${LIVE_BASE}/__stripe_stub` } },
       );
       const page = await context.newPage();
@@ -600,14 +643,14 @@ try {
       await page.getByTestId('button-bump-accept').click();
       await page.getByTestId('text-price-changed').waitFor({ timeout: 10000 }).catch(() => {});
       const notice = flat(await page.getByTestId('text-price-changed').innerText().catch(() => ''));
-      check(`${vp.label}: live chat — 409 names the new price and asks her to press again`, notice.includes('$57') && /press your answer again/i.test(notice), notice);
-      check(`${vp.label}: live chat — the card's price and the bump total move to $57`, flat(await page.getByTestId('text-gate-price').innerText()) === '$57' && flat(await page.getByTestId('text-bump-total').innerText()) === '$69.77 total');
+      check(`${vp.label}: live chat — 409 names the server's price and asks her to press again`, notice.includes('$45') && /press your answer again/i.test(notice) && !LADDER_COPY.test(notice), notice);
+      check(`${vp.label}: live chat — the card's price and the bump total move to $45`, flat(await page.getByTestId('text-gate-price').innerText()) === '$45' && flat(await page.getByTestId('text-bump-total').innerText()) === '$57.77 total');
       await sleep(300);
       await shot('chat-price-changed', page);
       await page.getByTestId('button-bump-accept').click();
       await page.waitForURL(`${LIVE_BASE}/__stripe_stub`, { timeout: 10000 }).catch(() => {});
       const [a, b] = stubs.state.checkoutBodies;
-      check(`${vp.label}: live chat — quotedDay 1 then 3, treatment chat, NO cup posted`, a?.quotedDay === 1 && b?.quotedDay === 3 && b?.treatment === 'chat' && a?.cup === undefined && b?.cup === undefined && b?.bump === true, JSON.stringify(b));
+      check(`${vp.label}: live chat — quotedArm A then B, one visitor id, treatment chat, NO cup posted`, a?.quotedArm === 'A' && b?.quotedArm === 'B' && !!a?.expSubject && a.expSubject === b?.expSubject && a.expSubject === stubs.state.priceSubjects[0] && b?.treatment === 'chat' && a?.cup === undefined && b?.cup === undefined && b?.bump === true, JSON.stringify(b));
       await context.close();
     }
 

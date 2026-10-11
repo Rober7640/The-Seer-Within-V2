@@ -59,7 +59,7 @@ in copies, and it is avoided by hand, every time.
 |---|---|---|---|---|---|
 | **02** Twin Flame | Reading | $35 fixed + bump | no | written, 4,821 words, 12 cards | ✅ built — [`00i`](./00i-DELIVERABLES-U1-U2.md) |
 | **03** Judgement Day | **Act** | pay-what-you-want | **yes** | written, 2,429 words | ◐ booking built, upsells not — tick sheet in [`00l`](./00l-DELIVERABLES-03.md), upsells planned in [`00k`](./00k-PLAN-03-UPSELLS.md) |
-| **04** The Turn | Reading | ladder $35→$47→$57→$67 by day, decided server-side | no | written ×3 — one reading per cup, ~3,800–3,950 words each + a one-page calendar *(2026-10-11)* | ◐ building — record in [`04/04-DELIVERABLES.md`](./04/04-DELIVERABLES.md) |
+| **04** The Turn | Reading | fixed $35 — split test $35 vs $45, decided server-side (`be_04_price_2026`; the day ladder is retired, 2026-10-11) | no | written ×3 — one reading per cup, ~3,800–3,950 words each + a one-page calendar *(2026-10-11)* | ◐ building — record in [`04/04-DELIVERABLES.md`](./04/04-DELIVERABLES.md) |
 | **05** Hex Her | — | — | — | — | ⚠ no copy at all yet |
 
 ⚠ **"Written" means the words exist in a markdown file.** No product has been
@@ -116,7 +116,7 @@ Query strings that change what you see:
 | `?step=give` | the booking page | step 2 — ⛔ only if the four boxes were ticked this visit. A cold link bounces to step 1 |
 | `?cancelled=1` | the booking chat | the back-from-Stripe door, with its own copy |
 
-### 04 — The Turn *(Reading · price ladder by day · no reply needed)*
+### 04 — The Turn *(Reading · one fixed price, split-tested $35 vs $45 · no reply needed)*
 
 | Screen | Path | Treatment | State |
 |---|---|---|---|
@@ -126,7 +126,7 @@ Query strings that change what you see:
 | Thank-you *(receipt)* | `/offers/wiccan/tea-reading/success?s=<session>` | page | ✅ built · preview |
 
 ⛔ `readyForMoney: false`, and with `VITE_BACKEND_CHECKOUT_LIVE` unset both booking treatments log
-`[preview] would checkout {…, quotedDay, cup}` and stop. Locally there is no `.env`: run the client
+`[preview] would checkout {…, quotedArm}` and stop (no cup — the server draws it). Locally there is no `.env`: run the client
 alone with `npx vite dev --port 5094` — the price endpoint and the order lookup then need a server
 (or the walk's stubs) to answer.
 
@@ -134,7 +134,7 @@ Query strings that change what you see:
 
 | Add | To | Shows |
 |---|---|---|
-| `?day=1` … `?day=4` | either booking treatment | that day's rung ($35 / $47 / $57 / $67) — display only, honoured by the server only while `readyForMoney` is false; the click sends `quotedDay` = that day |
+| `?arm=A` / `?arm=B` | either booking treatment | that arm of the price split test ($35 / $45, `be_04_price_2026`) — display only, honoured by the server only while `readyForMoney` is false, and it enrols nobody; the click sends `quotedArm` = that arm. (The day ladder and its `?day=` are retired — operator 2026-10-11, no price hike) |
 | `?fn=Sarah&c=61` | either booking treatment | what the letter passes down (`c=61–67` E2, `71–73` E6, `81–83` E5). ⚠ Nothing displays either — they ride through to checkout |
 | `?cancelled=1` | the page | the back-from-checkout line: *Nothing has been taken. Your cup is still here.* |
 | `?cancelled=1` | the chat | the back-from-checkout resume copy, at the card, nothing ticked |

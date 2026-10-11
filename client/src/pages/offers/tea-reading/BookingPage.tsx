@@ -2,7 +2,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { CosmicBackground } from '@/components/CosmicBackground'
 import { backendOfferFunnel, bookingFirstName, bookingLetterCode } from '@/lib/funnel'
 import { beginBackendCheckout } from '@/lib/backendCheckout'
-import { fetchLadderQuote, type LadderQuote } from '@/lib/ladderPrice'
+import { getBackendVisitorId } from '@/lib/backendVisitor'
+import { fetchPriceQuote, type PriceQuote } from '@/lib/teaReadingPrice'
 import { track as trackPH } from '@/lib/posthog'
 import {
   PAGE_HEADER,
@@ -14,7 +15,6 @@ import {
   CHECKOUT,
   PRICE_STATES,
   WHAT_YOU_GET,
-  WHY_THE_PRICE,
   TAB_TITLE,
   TEA_READING_OFFER,
   pagePriceChangedNotice,
@@ -29,7 +29,7 @@ import {
 // Copy spec: improve-v1/v1-one-time-BEs/copy/04/04-C1-booking-page-v2.md (bump included).
 // Constants: lib/teaReadingBooking.ts. Shape: 09's v2 one-tick page.
 //
-// The FIRST PHONE SCREEN (390×844) is the whole decision: headline, sub-line, photo, today's
+// The FIRST PHONE SCREEN (390×844) is the whole decision: headline, sub-line, photo, the
 // price, three check lines, ONE tick and the button. The button is ALWAYS on screen: it looks
 // disabled until the tick is ticked, and a tap before then points her at the tick. Once ticked,
 // the order bump (`double_turning` — intangible) and the total appear between the tick and the button.
@@ -37,10 +37,12 @@ import {
 // ⭐ NO CUP PICK (operator 2026-10-11). Which of the three readings she gets is drawn at random by
 // the server at checkout; this page never asks and never sends a cup.
 //
-// ⭐ THE PRICE IS TODAY'S RUNG, from the server (lib/ladderPrice.ts). While it loads the price
-// line is a blank bar and the button cannot be pressed; if it fails, a retry line. ⛔ Never a
-// guessed number. The page posts back the DAY it printed (`quotedDay`); if the server answers
-// 409 price_changed, the new price replaces the old one here and she is asked to press again.
+// ⭐ THE PRICE IS HER ARM'S, from the server (lib/teaReadingPrice.ts): $35 (A, control) or $45
+// (B) in the 50/50 split test, sticky per visitor — $35 for everyone until the test is started.
+// While it loads the price line is a blank bar and the button cannot be pressed; if it fails, a
+// retry line. ⛔ Never a guessed number. The page posts back the ARM it printed (`quotedArm`); if
+// the server answers 409 price_changed, its price replaces the old one here and she is asked to
+// press again.
 //
 // ⛔ Posts NO price. While BACKEND_CHECKOUT_LIVE is false the button LOGS and stops (preview).
 //
@@ -49,7 +51,7 @@ import {
 
 type PriceState =
   | { status: 'loading' }
-  | { status: 'ready'; quote: LadderQuote }
+  | { status: 'ready'; quote: PriceQuote }
   | { status: 'failed' }
 
 export default function TeaReadingBookingPage() {
@@ -77,7 +79,7 @@ export default function TeaReadingBookingPage() {
 
   const loadPrice = useCallback(async () => {
     setPrice({ status: 'loading' })
-    const result = await fetchLadderQuote(TEA_READING_OFFER, search)
+    const result = await fetchPriceQuote(TEA_READING_OFFER, getBackendVisitorId(), search)
     setPrice(result.kind === 'ok' ? { status: 'ready', quote: result.quote } : { status: 'failed' })
   }, [search])
 
@@ -90,8 +92,8 @@ export default function TeaReadingBookingPage() {
   }, [])
 
   // Back from Stripe via the browser's own Back: the page can come back from the back/forward
-  // cache exactly as it was — button disabled, price possibly a day old. Re-arm the button and
-  // ask for today's price again.
+  // cache exactly as it was — button disabled, price possibly stale (the test may have started
+  // or stopped). Re-arm the button and ask for her price again.
   useEffect(() => {
     const onPageShow = (event: PageTransitionEvent) => {
       if (!event.persisted) return
@@ -136,13 +138,13 @@ export default function TeaReadingBookingPage() {
       price_cents: teaReadingTotalCents(quote.cents, bumpInOrder),
       bump: bumpInOrder,
       treatment: 'page',
-      rung: quote.day,
+      price_arm: quote.arm,
     })
     const result = await beginBackendCheckout(
       teaReadingCheckoutRequest({ treatment: 'page', firstName, letterCode, bump: bumpInOrder, quote }),
     )
     if (result.status === 'price_changed') {
-      // Show the new rung everywhere it is printed; her next press sends the new day.
+      // Show the server's price everywhere it is printed; her next press sends the new arm.
       setPrice({ status: 'ready', quote: result.current })
       setMovedTo(result.current.label)
     }
@@ -194,12 +196,12 @@ export default function TeaReadingBookingPage() {
               </figcaption>
             </figure>
 
-            {/* Today's rung, from the server. Never a literal, never a guess. */}
+            {/* Her arm's price, from the server. Never a literal, never a guess. */}
             <div
               className="mt-3 flex min-h-[40px] items-center justify-center gap-3"
               data-testid="text-price-line"
               data-state={price.status}
-              data-day={quote?.day ?? ''}
+              data-arm={quote?.arm ?? ''}
             >
               {price.status === 'failed' ? (
                 <p className="text-center text-[14px] text-gray-700" role="alert" data-testid="text-price-failed">
@@ -393,10 +395,6 @@ export default function TeaReadingBookingPage() {
                 </ul>
               </section>
 
-              <section data-testid="section-why-the-price">
-                <h2 className="font-serif text-[19px] text-gray-900">{WHY_THE_PRICE.heading}</h2>
-                <p className="mt-2 text-[15px] leading-relaxed text-gray-700">{WHY_THE_PRICE.body}</p>
-              </section>
             </div>
           </div>
 

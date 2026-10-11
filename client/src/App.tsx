@@ -376,9 +376,9 @@ function Router() {
             last so the /chat, /page and /success paths match first. */}
         <Route path="/offers/wiccan/judgement-day" component={JudgementBookingChat} />
 
-        {/* Backend deck, offer 04 — The Turn, a tea-leaf READING by Evelyn Cross, priced
-            on a LADDER by day since the letter (the server decides; the page prints
-            today's rung). Review only: `readyForMoney: false`, and the booking buttons log
+        {/* Backend deck, offer 04 — The Turn, a tea-leaf READING by Evelyn Cross, at one
+            fixed price under a $35 / $45 split test (the server decides her arm; the page
+            prints its price). Review only: `readyForMoney: false`, and the booking buttons log
             and stop while BACKEND_CHECKOUT_LIVE is off. The PAGE (09's v2 one-tick shape)
             owns the offer root, where the letters' {{BOOKING_URL}} points; the chat is the
             second treatment at /chat. Both send a Stripe cancel back to themselves with

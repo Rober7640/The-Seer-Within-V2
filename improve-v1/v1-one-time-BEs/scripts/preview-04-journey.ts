@@ -11,7 +11,9 @@
 //   npx tsx improve-v1/v1-one-time-BEs/scripts/preview-04-journey.ts      # then open
 //   http://localhost:5096/offers/wiccan/tea-reading?fn=Sarah
 //
-// Add ?day=2 (3, 4) to the booking URL to see that day's price.
+// The price is one fixed price under a $35 / $45 split test (operator 2026-10-11 — no ladder).
+// The page shows arm A ($35) by default; add ?arm=B to the booking URL to see arm B ($45). The
+// stub checkout charges the arm the page printed (`quotedArm`).
 process.env.VITE_BACKEND_CHECKOUT_LIVE = 'true'; // so the button calls the stub below, not the preview log
 process.env.NODE_ENV = 'development';
 
@@ -20,14 +22,14 @@ import { createServer } from 'http';
 import { setupVite } from '../../../server/vite';
 
 const PORT = Number(process.env.PORT || 5096);
-const RUNGS: Record<number, number> = { 1: 3500, 2: 4700, 3: 5700, 4: 6700 };
+const ARMS: Record<string, number> = { A: 3500, B: 4500 };
 const BUMP_CENTS = 1277;
 const label = (c: number) => (c % 100 === 0 ? `$${c / 100}` : `$${(c / 100).toFixed(2)}`);
 
 interface PreviewOrder {
   firstName: string | null;
   bump: boolean;
-  day: number;
+  arm: string;
   upsellPurchased: boolean;
 }
 const orders = new Map<string, PreviewOrder>();
@@ -36,12 +38,14 @@ let seq = 0;
 const app = express();
 app.use(express.json());
 
+// The real endpoint resolves her arm from ?subject= (the draft test ⇒ A for everyone); this stub
+// answers A, or the ?arm= preview the page passes through.
 app.get('/api/backend/offers/tea-reading/price', (req, res) => {
-  const asked = Number(req.query.day);
-  const day = Number.isInteger(asked) && asked >= 1 ? Math.min(asked, 4) : 1;
+  const asked = String(req.query.arm ?? '').toUpperCase();
+  const arm = asked in ARMS ? asked : 'A';
   res.set('cache-control', 'no-store').json({
-    offer: 'tea-reading', day, cents: RUNGS[day], label: label(RUNGS[day]), startSet: true,
-    ...(asked ? { preview: true } : {}),
+    offer: 'tea-reading', arm, cents: ARMS[arm], label: label(ARMS[arm]),
+    ...(asked in ARMS ? { preview: true } : {}),
   });
 });
 
@@ -52,10 +56,11 @@ app.post('/api/backend/checkout', (req, res) => {
   orders.set(id, {
     firstName: typeof b.firstName === 'string' && b.firstName ? b.firstName : null,
     bump: !!b.bump,
-    day: Number(b.quotedDay) || 1,
+    // The stub charges the arm the page printed (the real checkout re-resolves it server-side).
+    arm: typeof b.quotedArm === 'string' && b.quotedArm in ARMS ? b.quotedArm : 'A',
     upsellPurchased: false,
   });
-  console.log(`[preview] checkout → ${id}`, { bump: !!b.bump, quotedDay: b.quotedDay ?? null });
+  console.log(`[preview] checkout → ${id}`, { bump: !!b.bump, quotedArm: b.quotedArm ?? null });
   res.json({ url: `/offers/upsell/welcome1?session_id=${id}` });
 });
 
@@ -88,7 +93,7 @@ app.post('/api/backend/upsell/shipping', (req, res) => {
 app.get('/api/backend/order/:id', (req, res) => {
   const o = orders.get(req.params.id);
   if (!o || req.query.offer !== 'tea-reading') return res.status(404).json({ error: 'Order not found.' });
-  const readingCents = RUNGS[o.day] ?? RUNGS[1];
+  const readingCents = ARMS[o.arm] ?? ARMS.A;
   res.json({
     order: {
       reference: req.params.id.slice(-6).toUpperCase(), offer: 'tea-reading', offerNumber: '04',

@@ -3,7 +3,8 @@ import { CosmicBackground } from '@/components/CosmicBackground'
 import { typingPace, BETWEEN_LINES_MS, BEFORE_CARD_MS } from '@/lib/chatPace'
 import { backendOfferFunnel, bookingFirstName, bookingLetterCode } from '@/lib/funnel'
 import { beginBackendCheckout } from '@/lib/backendCheckout'
-import { fetchLadderQuote, type LadderQuote } from '@/lib/ladderPrice'
+import { getBackendVisitorId } from '@/lib/backendVisitor'
+import { fetchPriceQuote, type PriceQuote } from '@/lib/teaReadingPrice'
 import { track as trackPH } from '@/lib/posthog'
 import {
   CHAT_SCRIPT,
@@ -27,8 +28,8 @@ import {
 // Copy spec: improve-v1/v1-one-time-BEs/copy/04/04-C2-booking-chat.md (constants in
 // lib/teaReadingBooking.ts). Built class-for-class off 03's JudgementBookingChat — the agreed
 // shape (workflow A2, "copy 03's chat, not 02's") — with 04's differences:
-//   · THREE statements, the third carrying today's rung (a price LADDER: fetched from the
-//     server, never guessed — a blank bar until it loads);
+//   · THREE statements, the third carrying her price (her arm of the $35 / $45 split test:
+//     fetched from the server, never guessed — a blank bar until it loads);
 //   · the bump as its own turn after she commits, as Evelyn's question.
 // ⭐ NO CUP QUESTION (operator 2026-10-11): the server draws which of the three readings she gets
 // at checkout, so the chat runs greeting → card → bump and never sends a cup.
@@ -37,9 +38,9 @@ import {
 // as it would take to type (lib/chatPace.ts — proportional to length, with variance). The card
 // gets its own beat. The chat opens on her already writing.
 //
-// ⛔ Posts NO price — the day the card printed (`quotedDay`) and the bump answer. While
+// ⛔ Posts NO price — the arm the card printed (`quotedArm`) and the bump answer. While
 // BACKEND_CHECKOUT_LIVE is false the bump answer LOGS and stops (preview). A 409 price_changed
-// puts the new price on the card and asks her to press her answer again.
+// puts the server's price on the card and asks her to press her answer again.
 
 // Survives a refresh, a navigate-away and the Stripe round-trip. sessionStorage, not
 // localStorage: it should not outlive the tab. ⚠ Only the POSITION is stored — never the ticks,
@@ -76,7 +77,7 @@ function resolveEntry(search: string): EntryMode {
   return stored ? 'refreshed' : 'fresh'
 }
 
-type PriceState = { status: 'loading' } | { status: 'ready'; quote: LadderQuote } | { status: 'failed' }
+type PriceState = { status: 'loading' } | { status: 'ready'; quote: PriceQuote } | { status: 'failed' }
 
 export default function TeaReadingBookingChat() {
   const entry = useRef<EntryMode>(resolveEntry(window.location.search)).current
@@ -124,7 +125,7 @@ export default function TeaReadingBookingChat() {
 
   const loadPrice = useCallback(async () => {
     setPrice({ status: 'loading' })
-    const result = await fetchLadderQuote(TEA_READING_OFFER, search)
+    const result = await fetchPriceQuote(TEA_READING_OFFER, getBackendVisitorId(), search)
     setPrice(result.kind === 'ok' ? { status: 'ready', quote: result.quote } : { status: 'failed' })
   }, [search])
 
@@ -132,7 +133,7 @@ export default function TeaReadingBookingChat() {
     void loadPrice()
   }, [loadPrice])
 
-  // Back from Stripe via the browser's Back button: re-arm the answers and re-ask today's price.
+  // Back from Stripe via the browser's Back button: re-arm the answers and re-ask her price.
   useEffect(() => {
     const onPageShow = (event: PageTransitionEvent) => {
       if (!event.persisted) return
@@ -234,7 +235,7 @@ export default function TeaReadingBookingChat() {
       price_cents: teaReadingTotalCents(quote.cents, taken),
       bump: taken,
       treatment: 'chat',
-      rung: quote.day,
+      price_arm: quote.arm,
     })
     const result = await beginBackendCheckout(
       teaReadingCheckoutRequest({ treatment: 'chat', firstName, letterCode, bump: taken, quote }),
@@ -370,7 +371,7 @@ export default function TeaReadingBookingChat() {
                     </span>
                   </div>
 
-                  {/* The button is ABSENT until every agreement is made and today's price is on
+                  {/* The button is ABSENT until every agreement is made and her price is on
                       the card — not disabled. That absence is the mechanism, per V1's gate. */}
                   <div className="px-4 pb-4 pt-4">
                     {ready ? (

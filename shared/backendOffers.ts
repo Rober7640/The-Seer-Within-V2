@@ -16,9 +16,9 @@
 // here, server-side. If the client could send a price, anyone could buy a $35 reading
 // for one cent.
 //
-// A LADDER offer (04) is priced by the SERVER's clock. The browser may say which day
-// its page displayed (`quotedDay`); that is honoured only inside a short grace window
-// after the rung moved on, and never below it — see `resolveLadderCharge()`.
+// A PRICE-TESTED offer (04) is still a fixed price. The SERVER resolves which arm of the
+// split test she is in and passes that arm's price as `armCents`; it is honoured only when
+// the catalog lists it in `testCents` — see `priceBackendOffer()`.
 //
 // ── Why the Stripe product keys are new strings ──────────────────────────────────
 // Every branch of the live Stripe webhook is keyed on `metadata.product`, and skips a
@@ -70,37 +70,34 @@ export const JUDGEMENT_BUMP_CENTS = 1277;
 // ⛔ 03's bump key — see the note on 02's above.
 export const JUDGEMENT_BUMP_PRODUCT_KEY = 'unburdening';
 
-// 04 — The Turn, a tea-leaf reading by Evelyn Cross. ⭐ The deck's first PRICE LADDER (D4,
-// locked 2026-08): the price rises with the DAY SINCE THE SALES LETTER WAS SENT — $35, $47,
-// $57, then $67 from day 4 for good. The offer never closes (04-E5:95). Why it rises is the
-// mechanic, not marketing: the cup dries, and a later reading is more work
-// (00e-FRAMEWORK-BEs.md §3a).
+// 04 — The Turn, a tea-leaf reading by Evelyn Cross. ONE FIXED PRICE, under a 50/50 PRICE
+// SPLIT TEST (operator 2026-10-11: "no price hike" — the day ladder $35/$47/$57/$67 is retired):
+// arm A $35 (control) vs arm B $45. The arm is decided by the SERVER and sticky per visitor —
+// experiment `be_04_price_2026`, resolved by resolveBe04Price() in server/lib/experiments.ts.
+// The test ships DRAFT: until someone starts it in /admin/experiments, everyone pays $35.
 //
-// 🔴 Unlike 07's tiers, the rung is NOT hers to pick. A tier is a product she chooses, so a
-//    tier key from the browser is safe. A day is a fact about the calendar, so a day from the
-//    browser would be a discount code. The server's clock decides — see resolveLadderCharge().
-//
-// Keyed by day so the booking page and the copy check read the same numbers the server charges.
-export const TEA_READING_RUNG_CENTS = {
-  1: 3500,
-  2: 4700,
-  3: 5700,
-  4: 6700,
-} as const;
-
-/** The env var holding the ISO timestamp the 04 sales letter was sent. Day 1 starts then. */
-export const TEA_READING_LADDER_START_ENV = 'BE04_LADDER_START';
+// 🔴 The browser never names a price. Checkout re-resolves her arm and hands its cents to
+//    priceBackendOffer() as `armCents`, which is honoured only when it is one of
+//    TEA_READING_TEST_CENTS — so the worst a bad payload can do is fall back to $35.
+export const TEA_READING_PRICE_CENTS = 3500;
 
 /**
- * How long a rung that has just moved on is still honoured, in minutes.
- *
- * A woman whose page loaded at 11:58pm on day 1 and who presses at 12:03am still pays the
- * $35 she was shown. Past this, the page is told the new price and asked to press again.
+ * The split test's arms and what each charges. A is the control and lists first, exactly as
+ * the experiment row does. Used for the closed set below and for the `?arm=` PREVIEW only —
+ * a live price comes from the experiment's payload, checked against TEA_READING_TEST_CENTS.
  */
-export const TEA_READING_GRACE_MINUTES = 120;
+export const TEA_READING_PRICE_ARMS = { A: 3500, B: 4500 } as const;
+export type TeaReadingPriceArm = keyof typeof TEA_READING_PRICE_ARMS;
+
+/** ⛔ The ONLY prices 04 can ever charge. Anything else the server is handed is ignored. */
+export const TEA_READING_TEST_CENTS: readonly number[] = Object.values(TEA_READING_PRICE_ARMS);
+
+export function isTeaReadingPriceArm(value: unknown): value is TeaReadingPriceArm {
+  return value === 'A' || value === 'B';
+}
 
 // 04's bump — "The Double Turning": Evelyn reads her cup a second time, to put twice the
-// strength into the same reading. $12.77 flat at every rung. ⭐ INTANGIBLE (operator
+// strength into the same reading. $12.77 flat at either price. ⭐ INTANGIBLE (operator
 // 2026-10-11): nothing extra is delivered — no page, no email, no link. Same reading, same 21
 // days. ⛔ NOT a speed bump: it does not change the 24-hour delivery (unlike 08's).
 // (It replaced "The Still Cup", a delivered nightly instructional, on 2026-10-11.)
@@ -241,7 +238,16 @@ export interface BackendTierListing {
 }
 
 export type BackendPricing =
-  | { model: 'fixed'; priceCents: number }
+  | {
+      model: 'fixed';
+      priceCents: number;
+      /**
+       * ⭐ A PRICE SPLIT TEST's closed set of arm prices (04 only). `priceCents` stays the
+       * control. The server may hand priceBackendOffer() an `armCents`; it is charged ONLY when
+       * it is in this list. ⛔ Never filled from the browser. Undefined ⇒ `armCents` is ignored.
+       */
+      testCents?: readonly number[];
+    }
   | { model: 'pwyw'; minCents: number; maxCents: number }
   /**
    * ⭐ One offer, several prices, chosen by a NAMED RUNG.
@@ -251,144 +257,23 @@ export type BackendPricing =
    * offer's are. ⛔ Never widen this to accept an amount — that is the one security rule
    * this file has, and a tiered offer is the easiest place to lose it.
    */
-  | { model: 'tiered'; tiers: Record<BackendTier, BackendTierListing> }
-  /**
-   * ⭐ One offer, a price that rises by DAY since a start moment (04's sales letter).
-   *
-   * 🔴 The day is decided by the SERVER's clock, never by the browser. The request may say
-   * which day its page displayed (`quotedDay`); see resolveLadderCharge() for when that is
-   * honoured. ⛔ Never accept a day as a price selector the way a tier key is accepted.
-   */
-  | {
-      model: 'ladder';
-      /** Ascending by day, starting at day 1. The last rung holds for every later day. */
-      rungs: readonly BackendLadderRung[];
-      /** The env var holding the start moment (ISO 8601). Read by the server at call time. */
-      startEnv: string;
-      /** How long a just-passed rung is still honoured for a page loaded before it moved. */
-      graceMinutes: number;
-    };
-
-/** One rung of a ladder: from `day` onwards (until the next rung), she pays `cents`. */
-export interface BackendLadderRung {
-  day: number;
-  cents: number;
-}
-
-/** Where the ladder stands at one moment. */
-export interface LadderPosition {
-  /** 1-based. Clamped to the ladder: never below 1, never past the last rung. */
-  day: number;
-  cents: number;
-  /**
-   * False when the start moment is unset or unparseable. The ladder then stands on day 1
-   * — ⛔ a broken setting may undercharge, it must never overcharge.
-   */
-  startSet: boolean;
-}
-
-const DAY_MS = 24 * 60 * 60 * 1000;
-
-/**
- * An ISO 8601 start moment in milliseconds, or null.
- *
- * ⚠ Strict on purpose. A date alone (`2026-10-12`) is UTC midnight. A time MUST carry `Z` or
- * an offset — `Date.parse` reads a bare `2026-10-12T18:30` in the SERVER's local zone, so the
- * same setting would move the ladder by hours from one machine to the next.
- */
-export function parseLadderStart(startIso: string | null | undefined): number | null {
-  if (typeof startIso !== 'string') return null;
-  const s = startIso.trim();
-  const ok =
-    /^\d{4}-\d{2}-\d{2}$/.test(s) ||
-    /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2}(\.\d{1,3})?)?(Z|[+-]\d{2}:\d{2})$/i.test(s);
-  if (!ok) return null;
-  const ms = Date.parse(s);
-  return Number.isFinite(ms) ? ms : null;
-}
-
-/**
- * The ladder's rung at `nowMs`. Pure: the caller supplies the clock and the start moment.
- *
- * Day = floor((now − start) / 24h) + 1, clamped to [1, last rung]. Before the start, and
- * when the start is unset or unparseable, it is day 1 (`startSet: false` for the latter).
- */
-export function ladderRungAt(
-  rungs: readonly BackendLadderRung[],
-  startIso: string | null | undefined,
-  nowMs: number,
-): LadderPosition {
-  const startMs = parseLadderStart(startIso);
-  const startSet = startMs !== null;
-  const lastDay = rungs[rungs.length - 1].day;
-  let day = 1;
-  if (startMs !== null && Number.isFinite(nowMs) && nowMs > startMs) {
-    day = Math.floor((nowMs - startMs) / DAY_MS) + 1;
-  }
-  day = Math.min(Math.max(day, 1), lastDay);
-  return { day, cents: ladderCentsForDay(rungs, day), startSet };
-}
-
-/** The price on `day`: the last rung that has started by then (day 1's for anything earlier). */
-export function ladderCentsForDay(rungs: readonly BackendLadderRung[], day: number): number {
-  let cents = rungs[0].cents;
-  for (const rung of rungs) {
-    if (rung.day <= day) cents = rung.cents;
-  }
-  return cents;
-}
+  | { model: 'tiered'; tiers: Record<BackendTier, BackendTierListing> };
 
 /** `$35`, or `$12.77` when there are cents. For display only — never parsed back. */
 export function priceLabel(cents: number): string {
   return cents % 100 === 0 ? `$${cents / 100}` : `$${(cents / 100).toFixed(2)}`;
 }
 
-/** The server's clock and the ladder's start, handed to the pricing rules. */
-export interface LadderClock {
-  /** The start moment as configured — the raw env value, unparsed. */
-  startIso: string | null | undefined;
-  nowMs: number;
-}
-
-export type LadderChargeResult =
-  | { ok: true; day: number; cents: number; current: LadderPosition }
-  | { ok: false; current: LadderPosition };
-
 /**
- * What a ladder offer charges, given the day her page said it showed.
- *
- *  · `quotedDay` missing or not a whole day ≥ 1 → today's rung.
- *  · `quotedDay` is today's day, OR the day that was current `graceMinutes` ago → that day's
- *    price. This is what lets a page loaded just before the rung moved keep its price.
- *  · `quotedDay` is LATER than today (the page cannot know a day the server does not) →
- *    today's rung, which is the lower price.
- *  · `quotedDay` is EARLIER than both → refused (`ok: false`) with today's rung, so the
- *    page can show the new price and ask her to press again. ⛔ Never charged silently at a
- *    number she was not shown, and never at a price that has expired.
- *
- * No clock (a caller that forgot to pass one) is treated as an unset start: day 1.
+ * The split-test arm price to charge on a fixed offer, or null to charge its `priceCents`.
+ * Null unless the offer lists a `testCents` set AND `armCents` is a whole number inside it.
  */
-export function resolveLadderCharge(
-  pricing: Extract<BackendPricing, { model: 'ladder' }>,
-  quotedDay: unknown,
-  clock: LadderClock | undefined,
-): LadderChargeResult {
-  const startIso = clock?.startIso ?? null;
-  const nowMs = clock?.nowMs ?? Number.NaN;
-  const current = ladderRungAt(pricing.rungs, startIso, nowMs);
-  const graceAgo = ladderRungAt(pricing.rungs, startIso, nowMs - pricing.graceMinutes * 60_000);
-
-  const quoted = typeof quotedDay === 'string' && quotedDay.trim() ? Number(quotedDay) : quotedDay;
-  if (typeof quoted !== 'number' || !Number.isInteger(quoted) || quoted < 1) {
-    return { ok: true, day: current.day, cents: current.cents, current };
-  }
-  if (quoted === current.day || quoted === graceAgo.day) {
-    return { ok: true, day: quoted, cents: ladderCentsForDay(pricing.rungs, quoted), current };
-  }
-  if (quoted > current.day) {
-    return { ok: true, day: current.day, cents: current.cents, current };
-  }
-  return { ok: false, current };
+function testArmCents(
+  pricing: Extract<BackendPricing, { model: 'fixed' }>,
+  armCents: unknown,
+): number | null {
+  if (!pricing.testCents || typeof armCents !== 'number' || !Number.isInteger(armCents)) return null;
+  return pricing.testCents.includes(armCents) ? armCents : null;
 }
 
 export interface BackendOfferBump {
@@ -555,11 +440,11 @@ export const BACKEND_OFFER_CATALOG: Record<BackendOfferKey, BackendOffer> = {
     readyForMoney: true,
   },
 
-  // ⭐ 04 — The Turn. A tea-leaf READING by Evelyn Cross, sold by email to past buyers, and
-  // the deck's first PRICE LADDER (see TEA_READING_RUNG_CENTS). Checkout draws one of three
-  // cups at random (TEA_CUPS, operator 2026-10-11 — no pick); the cup decides which of three
-  // finished readings she is sent, by AWeber tag + `reading_url` within 24 hours
-  // (server/lib/be04Delivery.ts).
+  // ⭐ 04 — The Turn. A tea-leaf READING by Evelyn Cross, sold by email to past buyers, at one
+  // fixed price under the deck's first PRICE SPLIT TEST, $35 vs $45 (see TEA_READING_PRICE_ARMS).
+  // Checkout draws one of three cups at random (TEA_CUPS, operator 2026-10-11 — no pick); the
+  // cup decides which of three finished readings she is sent, by AWeber tag + `reading_url`
+  // within 24 hours (server/lib/be04Delivery.ts).
   'tea-reading': {
     key: 'tea-reading',
     number: '04',
@@ -568,17 +453,9 @@ export const BACKEND_OFFER_CATALOG: Record<BackendOfferKey, BackendOffer> = {
     stripeName: 'The Turn — tea-leaf reading by Evelyn Cross',
     stripeDescription: 'Your 21-day reading, delivered within 24 hours.',
     stripeProduct: 'be_tea_reading',
-    pricing: {
-      model: 'ladder',
-      rungs: [
-        { day: 1, cents: TEA_READING_RUNG_CENTS[1] },
-        { day: 2, cents: TEA_READING_RUNG_CENTS[2] },
-        { day: 3, cents: TEA_READING_RUNG_CENTS[3] },
-        { day: 4, cents: TEA_READING_RUNG_CENTS[4] },
-      ],
-      startEnv: TEA_READING_LADDER_START_ENV,
-      graceMinutes: TEA_READING_GRACE_MINUTES,
-    },
+    // $35 unless the server resolved her into arm B of `be_04_price_2026` — and then only a
+    // price in this closed set (the checkout route passes it as `armCents`).
+    pricing: { model: 'fixed', priceCents: TEA_READING_PRICE_CENTS, testCents: TEA_READING_TEST_CENTS },
     bump: {
       productKey: TEA_READING_BUMP_PRODUCT_KEY,
       cents: TEA_READING_BUMP_CENTS,
@@ -596,7 +473,7 @@ export const BACKEND_OFFER_CATALOG: Record<BackendOfferKey, BackendOffer> = {
     collectsShipping: false,
     // 🔴 FALSE. Flip only when the booking page, chat and receipt render, the
     //    three reading PDFs are hosted (BE04_READING_URL_*), the AWeber Campaigns on the be-04
-    //    tags exist, BE04_LADDER_START is set to the letter's send time, and a Stripe TEST-mode
+    //    tags exist, the `be_04_price_2026` draft row has been created, and a Stripe TEST-mode
     //    order has been walked end to end — delivery email included.
     readyForMoney: false,
   },
@@ -878,15 +755,11 @@ export interface BackendChargeRequest {
    */
   tier?: unknown;
   /**
-   * Ladder offers only — the DAY her page displayed (1, 2, 3, 4). ⛔ Not a price selector:
-   * see resolveLadderCharge() for the narrow window in which it is honoured.
+   * Price-tested offers only (04) — the price of the split-test ARM the SERVER resolved for
+   * her (resolveBe04Price). ⛔ Supplied by the checkout route, never by the browser, and
+   * charged only when it is in the catalog's `testCents`; anything else charges `priceCents`.
    */
-  quotedDay?: unknown;
-  /**
-   * Ladder offers only — the SERVER's clock and the configured start. Supplied by the
-   * checkout route, never by the browser. Missing ⇒ the ladder stands on day 1.
-   */
-  ladderClock?: LadderClock;
+  armCents?: number;
 }
 
 export interface BackendChargeLine {
@@ -905,11 +778,6 @@ export type BackendChargeResult =
        * never from what the browser said. Undefined on fixed and pay-what-you-want.
        */
       tier?: BackendTier;
-      /**
-       * Ladder offers only — the DAY whose price was charged (1-based). Written to Stripe
-       * metadata as `rung`, from what the SERVER decided. Undefined on every other model.
-       */
-      rung?: number;
       /** What the reading itself costs — the fixed price, or what she chose to give. */
       readingCents: number;
       /** 0 when she did not take the bump. */
@@ -929,12 +797,8 @@ export type BackendChargeResult =
         | 'tier_missing'
         | 'tier_unknown'
         /** She asked for a bump on an offer that has none. */
-        | 'bump_unavailable'
-        /** Ladder offers: the price her page showed has expired. `current` holds today's. */
-        | 'price_changed';
+        | 'bump_unavailable';
       message: string;
-      /** `price_changed` only: today's rung, so the page can show it and ask her to press again. */
-      current?: { day: number; cents: number };
     };
 
 /**
@@ -977,25 +841,11 @@ export function priceBackendOffer(
 ): BackendChargeResult {
   let readingCents: number;
   let tier: BackendTier | undefined;
-  let rung: number | undefined;
 
   if (offer.pricing.model === 'fixed') {
-    readingCents = offer.pricing.priceCents;
-  } else if (offer.pricing.model === 'ladder') {
-    // ⛔ THE ONE SECURITY RULE, on a price that moves. The day comes from the server's clock
-    //    (`ladderClock`); `amountCents` and `tier` are never read here, and `quotedDay` can
-    //    only keep a price she was shown inside the grace window — never pick a lower one.
-    const ladder = resolveLadderCharge(offer.pricing, req.quotedDay, req.ladderClock);
-    if (!ladder.ok) {
-      return {
-        ok: false,
-        code: 'price_changed',
-        message: "Today's price has changed since this page was opened. Please check it and press the button again.",
-        current: { day: ladder.current.day, cents: ladder.current.cents },
-      };
-    }
-    rung = ladder.day;
-    readingCents = ladder.cents;
+    // ⛔ A split-test arm price (04) only when the catalog lists it — `armCents` comes from the
+    //    server's own resolution of her arm. Every offer without `testCents` ignores it.
+    readingCents = testArmCents(offer.pricing, req.armCents) ?? offer.pricing.priceCents;
   } else if (offer.pricing.model === 'tiered') {
     // ⛔ THE ONE SECURITY RULE, on the model most likely to lose it. The request may
     //    name a rung; the price comes from the catalog. `req.tier` is typed `unknown`
@@ -1086,7 +936,6 @@ export function priceBackendOffer(
     ok: true,
     offer,
     ...(tier ? { tier } : {}),
-    ...(rung ? { rung } : {}),
     readingCents,
     bumpCents,
     totalCents: readingCents + bumpCents,

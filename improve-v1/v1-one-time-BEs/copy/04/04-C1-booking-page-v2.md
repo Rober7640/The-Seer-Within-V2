@@ -2,14 +2,14 @@
 
 | | |
 |---|---|
-| **Offer** | 04 The Turn — READING · price ladder by day since the letter · 24h · **no reply needed** |
+| **Offer** | 04 The Turn — READING · one fixed price, split-tested `$35` vs `$45` · 24h · **no reply needed** |
 | **URL** | `https://theseerwithin.com/offers/wiccan/tea-reading` · chat treatment at `/offers/wiccan/tea-reading/chat` ([`04-C2`](04-C2-booking-chat.md)) · receipt at `/offers/wiccan/tea-reading/success` ([`04-T1`](04-T1-thank-you-page.md)) |
-| **Arrives from** | `04-E2` (`?c=61–67`), the abandon nudges `04-E6` (`?c=71–73`) and the ladder emails `04-E5` (`?c=81–83`). `?c=` and `?fn=` ride into Stripe metadata and are never shown |
+| **Arrives from** | `04-E2` (`?c=61–67`) and the abandon nudges `04-E6` (`?c=71–73`). `?c=` and `?fn=` ride into Stripe metadata and are never shown |
 | **Treatment** | Page |
-| **Price** | ⚠ **`{{TODAYS_RUNG}}`** — today's rung, from `GET /api/backend/offers/tea-reading/price`. Never hard-coded, never guessed: until it loads the price line is a blank grey bar and the button can't be pressed |
-| **Order bump** | the Double Turning, `double_turning`, $12.77 at every rung — **intangible** (operator, 2026-10-11): Evelyn reads her cup a second time, and nothing extra is delivered. Replaces the Still Cup ([`04-C3`](04-C3-order-bump.md), superseded). Unticked, appears once the tick is ticked, directly above the total |
+| **Price** | ⚠ **`{{PRICE}}`** — her arm's price, from `GET /api/backend/offers/tea-reading/price?subject=<visitor id>`: `$35` (arm A, the control) or `$45` (arm B) in the 50/50 split test `be_04_price_2026`, decided by the server and sticky per visitor. Until the test is started in `/admin/experiments`, everyone sees `$35`. Never hard-coded, never guessed: until it loads the price line is a blank grey bar and the button can't be pressed |
+| **Order bump** | the Double Turning, `double_turning`, $12.77 at either price — **intangible** (operator, 2026-10-11): Evelyn reads her cup a second time, and nothing extra is delivered. Replaces the Still Cup ([`04-C3`](04-C3-order-bump.md), superseded). Unticked, appears once the tick is ticked, directly above the total |
 | **Voice** | Plain second person ("your cup"). The one tick and the bump label are in her voice. Evelyn is named in the third person and never speaks on this page |
-| **Supersedes** | [`04-C1`](04-C1-booking-page.md), the six statements (D11, operator lock 2026-10: one short tick, the price and the button on the first phone screen). Its ideas are kept below: the claim, the permission, the drying leaves, 24 hours, the price's reason-why and the rim calendar |
+| **Supersedes** | [`04-C1`](04-C1-booking-page.md), the six statements (D11, operator lock 2026-10: one short tick, the price and the button on the first phone screen). Its ideas are kept below: the claim, the permission, 24 hours and the rim calendar |
 | **Component** | [00e §3 + §3a](../../docs/00e-FRAMEWORK-BEs.md) |
 
 ---
@@ -32,7 +32,7 @@
 
 **Caption:** *Your cup from the letter. Where the seven sit is what Evelyn reads.*
 
-**Price line:** **`{{TODAYS_RUNG}}`** | Today's price · paid once / Your reading within 24 hours
+**Price line:** **`{{PRICE}}`** | Paid once / Your reading within 24 hours
 
 **Check lines (display only, not checkboxes):**
 
@@ -47,7 +47,7 @@
 Always on screen. Before the tick it looks disabled, and a tap highlights the tick instead of doing
 nothing. **Under it while the tick is missing:** *Tick the box above to continue.*
 
-**Trust line, under the button:** Paid once at today's price · Within 24 hours · You don't need to send anything · [Refund policy](https://theseerwithin.com/refund) · [hi@theseerwithin.com](mailto:hi@theseerwithin.com)
+**Trust line, under the button:** Paid once · Within 24 hours · You don't need to send anything · [Refund policy](https://theseerwithin.com/refund) · [hi@theseerwithin.com](mailto:hi@theseerwithin.com)
 
 ---
 
@@ -68,7 +68,7 @@ harder.
 
 ### 2. The total
 
-**Total · `{{TODAYS_RUNG}}`**, plus the bump's $12.77 while the bump is ticked — computed from the
+**Total · `{{PRICE}}`**, plus the bump's $12.77 while the bump is ticked — computed from the
 catalog, never typed.
 
 ---
@@ -78,8 +78,8 @@ catalog, never typed.
 | State | What shows |
 |---|---|
 | Loading | a blank grey bar where the price goes, and the button can't be pressed. ⛔ Never a guessed number |
-| Failed | *Today's price didn't load.* **Try again** — and the button stays disabled until it loads |
-| Moved on while the page was open *(checkout answers `409 price_changed`)* | the price line and the total change to the new rung, and above the button: *Today's price is now `{{NEW_RUNG}}`. It went up while this page was open. Press TURN MY CUP again to go on at `{{NEW_RUNG}}`.* The next press sends the new day |
+| Failed | *The price didn't load.* **Try again** — and the button stays disabled until it loads |
+| Changed while the page was open *(checkout answers `409 price_changed`: the test was started, paused or re-weighted after the page loaded, so the server's arm is not the one printed)* | the price line and the total change to the server's price, and above the button: *The price is now `{{NEW_PRICE}}`. It changed while this page was open. Press TURN MY CUP again to go on at `{{NEW_PRICE}}`.* The next press sends the new arm |
 | Back from the secure checkout page (`?cancelled=1`) | a small line at the top of the sheet: *Nothing has been taken. Your cup is still here.* The tick comes back unticked |
 
 ---
@@ -94,13 +94,6 @@ catalog, never typed.
 - The rim calendar, free: your 21 days on one page.
 - A link to your reading, by email, within 24 hours. You don't need to send Evelyn anything.
 
-### Why today's price is today's
-
-Your seven symbols don't change. Where they sit does: as the leaves dry, they lift and move. A soft
-cup is an evening's work. A dry one has to be worked backwards, leaf by leaf, to where each one sat,
-and that's more of Evelyn's night. So the price goes up each day after the letter, until day four.
-You pay once, at the price on this page when you press the button.
-
 **Footer strip (existing component, unchanged):** 🔒 Secure checkout · One-time · no subscription
 
 ---
@@ -113,10 +106,19 @@ You pay once, at the price on this page when you press the button.
 - **The claim leads.** *"Your cup knows which week to speak in"* is the letter's fork in one line —
   *"the difference is not what you say — it is when"* (`04-E2`). The tick is the letter's promise in
   her voice: *"You stop guessing what to send."*
-- **The price is a merge field.** `{{TODAYS_RUNG}}` is the price endpoint's rung, printed with
-  `priceLabel()`. The page posts the day it showed (`quotedDay`); the server's clock decides the
-  charge and honours a just-expired rung for 120 minutes. ⛔ No other rung's price appears anywhere
-  on this page — not in a "was" line, not in the reason-why.
+- **No price hike — one fixed price, split-tested** (operator, 2026-10-11). The day ladder
+  ($35 / $47 / $57 / $67 by day since the letter) is gone, and with it the "today's price" lines and
+  the reason-why section ("Why today's price is today's", the drying leaves). In its place: a 50/50
+  split test, `be_04_price_2026` — arm A `$35` (the control) vs arm B `$45`. The server decides the
+  arm and it is sticky per visitor (her browser's visitor id). The test ships as a **draft**: until
+  someone starts it in `/admin/experiments`, everyone gets `$35`, and anything that goes wrong (a
+  paused test, a bad setting, a database error) also gives `$35`.
+- **The price is a merge field.** `{{PRICE}}` is her arm's price from the price endpoint, printed
+  with `priceLabel()`. The page posts the arm it showed (`quotedArm`); checkout works out her arm
+  again on the server and charges that. If the two differ it answers `409 price_changed` with the
+  server's price, so nobody is charged a price she wasn't shown. ⛔ The other arm's price appears
+  nowhere on the page. `?arm=A` / `?arm=B` previews either price while the offer is dark (display
+  only — checkout never reads it).
 - **No pick: the reading is drawn** (operator, 2026-10-11). Every buyer's reading reads the same
   cup photo, and there are three interpretations of it, one PDF each. Which one she gets is drawn
   at random **on the server, at checkout**, and written to Stripe metadata as `cup` (with

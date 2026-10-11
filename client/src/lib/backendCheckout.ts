@@ -1,6 +1,6 @@
 import type { BackendOfferKey, BookingTreatment } from '@shared/backendOffers';
 import { getBackendVisitorId } from './backendVisitor';
-import { parsePriceChanged, type LadderQuote } from './ladderPrice';
+import { parsePriceChanged, type PriceQuote } from './teaReadingPrice';
 import { getDistinctId, getUTMs } from './posthog';
 
 // The one way a backend booking screen reaches Stripe.
@@ -46,9 +46,9 @@ export interface BackendCheckoutRequest {
   /** From the letter's ?c=. Which sales letter she bought from — fulfilment reads it
    *  off Stripe metadata (`c`) to decide which letter's promises the reading owes. */
   letterCode?: string | null;
-  /** LADDER offers only (04): the day the screen PRINTED, never a price. The server's clock
-   *  decides the charge; this only keeps a just-expired rung inside its grace window. */
-  quotedDay?: number | null;
+  /** PRICE-TESTED offers only (04): the split-test ARM the screen PRINTED ('A' / 'B'), never a
+   *  price. The server re-resolves her arm and charges that; a mismatch is a 409 price_changed. */
+  quotedArm?: string | null;
   // ⛔ No `cup`: 04's reading is drawn at random by the server (operator 2026-10-11).
 }
 
@@ -56,9 +56,9 @@ export type BackendCheckoutResult =
   | { status: 'preview' }
   | { status: 'redirecting' }
   | { status: 'error'; message: string }
-  /** 04: the ladder moved on since the screen loaded. Show `current`, ask her to press again,
-   *  and re-send with `quotedDay: current.day`. Nothing was charged. */
-  | { status: 'price_changed'; current: LadderQuote; message: string };
+  /** 04: the server would charge another arm than the screen printed. Show `current`, ask her
+   *  to press again, and re-send with `quotedArm: current.arm`. Nothing was charged. */
+  | { status: 'price_changed'; current: PriceQuote; message: string };
 
 const GENERIC_ERROR = 'Something went wrong starting checkout. Please try again.';
 
@@ -82,8 +82,8 @@ export async function beginBackendCheckout(
       amountCents: req.amountCents ?? null,
       firstName: req.firstName ?? null,
       letterCode: req.letterCode ?? null,
-      // 04's ladder field, only when the screen sends it — every other offer's line is unchanged.
-      ...(req.quotedDay !== undefined ? { quotedDay: req.quotedDay } : {}),
+      // 04's price-test field, only when the screen sends it — every other offer's line is unchanged.
+      ...(req.quotedArm !== undefined ? { quotedArm: req.quotedArm } : {}),
     });
     return { status: 'preview' };
   }
@@ -99,9 +99,10 @@ export async function beginBackendCheckout(
         amountCents: req.amountCents ?? undefined,
         firstName: req.firstName ?? undefined,
         letterCode: req.letterCode ?? undefined,
-        quotedDay: req.quotedDay ?? undefined,
-        // The booking-treatment A/B subject, so the purchase attributes back to the
-        // arm she saw. Harmless when the test is off (no exposure → not counted).
+        quotedArm: req.quotedArm ?? undefined,
+        // The A/B visitor subject (02's booking treatment, 04's price test), so the purchase
+        // attributes back to the arm she saw — and, on 04, so the server re-resolves the SAME
+        // price arm the page printed. Harmless when a test is off (no exposure → not counted).
         expSubject: getBackendVisitorId(),
         // PostHog attribution: the browser distinct id + the entry link's UTM tag, so
         // the server-side revenue event stitches to her click and lands on the right
@@ -113,8 +114,8 @@ export async function beginBackendCheckout(
 
     const data = await response.json().catch(() => ({}) as { url?: string; error?: string });
 
-    // 04: the rung moved on past its grace window. Not an error she has to fix — the screen
-    // shows the new price and asks her to press again.
+    // 04: the server would charge another price arm than the screen printed. Not an error she
+    // has to fix — the screen shows the new price and asks her to press again.
     const moved = parsePriceChanged(response.status, data);
     if (moved) {
       return { status: 'price_changed', current: moved, message: data?.error || GENERIC_ERROR };

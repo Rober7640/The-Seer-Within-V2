@@ -16,7 +16,7 @@ overturned without re-deriving it.
 |---|---|---|---|
 | D1 | URL | **(rec.)** `/offers/wiccan/tea-reading` · chat `/offers/wiccan/tea-reading/chat` · receipt `/offers/wiccan/tea-reading/success` | The master's `/wiccan/tea-reading` is stale: 03 actually lives at `/offers/wiccan/judgement-day` and 06 at `/offers/wiccan/pixiu-bracelet` (`client/src/App.tsx`). 04 slots in beside them |
 | D3 | Booking-page promises that need code | **(rec.)** Build the rising price (`S9`). Keep 24h. Cut every line that promises *sooner* than 24h ("by morning", "look out for it tomorrow") | The rising price is the offer; a hard-coded number breaks for a day-3 buyer. "By morning" is false for a woman who buys at 8am |
-| D4 | Ladder rungs | $35 / $47 / $57 / $67 for days 1 / 2 / 3 / 4+, counted from the letter's send. Stays $67 after day 4 — the offer does not close (`04-E5`:95) | Locked 2026-08 ($35 floor). See *The ladder* below for how the day is decided |
+| D4 | Money | ~~Day ladder $35→$47→$57→$67~~ **superseded 2026-10-11:** fixed price, split test A $35 / B $45 (see *The price*) | Operator: "lets remove price hike. simple split test 35 vs 45" |
 | D11 | One page or one job per screen | **(rec.)** **One page, the 09 v2 shape**: one short tick, price and button on the first phone screen. The six statements are cut to one | Operator lock (2026-10): commitment pages are one tick + visible button + price on screen 1. `04-C1`'s six statements + the cup pick would be ~3 phone screens |
 | D5 | Product length | **(rec.)** Rewrite into **three complete readings, one per cup**, each ≥3,000 words before the rim calendar | Today one buyer gets ~2,100–2,300 words plus the calendar. A buyer of the other two cups also reads two different plans |
 | D6 | Artwork | **(rec.)** No tarot cards — 04 is leaves. One cup hero + one illustration per symbol (7), made with `codex exec` (free) | The RWS deck has nothing to say about tea. The letter's image rules carry over: the hero never shows a *read* cup |
@@ -37,33 +37,38 @@ overturned without re-deriving it.
 | **No pick — a random draw.** The booking page and chat no longer ask; the server draws one of the three interpretations at checkout (`server/lib/be04Draw.ts`, `crypto.randomInt`) into Stripe `metadata.cup` (+ `cupDrawn: '1'`). The receipt no longer names it. The readings no longer say "you picked": the cup reads from the mark that catches the light first when Evelyn tips it | "random draw" (asked: one PDF or three) | Three PDFs stay, one per interpretation; she gets one, drawn. Backups of the picked wording: `copy/04/product/_superseded-2026-10-11-picked/` |
 | **Upsell 2's "pick a stone" is closed.** The built upsell never asks it; it was only in the August draft | "confuse why theres a pick a stone" | Nothing to build |
 
-## The ladder (`S9`)
+## The price — a split test, $35 vs $45 *(replaced the day ladder, operator 2026-10-11)*
 
-**The server decides the price, never the browser.** The day is counted from the moment the
-letter was sent (env `BE04_LADDER_START`, ISO 8601 with `Z` or an offset):
-`day = floor((now − start) / 24h) + 1`, clamped to 1–4. Day 1 $35 · day 2 $47 · day 3 $57 ·
-day 4 and every day after $67. Before the start, or with the start unset or unreadable, it is
-day 1 — a broken setting can undercharge, never overcharge (and checkout logs a warning).
+⛔ **The day ladder (`S9`) is gone** — no price rise, no `BE04_LADDER_START`, no rungs, no
+`quotedDay` grace. The operator dropped it ("lets remove price hike. simple split test 35 vs 45").
 
-**The grace window (120 min).** The page sends back the day it showed (`quotedDay`). It is
-honoured only if it is today's day or the day that was current 120 minutes ago — so a woman
-whose page loaded at 11:58pm on day 1 still pays the $35 she saw. Lower than both → refused
-with `409 price_changed` and today's price, and the page asks her to press again. Higher than
-today → charged today's (lower) rung. Missing → today's rung. `amountCents` and `tier` are
-never read for 04.
+**The test:** experiment `be_04_price_2026` in the existing framework (`server/lib/experiments.ts`),
+subject = the backend visitor id, arms **A $35 (control) · B $45**, 50/50, `freezeAssignment`.
+**Ships as a draft:** until someone presses Start in `/admin/experiments`, everyone pays $35.
+Create the draft row once with `improve-v1/create-be-04-price-experiment-2026-10-11.sql` (not run).
+
+**The server decides the price, never the browser.** `resolveBe04Price(subject)` is asked twice —
+by the price endpoint (what the page prints) and by checkout (what Stripe charges) — and the same
+subject gets the same arm. Only $35 or $45 can ever be charged; any error, typo'd payload or
+non-running status falls back to $35. The page sends back the arm it showed (`quotedArm`); a
+mismatch returns `409 price_changed` with the server's price, so nobody pays a number she wasn't
+shown. Stripe metadata: `priceExp: 'be_04_price_2026'` + `priceArm`, copied onto both upsells.
+**Results** (`/admin/experiments` → `be_04_price_2026`): revenue per visitor per arm, counting the
+booking (bump included) and both upsells. Private-browsing visitor ids are now stable for the
+page's life (`client/src/lib/backendVisitor.ts`), so the arm can't flip between page and checkout.
 
 ### Server
 
 | Piece | Where |
 |---|---|
-| Rungs, grace, bump, cups, the pure resolver | `shared/backendOffers.ts` — `TEA_READING_RUNG_CENTS`, `ladderRungAt()`, `resolveLadderCharge()`, `TEA_CUPS`, `resolveTeaCup()`; catalog row `'tea-reading'` (`be_tea_reading`, bump `double_turning` $12.77, `readyForMoney: false`) |
-| Today's price for the page | `GET /api/backend/offers/tea-reading/price` → `{ offer, day, cents, label, startSet }`, `no-store`. `?day=N` previews a rung (display only, `preview: true`) while the offer is not open for money; checkout never reads it |
-| Checkout | `POST /api/backend/checkout` takes optional `quotedDay` (a `cup` from the browser is accepted and ignored). Stripe metadata gets `rung` ('1'–'4', what the server charged), `cup` (the server's random draw) and `cupDrawn: '1'` |
+| Price, bump, cups | `shared/backendOffers.ts` — `TEA_READING_PRICE_CENTS` ($35), `TEA_READING_TEST_CENTS` [3500, 4500], `TEA_CUPS`, `resolveTeaCup()`; `server/lib/experiments.ts` — `resolveBe04Price()`; catalog row `'tea-reading'` (`be_tea_reading`, bump `double_turning` $12.77, `readyForMoney: false`) |
+| The price for the page | `GET /api/backend/offers/tea-reading/price?subject=<visitorId>` → `{ offer, arm, cents, label }`, `no-store`. `?arm=A\|B` previews an arm (display only, `preview: true`, enrols nobody) while the offer is not open for money |
+| Checkout | `POST /api/backend/checkout` takes `quotedArm` (a `cup` from the browser is accepted and ignored). Stripe metadata gets `priceExp` / `priceArm` (what the server charged), `cup` (the server's random draw) and `cupDrawn: '1'` |
 | Receipt | `GET /api/backend/order/:sessionId` — 04 is always `deliveryHours: 24` (the Double Turning is not a speed bump); does NOT return the cup (anyone holding the session id could read the draw). `bumpPurchased` was already there |
 | AWeber tags | `be-04-tea-reading`, `be-04-bump`, `be-04-delivered`, upsells `be-04-upsell1-protection` / `be-04-upsell2-bracelet`; lists 6972552 / 6972554 (shared with 02/03) |
 | Delivery | `server/lib/be04Delivery.ts`, every 10 min from the cron set, **off** unless `BE04_DELIVERY_ENABLED=true`. Paid, undelivered 04 orders older than `BE04_DELIVERY_DELAY_HOURS` (default 12, 1–23) get their cup's link (`BE04_READING_URL_TURNED_HANDLE` / `_DIVIDED_RIM` / `_SUNKEN_LEAF`, https only) via `markBackendReadingDelivered`, then `reading_url` + `delivered_at` are stamped. Cup read from the Stripe session (no migration). No link, or Stripe unreadable → skipped and retried, never a guessed link. Still undelivered at 23h → error log every tick |
 
-⚠ **Before go-live:** set `BE04_LADDER_START` the moment the letter sends; host the three PDFs
+⚠ **Before go-live:** run the price-experiment SQL once (draft) and press Start when wanted; host the three PDFs
 and set their links; build the AWeber Campaigns on the be-04 tags (`reading_url` merged); make
 sure the DB has every be_orders column the schema names (a missing 07/08 column makes the
 order insert fail, and an order with no row is never auto-delivered).
@@ -75,14 +80,14 @@ order insert fail, and an order with no row is never auto-delivered).
 | Step | What | Where | Proof |
 |---|---|---|---|
 | A1 | Worksheet + D1 | [`0-WORKFLOW-04.md`](./0-WORKFLOW-04.md) Step 0; decisions above | — |
-| A2 | Booking **page** (one tick) + booking **chat** | `client/src/pages/offers/tea-reading/{BookingPage,BookingChat}.tsx`, `client/src/lib/{ladderPrice,teaReadingBooking}.ts`; copy `copy/04/04-C1-booking-page-v2.md`, `04-C2-booking-chat.md` | walk 195/195; phone button at 735–795px of 844, unticked |
+| A2 | Booking **page** (one tick) + booking **chat** | `client/src/pages/offers/tea-reading/{BookingPage,BookingChat}.tsx`, `client/src/lib/{teaReadingPrice,teaReadingBooking}.ts`; copy `copy/04/04-C1-booking-page-v2.md`, `04-C2-booking-chat.md` | walk 195/195; phone button at 735–795px of 844, unticked |
 | A3 | Bump — **the Double Turning**, $12.77, `double_turning`, never pre-checked. **Intangible: nothing is delivered** (operator 2026-10-11 — replaced the Still Cup, a delivered evening practice) | in both treatments; the receipt confirms it in one P.S. ("nothing extra to look out for"). No page, no email | walk |
 | A4/A5 | Upsells on the shared chain | `client/src/lib/upsellCopy/teaReading.ts` (registered in `BACKEND_UPSELL_PITCH`); copy as she sees it in `copy/04/04-U-upsell-copy-v2.md` | 18 tests; walk 36/36 (`scripts/walk-04-upsells.mjs`) |
 | A6 | Receipt | `ThankYouPage.tsx` + `client/src/lib/teaReadingReceipt.ts` (09's `?offer=` guard, 08's 2s/40s poll); copy `copy/04/04-T1-thank-you-page.md` | walk |
 | A7 | Routes, funnel, checkout fields | `App.tsx` (4 lazy routes), `funnel.ts` (`TEA_READING_PREFIX`, `'teareading'`), `backendCheckout.ts` (`quotedDay`, `cup`, `price_changed`) | 67 client tests; tsc 46 (baseline) |
 | A8 | Walk + screenshots | `scripts/walk-04-smoke.mjs` → `improve-v1/evidence/04-tea-reading-2026-10-11/` (48 shots + `upsells/`) | the 409 path proved on a second Vite with `VITE_BACKEND_CHECKOUT_LIVE=true`, every `/api` call answered by the script |
 
-Server side: see *The ladder* above.
+Server side: see *The price* and *Server* above.
 
 ### Phase B — the product *(2026-10-11)*
 
