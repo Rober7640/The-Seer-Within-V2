@@ -124,6 +124,25 @@ By hand in AWeber (C3): swap `{{AWEBER_READING_URL}}` for the `reading_url` fiel
 text); type the subject's name merge with a `"dear"` fallback; build the three Campaigns; seed-test
 with and without a first name. ⛔ Not uploaded — AWeber was not touched.
 
+### Sales emails *(2026-10-11, operator-approved)*
+
+The August letter (`04-E2`), ladder emails (`04-E5`), abandon nudges (`04-E6`) and their subject
+bank (`04-E1`) are **retired**. Operator: "will only send 3 emails. emails 2 and 3 need to be self
+contained", then "email 1, 4, 2 approved". The sequence is three standalone emails, one named idea
+— **"your bridge week"** — none naming a price (the $35/$45 test lives on the booking page):
+
+| Order | Source → build | Opens with | Codes |
+|---|---|---|---|
+| 1 | `copy/04/sales/04-S1-your-bridge-week.md` | "I saw your bridge week in the tea leaves." | 61–63 |
+| 2 · RE: | `copy/04/sales/04-S4-re-your-bridge-week.md` | "I'm writing to you about this a second time, on purpose…" | 91–92 |
+| 3 | `copy/04/sales/04-S2-two-months-not-three-weeks.md` | "He started pulling away about two months ago." | 71–73 |
+
+Built by `copy/04/sales/build-04-sales.py all` → `copy/04/sales/html/*.html|.txt` (Evelyn shell
+from 09); photo `docs/04/product/images/esl/esl-cup-640.jpg` → S3 `evelyn/backend-04/` (not
+uploaded). Handoff: `copy/04/sales/AWeber-handoff.md`. `04-S3` was drafted and not approved.
+Because a buyer may have read only one email, the readings, the confirmation email and the
+upsells no longer say "my letter said…", and the invented "woman in my letter" story is gone.
+
 ## Departures from the copy specs
 
 | Spec | Departure | Why |

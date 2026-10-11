@@ -1,3 +1,5 @@
+⛔ Superseded 2026-10-11 by copy/04/sales/ (1 → RE: → 2)
+
 # 04-E1 — Subject-line bank *(The Turn)*
 
 Same rules as [`02-E1`](../02/02-E1-subject-lines.md): one emoji at the front · `%FIRSTNAME%`

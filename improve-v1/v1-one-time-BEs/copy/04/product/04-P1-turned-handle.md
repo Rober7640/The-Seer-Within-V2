@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | **Cup** | The Turned Handle — *he answers, but flat* |
-| **Words before the calendar** | **4,611**. Measured from the `# Your cup is turned` line to the calendar marker: HTML comments, image-slot tokens and table rule lines removed, markdown symbols (hash, asterisk, pipe, backtick, angle bracket, underscore) stripped, then whitespace-separated words containing a letter or digit counted. Table cell text counts |
+| **Words before the calendar** | **4,705** (re-measured 2026-10-11). Measured from the `# Your cup is turned` line to the calendar marker: HTML comments, image-slot tokens and table rule lines removed, markdown symbols (hash, asterisk, pipe, backtick, angle bracket, underscore) stripped, then whitespace-separated words containing a letter or digit counted. Table cell text counts |
 | **Bridge days** | **13–15**. The one message: **day 14, between six and eight in the evening**. Days 16–18 are quiet |
 | **Calendar** | `04-P3-turned-handle.md` renders at the end, after the close |
 | **The cup** | ⛔ The ONE real cup, the same photo for every buyer (operator, 2026-10-11). Every position and shape below is checked against [`docs/04/product/esl-cup-map.md`](../../../docs/04/product/esl-cup-map.md). The random draw changes the interpretation and the order of the days (Evelyn reads the order from the first light, see Build notes), never what is in the cup |
@@ -27,15 +27,15 @@ can find each one on the photo as I go.
 Your cup reads as a Turned Handle. What runs between you and him is still open, and it's gone thin: he
 answers, and there's nothing in it. I'll show you where the cup says so, right beside your handle.
 
-Some of what follows will sound as if it's arguing with my letter, the bird most of all. Read it
-through before you decide it is.
+Some of what follows will go against what you've been telling yourself, the bird most of all. Read
+it through before you decide it's wrong.
 
 ---
 
 ## How a cup is read
 
-My letter gave you the seven leaves but not where they sat, and where they sit is the part with the
-timing in it. Three things decide it, and I'll use your cup to show you each.
+You've seen your seven leaves. Where they sit is the part with the timing in it. Three things decide
+it, and I'll use your cup to show you each.
 
 **The handle is you.** Whatever sits close to the handle is close to you. Whatever sits across the cup
 is as far from you as it gets: people you haven't met, or things you've let slide so far off they're
@@ -85,14 +85,14 @@ The last three weeks are the head: the flat replies, the "yeah, fine", the messa
 times looking for something in them. That's where he's got to, not where he started. So you can stop
 going over your own last few messages for the thing that switched him off. It's not in there.
 
-Now look at where he sits. My letter said the far side of a cup belongs to somebody you haven't met.
-Your bird's over there, a long way from your handle, and in your case that's exactly how he answers:
+Now look at where he sits. The far side of a cup belongs to somebody you haven't met. Your bird's
+over there, a long way from your handle, and in your case that's exactly how he answers:
 promptly, politely, like a man you've never met.
 
-My letter said a bird near the rim and a bird down by the base would have you doing two opposite things
-this week. Here's what I meant by it: a fortnight-old bird you'd talk to now, and one from the base
-you'd leave be. Two months sits between. Set enough that saying it now lands as pressure, fresh enough
-that it lands well on the right day. In your cup that day comes sooner than in most.
+A bird near the rim and a bird down by the base would have you doing two opposite things this week. A
+fortnight-old bird you'd talk to now, and one from the base you'd leave be. Two months sits between.
+Set enough that saying it now lands as pressure, fresh enough that it lands well on the right day.
+In your cup that day comes sooner than in most.
 
 ---
 
@@ -100,8 +100,8 @@ that it lands well on the right day. In your cup that day comes sooner than in m
 
 `[IMG-MAP]`
 
-*Your cup, the one I read for my letter, from above: my seven marks numbered in red, and the handle at
-the lower right.*
+*Your cup, the one I read for you, from above: my seven marks numbered in red, and the handle at the
+lower right.*
 
 | Leaf | Where it sits | Days | What that makes it |
 |---|---|---|---|
@@ -132,7 +132,7 @@ all there. The stalks that reach out from it are bare.
 A turned handle looks exactly like that. Everything's still joined up, and whatever reaches out from it
 comes to you with nothing on it.
 
-My letter called the tree the honest symbol, and in your cup it's honest twice over. It says the
+The tree's the most honest symbol in any cup, and in yours it's honest twice over. It says the
 foundation has thinned, not collapsed. And it says the contact's whole: one clump, stalks and all.
 
 Then look across the cup at his two leaves. The bird's toward the top, a long way from your handle,
@@ -164,8 +164,8 @@ One warning belongs to your cup and no other. It's in days 4 to 6. Don't skip it
 
 ## How much is recoverable
 
-In my letter I said the question that settles this isn't whether there's somebody else. It's how long
-he's been going, and how much of that you can get back. How long is two months. Here's how much.
+The question that settles this isn't whether there's somebody else. It's how long he's been going,
+and how much of that you can get back. How long is two months. Here's how much.
 
 **Nearly all of it.** Here's why, so you know it's the cup talking and not me being nice.
 
@@ -193,8 +193,8 @@ back. In yours, nearly all of it is.
 Day 1 is **the first evening after you read this.** Not a date. Count from this evening.
 
 Every stretch gets its instruction from its leaf, from what the leaf is and where it sits, and I'll
-give you the leaf first. My letter said the cup had the weeks in it. Here they are, and one of them
-has a day and an hour on it.
+give you the leaf first. Your cup has the weeks in it. Here they are, and one of them has a day and
+an hour on it.
 
 ### Days 1–3 · the broken heart · *Quiet: answer warm, leave first*
 
@@ -296,8 +296,8 @@ thin upright streak of leaf, standing on its own in clean china. Everything else
 in a clump. The lighthouse stands by itself, and nothing touches it.
 
 Near the handle means close to you, and just under the rim means now. Your fixed point's been a few
-inches from you the whole time. My letter said you've been navigating by a moving point, and the
-moving point's over on the far side of the cup with his head up under the rim.
+inches from you the whole time. You've been navigating by a moving point, and the moving point's
+over on the far side of the cup with his head up under the rim.
 
 A lighthouse doesn't go to ships. It stays put, it's lit, and ships find their way by it.
 
@@ -325,8 +325,9 @@ Lower left, right up under the rim: a thin line of leaf lying along the edge of 
 the cup, it sits between your heart and the boat, between your side and his, and higher than either of
 them.
 
-The bridge is what you bought: the stretch where what you say lands as an invitation and not as
-pressure. A week earlier, the same words would have been an exit.
+The bridge is what you bought. This is your bridge week, days 13 to 15: the stretch where what you
+say lands as an invitation and not as pressure. A week earlier, the same words would have been an
+exit.
 
 A bridge spans a gap, and it can be walked from either end. So you build a short one and stand on your
 side of it. Yours is thin, one line of leaf, and a thin bridge carries one thing.
@@ -432,8 +433,8 @@ hear that a tea reader has given you a three-week plan and say: "He answers you,
 tell him how you feel." They'll mean it kindly. They've watched you be unhappy and they want it over.
 
 Telling him is day 14. It's in the days. What they're suggesting is doing it tonight, which is the one
-thing this reading is here to stop, and exactly what the woman in my letter did. Right words, wrong
-week, and four months to make it back.
+thing this reading is here to stop. Sent tonight, the right words land as pressure, and it takes
+months to make that back.
 
 Don't argue with them. Don't tell them what you're doing.
 
@@ -449,8 +450,8 @@ There are marks in your cup I've left out of the table, because they aren't symb
 below the end of the bird's tail, there's a scatter of loose specks, too small and too broken to make
 any shape. The base is what's buried.
 
-My letter said the bird doesn't tell me whether there's somebody else, and the specks don't either. If
-there's a second presence in this, that's where she'd be: under everything, too broken up for me to
+The bird doesn't tell me whether there's somebody else, and the specks don't either. If there's a
+second presence in this, that's where she'd be: under everything, too broken up for me to
 name. If there isn't, they're specks.
 
 The days above work around it either way. I can tell you the shape of this and what to say. I can't
@@ -474,6 +475,14 @@ is on the next page.
 
 ## Build notes
 
+- **No letter references** (operator, 2026-10-11). The August letter (`04-E2-esl.md`) will not be
+  sent; three new standalone sales emails replace it (`copy/04/sales/04-S1`, `04-S4`, `04-S2`), and a
+  buyer may have read only one. Every "my letter said…" became Evelyn's own statement now, and the
+  invented client ("the woman in my letter", four months) is gone from Three things to expect. The only
+  pointers left are ones that are true whatever she read: "you've seen your seven leaves" (her cover
+  photo shows them, and all three emails name them) and the map caption "the one I read for you". The
+  bridge section names it "your bridge week" once (the emails' name), then gives the actual three days.
+  The pre-change version is in `_superseded-2026-10-11-old-letter/`.
 - **One cup for every buyer** (operator, 2026-10-11). The physical cup is the source letter's photo;
   every position and shape claim is checked against `docs/04/product/esl-cup-map.md`. The superseded
   version (an invented "fine line" round the lip, edge-on leaves) is in

@@ -60,7 +60,7 @@ checkout carried no name it becomes "dear". Lines marked `V1` are V1's words, un
 >
 > The trouble is they're not wrong about the honesty, {firstName}. Being honest with him is IN the sequence. It has its own week, and that's what the bridge is for.
 >
-> What they're actually asking is that you do it now, on the wrong day. That's what the woman in my letter did, and it cost her four months.
+> What they're actually asking is that you do it now, on the wrong day. Then even the right words push him further off.
 >
 > And you won't be able to argue back, because the case for waiting is a tea reading, and you'll hear how that sounds in your own mouth before you've finished saying it.
 
@@ -307,7 +307,7 @@ Buttons: **Yes, guard my quiet days** (also posted as her reply) · price line `
 >
 > Before I turn your cup, there's one leaf I want to say a bit more about.
 >
-> It's the butterfly. In my letter I told you it was the one to hold on to.
+> It's the butterfly, the one leaf in your cup that's only about you.
 >
 > And it isn't about him. The butterfly is a change that finishes on the inside before it shows, and yours has already started.
 >
@@ -649,7 +649,7 @@ butterfly).
   talk out of it"; "Good intentions have broken more sequences than rivals ever have" → "Bigger than
   anything he does"; "You don't have to win that conversation — you only have to not lose the week to
   it" → "You don't need to win that argument. You just need to still be on your days when it's over."
-- **RISK gained one line**: "That's what the woman in my letter did, and it cost her four months." It is
+- **RISK gained one line**: "Then even the right words push him further off." It is
   the product's own answer to the friend, in all three cups.
 - **Path B gained the decline acknowledgement** every other offer's Path B has: "I won't push the stone."
 - **Contractions** added where the draft read as written rather than spoken ("who has watched" →

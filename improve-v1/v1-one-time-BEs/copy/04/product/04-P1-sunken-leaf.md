@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | **Cup** | The Sunken Leaf — *silence; she starts everything* |
-| **Words before the calendar** | **4,500**. Measured from the `# Your cup is turned` line to the calendar marker: HTML comments, image-slot tokens and table rule lines removed, markdown symbols (hash, asterisk, pipe, backtick, angle bracket, underscore) stripped, then whitespace-separated words containing a letter or digit counted. Table cell text counts |
+| **Words before the calendar** | **4,591** (re-measured 2026-10-11). Measured from the `# Your cup is turned` line to the calendar marker: HTML comments, image-slot tokens and table rule lines removed, markdown symbols (hash, asterisk, pipe, backtick, angle bracket, underscore) stripped, then whitespace-separated words containing a letter or digit counted. Table cell text counts |
 | **Bridge days** | **19–21**. The one message: **day 20, between six and eight in the evening**, one sentence |
 | **Calendar** | `04-P3-sunken-leaf.md` renders at the end, after the close |
 | **The cup** | ⛔ The ONE real cup, the same photo for every buyer (operator, 2026-10-11). Every position and shape below is checked against [`docs/04/product/esl-cup-map.md`](../../../docs/04/product/esl-cup-map.md). The random draw changes the interpretation and the order of the days (Evelyn reads the order from the first light, see Build notes), never what is in the cup |
@@ -28,15 +28,14 @@ Your cup reads as a Sunken Leaf. What runs between you and him has gone quiet fr
 anything that passes between you starts with you. One of your seven has sunk low, down near the base,
 and I'll show you which.
 
-Some of what's below will look as if it argues with my letter. Read to the end before you decide it
-does.
+Some of what's below will go against what you've been telling yourself. Read to the end before you
+decide it's wrong.
 
 ---
 
 ## How a cup is read
 
-My letter gave you the seven leaves. It couldn't give you their places, because I hadn't turned the
-cup. The places are where the timing is. Three things decide it.
+You've seen your seven leaves. Their places are where the timing is, and three things decide it.
 
 **The handle is you.** Near the handle is near you, and yours. Across the cup is the far side, as far
 from you as the cup goes: the place for people you haven't met, and for anything you've let slip so
@@ -87,11 +86,11 @@ The last three weeks are the silence, and the silence is the head of the bird: w
 isn't where it began. You've been going over the last few messages you sent, looking for the one that
 did it. None of them did it. It was under way before they were written.
 
-And look where he sits: on the far side of your cup, the side my letter said belongs to somebody you
-haven't met. He's gone as quiet as a stranger, and that's where the cup put him.
+And look where he sits: on the far side of your cup, the side that belongs to somebody you haven't
+met. He's gone as quiet as a stranger, and that's where the cup put him.
 
-My letter said a fortnight-old bird and one from the base would have you doing two opposite things this
-week. Here's what I meant: speak at once, or leave it be. Two months is in between. Set enough that
+A fortnight-old bird and one from the base would have you doing two opposite things this week: speak
+at once, or leave it be. Two months is in between. Set enough that
 pushing now lands as pressure, recent enough that it can still be reached on the right day. So your
 days start quiet. In your cup they stay quiet longer than in any other, and that's the sunken leaf's
 doing, not the bird's.
@@ -102,8 +101,8 @@ doing, not the bird's.
 
 `[IMG-MAP]`
 
-*Your cup, the one I read for my letter, from above: my seven marks numbered in red, and the handle at
-the lower right.*
+*Your cup, the one I read for you, from above: my seven marks numbered in red, and the handle at the
+lower right.*
 
 | Leaf | Where it sits | Days | What that makes it |
 |---|---|---|---|
@@ -133,8 +132,8 @@ along the bottom of your cup, and you have to look for it: two dark clumps side 
 of china between them, half lost in the leaf round it. Nothing of yours sits lower. And it's still on
 the wall, not lying on the base.
 
-The heart's yours. My letter called it the turmoil, yours mostly, and said it was about the state
-you've been in while this hasn't ended. In your cup that state has sunk. It's gone down to where old
+The heart's yours. It's the turmoil, yours mostly: the state you've been in while this hasn't
+ended. In your cup that state has sunk. It's gone down to where old
 things settle, and it's sitting there by your handle under a weight of leaf.
 
 Now look at the rest of the cup the way I did. Your side of it, round the handle, is busy: the heart,
@@ -167,8 +166,8 @@ where you see whether he picks up an oar. Then the bridge, last, and thin.
 
 ## How much is recoverable
 
-My letter said the question that settles this isn't whether there's somebody else. It's how long he's
-been going, and how much of it can be got back. How long: two months. How much:
+The question that settles this isn't whether there's somebody else. It's how long he's been going,
+and how much of it can be got back. How long: two months. How much:
 
 **The two of you: all of it. You doing all the starting: none of it.**
 
@@ -196,8 +195,8 @@ relationship. The heart's still on the wall either way. What you find out is whe
 Day 1 is **the first evening after you read this.** Not a date on a calendar. This evening.
 
 Every stretch takes its instruction from its leaf, from what the leaf is and where it sits, and the leaf
-comes first so you can see where the instruction comes from. I told you the cup had the weeks in it. It
-does, and one of them has a day and an hour on it.
+comes first so you can see where the instruction comes from. Your cup has the weeks in it, and one of
+them has a day and an hour on it.
 
 ### Days 1–3 · the broken heart · *Silent*
 
@@ -373,7 +372,8 @@ cup, it sits between your heart and the boat, between your side and his, and hig
 A bridge spans a gap and can be walked from either end. So you build a short one and you stand on your
 side of it. Yours is thin, one line of leaf, and a thin bridge carries one sentence. Not a paragraph.
 
-Your bridge comes last because a silent cup can't be hurried, and because of where it sits: halfway
+This is your bridge week, the three days when what you say lands as an invitation and not as
+pressure. It comes last because a silent cup can't be hurried, and because of where it sits: halfway
 round between your heart and his boat. In a cup where you've been crossing the whole way yourself, you
 build the bridge only once you've seen whether he'll row any of the way. And it's yours to build from
 your side, whatever the boat did.
@@ -418,8 +418,8 @@ say how you feel. They'll mean it kindly. They've watched you carry this for mon
 over.
 
 Telling him how you feel is day 20. It's in the days. What they're suggesting is doing it tonight, which
-is the one thing this reading exists to stop, and what the woman in my letter did. She had the right
-words and the wrong week, and it cost her four months.
+is the one thing this reading exists to stop. The right words in the wrong week land as pressure, and
+they cost you months.
 
 Don't argue with them. Don't tell them what you're doing.
 
@@ -435,8 +435,8 @@ There are marks in your cup that aren't in the table, because they aren't symbol
 below the end of the bird's tail, there's a scatter of loose specks, the ones that fooled me at
 midnight, too small and too broken to make any shape. The base is what's buried.
 
-My letter said the bird doesn't tell me whether there's somebody else, and the specks don't either. If
-there's a second presence in this, that's where she'd be: under everything, too broken up for me to
+The bird doesn't tell me whether there's somebody else, and the specks don't either. If there's a
+second presence in this, that's where she'd be: under everything, too broken up for me to
 name. If there isn't, they're specks.
 
 Your days work around it either way. I can tell you the shape of this and what to say. I can't make
@@ -460,6 +460,14 @@ all you do is follow it. Your calendar's on the next page.
 
 ## Build notes
 
+- **No letter references** (operator, 2026-10-11). The August letter (`04-E2-esl.md`) will not be
+  sent; three new standalone sales emails replace it (`copy/04/sales/04-S1`, `04-S4`, `04-S2`), and a
+  buyer may have read only one. Every "my letter said…" became Evelyn's own statement now, and the
+  invented client ("the woman in my letter", four months) is gone from Three things to expect. The only
+  pointers left are ones that are true whatever she read: "you've seen your seven leaves" (her cover
+  photo shows them, and all three emails name them) and the map caption "the one I read for you". The
+  bridge section names it "your bridge week" once (the emails' name), then gives the actual three days.
+  The pre-change version is in `_superseded-2026-10-11-old-letter/`.
 - **One cup for every buyer** (operator, 2026-10-11). The physical cup is the source letter's photo;
   every position and shape claim is checked against `docs/04/product/esl-cup-map.md`. The superseded
   version (the boat lying whole on the base with a slide-trail, folded butterfly wings, the lighthouse

@@ -102,7 +102,7 @@ const TR_RISK = [
   "Not an enemy. Someone who loves you, who's watched you be unhappy for months and wants it over — and who's going to tell you, kindly, to stop overthinking and just be honest with him.",
   "They'll say it a few days in. They always do. That's when the quiet starts to look like you're suffering for no reason.",
   "The trouble is they're not wrong about the honesty, {firstName}. Being honest with him is IN the sequence. It has its own week, and that's what the bridge is for.",
-  "What they're actually asking is that you do it now, on the wrong day. That's what the woman in my letter did, and it cost her four months.",
+  "What they're actually asking is that you do it now, on the wrong day. Then even the right words push him further off.",
   "And you won't be able to argue back, because the case for waiting is a tea reading, and you'll hear how that sounds in your own mouth before you've finished saying it.",
 ];
 
@@ -280,7 +280,7 @@ const TR_PATH_A_OPEN = [
 const TR_PATH_B_OPEN = [
   "{firstName}... I won't push the stone. Your twenty-one days will be with you within 24 hours either way.",
   "Before I turn your cup, there's one leaf I want to say a bit more about.",
-  "It's the butterfly. In my letter I told you it was the one to hold on to.",
+  "It's the butterfly, the one leaf in your cup that's only about you.",
   "And it isn't about him. The butterfly is a change that finishes on the inside before it shows, and yours has already started.",
   "Here's why I'm telling you now, {firstName}. The sequence I'm about to send you tells you what to say and when to say it. Every word of it is about your timing.",
   "It doesn't do anything about what goes out from you on all the days you're saying nothing. And over three weeks, that matters as much as the wording does.",
