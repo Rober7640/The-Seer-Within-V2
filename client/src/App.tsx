@@ -69,6 +69,10 @@ const TwinFlameThankYouPage = lazyWithRetry(() => import("@/pages/TwinFlameThank
 const JudgementBookingPage = lazyWithRetry(() => import("@/pages/JudgementBookingPage"));
 const JudgementBookingChat = lazyWithRetry(() => import("@/pages/JudgementBookingChat"));
 const JudgementThankYouPage = lazyWithRetry(() => import("@/pages/JudgementThankYouPage"));
+const TeaReadingBookingPage = lazyWithRetry(() => import("@/pages/offers/tea-reading/BookingPage"));
+const TeaReadingBookingChat = lazyWithRetry(() => import("@/pages/offers/tea-reading/BookingChat"));
+const TeaReadingThankYouPage = lazyWithRetry(() => import("@/pages/offers/tea-reading/ThankYouPage"));
+const TeaReadingStillCupPage = lazyWithRetry(() => import("@/pages/offers/tea-reading/StillCupPage"));
 const PixiuBookingPage = lazyWithRetry(() => import("@/pages/offers/pixiu-bracelet/BookingPage"));
 const PixiuThankYouPage = lazyWithRetry(() => import("@/pages/offers/pixiu-bracelet/ThankYouPage"));
 const HeartCleanserBookingPage = lazyWithRetry(() => import("@/pages/offers/heart-cleanser/BookingPage"));
@@ -372,6 +376,21 @@ function Router() {
         {/* Offer root — the default treatment. Serves the chat (see note above);
             last so the /chat, /page and /success paths match first. */}
         <Route path="/offers/wiccan/judgement-day" component={JudgementBookingChat} />
+
+        {/* Backend deck, offer 04 — The Turn, a tea-leaf READING by Evelyn Cross, priced
+            on a LADDER by day since the letter (the server decides; the page prints
+            today's rung). Review only: `readyForMoney: false`, and the booking buttons log
+            and stop while BACKEND_CHECKOUT_LIVE is off. The PAGE (09's v2 one-tick shape)
+            owns the offer root, where the letters' {{BOOKING_URL}} points; the chat is the
+            second treatment at /chat. Both send a Stripe cancel back to themselves with
+            ?cancelled=1. The receipt (04-T1) is reached via successPath + `?s=` from the
+            shared upsell chain; the Still Cup page is the bump's deliverable
+            (TEA_READING_STILL_CUP_PATH). Route order: specific paths before the root.
+            Specs: improve-v1/v1-one-time-BEs/copy/04/04-C1-booking-page-v2.md, 04-C2, 04-T1, 04-C4 */}
+        <Route path="/offers/wiccan/tea-reading/chat" component={TeaReadingBookingChat} />
+        <Route path="/offers/wiccan/tea-reading/success" component={TeaReadingThankYouPage} />
+        <Route path="/offers/wiccan/tea-reading/still-cup" component={TeaReadingStillCupPage} />
+        <Route path="/offers/wiccan/tea-reading" component={TeaReadingBookingPage} />
 
         {/* Backend deck, offer 06 — the Wishing Bracelet (Pixiu). Reading-shaped
             funnel, Object-shaped product: fixed $49, a real physical item that

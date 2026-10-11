@@ -699,3 +699,44 @@ describe('09 · the Reiki charging bump', () => {
     });
   });
 });
+
+// ─── 04 · The Turn ─────────────────────────────────────────────────────────────
+// The ladder rung lands in `reading_cents` (from metadata.readingCents — what the SERVER
+// charged), the Still Cup under its own key, and NOTHING 07/08-shaped: no intake columns, no
+// due_at. Her cup stays on Stripe metadata, where the delivery job reads it.
+describe('04 · a tea-reading order', () => {
+  it('records the rung she was charged, the Still Cup, and no 07/08 columns', async () => {
+    state.row = { ...state.row, offer: 'tea-reading', bumpPurchased: true };
+    await recordBackendOrder(
+      session(
+        { amount_total: 5977 },
+        {
+          product: 'be_tea_reading',
+          offer: 'tea-reading',
+          readingCents: '4700',
+          rung: '2',
+          bump: '1',
+          bumpProduct: 'still_cup',
+          cup: 'sunken-leaf',
+          cupChosen: '1',
+        },
+      ),
+    );
+    expect(state.inserted).toMatchObject({
+      offer: 'tea-reading',
+      offerNumber: '04',
+      readingCents: 4700,
+      bumpPurchased: true,
+      bumpCents: 1277,
+      bumpProductKey: 'still_cup',
+      amountCents: 5977,
+      status: 'paid',
+    });
+    for (const column of ['dueAt', 'editionId', 'tier', 'spreadKey', 'question']) {
+      expect(state.inserted, column).not.toHaveProperty(column);
+    }
+    expect(addBackendCustomer).toHaveBeenCalledWith(
+      expect.objectContaining({ offer: 'tea-reading', stripeOrderId: 'cs_test_backend_1', bumpPurchased: true }),
+    );
+  });
+});

@@ -48,7 +48,8 @@ never gets — which is exactly how 02's chat ended up an older shape than 03's
 without anybody deciding it should be. That is the one failure mode of working
 in copies, and it is avoided by hand, every time.
 
-**Live copies:** [`03/0-WORKFLOW-03.md`](./03/0-WORKFLOW-03.md).
+**Live copies:** [`03/0-WORKFLOW-03.md`](./03/0-WORKFLOW-03.md) ·
+[`04/0-WORKFLOW-04.md`](./04/0-WORKFLOW-04.md) · [`09/0-WORKFLOW-09.md`](./09/0-WORKFLOW-09.md).
 
 ---
 
@@ -58,7 +59,7 @@ in copies, and it is avoided by hand, every time.
 |---|---|---|---|---|---|
 | **02** Twin Flame | Reading | $35 fixed + bump | no | written, 4,821 words, 12 cards | ✅ built — [`00i`](./00i-DELIVERABLES-U1-U2.md) |
 | **03** Judgement Day | **Act** | pay-what-you-want | **yes** | written, 2,429 words | ◐ booking built, upsells not — tick sheet in [`00l`](./00l-DELIVERABLES-03.md), upsells planned in [`00k`](./00k-PLAN-03-UPSELLS.md) |
-| **04** The Turn | Reading | ladder $35→$47→$57→$67 | no | written, 3,714 words | not analysed |
+| **04** The Turn | Reading | ladder $35→$47→$57→$67 by day, decided server-side | no | written ×3 — one reading per cup, ~3,800–3,950 words each + a one-page calendar *(2026-10-11)* | ◐ building — record in [`04/04-DELIVERABLES.md`](./04/04-DELIVERABLES.md) |
 | **05** Hex Her | — | — | — | — | ⚠ no copy at all yet |
 
 ⚠ **"Written" means the words exist in a markdown file.** No product has been
@@ -96,9 +97,13 @@ letter's `{{BOOKING_URL}}` actually points.
 
 | Screen | Path | Treatment | State |
 |---|---|---|---|
-| Booking · step 1 **Agree** | `/wiccan/judgement-day` | page | ✅ built · preview |
-| Booking · step 2 **Give** | `/wiccan/judgement-day?step=give` | page | ✅ built · preview |
-| Booking | `/wiccan/judgement-day/chat` | chat | ✅ built · preview |
+| Booking · step 1 **Agree** | `/offers/wiccan/judgement-day/page` | page | ✅ built |
+| Booking · step 2 **Give** | `/offers/wiccan/judgement-day/page?step=give` | page | ✅ built |
+| Booking | `/offers/wiccan/judgement-day/chat` (also the root `/offers/wiccan/judgement-day`) | chat | ✅ built |
+
+⚠ *Corrected 2026-10-11:* these rows said `/wiccan/judgement-day`; the routes moved under
+`/offers/` (`client/src/App.tsx`) and 03 is `readyForMoney: true`. Rows further down were not
+re-verified.
 | Upsell 1 | — | chat | ❌ not built (A4). Copy drafted in `copy/03/03-U-upsell-beats.md` |
 | Upsell 2 | — | chat | ❌ not built (A5) |
 | Thank-you = **the Entry form** | — | page | ❌ not built (A6) ⚠ load-bearing: the booking screens no longer ask her for the Entry anywhere |
@@ -111,10 +116,35 @@ Query strings that change what you see:
 | `?step=give` | the booking page | step 2 — ⛔ only if the four boxes were ticked this visit. A cold link bounces to step 1 |
 | `?cancelled=1` | the booking chat | the back-from-Stripe door, with its own copy |
 
-### 04 — The Turn · 05 — Hex Her
+### 04 — The Turn *(Reading · price ladder by day · no reply needed)*
 
-Nothing built. 04 is `/wiccan/tea-reading`, 05 is `/wiccan/hex-her` when they
-come — named in D1 so they slot in beside 03.
+| Screen | Path | Treatment | State |
+|---|---|---|---|
+| Booking — the one-tick page (default, the letters' `{{BOOKING_URL}}`) | `/offers/wiccan/tea-reading` | page | ✅ built · preview |
+| Booking | `/offers/wiccan/tea-reading/chat` | chat | ✅ built · preview |
+| Upsell 1 → Upsell 2 | `/offers/upsell/welcome1` → `/welcome2` *(shared engine, offer read from the booking session)* | chat | ✅ built · walked with stubs (`scripts/walk-04-upsells.mjs`, 36/36 — evidence `upsells/`). ⚠ No `?demo=true` on these pages: real use needs a paid booking session |
+| Thank-you *(receipt)* | `/offers/wiccan/tea-reading/success?s=<session>` | page | ✅ built · preview |
+| The Still Cup *(the bump's deliverable)* | `/offers/wiccan/tea-reading/still-cup` | page | ✅ built · noindex |
+
+⛔ `readyForMoney: false`, and with `VITE_BACKEND_CHECKOUT_LIVE` unset both booking treatments log
+`[preview] would checkout {…, quotedDay, cup}` and stop. Locally there is no `.env`: run the client
+alone with `npx vite dev --port 5094` — the price endpoint and the order lookup then need a server
+(or the walk's stubs) to answer.
+
+Query strings that change what you see:
+
+| Add | To | Shows |
+|---|---|---|
+| `?day=1` … `?day=4` | either booking treatment | that day's rung ($35 / $47 / $57 / $67) — display only, honoured by the server only while `readyForMoney` is false; the click sends `quotedDay` = that day |
+| `?fn=Sarah&c=61` | either booking treatment | what the letter passes down (`c=61–67` E2, `71–73` E6, `81–83` E5). ⚠ Nothing displays either — they ride through to checkout |
+| `?cancelled=1` | the page | the back-from-checkout line: *Nothing has been taken. Your cup is still here.* |
+| `?cancelled=1` | the chat | the back-from-checkout resume copy, at the card, nothing ticked |
+| *(a refresh)* | the chat | the refresh resume copy — no greeting for coming back |
+| `?s=<session>` | the receipt | the receipt for that order (`?offer=tea-reading` is added by the page). No `?s=`, or any other offer's session → the fallback |
+
+### 05 — Hex Her
+
+Nothing built. 05 is `/offers/wiccan/hex-her` when it comes — beside 03 and 04.
 
 ### Not this deck, but next door
 
@@ -255,7 +285,15 @@ you, Friend" on every screen after the money.
 |---|---|---|
 | Fixed + bump (02) | a total and a bump card | ✅ yes |
 | Pay-what-you-want (03) | an amount box she types in, empty, with a floor that is **enforced, never printed, and never spoken mid-keystroke** | ❌ new |
-| Ladder (04) | four price options, one chosen | ❌ new |
+| Ladder (04) | today's price, fetched from the server — never a number in the page | ✅ built for 04 (2026-10-11) |
+
+⛔ **A ladder's rung is decided by the server, never by the browser** *(learned on 04)*. 07's
+tiers let her pick a rung, which is safe there because every rung is a different product; for a
+time ladder the same move buys day 1's price on day 4. The day is counted from the letter's send
+(an env timestamp). The page sends back the day it showed, which is honoured for a short grace
+window after the rung moves, so the woman who loaded the page at 11:58pm pays what she saw; past
+that, checkout refuses with the new price rather than charging a number she was not shown. A
+broken start setting falls back to day 1 — it may undercharge, never overcharge.
 
 ---
 
@@ -292,6 +330,11 @@ answers into **the offer's deliverables doc**, not here.
 
 ### ☐ A2. The booking page — **and its chat**
 **Read:** `0X-C1`, and `00e-FRAMEWORK-BEs.md` §3.
+
+⛔ **Operator lock, 2026-10 (09 v2): a commitment page is ONE short tick, with the price and
+the button visible on the first phone screen.** The multi-statement page below is the older
+shape. A page that still needs several statements gets split per the next paragraph, but the
+default is now one tick — 04 was the first offer built to it.
 
 ⚠ **A booking page over about 2 phone screens should be split** *(learned on 03,
 2026-08-09)*. 03's measured 3,450px — 4.1 screens of unbroken commitment copy
@@ -451,7 +494,12 @@ something generated. Where we are:
 | Offer | Now | Verdict |
 |---|---|---|
 | 02 | 4,821 words, 12 cards | in range |
-| 04 | 3,714 words | in range |
+| 04 | ~3,800–3,950 words per cup *(was 3,714 for the file, but ~2,100–2,300 per buyer)* | in range since the 2026-10-11 rewrite |
+
+⚠ **Count what ONE buyer receives, not the file** *(learned on 04)*. A product that branches —
+04's three cups — holds several versions in one file, so the file's word count overstates what
+anyone gets. 04 read as "in range" for two months while every buyer would have received ~2,200
+words, and two of the three cups would have received two contradictory plans.
 | 03 | 2,429 words | ⚠ under — but it is an Act, and a verdict is not a reading |
 
 ⚠ **Decision D5 for anything under 3,000.** An Act product closes an account and
@@ -649,6 +697,9 @@ Every box, every time:
 
 - ☐ Word count in range (or D5 answered).
 - ☐ Every loop the letter opened is closed, by name.
+- ☐ **Every "as I said in my letter" is true.** Grep the product for *my letter / I told you /
+  I said* and check each against the letter. She has the letter in her inbox; a misquote is a
+  refund. *(04's rewrite invented two — 2026-10-11.)*
 - ☐ Every `[IMG-…]` replaced with a real card image, at the right size.
 - ☐ No `%TOKEN%` left unmerged. No blanks anywhere.
 - ☐ Subject matches the thank-you page word for word.

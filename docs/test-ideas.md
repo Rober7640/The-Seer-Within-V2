@@ -2179,3 +2179,52 @@ Not covered — needs a live walk on DEV (test card):
 - [ ] Downsell ($25) checkout on `/fb-read` shows it too
 - [ ] Webhook retry (resend the event from Stripe) does NOT add a second row or change the first
 - [ ] Terms + Privacy links in the disclosure open the pages with the new SMS sections
+
+## Backend offer 04 — The Turn (tea reading), built 2026-10-11
+
+Record: `improve-v1/v1-one-time-BEs/docs/04/04-DELIVERABLES.md`. Dark (`readyForMoney: false`).
+
+Covered by unit tests (`server/lib/backendOffers.teaReading.test.ts`,
+`server/routes/backendOffers.teaReading.test.ts`, `server/lib/be04Delivery.test.ts`,
+`client/src/lib/upsellCopy/teaReading.test.ts`, plus the 04 rows in `backendCustomerList.test.ts`):
+
+- [x] Ladder day = floor((now − start)/24h) + 1, clamped 1–4; unset / no-timezone start ⇒ day 1 (never overcharge)
+- [x] `quotedDay` honoured for 120 min after a rung change; lower than both ⇒ 409 `price_changed`; higher ⇒ today's (lower) rung
+- [x] `amountCents` / `tier` can never change a ladder price; `?day=` on the price endpoint is display-only
+- [x] Stripe metadata `rung`, `cup` (default `divided-rim`, invalid never blocks a sale), `cupChosen`
+- [x] Receipt `deliveryHours` is 24 for 04 even with the Still Cup (08 keeps 12)
+- [x] AWeber tags are the literal strings `be-04-tea-reading` / `be-04-bump` / `be-04-delivered` / `be-04-upsell1-protection` / `be-04-upsell2-bracelet`
+- [x] Delivery job: off unless `BE04_DELIVERY_ENABLED=true`; only paid, undelivered orders past the delay; link chosen by cup; missing / non-https link ⇒ skipped, never sent; idempotent; one failure doesn't stop the rest
+- [x] Upsell copy: no day numbers, no merge token but `{firstName}`, no "clearing" / "energy field" / "our conversation", same bucket block for everyone, U2 skips the AI passages
+
+Not covered — needs a DEV walk with a Stripe test card (`BACKEND_CHECKOUT_TEST_MODE=true`):
+
+- [ ] Day 1 → day 2 boundary with a page loaded before it: pays the shown $35 inside 2 hours; after that the page shows $47 and asks her to press again
+- [ ] Cup picked on the page reaches Stripe metadata; no pick ⇒ `divided-rim`, `cupChosen=0`
+- [ ] Bump ticked ⇒ second line item "The Still Cup" $12.77, `bumpProduct=still_cup`; receipt shows the Still Cup link; `be-04-bump` tag lands
+- [ ] Pay → `/offers/upsell/welcome1` → welcome2 → `/offers/wiccan/tea-reading/success?s=…` shows her order (not another offer's)
+- [ ] 1-click U1 / U2 charges succeed on the saved card; fallback checkout works when off-session fails
+- [ ] Stripe cancel returns to the treatment she came from with `?cancelled=1` and "nothing has been taken"
+- [ ] Webhook retry does not double the `be_orders` row or the AWeber write
+- [ ] With the delivery job on and the delay set to 1h: the `be-04-delivered` tag + her cup's `reading_url` arrive once; the T4 email links to the right PDF
+- [ ] An order still undelivered at 23h logs the overdue error
+- [ ] Live V1 funnel `/` and the 03 / 06 / 09 offers unchanged
+
+### 04 client pages — booking page, chat, receipt, Still Cup (built 2026-10-11)
+
+Covered by `client/src/lib/teaReadingBooking.test.ts`, `teaReadingReceipt.test.ts`, `funnel.teaReading.test.ts`
+and the walk `improve-v1/v1-one-time-BEs/scripts/walk-04-smoke.mjs` (API stubbed):
+
+- [x] Page: headline, image, price line, tick and button inside the first 390×844 screen, unticked
+- [x] Price is the endpoint's rung (blank bar while loading, retry line on failure, button disabled); `?day=1..4` shows each rung and sends that `quotedDay`
+- [x] Bump and cup pick appear only after the tick; bump never pre-checked; no pick ⇒ `cup: null`
+- [x] 409 `price_changed` shows the new price and "press again"; the re-press sends the new `quotedDay` (page and chat)
+- [x] Chat: typing indicator first, one line per turn, card gets its own beat; refresh vs `?cancelled=1` resume copy; post-commit lines render below the card
+- [x] Receipt: polls through 402s; bump ⇒ Still Cup P.S.; no name ⇒ "dear — your cup is turned"; other offers' sessions ⇒ fallback; no price
+- [x] Still Cup page renders 04-C4 word for word, noindex
+
+Not covered — needs a real server + Stripe test card:
+
+- [ ] Stripe cancel from the chat lands on `/offers/wiccan/tea-reading/chat?cancelled=1` (treatment `chat`), from the page on the page
+- [ ] Back button from Stripe (bfcache restore) re-arms the button and re-fetches today's price
+- [ ] Receipt shows the cup the session's metadata names, and the delivered variant once `deliveredAt` is set

@@ -1,0 +1,49 @@
+Dear {{ subscriber.first_name | default: "friend" }},
+
+Thank you for deciding this. You read your own situation well, and you didn't let it drift. What comes back to you will be counted in days, not fortnights.
+
+Your cup's on my table now and I've started.
+
+I'll tell you what I look at first, so you know what's coming. The bird. In my letter I said a bird high on the wall is a fortnight old, and a bird down by the base has been going since before you noticed anything. Those two would have you doing opposite things, and I can only tell which one you've got by where it sits. You'll read that before anything else.
+
+Your reading will be with you within 24 hours. Watch for an email with this subject line:
+
+{{ subscriber.first_name | default: "dear" }} — your cup is turned
+
+If 24 hours pass and it isn't there, look in your promotions tab, then reply to this email and I'll sort it out.
+
+Nothing's needed from you. Not tonight, and not while you wait.
+
+WHICH IS THE POINT, ACTUALLY
+
+Let me be direct about the wait, {{ subscriber.first_name | default: "dear" }}, because I know roughly what it holds.
+
+You've just bought a reading about when to speak. Somewhere in the back of your mind, booking it has already loosened something. And a loosened woman at ten at night with her phone in her hand is exactly the woman who sends the message.
+
+Don't send it tonight.
+
+Not because it's the wrong message. I haven't read your cup yet, so I don't know. But whatever it is, it'll still be sendable once your reading has arrived, and by then you'll know how long he's been going and which week your message belongs in.
+
+You've waited weeks already. This one's a day at most, and it's the only wait in all of this with an end you can see.
+
+AND SOMETHING TO HOLD WHILE YOU WAIT
+
+Here's a piece of the practice I like, and it's got nothing to do with your reading.
+
+When I was learning, the woman who taught me made me read forty cups before she'd let me say a word about any of them. Forty. I'd turn the cup, look, write down what I saw and hand her the paper, and she'd put it in a drawer without reading it.
+
+Around the thirtieth I got frustrated enough to ask what the drawer was for.
+
+She said: "You're not learning to read tea. Anybody can learn that in a fortnight. You're learning to look at something and not say anything about it yet."
+
+I've thought about that a great deal since, dear, and not only about tea.
+
+Almost everything I've got badly wrong in my life, I got wrong in the gap between noticing something and answering it. And I always made that gap shorter than it needed to be. Not because I was stupid. Because noticing was uncomfortable, and saying something was how I made the discomfort stop.
+
+She was a difficult woman, and she never once told me I'd done well at anything. I miss her enormously.
+
+If it's any use, pass it on. Most people know somebody who could use a drawer.
+
+Your cup's on the table. You'll hear from me when it's turned.
+
+— Evelyn

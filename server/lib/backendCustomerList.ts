@@ -119,6 +119,21 @@ export const BACKEND_OFFERS: Record<BackendOfferKey, BackendOfferListing> = {
     initialListId: '6972552',
     bumpListId: '6972554',
   },
+  // ⭐ 04 — The Turn (tea-leaf reading). REUSES 02's lists — initial 6972552, bump 6972554 —
+  // told apart only by the be-04 tags, exactly as 03 does. Campaign triggers: the purchase
+  // tag (thank-you) and the delivered tag (delivery email, `reading_url` merged), which the
+  // in-app delivery job applies (server/lib/be04Delivery.ts).
+  // ⛔ A Campaign on 6972554 must trigger on `be-04-bump`, never on `be-04-tea-reading`: the
+  //    purchase tag rides the bump-list write too, so it would send the thank-you twice.
+  'tea-reading': {
+    number: '04',
+    name: 'The Turn',
+    tag: 'be-04-tea-reading',
+    bumpTag: 'be-04-bump',
+    deliveredTag: 'be-04-delivered',
+    initialListId: '6972552',
+    bumpListId: '6972554',
+  },
   'pixiu-bracelet': {
     number: '06',
     name: 'Wishing Bracelet',

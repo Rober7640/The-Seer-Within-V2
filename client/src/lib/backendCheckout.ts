@@ -1,5 +1,6 @@
 import type { BackendOfferKey, BookingTreatment } from '@shared/backendOffers';
 import { getBackendVisitorId } from './backendVisitor';
+import { parsePriceChanged, type LadderQuote } from './ladderPrice';
 import { getDistinctId, getUTMs } from './posthog';
 
 // The one way a backend booking screen reaches Stripe.
@@ -45,12 +46,21 @@ export interface BackendCheckoutRequest {
   /** From the letter's ?c=. Which sales letter she bought from — fulfilment reads it
    *  off Stripe metadata (`c`) to decide which letter's promises the reading owes. */
   letterCode?: string | null;
+  /** LADDER offers only (04): the day the screen PRINTED, never a price. The server's clock
+   *  decides the charge; this only keeps a just-expired rung inside its grace window. */
+  quotedDay?: number | null;
+  /** 04 only: her cup (a TEA_CUPS slug), or null for no pick — the server then records the
+   *  default with `cupChosen: '0'`. ⚠ Optional, and an invalid value never blocks a sale. */
+  cup?: string | null;
 }
 
 export type BackendCheckoutResult =
   | { status: 'preview' }
   | { status: 'redirecting' }
-  | { status: 'error'; message: string };
+  | { status: 'error'; message: string }
+  /** 04: the ladder moved on since the screen loaded. Show `current`, ask her to press again,
+   *  and re-send with `quotedDay: current.day`. Nothing was charged. */
+  | { status: 'price_changed'; current: LadderQuote; message: string };
 
 const GENERIC_ERROR = 'Something went wrong starting checkout. Please try again.';
 
@@ -74,6 +84,9 @@ export async function beginBackendCheckout(
       amountCents: req.amountCents ?? null,
       firstName: req.firstName ?? null,
       letterCode: req.letterCode ?? null,
+      // 04's two fields, only when the screen sends them — every other offer's line is unchanged.
+      ...(req.quotedDay !== undefined ? { quotedDay: req.quotedDay } : {}),
+      ...(req.cup !== undefined ? { cup: req.cup } : {}),
     });
     return { status: 'preview' };
   }
@@ -89,6 +102,8 @@ export async function beginBackendCheckout(
         amountCents: req.amountCents ?? undefined,
         firstName: req.firstName ?? undefined,
         letterCode: req.letterCode ?? undefined,
+        quotedDay: req.quotedDay ?? undefined,
+        cup: req.cup ?? undefined,
         // The booking-treatment A/B subject, so the purchase attributes back to the
         // arm she saw. Harmless when the test is off (no exposure → not counted).
         expSubject: getBackendVisitorId(),
@@ -101,6 +116,13 @@ export async function beginBackendCheckout(
     });
 
     const data = await response.json().catch(() => ({}) as { url?: string; error?: string });
+
+    // 04: the rung moved on past its grace window. Not an error she has to fix — the screen
+    // shows the new price and asks her to press again.
+    const moved = parsePriceChanged(response.status, data);
+    if (moved) {
+      return { status: 'price_changed', current: moved, message: data?.error || GENERIC_ERROR };
+    }
 
     if (!response.ok || !data?.url) {
       // The server's own message when it has one — a refused amount needs to say what

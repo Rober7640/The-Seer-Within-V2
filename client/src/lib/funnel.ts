@@ -102,6 +102,7 @@ export function skipEmail(search?: string): boolean {
 // deliberately holds no copy, so routing can never depend on it.
 export const TWIN_FLAME_PREFIX = "/tarot/twin-flame"; // 02 Twin Flame Tarot
 export const JUDGEMENT_PREFIX = "/offers/wiccan/judgement-day"; // 03 Judgement Day
+export const TEA_READING_PREFIX = "/offers/wiccan/tea-reading"; // 04 The Turn (tea-leaf reading)
 export const PIXIU_PREFIX = "/offers/wiccan/pixiu-bracelet"; // 06 Pixiu (Wishing) Bracelet
 export const HEART_CLEANSER_PREFIX = "/offers/heart-cleanser"; // 09 Heart Cleanser Love Charm
 
@@ -237,7 +238,7 @@ export function funnelPath(v1Path: string, pathname?: string): string {
 export type PostHogFunnel =
   | "soulmate" | "fb" | "fb2" | "gdn" | "palm" | "tarot" | "read" | "v1" | "evelyn" | "aiden"
   | "marcus" | "luna" | "nova" | "maren" | "seven-seven" | "twinflame" | "judgement" | "pixiu"
-  | "heartcleanser" | "marcusreading";
+  | "heartcleanser" | "marcusreading" | "teareading";
 
 // Generalized persona landers → their PostHog funnel name. One route each.
 const PERSONA_LANDER_FUNNELS: Record<string, PostHogFunnel> = {
@@ -261,6 +262,10 @@ export function getPostHogFunnel(pathname?: string): PostHogFunnel | null {
   // offer-aware lander_view (see backendOfferFunnel) because they resolve the offer
   // from the session, not the path — so they are deliberately NOT matched here.
   if (p === JUDGEMENT_PREFIX || p.startsWith(`${JUDGEMENT_PREFIX}/`)) return "judgement";
+  // 04 The Turn — booking page (root) + chat + receipt + the Still Cup page, all under its
+  // prefix. Its upsells are the SHARED /offers/upsell/* pages, which fire their own
+  // offer-aware lander_view. Matches the server's BACKEND_FUNNEL['tea-reading'].
+  if (p === TEA_READING_PREFIX || p.startsWith(`${TEA_READING_PREFIX}/`)) return "teareading";
   // 06 Pixiu Bracelet — email → booking page + /success (page-only, no chat, no
   // welcome1/2 of its own). Registering it here is all App.tsx needs to fire
   // lander_view with the letter's utm_* attached, so a mailed Pixiu link reports
@@ -299,6 +304,7 @@ export function backendOfferFunnel(offer: string): string {
   switch (offer) {
     case "twin-flame": return "twinflame";
     case "judgement-day": return "judgement";
+    case "tea-reading": return "teareading";
     case "pixiu-bracelet": return "pixiu";
     case "heart-cleanser": return "heartcleanser";
     default: return offer;
@@ -342,6 +348,14 @@ export function getPostHogStep(pathname?: string): string {
       const sub = p.slice(JUDGEMENT_PREFIX.length); // "" at the booking root (chat, the default)
       if (sub === "" || sub === "/chat" || sub === "/page") return "booking";
       if (sub === "/success") return "thank_you";
+      return "unknown";
+    }
+    case "teareading": {
+      // 04: the page at the root, the chat at /chat, the receipt, and the bump's deliverable.
+      const sub = p.slice(TEA_READING_PREFIX.length); // "" at the booking root (the page)
+      if (sub === "" || sub === "/chat") return "booking";
+      if (sub === "/success") return "thank_you";
+      if (sub === "/still-cup") return "still_cup";
       return "unknown";
     }
     case "pixiu": {

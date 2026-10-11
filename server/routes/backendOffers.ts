@@ -3,15 +3,23 @@ import type Stripe from 'stripe';
 import { getStripe, getActiveStripeSecretKey } from '../lib/stripeAccount';
 import {
   BACKEND_OFFER_CATALOG,
+  TEA_READING_DELIVERY_HOURS,
   backendOfferForStripeProduct,
   backendOrderDescriptor,
   isBackendOfferKey,
   isBookingTreatment,
+  ladderCentsForDay,
+  ladderRungAt,
+  parseLadderStart,
   priceBackendOffer,
+  priceLabel,
   resolveBackendCharge,
+  resolveTeaCup,
   upsellChargeFields,
   type BackendOffer,
   type BookingTreatment,
+  type LadderClock,
+  type TeaCup,
 } from '@shared/backendOffers';
 import {
   STRIPE_CHECKOUT_SHIPPING_COUNTRIES,
@@ -40,6 +48,8 @@ import logger from '../lib/logger';
 // sets a price. A fixed offer's price is looked up server-side; a pay-what-you-want
 // amount is the only number the buyer supplies, and `resolveBackendCharge` floor-checks
 // it here. If the client could send a price, anyone could buy a $35 reading for a cent.
+// A ladder offer (04) also posts `quotedDay` — the day its page DISPLAYED, not a price —
+// and the server's clock decides what it costs (`ladderClockFor` below).
 //
 // ── Why this cannot disturb the live funnels ─────────────────────────────────────
 // `metadata.product` is `be_*`, a value no branch of the shared Stripe webhook knows:
@@ -157,6 +167,16 @@ function backendCheckoutTestModeOpen(): boolean {
   if (process.env.BACKEND_CHECKOUT_TEST_MODE !== 'true') return false;
   const key = getActiveStripeSecretKey();
   return typeof key === 'string' && key.startsWith('sk_test_');
+}
+
+/**
+ * A ladder offer's clock: now, and its start moment read from the catalog's env var AT CALL
+ * TIME (not import time), so tests can vary it. Undefined for every other pricing model.
+ * ⛔ Never from the request — this is what makes the ladder the server's decision.
+ */
+function ladderClockFor(offer: BackendOffer, nowMs: number = Date.now()): LadderClock | undefined {
+  if (offer.pricing.model !== 'ladder') return undefined;
+  return { startIso: process.env[offer.pricing.startEnv] ?? null, nowMs };
 }
 
 function baseUrl(req: Request): string {
@@ -680,6 +700,44 @@ router.get('/marcus/editions/:id', async (req: Request, res: Response) => {
   }
 });
 
+// ── Ladder offers (04) · today's price, for the booking page to PRINT ────────────────
+// GET /api/backend/offers/:offer/price → { offer, day, cents, label, startSet, preview? }
+//
+// The page shows this price and posts `day` back to /checkout as `quotedDay`. Checkout
+// re-decides the price from the server's clock (resolveLadderCharge), so nothing this route
+// answers can change what she is charged. `no-store`: a cached day-1 price is a wrong price.
+//
+// `?day=N` is a PREVIEW aid — display only, honoured only while the offer is NOT open for
+// money (`readyForMoney: false`), and flagged `preview: true`. ⛔ Checkout never reads it.
+router.get('/offers/:offer/price', (req: Request, res: Response) => {
+  const key = String(req.params.offer || '');
+  if (!isBackendOfferKey(key)) return res.status(404).json({ error: 'That offer does not exist.' });
+  const offer = BACKEND_OFFER_CATALOG[key];
+  if (offer.pricing.model !== 'ladder') {
+    return res.status(404).json({ error: 'That offer has no daily price.' });
+  }
+
+  const { rungs } = offer.pricing;
+  const clock = ladderClockFor(offer)!;
+  const today = ladderRungAt(rungs, clock.startIso, clock.nowMs);
+
+  const rawDay = typeof req.query.day === 'string' ? Number(req.query.day) : Number.NaN;
+  const preview = !offer.readyForMoney && Number.isInteger(rawDay) && rawDay >= 1;
+  const day = preview ? Math.min(rawDay, rungs[rungs.length - 1].day) : today.day;
+  const cents = preview ? ladderCentsForDay(rungs, day) : today.cents;
+
+  res.set('Cache-Control', 'no-store');
+  return res.json({
+    offer: offer.key,
+    day,
+    cents,
+    label: priceLabel(cents),
+    // False ⇒ BE04_LADDER_START is unset or unparseable and the ladder stands on day 1.
+    startSet: today.startSet,
+    ...(preview ? { preview: true } : {}),
+  });
+});
+
 router.post('/checkout', async (req: Request, res: Response) => {
   try {
     const stripe = getStripe();
@@ -754,6 +812,11 @@ router.post('/checkout', async (req: Request, res: Response) => {
       // ⛔ A tier KEY, never a tier price. `resolveBackendCharge` validates it against the
       //    catalog and looks the cents up server-side; an unknown rung is refused outright.
       tier: req.body?.tier,
+      // ⛔ Ladder offers (04): the day her page DISPLAYED, never a price. The price comes from
+      //    the server's clock below; quotedDay only keeps a just-expired price inside the
+      //    grace window (resolveLadderCharge). Ignored by every other pricing model.
+      quotedDay: req.body?.quotedDay,
+      ladderClock: ladderClockFor(BACKEND_OFFER_CATALOG[offerKey]),
     };
     let charge = resolveBackendCharge(chargeReq);
 
@@ -769,6 +832,22 @@ router.post('/checkout', async (req: Request, res: Response) => {
     }
 
     if (!charge.ok) {
+      // 04's ladder moved on since her page loaded, past the grace window. 409, not 400: her
+      // request was fine when the page made it. `current` is today's rung, so the page can
+      // show the new price and ask her to press again — never charge a number she was not shown.
+      if (charge.code === 'price_changed' && charge.current) {
+        logger.info('backend/checkout: refused — the price ladder moved on', {
+          offer: offerKey,
+          code: charge.code,
+          quotedDay: req.body?.quotedDay,
+          currentDay: charge.current.day,
+        });
+        return res.status(409).json({
+          error: charge.message,
+          code: charge.code,
+          current: { ...charge.current, label: priceLabel(charge.current.cents) },
+        });
+      }
       // 400 with her own message — a checkout that silently does nothing is worse than
       // one that says what to change. ⛔ The floor message never names the floor.
       if (charge.code === 'not_ready') {
@@ -782,6 +861,22 @@ router.post('/checkout', async (req: Request, res: Response) => {
     }
 
     const { offer } = charge;
+
+    // 04: a ladder with no usable start stands on day 1. That undercharges, which is the safe
+    // direction — but it is a setting someone forgot, so say so on every sale it touches.
+    if (chargeReq.ladderClock && parseLadderStart(chargeReq.ladderClock.startIso) === null) {
+      logger.warn('backend/checkout: ladder start is unset or unparseable — charging day 1', {
+        offer: offer.key,
+        env: offer.pricing.model === 'ladder' ? offer.pricing.startEnv : undefined,
+      });
+    }
+
+    // ── 04's cup ─────────────────────────────────────────────────────────────────────
+    // Optional, picked on the booking page; decides which of three readings she is sent.
+    // ⚠ Never blocks a sale: anything that is not one of the three slugs becomes the default,
+    // with `cupChosen: '0'`. Short and fixed-shape, so it rides Stripe metadata — which is
+    // where the delivery job reads it back (server/lib/be04Delivery.ts; no intake column).
+    const teaCup = offer.key === 'tea-reading' ? resolveTeaCup(req.body?.cup) : null;
 
     // 08: what Marcus calls her is the booking form's first-name box, not a letter ?fn=.
     const rawName = be08Person
@@ -915,6 +1010,10 @@ router.post('/checkout', async (req: Request, res: Response) => {
         // fixed-shape; a backstop for the intake row. ⛔ Her birth name and birth date are
         // NOT here (PII) — they live on be_order_intake only.
         ...(edition ? { editionId: edition.id, editionVersion: String(edition.version) } : {}),
+        // 04: the ladder rung the SERVER charged ('1'..'4'), and her cup — the delivery job
+        // picks her reading by `cup`; `cupChosen` tells a real pick ('1') from the default ('0').
+        ...(charge.rung ? { rung: String(charge.rung) } : {}),
+        ...(teaCup ? { cup: teaCup.cup, cupChosen: teaCup.chosen ? '1' : '0' } : {}),
       },
       payment_intent_data: {
         // The Stripe Dashboard's Description column, prefixed `BE <nn>` so a backend
@@ -974,6 +1073,8 @@ router.post('/checkout', async (req: Request, res: Response) => {
       session: session.id,
       ...(charge.tier ? { tier: charge.tier, spreadKey, drawDate } : {}),
       ...(edition ? { editionId: edition.id, editionVersion: edition.version } : {}),
+      ...(charge.rung ? { rung: charge.rung } : {}),
+      ...(teaCup ? { cup: teaCup.cup, cupChosen: teaCup.chosen } : {}),
     });
 
     return res.json({ url: session.url });
@@ -1035,7 +1136,8 @@ router.get('/order/:sessionId', async (req: Request, res: Response) => {
             retrieveSession: async () => (await getStripe()?.checkout.sessions.retrieve(sessionId)) ?? null,
           })
         : null;
-      return res.json({ order: await publicOrder(row, shipment) });
+      const teaCup = row.offer === 'tea-reading' ? await teaCupForReceipt(sessionId) : null;
+      return res.json({ order: await publicOrder(row, shipment, { teaCup }) });
     }
 
     const stripe = getStripe();
@@ -1070,7 +1172,8 @@ router.get('/order/:sessionId', async (req: Request, res: Response) => {
 
     if (!recorded) return res.status(404).json({ error: 'Order not found.' });
 
-    return res.json({ order: await publicOrder(recorded, shipment) });
+    const teaCup = sessionOffer === 'tea-reading' ? await teaCupForReceipt(sessionId, session) : null;
+    return res.json({ order: await publicOrder(recorded, shipment, { teaCup }) });
   } catch (err) {
     logger.error('backend/order lookup failed:', err);
     return res.status(500).json({ error: 'Could not load your order.' });
@@ -1080,6 +1183,29 @@ router.get('/order/:sessionId', async (req: Request, res: Response) => {
 /** Does this offer key name a physical offer (a parcel to post)? */
 function collectsShipping(offerKey: string): boolean {
   return isBackendOfferKey(offerKey) && Boolean(BACKEND_OFFER_CATALOG[offerKey].collectsShipping);
+}
+
+/**
+ * 04 · her cup, for the receipt — read from the Stripe session's metadata, the only place it
+ * is stored (no intake column; see /checkout). Uses the session when the caller already has
+ * it, else one Stripe retrieve. ⚠ A failure costs only the line naming her cup: `null`, never
+ * a guessed cup. Missing/invalid metadata resolves to the default — the same cup the delivery
+ * job will send, so the receipt and the email cannot disagree.
+ */
+async function teaCupForReceipt(
+  sessionId: string,
+  session?: Stripe.Checkout.Session | null,
+): Promise<TeaCup | null> {
+  try {
+    const s = session ?? (await getStripe()?.checkout.sessions.retrieve(sessionId)) ?? null;
+    return s ? resolveTeaCup(s.metadata?.cup).cup : null;
+  } catch (err) {
+    logger.warn('backend/order: 04 cup lookup failed, receipt renders without it', {
+      session: sessionId,
+      err: err instanceof Error ? err.message : String(err),
+    });
+    return null;
+  }
 }
 
 /** A Date column as ISO, or null. Rows arrive as Date objects from drizzle; a string
@@ -1103,16 +1229,23 @@ function isoOrNull(value: unknown): string | null {
  * same parts structured, plus the parcel's status. ⚠ That is her address, readable by
  * whoever holds the session id; no phone, email or Stripe id rides with it. Both keys are
  * ABSENT on a digital offer's receipt, so 02/03/07/08 receipts are unchanged.
+ *
+ * 04 only: `cup` — the cup her reading follows (a TEA_CUPS slug), or null when Stripe could
+ * not be read. ABSENT on every other offer's receipt. The receipt links The Still Cup when
+ * `bumpPurchased` is true.
  */
 async function publicOrder(
   row: Awaited<ReturnType<typeof getBeOrderBySession>>,
   shipment: BeShipment | null = null,
+  extras: { teaCup?: TeaCup | null } = {},
 ) {
   if (!row) return null;
 
-  // 12h with the '+ 12-hour delivery' bump, 24h without — the same rule that stamps
-  // `due_at` (server/lib/beOrders.ts, prepareBe08).
-  const deliveryHours = row.bumpPurchased ? 12 : 24;
+  // 12h with 08's '+ 12-hour delivery' bump, 24h without — the same rule that stamps
+  // `due_at` (server/lib/beOrders.ts, prepareBe08). ⛔ 04's Still Cup is NOT a speed bump,
+  // so 04 is always TEA_READING_DELIVERY_HOURS. Every other offer keeps the rule it had.
+  const deliveryHours =
+    row.offer === 'tea-reading' ? TEA_READING_DELIVERY_HOURS : row.bumpPurchased ? 12 : 24;
 
   // 08 · the edition she booked, pinned to the version on the order. A lookup failure
   // (table not migrated yet, DB hiccup, retired row) must never break the receipt.
@@ -1184,6 +1317,9 @@ async function publicOrder(
 
     // ── additive (physical offers only) ───────────────────────────────────────────
     ...(collectsShipping(row.offer) ? publicShipping(shipment) : {}),
+
+    // ── additive (04 only) ────────────────────────────────────────────────────────
+    ...(row.offer === 'tea-reading' ? { cup: extras.teaCup ?? null } : {}),
   };
 }
 

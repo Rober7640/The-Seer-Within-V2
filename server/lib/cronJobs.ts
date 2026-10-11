@@ -15,6 +15,7 @@ import { processPersonaVerifiedDripQueue } from './personaVerifiedDripGenerator'
 import { processEvelynPostPurchaseDripQueue } from './evelynPostPurchaseDripGenerator';
 import { processAidenPostPurchaseDripQueue } from './aidenPostPurchaseDripGenerator';
 import { reconcilePendingPurchases } from './reconciliationProcessor';
+import { startBe04DeliveryJob } from './be04Delivery';
 import logger from './logger';
 
 // Per-job concurrency guards — prevent overlapping runs if a job takes longer than its interval
@@ -377,6 +378,11 @@ export function initializeCronJobs(): void {
     },
     { timezone },
   );
+
+  // 04 The Turn — tea-reading delivery, every 10 minutes. ⛔ OFF unless
+  // BE04_DELIVERY_ENABLED=true: the timer is not even registered otherwise. Overlap-guarded
+  // inside. See server/lib/be04Delivery.ts.
+  startBe04DeliveryJob((expression, task) => cron.schedule(expression, task, { timezone }));
 
   logger.info('Cron jobs initialized', { timezone });
 }

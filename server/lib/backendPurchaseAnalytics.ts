@@ -79,6 +79,7 @@ export function dedupeUuid(dedupeId: string): string {
 const BACKEND_STEP: Record<string, string> = {
   be_twin_flame: 'sales',
   be_judgement_day: 'sales',
+  be_tea_reading: 'sales',
   be_pixiu_bracelet: 'sales',
   be_marcus_reading: 'sales',
   be_heart_cleanser: 'sales',
@@ -91,6 +92,7 @@ const BACKEND_STEP: Record<string, string> = {
 const BACKEND_FUNNEL: Record<string, string> = {
   'twin-flame': 'twinflame',
   'judgement-day': 'judgement',
+  'tea-reading': 'teareading',
   'pixiu-bracelet': 'pixiu',
   'marcus-reading': 'marcusreading',
   'heart-cleanser': 'heartcleanser',

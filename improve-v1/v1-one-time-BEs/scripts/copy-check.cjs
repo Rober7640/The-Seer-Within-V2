@@ -29,7 +29,9 @@ const OFFERS = {
   // 03/05 are PWYW: 300 and 250 are the ANCHORS quoted on the booking page (what others pay,
   // what she was urged to hold it at), not charges. They are valid copy; the charge is the bump.
   '03': { name: 'Judgement Day',    sla: /\b(three|3) (days|nights)\b/i, prices: ['12.77', '300', '250'] },
-  '04': { name: 'The Turn',         sla: /\b24 hours?\b/i, prices: ['35', '47', '57', '67', '12.77'] },
+  // 04's ladder rungs + bump, plus the shared upsell chain's prices its U spec quotes
+  // (Protection Ritual / Manifestation Bracelet $47, bracelet downsell $30).
+  '04': { name: 'The Turn',         sla: /\b24 hours?\b/i, prices: ['35', '47', '57', '67', '12.77', '30'] },
   '05': { name: 'Cut the Cord',     sla: /\b24 hours?\b/i, prices: ['12.77'] },
   // 06 is the deck's first physical offer — real manufacturing + shipping, not a digital SLA.
   // Main price is `{{PRICE}}` (merge field, genuinely undecided — see docs/06/0-WORKFLOW-06.md),
@@ -48,7 +50,7 @@ const OFFERS = {
   // $11.11 — Reiki charging by Evelyn before packing (09-C3, Joel 2026-09-15).
   '09': { name: 'Heart Cleanser Love Charm', sla: /\b(2 business days|7[-–]14 days|2[-–]4 weeks)\b/i, prices: ['59', '59.00', '11.11'] },
 };
-const ALL_PRICES = ['35.00', '35', '47', '57', '67', '87', '12.77', '300', '250', '11.11', '59', '59.00'];
+const ALL_PRICES = ['35.00', '35', '47', '57', '67', '87', '12.77', '300', '250', '11.11', '59', '59.00', '30'];
 
 // ── per-file rules ─────────────────────────────────────────────────────────────────────────
 const BANNED = [
@@ -217,6 +219,9 @@ for (const file of files) {
   //     remains is shared spec prose ("run one challenger per send") which is not a device.
   if (offer && !/-E1\b/.test(id)) {
     const prose = body
+      // A line tagged `V1` is the shared V1 upsell pitch quoted verbatim (e.g. 04-U-upsell-copy-v2):
+      // identical across offers by design — the same stone, the same product — so not a device.
+      .replace(/^.*`V1`\s*$/gm, '')
       .replace(/^#.*$/gm, '')
       .replace(/\[([^\]]+)\]\([^)]*\)/g, '$1')
       .replace(/`[^`]*`/g, '');
