@@ -26,7 +26,9 @@ export function PackBadge({ badge }: { badge: string }) {
   const isPopular = badge === "MOST POPULAR";
   return (
     <div
-      className={`absolute -top-2.5 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide shadow-lg ${
+      // 11px = the small-print floor. No letter-spacing and a slim side padding keep
+      // "MOST POPULAR" inside a 360px-phone tile (~100px wide).
+      className={`absolute -top-2.5 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full px-1.5 py-[3px] text-[11px] font-bold uppercase leading-none shadow-lg ${
         isPopular
           ? "bg-gradient-to-r from-amber-400 to-orange-400 text-[#1a1530]"
           : "bg-gradient-to-r from-violet-300 to-fuchsia-300 text-[#1a1530]"
@@ -46,6 +48,19 @@ export function SelectedCheck() {
     </div>
   );
 }
+
+/** Tile box + inner row spacing, shared by the pack tiles and RepeatBuyerPaywall's
+ *  Custom tile so all six stay the same height. Shorter on short phones (621–700px
+ *  tall, then ≤ 620px) so the whole paywall fits without scrolling; the height ranges
+ *  never overlap, so class order doesn't matter. */
+export const TILE_BOX_CLASS =
+  "relative rounded-2xl border-2 px-1 pb-2.5 pt-4 text-center transition-all duration-150 " +
+  "[@media(min-height:621px)_and_(max-height:700px)]:pb-2 [@media(min-height:621px)_and_(max-height:700px)]:pt-3 " +
+  "[@media(max-height:620px)]:pb-1.5 [@media(max-height:620px)]:pt-2.5";
+/** The FREE-pill row (fixed 17px so tiles with and without a pill line up). */
+export const TILE_PILL_ROW_CLASS = "mt-2 flex h-[17px] items-center justify-center [@media(max-height:700px)]:mt-1.5";
+/** The "N min total" row. */
+export const TILE_TOTAL_ROW_CLASS = "mt-1.5 text-[12px] font-medium leading-none text-white/60 [@media(max-height:700px)]:mt-1";
 
 /** Border/background of a tile, selected or not (also used by the Custom tile). */
 export function tileFrameClass(selected: boolean, invalid = false): string {
@@ -69,15 +84,15 @@ export function BonusPackTile({
       type="button"
       onClick={onSelect}
       aria-pressed={selected}
-      className={`relative rounded-2xl border-2 px-1 pb-2.5 pt-4 text-center transition-all duration-150 ${tileFrameClass(selected)}`}
+      className={`${TILE_BOX_CLASS} ${tileFrameClass(selected)}`}
     >
       {tier.badge && <PackBadge badge={tier.badge} />}
       {selected && <SelectedCheck />}
       <div className="text-[24px] font-bold leading-none text-white">${(tier.priceUsd / 100).toFixed(0)}</div>
-      <div className="mt-2 flex h-[17px] items-center justify-center">
+      <div className={TILE_PILL_ROW_CLASS}>
         {tier.freeMinutesShown > 0 ? <FreeMinutesPill minutes={tier.freeMinutesShown} /> : null}
       </div>
-      <div className="mt-1.5 text-[12px] font-medium leading-none text-white/60">
+      <div className={TILE_TOTAL_ROW_CLASS}>
         {minutesLabel(tier.totalMinutesShown, tier.freeMinutesShown)}
       </div>
     </button>

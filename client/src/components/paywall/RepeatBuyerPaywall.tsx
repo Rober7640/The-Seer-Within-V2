@@ -20,7 +20,16 @@ import {
   type PricingTier,
 } from "@shared/types";
 import { quoteCustomAmount, type BonusPreviewTier } from "@shared/paywall";
-import { BonusPackTile, FreeMinutesPill, SelectedCheck, minutesLabel, tileFrameClass } from "./BonusPackTile";
+import {
+  BonusPackTile,
+  FreeMinutesPill,
+  SelectedCheck,
+  TILE_BOX_CLASS,
+  TILE_PILL_ROW_CLASS,
+  TILE_TOTAL_ROW_CLASS,
+  minutesLabel,
+  tileFrameClass,
+} from "./BonusPackTile";
 
 export interface RepeatBuyerPaywallProps {
   personaName?: string;
@@ -104,19 +113,26 @@ export function RepeatBuyerPaywallPanel({
       <div className="absolute inset-0 bg-gradient-to-b from-[#0f1628] via-[#162040] to-[#1a2550]" />
       <div className="absolute inset-x-0 top-0 h-32 bg-gradient-to-b from-purple-900/30 to-transparent" />
 
-      {/* Close */}
+      {/* Close — the same 28px circle in the same spot as BuyCreditsModal, inside a
+          40px tap area. */}
       <button
         onClick={onClose}
         aria-label="Close"
-        className="absolute right-3 top-3 z-20 flex h-7 w-7 items-center justify-center rounded-full bg-white/10 text-white/60 transition-all hover:bg-white/20 hover:text-white"
+        className="group absolute right-1.5 top-1.5 z-20 flex h-10 w-10 items-center justify-center rounded-full focus-visible:outline-none"
       >
-        <X className="h-4 w-4" />
+        <span className="flex h-7 w-7 items-center justify-center rounded-full bg-white/10 text-white/60 transition-all group-hover:bg-white/20 group-hover:text-white group-focus-visible:ring-2 group-focus-visible:ring-white/60">
+          <X className="h-4 w-4" />
+        </span>
       </button>
 
-      <div className="relative z-10 max-h-[88vh] overflow-y-auto px-6 pb-6 pt-7">
+      {/* Short phones (≤ 620px tall, e.g. 375×548 / 360×560 under the browser bars) get a
+          tighter header and gaps so the six packs AND the buttons fit with no scrolling.
+          Phones: as tall as the visible screen allows (dvh) minus a 40px strip of chat;
+          browsers without dvh keep 88vh. */}
+      <div className="relative z-10 max-h-[88vh] overflow-y-auto px-6 pb-6 pt-7 max-sm:max-h-[calc(100dvh-40px)] [@media(max-height:620px)]:pb-4 [@media(max-height:620px)]:pt-4">
         {/* Header — same words as BuyCreditsModal */}
-        <div className="mb-4 text-center">
-          <div className="mx-auto mb-2.5 h-12 w-12 rounded-full p-[2px] ring-1 ring-amber-200/40 shadow-[0_0_24px_rgba(251,191,36,0.25)]">
+        <div className="mb-4 text-center [@media(max-height:620px)]:mb-3">
+          <div className="mx-auto mb-2.5 h-12 w-12 rounded-full p-[2px] ring-1 ring-amber-200/40 shadow-[0_0_24px_rgba(251,191,36,0.25)] [@media(max-height:620px)]:mb-1.5 [@media(max-height:620px)]:h-10 [@media(max-height:620px)]:w-10">
             <img
               src={avatarUrl || "/evelyn-avatar.png"}
               alt={personaName || "your guide"}
@@ -127,14 +143,14 @@ export function RepeatBuyerPaywallPanel({
               }}
             />
           </div>
-          <h2 className="font-serif text-2xl font-bold leading-tight text-white">
+          <h2 className="font-serif text-2xl font-bold leading-tight text-white [@media(max-height:620px)]:text-[22px]">
             {isOutOfCredits ? "Continue Your Chat" : "More time together"}
           </h2>
-          <p className="mt-1.5 text-[13px] text-white/60">{firstName} will wait for you</p>
+          <p className="mt-1.5 text-[13px] text-white/60 [@media(max-height:620px)]:mt-1">{firstName} will wait for you</p>
         </div>
 
         {/* Add-minutes label */}
-        <p className="mb-3.5 text-[13px] font-medium text-white/70">
+        <p className="mb-3.5 text-[13px] font-medium text-white/70 [@media(max-height:620px)]:mb-3 [@media(max-height:620px)]:leading-snug">
           Add minutes to keep chatting.
           <span className="ml-1 font-normal text-white/45">Your balance works with every guide.</span>
         </p>
@@ -142,7 +158,7 @@ export function RepeatBuyerPaywallPanel({
         {/* Packs — 3×2: $10 / $20 / $30, then $50 / $100 / Custom. The row gap is
             wider than the column gap so the bottom row's badge never touches the
             tiles above it, nor the tick on a selected tile above. */}
-        <div className="mb-3 grid grid-cols-3 gap-x-2 gap-y-5">
+        <div className="mb-3 grid grid-cols-3 gap-x-2 gap-y-5 [@media(max-height:620px)]:mb-2.5">
           {presetTiers.map((tier) => (
             <BonusPackTile
               key={tier.packageType}
@@ -165,7 +181,7 @@ export function RepeatBuyerPaywallPanel({
               setMode("custom");
               customInputRef.current?.focus();
             }}
-            className={`relative cursor-text rounded-2xl border-2 px-1 pb-2.5 pt-4 text-center transition-all duration-150 ${tileFrameClass(
+            className={`${TILE_BOX_CLASS} cursor-text ${tileFrameClass(
               customActive,
               customTooLow || customTooHigh,
             )}`}
@@ -198,12 +214,12 @@ export function RepeatBuyerPaywallPanel({
                 }`}
               />
             </div>
-            <div className="mt-2 flex h-[17px] items-center justify-center">
+            <div className={TILE_PILL_ROW_CLASS}>
               {customCents > 0 && !customTooHigh && customQuote.freeMinutesShown > 0 ? (
                 <FreeMinutesPill minutes={customQuote.freeMinutesShown} />
               ) : null}
             </div>
-            <div className="mt-1.5 text-[12px] font-medium leading-none text-white/60">
+            <div className={TILE_TOTAL_ROW_CLASS}>
               {customCents > 0 && !customTooHigh
                 ? minutesLabel(customQuote.totalMinutesShown, customQuote.freeMinutesShown)
                 : <span className="text-white/40">${floorUsd}–${CUSTOM_TOPUP_MAX_USD}</span>}
@@ -219,7 +235,7 @@ export function RepeatBuyerPaywallPanel({
         )}
 
         {/* Terms line */}
-        <p className="mb-3.5 text-center text-[11px] leading-snug text-white/40">
+        <p className="mb-3.5 text-center text-[11px] leading-snug text-white/40 [@media(max-height:620px)]:mb-3">
           By continuing you agree to our{" "}
           <a href="/terms" target="_blank" rel="noopener noreferrer" className="underline underline-offset-2 hover:text-white/70">
             Terms

@@ -4,12 +4,9 @@
 // `preview-samples.local.json` (git-excluded — it holds real chat excerpts, so it
 // must never be committed). When that file is missing the preview falls back to
 // the clearly-labelled PLACEHOLDER below, so the page always renders.
-
-export interface PreviewQuote {
-  text: string;
-  /** Approved for public display (session_feedback.approved). */
-  approved: boolean;
-}
+//
+// The paywall shows no customer review quotes (operator decision). Older local
+// files may still carry a `quotes` key; it is ignored.
 
 export interface PreviewSample {
   id: string;
@@ -28,7 +25,6 @@ export interface PreviewSample {
 
 export interface PreviewSamplesFile {
   persona: { name: string; slug: string; avatarUrl: string; rating: number; ratingCount: number };
-  quotes: PreviewQuote[];
   samples: PreviewSample[];
 }
 
@@ -40,10 +36,6 @@ const PLACEHOLDER: PreviewSamplesFile = {
     rating: 4.7,
     ratingCount: 290,
   },
-  quotes: [
-    { text: "PLACEHOLDER — an approved 5-star review goes here.", approved: false },
-    { text: "PLACEHOLDER — a second approved review goes here.", approved: false },
-  ],
   samples: [
     {
       id: "s01",
@@ -76,7 +68,6 @@ export const previewSamplesAreReal = !!(loaded && Array.isArray(loaded.samples) 
 export const previewSamples: PreviewSamplesFile = previewSamplesAreReal
   ? {
       persona: { ...PLACEHOLDER.persona, ...(loaded!.persona ?? {}) },
-      quotes: loaded!.quotes?.length ? loaded!.quotes : PLACEHOLDER.quotes,
       samples: loaded!.samples,
     }
   : PLACEHOLDER;

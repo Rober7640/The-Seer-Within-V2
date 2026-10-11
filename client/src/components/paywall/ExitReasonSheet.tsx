@@ -46,7 +46,7 @@ export function ExitReasonPanel({ onPick }: ExitReasonSheetProps) {
 
         <button
           onClick={() => onPick(null)}
-          className="mx-auto mt-3 block px-4 py-2 text-[13px] font-medium text-white/45 underline-offset-2 transition-colors hover:text-white/75 hover:underline"
+          className="mx-auto mt-2 flex h-10 items-center px-4 text-[13px] font-medium text-white/45 underline-offset-2 transition-colors hover:text-white/75 hover:underline"
         >
           Skip
         </button>

@@ -3,15 +3,18 @@
 // /paywall-preview?surface=longcopy route; nothing live imports it yet.
 //
 // Order is deliberate: the personal part (what the guide still sees), the packs
-// and the CTA sit above the fold on a phone so a ready buyer never scrolls; proof
-// and reassurance sit below for the one who hesitates.
+// and the CTA come first; the reassurance + terms small print and "Not now" sit
+// under the CTA. The WHOLE sheet fits on one phone screen with no scrolling, down
+// to 360×560 / 375×548 (measured by .preview-shots/measure-fit.mjs). No customer
+// review quotes (operator decision) — the header's aggregate rating is the only
+// social proof.
 //
 // Presentational: everything comes in via props. `LongCopyPaywallPanel` is the
 // card itself; the default export wraps it in the same Dialog + mobile bottom
 // sheet as BuyCreditsModal so integration is a drop-in.
 
 import { useMemo, useState } from "react";
-import { Check, Star, X } from "lucide-react";
+import { Star, X } from "lucide-react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { PAYMENT_DIALOG_MOBILE_SHEET } from "@/lib/paymentDialog";
 import {
@@ -32,17 +35,10 @@ export interface LongCopyPersona {
   ratingCount?: number;
 }
 
-export interface LongCopyQuote {
-  text: string;
-  /** Approved for public display. Unapproved quotes may only appear in the preview. */
-  approved: boolean;
-}
-
 export interface LongCopyPaywallProps {
   persona: LongCopyPersona;
   /** The three "What I still see for you" lines, written from HER chat. null = fallback line. */
   stillSee: string[] | null;
-  quotes: LongCopyQuote[];
   /** Bonus-minute packs; each carries the numbers its tile claims (shared/paywall.ts). */
   tiers: BonusPreviewTier[];
   /** The guide's cents-per-minute rate; drives the custom-amount minutes. */
@@ -50,8 +46,6 @@ export interface LongCopyPaywallProps {
   /** Called with the chosen pack (a preset, or a synthesized custom tier). */
   onContinue: (tier: PricingTier) => void;
   onNotNow: () => void;
-  /** PREVIEW ONLY: tag quotes that are not yet approved for display. */
-  showApprovalTags?: boolean;
 }
 
 const FALLBACK_AVATAR = "/evelyn-avatar.png";
@@ -59,12 +53,10 @@ const FALLBACK_AVATAR = "/evelyn-avatar.png";
 export function LongCopyPaywallPanel({
   persona,
   stillSee,
-  quotes,
   tiers,
   coinsPerMinute = COINS_PER_MINUTE,
   onContinue,
   onNotNow,
-  showApprovalTags = false,
 }: LongCopyPaywallProps) {
   const firstName = (persona.name || "your guide").split(" ")[0];
 
@@ -114,17 +106,26 @@ export function LongCopyPaywallPanel({
   const lines = (stillSee ?? []).map((l) => l.trim()).filter(Boolean).slice(0, 3);
   const showRating = typeof persona.rating === "number" && (persona.ratingCount ?? 0) > 0;
 
+  // Phone height tiers (Tailwind arbitrary variants; the ranges never overlap, so no
+  // class order games): tall > 700px · compact 621–700px · tight ≤ 620px. The whole
+  // sheet must fit with NO scrolling on every phone down to 360×560 / 375×548 (the
+  // visible area under Safari/Chrome bars). Readability floor: still-see lines 14px,
+  // small print 11px, buy button 48px tall, every other tap target 40px tall.
   return (
     <div className="relative overflow-hidden rounded-2xl shadow-2xl max-sm:rounded-b-none">
       {/* Cosmic backdrop — same family as BuyCreditsModal */}
       <div className="absolute inset-0 bg-gradient-to-b from-[#0f1628] via-[#162040] to-[#1a2550]" />
       <div className="absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-purple-900/35 to-transparent" />
 
-      <div className="relative z-10 max-h-[88vh] overflow-y-auto px-5 pb-5">
+      {/* Phones: as tall as the visible screen allows (dvh tracks the browser bars),
+          minus a 40px strip so the chat still shows above the sheet. Browsers without
+          dvh keep 88vh. Measured: no scrolling down to 360×560 / 375×548 with up to two
+          still-see lines wrapping; if all three wrap, ≤ 14px scrolls there. */}
+      <div className="relative z-10 max-h-[88vh] overflow-y-auto px-5 pb-2 max-sm:max-h-[calc(100dvh-40px)] [@media(max-height:620px)]:px-4 [@media(max-height:620px)]:pb-0">
         {/* Guide + real rating — a sticky top bar that owns the close button, so the ✕
             never floats over scrolled text. Its fill matches the sheet's top gradient. */}
-        <div className="sticky top-0 z-20 -mx-5 flex items-center gap-3 bg-gradient-to-b from-[#28164a] to-[#201840] px-5 pb-2 pt-5 [@media(max-height:700px)]:pt-4">
-          <div className="h-11 w-11 shrink-0 rounded-full p-[2px] ring-1 ring-amber-200/40 shadow-[0_0_20px_rgba(251,191,36,0.22)]">
+        <div className="sticky top-0 z-20 -mx-5 flex items-center gap-3 bg-gradient-to-b from-[#28164a] to-[#201840] px-5 pb-2 pt-5 [@media(min-height:621px)_and_(max-height:700px)]:pb-1.5 [@media(min-height:621px)_and_(max-height:700px)]:pt-4 [@media(max-height:620px)]:-mx-4 [@media(max-height:620px)]:gap-2.5 [@media(max-height:620px)]:px-4 [@media(max-height:620px)]:pb-1 [@media(max-height:620px)]:pt-2.5">
+          <div className="h-11 w-11 shrink-0 rounded-full p-[2px] ring-1 ring-amber-200/40 shadow-[0_0_20px_rgba(251,191,36,0.22)] [@media(min-height:621px)_and_(max-height:700px)]:h-10 [@media(min-height:621px)_and_(max-height:700px)]:w-10 [@media(max-height:620px)]:h-8 [@media(max-height:620px)]:w-8">
             <img
               src={persona.avatarUrl || FALLBACK_AVATAR}
               alt={persona.name}
@@ -136,38 +137,42 @@ export function LongCopyPaywallPanel({
             />
           </div>
           <div className="min-w-0 flex-1">
-            <p className="truncate font-serif text-[16px] font-bold leading-tight text-white">{persona.name}</p>
+            <p className="truncate font-serif text-[16px] font-bold leading-tight text-white [@media(max-height:620px)]:text-[15px]">{persona.name}</p>
             {showRating && (
-              <p className="mt-0.5 flex items-center gap-1 text-[12px] text-white/60">
+              <p className="mt-0.5 flex items-center gap-1 text-[12px] text-white/60 [@media(max-height:620px)]:mt-0 [@media(max-height:620px)]:text-[11px] [@media(max-height:620px)]:leading-tight">
                 <Star className="h-3 w-3 fill-amber-300 text-amber-300" />
                 <span className="font-semibold text-white/85">{persona.rating!.toFixed(1)}</span>
                 <span>· {persona.ratingCount!.toLocaleString("en-US")} client ratings</span>
               </p>
             )}
           </div>
-          {/* Close = the same decision as "Not now" */}
+          {/* Close = the same decision as "Not now". A 40px tap area around the same
+              28px circle; the negative margin keeps it from making the bar taller. */}
           <button
             onClick={onNotNow}
             aria-label="Close"
-            className="flex h-7 w-7 shrink-0 items-center justify-center self-start rounded-full bg-white/10 text-white/60 transition-all hover:bg-white/20 hover:text-white"
+            className="group -m-1.5 flex h-10 w-10 shrink-0 items-center justify-center self-start rounded-full focus-visible:outline-none"
           >
-            <X className="h-4 w-4" />
+            <span className="flex h-7 w-7 items-center justify-center rounded-full bg-white/10 text-white/60 transition-all group-hover:bg-white/20 group-hover:text-white group-focus-visible:ring-2 group-focus-visible:ring-white/60">
+              <X className="h-4 w-4" />
+            </span>
           </button>
         </div>
 
         {/* Headline */}
-        <h2 className="mt-2 font-serif text-[22px] font-bold leading-[1.2] text-white [@media(max-height:700px)]:mt-1 [@media(max-height:700px)]:text-[19px]">
+        <h2 className="mt-2 font-serif text-[22px] font-bold leading-[1.2] text-white [@media(min-height:621px)_and_(max-height:700px)]:mt-1.5 [@media(min-height:621px)_and_(max-height:700px)]:text-[20px] [@media(max-height:620px)]:mt-0.5 [@media(max-height:620px)]:text-[18px] [@media(max-height:620px)]:leading-[1.15]">
           Your free minutes are up, but your reading isn't.
         </h2>
 
-        {/* What the guide still sees — HER reading, not minutes */}
-        <div className="mt-3.5 rounded-2xl border border-amber-200/15 bg-white/[0.04] px-4 py-3 [@media(max-height:700px)]:mt-2.5 [@media(max-height:700px)]:py-2.5">
+        {/* What the guide still sees — HER reading, not minutes. Lines stay 14px on
+            every phone; a long line may wrap to two rows. */}
+        <div className="mt-3.5 rounded-2xl border border-amber-200/15 bg-white/[0.04] px-4 py-3 [@media(min-height:621px)_and_(max-height:700px)]:mt-2.5 [@media(min-height:621px)_and_(max-height:700px)]:px-3.5 [@media(min-height:621px)_and_(max-height:700px)]:py-2.5 [@media(max-height:620px)]:mt-2 [@media(max-height:620px)]:px-3 [@media(max-height:620px)]:py-1.5">
           {lines.length > 0 ? (
             <>
-              <p className="text-[13px] font-semibold text-amber-200/90">What I still see for you:</p>
-              <ul className="mt-2 space-y-1.5 [@media(max-height:700px)]:mt-1.5 [@media(max-height:700px)]:space-y-1">
+              <p className="text-[13px] font-semibold leading-snug text-amber-200/90">What I still see for you:</p>
+              <ul className="mt-2 space-y-1.5 [@media(min-height:621px)_and_(max-height:700px)]:mt-1.5 [@media(min-height:621px)_and_(max-height:700px)]:space-y-1 [@media(max-height:620px)]:mt-1 [@media(max-height:620px)]:space-y-0.5">
                 {lines.map((line, i) => (
-                  <li key={i} className="flex gap-2 text-[14px] leading-snug text-white/90 [@media(max-height:700px)]:text-[13px]">
+                  <li key={i} className="flex gap-2 text-[14px] leading-snug text-white/90 [@media(max-height:620px)]:gap-1.5 [@media(max-height:620px)]:leading-[1.3]">
                     <span aria-hidden className="shrink-0 text-amber-300">➤</span>
                     <span>{line}</span>
                   </li>
@@ -182,8 +187,8 @@ export function LongCopyPaywallPanel({
         </div>
 
         {/* Packs — price big, the FREE minutes as the eye-catcher, whole-minute total small.
-            Bonus minutes grow faster than the price. */}
-        <div className="mt-5 grid grid-cols-3 gap-2 [@media(max-height:700px)]:mt-4">
+            Bonus minutes grow faster than the price. The top gap leaves room for the badges. */}
+        <div className="mt-5 grid grid-cols-3 gap-2 [@media(min-height:621px)_and_(max-height:700px)]:mt-4 [@media(max-height:620px)]:mt-3">
           {presetTiers.map((tier) => (
             <BonusPackTile
               key={tier.packageType}
@@ -198,9 +203,10 @@ export function LongCopyPaywallPanel({
           ))}
         </div>
 
-        {/* Custom amount (compact) — ~20% of revenue, so it stays */}
-        <div
-          className={`mt-2.5 rounded-xl border px-3 py-2 transition-colors ${
+        {/* Custom amount (compact) — ~20% of revenue, so it stays. A <label>, so a tap
+            anywhere on the row (≥ 40px tall) focuses the field. */}
+        <label
+          className={`mt-2.5 flex min-h-11 cursor-text items-center justify-between gap-3 rounded-xl border px-3 transition-colors [@media(max-height:620px)]:mt-2 [@media(max-height:620px)]:min-h-10 ${
             mode === "custom"
               ? customTooLow || customTooHigh
                 ? "border-rose-400/60 bg-rose-400/[0.06]"
@@ -208,115 +214,74 @@ export function LongCopyPaywallPanel({
               : "border-white/10 bg-white/[0.03]"
           }`}
         >
-          <div className="flex items-center justify-between gap-3">
-            <div className="flex flex-1 items-center gap-1.5">
-              <span className="text-[15px] font-semibold text-white/60">$</span>
-              <input
-                type="text"
-                inputMode="decimal"
-                placeholder="Other amount"
-                value={customInput}
-                onFocus={() => setMode("custom")}
-                onChange={(e) => {
-                  const raw = e.target.value.replace(/[^0-9.]/g, "");
-                  const parts = raw.split(".");
-                  const clean = parts.length > 2 ? `${parts[0]}.${parts.slice(1).join("")}` : raw;
-                  setMode("custom");
-                  setCustomInput(clean);
-                }}
-                className="w-full bg-transparent text-[14px] text-white placeholder:text-white/40 focus:outline-none"
-              />
-            </div>
-            {customCents > 0 && !customTooHigh ? (
-              <span className="flex shrink-0 items-center gap-1.5">
-                {customQuote.freeMinutesShown > 0 && <FreeMinutesPill minutes={customQuote.freeMinutesShown} />}
-                <span className="text-[12px] font-medium text-white/60">
-                  {minutesLabel(customQuote.totalMinutesShown, customQuote.freeMinutesShown)}
-                </span>
+          <span className="flex flex-1 items-center gap-1.5">
+            <span className="text-[15px] font-semibold text-white/60">$</span>
+            <input
+              type="text"
+              inputMode="decimal"
+              aria-label="Other amount in dollars"
+              placeholder="Other amount"
+              value={customInput}
+              onFocus={() => setMode("custom")}
+              onChange={(e) => {
+                const raw = e.target.value.replace(/[^0-9.]/g, "");
+                const parts = raw.split(".");
+                const clean = parts.length > 2 ? `${parts[0]}.${parts.slice(1).join("")}` : raw;
+                setMode("custom");
+                setCustomInput(clean);
+              }}
+              className="w-full bg-transparent py-2 text-[14px] text-white placeholder:text-white/40 focus:outline-none"
+            />
+          </span>
+          {customCents > 0 && !customTooHigh ? (
+            <span className="flex shrink-0 items-center gap-1.5">
+              {customQuote.freeMinutesShown > 0 && <FreeMinutesPill minutes={customQuote.freeMinutesShown} />}
+              <span className="text-[12px] font-medium text-white/60">
+                {minutesLabel(customQuote.totalMinutesShown, customQuote.freeMinutesShown)}
               </span>
-            ) : (
-              <span className="shrink-0 text-[12px] font-medium text-white/40">0 min</span>
-            )}
-          </div>
-        </div>
+            </span>
+          ) : (
+            <span className="shrink-0 text-[12px] font-medium text-white/40">0 min</span>
+          )}
+        </label>
         {mode === "custom" && (customTooLow || customTooHigh) && (
           <p className="mt-1.5 text-center text-[11px] text-rose-300/90">
             {customTooHigh ? `Maximum top-up is $${CUSTOM_TOPUP_MAX_USD}.` : `Minimum top-up is $${floorUsd}.`}
           </p>
         )}
 
-        {/* CTA */}
+        {/* CTA — never under 48px tall */}
         <button
           onClick={handleContinue}
           disabled={!canContinue}
-          className="mt-3.5 w-full rounded-2xl bg-gradient-to-r from-teal-400 to-emerald-500 py-3.5 [@media(max-height:700px)]:mt-3 [@media(max-height:700px)]:py-3 text-center text-[15px] font-bold text-[#0f1628] shadow-lg shadow-emerald-500/20 transition-transform active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-50"
+          className="mt-3.5 flex min-h-12 w-full items-center justify-center rounded-2xl bg-gradient-to-r from-teal-400 to-emerald-500 py-3.5 text-center text-[15px] font-bold text-[#0f1628] shadow-lg shadow-emerald-500/20 transition-transform active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-50 [@media(min-height:621px)_and_(max-height:700px)]:mt-3 [@media(max-height:620px)]:mt-2 [@media(max-height:620px)]:py-3"
         >
           Continue my reading
         </button>
 
-        {/* ---- Below the fold: proof + reassurance ---- */}
-        <div className="my-5 h-px bg-white/10" />
+        {/* Reassurance + terms, merged into two rows of small print (was three ✓ lines
+            + a terms line). Each row fits one line at 11px on a 360px phone. The refund
+            promise lives in the "30-day Refund Policy" link (/refund: "30-day goodwill
+            refund on unused purchased minutes"). */}
+        <div className="mt-3 space-y-0.5 text-center text-[11px] leading-[1.35] text-white/50 [@media(min-height:621px)_and_(max-height:700px)]:mt-2.5 [@media(max-height:620px)]:mt-1.5 [@media(max-height:620px)]:space-y-0">
+          <p>One-time payment · No subscription · Works with every guide</p>
+          <p>
+            By continuing you agree to our{" "}
+            <a href="/terms" target="_blank" rel="noopener noreferrer" className="underline underline-offset-2 hover:text-white/80">
+              Terms
+            </a>{" "}
+            &amp;{" "}
+            <a href="/refund" target="_blank" rel="noopener noreferrer" className="underline underline-offset-2 hover:text-white/80">
+              30-day Refund Policy
+            </a>
+            .
+          </p>
+        </div>
 
-        {quotes.length > 0 && (
-          <div className="space-y-3">
-            {quotes.slice(0, 2).map((q, i) => (
-              <figure key={i} className="rounded-xl bg-white/[0.03] px-3.5 py-3">
-                <div className="flex items-center gap-2">
-                  <span className="flex gap-0.5" aria-label="5 stars">
-                    {Array.from({ length: 5 }).map((_, s) => (
-                      <Star key={s} className="h-3 w-3 fill-amber-300 text-amber-300" />
-                    ))}
-                  </span>
-                  {showApprovalTags && !q.approved && (
-                    <span className="rounded bg-rose-500/20 px-1.5 py-[1px] text-[9px] font-bold uppercase tracking-wide text-rose-300">
-                      needs approval
-                    </span>
-                  )}
-                </div>
-                <blockquote className="mt-1.5 text-[13px] italic leading-snug text-white/80">“{q.text}”</blockquote>
-                <figcaption className="mt-1 text-[11px] text-white/40">— {firstName}'s client</figcaption>
-              </figure>
-            ))}
-          </div>
-        )}
-
-        <ul className="mt-4 space-y-2">
-          <li className="flex items-start gap-2 text-[13px] leading-snug text-white/70">
-            <Check className="mt-[2px] h-3.5 w-3.5 shrink-0 text-emerald-300" strokeWidth={3} />
-            One-time payment. No subscription.
-          </li>
-          <li className="flex items-start gap-2 text-[13px] leading-snug text-white/70">
-            <Check className="mt-[2px] h-3.5 w-3.5 shrink-0 text-emerald-300" strokeWidth={3} />
-            <span>
-              Unused minutes can be{" "}
-              <a href="/refund" target="_blank" rel="noopener noreferrer" className="underline underline-offset-2 hover:text-white">
-                refunded
-              </a>{" "}
-              within 30 days.
-            </span>
-          </li>
-          <li className="flex items-start gap-2 text-[13px] leading-snug text-white/70">
-            <Check className="mt-[2px] h-3.5 w-3.5 shrink-0 text-emerald-300" strokeWidth={3} />
-            Your minutes work with every guide.
-          </li>
-        </ul>
-
-        {/* Terms line — as today */}
-        <p className="mt-5 text-center text-[11px] leading-snug text-white/40">
-          By continuing you agree to our{" "}
-          <a href="/terms" target="_blank" rel="noopener noreferrer" className="underline underline-offset-2 hover:text-white/70">
-            Terms
-          </a>{" "}
-          &amp;{" "}
-          <a href="/refund" target="_blank" rel="noopener noreferrer" className="underline underline-offset-2 hover:text-white/70">
-            Refund Policy
-          </a>
-          .
-        </p>
-
+        {/* Not now — a small text link with a full 40px tap area */}
         <button
           onClick={onNotNow}
-          className="mx-auto mt-3 block px-4 py-2 text-[13px] font-medium text-white/50 underline-offset-2 transition-colors hover:text-white/80 hover:underline"
+          className="mx-auto mt-1 flex h-10 items-center px-5 text-[13px] font-medium text-white/60 underline decoration-white/30 underline-offset-[3px] transition-colors hover:text-white/85 [@media(max-height:620px)]:mt-0"
         >
           Not now
         </button>

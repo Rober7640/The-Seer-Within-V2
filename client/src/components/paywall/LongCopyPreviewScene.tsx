@@ -127,10 +127,8 @@ export default function LongCopyPreviewScene({ surface }: { surface: View }) {
   const panelProps = {
     persona: { name: persona.name, avatarUrl: persona.avatarUrl, rating: persona.rating, ratingCount: persona.ratingCount },
     stillSee: forceFallback ? null : sample?.stillSee ?? null,
-    quotes: previewSamples.quotes,
     tiers,
     coinsPerMinute,
-    showApprovalTags: true,
     onContinue: (t: PricingTier) => setLastAction(continueLog(t)),
     onNotNow: () => {
       setLastAction("Not now → exit question");
@@ -163,8 +161,14 @@ export default function LongCopyPreviewScene({ surface }: { surface: View }) {
 
   return (
     <div className="min-h-screen bg-white">
-      {/* Preview chrome — never shipped */}
-      <div className="sticky top-0 z-[70] border-b border-white/10 bg-[#0b1020]/95 px-3 py-1.5 text-[12px] text-white/80 backdrop-blur">
+      {/* Preview chrome — never shipped. With ?frame=dialog it sits UNDER the dialog's
+          dark overlay (it is inert there anyway), so the sheet's top edge and the strip
+          of chat above it look exactly as on a real phone. */}
+      <div
+        className={`sticky top-0 border-b border-white/10 bg-[#0b1020]/95 px-3 py-1.5 text-[12px] text-white/80 backdrop-blur ${
+          realFrame ? "z-40" : "z-[70]"
+        }`}
+      >
         <div className="mx-auto flex max-w-5xl flex-wrap items-center gap-x-2.5 gap-y-1">
           <span className="font-semibold uppercase tracking-[0.12em] text-amber-200/70">
             Preview<span className="hidden sm:inline"> · not live</span>
