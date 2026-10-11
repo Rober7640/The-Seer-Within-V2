@@ -95,7 +95,7 @@ app.get('/api/backend/order/:id', (req, res) => {
       email: 'preview@example.test', status: 'paid', deliveryHours: 24, deliveredAt: null,
       firstName: o.firstName, readingCents,
       bumpPurchased: o.bump, bumpCents: o.bump ? BUMP_CENTS : 0,
-      bumpProductKey: o.bump ? 'still_cup' : null,
+      bumpProductKey: o.bump ? 'double_turning' : null,
       amountCents: readingCents + (o.bump ? BUMP_CENTS : 0),
     },
   });

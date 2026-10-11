@@ -56,10 +56,10 @@ never read for 04.
 
 | Piece | Where |
 |---|---|
-| Rungs, grace, bump, cups, the pure resolver | `shared/backendOffers.ts` — `TEA_READING_RUNG_CENTS`, `ladderRungAt()`, `resolveLadderCharge()`, `TEA_CUPS`, `resolveTeaCup()`; catalog row `'tea-reading'` (`be_tea_reading`, bump `still_cup` $12.77, `readyForMoney: false`) |
+| Rungs, grace, bump, cups, the pure resolver | `shared/backendOffers.ts` — `TEA_READING_RUNG_CENTS`, `ladderRungAt()`, `resolveLadderCharge()`, `TEA_CUPS`, `resolveTeaCup()`; catalog row `'tea-reading'` (`be_tea_reading`, bump `double_turning` $12.77, `readyForMoney: false`) |
 | Today's price for the page | `GET /api/backend/offers/tea-reading/price` → `{ offer, day, cents, label, startSet }`, `no-store`. `?day=N` previews a rung (display only, `preview: true`) while the offer is not open for money; checkout never reads it |
 | Checkout | `POST /api/backend/checkout` takes optional `quotedDay` (a `cup` from the browser is accepted and ignored). Stripe metadata gets `rung` ('1'–'4', what the server charged), `cup` (the server's random draw) and `cupDrawn: '1'` |
-| Receipt | `GET /api/backend/order/:sessionId` — 04 is always `deliveryHours: 24` (the Still Cup is not a speed bump); does NOT return the cup (anyone holding the session id could read the draw). `bumpPurchased` was already there; the Still Cup page is `TEA_READING_STILL_CUP_PATH` |
+| Receipt | `GET /api/backend/order/:sessionId` — 04 is always `deliveryHours: 24` (the Double Turning is not a speed bump); does NOT return the cup (anyone holding the session id could read the draw). `bumpPurchased` was already there |
 | AWeber tags | `be-04-tea-reading`, `be-04-bump`, `be-04-delivered`, upsells `be-04-upsell1-protection` / `be-04-upsell2-bracelet`; lists 6972552 / 6972554 (shared with 02/03) |
 | Delivery | `server/lib/be04Delivery.ts`, every 10 min from the cron set, **off** unless `BE04_DELIVERY_ENABLED=true`. Paid, undelivered 04 orders older than `BE04_DELIVERY_DELAY_HOURS` (default 12, 1–23) get their cup's link (`BE04_READING_URL_TURNED_HANDLE` / `_DIVIDED_RIM` / `_SUNKEN_LEAF`, https only) via `markBackendReadingDelivered`, then `reading_url` + `delivered_at` are stamped. Cup read from the Stripe session (no migration). No link, or Stripe unreadable → skipped and retried, never a guessed link. Still undelivered at 23h → error log every tick |
 
@@ -76,7 +76,7 @@ order insert fail, and an order with no row is never auto-delivered).
 |---|---|---|---|
 | A1 | Worksheet + D1 | [`0-WORKFLOW-04.md`](./0-WORKFLOW-04.md) Step 0; decisions above | — |
 | A2 | Booking **page** (one tick) + booking **chat** | `client/src/pages/offers/tea-reading/{BookingPage,BookingChat}.tsx`, `client/src/lib/{ladderPrice,teaReadingBooking}.ts`; copy `copy/04/04-C1-booking-page-v2.md`, `04-C2-booking-chat.md` | walk 195/195; phone button at 735–795px of 844, unticked |
-| A3 | Bump — the Still Cup, $12.77, `still_cup`, never pre-checked | in both treatments; deliverable page `StillCupPage.tsx` at `/offers/wiccan/tea-reading/still-cup` (04-C4 word for word, noindex) | walk |
+| A3 | Bump — **the Double Turning**, $12.77, `double_turning`, never pre-checked. **Intangible: nothing is delivered** (operator 2026-10-11 — replaced the Still Cup, a delivered evening practice) | in both treatments; the receipt confirms it in one P.S. ("nothing extra to look out for"). No page, no email | walk |
 | A4/A5 | Upsells on the shared chain | `client/src/lib/upsellCopy/teaReading.ts` (registered in `BACKEND_UPSELL_PITCH`); copy as she sees it in `copy/04/04-U-upsell-copy-v2.md` | 18 tests; walk 36/36 (`scripts/walk-04-upsells.mjs`) |
 | A6 | Receipt | `ThankYouPage.tsx` + `client/src/lib/teaReadingReceipt.ts` (09's `?offer=` guard, 08's 2s/40s poll); copy `copy/04/04-T1-thank-you-page.md` | walk |
 | A7 | Routes, funnel, checkout fields | `App.tsx` (4 lazy routes), `funnel.ts` (`TEA_READING_PREFIX`, `'teareading'`), `backendCheckout.ts` (`quotedDay`, `cup`, `price_changed`) | 67 client tests; tsc 46 (baseline) |
@@ -113,7 +113,6 @@ all the starting, none of it*.
 |---|---|---|---|
 | Confirmation (C1) | `copy/04/04-T3-confirmation-email.md` | Your tea reading is confirmed — The Turn | `be-04-tea-reading` |
 | Delivery (C2) | `copy/04/04-T4-delivery-email.md` | `%FIRSTNAME% — your cup is turned` | `be-04-delivered` |
-| Still Cup *(new)* | `copy/04/04-T5-still-cup-email.md` | Your Still Cup is ready | `be-04-bump` (suggest a 10-min wait so it lands after the confirmation) |
 
 Rendered `.html`/`.txt` beside each spec; send-ready copies in `~/Desktop/04-tea-reading-emails/`.
 By hand in AWeber (C3): swap `{{AWEBER_READING_URL}}` for the `reading_url` field in T4 (HTML and
@@ -133,7 +132,7 @@ with and without a first name. ⛔ Not uploaded — AWeber was not touched.
 | `04-C1` | Six statements → one tick (`04-C1-booking-page-v2.md`) | D11 / the operator's one-tick lock |
 | `04-C1` | ~~The cup pick sits after the tick~~ — the pick was removed entirely (random draw, operator 2026-10-11) | It was 245px tall and confused the operator |
 | `04-C3` | The bump is a label, one line and the price on the page; the "nine o'clock on a Tuesday" line moved to the chat's bump turn | Room on the first screen; a weekday on a page is a date |
-| `04-C2` | The chat's bump says "as soon as you're through", not "with your reading" | The Still Cup is delivered at once, not with the reading |
+| `04-C3` / `04-C4` | **Superseded.** The bump is the Double Turning (Evelyn reads the cup a second time for twice the strength): intangible, nothing delivered; the Still Cup page, its T5 email and the receipt link are deleted | Operator, 2026-10-11: "an intangible that doesn't need to be delivered"; the first wording ("seals at double strength") was rejected as unclear, so the copy says plainly what she gets |
 | `04-T1` | "It's going on soft — you didn't leave it" cut; "I'll send it again the same day" → "I'll sort it out"; added her cup, the confirmation subject, and a variant for an already-delivered order | Soft is false after day 2; a same-day resend is a promise nobody is staffed for |
 | `04-C4` page | Greeting shows her name when the tab knows it, else is cut; the rest is 04-C4 verbatim (test-checked) | No blank where a name should be |
 | Prices | Shown as `$35` / `$47.77`, never `$35.00` | Matches copy-check's 04 forms |

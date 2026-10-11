@@ -262,7 +262,7 @@ export function getPostHogFunnel(pathname?: string): PostHogFunnel | null {
   // offer-aware lander_view (see backendOfferFunnel) because they resolve the offer
   // from the session, not the path — so they are deliberately NOT matched here.
   if (p === JUDGEMENT_PREFIX || p.startsWith(`${JUDGEMENT_PREFIX}/`)) return "judgement";
-  // 04 The Turn — booking page (root) + chat + receipt + the Still Cup page, all under its
+  // 04 The Turn — booking page (root) + chat + receipt, all under its
   // prefix. Its upsells are the SHARED /offers/upsell/* pages, which fire their own
   // offer-aware lander_view. Matches the server's BACKEND_FUNNEL['tea-reading'].
   if (p === TEA_READING_PREFIX || p.startsWith(`${TEA_READING_PREFIX}/`)) return "teareading";
@@ -351,11 +351,11 @@ export function getPostHogStep(pathname?: string): string {
       return "unknown";
     }
     case "teareading": {
-      // 04: the page at the root, the chat at /chat, the receipt, and the bump's deliverable.
+      // 04: the page at the root, the chat at /chat, and the receipt. The bump (the Double
+      // Turning) is intangible — it has no page, so no step of its own.
       const sub = p.slice(TEA_READING_PREFIX.length); // "" at the booking root (the page)
       if (sub === "" || sub === "/chat") return "booking";
       if (sub === "/success") return "thank_you";
-      if (sub === "/still-cup") return "still_cup";
       return "unknown";
     }
     case "pixiu": {

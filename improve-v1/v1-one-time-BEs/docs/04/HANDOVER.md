@@ -24,7 +24,7 @@ two decisions come first, and they're Joel's.
 |---|---|---|
 | J1 | **Read the three readings** (the product — what she pays for) | `docs/04/product/pdf/04-the-turn-{divided-rim,turned-handle,sunken-leaf}.pdf` |
 | J2 | **Read the funnel copy**: booking page, booking chat, receipt, upsells | `copy/04/04-C1-booking-page-v2.md`, `04-C2-booking-chat.md`, `04-T1-thank-you-page.md`, `04-U-upsell-copy-v2.md`. Screenshots: `improve-v1/evidence/04-tea-reading-2026-10-11/` |
-| J3 | **Read the three emails** | `copy/04/04-T3-confirmation-email`, `04-T4-delivery-email`, `04-T5-still-cup-email` (.html/.txt), also `~/Desktop/04-tea-reading-emails/` |
+| J3 | **Read the two emails** | `copy/04/04-T3-confirmation-email`, `04-T4-delivery-email` (.html/.txt), also `~/Desktop/04-tea-reading-emails/`. (The bump is intangible, so there is no bump email — the old `04-T5` Still Cup email is deleted) |
 | J6 | **Which sales letter sends?** The source letter or the rewrite `copy/04/04-E2-esl.md`. ⛔ Either way it must show **the source letter's cup photo** with the seven numbered marks, because all three readings read that exact cup. The day-2/3/4 ladder emails (`04-E5`) and abandon nudges (`04-E6`) exist as drafts only and were outside this build | `docs/04/product/images/esl/esl-cup-original.jpg` |
 | J7 | **OK to put the PDFs online.** The links will be public but unguessable | step D3 |
 
@@ -38,8 +38,8 @@ two decisions come first, and they're Joel's.
 | D2 | **Database: no new migration for 04.** ⚠ But check that production `be_orders` has **every column `shared/schema.ts` names** | The 07/08 columns were missing from production on 2026-09-13. If a column is missing, the order insert fails: she still gets her confirmation email, but **her reading is never auto-delivered** (no row for the job to find). Apply the pending `be-07` / `be-08` / `be-shipments` migrations first. ⛔ Never `db:push` |
 | D3 | **Upload the three PDFs** at unguessable keys | e.g. `node improve-v1/v1-one-time-BEs/scripts/host-be-asset.cjs file docs/…/04-the-turn-divided-rim.pdf evelyn/backend-04/<random>/04-the-turn-divided-rim.pdf`. ⛔ Never under `evelyn/tarot/` |
 | D4 | **Environment variables** (production) | `BE04_READING_URL_TURNED_HANDLE` / `_DIVIDED_RIM` / `_SUNKEN_LEAF` — the three https links from D3. `BE04_DELIVERY_ENABLED=true` on the instance that runs cron jobs (not where `DISABLE_CRONS=true`). `BE04_DELIVERY_DELAY_HOURS` (default 12, allowed 1–23). Confirm the client build has `VITE_BACKEND_CHECKOUT_LIVE=true` (it must already, for 03/06 to take money). `BE04_LADDER_START` is set on send day — see D8 |
-| D5 | **AWeber, by hand** (the API can't build Campaigns) | **T3 confirmation** — list `6972552`, trigger tag `be-04-tea-reading`, no wait. ⛔ Not on `6972554`: bump buyers get `be-04-tea-reading` there too, so it would send twice. **T4 delivery** — list `6972552`, trigger `be-04-delivered`, no wait; swap `{{AWEBER_READING_URL}}` for the `reading_url` custom field (HTML *and* text); subject `{{ subscriber.first_name \| default: "dear" }} — your cup is turned`. **T5 Still Cup** — list `6972554`, trigger `be-04-bump`, suggest a 10-minute wait. Check `reading_url` exists as a custom field on `6972552` (02 uses it). Seed-test each with and without a first name |
-| D6 | **One real test purchase** on dev (`BACKEND_CHECKOUT_TEST_MODE=true` + a `sk_test_` key) | Run the checklist in `docs/test-ideas.md` → "Backend offer 04". The ones that matter most: a drawn cup is in Stripe metadata · bump adds "The Still Cup" $12.77 · pay → upsell 1 → upsell 2 → receipt shows *her* order · the confirmation email lands once · with the delay set to 1 hour, the delivery email arrives once with **her cup's** PDF link · the live V1 funnel `/` and offers 03/06/09 unchanged |
+| D5 | **AWeber, by hand** (the API can't build Campaigns) | **T3 confirmation** — list `6972552`, trigger tag `be-04-tea-reading`, no wait. ⛔ Not on `6972554`: bump buyers get `be-04-tea-reading` there too, so it would send twice. **T4 delivery** — list `6972552`, trigger `be-04-delivered`, no wait; swap `{{AWEBER_READING_URL}}` for the `reading_url` custom field (HTML *and* text); subject `{{ subscriber.first_name \| default: "dear" }} — your cup is turned`. **No bump Campaign:** the bump (the Double Turning) is intangible — nothing to send. `be-04-bump` on `6972554` stays as a segment only. Check `reading_url` exists as a custom field on `6972552` (02 uses it). Seed-test each with and without a first name |
+| D6 | **One real test purchase** on dev (`BACKEND_CHECKOUT_TEST_MODE=true` + a `sk_test_` key) | Run the checklist in `docs/test-ideas.md` → "Backend offer 04". The ones that matter most: a drawn cup is in Stripe metadata · bump adds "The Double Turning" $12.77 (`bumpProduct=double_turning`) · pay → upsell 1 → upsell 2 → receipt shows *her* order · the confirmation email lands once · with the delay set to 1 hour, the delivery email arrives once with **her cup's** PDF link · the live V1 funnel `/` and offers 03/06/09 unchanged |
 | D7 | **Switch it on** | `readyForMoney: true` for `'tea-reading'` in `shared/backendOffers.ts`, then deploy |
 | D8 | **On the day the letter sends** | Set `BE04_LADDER_START` to the exact send time **with a timezone**, e.g. `2026-10-20T18:30:00+08:00` (without one it's ignored and the price stays $35). Letter button → `https://theseerwithin.com/offers/wiccan/tea-reading?c=61&fn=<first name, URL-encoded>`. Codes: `61–67` the letter, `81–83` the ladder emails, `71–73` abandon nudges. Suppress buyers from the ladder emails |
 
@@ -85,8 +85,10 @@ BASE=http://localhost:5094 node improve-v1/v1-one-time-BEs/scripts/walk-04-upsel
   an overdue error every 10 minutes until someone delivers them by hand.
 - **Delivery only runs where cron jobs run.** If no deployed instance runs crons, nothing is delivered.
 - **Upsell 2** still uses V1's shared questions (the "calling something in" one, US spelling "recognized"). There is no stone question: the bracelet is charged to all three leaves at once (closed 2026-10-11).
-- **The Still Cup page** opens with "Do this tonight, before your reading has even arrived", which is
-  stale if she reopens it after delivery. Minor.
+- **The bump is the Double Turning** (operator, 2026-10-11): Evelyn reads her cup a second time — an
+  intangible, **nothing to fulfil**. No page, no email, no link; the delivery time doesn't change
+  (24 hours). Its only trace is one P.S. on the receipt for bump buyers. It replaced the Still Cup
+  (a delivered nightly instructional); that page, its route and its `04-T5` email are gone.
 - **Desktop booking page:** the button sits just below the first screen (885px on 1280×800). Phones are fine (811 of 844).
 - **Not 04's:** 28 tests already fail on `development`; walk scripts for 03/06/09 have stale URLs/prices.
 
@@ -97,7 +99,7 @@ BASE=http://localhost:5094 node improve-v1/v1-one-time-BEs/scripts/walk-04-upsel
 | What | Path |
 |---|---|
 | Server | `shared/backendOffers.ts`, `server/routes/backendOffers.ts`, `server/lib/be04Delivery.ts`, `server/lib/backendCustomerList.ts`, `server/lib/cronJobs.ts` |
-| Client | `client/src/pages/offers/tea-reading/`, `client/src/lib/{ladderPrice,teaReadingBooking,teaReadingReceipt,stillCup}.ts`, `client/src/lib/upsellCopy/teaReading.ts`, `client/public/tea-reading/` |
+| Client | `client/src/pages/offers/tea-reading/`, `client/src/lib/{ladderPrice,teaReadingBooking,teaReadingReceipt}.ts`, `client/src/lib/upsellCopy/teaReading.ts`, `client/public/tea-reading/` |
 | Tests | `server/lib/backendOffers.teaReading.test.ts`, `server/routes/backendOffers.teaReading.test.ts`, `server/lib/be04Delivery.test.ts`, `client/src/lib/{teaReadingBooking,teaReadingReceipt,funnel.teaReading}.test.ts`, `client/src/lib/upsellCopy/teaReading.test.ts` |
 | Copy specs | `improve-v1/v1-one-time-BEs/copy/04/` (old drafts are marked *Superseded*) |
 | Product | `copy/04/product/` (readings + calendars), `docs/04/product/` (images, cup map, fonts, PDFs) |

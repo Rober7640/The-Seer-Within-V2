@@ -10,7 +10,7 @@
 // ?offer=tea-reading, so another offer's session gets a 404 — and the page re-checks the offer
 // anyway. While Stripe's payment is still settling (402) or the lookup fails, it asks again every
 // 2s for up to 40s. Anything not verified as THIS paid order shows the fallback: no receipt lines,
-// no Still Cup link. ⛔ No receipt names her cup — it is drawn at random at checkout, and the
+// no bump P.S. ⛔ No receipt names her cup — it is drawn at random at checkout, and the
 // reading itself is the reveal (operator 2026-10-11).
 //
 // ⛔ Timing (04-T1 build notes): only "within 24 hours". Never tonight, by morning, tomorrow or a
@@ -20,11 +20,12 @@ import { useEffect, useState } from 'react'
 import { useSearch } from 'wouter'
 import { CheckCircle, Loader2 } from 'lucide-react'
 import { CosmicBackground } from '@/components/CosmicBackground'
-import { CHECKOUT, TEA_READING_STILL_CUP_PATH } from '@/lib/teaReadingBooking'
+import { CHECKOUT } from '@/lib/teaReadingBooking'
 import {
   EMAIL_SUBJECTS,
   loadTeaReceipt,
   receiptFirstName,
+  receiptPostscript,
   receiptSessionId,
   type TeaReceiptState,
   type VerifiedTeaOrder,
@@ -128,6 +129,7 @@ function FallbackReceipt({ reason }: { reason: string }) {
 
 function VerifiedReceipt({ order }: { order: VerifiedTeaOrder }) {
   const name = receiptFirstName(order.firstName)
+  const postscript = receiptPostscript(order)
 
   return (
     <Shell>
@@ -178,22 +180,15 @@ function VerifiedReceipt({ order }: { order: VerifiedTeaOrder }) {
 
           <p className="font-serif text-xl text-white">— Evelyn</p>
 
-          {/* P.S. — ONLY for a verified order that took the Still Cup. Otherwise nothing. */}
-          {order.bumpPurchased && (
-            <div className="rounded-xl border border-amber-300/30 bg-amber-200/5 p-5" data-testid="block-still-cup">
-              <p className="font-serif text-lg text-white">P.S. Your Still Cup is ready now.</p>
-              <p className="mt-2">
-                <a
-                  href={TEA_READING_STILL_CUP_PATH}
-                  className="font-semibold text-amber-300 underline underline-offset-4 hover:text-amber-200"
-                  data-testid="link-still-cup"
-                >
-                  Open the Still Cup
-                </a>
-                . Don't wait for your reading: start tonight, and do it every evening after. It takes four
-                minutes, and it's for the hours while you wait.
-              </p>
-            </div>
+          {/* P.S. — ONLY for a verified order that took the Double Turning. Otherwise nothing.
+              ⭐ Intangible: no link, nothing to open — it says so. */}
+          {postscript && (
+            <p
+              className="rounded-xl border border-amber-300/30 bg-amber-200/5 p-5"
+              data-testid="text-bump-ps"
+            >
+              {postscript}
+            </p>
           )}
         </div>
       </div>

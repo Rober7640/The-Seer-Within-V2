@@ -120,15 +120,15 @@ describe('buildBackendPurchaseEvent', () => {
     assert.equal(u1.properties.step, 'upsell1');
   });
 
-  it('tea-reading (04) maps to funnel teareading: booking = sales (with the Still Cup), upsells keep the funnel', () => {
+  it('tea-reading (04) maps to funnel teareading: booking = sales (with the Double Turning), upsells keep the funnel', () => {
     const booking = buildBackendPurchaseEvent({
       product: 'be_tea_reading', offer: 'tea-reading',
-      amountCents: 4777, email: 'x@y.com', dedupeId: 'cs_tr', bumpProduct: 'still_cup',
+      amountCents: 4777, email: 'x@y.com', dedupeId: 'cs_tr', bumpProduct: 'double_turning',
     });
     assert.equal(booking.properties.funnel, 'teareading');
     assert.equal(booking.properties.step, 'sales');
     assert.equal(booking.properties.bump, true);
-    assert.equal(booking.properties.bump_product, 'still_cup');
+    assert.equal(booking.properties.bump_product, 'double_turning');
     const u2 = buildBackendPurchaseEvent({
       product: 'be_bracelet', offer: 'tea-reading',
       amountCents: 4700, email: 'x@y.com', dedupeId: 'pi_tr2',

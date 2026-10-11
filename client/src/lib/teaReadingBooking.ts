@@ -3,7 +3,6 @@
 //
 // Copy specs: improve-v1/v1-one-time-BEs/copy/04/04-C1-booking-page-v2.md (page — the one-tick shape)
 //             improve-v1/v1-one-time-BEs/copy/04/04-C2-booking-chat.md (chat)
-//             improve-v1/v1-one-time-BEs/copy/04/04-C3-order-bump.md (the bump, condensed)
 // Change the doc first, then this file. Tests: teaReadingBooking.test.ts (reads the docs).
 //
 // ⭐ 04 is the deck's first PRICE LADDER. The price is NOT here and NOT in the page: it is the
@@ -23,7 +22,7 @@ import type { BackendCheckoutRequest } from './backendCheckout';
 import type { LadderQuote } from './ladderPrice';
 import { TEA_READING_BUMP_CENTS, priceLabel, type BookingTreatment } from '@shared/backendOffers';
 
-export { TEA_READING_BUMP_CENTS, TEA_READING_STILL_CUP_PATH, priceLabel } from '@shared/backendOffers';
+export { TEA_READING_BUMP_CENTS, priceLabel } from '@shared/backendOffers';
 
 export const TEA_READING_OFFER = 'tea-reading' as const;
 
@@ -65,14 +64,17 @@ export const CHECK_LINES = [
 /** The ONE required tick, in her voice. */
 export const READY_TICK = "Yes — I'm ready to stop guessing what to send.";
 
-// The order bump, condensed from 04-C3. ⛔ Never pre-checked — a pre-selected paid add-on is a
+// The order bump — the Double Turning (operator 2026-10-11): Evelyn reads her cup a second time.
+// ⭐ INTANGIBLE: nothing extra is delivered, so the copy promises nothing to look out for — same
+// reading, same 21 days, same 24 hours. ⛔ Never pre-checked — a pre-selected paid add-on is a
 // negative option under FTC and card-network rules. ⛔ Never tells her what to send.
 export const BUMP = {
-  label: 'Yes — add the Still Cup, for the evenings',
+  label: 'Yes, double the strength of my reading',
   priceLabel: `+${priceLabel(TEA_READING_BUMP_CENTS)}`,
   note:
-    "Four minutes with a cup of tea, every evening, for the hour you'd spend rereading his last " +
-    'message. Start it tonight.',
+    'Evelyn reads your cup a second time and puts twice the strength into your reading. Same ' +
+    'reading, same 21 days. It just works twice as hard: the quiet days hold better, and your one ' +
+    'message lands harder.',
 } as const;
 
 export const CHECKOUT = {
@@ -172,15 +174,14 @@ export function chatStatementParts(statement: string): { before: string; after: 
   return { before: statement.slice(0, at), after: statement.slice(at + RUNG_TOKEN.length) };
 }
 
-// The bump as Evelyn asks it — a question, not her checkbox label. ⚠ "as soon as you're
-// through": the Still Cup is on the receipt and in its own email at once, not sent with the reading.
+// The bump as Evelyn asks it — a question, not her checkbox label. The Double Turning is
+// intangible: nothing extra arrives, so it promises nothing to look out for.
 export const CHAT_BUMP = {
   body:
-    "The turned cup tells you which week to speak in. It won't get you through nine o'clock on a " +
-    "Tuesday, when you've decided to send something anyway. The Still Cup is for that hour: four " +
-    "minutes with a cup of tea, every evening, and you'll have it as soon as you're through. Shall I add it?",
+    'I can read your cup a second time, to put twice the strength into your ' +
+    'reading. Same reading, same twenty-one days, just working twice as hard for you. Shall I do that?',
   priceLine: `+ ${priceLabel(TEA_READING_BUMP_CENTS)}`,
-  accept: 'Yes, add the Still Cup',
+  accept: 'Yes, double the strength',
   decline: 'No, just my reading',
 } as const;
 

@@ -1,28 +1,29 @@
-// Offer 04 — The Turn: the receipt's order lookup (with its poll), and the Still Cup page's copy.
+// Offer 04 — The Turn: the receipt's order lookup (with its poll), and the bump buyer's P.S.
 //
 //   npx vitest run client/src/lib/teaReadingReceipt.test.ts
 //
-// Copy sources: improve-v1/v1-one-time-BEs/copy/04/04-T1-thank-you-page.md (receipt)
-//               improve-v1/v1-one-time-BEs/copy/04/04-C4-still-cup-instructional.md (Still Cup)
-// ⛔ The page may print receipt lines or the Still Cup link ONLY for an order verified as THIS
-// offer's, and paid. Everything else gets the one safe fallback. ⛔ It never names her cup — the
+// Copy source: improve-v1/v1-one-time-BEs/copy/04/04-T1-thank-you-page.md (receipt)
+// ⛔ The page may print receipt lines or the bump's P.S. ONLY for an order verified as THIS
+// offer's, and paid. The bump is the Double Turning (operator 2026-10-11) — intangible, so the
+// P.S. links nothing. Everything else gets the one safe fallback. ⛔ It never names her cup — the
 // cup is drawn at random at checkout and the reading itself is the reveal (operator 2026-10-11).
 
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import { BACKEND_OFFER_CATALOG, TEA_READING_STILL_CUP_PATH } from '@shared/backendOffers';
+import { BACKEND_OFFER_CATALOG } from '@shared/backendOffers';
 import {
   EMAIL_SUBJECTS,
+  RECEIPT_BUMP_PS,
   RECEIPT_POLL_MS,
   RECEIPT_POLL_WINDOW_MS,
   loadTeaReceipt,
   lookupTeaReceipt,
   orderLookupUrl,
   receiptFirstName,
+  receiptPostscript,
   receiptSessionId,
   type ReceiptFetch,
 } from './teaReadingReceipt';
-import { STILL_CUP, inlineSegments } from './stillCup';
 
 const doc = (name: string) =>
   readFileSync(new URL(`../../../improve-v1/v1-one-time-BEs/copy/04/${name}`, import.meta.url), 'utf8');
@@ -97,7 +98,7 @@ describe('lookupTeaReceipt — one attempt', () => {
     }
   });
 
-  it('the Still Cup shows for a literal true only', async () => {
+  it('the bump (bumpPurchased) counts for a literal true only', async () => {
     const yes = await lookupTeaReceipt('cs_1', respond(200, { order: { ...ORDER_04, bumpPurchased: true } }));
     expect(yes.kind === 'verified' && yes.order.bumpPurchased).toBe(true);
     for (const bumpPurchased of ['1', 1, 'true', null, undefined]) {
@@ -238,55 +239,35 @@ describe('receipt copy', () => {
     expect(body).not.toMatch(/Turned Handle|Divided Rim|Sunken Leaf/);
   });
 
-  it('the Still Cup link on the receipt is the catalog’s path', () => {
-    expect(TEA_READING_STILL_CUP_PATH).toBe('/offers/wiccan/tea-reading/still-cup');
-    expect(T1).toContain(`(https://theseerwithin.com${TEA_READING_STILL_CUP_PATH})`);
+  it('the bump P.S. is 04-T1’s, word for word — and links nothing', () => {
+    expect(RECEIPT_BUMP_PS).toBe(
+      "P.S. You added a Double Turning. I'll read your cup a second time before I send your reading. " +
+        "There's nothing extra to look out for.",
+    );
+    expect(T1.replace(/\s+/g, ' ')).toContain(RECEIPT_BUMP_PS);
+    expect(T1).not.toMatch(/still[ -]?cup\)|\/still-cup/i);
   });
 });
 
-describe('Still Cup page copy is 04-C4’s, word for word', () => {
-  const C4 = doc('04-C4-still-cup-instructional.md');
-  const copy = C4.slice(C4.indexOf('## The copy'), C4.indexOf('## Build notes'));
-  const flat = (s: string) => s.replace(/\s+/g, ' ');
-  const COPY = flat(copy);
-
-  it('title, subtitle and sign-off', () => {
-    expect(COPY).toContain(`# ${STILL_CUP.title}`);
-    expect(COPY).toContain(`### ${STILL_CUP.subtitle}`);
-    expect(COPY).toContain(STILL_CUP.signOff);
-  });
-
-  it('every section heading and every block is in the doc, in order', () => {
-    let from = 0;
-    for (const section of STILL_CUP.sections) {
-      if (section.heading) {
-        const at = COPY.indexOf(`## ${section.heading}`, from);
-        expect(at, section.heading).toBeGreaterThan(-1);
-        from = at;
-      }
-      for (const block of section.blocks) {
-        const text = block.kind === 'step' ? `**${block.title}** ${block.text}`.trim() : block.text;
-        const at = COPY.indexOf(text, from);
-        expect(at, text.slice(0, 60)).toBeGreaterThan(-1);
-        from = at;
-      }
+describe('the bump P.S. — the Double Turning (intangible, operator 2026-10-11)', () => {
+  it('shows for bump buyers only', () => {
+    expect(receiptPostscript({ bumpPurchased: true })).toBe(RECEIPT_BUMP_PS);
+    expect(receiptPostscript({ bumpPurchased: false })).toBeNull();
+    for (const bumpPurchased of ['1', 1, 'true', null, undefined]) {
+      expect(receiptPostscript({ bumpPurchased } as never), String(bumpPurchased)).toBeNull();
     }
   });
 
-  it('carries none of the build notes', () => {
-    const all = JSON.stringify(STILL_CUP);
-    expect(all).not.toMatch(/§|Rule 4|04-C3|04-P3|device|corpus|bump/i);
+  it('follows a verified lookup: bump order → the P.S., no bump → nothing', async () => {
+    const yes = await lookupTeaReceipt('cs_1', respond(200, { order: { ...ORDER_04, bumpPurchased: true } }));
+    const no = await lookupTeaReceipt('cs_1', respond(200, { order: ORDER_04 }));
+    expect(yes.kind === 'verified' && receiptPostscript(yes.order)).toBe(RECEIPT_BUMP_PS);
+    expect(no.kind === 'verified' && receiptPostscript(no.order)).toBeNull();
   });
 
-  it('inline marks render as bold and italic, nothing else', () => {
-    expect(inlineSegments('**Your phone is in another room for this.** That is not')).toEqual([
-      { text: 'Your phone is in another room for this.', strong: true },
-      { text: ' That is not' },
-    ]);
-    expect(inlineSegments('stops being *for* anything')).toEqual([
-      { text: 'stops being ' },
-      { text: 'for', em: true },
-      { text: ' anything' },
-    ]);
+  it('says nothing is delivered: nothing extra to look out for, no link, no Still Cup', () => {
+    expect(RECEIPT_BUMP_PS).toMatch(/nothing extra to look out for/);
+    expect(RECEIPT_BUMP_PS).toMatch(/a second time/);
+    expect(RECEIPT_BUMP_PS).not.toMatch(/https?:|\/offers|open|link|email|tonight|still cup/i);
   });
 });

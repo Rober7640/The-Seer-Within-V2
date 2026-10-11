@@ -1207,7 +1207,8 @@ function isoOrNull(value: unknown): string | null {
  *
  * 04: nothing extra. ⛔ Her drawn cup is NOT on the receipt — the reading itself is the reveal
  * (operator 2026-10-11), and this shape is readable by anyone holding the session id. The
- * receipt links The Still Cup when `bumpPurchased` is true.
+ * receipt adds a one-line P.S. when `bumpPurchased` is true (the Double Turning — intangible,
+ * nothing to link).
  */
 async function publicOrder(
   row: Awaited<ReturnType<typeof getBeOrderBySession>>,
@@ -1216,7 +1217,7 @@ async function publicOrder(
   if (!row) return null;
 
   // 12h with 08's '+ 12-hour delivery' bump, 24h without — the same rule that stamps
-  // `due_at` (server/lib/beOrders.ts, prepareBe08). ⛔ 04's Still Cup is NOT a speed bump,
+  // `due_at` (server/lib/beOrders.ts, prepareBe08). ⛔ 04's Double Turning is NOT a speed bump,
   // so 04 is always TEA_READING_DELIVERY_HOURS. Every other offer keeps the rule it had.
   const deliveryHours =
     row.offer === 'tea-reading' ? TEA_READING_DELIVERY_HOURS : row.bumpPurchased ? 12 : 24;

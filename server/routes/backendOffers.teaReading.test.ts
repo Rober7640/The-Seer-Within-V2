@@ -10,7 +10,7 @@
 //     the price, the cup, or blocks the sale (operator 2026-10-11: no pick, a random draw).
 //  2. THE QUOTE ENDPOINT prints today's price; its `?day=` preview is display-only and never
 //     reaches what checkout charges.
-//  3. THE RECEIPT: 04 is always 24 hours (the Still Cup is not a speed bump) while 08 keeps
+//  3. THE RECEIPT: 04 is always 24 hours (the Double Turning is not a speed bump) while 08 keeps
 //     12 with its bump; 04's receipt never names the drawn cup (the reading is the reveal).
 //  4. OTHER OFFERS ARE UNTOUCHED: no rung/cup on their metadata, no draw, no cup on a receipt.
 
@@ -131,7 +131,7 @@ function paidRow(overrides: Record<string, unknown> = {}) {
     readingCents: 3500,
     bumpPurchased: true,
     bumpCents: 1277,
-    bumpProductKey: 'still_cup',
+    bumpProductKey: 'double_turning',
     editionId: null,
     editionVersion: null,
     dueAt: null,
@@ -217,17 +217,17 @@ describe('POST /api/backend/checkout — 04', () => {
     }
   });
 
-  it('adds The Still Cup as a second line under its own key, at every rung', async () => {
+  it('adds The Double Turning as a second line under its own key, at every rung', async () => {
     at(DAY + 3 * HOUR);
     const res = await checkout({ bump: true });
     expect(res.status).toBe(200);
     const p = state.created as any;
     expect(p.line_items.map((l: any) => [l.price_data.product_data.name, l.price_data.unit_amount])).toEqual([
       ['The Turn — tea-leaf reading by Evelyn Cross', 4700],
-      ['The Still Cup', 1277],
+      ['The Double Turning', 1277],
     ]);
-    expect(p.metadata).toMatchObject({ bump: '1', bumpProduct: 'still_cup', rung: '2' });
-    expect(p.payment_intent_data.description).toBe('BE 04 · The Turn — tea-leaf reading by Evelyn Cross + The Still Cup');
+    expect(p.metadata).toMatchObject({ bump: '1', bumpProduct: 'double_turning', rung: '2' });
+    expect(p.payment_intent_data.description).toBe('BE 04 · The Turn — tea-leaf reading by Evelyn Cross + The Double Turning');
   });
 
   it('⛔ draws her cup on the server — a cup the client sends is ignored, never a 400', async () => {
@@ -404,7 +404,7 @@ describe('GET /api/backend/offers/:offer/price', () => {
 // ─── 3 · the receipt ───────────────────────────────────────────────────────────
 
 describe('GET /api/backend/order/:sessionId — 04 receipt', () => {
-  it('is always 24 hours — the Still Cup is not a speed bump — and never names the drawn cup', async () => {
+  it('is always 24 hours — the Double Turning is not a speed bump — and never names the drawn cup', async () => {
     state.order = paidRow({ bumpPurchased: true });
     const res = await request(app).get(`/api/backend/order/${SESSION}?offer=tea-reading`);
     expect(res.status).toBe(200);
@@ -412,7 +412,7 @@ describe('GET /api/backend/order/:sessionId — 04 receipt', () => {
       offer: 'tea-reading',
       offerNumber: '04',
       bumpPurchased: true,
-      bumpProductKey: 'still_cup',
+      bumpProductKey: 'double_turning',
       deliveryHours: 24,
     });
     expect(res.body.order).not.toHaveProperty('cup');

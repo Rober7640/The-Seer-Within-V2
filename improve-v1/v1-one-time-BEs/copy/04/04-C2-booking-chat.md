@@ -65,13 +65,12 @@ button stays away. **If it failed:** *Today's price didn't load.* **Try again**
 
 **The bump card** *(Evelyn's voice, a question)*:
 
-The turned cup tells you which week to speak in. It won't get you through nine o'clock on a Tuesday,
-when you've decided to send something anyway. The Still Cup is for that hour: four minutes with a
-cup of tea, every evening, and you'll have it as soon as you're through. Shall I add it?
+I can read your cup a second time, to put twice the strength into your reading.
+Same reading, same twenty-one days, just working twice as hard for you. Shall I do that?
 
 **+ $12.77** · *`{{TODAYS_RUNG}}` + $12.77 total, computed*
 
-> **Yes, add the Still Cup**
+> **Yes, double the strength**
 
 > No, just my reading
 
@@ -119,10 +118,12 @@ and her live question is whether she's been charged):
   with `cupDrawn: '1'`), exactly as on the page. So the chat runs greeting → card → *"Good."* →
   *"One more thing before I start."* → the bump. "One more thing" follows the card's three things,
   so it still reads true with nothing in between.
-- **The bump, rewritten as Evelyn's question.** The page's bump is a checkbox label in her voice;
-  here Evelyn asks. Kept from `04-C3`: the reading says *which week*, the Still Cup covers *the hour
-  in between*, nine o'clock on a Tuesday. ⚠ *"You'll have it as soon as you're through"* — the
-  Still Cup is on the receipt page and in its own email straight away, not sent with the reading.
+- **The bump is the Double Turning, as Evelyn's question** (operator, 2026-10-11; copy
+  operator-reviewed — word for word). The page's bump is a checkbox label in her voice; here Evelyn
+  asks. It is **intangible**: she reads the cup a second time, nothing extra is delivered, and the
+  reading still comes within 24 hours — so the turn promises nothing to look out for. It replaces
+  the Still Cup (`04-C3`/`04-C4`, superseded). ⚠ The turn opens *"One more thing."* straight after
+  Evelyn's *"One more thing before I start."* — kept as written; flagged to the operator.
 - **Pace.** One sentence per turn, never a flat delay, the card gets its own beat. The walk times
   the long line and fails under 1.2s.
 - **Timing.** Only "within 24 hours" about the reading. No tonight, by morning, tomorrow or weekdays

@@ -130,7 +130,6 @@ Query strings that change what you see:
 | Booking | `/offers/wiccan/tea-reading/chat` | chat | ✅ built · preview · greeting → card → bump, no cup turn (2026-10-11) |
 | Upsell 1 → Upsell 2 | `/offers/upsell/welcome1` → `/welcome2` *(shared engine, offer read from the booking session)* | chat | ✅ built · walked with stubs (`scripts/walk-04-upsells.mjs`, 36/36 — evidence `upsells/`). ⚠ No `?demo=true` on these pages: real use needs a paid booking session |
 | Thank-you *(receipt)* | `/offers/wiccan/tea-reading/success?s=<session>` | page | ✅ built · preview |
-| The Still Cup *(the bump's deliverable)* | `/offers/wiccan/tea-reading/still-cup` | page | ✅ built · noindex |
 
 ⛔ `readyForMoney: false`, and with `VITE_BACKEND_CHECKOUT_LIVE` unset both booking treatments log
 `[preview] would checkout {…, quotedDay}` and stop. Neither sends a cup: which of the three readings
@@ -169,7 +168,7 @@ in beside 03.
 | 02 | see [`00i`](./00i-DELIVERABLES-U1-U2.md) |
 | 03 booking, split | [`03-booking-split-2026-08-09`](../../evidence/03-booking-split-2026-08-09/README.md) — 50 page assertions, 47 chat |
 | 03 booking, single page *(superseded)* | `improve-v1/evidence/03-booking-2026-08-08/` |
-| 04 booking page + chat + receipt + Still Cup | `improve-v1/evidence/04-tea-reading-2026-10-11/` — `walk-04-smoke.mjs`, phone 390×844 + desktop 1280×800, API stubbed |
+| 04 booking page + chat + receipt | `improve-v1/evidence/04-tea-reading-2026-10-11/` — `walk-04-smoke.mjs`, phone 390×844 + desktop 1280×800, API stubbed |
 
 ```
 node improve-v1/v1-one-time-BEs/scripts/walk-03-booking.mjs      improve-v1/evidence/<folder>
@@ -191,7 +190,7 @@ specs and proposes the answers; you confirm.
 | Question | 04 The Turn |
 |---|---|
 | Reading or Act? | **Reading** (`04-C1`:5). Thank-you page is a **receipt** |
-| How is it priced? | **Ladder by day since the letter**: day 1 $35 → day 2 $47 → day 3 $57 → day 4 $67 (`04-E5`:5). Booking page shows `{{TODAYS_RUNG}}`, no email carries a number. Bump $12.77 at every rung (`04-C3`:5). ⚠ The resolver (`S9`) is **not built** — nothing in the code knows what day she is on |
+| How is it priced? | **Ladder by day since the letter**: day 1 $35 → day 2 $47 → day 3 $57 → day 4 $67 (`04-E5`:5). Booking page shows `{{TODAYS_RUNG}}`, no email carries a number. Bump $12.77 at every rung — the Double Turning since 2026-10-11 (`04-C1` v2). ⚠ The resolver (`S9`) is **not built** — nothing in the code knows what day she is on |
 | Does the work need a reply from her? | **No.** `04-T1`:22, `04-T3`:52, `04-E2`:218. ~~Her only input is the optional cup pick on the booking page~~ — since 2026-10-11 she gives **no input at all**: the server draws one of the three cups (Turned Handle / Divided Rim / Sunken Leaf) at random at checkout (`04-C1` build notes) |
 | Does the booking page promise anything only code can keep? | **The rising price** (`S9`) and **24h delivery** (`04-C1`:52, :114). No capacity cap — statement 4's scarcity is the leaves drying, which needs no code (`04-C1`:123). ⚠ Later screens promise *sooner* than 24h: "tonight" (`04-T3`:40, :49), "by morning" (`04-U`:20, :129), "look out for it tomorrow" (`04-T1`:15) |
 | What is the one sentence both upsells sell? | *The sequence gives you the words and the weeks; it does nothing about what reaches you while you keep them* (`04-U`:48–49). U1 = V1 lava stone, left wrist — keeps a well-meaning friend from talking her out of the quiet days. U2 = manifestation bracelet, right wrist — charged to the bridge, lighthouse or butterfly. ⚠ `04-U`:52, :136, :156 hard-code **Divided Rim's** days ("days sixteen to eighteen"); wrong for the other two cups, and the cup pick is her data, so the settled rule says cut the day numbers |
@@ -431,7 +430,7 @@ we have built*** with whatever query string they need.
 
 ### ☑ A3. The order bump
 
-> **04 · 2026-10-11:** The Still Cup, $12.77, `still_cup`, never pre-checked; deliverable page `/offers/wiccan/tea-reading/still-cup`.
+> **04 · 2026-10-11:** The Double Turning, $12.77, `double_turning`, never pre-checked — Evelyn reads her cup a second time. ⭐ Intangible (operator): nothing delivered, no page, no email; one P.S. on the receipt for bump buyers. Replaced the Still Cup (`still_cup`, a delivered page + `04-T5` email), now removed; `04-C3`/`04-C4` marked superseded.
 **Read:** `0X-C3`.
 
 Sits inline beside the total, and is **never pre-checked** — a pre-selected paid
@@ -496,6 +495,7 @@ wrong query string in them.
 ### ☑ A8. Walk it and screenshot it
 
 > **04 · 2026-10-11:** Stubbed walks: booking/chat/receipt 195/195, upsells 36/36. ☐ A walk against a real server + Stripe test mode is still owed (needs `.env`).
+> **04 · 2026-10-11 (bump swap):** re-walked after the Double Turning replaced the Still Cup: booking/chat/receipt 194/194 — the Still Cup page checks are replaced by "`/still-cup` renders no Still Cup page".
 Claude drives a real browser through the whole thing and saves the screenshots so
 you can read the flow without sitting through it.
 
@@ -901,7 +901,7 @@ everything mid-sentence `"dear"`. Do not flatten them back to one.
 
 ### ☑ C2. The delivery email — sends when the reading is done
 
-> **04 · 2026-10-11:** `04-T4-delivery-email` written + rendered (+ new `04-T5` Still Cup email).
+> **04 · 2026-10-11:** `04-T4-delivery-email` written + rendered. (A `04-T5` Still Cup email was written too, then deleted the same day when the bump became the intangible Double Turning — no bump email.)
 
 **Read:** `0X-T4`. ⚠ **This asset is new.** It did not exist for any offer,
 because the reading used to *be* the email. Once the product became a PDF, the

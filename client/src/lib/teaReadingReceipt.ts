@@ -5,7 +5,7 @@
 //
 // 09's receipt pattern (lib/heartCleanserReceipt.ts) with 08's poll (pages/marcus/marcusOrder.ts):
 //
-// ⛔ THE RULE: never print receipt lines or the Still Cup link for an order that wasn't
+// ⛔ THE RULE: never print receipt lines or the bump's P.S. for an order that wasn't
 // verified as THIS offer's, and paid. ⛔ Never her cup, for anyone: it is drawn at random at
 // checkout and the reading itself is the reveal (operator 2026-10-11) — the server no longer
 // sends it, and a `cup` an older server sends is dropped here.
@@ -31,9 +31,21 @@ export const EMAIL_SUBJECTS = {
   delivered: (name: string): string => `${name} — your cup is turned`,
 } as const;
 
+// The bump buyer's P.S. (04-T1), word for word. The bump is the Double Turning (operator
+// 2026-10-11): INTANGIBLE — Evelyn reads the cup a second time, nothing extra is delivered — so
+// the P.S. links nothing and tells her there is nothing extra to look out for.
+export const RECEIPT_BUMP_PS =
+  "P.S. You added a Double Turning. I'll read your cup a second time before I send your reading. " +
+  "There's nothing extra to look out for.";
+
+/** The P.S. for this order: bump buyers only, otherwise nothing. */
+export function receiptPostscript(order: Pick<VerifiedTeaOrder, 'bumpPurchased'>): string | null {
+  return order.bumpPurchased === true ? RECEIPT_BUMP_PS : null;
+}
+
 export interface VerifiedTeaOrder {
   firstName: string | null;
-  /** She took the Still Cup. Only a literal `true` from the server counts. */
+  /** She took the Double Turning. Only a literal `true` from the server counts. */
   bumpPurchased: boolean;
   /** The reading has already gone out (`deliveredAt` set). */
   delivered: boolean;

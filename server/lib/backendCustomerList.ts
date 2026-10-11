@@ -125,6 +125,8 @@ export const BACKEND_OFFERS: Record<BackendOfferKey, BackendOfferListing> = {
   // in-app delivery job applies (server/lib/be04Delivery.ts).
   // ⛔ A Campaign on 6972554 must trigger on `be-04-bump`, never on `be-04-tea-reading`: the
   //    purchase tag rides the bump-list write too, so it would send the thank-you twice.
+  // ⭐ 04's bump (the Double Turning, operator 2026-10-11) is INTANGIBLE — nothing to deliver,
+  //    so there is no bump Campaign. `be-04-bump` + the bump list stay as a segment only.
   'tea-reading': {
     number: '04',
     name: 'The Turn',

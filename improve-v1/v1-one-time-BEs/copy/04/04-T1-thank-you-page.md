@@ -53,18 +53,15 @@ Your cup's turned, and your reading's been sent. Look for this title:
 
 ## P.S. — bump buyers only *(`bumpPurchased: true`)*
 
-**P.S. Your Still Cup is ready now.**
-
-[Open the Still Cup](https://theseerwithin.com/offers/wiccan/tea-reading/still-cup). Don't wait for
-your reading: start tonight, and do it every evening after. It takes four minutes, and it's for the
-hours while you wait.
+P.S. You added a Double Turning. I'll read your cup a second time before I send your reading.
+There's nothing extra to look out for.
 
 ---
 
 ## Fallback — the order can't be verified
 
 *(No `?s=`, not this offer's order, not paid, refunded, or the lookup failed for the whole window.
-⛔ No receipt lines, no Still Cup link.)*
+⛔ No receipt lines, no P.S.)*
 
 ### Thank you, dear.
 
@@ -93,8 +90,10 @@ If it hasn't come, write to **hi@theseerwithin.com** and someone will find your 
   the reveal. The old *"Your reading follows The …"* line is gone, and the order lookup no longer
   returns a cup.
 - **No price on this page.** There is no receipt ledger; her card receipt has the amounts.
-- **The Still Cup is delivered here, immediately** (`04-C4`: sold as *tonight*). The P.S. renders
-  only for a verified order with `bumpPurchased: true`; `04-T5` emails the same link ten minutes
-  later for the woman who closes this page.
+- **The P.S. is the bump's only trace** (operator, 2026-10-11). The bump is the Double Turning —
+  intangible: Evelyn reads the cup a second time, nothing extra is delivered, so the P.S. links
+  nothing and says there's nothing extra to look out for. It renders only for a verified order
+  with `bumpPurchased: true`. There is no bump email. (It replaces the Still Cup P.S. and its link;
+  `04-T5`, the Still Cup email, is deleted.)
 - **Banned:** open communication, seek guidance, embrace growth, clearing, energy field, our
   conversation. None appear.

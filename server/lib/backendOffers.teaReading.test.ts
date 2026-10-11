@@ -223,7 +223,7 @@ describe('the grace window — 120 minutes after the rung moves on', () => {
   });
 });
 
-describe('the Still Cup bump', () => {
+describe('the Double Turning bump (intangible — operator 2026-10-11)', () => {
   it('is $12.77 at every rung, as a second line, under its own key', () => {
     for (const [offset, reading] of [[0, 3500], [DAY, 4700], [2 * DAY, 5700], [9 * DAY, 6700]] as const) {
       const r = charged(price({ ladderClock: clockAt(offset), bump: true }));
@@ -235,7 +235,7 @@ describe('the Still Cup bump', () => {
           description: 'Your 21-day reading, delivered within 24 hours.',
           amountCents: reading,
         },
-        { name: 'The Still Cup', amountCents: 1277 },
+        { name: 'The Double Turning', amountCents: 1277 },
       ]);
     }
   });
@@ -246,13 +246,20 @@ describe('the Still Cup bump', () => {
   });
 
   it('owns its key — never another offer\'s (n8n exact-matches bumpProduct)', () => {
-    expect(TEA_READING_BUMP_PRODUCT_KEY).toBe('still_cup');
+    expect(TEA_READING_BUMP_PRODUCT_KEY).toBe('double_turning');
     expect(TEA_READING_BUMP_CENTS).toBe(1277);
-    expect(TEA.bump).toEqual({ productKey: 'still_cup', cents: 1277, stripeName: 'The Still Cup' });
+    expect(TEA.bump).toEqual({ productKey: 'double_turning', cents: 1277, stripeName: 'The Double Turning' });
     const others = Object.values(BACKEND_OFFER_CATALOG)
       .filter((o) => o.key !== 'tea-reading')
       .flatMap((o) => (o.bump ? [o.bump.productKey] : []));
-    expect(others).not.toContain('still_cup');
+    expect(others).not.toContain('double_turning');
+  });
+
+  it('is a NEW key, not the retired Still Cup\'s — and nothing delivered rides with it', async () => {
+    expect(TEA_READING_BUMP_PRODUCT_KEY).not.toBe('still_cup');
+    const shared = await import('@shared/backendOffers');
+    expect('TEA_READING_STILL_CUP_PATH' in shared).toBe(false);
+    expect(JSON.stringify(TEA)).not.toMatch(/still[ _-]?cup/i);
   });
 });
 
@@ -335,7 +342,7 @@ describe('the 04 catalog row', () => {
   it('labels the Stripe Dashboard row BE 04, naming the bump only when she took it', () => {
     expect(backendOrderDescriptor('tea-reading', false)).toBe('BE 04 · The Turn — tea-leaf reading by Evelyn Cross');
     expect(backendOrderDescriptor('tea-reading', true))
-      .toBe('BE 04 · The Turn — tea-leaf reading by Evelyn Cross + The Still Cup');
+      .toBe('BE 04 · The Turn — tea-leaf reading by Evelyn Cross + The Double Turning');
   });
 });
 

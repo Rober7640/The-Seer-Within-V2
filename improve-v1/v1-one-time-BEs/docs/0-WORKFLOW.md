@@ -124,7 +124,6 @@ Query strings that change what you see:
 | Booking | `/offers/wiccan/tea-reading/chat` | chat | ✅ built · preview |
 | Upsell 1 → Upsell 2 | `/offers/upsell/welcome1` → `/welcome2` *(shared engine, offer read from the booking session)* | chat | ✅ built · walked with stubs (`scripts/walk-04-upsells.mjs`, 36/36 — evidence `upsells/`). ⚠ No `?demo=true` on these pages: real use needs a paid booking session |
 | Thank-you *(receipt)* | `/offers/wiccan/tea-reading/success?s=<session>` | page | ✅ built · preview |
-| The Still Cup *(the bump's deliverable)* | `/offers/wiccan/tea-reading/still-cup` | page | ✅ built · noindex |
 
 ⛔ `readyForMoney: false`, and with `VITE_BACKEND_CHECKOUT_LIVE` unset both booking treatments log
 `[preview] would checkout {…, quotedDay, cup}` and stop. Locally there is no `.env`: run the client

@@ -26,13 +26,13 @@ import {
 // Offer 04 — The Turn, a tea-leaf reading by Evelyn Cross. PAGE treatment (the offer root).
 // The chat treatment is ./BookingChat.tsx.
 //
-// Copy spec: improve-v1/v1-one-time-BEs/copy/04/04-C1-booking-page-v2.md (+ 04-C3, condensed).
+// Copy spec: improve-v1/v1-one-time-BEs/copy/04/04-C1-booking-page-v2.md (bump included).
 // Constants: lib/teaReadingBooking.ts. Shape: 09's v2 one-tick page.
 //
 // The FIRST PHONE SCREEN (390×844) is the whole decision: headline, sub-line, photo, today's
 // price, three check lines, ONE tick and the button. The button is ALWAYS on screen: it looks
 // disabled until the tick is ticked, and a tap before then points her at the tick. Once ticked,
-// the order bump (`still_cup`) and the total appear between the tick and the button.
+// the order bump (`double_turning` — intangible) and the total appear between the tick and the button.
 //
 // ⭐ NO CUP PICK (operator 2026-10-11). Which of the three readings she gets is drawn at random by
 // the server at checkout; this page never asks and never sends a cup.
@@ -277,7 +277,7 @@ export default function TeaReadingBookingPage() {
 
               {ready && (
                 <>
-                  {/* The order bump (04-C3, condensed) stays INLINE, directly above the total and
+                  {/* The order bump (the Double Turning, 04-C1 v2) stays INLINE, directly above the total and
                       the button. ⚠ Never pre-checked — a pre-selected paid add-on is a negative
                       option under FTC and card-network rules. */}
                   <label

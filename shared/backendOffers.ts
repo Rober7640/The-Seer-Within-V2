@@ -99,18 +99,19 @@ export const TEA_READING_LADDER_START_ENV = 'BE04_LADDER_START';
  */
 export const TEA_READING_GRACE_MINUTES = 120;
 
-// 04's bump — "The Still Cup", a nightly rite for the waiting hours (00e §4a). $12.77 flat at
-// every rung. ⛔ NOT a speed bump: it does not change the 24-hour delivery (unlike 08's).
+// 04's bump — "The Double Turning": Evelyn reads her cup a second time, to put twice the
+// strength into the same reading. $12.77 flat at every rung. ⭐ INTANGIBLE (operator
+// 2026-10-11): nothing extra is delivered — no page, no email, no link. Same reading, same 21
+// days. ⛔ NOT a speed bump: it does not change the 24-hour delivery (unlike 08's).
+// (It replaced "The Still Cup", a delivered nightly instructional, on 2026-10-11.)
 export const TEA_READING_BUMP_CENTS = 1277;
 
-// ⛔ 04's bump key — see the note on 02's above. n8n exact-matches `metadata.bumpProduct`.
-export const TEA_READING_BUMP_PRODUCT_KEY = 'still_cup';
+// ⛔ 04's bump key — see the note on 02's above. n8n exact-matches `metadata.bumpProduct`, so
+// this is a NEW key of its own, never another offer's (and not the retired 'still_cup').
+export const TEA_READING_BUMP_PRODUCT_KEY = 'double_turning';
 
 /** Every 04 reading arrives within this many hours, bump or no bump. */
 export const TEA_READING_DELIVERY_HOURS = 24;
-
-/** Where a bump buyer reads The Still Cup. The receipt links it only when `bumpPurchased`. */
-export const TEA_READING_STILL_CUP_PATH = '/offers/wiccan/tea-reading/still-cup';
 
 /**
  * The three interpretations of 04's one cup photo — one finished reading each (04-DELIVERABLES
@@ -581,7 +582,8 @@ export const BACKEND_OFFER_CATALOG: Record<BackendOfferKey, BackendOffer> = {
     bump: {
       productKey: TEA_READING_BUMP_PRODUCT_KEY,
       cents: TEA_READING_BUMP_CENTS,
-      stripeName: 'The Still Cup',
+      // Prints on her card receipt — plain.
+      stripeName: 'The Double Turning',
     },
     bookingPath: {
       page: '/offers/wiccan/tea-reading',
@@ -592,7 +594,7 @@ export const BACKEND_OFFER_CATALOG: Record<BackendOfferKey, BackendOffer> = {
     upsellEntryPath: '/offers/upsell/welcome1',
     // A digital reading: email only, no mailing address.
     collectsShipping: false,
-    // 🔴 FALSE. Flip only when the booking page, chat, receipt and Still Cup page render, the
+    // 🔴 FALSE. Flip only when the booking page, chat and receipt render, the
     //    three reading PDFs are hosted (BE04_READING_URL_*), the AWeber Campaigns on the be-04
     //    tags exist, BE04_LADDER_START is set to the letter's send time, and a Stripe TEST-mode
     //    order has been walked end to end — delivery email included.

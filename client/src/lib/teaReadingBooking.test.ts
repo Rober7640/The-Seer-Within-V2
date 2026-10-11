@@ -98,10 +98,16 @@ describe('04 page copy is 04-C1 v2’s, word for word', () => {
     expect(C1).toMatch(/drawn at random \*\*on the server, at checkout\*\*/);
   });
 
-  it('the bump is 04-C3 condensed: label, price and one line', () => {
+  it('the bump is the Double Turning, word for word (operator-reviewed): label, price and line', () => {
+    expect(BUMP.label).toBe('Yes, double the strength of my reading');
+    expect(BUMP.priceLabel).toBe('+$12.77');
+    expect(BUMP.note).toBe(
+      'Evelyn reads your cup a second time and puts twice the strength into your reading. Same reading, ' +
+        'same 21 days. It just works twice as hard: the quiet days hold better, and your one message lands harder.',
+    );
     expect(C1).toContain(`**☐ ${BUMP.label} · ${BUMP.priceLabel}**`);
     expect(C1).toContain(BUMP.note);
-    expect(BUMP.priceLabel).toBe('+$12.77');
+    expect(C1_RAW).toContain('`double_turning`');
   });
 
   it('the price line’s states, below the fold, and the reason-why', () => {
@@ -178,6 +184,12 @@ describe('04 chat copy is 04-C2’s, word for word', () => {
   });
 
   it('the bump as Evelyn’s question, with both answers and the 409 line', () => {
+    expect(CHAT_BUMP.body).toBe(
+      'I can read your cup a second time, to put twice the strength into your reading. ' +
+        'Same reading, same twenty-one days, just working twice as hard for you. Shall I do that?',
+    );
+    expect(CHAT_BUMP.accept).toBe('Yes, double the strength');
+    expect(CHAT_BUMP.decline).toBe('No, just my reading');
     expect(C2).toContain(CHAT_BUMP.body);
     expect(CHAT_BUMP.body.trim().endsWith('?')).toBe(true);
     expect(C2).toContain(`> **${CHAT_BUMP.accept}**`);
@@ -200,13 +212,17 @@ describe('04 copy rules', () => {
     expect(new Set(dollars)).toEqual(new Set(['$12.77']));
   });
 
-  it('timing: only "within 24 hours" about the reading — no tomorrow, by morning or weekdays', () => {
+  it('timing: only "within 24 hours" about the reading — no tonight, tomorrow, by morning or weekdays', () => {
     expect(ALL).toMatch(/24 hours/);
-    // The bump's "nine o'clock on a Tuesday" (04-C3) is her evening, not a delivery day.
-    const withoutBump = ALL.replace(JSON.stringify(CHAT_BUMP.body).slice(1, -1), '');
-    expect(withoutBump).not.toMatch(/tomorrow|by morning|overnight|monday|tuesday|wednesday|thursday|friday|saturday|sunday/i);
-    // "tonight" only ever about the Still Cup — never about the reading arriving.
-    for (const m of ALL.matchAll(/[^.]*\btonight\b[^.]*/gi)) expect(m[0]).not.toMatch(/reading|arriv|deliver/i);
+    expect(ALL).not.toMatch(/tonight|tomorrow|by morning|overnight|monday|tuesday|wednesday|thursday|friday|saturday|sunday/i);
+  });
+
+  it('⭐ the bump is intangible: nothing to open, download or wait for — and no Still Cup', () => {
+    const bump = JSON.stringify({ BUMP, CHAT_BUMP });
+    expect(bump).not.toMatch(/still cup|link|email|download|page|every evening|four minutes|tonight/i);
+    expect(bump).toMatch(/a second time/);
+    expect(ALL).not.toMatch(/still cup/i);
+    expect('TEA_READING_STILL_CUP_PATH' in booking).toBe(false);
   });
 
   it('none of 04’s banned words, and never "buy"', () => {

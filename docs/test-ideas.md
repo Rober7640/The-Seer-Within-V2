@@ -2195,7 +2195,8 @@ Covered by unit tests (`server/lib/backendOffers.teaReading.test.ts`,
 - [x] Stripe metadata `rung`, `cup` (the server's draw, always a valid slug), `cupDrawn: '1'`; no `cupChosen`
 - [x] A `cup` the client sends (valid, invalid, junk) is ignored — never a 400, never changes the drawn cup; other offers get no `cup` and no draw
 - [x] Receipt (`GET /api/backend/order/:session`) never returns a `cup` for 04
-- [x] Receipt `deliveryHours` is 24 for 04 even with the Still Cup (08 keeps 12)
+- [x] Receipt `deliveryHours` is 24 for 04 even with the bump — the Double Turning is not a speed bump (08 keeps 12)
+- [x] Bump is the Double Turning (operator 2026-10-11, intangible): key `double_turning` (its own — not another offer's, not the retired `still_cup`), $12.77, Stripe line "The Double Turning"; no `TEA_READING_STILL_CUP_PATH`
 - [x] AWeber tags are the literal strings `be-04-tea-reading` / `be-04-bump` / `be-04-delivered` / `be-04-upsell1-protection` / `be-04-upsell2-bracelet`
 - [x] Delivery job: off unless `BE04_DELIVERY_ENABLED=true`; only paid, undelivered orders past the delay; link chosen by cup; missing / non-https link ⇒ skipped, never sent; idempotent; one failure doesn't stop the rest
 - [x] Upsell copy: no day numbers, no merge token but `{firstName}`, no "clearing" / "energy field" / "our conversation", same bucket block for everyone, U2 skips the AI passages
@@ -2204,7 +2205,7 @@ Not covered — needs a DEV walk with a Stripe test card (`BACKEND_CHECKOUT_TEST
 
 - [ ] Day 1 → day 2 boundary with a page loaded before it: pays the shown $35 inside 2 hours; after that the page shows $47 and asks her to press again
 - [ ] A drawn cup is in Stripe metadata (`cup` = one of the three slugs, `cupDrawn=1`); over several test orders more than one cup turns up
-- [ ] Bump ticked ⇒ second line item "The Still Cup" $12.77, `bumpProduct=still_cup`; receipt shows the Still Cup link; `be-04-bump` tag lands
+- [ ] Bump ticked ⇒ second line item "The Double Turning" $12.77 (and on her card receipt), `bumpProduct=double_turning`; receipt shows the Double Turning P.S. (no link); `be-04-bump` tag lands; no bump email is sent (there is no bump Campaign)
 - [ ] Pay → `/offers/upsell/welcome1` → welcome2 → `/offers/wiccan/tea-reading/success?s=…` shows her order (not another offer's)
 - [ ] 1-click U1 / U2 charges succeed on the saved card; fallback checkout works when off-session fails
 - [ ] Stripe cancel returns to the treatment she came from with `?cancelled=1` and "nothing has been taken"
@@ -2213,18 +2214,18 @@ Not covered — needs a DEV walk with a Stripe test card (`BACKEND_CHECKOUT_TEST
 - [ ] An order still undelivered at 23h logs the overdue error
 - [ ] Live V1 funnel `/` and the 03 / 06 / 09 offers unchanged
 
-### 04 client pages — booking page, chat, receipt, Still Cup (built 2026-10-11)
+### 04 client pages — booking page, chat, receipt (built 2026-10-11; bump → the Double Turning same day)
 
 Covered by `client/src/lib/teaReadingBooking.test.ts`, `teaReadingReceipt.test.ts`, `funnel.teaReading.test.ts`
 and the walk `improve-v1/v1-one-time-BEs/scripts/walk-04-smoke.mjs` (API stubbed):
 
 - [x] Page: headline, image, price line, tick and button inside the first 390×844 screen, unticked
 - [x] Price is the endpoint's rung (blank bar while loading, retry line on failure, button disabled); `?day=1..4` shows each rung and sends that `quotedDay`
-- [x] Bump appears only after the tick, never pre-checked; NO cup pick on the page or in the chat (no picker, no cup names, no question); the checkout request sends no `cup`
+- [x] Bump appears only after the tick, never pre-checked, and reads the Double Turning word for word (page label + line; chat question ends "?", "Yes, double the strength" / "No, just my reading"); it promises nothing to open or wait for; NO cup pick on the page or in the chat (no picker, no cup names, no question); the checkout request sends no `cup`
 - [x] 409 `price_changed` shows the new price and "press again"; the re-press sends the new `quotedDay` (page and chat)
 - [x] Chat: typing indicator first, one line per turn, card gets its own beat; refresh vs `?cancelled=1` resume copy; post-commit lines render below the card
-- [x] Receipt: polls through 402s; bump ⇒ Still Cup P.S.; no name ⇒ "dear — your cup is turned"; other offers' sessions ⇒ fallback; no price; no "Your reading follows" line, even if an order carries a `cup`
-- [x] Still Cup page renders 04-C4 word for word, noindex
+- [x] Receipt: polls through 402s; bump ⇒ the Double Turning P.S. (bump buyers only, no link, "nothing extra to look out for"); no bump ⇒ no P.S.; no name ⇒ "dear — your cup is turned"; other offers' sessions ⇒ fallback; no price; no "Your reading follows" line, even if an order carries a `cup`
+- [x] No `/still-cup` route: App.tsx has none, the page and `stillCup.ts` are deleted, the URL renders the 404 (walk), and PostHog maps it to `unknown`
 
 Not covered — needs a real server + Stripe test card:
 

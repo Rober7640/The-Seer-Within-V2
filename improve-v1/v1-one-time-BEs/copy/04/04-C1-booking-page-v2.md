@@ -7,7 +7,7 @@
 | **Arrives from** | `04-E2` (`?c=61–67`), the abandon nudges `04-E6` (`?c=71–73`) and the ladder emails `04-E5` (`?c=81–83`). `?c=` and `?fn=` ride into Stripe metadata and are never shown |
 | **Treatment** | Page |
 | **Price** | ⚠ **`{{TODAYS_RUNG}}`** — today's rung, from `GET /api/backend/offers/tea-reading/price`. Never hard-coded, never guessed: until it loads the price line is a blank grey bar and the button can't be pressed |
-| **Order bump** | the Still Cup, `still_cup`, $12.77 at every rung — condensed from [`04-C3`](04-C3-order-bump.md). Unticked, appears once the tick is ticked, directly above the total |
+| **Order bump** | the Double Turning, `double_turning`, $12.77 at every rung — **intangible** (operator, 2026-10-11): Evelyn reads her cup a second time, and nothing extra is delivered. Replaces the Still Cup ([`04-C3`](04-C3-order-bump.md), superseded). Unticked, appears once the tick is ticked, directly above the total |
 | **Voice** | Plain second person ("your cup"). The one tick and the bump label are in her voice. Evelyn is named in the third person and never speaks on this page |
 | **Supersedes** | [`04-C1`](04-C1-booking-page.md), the six statements (D11, operator lock 2026-10: one short tick, the price and the button on the first phone screen). Its ideas are kept below: the claim, the permission, the drying leaves, 24 hours, the price's reason-why and the rim calendar |
 | **Component** | [00e §3 + §3a](../../docs/00e-FRAMEWORK-BEs.md) |
@@ -56,12 +56,13 @@ nothing. **Under it while the tick is missing:** *Tick the box above to continue
 These appear between the tick and the button, in this order. If they push the button off the
 screen, the page scrolls just far enough to bring it back.
 
-### 1. The order bump *(from 04-C3)*
+### 1. The order bump *(the Double Turning)*
 
-**☐ Yes — add the Still Cup, for the evenings · +$12.77**
+**☐ Yes, double the strength of my reading · +$12.77**
 
-Four minutes with a cup of tea, every evening, for the hour you'd spend rereading his last message.
-Start it tonight.
+Evelyn reads your cup a second time and puts twice the strength into your reading. Same reading,
+same 21 days. It just works twice as hard: the quiet days hold better, and your one message lands
+harder.
 
 ⛔ Never pre-checked. Unticking the main tick hides it, and it comes back unticked.
 
@@ -126,13 +127,15 @@ You pay once, at the price on this page when you press the button.
 - **The first screen is measured.** On a 390×844 phone, unticked, the headline, photo, price, three
   check lines, tick and button all fit. The walk (`walk-04-smoke.mjs`) prints the button's
   position on every run.
-- **The bump is 04-C3 condensed.** C3's long pitch is a page of her voice; on a one-tick page it is
-  a label and one line. Kept: *something to do with the evenings*, the hour she'd spend rereading
-  his last message, four minutes, starts tonight. Cut: the Tuesday at nine and "nothing to buy".
-  ⛔ It never tells her what to send — that is the paid reading.
+- **The bump is the Double Turning — an intangible** (operator, 2026-10-11). Evelyn reads her cup
+  a second time and puts twice the strength into the same reading. Nothing extra is delivered: no
+  page, no email, no link, and the delivery time doesn't change (still within 24 hours). It
+  replaces the Still Cup (`04-C3`/`04-C4`, now superseded), a nightly instructional that had to be
+  delivered. Stripe line item: *The Double Turning*. Copy operator-reviewed for clarity — use it
+  word for word. ⛔ It never tells her what to send — that is the paid reading.
 - **"You don't need to send anything"** is in the trust line because it is 04's real difference
   from 03 and 05, and the last line before a click is where friction goes.
 - **Timing.** Only "within 24 hours". Nothing here says tonight, by morning, tomorrow or a weekday
-  about the reading. *"Start it tonight"* is about the Still Cup, which she can do this evening.
+  about the reading. The bump changes none of it: same reading, same 21 days, same 24 hours.
 - **Banned:** open communication, seek guidance, embrace growth, clearing, energy field, our
   conversation. None appear.

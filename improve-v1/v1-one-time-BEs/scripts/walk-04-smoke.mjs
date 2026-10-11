@@ -25,7 +25,8 @@ import { fileURLToPath } from 'node:url';
 //     - headline, image, price line, the ONE tick and the button sit inside the first 844px
 //       (phone), unticked — and prints each one's measured y
 //     - the button is aria-disabled until the tick, and a tap before then charges nothing
-//     - the bump is NOT on the page before the tick, and is never pre-checked
+//     - the bump is NOT on the page before the tick, and is never pre-checked; ticked, it reads the
+//       Double Turning word for word (intangible — operator 2026-10-11)
 //     - ⛔ NO CUP PICK, ticked or not (operator 2026-10-11: the server draws the cup) — no picker,
 //       no cup names, no "which sounds like" question
 //     - only today's rung, $12.77 and their total ever appear as prices
@@ -40,13 +41,16 @@ import { fileURLToPath } from 'node:url';
 //     - three statements, price third; button absent until all ticked
 //     - after the card: "Good." → "One more thing before I start." → the bump turn, BELOW the card;
 //       ⛔ no cup question, no quick replies, no bubble of hers
+//     - the bump turn is the Double Turning question, ending "?"; "Yes, double the strength" /
+//       "No, just my reading"
 //     - both bump answers log [preview] with treatment chat, and NO cup
 //     - a refresh resumes without greeting her back; ?cancelled=1 says nothing has been taken
 //   receipt  /offers/wiccan/tea-reading/success?s=…   (order lookup STUBBED)
 //     - bump / no bump × name / no name; the poll rides out two 402s; no ?s= → fallback
+//     - the Double Turning P.S. for bump buyers only — no link, "nothing extra to look out for"
 //     - no price anywhere on the receipt; ⛔ no "Your reading follows …" line and no cup's name,
 //       even when the (stubbed) order still carries a `cup`
-//   Still Cup  /offers/wiccan/tea-reading/still-cup — renders, noindex, readable on a phone
+//   /still-cup  the retired Still Cup page is GONE (the bump is intangible) — nothing renders it
 //   V1 funnel  /  — still renders (rule 5: it is live)
 //
 // Screenshots → the folder given as the first argument (relative to the repo root), else
@@ -73,6 +77,17 @@ fs.mkdirSync(OUT, { recursive: true });
 const RUNGS = { 1: 3500, 2: 4700, 3: 5700, 4: 6700 };
 const label = (cents) => (cents % 100 === 0 ? `$${cents / 100}` : `$${(cents / 100).toFixed(2)}`);
 const BUMP_CENTS = 1277;
+// The Double Turning (operator 2026-10-11), word for word — 04-C1 v2, 04-C2 and 04-T1.
+const BUMP_PAGE = {
+  label: 'Yes, double the strength of my reading',
+  note: 'Evelyn reads your cup a second time and puts twice the strength into your reading. Same reading, same 21 days. It just works twice as hard: the quiet days hold better, and your one message lands harder.',
+};
+const BUMP_CHAT = {
+  body: 'I can read your cup a second time, to put twice the strength into your reading. Same reading, same twenty-one days, just working twice as hard for you. Shall I do that?',
+  accept: 'Yes, double the strength',
+  decline: 'No, just my reading',
+};
+const RECEIPT_PS = "P.S. You added a Double Turning. I'll read your cup a second time before I send your reading. There's nothing extra to look out for.";
 
 const results = [];
 const check = (name, ok, detail = '') => {
@@ -107,9 +122,9 @@ const ORDER = {
   bumpCents: 0,
 };
 const ORDERS = {
-  cs_test_04_bump_named: { ...ORDER, firstName: 'Sarah', bumpPurchased: true, bumpCents: 1277, amountCents: 4777, bumpProductKey: 'still_cup', cup: 'sunken-leaf' },
+  cs_test_04_bump_named: { ...ORDER, firstName: 'Sarah', bumpPurchased: true, bumpCents: 1277, amountCents: 4777, bumpProductKey: 'double_turning', cup: 'sunken-leaf' },
   cs_test_04_nobump_named: { ...ORDER, firstName: 'Sarah', bumpPurchased: false, amountCents: 3500, cup: 'divided-rim' },
-  cs_test_04_bump_noname: { ...ORDER, firstName: null, bumpPurchased: true, bumpCents: 1277, amountCents: 4777, bumpProductKey: 'still_cup', cup: 'turned-handle' },
+  cs_test_04_bump_noname: { ...ORDER, firstName: null, bumpPurchased: true, bumpCents: 1277, amountCents: 4777, bumpProductKey: 'double_turning', cup: 'turned-handle' },
   cs_test_04_nobump_noname: { ...ORDER, firstName: null, bumpPurchased: false, amountCents: 3500, cup: 'divided-rim' },
   cs_test_04_pending: { ...ORDER, firstName: 'Sarah', bumpPurchased: false, amountCents: 3500, cup: 'divided-rim' },
 };
@@ -268,6 +283,12 @@ try {
       const bumpBox = bump.locator('input');
       check(`${vp.label}: the bump appears after the tick`, (await bump.count()) === 1);
       check(`${vp.label}: the bump is NOT pre-checked`, (await bumpBox.count()) === 1 && !(await bumpBox.isChecked()));
+      const bumpText = flat(await bump.innerText());
+      check(
+        `${vp.label}: the bump is the Double Turning, word for word — and no Still Cup`,
+        bumpText.includes(`${BUMP_PAGE.label} · +$12.77`) && bumpText.includes(BUMP_PAGE.note) && !/still cup/i.test(await page.locator('body').innerText()),
+        bumpText.slice(0, 120),
+      );
       pick = await noCupPick(page);
       check(`${vp.label}: ticked, still no cup pick — the bump comes straight after the tick`, pick.ok, JSON.stringify(pick));
       check(`${vp.label}: the button is live once ticked`, (await button.getAttribute('aria-disabled')) === 'false');
@@ -510,6 +531,12 @@ try {
       const chatPick = await noCupPick(page);
       check(`${vp.label}: no cup question in the chat — no quick replies, no cup names, no bubble of hers`, chatPick.ok && (await page.getByTestId('message-her').count()) === 0, JSON.stringify(chatPick));
       check(`${vp.label}: the bump turn shows +$12.77 and the $47.77 total`, flat(await page.getByTestId('order-bump').innerText()).includes('+ $12.77') && flat(await page.getByTestId('text-bump-total').innerText()) === '$47.77 total');
+      const bumpTurn = flat(await page.getByTestId('order-bump').innerText());
+      check(
+        `${vp.label}: the bump turn is the Double Turning question (ends "?"), with "${BUMP_CHAT.accept}" / "${BUMP_CHAT.decline}"`,
+        bumpTurn.includes(BUMP_CHAT.body) && BUMP_CHAT.body.endsWith('?') && flat(await page.getByTestId('button-bump-accept').innerText()) === BUMP_CHAT.accept && flat(await page.getByTestId('button-bump-decline').innerText()) === BUMP_CHAT.decline && !/still cup/i.test(bumpTurn),
+        bumpTurn.slice(0, 120),
+      );
       await sleep(500);
       await shot('chat-bump-turn', page);
       await page.getByTestId('button-bump-decline').click();
@@ -518,7 +545,7 @@ try {
       check(`${vp.label}: "No, just my reading" logs [preview] — chat, bump false, quotedDay 1, fn + c, NO cup`, !!d && d.offer === 'tea-reading' && d.treatment === 'chat' && d.bump === false && d.quotedDay === 1 && !('cup' in d) && d.firstName === 'Smoke' && d.letterCode === '61', JSON.stringify(d));
       await page.getByTestId('button-bump-accept').click();
       await waitForCount(previews, 2);
-      check(`${vp.label}: "Yes, add the Still Cup" logs bump true, NO cup`, previews[1]?.bump === true && previews[1]?.treatment === 'chat' && !('cup' in (previews[1] ?? {})), JSON.stringify(previews[1]));
+      check(`${vp.label}: "${BUMP_CHAT.accept}" logs bump true, NO cup`, previews[1]?.bump === true && previews[1]?.treatment === 'chat' && !('cup' in (previews[1] ?? {})), JSON.stringify(previews[1]));
       let hs = await noHorizontalScroll(page);
       check(`${vp.label}: chat has no horizontal scroll`, hs.ok, `scrollWidth=${hs.scrollWidth}`);
 
@@ -605,7 +632,7 @@ try {
         const card = page.getByTestId('card-thankyou-tea-reading');
         await card.waitFor({ timeout: 15000 }).catch(() => {});
         const text = flat(await page.locator('body').innerText());
-        const stillCup = page.getByTestId('link-still-cup');
+        const ps = page.getByTestId('text-bump-ps');
         check(
           `${vp.label}: receipt (${name}) — "Thank you, ${want.name}.", title "${want.name} — your cup is turned", within 24 hours`,
           text.includes(`Thank you, ${want.name}.`) && flat(await page.getByTestId('text-delivery-title').innerText()) === `${want.name} — your cup is turned` && text.includes('within 24 hours'),
@@ -616,8 +643,11 @@ try {
           text.match(/[^.]*follows[^.]*/i)?.[0] ?? text.match(CUP_NAMES)?.[0] ?? '',
         );
         check(
-          `${vp.label}: receipt (${name}) ${want.bump ? 'shows' : 'does not show'} the Still Cup P.S.`,
-          want.bump ? (await stillCup.count()) === 1 && (await stillCup.getAttribute('href')) === `${ROOT}/still-cup` : (await stillCup.count()) === 0 && !text.includes('Still Cup'),
+          `${vp.label}: receipt (${name}) ${want.bump ? 'shows' : 'does not show'} the Double Turning P.S. — never a link, never the Still Cup`,
+          (want.bump
+            ? (await ps.count()) === 1 && flat(await ps.innerText()) === RECEIPT_PS && (await ps.locator('a').count()) === 0
+            : (await ps.count()) === 0 && !text.includes('Double Turning')) &&
+            !/still cup/i.test(text) && (await page.locator('a[href*="still-cup"]').count()) === 0,
         );
         check(`${vp.label}: receipt (${name}) — no price, no "tomorrow"/"by morning"`, dollars(text).length === 0 && !/tomorrow|by morning/i.test(text));
         const hs = await noHorizontalScroll(page);
@@ -635,14 +665,16 @@ try {
         await page.goto(`${BASE}${ROOT}/success${suffix}`, { waitUntil: 'domcontentloaded' });
         await page.getByTestId('card-receipt-fallback').waitFor({ timeout: 15000 }).catch(() => {});
         const text = flat(await page.locator('body').innerText());
-        check(`${vp.label}: receipt (${name}) shows the safe fallback — no title box, no cup, no Still Cup`, (await page.getByTestId('card-receipt-fallback').count()) === 1 && !text.includes('your cup is turned') && !text.includes('Still Cup') && !CUP_NAMES.test(text));
+        check(`${vp.label}: receipt (${name}) shows the safe fallback — no title box, no cup, no P.S.`, (await page.getByTestId('card-receipt-fallback').count()) === 1 && !text.includes('your cup is turned') && !text.includes('Double Turning') && !/still cup/i.test(text) && !CUP_NAMES.test(text));
         await shot(`receipt-fallback-${name}`, page);
       }
       check(`${vp.label}: receipt has no page errors`, errors.length === 0, errors.slice(0, 2).join(' | '));
       await context.close();
     }
 
-    // ═══ 6. STILL CUP + the live V1 funnel ═══
+    // ═══ 6. NO STILL CUP PAGE + the live V1 funnel ═══
+    // The bump is the Double Turning (operator 2026-10-11): intangible, so the old Still Cup page,
+    // its route and its link are gone. Its URL must render no Still Cup.
     {
       const context = await browser.newContext({ viewport: { width: vp.width, height: vp.height } });
       const stubs = makeStubs(new URL(BASE).origin);
@@ -651,17 +683,14 @@ try {
       const errors = [];
       page.on('pageerror', (e) => errors.push(e.message));
       await page.goto(`${BASE}${ROOT}/still-cup`, { waitUntil: 'domcontentloaded' });
-      await page.getByTestId('still-cup').waitFor({ timeout: 15000 }).catch(() => {});
+      await sleep(1500); // give a lazy route the time it would need to render
       const text = flat(await page.locator('body').innerText());
-      const robots = await page.locator('meta[name="robots"]').getAttribute('content').catch(() => null);
-      check(`${vp.label}: Still Cup renders the practice`, flat(await page.locator('h1').innerText()) === 'The Still Cup' && text.includes('Your phone is in another room for this.') && (await page.getByTestId('still-cup-step').count()) === 4 && text.includes('— Evelyn'));
-      check(`${vp.label}: Still Cup is noindex`, !!robots && robots.includes('noindex'), robots ?? 'no meta');
-      check(`${vp.label}: Still Cup carries no build notes and no blank salutation`, !/Build notes|%FIRSTNAME%|§|device variance/i.test(text) && (await page.getByTestId('text-salutation').count()) === 0);
-      const fontPx = await page.locator('[data-testid="still-cup"] p').first().evaluate((el) => parseFloat(getComputedStyle(el).fontSize));
-      const hs = await noHorizontalScroll(page);
-      check(`${vp.label}: Still Cup is readable — ≥16px body, no horizontal scroll`, fontPx >= 16 && hs.ok, `font=${fontPx}px scrollWidth=${hs.scrollWidth}`);
-      await shot('still-cup', page, { fullPage: true });
-      check(`${vp.label}: Still Cup has no page errors`, errors.length === 0, errors.slice(0, 2).join(' | '));
+      check(
+        `${vp.label}: the retired /still-cup renders no Still Cup page`,
+        (await page.getByTestId('still-cup').count()) === 0 && (await page.getByTestId('still-cup-step').count()) === 0 && !/still cup/i.test(text),
+        text.slice(0, 80),
+      );
+      check(`${vp.label}: /still-cup has no page errors`, errors.length === 0, errors.slice(0, 2).join(' | '));
 
       const v1 = await context.newPage();
       const v1Errors = [];
