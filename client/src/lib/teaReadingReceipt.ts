@@ -5,8 +5,12 @@
 //
 // 09's receipt pattern (lib/heartCleanserReceipt.ts) with 08's poll (pages/marcus/marcusOrder.ts):
 //
-// ⛔ THE RULE: never print receipt lines, her cup or the Still Cup link for an order that wasn't
-// verified as THIS offer's, and paid. So the page has exactly two final shapes:
+// ⛔ THE RULE: never print receipt lines or the Still Cup link for an order that wasn't
+// verified as THIS offer's, and paid. ⛔ Never her cup, for anyone: it is drawn at random at
+// checkout and the reading itself is the reveal (operator 2026-10-11) — the server no longer
+// sends it, and a `cup` an older server sends is dropped here.
+//
+// So the page has exactly two final shapes:
 //   verified   — the server returned a paid tea-reading order for this ?s=;
 //   unverified — anything else: no ?s=, 400/404 (not this offer's order), a refunded or cancelled
 //                row, a body that isn't JSON, or an order for another offer — and, once the poll
@@ -16,7 +20,6 @@
 // the paid webhook has written the row. The route already falls back to Stripe on a miss, so most
 // loads settle on the first request. The lookup is a GET with no side effect the page depends on.
 
-import { isTeaCup, type TeaCup } from '@shared/backendOffers';
 import { displayName } from './upsellCopy/types';
 
 export const TEA_READING_OFFER = 'tea-reading' as const;
@@ -32,8 +35,6 @@ export interface VerifiedTeaOrder {
   firstName: string | null;
   /** She took the Still Cup. Only a literal `true` from the server counts. */
   bumpPurchased: boolean;
-  /** The cup her reading follows, or null when the server couldn't read it — the line is cut. */
-  cup: TeaCup | null;
   /** The reading has already gone out (`deliveredAt` set). */
   delivered: boolean;
 }
@@ -101,7 +102,6 @@ export async function lookupTeaReceipt(
     order: {
       firstName: typeof order.firstName === 'string' ? order.firstName : null,
       bumpPurchased: order.bumpPurchased === true,
-      cup: isTeaCup(order.cup) ? order.cup : null,
       delivered: typeof order.deliveredAt === 'string' && order.deliveredAt.length > 0,
     },
   };

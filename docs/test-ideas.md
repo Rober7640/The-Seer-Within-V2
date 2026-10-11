@@ -2191,7 +2191,10 @@ Covered by unit tests (`server/lib/backendOffers.teaReading.test.ts`,
 - [x] Ladder day = floor((now − start)/24h) + 1, clamped 1–4; unset / no-timezone start ⇒ day 1 (never overcharge)
 - [x] `quotedDay` honoured for 120 min after a rung change; lower than both ⇒ 409 `price_changed`; higher ⇒ today's (lower) rung
 - [x] `amountCents` / `tier` can never change a ladder price; `?day=` on the price endpoint is display-only
-- [x] Stripe metadata `rung`, `cup` (default `divided-rim`, invalid never blocks a sale), `cupChosen`
+- [x] Cup is DRAWN, not picked (operator 2026-10-11): `drawTeaCup` is uniform over the three slugs given an injected random; the real draw (`crypto.randomInt`) only deals valid slugs
+- [x] Stripe metadata `rung`, `cup` (the server's draw, always a valid slug), `cupDrawn: '1'`; no `cupChosen`
+- [x] A `cup` the client sends (valid, invalid, junk) is ignored — never a 400, never changes the drawn cup; other offers get no `cup` and no draw
+- [x] Receipt (`GET /api/backend/order/:session`) never returns a `cup` for 04
 - [x] Receipt `deliveryHours` is 24 for 04 even with the Still Cup (08 keeps 12)
 - [x] AWeber tags are the literal strings `be-04-tea-reading` / `be-04-bump` / `be-04-delivered` / `be-04-upsell1-protection` / `be-04-upsell2-bracelet`
 - [x] Delivery job: off unless `BE04_DELIVERY_ENABLED=true`; only paid, undelivered orders past the delay; link chosen by cup; missing / non-https link ⇒ skipped, never sent; idempotent; one failure doesn't stop the rest
@@ -2200,7 +2203,7 @@ Covered by unit tests (`server/lib/backendOffers.teaReading.test.ts`,
 Not covered — needs a DEV walk with a Stripe test card (`BACKEND_CHECKOUT_TEST_MODE=true`):
 
 - [ ] Day 1 → day 2 boundary with a page loaded before it: pays the shown $35 inside 2 hours; after that the page shows $47 and asks her to press again
-- [ ] Cup picked on the page reaches Stripe metadata; no pick ⇒ `divided-rim`, `cupChosen=0`
+- [ ] A drawn cup is in Stripe metadata (`cup` = one of the three slugs, `cupDrawn=1`); over several test orders more than one cup turns up
 - [ ] Bump ticked ⇒ second line item "The Still Cup" $12.77, `bumpProduct=still_cup`; receipt shows the Still Cup link; `be-04-bump` tag lands
 - [ ] Pay → `/offers/upsell/welcome1` → welcome2 → `/offers/wiccan/tea-reading/success?s=…` shows her order (not another offer's)
 - [ ] 1-click U1 / U2 charges succeed on the saved card; fallback checkout works when off-session fails
@@ -2217,14 +2220,14 @@ and the walk `improve-v1/v1-one-time-BEs/scripts/walk-04-smoke.mjs` (API stubbed
 
 - [x] Page: headline, image, price line, tick and button inside the first 390×844 screen, unticked
 - [x] Price is the endpoint's rung (blank bar while loading, retry line on failure, button disabled); `?day=1..4` shows each rung and sends that `quotedDay`
-- [x] Bump and cup pick appear only after the tick; bump never pre-checked; no pick ⇒ `cup: null`
+- [x] Bump appears only after the tick, never pre-checked; NO cup pick on the page or in the chat (no picker, no cup names, no question); the checkout request sends no `cup`
 - [x] 409 `price_changed` shows the new price and "press again"; the re-press sends the new `quotedDay` (page and chat)
 - [x] Chat: typing indicator first, one line per turn, card gets its own beat; refresh vs `?cancelled=1` resume copy; post-commit lines render below the card
-- [x] Receipt: polls through 402s; bump ⇒ Still Cup P.S.; no name ⇒ "dear — your cup is turned"; other offers' sessions ⇒ fallback; no price
+- [x] Receipt: polls through 402s; bump ⇒ Still Cup P.S.; no name ⇒ "dear — your cup is turned"; other offers' sessions ⇒ fallback; no price; no "Your reading follows" line, even if an order carries a `cup`
 - [x] Still Cup page renders 04-C4 word for word, noindex
 
 Not covered — needs a real server + Stripe test card:
 
 - [ ] Stripe cancel from the chat lands on `/offers/wiccan/tea-reading/chat?cancelled=1` (treatment `chat`), from the page on the page
 - [ ] Back button from Stripe (bfcache restore) re-arms the button and re-fetches today's price
-- [ ] Receipt shows the cup the session's metadata names, and the delivered variant once `deliveredAt` is set
+- [ ] Receipt shows the delivered variant once `deliveredAt` is set (and never names the drawn cup)

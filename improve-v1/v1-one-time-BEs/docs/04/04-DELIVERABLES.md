@@ -32,12 +32,10 @@ overturned without re-deriving it.
 | Change | Why (operator) | What it did |
 |---|---|---|
 | **Every buyer gets the SAME cup: the photo from the source letter**, seven numbered red marks and all (`docs/04/product/images/esl/`, extracted from `Wiccan Watch - Tea Reading - ESL.docx`) | The generated leaf pictures were "unrealistic" | The PDF cover, a new map photo under "Where your seven landed", and a square crop of each numbered mark at its stretch. The booking page shows the same photo (3:2, tight on the cup). The generated images are no longer used anywhere |
-| **The three cup picks are three INTERPRETATIONS of that one cup**, not three different cups | "3 different interpretations instead" | The readings were rewritten so every position claim matches the photo ([`product/esl-cup-map.md`](./product/esl-cup-map.md) is the ground truth); the 21-day plans, the one-message days and the calendars were kept. Backups of the different-cups version: `copy/04/product/_superseded-2026-10-11-different-cups/` |
+| **The three cup types are three INTERPRETATIONS of that one cup**, not three different cups | "3 different interpretations instead" | The readings were rewritten so every position claim matches the photo ([`product/esl-cup-map.md`](./product/esl-cup-map.md) is the ground truth); the 21-day plans, the one-message days and the calendars were kept. Backups of the different-cups version: `copy/04/product/_superseded-2026-10-11-different-cups/` |
 
-⚠ The operator also wrote *"should have 1 PDF only"*. Read together with the next message as **one cup
-(one photo) for everyone**; the build still makes one PDF per interpretation (three), because her
-pick still changes her 21 days. If one file is wanted literally, the three can be merged — a
-packaging step, not a rewrite.
+| **No pick — a random draw.** The booking page and chat no longer ask; the server draws one of the three interpretations at checkout (`server/lib/be04Draw.ts`, `crypto.randomInt`) into Stripe `metadata.cup` (+ `cupDrawn: '1'`). The receipt no longer names it. The readings no longer say "you picked": the cup reads from the mark that catches the light first when Evelyn tips it | "random draw" (asked: one PDF or three) | Three PDFs stay, one per interpretation; she gets one, drawn. Backups of the picked wording: `copy/04/product/_superseded-2026-10-11-picked/` |
+| **Upsell 2's "pick a stone" is closed.** The built upsell never asks it; it was only in the August draft | "confuse why theres a pick a stone" | Nothing to build |
 
 ## The ladder (`S9`)
 
@@ -60,8 +58,8 @@ never read for 04.
 |---|---|
 | Rungs, grace, bump, cups, the pure resolver | `shared/backendOffers.ts` — `TEA_READING_RUNG_CENTS`, `ladderRungAt()`, `resolveLadderCharge()`, `TEA_CUPS`, `resolveTeaCup()`; catalog row `'tea-reading'` (`be_tea_reading`, bump `still_cup` $12.77, `readyForMoney: false`) |
 | Today's price for the page | `GET /api/backend/offers/tea-reading/price` → `{ offer, day, cents, label, startSet }`, `no-store`. `?day=N` previews a rung (display only, `preview: true`) while the offer is not open for money; checkout never reads it |
-| Checkout | `POST /api/backend/checkout` takes optional `quotedDay` and `cup`. Stripe metadata gets `rung` ('1'–'4', what the server charged), `cup` (always a valid slug, default `divided-rim`) and `cupChosen` ('1'/'0'). An invalid cup never blocks a sale |
-| Receipt | `GET /api/backend/order/:sessionId` — 04 is always `deliveryHours: 24` (the Still Cup is not a speed bump); adds `cup` (null if Stripe can't be read). `bumpPurchased` was already there; the Still Cup page is `TEA_READING_STILL_CUP_PATH` |
+| Checkout | `POST /api/backend/checkout` takes optional `quotedDay` (a `cup` from the browser is accepted and ignored). Stripe metadata gets `rung` ('1'–'4', what the server charged), `cup` (the server's random draw) and `cupDrawn: '1'` |
+| Receipt | `GET /api/backend/order/:sessionId` — 04 is always `deliveryHours: 24` (the Still Cup is not a speed bump); does NOT return the cup (anyone holding the session id could read the draw). `bumpPurchased` was already there; the Still Cup page is `TEA_READING_STILL_CUP_PATH` |
 | AWeber tags | `be-04-tea-reading`, `be-04-bump`, `be-04-delivered`, upsells `be-04-upsell1-protection` / `be-04-upsell2-bracelet`; lists 6972552 / 6972554 (shared with 02/03) |
 | Delivery | `server/lib/be04Delivery.ts`, every 10 min from the cron set, **off** unless `BE04_DELIVERY_ENABLED=true`. Paid, undelivered 04 orders older than `BE04_DELIVERY_DELAY_HOURS` (default 12, 1–23) get their cup's link (`BE04_READING_URL_TURNED_HANDLE` / `_DIVIDED_RIM` / `_SUNKEN_LEAF`, https only) via `markBackendReadingDelivered`, then `reading_url` + `delivered_at` are stamped. Cup read from the Stripe session (no migration). No link, or Stripe unreadable → skipped and retried, never a guessed link. Still undelivered at 23h → error log every tick |
 
@@ -91,7 +89,7 @@ Server side: see *The ladder* above.
 | Piece | Where | State |
 |---|---|---|
 | Structure map (B2) | [`04-B2-product-map.md`](./04-B2-product-map.md) — per cup: sections, which letter loop each closes, the 21 days | ✅ |
-| Three readings (B3) | `copy/04/product/04-P1-{divided-rim,turned-handle,sunken-leaf}.md` — three interpretations of the SAME cup, 4,452–4,697 words each before the calendar. The 21-day order now comes from her pick, not from where leaves sit ("leaves don't land in a queue") | ✅ rewritten 2026-10-11 · ☐ operator read |
+| Three readings (B3) | `copy/04/product/04-P1-{divided-rim,turned-handle,sunken-leaf}.md` — three interpretations of the SAME cup, 4,452–4,697 words each before the calendar. The 21-day order comes from the mark that catches the light first when Evelyn tips the cup, not from where leaves sit | ✅ rewritten 2026-10-11 · ☐ operator read |
 | Three rim calendars | `copy/04/product/04-P3-{cup}.md` — one page, day for day with its reading | ✅ |
 | Images (B4) | `docs/04/product/images/esl/` — the source letter's real cup photo (`esl-cup-original.jpg`, from the .docx), a full and a tight 3:2 version, and a square crop of each numbered mark (`mark-1-bird` … `mark-7-butterfly`). Ground truth for every position claim: [`product/esl-cup-map.md`](./product/esl-cup-map.md). The generated images are in `images/_rejected-ai-2026-10-11/` (not used; don't commit `raw/`) | ✅ (redone 2026-10-11 after operator review) |
 | PDFs + Word twins (B5) | `docs/04/product/pdf/04-the-turn-{cup}.pdf` (17–18 pages, 1.3 MB each: cover, a full-page "Your cup" plate before the table, a mark crop at every stretch) + `.docx` + `preview-{cup}.jpg`. Rebuild: `node improve-v1/v1-one-time-BEs/scripts/build-04-pdf.mjs` (gate: `scripts/check-04-pdf.py`, 7 checks × 3, all pass). The PDFs are committed with the branch (no Desktop copy, operator 2026-10-11) | ✅ built · ☐ phone/print/seed-send checks |
@@ -133,14 +131,14 @@ with and without a first name. ⛔ Not uploaded — AWeber was not touched.
 | `04-T1-T3` | The old T3 draft is superseded by `04-T3-confirmation-email.md`; "Thursday", "I'll write in the morning" and "tonight" (about delivery) are gone | A weekday breaks for most buyers; delivery is "within 24 hours" |
 | `04-T3` | "Your leaves were still soft when you booked" cut | Sent to every buyer, incl. day 3–4 buyers whose ladder emails said the leaves had dried |
 | `04-C1` | Six statements → one tick (`04-C1-booking-page-v2.md`) | D11 / the operator's one-tick lock |
-| `04-C1` | The cup pick sits **after** the tick, beside the bump | Measured: 245px tall; above the tick it pushed the button to 1,040px, off a phone screen |
+| `04-C1` | ~~The cup pick sits after the tick~~ — the pick was removed entirely (random draw, operator 2026-10-11) | It was 245px tall and confused the operator |
 | `04-C3` | The bump is a label, one line and the price on the page; the "nine o'clock on a Tuesday" line moved to the chat's bump turn | Room on the first screen; a weekday on a page is a date |
 | `04-C2` | The chat's bump says "as soon as you're through", not "with your reading" | The Still Cup is delivered at once, not with the reading |
 | `04-T1` | "It's going on soft — you didn't leave it" cut; "I'll send it again the same day" → "I'll sort it out"; added her cup, the confirmation subject, and a variant for an already-delivered order | Soft is false after day 2; a same-day resend is a promise nobody is staffed for |
 | `04-C4` page | Greeting shows her name when the tab knows it, else is cut; the rest is 04-C4 verbatim (test-checked) | No blank where a name should be |
 | Prices | Shown as `$35` / `$47.77`, never `$35.00` | Matches copy-check's 04 forms |
 | Desktop | The button sits at 885px on 1280×800 | The lock is for phones; 09 v2 has the same roomy desktop header |
-| `04-U` | Every day number cut ("first nine days", "day five", "days sixteen to eighteen", "week two"…) | The cup she picked changes the days, and the cup is her data — the settled no-personal-details rule. ("Day five" is true for all three cups; restore it if wanted) |
+| `04-U` | Every day number cut ("first nine days", "day five", "days sixteen to eighteen", "week two"…) | Her interpretation (now drawn at random) changes the days, and the upsells can't know which — the settled no-personal-details rule. ("Day five" is true for all three cups; restore it if wanted) |
 | `04-U` | U2 no longer "draws him back": the bracelet works on what goes out from HER on the quiet days, charged to the bridge, lighthouse and butterfly — *"It won't walk him across that bridge. Nothing does."* | Rule 2: every reading refuses to promise his return |
 | `04-U` | "It sat highest in your cup" cut — the upsell runs before the cup is turned; both openings use the letter's own words for the butterfly | The position isn't known yet at that moment |
 | `04-U` | "By morning" / "tonight" about the reading → "within 24 hours"; U1 adds that protection starts the night of the ritual (the stone ships in 48h) | Timing truth |

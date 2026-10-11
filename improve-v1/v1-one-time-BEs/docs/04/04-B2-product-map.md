@@ -9,7 +9,7 @@ per cup) from [`04-DELIVERABLES.md`](./04-DELIVERABLES.md).
 | **Readings** | `copy/04/product/04-P1-divided-rim.md` · `04-P1-turned-handle.md` · `04-P1-sunken-leaf.md` |
 | **Calendars** | `copy/04/product/04-P3-divided-rim.md` · `04-P3-turned-handle.md` · `04-P3-sunken-leaf.md` |
 | **Source drafts** | `copy/04/04-P1-the-turn.md`, `04-P3-rim-calendar.md` — untouched |
-| **She receives** | exactly one reading + its calendar, chosen by her `04-C1` cup pick. **No pick → Divided Rim** |
+| **She receives** | exactly one reading + its calendar, assigned by **random draw** (operator, 2026-10-11). She no longer picks a cup on `04-C1`, so no reading may say or imply she chose, ticked or told Evelyn anything |
 
 ---
 
@@ -17,9 +17,11 @@ per cup) from [`04-DELIVERABLES.md`](./04-DELIVERABLES.md).
 
 ⛔ **One cup for every buyer** (operator, 2026-10-11). Every buyer gets the SAME cup: the real photo
 from the source letter, with Evelyn's seven numbered red marks
-([`product/esl-cup-map.md`](./product/esl-cup-map.md), images in `product/images/esl/`). Her pick
-(Turned Handle / Divided Rim / Sunken Leaf) changes how Evelyn **interprets** that one cup and the
-**order** of the 21 days, never what is in the cup. The superseded three-different-cups versions
+([`product/esl-cup-map.md`](./product/esl-cup-map.md), images in `product/images/esl/`). The random
+draw (Turned Handle / Divided Rim / Sunken Leaf) changes how Evelyn **interprets** that one cup and the
+**order** of the 21 days, never what is in the cup. Evelyn reads the order from the cup itself (the
+first light, below). The pre-draw "you picked" readings are in
+`copy/04/product/_superseded-2026-10-11-picked/`. The superseded three-different-cups versions
 (invented fine line, edge-on leaves, a channel through a wing, a boat on the base, the lighthouse
 opposite the handle, a fleck) are in `copy/04/product/_superseded-2026-10-11-different-cups/`.
 
@@ -30,7 +32,7 @@ same three rules in *How a cup is read*:
 |---|---|---|
 | **The handle is you.** Near = close to her, hers. Across the cup = the far side: people she hasn't met, or things she's let drift that far | *whose*, how near | `04-E2`:103–105 |
 | **Height is time.** The rim and just under it = the days, a fortnight either side of now · halfway down = two months · base = buried, before she noticed | *how long* / how soon | `04-E2`:105–106, 236–238 |
-| **Her pick sets the order.** The leaves give what each stretch is and how near or far it sits; they don't land in a queue. What she told Evelyn (her cup pick) decides the order, so the same seven leaves give a woman whose man has gone flat a different 21 days from one whose man runs hot and cold. No pick → Divided Rim: *"If you didn't, the heart told me"* | *the order of the 21 days* | new; `04-C1`:95 already tells her the pick "changes the reading" |
+| **The first light sets the order.** The leaves give what each stretch is and how near or far it sits; they don't land in a queue. The first time Evelyn tips a turned cup toward the light, one mark catches it before the others; the whole cup reads from that mark, and it says which man she's dealing with, so the same seven leaves give a woman whose man has gone flat a different 21 days from one whose man runs hot and cold. Divided Rim: the light lights the bare china between the heart's halves (**mark 2**). Turned Handle: it catches the tree's bare stalks by the handle (**mark 3**). Sunken Leaf: it goes right down into the dark band and catches **mark 2** first, half lost in the leaf round it. An event at the turning, not in the photo, so it never contradicts the map | *the order of the 21 days* | new (2026-10-11, random draw). Fits `04-E2`:213–219: *"Nothing you have to write, and nothing you have to tell me"* |
 
 ⛔ The old rule *"read round from the handle, sunwise, three days to each leaf"* is retired. Round from
 the handle this photo gives heart → bridge → boat → butterfly → bird → lighthouse → tree one way (the
@@ -115,21 +117,22 @@ Numbered once here; the per-cup tables cite them.
 
 ---
 
-## 4. The Divided Rim *(hot and cold · the default)*
+## 4. The Divided Rim *(hot and cold)*
 
 **Interpretation of the one cup:** the weight sits on **mark 2, the heart**: two dark clumps side by
 side, a pale gap of bare china between, low by the handle. The halves = his two temperatures as they
 land on her; the bare gap = no pattern to find; low = settled. The swing is not hers: the heart is
 where it lands, the bird across the cup is where it starts, and the tree (the letter's own hot-and-cold
-leaf, `04-E2`:145–147) sits by the handle thinned, not broken. For a no-pick buyer the heart is what
-chose this order. Rule under every stretch: *answer the hot day and the cold day the same.*
+leaf, `04-E2`:145–147) sits by the handle thinned, not broken. The first light lands on the heart
+and lights the bare gap: that is what sets this order. Rule under every stretch: *answer the hot day
+and the cold day the same.*
 
 ### Sections
 
 | Section | Symbol | What it has to do | Loops closed |
 |---|---|---|---|
-| Opening | `[IMG-CUP]` | Cup is turned; name the cup without claiming she ticked it (default buyers); inoculate (*read to the end*) | L13 |
-| How a cup is read | — | The three rules; *the man sets the order* (ticked → she told me; no pick → the heart told me); the scale down the wall | L2, L4 |
+| Opening | `[IMG-CUP]` | Cup is turned; *"Your cup reads as a Divided Rim"*, stated flat, leading with what runs between them (warm or cold, nothing in between) before the heart; inoculate (*read to the end*) | L13 |
+| How a cup is read | — | The three rules; *the first light sets the order* (it lights the bare china in the heart, mark 2); the scale down the wall | L2, L4 |
 | The bird, and how long he's been going | bird | Difficulty overcome (head reads a fortnight; the tail runs into the base's loose specks; turned three times; last piece in line halfway = two months); finding: **two months, not about the last three weeks**; across the cup = "on his cold days, that's who you're talking to" | L14 (how long), L17, L6 (in part) |
 | Where your seven landed | all seven `[IMG-MAP]` | The shared position table (§1); butterfly highest = nearest, nearly opposite = the woman she hasn't met | L2, L16 |
 | Your cup: the Divided Rim | heart (2), tree (3), bird (1) | Halves = his temperatures; bare gap = no pattern; the swing is his; level answers starve it; **why this order** | L8 |
@@ -171,8 +174,8 @@ answers "like a man you've never met"). The bridge sits between the heart and th
 
 | Section | Symbol | What it has to do | Loops closed |
 |---|---|---|---|
-| Opening | `[IMG-CUP]` | Cup is turned; "you picked the Turned Handle, the cup agrees"; inoculate | L13 |
-| How a cup is read | the tree | The three rules; the tree nearest the handle; *what you told me sets the order* | L2, L4 |
+| Opening | `[IMG-CUP]` | Cup is turned; *"Your cup reads as a Turned Handle"*, stated flat, leading with what runs between them (still open, gone thin), then *"he answers, and there's nothing in it"*; inoculate | L13 |
+| How a cup is read | the tree | The three rules; the tree nearest the handle; *the first light sets the order* (it catches the tree's bare stalks, mark 3) | L2, L4 |
 | The bird, and how long he's been going | bird | Difficulty: the tail runs into the base's loose specks; tipped to the window, turned three times; **two months**; stop searching her own messages; far side = "like a man you've never met" | L14 (how long), L17, L6 (in part) |
 | Where your seven landed | all seven `[IMG-MAP]` | The shared position table (§1), rows in this order | L2, L16 |
 | Your cup: the Turned Handle | tree (3), bird (1), boat (4) | Contact exists; change what it carries; **why this order** (boat early, bridge early, tree after the bridge); points to the test warning | — (cup finding) |
@@ -220,8 +223,8 @@ carries two people, and she has been rowing a boat that sits on his side.
 
 | Section | Symbol | What it has to do | Loops closed |
 |---|---|---|---|
-| Opening | `[IMG-CUP]` | Cup is turned; hardest of the three; "you picked the Sunken Leaf, the cup agrees"; inoculate | L13 |
-| How a cup is read | — | The three rules, with weight on the bottom of the wall; *what you told me sets the order* | L2, L4 |
+| Opening | `[IMG-CUP]` | Cup is turned; hardest of the three; *"Your cup reads as a Sunken Leaf"*, stated flat, leading with what runs between them (quiet from his end; anything that passes starts with her); inoculate | L13 |
+| How a cup is read | — | The three rules, with weight on the bottom of the wall; *the first light sets the order* (it goes down into the dark band and catches mark 2 first) | L2, L4 |
 | The bird, and how long he's been going | bird | Difficulty: by lamplight the tail and the base's loose specks read as one trail, rim to base (= a base bird); daylight and a pencil show his pieces stop halfway; **two months**; none of her messages did it | L14 (how long), L17, L6 (in part) |
 | Where your seven landed | all seven `[IMG-MAP]` | The shared position table (§1); butterfly early and highest | L2, L16 |
 | Your cup: the Sunken Leaf | heart (2), bird (1), boat (4) | Sunk, not gone under; **the starting has become the problem**; **why this order** (the slowest) | — (cup finding) |
@@ -308,8 +311,8 @@ the mark number and where it sits — nine per reading.
    POSITION, not symbols"*. The letter gave all seven (`04-E2`:60–62); the product re-places the same
    seven. What she didn't have, position, is the whole of the paid part.
 3. **The arrangement means something** — the leaves give each stretch its content and its near/far
-   (whose it is, how old, how soon); her pick gives the order, and each reading says why its order
-   follows from her situation plus those properties. Same cup, same method, three orders.
+   (whose it is, how old, how soon); the first light gives the order, and each reading says why its
+   order follows from her situation plus those properties. Same cup, same method, three orders.
 
 ### Word counts (before the calendar)
 
@@ -332,8 +335,10 @@ of the three).
 
 - **The order rule (revised 2026-10-11).** The first rule, *round from the handle, sunwise, three days
   per leaf*, only worked with three invented cups; on the real photo it gives nonsense. The readings
-  now say: the leaves tell Evelyn what each stretch is and how near or far it sits, and what she told
-  Evelyn (her pick) sets the order. Each reading then derives its order in *Your cup*: heart (hers)
+  now say: the leaves tell Evelyn what each stretch is and how near or far it sits, and the first mark
+  to catch the light when she tips the turned cup sets the order (revised again 2026-10-11 for the
+  random draw; it was "what she told Evelyn (her pick)"). Each reading then derives its order in
+  *Your cup*: heart (hers)
   and bird (still going) first in all three; after that the Turned Handle goes boat → lighthouse →
   bridge → tree (contact exists), the Divided Rim goes tree → boat → lighthouse → bridge (re-lay the
   ordinary first), the Sunken Leaf goes butterfly → tree → lighthouse → boat → bridge (the slowest).
@@ -342,13 +347,15 @@ of the three).
   ten), and it carries the letter's *"becoming somebody who does this part differently"*. The map's
   "far side" list names only the bird and the boat; if the operator wants the butterfly kept off the
   far side, cut that clause in the three tables and butterfly stretches.
-- **Default buyers.** Divided Rim also goes to women who picked nothing, so it never says "you told
-  me" or "you ticked". The other two say "you picked", which is true for them.
+- **Random draw (2026-10-11).** No buyer picks a cup, so no reading says "you picked", "you told me"
+  or "you ticked". One in three women gets an interpretation that isn't exactly her situation, so
+  each opening leads with what runs between them, then the situation, flat and with no disclaimer:
+  wide enough to land for a neighbouring situation, still distinct from the other two.
 - **No soft/dry claim.** The draft opened "your leaves were still soft". A day-4 buyer's leaves were
   dry by the letter's own logic, and the PDF is the same for everyone in a cup, so the readings don't
   say either.
 - **§10 rule 1 (≥3 buyer-specific callbacks, one verbatim) can't be met** with one PDF per cup and no
-  merge (D7). What the readings call back instead: her cup pick, the drafted message, the woman in
+  merge (D7). What the readings call back instead: the cup pattern, the drafted message, the woman in
   the letter, and the evening she bought it. If per-buyer callbacks are wanted, they belong in the
   delivery email, which carries her name.
 - **Kept `04-T4` (the delivery email, written in parallel) true.** T4 tells her the bird took three

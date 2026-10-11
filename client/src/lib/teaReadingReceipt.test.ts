@@ -4,8 +4,9 @@
 //
 // Copy sources: improve-v1/v1-one-time-BEs/copy/04/04-T1-thank-you-page.md (receipt)
 //               improve-v1/v1-one-time-BEs/copy/04/04-C4-still-cup-instructional.md (Still Cup)
-// ⛔ The page may print receipt lines, her cup or the Still Cup link ONLY for an order verified
-// as THIS offer's, and paid. Everything else gets the one safe fallback.
+// ⛔ The page may print receipt lines or the Still Cup link ONLY for an order verified as THIS
+// offer's, and paid. Everything else gets the one safe fallback. ⛔ It never names her cup — the
+// cup is drawn at random at checkout and the reading itself is the reveal (operator 2026-10-11).
 
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
@@ -61,7 +62,6 @@ const ORDER_04 = {
   status: 'paid',
   deliveryHours: 24,
   deliveredAt: null,
-  cup: 'divided-rim',
 };
 
 describe('orderLookupUrl / receiptSessionId', () => {
@@ -85,8 +85,16 @@ describe('lookupTeaReceipt — one attempt', () => {
   it('a paid 04 order → verified, with only what the page prints', async () => {
     expect(await lookupTeaReceipt('cs_1', respond(200, { order: ORDER_04 }))).toEqual({
       kind: 'verified',
-      order: { firstName: 'Sarah', bumpPurchased: false, cup: 'divided-rim', delivered: false },
+      order: { firstName: 'Sarah', bumpPurchased: false, delivered: false },
     });
+  });
+
+  it('⛔ a cup an older server still sends is dropped — the receipt never carries the draw', async () => {
+    for (const cup of ['divided-rim', 'sunken-leaf', 'turned-handle']) {
+      const s = await lookupTeaReceipt('cs_1', respond(200, { order: { ...ORDER_04, cup } }));
+      expect(s.kind).toBe('verified');
+      expect(s.kind === 'verified' && 'cup' in s.order, cup).toBe(false);
+    }
   });
 
   it('the Still Cup shows for a literal true only', async () => {
@@ -98,11 +106,7 @@ describe('lookupTeaReceipt — one attempt', () => {
     }
   });
 
-  it('an unreadable or invalid cup → null (the line is cut, never guessed); deliveredAt → delivered', async () => {
-    for (const cup of [null, undefined, 'teacup']) {
-      const s = await lookupTeaReceipt('cs_1', respond(200, { order: { ...ORDER_04, cup } }));
-      expect(s.kind === 'verified' && s.order.cup).toBeNull();
-    }
+  it('deliveredAt → delivered', async () => {
     const sent = await lookupTeaReceipt(
       'cs_1',
       respond(200, { order: { ...ORDER_04, deliveredAt: '2026-10-12T09:00:00.000Z' } }),
@@ -226,6 +230,12 @@ describe('receipt copy', () => {
     expect(body).not.toMatch(/tomorrow|by morning|monday|tuesday|wednesday|thursday|friday|saturday|sunday/i);
     for (const m of body.matchAll(/[^.\n]*\btonight\b[^.\n]*/gi)) expect(m[0]).not.toMatch(/reading arriv|deliver|send it/i);
     expect(body).not.toMatch(/\$\d/);
+  });
+
+  it('⛔ T1 names no cup: no "Your reading follows" line, no interpretation’s name', () => {
+    const body = T1.slice(0, T1.indexOf('## Build notes'));
+    expect(body).not.toMatch(/follows/i);
+    expect(body).not.toMatch(/Turned Handle|Divided Rim|Sunken Leaf/);
   });
 
   it('the Still Cup link on the receipt is the catalog’s path', () => {

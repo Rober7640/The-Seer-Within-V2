@@ -718,7 +718,7 @@ describe('04 · a tea-reading order', () => {
           bump: '1',
           bumpProduct: 'still_cup',
           cup: 'sunken-leaf',
-          cupChosen: '1',
+          cupDrawn: '1',
         },
       ),
     );

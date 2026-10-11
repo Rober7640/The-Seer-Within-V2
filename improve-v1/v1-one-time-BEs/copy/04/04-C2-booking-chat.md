@@ -57,35 +57,9 @@ button stays away. **If it failed:** *Today's price didn't load.* **Try again**
 
 ---
 
-## Beat 2 — the cup, as a question *(after she presses TURN MY CUP)*
+## Beat 2 — the bump, as its own turn *(after she presses TURN MY CUP)*
 
 > Good.
-
-> One question first, and it decides which reading you get.
-
-> Which sounds like the last three weeks?
-
-**Quick replies** *(her words; the one she taps appears as her message)*:
-
-| She taps | Her cup |
-|---|---|
-| He answers, but flat | The Turned Handle |
-| Hot and cold | The Divided Rim |
-| Silence — I start everything | The Sunken Leaf |
-| None of these — you choose | no pick → The Divided Rim, recorded as the default |
-
-**Evelyn answers, one line:**
-
-- *The Turned Handle, then. I'll read yours for that.*
-- *The Divided Rim, then. I'll read yours for that.*
-- *The Sunken Leaf, then. I'll read yours for that.*
-- *(none of these)* *Then I'll read it as the Divided Rim, dear.*
-
-⚠ Never a gate: every reply, including "you choose", moves her on.
-
----
-
-## Beat 3 — the bump, as its own turn
 
 > One more thing before I start.
 
@@ -113,7 +87,7 @@ new day.
 
 ## Resume copy
 
-Both land at the card with every box **unticked**. The cup question and the bump are not restored.
+Both land at the card with every box **unticked**. The bump is not restored.
 ⛔ Position is restored; consent never is.
 
 **A refresh** *(she never left — ⛔ don't greet her for coming back)*:
@@ -140,9 +114,11 @@ and her live question is whether she's been charged):
   is the leaves drying, not a penalty for waiting. ⛔ It never names another rung.
 - **"Your cup's on my table, and I haven't turned it yet"** is true at every rung. ⛔ Not "still
   soft": by day 3 the ladder emails tell her the leaves have lifted.
-- **The cup is a quick-reply turn, after she commits** — it is a contribution, not a qualifying
-  form, exactly as on the page. "None of these — you choose" sends no cup, so the server records the
-  default with `cupChosen: '0'`.
+- **No cup question — the reading is drawn** (operator, 2026-10-11). Which of the three
+  interpretations she gets is drawn at random on the server at checkout (Stripe metadata `cup`,
+  with `cupDrawn: '1'`), exactly as on the page. So the chat runs greeting → card → *"Good."* →
+  *"One more thing before I start."* → the bump. "One more thing" follows the card's three things,
+  so it still reads true with nothing in between.
 - **The bump, rewritten as Evelyn's question.** The page's bump is a checkbox label in her voice;
   here Evelyn asks. Kept from `04-C3`: the reading says *which week*, the Still Cup covers *the hour
   in between*, nine o'clock on a Tuesday. ⚠ *"You'll have it as soon as you're through"* — the

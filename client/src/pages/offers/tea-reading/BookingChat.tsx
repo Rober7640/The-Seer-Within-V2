@@ -8,8 +8,6 @@ import { track as trackPH } from '@/lib/posthog'
 import {
   CHAT_SCRIPT,
   CHAT_GATE,
-  CHAT_CUP,
-  CHAT_CUP_REPLIES,
   CHAT_BUMP,
   CHAT_RESUME,
   CHAT_THREAD_TITLE,
@@ -22,7 +20,6 @@ import {
   teaReadingCheckoutRequest,
   teaReadingTotalCents,
 } from '@/lib/teaReadingBooking'
-import type { TeaCup } from '@shared/backendOffers'
 
 // Offer 04 — The Turn, booking CHAT treatment (/offers/wiccan/tea-reading/chat).
 // The page treatment is ./BookingPage.tsx at the offer root.
@@ -32,23 +29,24 @@ import type { TeaCup } from '@shared/backendOffers'
 // shape (workflow A2, "copy 03's chat, not 02's") — with 04's differences:
 //   · THREE statements, the third carrying today's rung (a price LADDER: fetched from the
 //     server, never guessed — a blank bar until it loads);
-//   · the cup pick as a QUICK-REPLY turn after she commits — optional, "you choose" included;
-//   · the bump as its own turn after that, as Evelyn's question.
+//   · the bump as its own turn after she commits, as Evelyn's question.
+// ⭐ NO CUP QUESTION (operator 2026-10-11): the server draws which of the three readings she gets
+// at checkout, so the chat runs greeting → card → bump and never sends a cup.
 //
 // ⚠ ONE SENTENCE PER TURN, AT A HUMAN PACE. Each line waits for the typing indicator for as long
 // as it would take to type (lib/chatPace.ts — proportional to length, with variance). The card
 // gets its own beat. The chat opens on her already writing.
 //
-// ⛔ Posts NO price — the day the card printed (`quotedDay`), the bump answer and her cup. While
+// ⛔ Posts NO price — the day the card printed (`quotedDay`) and the bump answer. While
 // BACKEND_CHECKOUT_LIVE is false the bump answer LOGS and stops (preview). A 409 price_changed
 // puts the new price on the card and asks her to press her answer again.
 
 // Survives a refresh, a navigate-away and the Stripe round-trip. sessionStorage, not
 // localStorage: it should not outlive the tab. ⚠ Only the POSITION is stored — never the ticks,
-// never the cup, never the bump.
+// never the bump.
 const RESUME_KEY = 'tr_booking_position'
 
-type ChatStep = { kind: 'line'; text: string } | { kind: 'gate' } | { kind: 'cup' } | { kind: 'bump' }
+type ChatStep = { kind: 'line'; text: string } | { kind: 'gate' } | { kind: 'bump' }
 
 // The script, flattened so that ONE STEP IS ONE TURN.
 const STEPS: ChatStep[] = CHAT_SCRIPT.flatMap((beat) =>
@@ -85,7 +83,7 @@ export default function TeaReadingBookingChat() {
   const isResume = entry !== 'fresh'
 
   // A resumed session opens AT THE CARD with the resume lines already on screen — the greeting
-  // is not replayed, and neither the cup nor the bump is restored.
+  // is not replayed, and the bump is not restored.
   const [messages, setMessages] = useState<ChatMessage[]>(() =>
     isResume
       ? CHAT_RESUME[entry === 'cancelled' ? 'cancelled' : 'refreshed'].map((text, i) => ({
@@ -103,9 +101,6 @@ export default function TeaReadingBookingChat() {
     isResume ? CHAT_RESUME[entry === 'cancelled' ? 'cancelled' : 'refreshed'].length : 0,
   )
   const [gateConfirmed, setGateConfirmed] = useState(false)
-  const [showCupReplies, setShowCupReplies] = useState(false)
-  const [cupAnswer, setCupAnswer] = useState<string | null>(null) // Evelyn's line, still to type
-  const [cup, setCup] = useState<TeaCup | null>(null)
   const [showBump, setShowBump] = useState(false)
   const [isTyping, setIsTyping] = useState(false)
   const [checked, setChecked] = useState<boolean[]>(() => CHAT_GATE.statements.map(() => false))
@@ -172,28 +167,6 @@ export default function TeaReadingBookingChat() {
       return () => clearTimeout(timer)
     }
 
-    if (step.kind === 'cup') {
-      // She answers; then Evelyn types her one-line answer, then the run moves on.
-      if (cupAnswer !== null) {
-        const startTyping = setTimeout(() => setIsTyping(true), BETWEEN_LINES_MS)
-        const land = setTimeout(() => {
-          setIsTyping(false)
-          addMessage(cupAnswer, 'evelyn')
-          setCupAnswer(null)
-          setBeatIndex((i) => i + 1)
-        }, BETWEEN_LINES_MS + typingPace(cupAnswer))
-        return () => {
-          clearTimeout(startTyping)
-          clearTimeout(land)
-        }
-      }
-      if (!showCupReplies) {
-        const timer = setTimeout(() => setShowCupReplies(true), BETWEEN_LINES_MS)
-        return () => clearTimeout(timer)
-      }
-      return
-    }
-
     if (step.kind === 'bump') {
       if (showBump) return
       setIsTyping(true)
@@ -218,11 +191,11 @@ export default function TeaReadingBookingChat() {
       clearTimeout(startTyping)
       clearTimeout(land)
     }
-  }, [beatIndex, gateConfirmed, showGate, showBump, showCupReplies, cupAnswer])
+  }, [beatIndex, gateConfirmed, showGate, showBump])
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' })
-  }, [messages, showGate, showCupReplies, showBump, isTyping, movedTo, checkoutError])
+  }, [messages, showGate, showBump, isTyping, movedTo, checkoutError])
 
   useEffect(() => {
     document.title = CHAT_TAB_TITLE
@@ -248,15 +221,6 @@ export default function TeaReadingBookingChat() {
     setBeatIndex((i) => i + 1)
   }
 
-  // Her quick reply. null = "None of these — you choose" → no pick, the server's default.
-  const handleCupReply = (picked: TeaCup | null, text: string) => {
-    if (!showCupReplies || cupAnswer !== null) return
-    setShowCupReplies(false)
-    setCup(picked)
-    addMessage(text, 'her')
-    setCupAnswer(CHAT_CUP.answer(picked))
-  }
-
   // The bump answer IS the checkout on this treatment — the last turn before the money.
   const handleBumpChoice = async (taken: boolean) => {
     if (busy || !quote) return
@@ -271,10 +235,9 @@ export default function TeaReadingBookingChat() {
       bump: taken,
       treatment: 'chat',
       rung: quote.day,
-      cup: cup ?? 'none',
     })
     const result = await beginBackendCheckout(
-      teaReadingCheckoutRequest({ treatment: 'chat', firstName, letterCode, bump: taken, quote, cup }),
+      teaReadingCheckoutRequest({ treatment: 'chat', firstName, letterCode, bump: taken, quote }),
     )
     if (result.status === 'price_changed') {
       setPrice({ status: 'ready', quote: result.current })
@@ -444,23 +407,6 @@ export default function TeaReadingBookingChat() {
                   <span className="h-2 w-2 animate-bounce rounded-full bg-gray-400 [animation-delay:-0.15s]"></span>
                   <span className="h-2 w-2 animate-bounce rounded-full bg-gray-400"></span>
                 </div>
-              </div>
-            )}
-
-            {/* THE CUP — a quick-reply turn. Optional: "you choose" moves her on like the rest. */}
-            {showCupReplies && (
-              <div className="flex flex-wrap justify-end gap-2 animate-cta-appear" data-testid="cup-replies">
-                {CHAT_CUP_REPLIES.map((reply) => (
-                  <button
-                    key={reply.text}
-                    type="button"
-                    onClick={() => handleCupReply(reply.cup, reply.text)}
-                    className="rounded-full border border-purple-300 bg-white px-4 py-2 text-sm font-medium text-purple-800 shadow-sm transition-colors hover:bg-purple-50"
-                    data-testid={`cup-reply-${reply.cup ?? 'skip'}`}
-                  >
-                    {reply.text}
-                  </button>
-                ))}
               </div>
             )}
 

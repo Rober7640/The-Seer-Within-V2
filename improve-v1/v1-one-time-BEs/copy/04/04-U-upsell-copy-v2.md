@@ -15,7 +15,7 @@ checkout carried no name it becomes "dear". Lines marked `V1` are V1's words, un
 
 **The rules this copy is held to** (and the tests check):
 
-1. **No personal details.** The cup she picks is her data, and it moves the days — the bridge is
+1. **No personal details.** Her interpretation (drawn at random at checkout) moves the days, and the upsells run before she knows it — the bridge is
    days 16–18, 13–15 or 19–21 depending on the cup, and the quiet runs nine days or six. So no day
    number, no count of quiet days and no numbered week appears anywhere. The leaves every buyer has
    (bridge, lighthouse, butterfly) are named freely.

@@ -5,8 +5,8 @@
 //
 // What these pin down:
 //  1. DUE MEANS PAID, UNDELIVERED AND PAST THE DELAY. Not before, and never twice.
-//  2. HER CUP PICKS HER READING. A missing cup is the default; an UNREADABLE cup is not
-//     guessed — the order waits for the next tick.
+//  2. HER DRAWN CUP DECIDES HER READING (checkout draws it, metadata `cup`). A missing cup is
+//     the default; an UNREADABLE cup is not guessed — the order waits for the next tick.
 //  3. NO LINK, NO SEND. A cup whose link is unset or not https is skipped, loudly.
 //  4. ONE FAILURE NEVER STOPS THE OTHERS, and anything still undelivered at 23 hours is an
 //     error-level log line on every tick.

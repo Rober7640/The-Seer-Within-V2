@@ -30,10 +30,6 @@ Your reading arrives within **24 hours**, by email, under this title:
 
 That title is only ever used for this, so it's easy to find.
 
-<!-- Only when the order names her cup (it always does unless Stripe couldn't be read). -->
-Your reading follows **The Divided Rim** — *hot and cold*.
-*(or The Turned Handle — he answers, but flat · The Sunken Leaf — silence, I start everything)*
-
 If 24 hours pass and it isn't there, look in your promotions tab first. Then reply to your
 confirmation email, or write to **hi@theseerwithin.com**, and I'll sort it out.
 
@@ -68,7 +64,7 @@ hours while you wait.
 ## Fallback — the order can't be verified
 
 *(No `?s=`, not this offer's order, not paid, refunded, or the lookup failed for the whole window.
-⛔ No receipt lines, no cup, no Still Cup link.)*
+⛔ No receipt lines, no Still Cup link.)*
 
 ### Thank you, dear.
 
@@ -92,9 +88,10 @@ If it hasn't come, write to **hi@theseerwithin.com** and someone will find your 
   booking on day 4, when the ladder emails have told her the leaves have lifted.
 - **The title box matches `04-T3` and `04-T4` exactly.** With no first name it reads *"dear — your
   cup is turned"*, the same fallback `04-T3`'s box and the `04-T4` subject use.
-- **Her cup is named** so she knows which reading is coming. It comes from the order's Stripe
-  metadata (always a valid cup: her pick, or The Divided Rim). If Stripe can't be read the line is
-  cut, never guessed.
+- **Her cup is not named** (operator, 2026-10-11). There is no pick any more: which of the three
+  interpretations she gets is drawn at random on the server at checkout, and the reading itself is
+  the reveal. The old *"Your reading follows The …"* line is gone, and the order lookup no longer
+  returns a cup.
 - **No price on this page.** There is no receipt ledger; her card receipt has the amounts.
 - **The Still Cup is delivered here, immediately** (`04-C4`: sold as *tonight*). The P.S. renders
   only for a verified order with `bumpPurchased: true`; `04-T5` emails the same link ten minutes

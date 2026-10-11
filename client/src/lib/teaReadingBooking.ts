@@ -11,57 +11,24 @@
 // printed where the spec says {{TODAYS_RUNG}}. The page posts back the DAY it printed
 // (`quotedDay`); the server's clock decides the charge. ⛔ No other rung's price is ever printed.
 //
+// ⭐ NO CUP PICK (operator 2026-10-11). Which of the three readings she is sent is drawn at random
+// by the SERVER at checkout (server/lib/be04Draw.ts). Neither screen asks, and nothing here sends
+// a cup.
+//
 // ⚠ VOICE. Page: plain second person; the one tick and the bump label are in HER voice; Evelyn is
 // named in the third person and never speaks. Chat: Evelyn speaks only in the stream; inside the
 // card it is her voice, first person, talking to Evelyn.
 
 import type { BackendCheckoutRequest } from './backendCheckout';
 import type { LadderQuote } from './ladderPrice';
-import {
-  TEA_CUPS,
-  TEA_READING_BUMP_CENTS,
-  isTeaCup,
-  priceLabel,
-  type BookingTreatment,
-  type TeaCup,
-} from '@shared/backendOffers';
+import { TEA_READING_BUMP_CENTS, priceLabel, type BookingTreatment } from '@shared/backendOffers';
 
-export {
-  TEA_CUPS,
-  TEA_CUP_DEFAULT,
-  TEA_READING_BUMP_CENTS,
-  TEA_READING_STILL_CUP_PATH,
-  priceLabel,
-} from '@shared/backendOffers';
+export { TEA_READING_BUMP_CENTS, TEA_READING_STILL_CUP_PATH, priceLabel } from '@shared/backendOffers';
 
 export const TEA_READING_OFFER = 'tea-reading' as const;
 
 /** The token the specs use where today's price goes. Never rendered — the screens swap in the rung. */
 export const RUNG_TOKEN = '{{TODAYS_RUNG}}';
-
-// ─── The three cups (04-C1 v2 "Which cup is yours?") ────────────────────────────────────────
-// The cup decides which of three finished readings she is sent (04-DELIVERABLES D7). The slugs
-// are an API (shared/backendOffers.ts TEA_CUPS); the words here are what she reads.
-
-export interface TeaCupCopy {
-  /** "The Divided Rim" — what the page and the receipt call it. */
-  name: string;
-  /** "hot and cold" — the pattern, in her words. */
-  pattern: string;
-  /** The chat's quick reply for this cup (04-C2 beat 2). */
-  reply: string;
-}
-
-export const TEA_CUP_COPY: Record<TeaCup, TeaCupCopy> = {
-  'turned-handle': { name: 'The Turned Handle', pattern: 'he answers, but flat', reply: 'He answers, but flat' },
-  'divided-rim': { name: 'The Divided Rim', pattern: 'hot and cold', reply: 'Hot and cold' },
-  'sunken-leaf': { name: 'The Sunken Leaf', pattern: 'silence, I start everything', reply: 'Silence — I start everything' },
-};
-
-export const CUP_PICK = {
-  question: 'Which sounds like the last three weeks?',
-  note: 'Optional. It decides which reading you get. Skip it and Evelyn reads The Divided Rim.',
-} as const;
 
 // ─── The page (04-C1 v2) ───────────────────────────────────────────────────────────────────
 
@@ -161,11 +128,7 @@ export const WHY_THE_PRICE = {
 export const CHAT_THREAD_TITLE = 'The Turn — confirm your booking';
 export const CHAT_TAB_TITLE = `${CHAT_THREAD_TITLE} | The Seer Within`;
 
-export type ChatBeat =
-  | { kind: 'evelyn'; lines: string[] }
-  | { kind: 'gate' }
-  | { kind: 'cup' }
-  | { kind: 'bump' };
+export type ChatBeat = { kind: 'evelyn'; lines: string[] } | { kind: 'gate' } | { kind: 'bump' };
 
 // ⚠ ONE SENTENCE PER LINE — each line is its own turn. The letter re-argues nothing.
 export const CHAT_SCRIPT: ChatBeat[] = [
@@ -178,13 +141,8 @@ export const CHAT_SCRIPT: ChatBeat[] = [
     ],
   },
   { kind: 'gate' },
-  {
-    kind: 'evelyn',
-    lines: ['Good.', 'One question first, and it decides which reading you get.', CUP_PICK.question],
-  },
-  // Her reply and Evelyn's one-line answer are inserted by the screen (CHAT_CUP below).
-  { kind: 'cup' },
-  { kind: 'evelyn', lines: ['One more thing before I start.'] },
+  // No cup question (operator 2026-10-11: the server draws it). Straight on to the bump.
+  { kind: 'evelyn', lines: ['Good.', 'One more thing before I start.'] },
   { kind: 'bump' },
 ];
 
@@ -214,19 +172,6 @@ export function chatStatementParts(statement: string): { before: string; after: 
   return { before: statement.slice(0, at), after: statement.slice(at + RUNG_TOKEN.length) };
 }
 
-/** The cup turn (04-C2 beat 2). `null` is "None of these — you choose" → no pick, the default. */
-export const CHAT_CUP = {
-  skipReply: 'None of these — you choose',
-  answer: (cup: TeaCup | null): string =>
-    cup ? `${TEA_CUP_COPY[cup].name}, then. I'll read yours for that.` : "Then I'll read it as the Divided Rim, dear.",
-} as const;
-
-/** The quick replies, in order. */
-export const CHAT_CUP_REPLIES: { cup: TeaCup | null; text: string }[] = [
-  ...TEA_CUPS.map((cup) => ({ cup, text: TEA_CUP_COPY[cup].reply })),
-  { cup: null, text: CHAT_CUP.skipReply },
-];
-
 // The bump as Evelyn asks it — a question, not her checkbox label. ⚠ "as soon as you're
 // through": the Still Cup is on the receipt and in its own email at once, not sent with the reading.
 export const CHAT_BUMP = {
@@ -244,7 +189,7 @@ export function chatPriceChangedNotice(label: string): string {
   return `Today's price moved to ${label} while we were talking. Press your answer again to go on at ${label}.`;
 }
 
-// Resume copy. Both land at the card, every box unticked; the cup and the bump are not restored.
+// Resume copy. Both land at the card, every box unticked; the bump is not restored.
 // ⛔ Position is restored; consent never is.
 export const CHAT_RESUME = {
   // ⛔ A refresh is not a return — she never left. No greeting for coming back.
@@ -264,11 +209,6 @@ export function teaReadingTotalCents(rungCents: number, bump: boolean): number {
   return rungCents + (bump ? TEA_READING_BUMP_CENTS : 0);
 }
 
-/** A cup she actually picked, or null. Anything else — a typo, an old slug — is no pick. */
-export function pickedCup(value: unknown): TeaCup | null {
-  return isTeaCup(value) ? value : null;
-}
-
 /** The day a screen printed, if it printed one. */
 function quotedDayOf(quote: Pick<LadderQuote, 'day'> | null | undefined): number | null {
   const day = quote?.day;
@@ -279,9 +219,9 @@ function quotedDayOf(quote: Pick<LadderQuote, 'day'> | null | undefined): number
  * What the button sends to beginBackendCheckout.
  *
  * ⛔ Posts NO price. `quotedDay` is the day the screen PRINTED (so a price that moved on while
- * the page was open is caught as 409 price_changed, never charged silently); `cup` is her pick
- * or null — the server records The Divided Rim with `cupChosen: '0'` for null. Carries the
- * letter's ?fn= and ?c= so fulfilment knows her name and which letter she bought from.
+ * the page was open is caught as 409 price_changed, never charged silently). ⛔ Posts NO cup —
+ * the server draws one (operator 2026-10-11). Carries the letter's ?fn= and ?c= so fulfilment
+ * knows her name and which letter she bought from.
  */
 export function teaReadingCheckoutRequest(from: {
   treatment: BookingTreatment;
@@ -289,7 +229,6 @@ export function teaReadingCheckoutRequest(from: {
   letterCode: string | null;
   bump: boolean;
   quote: Pick<LadderQuote, 'day'> | null;
-  cup: unknown;
 }): BackendCheckoutRequest {
   return {
     offer: TEA_READING_OFFER,
@@ -298,6 +237,5 @@ export function teaReadingCheckoutRequest(from: {
     firstName: from.firstName,
     letterCode: from.letterCode,
     quotedDay: quotedDayOf(from.quote),
-    cup: pickedCup(from.cup),
   };
 }

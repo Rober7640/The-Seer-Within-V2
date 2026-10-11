@@ -49,9 +49,7 @@ export interface BackendCheckoutRequest {
   /** LADDER offers only (04): the day the screen PRINTED, never a price. The server's clock
    *  decides the charge; this only keeps a just-expired rung inside its grace window. */
   quotedDay?: number | null;
-  /** 04 only: her cup (a TEA_CUPS slug), or null for no pick — the server then records the
-   *  default with `cupChosen: '0'`. ⚠ Optional, and an invalid value never blocks a sale. */
-  cup?: string | null;
+  // ⛔ No `cup`: 04's reading is drawn at random by the server (operator 2026-10-11).
 }
 
 export type BackendCheckoutResult =
@@ -84,9 +82,8 @@ export async function beginBackendCheckout(
       amountCents: req.amountCents ?? null,
       firstName: req.firstName ?? null,
       letterCode: req.letterCode ?? null,
-      // 04's two fields, only when the screen sends them — every other offer's line is unchanged.
+      // 04's ladder field, only when the screen sends it — every other offer's line is unchanged.
       ...(req.quotedDay !== undefined ? { quotedDay: req.quotedDay } : {}),
-      ...(req.cup !== undefined ? { cup: req.cup } : {}),
     });
     return { status: 'preview' };
   }
@@ -103,7 +100,6 @@ export async function beginBackendCheckout(
         firstName: req.firstName ?? undefined,
         letterCode: req.letterCode ?? undefined,
         quotedDay: req.quotedDay ?? undefined,
-        cup: req.cup ?? undefined,
         // The booking-treatment A/B subject, so the purchase attributes back to the
         // arm she saw. Harmless when the test is off (no exposure → not counted).
         expSubject: getBackendVisitorId(),

@@ -2,11 +2,11 @@
 
 | | |
 |---|---|
-| **Cup** | The Divided Rim — *hot and cold*. ⚠ Also the **default**: a buyer who picked no cup gets this file, so the copy never says she ticked it |
-| **Words before the calendar** | **4,697**. Measured from the `# Your cup is turned` line to the calendar marker: HTML comments, image-slot tokens and table rule lines removed, markdown symbols (hash, asterisk, pipe, backtick, angle bracket, underscore) stripped, then whitespace-separated words containing a letter or digit counted. Table cell text counts |
+| **Cup** | The Divided Rim — *hot and cold*. ⚠ **Random draw** (operator, 2026-10-11): no buyer chooses a cup, so the copy never says or implies she chose a cup or told Evelyn anything |
+| **Words before the calendar** | **4,744**. Measured from the `# Your cup is turned` line to the calendar marker: HTML comments, image-slot tokens and table rule lines removed, markdown symbols (hash, asterisk, pipe, backtick, angle bracket, underscore) stripped, then whitespace-separated words containing a letter or digit counted. Table cell text counts |
 | **Bridge days** | **16–18**. The one message: **day 17, between six and eight in the evening** |
 | **Calendar** | `04-P3-divided-rim.md` renders at the end, after the close |
-| **The cup** | ⛔ The ONE real cup, the same photo for every buyer (operator, 2026-10-11). Every position and shape below is checked against [`docs/04/product/esl-cup-map.md`](../../../docs/04/product/esl-cup-map.md). Her pick changes the interpretation and the order of the days, never what is in the cup |
+| **The cup** | ⛔ The ONE real cup, the same photo for every buyer (operator, 2026-10-11). Every position and shape below is checked against [`docs/04/product/esl-cup-map.md`](../../../docs/04/product/esl-cup-map.md). The random draw changes the interpretation and the order of the days (Evelyn reads the order from the first light, see Build notes), never what is in the cup |
 | **Map** | [`docs/04/04-B2-product-map.md`](../../../docs/04/04-B2-product-map.md) |
 
 ---
@@ -24,9 +24,10 @@ the kitchen table, and again this morning by the window, because there was one l
 myself on at midnight. I'll tell you which one when we get to it. I've marked your seven in red and
 numbered them, so you can find each one on the photo as I go.
 
-Yours is a Divided Rim. If you ticked that box on the way in, you'll know why it fits. If you didn't
-tick anything, the cup's done it for you: the heart in it came down in two halves with bare china
-between them, just left of your handle, and a heart in two halves is hot and cold.
+Your cup reads as a Divided Rim. What runs between you and him comes warm or cold, with nothing in
+between, and you can't tell from one evening to the next which you'll get. The plainest place the cup
+shows it is just left of your handle: the heart came down in two halves with bare china between them,
+and a heart in two halves is hot and cold.
 
 A couple of things below will look as if they argue with my letter. The bird, mostly. Read to the end
 before you decide they do.
@@ -49,13 +50,15 @@ the near future and the near past. Below that, the further down a leaf runs, the
 reaches. Halfway down is a couple of months. The base is what's buried, there before you noticed
 anything. A leaf that trails down the wall has a history, and how far it trails tells me how long.
 
-**The man sets the order.** Seven leaves, three days each: twenty-one days. The leaves tell me what
-each stretch is about, whose it is, and how near or far back it sits. They don't tell me which stretch
-comes first, because leaves don't land in a queue. The order comes from the man you're dealing with. A
-woman whose man runs hot and cold has to stop a different thing first from a woman whose man has gone
-flat, so the same seven leaves reach her in a different order. If you ticked the Divided Rim, you told
-me which man you've got. If you didn't, the heart told me. Either way I've read your days in the
-hot-and-cold order, and I'll show you why it runs as it does.
+**The first light sets the order.** Seven leaves, three days each: twenty-one days. The leaves tell me
+what each stretch is about, whose it is, and how near or far back it sits. They don't tell me which
+stretch comes first, because leaves don't land in a queue. The cup does. When I first turn a cup, I tip
+it slowly toward the light, and the whole cup reads from the mark that catches the light first. That
+mark tells me which man you're dealing with. A woman whose man runs hot and cold has to stop a different
+thing first from a woman whose man has gone flat, so the same seven leaves reach her in a different
+order. In yours the light went straight to the heart, mark 2, and lit the bare china between its two
+halves before it touched anything else. That's a hot-and-cold cup, so I've read your days in that order,
+and I'll show you why it runs as it does.
 
 So each of your seven has a whose, a how long, and a place in the order. I'll show my working as I go.
 
@@ -487,15 +490,22 @@ calendar's on the next page.
   every position and shape claim is checked against `docs/04/product/esl-cup-map.md`. The superseded
   version (an invented channel through the bird's far wing, a boat's bow turned toward the handle, the
   lighthouse opposite the handle) is in `_superseded-2026-10-11-different-cups/`.
-- **Default cup.** A buyer who picks no cup on `04-C1` gets this file, so the copy says *"if you
-  ticked that box… if you didn't tick anything, the cup's done it for you"* and never "you told me".
-  For a no-pick buyer the heart (mark 2: two clumps, a bare gap) is what chose the order: *"If you
-  didn't, the heart told me."*
+- **Random draw, not a pick** (operator, 2026-10-11). Buyers no longer choose a cup on the booking
+  page; each gets one of the three readings by random draw. The copy never says or implies she chose,
+  ticked or told Evelyn anything. The pre-draw version is in `_superseded-2026-10-11-picked/`.
+- **The order comes from the first light** (shared by all three readings): the first time Evelyn
+  tips a turned cup toward the light, one mark catches it before the others; the whole cup reads
+  from that mark, and so does the order of the days. Here the light lands on **mark 2, the heart**,
+  and lights the bare china between its two halves = a hot-and-cold cup. An event at the turning,
+  not something in the photo, so it never contradicts the map.
+- **The opening** leads with what runs between them (warm or cold, nothing in between; she can't
+  tell which she'll get), then the heart. Wide enough to land for a woman whose
+  man has gone flat or quiet on his cold side, without a hedge.
 - **This cup's interpretation:** the heart's two halves = his two temperatures as they land on her; the
   bare gap = no pattern to find; low = settled. The swing isn't hers: the heart is where it lands, the
   bird across the cup is where it starts, and the tree (the letter's hot-and-cold leaf) by the handle
   is thinned, not broken.
-- **The order comes from her pick, not from going round the cup.** Heart (hers) and bird (still going)
+- **The order comes from the first light, not from going round the cup.** Heart (hers) and bird (still going)
   first as in every cup; the tree next because it's the nearest leaf to the handle, the first thing
   she can reach (the ordinary, at the root); the boat on his side only after the ordinary's answered;
   the lighthouse (near, high) before the bridge; the butterfly last.

@@ -2,8 +2,8 @@
 
 **Every buyer gets this one cup** (operator, 2026-10-11): the photo from the source letter,
 `images/esl/esl-cup-original.jpg` (2048×1536, from `Wiccan Watch - Tea Reading - ESL.docx`). Her
-cup pick (Turned Handle / Divided Rim / Sunken Leaf) changes how Evelyn **interprets** this cup —
-never what is in it. Anything a reading says about where a leaf sits must be true of this photo.
+interpretation (Turned Handle / Divided Rim / Sunken Leaf — drawn at random at checkout,
+operator 2026-10-11) changes how Evelyn **interprets** this cup — never what is in it. Anything a reading says about where a leaf sits must be true of this photo.
 
 Crops of each numbered mark: `images/esl/mark-<n>-<symbol>.jpg`. Full photo for the PDF:
 `images/esl/esl-cup.jpg`.

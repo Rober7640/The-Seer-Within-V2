@@ -1,9 +1,9 @@
-// 04 · The Turn — the price ladder (S9), the cup, and the catalog row.
+// 04 · The Turn — the price ladder (S9), the cup draw, and the catalog row.
 //
 //   npx vitest run server/lib/backendOffers.teaReading.test.ts
 //
 // (Lives under server/ because vitest only collects tests from server/ and tests/; the code
-// under test is shared/backendOffers.ts.)
+// under test is shared/backendOffers.ts, plus the draw in server/lib/be04Draw.ts.)
 //
 // What these pin down:
 //  1. THE DAY IS THE SERVER'S. Day = floor((now − start) / 24h) + 1, clamped to [1, 4].
@@ -13,7 +13,8 @@
 //     silently at a number she did not see.
 //  3. NOTHING THE BROWSER SENDS CAN LOWER THE PRICE. Not `amountCents`, not `tier`, not a
 //     `quotedDay` below today's (outside the window).
-//  4. THE CUP NEVER BLOCKS A SALE. Anything that is not one of three slugs is the default.
+//  4. THE CUP IS DRAWN, NOT PICKED (operator 2026-10-11): uniform over the three slugs, and
+//     reading it back off metadata never fails — anything that is not a slug is the fallback.
 
 import { describe, expect, it } from 'vitest';
 
@@ -34,9 +35,12 @@ import {
   priceLabel,
   resolveBackendCharge,
   resolveLadderCharge,
+  isTeaCup,
   resolveTeaCup,
   type BackendChargeRequest,
+  type TeaCup,
 } from '@shared/backendOffers';
+import { drawTeaCup } from './be04Draw';
 
 const TEA = BACKEND_OFFER_CATALOG['tea-reading'];
 if (TEA.pricing.model !== 'ladder') throw new Error('04 must be a ladder offer');
@@ -252,20 +256,55 @@ describe('the Still Cup bump', () => {
   });
 });
 
-describe('the cup', () => {
-  it('has three slugs and defaults to the divided rim', () => {
+describe('the cup — drawn at checkout, never picked (operator 2026-10-11)', () => {
+  it('has three slugs; the read-back fallback is the divided rim', () => {
     expect([...TEA_CUPS]).toEqual(['turned-handle', 'divided-rim', 'sunken-leaf']);
     expect(TEA_CUP_DEFAULT).toBe('divided-rim');
   });
 
-  it('keeps a real pick, and says it was chosen', () => {
-    for (const cup of TEA_CUPS) expect(resolveTeaCup(cup)).toEqual({ cup, chosen: true });
-    expect(resolveTeaCup(' Sunken-Leaf ')).toEqual({ cup: 'sunken-leaf', chosen: true });
+  it('asks the random source for exactly three outcomes, and maps each to its own cup', () => {
+    const asked: number[] = [];
+    const cups = [0, 1, 2].map((i) =>
+      drawTeaCup((max) => {
+        asked.push(max);
+        return i;
+      }),
+    );
+    expect(asked).toEqual([3, 3, 3]);
+    expect(cups).toEqual([...TEA_CUPS]);
   });
 
-  it('turns anything else into the default — an invalid cup never blocks a sale', () => {
+  it('is uniform over the three: a uniform source deals each cup equally often', () => {
+    let n = 0;
+    const counts: Record<TeaCup, number> = { 'turned-handle': 0, 'divided-rim': 0, 'sunken-leaf': 0 };
+    for (let k = 0; k < 300; k++) counts[drawTeaCup((max) => n++ % max)]++;
+    expect(counts).toEqual({ 'turned-handle': 100, 'divided-rim': 100, 'sunken-leaf': 100 });
+  });
+
+  it('the real draw (crypto.randomInt) only deals valid slugs, and deals all three', () => {
+    const counts: Record<TeaCup, number> = { 'turned-handle': 0, 'divided-rim': 0, 'sunken-leaf': 0 };
+    for (let k = 0; k < 600; k++) {
+      const cup = drawTeaCup();
+      expect(isTeaCup(cup), String(cup)).toBe(true);
+      counts[cup]++;
+    }
+    // Expected 200 each (sd ≈ 11.5). 120..280 is ±7 sd: a fair draw never fails this; a
+    // draw stuck on one cup, or on two, always does.
+    for (const cup of TEA_CUPS) expect(counts[cup], cup).toBeGreaterThanOrEqual(120);
+    for (const cup of TEA_CUPS) expect(counts[cup], cup).toBeLessThanOrEqual(280);
+  });
+
+  it('refuses an injected source that answers outside 0..2 — never a silent default', () => {
+    for (const bad of [3, -1, 1.5, Number.NaN]) {
+      expect(() => drawTeaCup(() => bad), String(bad)).toThrow(RangeError);
+    }
+  });
+
+  it('reads a cup back off metadata: a valid slug stays, anything else is the fallback', () => {
+    for (const cup of TEA_CUPS) expect(resolveTeaCup(cup)).toBe(cup);
+    expect(resolveTeaCup(' Sunken-Leaf ')).toBe('sunken-leaf');
     for (const bad of [undefined, null, '', 'blue', 'divided_rim', 42, {}, ['sunken-leaf']]) {
-      expect(resolveTeaCup(bad), JSON.stringify(bad)).toEqual({ cup: 'divided-rim', chosen: false });
+      expect(resolveTeaCup(bad), JSON.stringify(bad)).toBe('divided-rim');
     }
   });
 });

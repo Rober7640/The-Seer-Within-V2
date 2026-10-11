@@ -56,20 +56,7 @@ nothing. **Under it while the tick is missing:** *Tick the box above to continue
 These appear between the tick and the button, in this order. If they push the button off the
 screen, the page scrolls just far enough to bring it back.
 
-### 1. Which cup is yours? *(optional — never a gate)*
-
-**Which sounds like the last three weeks?**
-
-*Optional. It decides which reading you get. Skip it and Evelyn reads The Divided Rim.*
-
-- **The Turned Handle** — he answers, but flat
-- **The Divided Rim** — hot and cold
-- **The Sunken Leaf** — silence, I start everything
-
-Nothing is picked when it appears. Tapping a picked cup again un-picks it. The button works with or
-without a pick.
-
-### 2. The order bump *(from 04-C3)*
+### 1. The order bump *(from 04-C3)*
 
 **☐ Yes — add the Still Cup, for the evenings · +$12.77**
 
@@ -78,7 +65,7 @@ Start it tonight.
 
 ⛔ Never pre-checked. Unticking the main tick hides it, and it comes back unticked.
 
-### 3. The total
+### 2. The total
 
 **Total · `{{TODAYS_RUNG}}`**, plus the bump's $12.77 while the bump is ticked — computed from the
 catalog, never typed.
@@ -129,14 +116,16 @@ You pay once, at the price on this page when you press the button.
   `priceLabel()`. The page posts the day it showed (`quotedDay`); the server's clock decides the
   charge and honours a just-expired rung for 120 minutes. ⛔ No other rung's price appears anywhere
   on this page — not in a "was" line, not in the reason-why.
-- **The cup pick sits after the tick, measured.** On a 390×844 phone, unticked, the button's
-  bottom edge is at 795px — the first screen holds the headline, photo, price, three check lines,
-  tick and button with 49px to spare. The cup pick is 245px tall with its margin, so above the tick
-  it would put the button at 1,040px, off the screen. It appears with the bump once she has ticked.
-  The walk (`walk-04-smoke.mjs`) prints both numbers on every run.
-- **The cup is optional in code.** No pick → the page sends no cup and the server records The
-  Divided Rim with `cupChosen: '0'`, so fulfilment and analytics can tell a pick from the default.
-  ⛔ An invalid value never blocks a sale.
+- **No pick: the reading is drawn** (operator, 2026-10-11). Every buyer's reading reads the same
+  cup photo, and there are three interpretations of it, one PDF each. Which one she gets is drawn
+  at random **on the server, at checkout**, and written to Stripe metadata as `cup` (with
+  `cupDrawn: '1'`); the delivery job sends that cup's link. The page never asks and sends no cup —
+  a cup sent by an old cached page is ignored. The receipt doesn't name it either: the reading
+  itself is the reveal. This replaces the optional "which cup is yours?" question that sat after
+  the tick, which the operator found confusing.
+- **The first screen is measured.** On a 390×844 phone, unticked, the headline, photo, price, three
+  check lines, tick and button all fit. The walk (`walk-04-smoke.mjs`) prints the button's
+  position on every run.
 - **The bump is 04-C3 condensed.** C3's long pitch is a page of her voice; on a one-tick page it is
   a label and one line. Kept: *something to do with the evenings*, the hour she'd spend rereading
   his last message, four minutes, starts tonight. Cut: the Tuesday at nine and "nothing to buy".

@@ -20,11 +20,12 @@ import logger from './logger';
 // Anything still undelivered at 23 hours is logged at error level: the promise is about to break.
 //
 // ── Where her cup comes from ─────────────────────────────────────────────────────
-// The checkout writes it to the Stripe session's metadata (`cup`, always a valid slug). There
-// is no be_orders / be_order_intake column for it, and none is added: production may lack the
-// 07/08 columns, and a migration for one short string is not worth that risk. So the job reads
-// the session back. ⛔ If Stripe cannot be read, the order is SKIPPED and retried next tick —
-// never sent the default cup's reading, which is the wrong reading for anyone who picked another.
+// The checkout DRAWS it at random (be04Draw.ts — no pick, operator 2026-10-11) and writes it to
+// the Stripe session's metadata (`cup`, always a valid slug). There is no be_orders /
+// be_order_intake column for it, and none is added: production may lack the 07/08 columns, and
+// a migration for one short string is not worth that risk. So the job reads the session back.
+// ⛔ If Stripe cannot be read, the order is SKIPPED and retried next tick — never sent the
+// default cup's reading, which is the wrong reading for anyone who was drawn another.
 //
 // ── It refuses rather than guesses ───────────────────────────────────────────────
 // A cup whose link is unset, or not https, is skipped with an error log. An empty or wrong
@@ -155,9 +156,9 @@ async function deliverOne(order: Be04DueOrder, deps: Be04DeliveryDeps): Promise<
 
   let cup: TeaCup;
   try {
-    cup = resolveTeaCup(await deps.lookupCup(session)).cup;
+    cup = resolveTeaCup(await deps.lookupCup(session));
   } catch (err) {
-    // ⛔ Not the default cup. A guessed cup is the wrong reading for anyone who picked another.
+    // ⛔ Not the default cup. A guessed cup is the wrong reading for anyone drawn another.
     logger.error('be_04 delivery: cup lookup FAILED — not delivered, retried next tick', {
       session,
       err: errMessage(err),

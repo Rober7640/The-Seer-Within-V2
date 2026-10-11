@@ -10,7 +10,8 @@
 // ?offer=tea-reading, so another offer's session gets a 404 — and the page re-checks the offer
 // anyway. While Stripe's payment is still settling (402) or the lookup fails, it asks again every
 // 2s for up to 40s. Anything not verified as THIS paid order shows the fallback: no receipt lines,
-// no cup, no Still Cup link.
+// no Still Cup link. ⛔ No receipt names her cup — it is drawn at random at checkout, and the
+// reading itself is the reveal (operator 2026-10-11).
 //
 // ⛔ Timing (04-T1 build notes): only "within 24 hours". Never tonight, by morning, tomorrow or a
 // weekday about delivery — a woman who books at 8am would read her reading arrive before "tonight".
@@ -19,7 +20,7 @@ import { useEffect, useState } from 'react'
 import { useSearch } from 'wouter'
 import { CheckCircle, Loader2 } from 'lucide-react'
 import { CosmicBackground } from '@/components/CosmicBackground'
-import { CHECKOUT, TEA_CUP_COPY, TEA_READING_STILL_CUP_PATH } from '@/lib/teaReadingBooking'
+import { CHECKOUT, TEA_READING_STILL_CUP_PATH } from '@/lib/teaReadingBooking'
 import {
   EMAIL_SUBJECTS,
   loadTeaReceipt,
@@ -127,7 +128,6 @@ function FallbackReceipt({ reason }: { reason: string }) {
 
 function VerifiedReceipt({ order }: { order: VerifiedTeaOrder }) {
   const name = receiptFirstName(order.firstName)
-  const cup = order.cup ? TEA_CUP_COPY[order.cup] : null
 
   return (
     <Shell>
@@ -160,14 +160,6 @@ function VerifiedReceipt({ order }: { order: VerifiedTeaOrder }) {
           <TitleBox name={name} />
 
           <p>That title is only ever used for this, so it's easy to find.</p>
-
-          {/* Her cup — the reading she'll get. Cut, never guessed, when the server couldn't read it. */}
-          {cup && (
-            <p data-testid="text-receipt-cup">
-              Your reading follows <strong className="text-white">{cup.name}</strong> —{' '}
-              <em>{cup.pattern}</em>.
-            </p>
-          )}
 
           <p>
             If 24 hours pass and it isn't there, look in your promotions tab first. Then reply to your

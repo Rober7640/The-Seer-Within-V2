@@ -3,10 +3,10 @@
 | | |
 |---|---|
 | **Cup** | The Turned Handle — *he answers, but flat* |
-| **Words before the calendar** | **4,583**. Measured from the `# Your cup is turned` line to the calendar marker: HTML comments, image-slot tokens and table rule lines removed, markdown symbols (hash, asterisk, pipe, backtick, angle bracket, underscore) stripped, then whitespace-separated words containing a letter or digit counted. Table cell text counts |
+| **Words before the calendar** | **4,611**. Measured from the `# Your cup is turned` line to the calendar marker: HTML comments, image-slot tokens and table rule lines removed, markdown symbols (hash, asterisk, pipe, backtick, angle bracket, underscore) stripped, then whitespace-separated words containing a letter or digit counted. Table cell text counts |
 | **Bridge days** | **13–15**. The one message: **day 14, between six and eight in the evening**. Days 16–18 are quiet |
 | **Calendar** | `04-P3-turned-handle.md` renders at the end, after the close |
-| **The cup** | ⛔ The ONE real cup, the same photo for every buyer (operator, 2026-10-11). Every position and shape below is checked against [`docs/04/product/esl-cup-map.md`](../../../docs/04/product/esl-cup-map.md). Her pick changes the interpretation and the order of the days, never what is in the cup |
+| **The cup** | ⛔ The ONE real cup, the same photo for every buyer (operator, 2026-10-11). Every position and shape below is checked against [`docs/04/product/esl-cup-map.md`](../../../docs/04/product/esl-cup-map.md). The random draw changes the interpretation and the order of the days (Evelyn reads the order from the first light, see Build notes), never what is in the cup |
 | **Map** | [`docs/04/04-B2-product-map.md`](../../../docs/04/04-B2-product-map.md) |
 
 ---
@@ -24,8 +24,8 @@ it isn't a neat cup. The leaves came down in loose clumps, the way they always d
 means looking hard at where each one sits. I've marked your seven in red and numbered them, so you
 can find each one on the photo as I go.
 
-You picked the Turned Handle: he answers, but flat. The cup agrees with you, and the plainest place it
-says so is right beside your handle. I'll show you.
+Your cup reads as a Turned Handle. What runs between you and him is still open, and it's gone thin: he
+answers, and there's nothing in it. I'll show you where the cup says so, right beside your handle.
 
 Some of what follows will sound as if it's arguing with my letter, the bird most of all. Read it
 through before you decide it is.
@@ -47,12 +47,13 @@ just gone or just coming. The further down the wall a leaf runs, the further bac
 down is two months. The base is what's buried, older than anything you've noticed. A leaf with a tail
 trailing down the wall has a history, and the tail tells me how long it is.
 
-**What you told me sets the order.** Seven leaves at three days a leaf: twenty-one days. The leaves tell
-me what each stretch is about, and how close to you and how far back each thing sits. They don't tell
-me which stretch comes first, because leaves don't land in a queue. That part comes from you. When you
-booked, you told me which of my three sounded like your last three weeks. A woman whose man has gone
-flat has to stop doing a different thing first from a woman whose man runs hot and cold, so the same
-seven leaves come to her in a different order. I'll show you why yours runs the way it does.
+**The first light sets the order.** Seven leaves at three days a leaf: twenty-one days. The leaves tell
+me what each stretch is about, and how close to you and how far back each thing sits. They don't tell me
+which stretch comes first, because leaves don't land in a queue. The cup does. When I first turn a cup,
+I tip it slowly toward the light, and the whole cup reads from the mark that catches the light first. A
+woman whose man has gone flat has to stop doing a different thing first from a woman whose man runs hot
+and cold, so the same seven leaves come to her in a different order. In yours the light caught the bare
+stalks of the tree, mark 3, just above your handle. That's a turned handle.
 
 Those three are the whole method, and I'll show you the working at every leaf.
 
@@ -400,8 +401,8 @@ There's no instruction toward him in these three days. Whatever he's said since 
 way you've been answering everything.
 
 The change is yours, and it's already happened. You stopped reading his tone for evidence. You
-answered flat with warm and left first, without once testing him. You asked one real question. You said
-your thing once, on its own, at the right hour. The woman who did all that is the somebody you hadn't
+answered flat with warm and left first, without once testing him. You asked one real question. You sent
+the one message, on its own, at the right hour. The woman who did all that is the somebody you hadn't
 met.
 
 Whatever he does with any of it, that part's yours, and it doesn't reverse.
@@ -482,8 +483,15 @@ is on the next page.
   flat). His two leaves, the bird and the boat, sit on the far side ("like a man you've never met").
   The bridge sits between the heart and the boat and above both, "a leaf of its own", so the message
   goes **on its own**.
-- **The order comes from her pick, not from going round the cup.** The leaves give what each stretch
-  is and how near/far it sits; the Turned Handle decides the order. Heart (hers) and bird (still going)
+- **Random draw, not a pick** (operator, 2026-10-11). Buyers no longer choose a cup; each gets one of
+  the three readings by random draw, so the copy never says or implies she chose or told Evelyn
+  anything. The opening states it flat and leads with what runs between them: *"Your cup reads as a
+  Turned Handle. What runs between you and him is still open, and it's gone thin: he answers, and
+  there's nothing in it."* The pre-draw version is in `_superseded-2026-10-11-picked/`.
+- **The order comes from the first light, not from going round the cup** (shared by all three
+  readings). The leaves give what each stretch is and how near/far it sits; the first mark to catch
+  the light when Evelyn tips the turned cup is the one the cup reads from. Here it is **mark 3, the
+  tree** by the handle, its bare stalks = a turned handle, and the Turned Handle decides the order. Heart (hers) and bird (still going)
   first as in every cup; the boat early because contact exists; the lighthouse (near, high) before the
   bridge; the bridge early; the tree after it because the bridge waters the root.
 - **The bird** reads two months in every cup: head under the rim, the last piece in line with the tail
@@ -495,5 +503,7 @@ is on the next page.
   (root). Not recoverable: the two months of flat messages. "I won't promise you he's coming back"
   is quoted by `04-U-upsell-copy-v2`; keep it verbatim.
 - **The limit:** the loose specks on the base (in the map), not an invented fleck.
+- **Butterfly recap:** "You said your thing once" became "You sent the one message" (2026-10-11) so
+  the reading carries no "you said" at all.
 - **Prediction stated flat:** his answer to the day 7–9 question is the longest thing he's sent in
   weeks; he asks "are you all right?" around day five or six.

@@ -3,10 +3,10 @@
 | | |
 |---|---|
 | **Cup** | The Sunken Leaf — *silence; she starts everything* |
-| **Words before the calendar** | **4,452**. Measured from the `# Your cup is turned` line to the calendar marker: HTML comments, image-slot tokens and table rule lines removed, markdown symbols (hash, asterisk, pipe, backtick, angle bracket, underscore) stripped, then whitespace-separated words containing a letter or digit counted. Table cell text counts |
+| **Words before the calendar** | **4,500**. Measured from the `# Your cup is turned` line to the calendar marker: HTML comments, image-slot tokens and table rule lines removed, markdown symbols (hash, asterisk, pipe, backtick, angle bracket, underscore) stripped, then whitespace-separated words containing a letter or digit counted. Table cell text counts |
 | **Bridge days** | **19–21**. The one message: **day 20, between six and eight in the evening**, one sentence |
 | **Calendar** | `04-P3-sunken-leaf.md` renders at the end, after the close |
-| **The cup** | ⛔ The ONE real cup, the same photo for every buyer (operator, 2026-10-11). Every position and shape below is checked against [`docs/04/product/esl-cup-map.md`](../../../docs/04/product/esl-cup-map.md). Her pick changes the interpretation and the order of the days, never what is in the cup |
+| **The cup** | ⛔ The ONE real cup, the same photo for every buyer (operator, 2026-10-11). Every position and shape below is checked against [`docs/04/product/esl-cup-map.md`](../../../docs/04/product/esl-cup-map.md). The random draw changes the interpretation and the order of the days (Evelyn reads the order from the first light, see Build notes), never what is in the cup |
 | **Map** | [`docs/04/04-B2-product-map.md`](../../../docs/04/04-B2-product-map.md) |
 
 ---
@@ -24,9 +24,9 @@ Your cup's turned. Of the three cups, yours is the hardest, and you deserve it r
 how I've read it. I've marked your seven in red and numbered them, so you can find each one on the
 photo as I go.
 
-You picked the Sunken Leaf: it's gone quiet and stayed quiet, and you're the one who starts everything
-or nothing starts. The cup agrees with you. One of your seven has sunk low, down near the base, and
-I'll show you which.
+Your cup reads as a Sunken Leaf. What runs between you and him has gone quiet from his end. Lately,
+anything that passes between you starts with you. One of your seven has sunk low, down near the base,
+and I'll show you which.
 
 Some of what's below will look as if it argues with my letter. Read to the end before you decide it
 does.
@@ -48,12 +48,14 @@ the thing it's telling me about. Halfway down is two months. The base is what's 
 there before you noticed. In your cup the bottom of the wall matters more than in most, because one of
 your seven has sunk down there.
 
-**What you told me sets the order.** Seven leaves at three days a leaf: twenty-one days. The leaves tell
+**The first light sets the order.** Seven leaves at three days a leaf: twenty-one days. The leaves tell
 me what each stretch is about, whose it is, and how near or far back it sits. They don't tell me which
-stretch comes first, because leaves don't land in a queue. That came from you. When you booked, you
-picked the one of my three that sounded like your last three weeks. A woman who's been met with silence
-has to stop a different thing first from a woman whose man runs hot and cold, so the same seven leaves
-come to her in a different order. Yours is the slowest of the three, and I'll show you why.
+stretch comes first, because leaves don't land in a queue. The cup does. When I first turn a cup, I tip
+it slowly toward the light, and the whole cup reads from the mark that catches the light first. A woman
+who's been met with silence has to stop a different thing first from a woman whose man runs hot and
+cold, so the same seven leaves come to her in a different order. In yours the light went right down the
+wall into the dark band near the base, and the first mark it caught was mark 2, half lost in the leaf
+round it. A cup that reads from its lowest leaf is the slowest of the three, and I'll show you why.
 
 I'll show my working at every leaf, so none of this rests on you taking my word.
 
@@ -466,7 +468,15 @@ all you do is follow it. Your calendar's on the next page.
   anything of hers, and still on the wall, not on the base. Her side of the
   cup is busy (heart, tree, lighthouse); his side holds the bird and the boat, the boat sitting still
   on the far wall: she's been rowing a boat that sits on his side.
-- **The order comes from her pick, not from going round the cup.** Heart (hers, sunk) and bird (still
+- **Random draw, not a pick** (operator, 2026-10-11). Buyers no longer choose a cup; each gets one of
+  the three readings by random draw, so the copy never says or implies she chose or told Evelyn
+  anything. The opening leads with what runs between them (quiet from his end, the starting all hers).
+  The pre-draw version is in `_superseded-2026-10-11-picked/`.
+- **The first light** (shared by all three readings): the first mark to catch the light when Evelyn
+  tips the turned cup is the one the cup reads from. Here the light goes right down the wall into the
+  dark band and catches **mark 2** first, half lost in the leaf round it: a cup that reads from its lowest leaf
+  = the slowest order.
+- **The order comes from the first light, not from going round the cup.** Heart (hers, sunk) and bird (still
   going) first as in every cup; the butterfly third, inside the silence (the change in her comes before
   she starts anything; it is the highest leaf, so already close); the tree (nearest the handle, the
   first thing she can reach); the lighthouse twice; the boat on his side = his move; the bridge last

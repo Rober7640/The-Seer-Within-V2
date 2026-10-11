@@ -8,38 +8,28 @@
 
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import {
-  BACKEND_OFFER_CATALOG,
-  TEA_CUP_DEFAULT,
-  TEA_READING_BUMP_CENTS,
-  TEA_READING_RUNG_CENTS,
-  resolveTeaCup,
-} from '@shared/backendOffers';
+import { BACKEND_OFFER_CATALOG, TEA_READING_BUMP_CENTS, TEA_READING_RUNG_CENTS } from '@shared/backendOffers';
+import * as booking from './teaReadingBooking';
 import {
   BUMP,
   CHAT_BUMP,
-  CHAT_CUP,
-  CHAT_CUP_REPLIES,
   CHAT_GATE,
   CHAT_RESUME,
   CHAT_SCRIPT,
   CHAT_THREAD_TITLE,
   CHECK_LINES,
   CHECKOUT,
-  CUP_PICK,
   PAGE_HEADER,
   PAGE_IMAGE,
   PRICE_NOTES,
   PRICE_STATES,
   READY_TICK,
   RUNG_TOKEN,
-  TEA_CUP_COPY,
   WHAT_YOU_GET,
   WHY_THE_PRICE,
   chatPriceChangedNotice,
   chatStatementParts,
   pagePriceChangedNotice,
-  pickedCup,
   teaReadingCheckoutRequest,
   teaReadingTotalCents,
 } from './teaReadingBooking';
@@ -62,14 +52,20 @@ const C2 = flat(doc('04-C2-booking-chat.md'));
 const C1_RAW = doc('04-C1-booking-page-v2.md');
 
 const PAGE_COPY = JSON.stringify({
-  PAGE_HEADER, PAGE_IMAGE, PRICE_NOTES, CHECK_LINES, READY_TICK, CUP_PICK, TEA_CUP_COPY, BUMP, CHECKOUT,
+  PAGE_HEADER, PAGE_IMAGE, PRICE_NOTES, CHECK_LINES, READY_TICK, BUMP, CHECKOUT,
   PRICE_STATES, WHAT_YOU_GET, WHY_THE_PRICE, notice: pagePriceChangedNotice('{{NEW_RUNG}}'),
 });
 const CHAT_COPY = JSON.stringify({
-  CHAT_THREAD_TITLE, CHAT_SCRIPT, CHAT_GATE, CHAT_BUMP, CHAT_RESUME, CHAT_CUP_REPLIES,
-  answers: [null, ...Object.keys(TEA_CUP_COPY)].map((c) => CHAT_CUP.answer(c as never)),
+  CHAT_THREAD_TITLE, CHAT_SCRIPT, CHAT_GATE, CHAT_BUMP, CHAT_RESUME,
   notice: chatPriceChangedNotice('{{NEW_RUNG}}'),
 });
+
+// The three interpretations' names and the old pick's words. Operator 2026-10-11: the cup is
+// DRAWN by the server, so none of these may appear on a booking screen or in its spec's copy.
+const CUP_NAMES = /Turned Handle|Divided Rim|Sunken Leaf/;
+const PICK_WORDS = /Which sounds like|which cup is yours|you choose|decides which reading/i;
+/** A spec's copy — everything above its build notes (which may explain the change). */
+const copyOf = (md: string) => md.slice(0, md.indexOf('## Build notes'));
 
 describe('04 page copy is 04-C1 v2’s, word for word', () => {
   it('masthead, image, price notes, check lines and the one tick', () => {
@@ -93,10 +89,13 @@ describe('04 page copy is 04-C1 v2’s, word for word', () => {
     expect(CHECKOUT.supportEmail).toBe('hi@theseerwithin.com');
   });
 
-  it('the cup pick: question, note and the three cups', () => {
-    expect(C1).toContain(`**${CUP_PICK.question}**`);
-    expect(C1).toContain(`*${CUP_PICK.note}*`);
-    for (const cup of Object.values(TEA_CUP_COPY)) expect(C1).toContain(`**${cup.name}** — ${cup.pattern}`);
+  it('⛔ no cup pick: the spec and the page copy name no cup and ask no question about one', () => {
+    expect(copyOf(C1_RAW)).not.toMatch(CUP_NAMES);
+    expect(copyOf(C1_RAW)).not.toMatch(PICK_WORDS);
+    expect(PAGE_COPY).not.toMatch(CUP_NAMES);
+    expect(PAGE_COPY).not.toMatch(PICK_WORDS);
+    // The build notes say why: drawn at random on the server.
+    expect(C1).toMatch(/drawn at random \*\*on the server, at checkout\*\*/);
   });
 
   it('the bump is 04-C3 condensed: label, price and one line', () => {
@@ -138,8 +137,10 @@ describe('04 chat copy is 04-C2’s, word for word', () => {
     for (const line of [...CHAT_RESUME.refreshed, ...CHAT_RESUME.cancelled]) expect(C2).toContain(`> ${line}`);
   });
 
-  it('the script is greeting → card → cup → bump', () => {
-    expect(CHAT_SCRIPT.map((b) => b.kind)).toEqual(['evelyn', 'gate', 'evelyn', 'cup', 'evelyn', 'bump']);
+  it('the script is greeting → card → "Good." → bump — no cup turn', () => {
+    expect(CHAT_SCRIPT.map((b) => b.kind)).toEqual(['evelyn', 'gate', 'evelyn', 'bump']);
+    const afterCard = CHAT_SCRIPT[2];
+    expect(afterCard.kind === 'evelyn' && afterCard.lines).toEqual(['Good.', 'One more thing before I start.']);
   });
 
   it('the card: heading, deck, three statements in her voice, price third', () => {
@@ -161,14 +162,19 @@ describe('04 chat copy is 04-C2’s, word for word', () => {
     expect(chatStatementParts(CHAT_GATE.statements[0])).toBeNull();
   });
 
-  it('the cup turn: four replies, "you choose" is no pick, and Evelyn’s answers', () => {
-    expect(CHAT_CUP_REPLIES.map((r) => r.cup)).toEqual(['turned-handle', 'divided-rim', 'sunken-leaf', null]);
-    for (const r of CHAT_CUP_REPLIES) {
-      const name = r.cup ? TEA_CUP_COPY[r.cup].name : 'no pick';
-      expect(C2).toContain(`| ${r.text} | ${name}`);
-      expect(C2).toContain(`*${CHAT_CUP.answer(r.cup)}*`);
+  it('⛔ no cup turn: the spec and the chat copy name no cup and ask no question about one', () => {
+    const C2_RAW = doc('04-C2-booking-chat.md');
+    expect(copyOf(C2_RAW)).not.toMatch(CUP_NAMES);
+    expect(copyOf(C2_RAW)).not.toMatch(PICK_WORDS);
+    expect(CHAT_COPY).not.toMatch(CUP_NAMES);
+    expect(CHAT_COPY).not.toMatch(PICK_WORDS);
+    expect(C2).toMatch(/drawn at random on the server at checkout/);
+  });
+
+  it('the pick’s helpers are gone from the module', () => {
+    for (const name of ['CUP_PICK', 'TEA_CUP_COPY', 'CHAT_CUP', 'CHAT_CUP_REPLIES', 'pickedCup', 'TEA_CUPS', 'TEA_CUP_DEFAULT']) {
+      expect(name in booking, name).toBe(false);
     }
-    expect(CHAT_CUP.answer(null)).toContain('Divided Rim');
   });
 
   it('the bump as Evelyn’s question, with both answers and the 409 line', () => {
@@ -209,7 +215,7 @@ describe('04 copy rules', () => {
   });
 
   it('page voice: Evelyn is named in the third person, never speaks', () => {
-    const page = JSON.stringify({ PAGE_HEADER, CHECK_LINES, WHAT_YOU_GET, WHY_THE_PRICE, CUP_PICK, BUMP });
+    const page = JSON.stringify({ PAGE_HEADER, CHECK_LINES, WHAT_YOU_GET, WHY_THE_PRICE, BUMP });
     expect(page).not.toMatch(/\b(I'll|I've|I am|I will) (read|turn|send)/);
     expect(page).toContain('Evelyn');
   });
@@ -239,10 +245,9 @@ describe('teaReadingCheckoutRequest', () => {
     letterCode: '61',
     bump: false,
     quote: { day: 2 },
-    cup: 'sunken-leaf',
   };
 
-  it('is the tea-reading offer, carrying name, letter code, quotedDay and cup — and NO price', () => {
+  it('is the tea-reading offer, carrying name, letter code and quotedDay — and NO price, NO cup', () => {
     const req = teaReadingCheckoutRequest(base);
     expect(req).toEqual({
       offer: 'tea-reading',
@@ -251,10 +256,10 @@ describe('teaReadingCheckoutRequest', () => {
       firstName: 'Sarah',
       letterCode: '61',
       quotedDay: 2,
-      cup: 'sunken-leaf',
     });
     expect('amountCents' in req).toBe(false);
     expect('tier' in req).toBe(false);
+    expect('cup' in req).toBe(false);
   });
 
   it('carries the chat treatment when the chat sends it (so a cancel returns to the chat)', () => {
@@ -277,17 +282,10 @@ describe('teaReadingCheckoutRequest', () => {
     expect(teaReadingCheckoutRequest({ ...base, quote: { day: 1.5 } }).quotedDay).toBeNull();
   });
 
-  it('cup: a real pick passes; no pick or anything invalid is null — the server records the default', () => {
-    for (const cup of ['turned-handle', 'divided-rim', 'sunken-leaf']) {
-      expect(teaReadingCheckoutRequest({ ...base, cup }).cup).toBe(cup);
-    }
-    for (const cup of [null, undefined, '', 'Divided Rim', 'teacup', 3]) {
-      expect(teaReadingCheckoutRequest({ ...base, cup }).cup).toBeNull();
-    }
-    // …which the server turns into The Divided Rim, marked as not chosen.
-    expect(resolveTeaCup(null)).toEqual({ cup: TEA_CUP_DEFAULT, chosen: false });
-    expect(TEA_CUP_DEFAULT).toBe('divided-rim');
-    expect(pickedCup('sunken-leaf')).toBe('sunken-leaf');
+  it('⛔ never sends a cup, even if a caller hands it one — the server draws it', () => {
+    const req = teaReadingCheckoutRequest({ ...base, cup: 'sunken-leaf' } as never);
+    expect('cup' in req).toBe(false);
+    expect(JSON.stringify(req)).not.toMatch(/sunken-leaf/);
   });
 
   it('passes a missing name or letter code through as null', () => {

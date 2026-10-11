@@ -6,7 +6,7 @@ import { fileURLToPath } from 'node:url';
 // Smoke walk for offer 04 (The Turn — a tea-leaf reading on a price ladder). Workflow step A8.
 //
 //   BASE=http://localhost:5094 LIVE_BASE=http://localhost:5095 \
-//     node improve-v1/v1-one-time-BEs/scripts/walk-04-smoke.mjs
+//     node improve-v1/v1-one-time-BEs/scripts/walk-04-smoke.mjs [evidence-folder]
 //
 // Two Vite dev servers, CLIENT ONLY (no Express, no .env, no database):
 //   BASE       `npx vite dev --port 5094` — the shipped default: checkout is DARK, so the
@@ -25,10 +25,12 @@ import { fileURLToPath } from 'node:url';
 //     - headline, image, price line, the ONE tick and the button sit inside the first 844px
 //       (phone), unticked — and prints each one's measured y
 //     - the button is aria-disabled until the tick, and a tap before then charges nothing
-//     - the bump and the cup pick are NOT on the page before the tick; the bump is never pre-checked
+//     - the bump is NOT on the page before the tick, and is never pre-checked
+//     - ⛔ NO CUP PICK, ticked or not (operator 2026-10-11: the server draws the cup) — no picker,
+//       no cup names, no "which sounds like" question
 //     - only today's rung, $12.77 and their total ever appear as prices
 //     - ?day=1..4 shows $35/$47/$57/$67, and the click carries quotedDay = the day shown
-//     - the click logs [preview] with offer/treatment/bump/quotedDay/cup/fn/c and NO price
+//     - the click logs [preview] with offer/treatment/bump/quotedDay/fn/c and NO price, NO cup
 //     - a price that fails to load shows a retry line and keeps the button disabled; retry works
 //     - ?cancelled=1 says nothing has been taken
 //     - LIVE_BASE: 409 price_changed shows the new price + "press again", and the re-press sends
@@ -36,21 +38,27 @@ import { fileURLToPath } from 'node:url';
 //   booking chat  /offers/wiccan/tea-reading/chat
 //     - opens on the typing indicator; one line at a time; the long line + card ≥ 1.2s
 //     - three statements, price third; button absent until all ticked
-//     - cup quick replies → her bubble → Evelyn's answer → the bump turn, all BELOW the card
-//     - both bump answers log [preview] with treatment chat; "you choose" sends no cup
+//     - after the card: "Good." → "One more thing before I start." → the bump turn, BELOW the card;
+//       ⛔ no cup question, no quick replies, no bubble of hers
+//     - both bump answers log [preview] with treatment chat, and NO cup
 //     - a refresh resumes without greeting her back; ?cancelled=1 says nothing has been taken
 //   receipt  /offers/wiccan/tea-reading/success?s=…   (order lookup STUBBED)
 //     - bump / no bump × name / no name; the poll rides out two 402s; no ?s= → fallback
-//     - no price anywhere on the receipt
+//     - no price anywhere on the receipt; ⛔ no "Your reading follows …" line and no cup's name,
+//       even when the (stubbed) order still carries a `cup`
 //   Still Cup  /offers/wiccan/tea-reading/still-cup — renders, noindex, readable on a phone
 //   V1 funnel  /  — still renders (rule 5: it is live)
 //
-// Screenshots → improve-v1/evidence/04-tea-reading-2026-10-11/
+// Screenshots → the folder given as the first argument (relative to the repo root), else
+// improve-v1/evidence/04-tea-reading-2026-10-11/
 
 const BASE = (process.env.BASE || 'http://localhost:5094').replace(/\/$/, '');
 const LIVE_BASE = (process.env.LIVE_BASE || 'http://localhost:5095').replace(/\/$/, '');
 const HERE = path.dirname(fileURLToPath(import.meta.url));
-const OUT = path.resolve(HERE, '../../evidence/04-tea-reading-2026-10-11');
+const REPO = path.resolve(HERE, '../../..');
+const OUT = process.argv[2]
+  ? path.resolve(REPO, process.argv[2])
+  : path.resolve(HERE, '../../evidence/04-tea-reading-2026-10-11');
 const ROOT = '/offers/wiccan/tea-reading';
 
 for (const b of [BASE, LIVE_BASE]) {
@@ -75,6 +83,15 @@ const info = (msg) => console.log(`[info] ${msg}`);
 const flat = (s) => (s || '').replace(/\s+/g, ' ').trim();
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const dollars = (text) => [...new Set(text.match(/\$\d+(?:,\d{3})*(?:\.\d{2})?/g) ?? [])];
+// The three interpretations' names and the old pick's words — none may appear on any 04 screen.
+const CUP_NAMES = /Turned Handle|Divided Rim|Sunken Leaf/;
+const PICK_WORDS = /Which sounds like|which cup is yours|you choose|decides which reading/i;
+/** No picker of any kind on the page: neither the page's fieldset nor the chat's quick replies. */
+async function noCupPick(page) {
+  const pickers = await page.locator('[data-testid="cup-pick"], [data-testid^="cup-reply"], [data-testid^="cup-turned"], [data-testid^="cup-divided"], [data-testid^="cup-sunken"], [data-testid="cup-replies"]').count();
+  const text = await page.locator('body').innerText();
+  return { ok: pickers === 0 && !CUP_NAMES.test(text) && !PICK_WORDS.test(text), pickers, names: text.match(CUP_NAMES)?.[0] ?? null, words: text.match(PICK_WORDS)?.[0] ?? null };
+}
 
 // ── the stubbed API ───────────────────────────────────────────────────────────────────────
 const ORDER = {
@@ -229,7 +246,8 @@ try {
       check(`${vp.label}: button is aria-disabled before the tick`, (await button.getAttribute('aria-disabled')) === 'true');
       check(`${vp.label}: the locked hint shows`, await page.getByTestId('text-locked-hint').isVisible());
       check(`${vp.label}: no bump on the page before the tick`, (await page.getByTestId('checkbox-bump').count()) === 0);
-      check(`${vp.label}: no cup pick on the page before the tick`, (await page.getByTestId('cup-pick').count()) === 0);
+      let pick = await noCupPick(page);
+      check(`${vp.label}: no cup pick on the page (unticked) — no picker, no cup names, no question`, pick.ok, JSON.stringify(pick));
       const unticked = dollars(await page.locator('body').innerText());
       check(`${vp.label}: unticked, the only price on the page is today's rung`, unticked.length === 1 && unticked[0] === '$35', unticked.join(' '));
       let hs = await noHorizontalScroll(page);
@@ -250,16 +268,13 @@ try {
       const bumpBox = bump.locator('input');
       check(`${vp.label}: the bump appears after the tick`, (await bump.count()) === 1);
       check(`${vp.label}: the bump is NOT pre-checked`, (await bumpBox.count()) === 1 && !(await bumpBox.isChecked()));
-      check(`${vp.label}: the cup pick appears after the tick, nothing picked`, (await page.getByTestId('cup-pick').count()) === 1 && (await page.locator('[data-testid^="cup-"][aria-pressed="true"]').count()) === 0);
+      pick = await noCupPick(page);
+      check(`${vp.label}: ticked, still no cup pick — the bump comes straight after the tick`, pick.ok, JSON.stringify(pick));
       check(`${vp.label}: the button is live once ticked`, (await button.getAttribute('aria-disabled')) === 'false');
-      const cupHeight = await page.getByTestId('cup-pick').evaluate((el) => Math.round(el.getBoundingClientRect().height + 16));
-      measurements[vp.label].cupPickHeight = cupHeight;
-      if (vp.label === 'phone') {
-        const wouldBe = ys.button + cupHeight;
-        info(`phone: the cup pick is ${cupHeight}px tall (with its margin) — above the tick it would put the button bottom at ${wouldBe}px`);
-        check('phone: the cup pick does NOT fit above the tick (so it lives after it)', wouldBe > vp.height, `${wouldBe}px > ${vp.height}px`);
-      }
       const box = await button.boundingBox();
+      measurements[vp.label].tickedButtonViewport = box ? { top: Math.round(box.y), bottom: Math.round(box.y + box.height) } : null;
+      measurements[vp.label].tickedButtonBottom = await bottomY(button);
+      info(`${vp.label}: ticked — button at y=${box ? Math.round(box.y) : '?'}–${box ? Math.round(box.y + box.height) : '?'}px in the viewport (page bottom edge ${measurements[vp.label].tickedButtonBottom}px)`);
       check(`${vp.label}: after ticking, the button is back on screen`, !!box && box.y >= 0 && box.y + box.height <= vp.height, box ? `y=${Math.round(box.y)}` : '');
       check(`${vp.label}: total reads $35`, flat(await page.getByTestId('text-total').innerText()) === '$35');
 
@@ -267,15 +282,13 @@ try {
       await waitForCount(previews, 1);
       const p1 = previews[0];
       check(
-        `${vp.label}: click logs [preview] — tea-reading, page, bump false, quotedDay 1, cup null, fn + c, no price`,
-        !!p1 && p1.offer === 'tea-reading' && p1.treatment === 'page' && p1.bump === false && p1.quotedDay === 1 && p1.cup === null && p1.firstName === 'Smoke' && p1.letterCode === '61' && p1.amountCents == null,
+        `${vp.label}: click logs [preview] — tea-reading, page, bump false, quotedDay 1, fn + c, no price, NO cup`,
+        !!p1 && p1.offer === 'tea-reading' && p1.treatment === 'page' && p1.bump === false && p1.quotedDay === 1 && !('cup' in p1) && p1.firstName === 'Smoke' && p1.letterCode === '61' && p1.amountCents == null,
         JSON.stringify(p1),
       );
       check(`${vp.label}: click does not navigate`, page.url().startsWith(`${BASE}${ROOT}`));
 
-      // Pick a cup, tick the bump.
-      await page.getByTestId('cup-sunken-leaf').click();
-      check(`${vp.label}: picking a cup presses it`, (await page.getByTestId('cup-sunken-leaf').getAttribute('aria-pressed')) === 'true');
+      // Tick the bump.
       await bumpBox.check();
       check(`${vp.label}: with the bump ticked the total is $47.77`, flat(await page.getByTestId('text-total').innerText()) === '$47.77');
       const ticked = dollars(await page.locator('body').innerText()).sort();
@@ -287,10 +300,8 @@ try {
       await button.click();
       await waitForCount(previews, 2);
       const p2 = previews[1];
-      check(`${vp.label}: the next click carries bump true and cup sunken-leaf`, !!p2 && p2.bump === true && p2.cup === 'sunken-leaf' && p2.quotedDay === 1, JSON.stringify(p2));
+      check(`${vp.label}: the next click carries bump true, and still no cup`, !!p2 && p2.bump === true && !('cup' in p2) && p2.quotedDay === 1, JSON.stringify(p2));
 
-      await page.getByTestId('cup-sunken-leaf').click();
-      check(`${vp.label}: a second tap un-picks the cup (optional)`, (await page.getByTestId('cup-sunken-leaf').getAttribute('aria-pressed')) === 'false');
       await tick.locator('input').uncheck();
       check(`${vp.label}: unticking hides the bump and disables the button`, (await bump.count()) === 0 && (await button.getAttribute('aria-disabled')) === 'true');
       await tick.locator('input').check();
@@ -482,7 +493,7 @@ try {
       check(`${vp.label}: the card prints only today's rung`, chatDollars.every((d) => d === '$35'), chatDollars.join(' '));
       await page.getByTestId('button-checkout').click();
 
-      await page.waitForSelector('[data-testid="cup-replies"]', { timeout: 15000 });
+      await page.waitForSelector('[data-testid="order-bump"]', { timeout: 15000 });
       // Both edges read in ONE frame — the thread scrolls smoothly, so two separate reads can disagree.
       const below = await page.evaluate(() => {
         const card = document.querySelector('[data-testid="commitment-gate"]')?.getBoundingClientRect();
@@ -491,23 +502,23 @@ try {
         return card && g ? { cardBottom: Math.round(card.bottom), goodTop: Math.round(g.top) } : null;
       });
       check(`${vp.label}: what Evelyn says after the card lands BELOW it`, !!below && below.goodTop >= below.cardBottom - 2, JSON.stringify(below));
-      await shot('chat-cup-question', page);
-      await page.getByTestId('cup-reply-divided-rim').click();
-      await page.waitForSelector('[data-testid="message-her"]');
-      check(`${vp.label}: her reply appears as her own message`, flat(await page.getByTestId('message-her').innerText()) === 'Hot and cold');
-      await page.waitForSelector('[data-testid="order-bump"]', { timeout: 15000 });
-      const thread = flat(await page.locator('body').innerText());
-      check(`${vp.label}: Evelyn answers the cup, then asks the bump`, thread.includes("The Divided Rim, then. I'll read yours for that.") && thread.includes('One more thing before I start.'));
+      const afterCard = await page.evaluate(() => {
+        const lines = [...document.querySelectorAll('[data-testid="message-evelyn"]')].map((el) => el.textContent.trim());
+        return lines.slice(lines.indexOf('Good.'));
+      });
+      check(`${vp.label}: after the card — "Good." then "One more thing before I start.", then the bump`, JSON.stringify(afterCard) === JSON.stringify(['Good.', 'One more thing before I start.']), JSON.stringify(afterCard));
+      const chatPick = await noCupPick(page);
+      check(`${vp.label}: no cup question in the chat — no quick replies, no cup names, no bubble of hers`, chatPick.ok && (await page.getByTestId('message-her').count()) === 0, JSON.stringify(chatPick));
       check(`${vp.label}: the bump turn shows +$12.77 and the $47.77 total`, flat(await page.getByTestId('order-bump').innerText()).includes('+ $12.77') && flat(await page.getByTestId('text-bump-total').innerText()) === '$47.77 total');
       await sleep(500);
       await shot('chat-bump-turn', page);
       await page.getByTestId('button-bump-decline').click();
       await waitForCount(previews, 1);
       const d = previews[0];
-      check(`${vp.label}: "No, just my reading" logs [preview] — chat, bump false, quotedDay 1, cup divided-rim, fn + c`, !!d && d.offer === 'tea-reading' && d.treatment === 'chat' && d.bump === false && d.quotedDay === 1 && d.cup === 'divided-rim' && d.firstName === 'Smoke' && d.letterCode === '61', JSON.stringify(d));
+      check(`${vp.label}: "No, just my reading" logs [preview] — chat, bump false, quotedDay 1, fn + c, NO cup`, !!d && d.offer === 'tea-reading' && d.treatment === 'chat' && d.bump === false && d.quotedDay === 1 && !('cup' in d) && d.firstName === 'Smoke' && d.letterCode === '61', JSON.stringify(d));
       await page.getByTestId('button-bump-accept').click();
       await waitForCount(previews, 2);
-      check(`${vp.label}: "Yes, add the Still Cup" logs bump true`, previews[1]?.bump === true && previews[1]?.treatment === 'chat', JSON.stringify(previews[1]));
+      check(`${vp.label}: "Yes, add the Still Cup" logs bump true, NO cup`, previews[1]?.bump === true && previews[1]?.treatment === 'chat' && !('cup' in (previews[1] ?? {})), JSON.stringify(previews[1]));
       let hs = await noHorizontalScroll(page);
       check(`${vp.label}: chat has no horizontal scroll`, hs.ok, `scrollWidth=${hs.scrollWidth}`);
 
@@ -529,21 +540,16 @@ try {
       await page.evaluate(() => document.querySelector('.overflow-y-auto')?.scrollTo(0, 0));
       await shot('chat-cancelled-resume', page);
 
-      // "None of these — you choose" sends NO cup (the server records the default).
-      const skip = await context.newPage();
-      const skipPreviews = watchPreviews(skip);
-      await skip.goto(`${BASE}${ROOT}/chat?cancelled=1`, { waitUntil: 'domcontentloaded' });
-      await skip.waitForSelector('[data-testid="text-gate-price"]', { timeout: 15000 });
-      for (let i = 0; i < 3; i++) await skip.locator(`[data-testid="checkbox-statement-${i}"] input`).check();
-      await skip.getByTestId('button-checkout').click();
-      await skip.waitForSelector('[data-testid="cup-replies"]', { timeout: 15000 });
-      await skip.getByTestId('cup-reply-skip').click();
-      await skip.waitForSelector('[data-testid="order-bump"]', { timeout: 15000 });
-      check(`${vp.label}: "you choose" gets Evelyn's default line`, flat(await skip.locator('body').innerText()).includes("Then I'll read it as the Divided Rim, dear."));
-      await skip.getByTestId('button-bump-decline').click();
-      await waitForCount(skipPreviews, 1);
-      check(`${vp.label}: "you choose" sends cup null`, skipPreviews[0]?.cup === null, JSON.stringify(skipPreviews[0]));
-      await skip.close();
+      // From the ?cancelled=1 resume too: card → bump, with no cup question in between.
+      const resumed = await context.newPage();
+      await resumed.goto(`${BASE}${ROOT}/chat?cancelled=1`, { waitUntil: 'domcontentloaded' });
+      await resumed.waitForSelector('[data-testid="text-gate-price"]', { timeout: 15000 });
+      for (let i = 0; i < 3; i++) await resumed.locator(`[data-testid="checkbox-statement-${i}"] input`).check();
+      await resumed.getByTestId('button-checkout').click();
+      await resumed.waitForSelector('[data-testid="order-bump"]', { timeout: 15000 });
+      const resumedPick = await noCupPick(resumed);
+      check(`${vp.label}: the resumed chat goes card → bump, no cup question`, resumedPick.ok && (await resumed.getByTestId('message-her').count()) === 0, JSON.stringify(resumedPick));
+      await resumed.close();
 
       check(`${vp.label}: chat has no page errors`, errors.length === 0, errors.slice(0, 2).join(' | '));
       await context.close();
@@ -563,8 +569,6 @@ try {
       await page.waitForSelector('[data-testid="text-gate-price"]', { timeout: 15000 });
       for (let i = 0; i < 3; i++) await page.locator(`[data-testid="checkbox-statement-${i}"] input`).check();
       await page.getByTestId('button-checkout').click();
-      await page.waitForSelector('[data-testid="cup-replies"]', { timeout: 15000 });
-      await page.getByTestId('cup-reply-turned-handle').click();
       await page.waitForSelector('[data-testid="order-bump"]', { timeout: 15000 });
       await page.getByTestId('button-bump-accept').click();
       await page.getByTestId('text-price-changed').waitFor({ timeout: 10000 }).catch(() => {});
@@ -576,7 +580,7 @@ try {
       await page.getByTestId('button-bump-accept').click();
       await page.waitForURL(`${LIVE_BASE}/__stripe_stub`, { timeout: 10000 }).catch(() => {});
       const [a, b] = stubs.state.checkoutBodies;
-      check(`${vp.label}: live chat — quotedDay 1 then 3, treatment chat, cup turned-handle`, a?.quotedDay === 1 && b?.quotedDay === 3 && b?.treatment === 'chat' && b?.cup === 'turned-handle' && b?.bump === true, JSON.stringify(b));
+      check(`${vp.label}: live chat — quotedDay 1 then 3, treatment chat, NO cup posted`, a?.quotedDay === 1 && b?.quotedDay === 3 && b?.treatment === 'chat' && a?.cup === undefined && b?.cup === undefined && b?.bump === true, JSON.stringify(b));
       await context.close();
     }
 
@@ -589,11 +593,12 @@ try {
       const errors = [];
       page.on('pageerror', (e) => errors.push(e.message));
 
+      // The stubbed orders still carry a `cup` (as an older server sent) — the receipt must drop it.
       const cases = [
-        ['bump-named', 'cs_test_04_bump_named', { name: 'Sarah', bump: true, cup: 'The Sunken Leaf' }],
-        ['nobump-named', 'cs_test_04_nobump_named', { name: 'Sarah', bump: false, cup: 'The Divided Rim' }],
-        ['bump-noname', 'cs_test_04_bump_noname', { name: 'dear', bump: true, cup: 'The Turned Handle' }],
-        ['nobump-noname', 'cs_test_04_nobump_noname', { name: 'dear', bump: false, cup: 'The Divided Rim' }],
+        ['bump-named', 'cs_test_04_bump_named', { name: 'Sarah', bump: true }],
+        ['nobump-named', 'cs_test_04_nobump_named', { name: 'Sarah', bump: false }],
+        ['bump-noname', 'cs_test_04_bump_noname', { name: 'dear', bump: true }],
+        ['nobump-noname', 'cs_test_04_nobump_noname', { name: 'dear', bump: false }],
       ];
       for (const [name, sid, want] of cases) {
         await page.goto(`${BASE}${ROOT}/success?s=${sid}`, { waitUntil: 'domcontentloaded' });
@@ -602,8 +607,13 @@ try {
         const text = flat(await page.locator('body').innerText());
         const stillCup = page.getByTestId('link-still-cup');
         check(
-          `${vp.label}: receipt (${name}) — "Thank you, ${want.name}.", title "${want.name} — your cup is turned", ${want.cup}`,
-          text.includes(`Thank you, ${want.name}.`) && flat(await page.getByTestId('text-delivery-title').innerText()) === `${want.name} — your cup is turned` && text.includes(want.cup) && text.includes('within 24 hours'),
+          `${vp.label}: receipt (${name}) — "Thank you, ${want.name}.", title "${want.name} — your cup is turned", within 24 hours`,
+          text.includes(`Thank you, ${want.name}.`) && flat(await page.getByTestId('text-delivery-title').innerText()) === `${want.name} — your cup is turned` && text.includes('within 24 hours'),
+        );
+        check(
+          `${vp.label}: receipt (${name}) — no "Your reading follows" line, no cup's name`,
+          !/follows/i.test(text) && !CUP_NAMES.test(text) && (await page.getByTestId('text-receipt-cup').count()) === 0,
+          text.match(/[^.]*follows[^.]*/i)?.[0] ?? text.match(CUP_NAMES)?.[0] ?? '',
         );
         check(
           `${vp.label}: receipt (${name}) ${want.bump ? 'shows' : 'does not show'} the Still Cup P.S.`,
@@ -625,7 +635,7 @@ try {
         await page.goto(`${BASE}${ROOT}/success${suffix}`, { waitUntil: 'domcontentloaded' });
         await page.getByTestId('card-receipt-fallback').waitFor({ timeout: 15000 }).catch(() => {});
         const text = flat(await page.locator('body').innerText());
-        check(`${vp.label}: receipt (${name}) shows the safe fallback — no title box, no cup, no Still Cup`, (await page.getByTestId('card-receipt-fallback').count()) === 1 && !text.includes('your cup is turned') && !text.includes('Still Cup') && !/Divided Rim|Sunken Leaf|Turned Handle/.test(text));
+        check(`${vp.label}: receipt (${name}) shows the safe fallback — no title box, no cup, no Still Cup`, (await page.getByTestId('card-receipt-fallback').count()) === 1 && !text.includes('your cup is turned') && !text.includes('Still Cup') && !CUP_NAMES.test(text));
         await shot(`receipt-fallback-${name}`, page);
       }
       check(`${vp.label}: receipt has no page errors`, errors.length === 0, errors.slice(0, 2).join(' | '));

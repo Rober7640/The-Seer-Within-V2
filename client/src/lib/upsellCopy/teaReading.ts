@@ -14,12 +14,12 @@
 //      PERSONALIZE those stages POST bucket:null to /api/upsell2/reading → 400 → generic
 //      fallback. TR_CHAIN_2 routes around both, exactly as JD/PX/HC_CHAIN_2 do.
 //
-// ⛔ THE CUP IS HER DATA. She picks one of three cups on the booking page and the cup
-//    decides which of three readings she is sent — and the three put the same seven leaves
-//    on DIFFERENT days (the bridge is days 16–18 in the Divided Rim, 13–15 in the Turned
-//    Handle, 19–21 in the Sunken Leaf; the quiet runs nine days in two cups and six in the
-//    third). So no day number and no count of quiet days appears anywhere below. What every
-//    buyer's reading shares, and what this copy argues from:
+// ⛔ THE CUP IS UNKNOWN HERE. Checkout draws one of three cups at random (operator
+//    2026-10-11), the cup decides which of three readings she is sent — and the three put
+//    the same seven leaves on DIFFERENT days (the bridge is days 16–18 in the Divided Rim,
+//    13–15 in the Turned Handle, 19–21 in the Sunken Leaf; the quiet runs nine days in two
+//    cups and six in the third). So no day number and no count of quiet days appears
+//    anywhere below. What every buyer's reading shares, and what this copy argues from:
 //      - twenty-one days, seven leaves, quiet days and one bridge stretch with ONE message;
 //      - the three "ways through" from the letter: the bridge, the lighthouse, the butterfly;
 //      - expectation three, in all three cups: someone close to her will try

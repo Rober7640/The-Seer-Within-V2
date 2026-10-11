@@ -4,15 +4,15 @@
 //   npx vitest run server/routes/backendOffers.teaReading.test.ts
 //
 // What these pin down:
-//  1. CHECKOUT CHARGES THE SERVER'S RUNG, writes `rung` / `cup` / `cupChosen` to Stripe
-//     metadata, and refuses an expired quoted price with a 409 `price_changed` that carries
-//     today's price. Nothing posted — amountCents, tier, an invalid cup — changes the price or
-//     blocks the sale.
+//  1. CHECKOUT CHARGES THE SERVER'S RUNG, DRAWS HER CUP, writes `rung` / `cup` / `cupDrawn`
+//     to Stripe metadata, and refuses an expired quoted price with a 409 `price_changed` that
+//     carries today's price. Nothing posted — amountCents, tier, a `cup` of any kind — changes
+//     the price, the cup, or blocks the sale (operator 2026-10-11: no pick, a random draw).
 //  2. THE QUOTE ENDPOINT prints today's price; its `?day=` preview is display-only and never
 //     reaches what checkout charges.
 //  3. THE RECEIPT: 04 is always 24 hours (the Still Cup is not a speed bump) while 08 keeps
-//     12 with its bump; 04's receipt names her cup.
-//  4. OTHER OFFERS ARE UNTOUCHED: no rung/cup on their metadata, no cup on their receipt.
+//     12 with its bump; 04's receipt never names the drawn cup (the reading is the reveal).
+//  4. OTHER OFFERS ARE UNTOUCHED: no rung/cup on their metadata, no draw, no cup on a receipt.
 
 import express from 'express';
 import request from 'supertest';
@@ -29,6 +29,9 @@ const state = {
   liftGate: true,
   created: null as Record<string, unknown> | null,
   order: null as Record<string, unknown> | null,
+  /** Pins the draw for a test; null = the real draw (crypto.randomInt). */
+  drawn: null as string | null,
+  draws: 0,
 };
 
 vi.mock('../lib/db', () => ({ db: {} }));
@@ -51,6 +54,17 @@ vi.mock('../lib/beShipments', () => ({
   publicShipping: vi.fn(() => ({})),
   ensureBackendShipment: vi.fn(async () => null),
 }));
+// The draw stays real unless a test pins `state.drawn`; every call is counted.
+vi.mock('../lib/be04Draw', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../lib/be04Draw')>();
+  return {
+    ...actual,
+    drawTeaCup: (...args: Parameters<typeof actual.drawTeaCup>) => {
+      state.draws++;
+      return (state.drawn as ReturnType<typeof actual.drawTeaCup> | null) ?? actual.drawTeaCup(...args);
+    },
+  };
+});
 
 const getBeOrderBySession = vi.fn(async (_s: string) => state.order);
 const writeToCustomerList = vi.fn(async (row: unknown) => row);
@@ -87,7 +101,7 @@ vi.mock('@shared/backendOffers', async (importOriginal) => {
   };
 });
 
-const { BACKEND_OFFER_CATALOG } = await import('@shared/backendOffers');
+const { BACKEND_OFFER_CATALOG, TEA_CUPS } = await import('@shared/backendOffers');
 const { default: router } = await import('./backendOffers');
 const app = express();
 app.use(express.json());
@@ -135,6 +149,8 @@ beforeEach(() => {
   state.liftGate = true;
   state.created = null;
   state.order = null;
+  state.drawn = null;
+  state.draws = 0;
   for (const fn of [getBeOrderBySession, writeToCustomerList, recordBackendOrder, saveOrderIntake, create]) {
     fn.mockClear();
   }
@@ -151,7 +167,8 @@ afterEach(() => {
 
 describe('POST /api/backend/checkout — 04', () => {
   it('opens a one-line, no-shipping session at the server\'s day-1 price', async () => {
-    const res = await checkout({ quotedDay: 1, cup: 'sunken-leaf' });
+    state.drawn = 'sunken-leaf';
+    const res = await checkout({ quotedDay: 1 });
     expect(res.status).toBe(200);
     const p = state.created as any;
     expect(p).not.toHaveProperty('shipping_address_collection');
@@ -171,14 +188,15 @@ describe('POST /api/backend/checkout — 04', () => {
       bump: '0',
       rung: '1',
       cup: 'sunken-leaf',
-      cupChosen: '1',
+      cupDrawn: '1',
     });
+    expect(p.metadata).not.toHaveProperty('cupChosen');
     expect(p.metadata).not.toHaveProperty('bumpProduct');
     expect(p.metadata).not.toHaveProperty('tier');
     expect(p.payment_intent_data.description).toBe('BE 04 · The Turn — tea-leaf reading by Evelyn Cross');
     expect(p.success_url).toMatch(/\/offers\/upsell\/welcome1\?session_id=\{CHECKOUT_SESSION_ID\}$/);
     expect(p.cancel_url).toMatch(/\/offers\/wiccan\/tea-reading\?cancelled=1$/);
-    // 04 parks nothing on be_order_intake — the cup rides Stripe metadata.
+    // 04 parks nothing on be_order_intake — the drawn cup rides Stripe metadata.
     expect(saveOrderIntake).not.toHaveBeenCalled();
   });
 
@@ -212,15 +230,35 @@ describe('POST /api/backend/checkout — 04', () => {
     expect(p.payment_intent_data.description).toBe('BE 04 · The Turn — tea-leaf reading by Evelyn Cross + The Still Cup');
   });
 
-  it('a missing cup is the divided rim, cupChosen 0', async () => {
-    await checkout({});
-    expect((state.created as any).metadata).toMatchObject({ cup: 'divided-rim', cupChosen: '0' });
+  it('⛔ draws her cup on the server — a cup the client sends is ignored, never a 400', async () => {
+    state.drawn = 'turned-handle';
+    for (const sent of ['sunken-leaf', 'divided-rim', '<script>', 42, null]) {
+      const res = await checkout({ cup: sent });
+      expect(res.status, String(sent)).toBe(200);
+      expect((state.created as any).metadata, String(sent)).toMatchObject({ cup: 'turned-handle', cupDrawn: '1' });
+    }
   });
 
-  it('an invalid cup never blocks the sale — it becomes the default', async () => {
-    const res = await checkout({ cup: '<script>' });
-    expect(res.status).toBe(200);
-    expect((state.created as any).metadata).toMatchObject({ cup: 'divided-rim', cupChosen: '0' });
+  it('with the real draw, every session carries a valid cup — one draw per checkout', async () => {
+    const seen = new Set<string>();
+    for (let k = 0; k < 12; k++) {
+      const res = await checkout({});
+      expect(res.status).toBe(200);
+      const meta = (state.created as any).metadata;
+      expect(TEA_CUPS as readonly string[]).toContain(meta.cup);
+      expect(meta.cupDrawn).toBe('1');
+      expect(meta).not.toHaveProperty('cupChosen');
+      seen.add(meta.cup);
+    }
+    expect(state.draws).toBe(12);
+    expect(seen.size).toBeGreaterThanOrEqual(1);
+  });
+
+  it('a refused checkout draws nothing', async () => {
+    at(DAY + 121 * MIN);
+    const res = await checkout({ quotedDay: 1 });
+    expect(res.status).toBe(409);
+    expect(state.draws).toBe(0);
   });
 
   it('a tampered amountCents / tier cannot change the ladder price', async () => {
@@ -290,7 +328,9 @@ describe('POST /api/backend/checkout — other offers are untouched by the 04 fi
     expect(p.line_items[0].price_data.unit_amount).toBe(3500);
     expect(p.metadata).not.toHaveProperty('rung');
     expect(p.metadata).not.toHaveProperty('cup');
+    expect(p.metadata).not.toHaveProperty('cupDrawn');
     expect(p.metadata).not.toHaveProperty('cupChosen');
+    expect(state.draws).toBe(0);
   });
 
   it('03 still floor-checks its pay-what-you-want amount', async () => {
@@ -364,9 +404,8 @@ describe('GET /api/backend/offers/:offer/price', () => {
 // ─── 3 · the receipt ───────────────────────────────────────────────────────────
 
 describe('GET /api/backend/order/:sessionId — 04 receipt', () => {
-  it('is always 24 hours — the Still Cup is not a speed bump — and names her cup', async () => {
+  it('is always 24 hours — the Still Cup is not a speed bump — and never names the drawn cup', async () => {
     state.order = paidRow({ bumpPurchased: true });
-    retrieve.mockResolvedValue({ id: SESSION, metadata: { product: 'be_tea_reading', cup: 'turned-handle' } });
     const res = await request(app).get(`/api/backend/order/${SESSION}?offer=tea-reading`);
     expect(res.status).toBe(200);
     expect(res.body.order).toMatchObject({
@@ -375,37 +414,39 @@ describe('GET /api/backend/order/:sessionId — 04 receipt', () => {
       bumpPurchased: true,
       bumpProductKey: 'still_cup',
       deliveryHours: 24,
-      cup: 'turned-handle',
     });
+    expect(res.body.order).not.toHaveProperty('cup');
+    // The receipt no longer needs the session's metadata at all.
+    expect(retrieve).not.toHaveBeenCalled();
   });
 
   it('24 hours without the bump too', async () => {
     state.order = paidRow({ bumpPurchased: false, bumpCents: 0, bumpProductKey: null, amountCents: 3500 });
-    retrieve.mockResolvedValue({ id: SESSION, metadata: { cup: 'divided-rim' } });
     const res = await request(app).get(`/api/backend/order/${SESSION}`);
-    expect(res.body.order).toMatchObject({ deliveryHours: 24, bumpPurchased: false, cup: 'divided-rim' });
+    expect(res.body.order).toMatchObject({ deliveryHours: 24, bumpPurchased: false });
+    expect(res.body.order).not.toHaveProperty('cup');
   });
 
-  it('a Stripe failure costs only the cup line — null, never a guessed cup', async () => {
+  it('a Stripe outage cannot touch a receipt whose order is on record', async () => {
     state.order = paidRow();
     retrieve.mockRejectedValue(new Error('stripe down'));
     const res = await request(app).get(`/api/backend/order/${SESSION}`);
     expect(res.status).toBe(200);
-    expect(res.body.order.cup).toBeNull();
     expect(res.body.order.deliveryHours).toBe(24);
+    expect(res.body.order).not.toHaveProperty('cup');
   });
 
-  it('when the redirect beats the webhook, reads the cup off the session it already has', async () => {
+  it('when the redirect beats the webhook: one Stripe read (the payment), still no cup', async () => {
     state.order = null;
     recordBackendOrder.mockResolvedValueOnce(paidRow() as never);
     retrieve.mockResolvedValue({
       id: SESSION,
       payment_status: 'paid',
-      metadata: { product: 'be_tea_reading', offer: 'tea-reading', cup: 'sunken-leaf' },
+      metadata: { product: 'be_tea_reading', offer: 'tea-reading', cup: 'sunken-leaf', cupDrawn: '1' },
     });
     const res = await request(app).get(`/api/backend/order/${SESSION}?offer=tea-reading`);
     expect(res.status).toBe(200);
-    expect(res.body.order.cup).toBe('sunken-leaf');
+    expect(res.body.order).not.toHaveProperty('cup');
     expect(retrieve).toHaveBeenCalledTimes(1);
   });
 

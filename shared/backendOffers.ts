@@ -113,8 +113,9 @@ export const TEA_READING_DELIVERY_HOURS = 24;
 export const TEA_READING_STILL_CUP_PATH = '/offers/wiccan/tea-reading/still-cup';
 
 /**
- * The three cup patterns she can pick on the 04 booking page (00e §10). The cup decides which
- * of three finished readings she is sent (04-DELIVERABLES D7).
+ * The three interpretations of 04's one cup photo — one finished reading each (04-DELIVERABLES
+ * D7). ⭐ Operator 2026-10-11: she does NOT pick. The server draws one at random at checkout
+ * (server/lib/be04Draw.ts) and writes it to Stripe metadata `cup`.
  *
  * ⛔ These slugs are an API: Stripe metadata `cup`, and the env var names that hold each
  *    reading's link (BE04_READING_URL_TURNED_HANDLE, …). Add slugs; never rename one.
@@ -122,7 +123,11 @@ export const TEA_READING_STILL_CUP_PATH = '/offers/wiccan/tea-reading/still-cup'
 export const TEA_CUPS = ['turned-handle', 'divided-rim', 'sunken-leaf'] as const;
 export type TeaCup = (typeof TEA_CUPS)[number];
 
-/** The cup she gets when she picks none (04-C1) — The Divided Rim, the hot-and-cold pattern. */
+/**
+ * The fallback for a session whose metadata has no valid `cup` — The Divided Rim. Checkout
+ * never writes one (it always writes a drawn cup); this only keeps the delivery job from
+ * stalling on an old or hand-made session.
+ */
 export const TEA_CUP_DEFAULT: TeaCup = 'divided-rim';
 
 export function isTeaCup(value: unknown): value is TeaCup {
@@ -130,15 +135,12 @@ export function isTeaCup(value: unknown): value is TeaCup {
 }
 
 /**
- * Her cup, from whatever the page (or Stripe metadata) said.
- *
- * ⚠ The pick is optional, and an invalid value must NEVER block a sale — so anything that is
- * not one of the three slugs becomes the default, with `chosen: false` so fulfilment and the
- * analytics can tell a real pick from a default.
+ * Her cup, read back off Stripe metadata (the delivery job). A valid slug is kept; anything
+ * else is TEA_CUP_DEFAULT. ⛔ Never used to read a cup from the browser — the cup is drawn.
  */
-export function resolveTeaCup(value: unknown): { cup: TeaCup; chosen: boolean } {
+export function resolveTeaCup(value: unknown): TeaCup {
   const slug = typeof value === 'string' ? value.trim().toLowerCase() : value;
-  return isTeaCup(slug) ? { cup: slug, chosen: true } : { cup: TEA_CUP_DEFAULT, chosen: false };
+  return isTeaCup(slug) ? slug : TEA_CUP_DEFAULT;
 }
 
 // 06 — fixed price, decision D2 (2026-09-02, HANDOVER §2). A real physical object
@@ -553,9 +555,10 @@ export const BACKEND_OFFER_CATALOG: Record<BackendOfferKey, BackendOffer> = {
   },
 
   // ⭐ 04 — The Turn. A tea-leaf READING by Evelyn Cross, sold by email to past buyers, and
-  // the deck's first PRICE LADDER (see TEA_READING_RUNG_CENTS). She picks one of three cups
-  // on the booking page (optional, TEA_CUPS); the cup decides which of three finished readings
-  // she is sent, by AWeber tag + `reading_url` within 24 hours (server/lib/be04Delivery.ts).
+  // the deck's first PRICE LADDER (see TEA_READING_RUNG_CENTS). Checkout draws one of three
+  // cups at random (TEA_CUPS, operator 2026-10-11 — no pick); the cup decides which of three
+  // finished readings she is sent, by AWeber tag + `reading_url` within 24 hours
+  // (server/lib/be04Delivery.ts).
   'tea-reading': {
     key: 'tea-reading',
     number: '04',

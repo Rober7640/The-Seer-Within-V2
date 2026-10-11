@@ -10,9 +10,6 @@ import {
   PRICE_NOTES,
   CHECK_LINES,
   READY_TICK,
-  CUP_PICK,
-  TEA_CUPS,
-  TEA_CUP_COPY,
   BUMP,
   CHECKOUT,
   PRICE_STATES,
@@ -25,7 +22,6 @@ import {
   teaReadingCheckoutRequest,
   teaReadingTotalCents,
 } from '@/lib/teaReadingBooking'
-import type { TeaCup } from '@shared/backendOffers'
 
 // Offer 04 — The Turn, a tea-leaf reading by Evelyn Cross. PAGE treatment (the offer root).
 // The chat treatment is ./BookingChat.tsx.
@@ -36,9 +32,10 @@ import type { TeaCup } from '@shared/backendOffers'
 // The FIRST PHONE SCREEN (390×844) is the whole decision: headline, sub-line, photo, today's
 // price, three check lines, ONE tick and the button. The button is ALWAYS on screen: it looks
 // disabled until the tick is ticked, and a tap before then points her at the tick. Once ticked,
-// the optional cup pick, the order bump (`still_cup`) and the total appear between the tick and
-// the button — the cup pick sits here, not above the tick, because it does not fit on the first
-// screen (measured by walk-04-smoke.mjs).
+// the order bump (`still_cup`) and the total appear between the tick and the button.
+//
+// ⭐ NO CUP PICK (operator 2026-10-11). Which of the three readings she gets is drawn at random by
+// the server at checkout; this page never asks and never sends a cup.
 //
 // ⭐ THE PRICE IS TODAY'S RUNG, from the server (lib/ladderPrice.ts). While it loads the price
 // line is a blank bar and the button cannot be pressed; if it fails, a retry line. ⛔ Never a
@@ -59,8 +56,6 @@ export default function TeaReadingBookingPage() {
   const [ready, setReady] = useState(false)
   // ⛔ Starts FALSE and only her click changes it — never pre-checked (negative option).
   const [bumpTaken, setBumpTaken] = useState(false)
-  // Optional. null = no pick → the server records The Divided Rim as the default.
-  const [cup, setCup] = useState<TeaCup | null>(null)
   const [price, setPrice] = useState<PriceState>({ status: 'loading' })
   // Set when checkout answered 409 price_changed; cleared on her next press.
   const [movedTo, setMovedTo] = useState<string | null>(null)
@@ -107,8 +102,8 @@ export default function TeaReadingBookingPage() {
     return () => window.removeEventListener('pageshow', onPageShow)
   }, [loadPrice])
 
-  // Ticking adds the cup pick, the bump and the total ABOVE the button, which pushes it off the
-  // first phone screen. Bring it back into view (only if it left the screen).
+  // Ticking adds the bump and the total ABOVE the button, which can push it off the first phone
+  // screen. Bring it back into view (only if it left the screen).
   useEffect(() => {
     if (!ready) return
     const button = checkoutButton.current
@@ -120,8 +115,7 @@ export default function TeaReadingBookingPage() {
   const onReadyChange = (next: boolean) => {
     setReady(next)
     setNudge(false)
-    // Unticking hides the bump; it comes back UNTICKED, never as she left it. Her cup pick is
-    // not consent, so it is kept.
+    // Unticking hides the bump; it comes back UNTICKED, never as she left it.
     if (!next) setBumpTaken(false)
   }
 
@@ -143,10 +137,9 @@ export default function TeaReadingBookingPage() {
       bump: bumpInOrder,
       treatment: 'page',
       rung: quote.day,
-      cup: cup ?? 'none',
     })
     const result = await beginBackendCheckout(
-      teaReadingCheckoutRequest({ treatment: 'page', firstName, letterCode, bump: bumpInOrder, quote, cup }),
+      teaReadingCheckoutRequest({ treatment: 'page', firstName, letterCode, bump: bumpInOrder, quote }),
     )
     if (result.status === 'price_changed') {
       // Show the new rung everywhere it is printed; her next press sends the new day.
@@ -284,44 +277,6 @@ export default function TeaReadingBookingPage() {
 
               {ready && (
                 <>
-                  {/* Which cup is yours? Optional, never a gate: nothing is picked when it
-                      appears, a second tap un-picks, and the button works either way. */}
-                  <fieldset className="mt-4 px-0.5" data-testid="cup-pick">
-                    <legend className="font-serif text-[16px] leading-snug text-gray-900">{CUP_PICK.question}</legend>
-                    <p className="mt-0.5 text-pretty text-[12.5px] leading-snug text-gray-500">{CUP_PICK.note}</p>
-                    <div className="mt-2 space-y-1.5">
-                      {TEA_CUPS.map((slug) => {
-                        const picked = cup === slug
-                        return (
-                          <button
-                            key={slug}
-                            type="button"
-                            aria-pressed={picked}
-                            onClick={() => setCup(picked ? null : slug)}
-                            className={`flex w-full items-baseline gap-2 rounded-lg border px-3 py-2 text-left text-[14px] leading-snug transition-colors ${
-                              picked
-                                ? 'border-purple-500 bg-purple-50 text-gray-900'
-                                : 'border-gray-200 bg-white text-gray-700 hover:border-purple-300'
-                            }`}
-                            data-testid={`cup-${slug}`}
-                          >
-                            <span
-                              aria-hidden="true"
-                              className={`mt-[3px] h-3.5 w-3.5 shrink-0 self-start rounded-full border-2 ${
-                                picked ? 'border-purple-600 bg-purple-600' : 'border-gray-300'
-                              }`}
-                            />
-                            <span className="min-w-0">
-                              <strong className="font-semibold text-gray-900">{TEA_CUP_COPY[slug].name}</strong>
-                              {' — '}
-                              {TEA_CUP_COPY[slug].pattern}
-                            </span>
-                          </button>
-                        )
-                      })}
-                    </div>
-                  </fieldset>
-
                   {/* The order bump (04-C3, condensed) stays INLINE, directly above the total and
                       the button. ⚠ Never pre-checked — a pre-selected paid add-on is a negative
                       option under FTC and card-network rules. */}

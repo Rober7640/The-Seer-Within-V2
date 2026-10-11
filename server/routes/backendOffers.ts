@@ -14,12 +14,10 @@ import {
   priceBackendOffer,
   priceLabel,
   resolveBackendCharge,
-  resolveTeaCup,
   upsellChargeFields,
   type BackendOffer,
   type BookingTreatment,
   type LadderClock,
-  type TeaCup,
 } from '@shared/backendOffers';
 import {
   STRIPE_CHECKOUT_SHIPPING_COUNTRIES,
@@ -32,6 +30,7 @@ import { shippingFromSession, shippingParamFromSession } from '../lib/stripeShip
 import { getBe08Edition, listPublishedBe08Editions, type Be08Edition } from '../lib/be08Editions';
 import { BE_08_DECK } from '../lib/be08Draw';
 import { parseDateOfBirth } from '../lib/be08Birth';
+import { drawTeaCup } from '../lib/be04Draw';
 import { resolveBeBookingTreatment } from '../lib/experiments';
 import { BACKEND_UPSELLS } from '../lib/backendCustomerList';
 import { paidUpsellAmountCents } from '../lib/beUpsellOrders';
@@ -872,11 +871,12 @@ router.post('/checkout', async (req: Request, res: Response) => {
     }
 
     // ── 04's cup ─────────────────────────────────────────────────────────────────────
-    // Optional, picked on the booking page; decides which of three readings she is sent.
-    // ⚠ Never blocks a sale: anything that is not one of the three slugs becomes the default,
-    // with `cupChosen: '0'`. Short and fixed-shape, so it rides Stripe metadata — which is
-    // where the delivery job reads it back (server/lib/be04Delivery.ts; no intake column).
-    const teaCup = offer.key === 'tea-reading' ? resolveTeaCup(req.body?.cup) : null;
+    // DRAWN here, uniformly at random — she does not pick (operator 2026-10-11). It decides
+    // which of three readings she is sent. ⛔ `req.body.cup` is IGNORED: an old cached booking
+    // page may still send one, so it is accepted (never a 400) and never read. Short and
+    // fixed-shape, so it rides Stripe metadata — which is where the delivery job reads it back
+    // (server/lib/be04Delivery.ts; no intake column).
+    const teaCup = offer.key === 'tea-reading' ? drawTeaCup() : null;
 
     // 08: what Marcus calls her is the booking form's first-name box, not a letter ?fn=.
     const rawName = be08Person
@@ -1011,9 +1011,9 @@ router.post('/checkout', async (req: Request, res: Response) => {
         // NOT here (PII) — they live on be_order_intake only.
         ...(edition ? { editionId: edition.id, editionVersion: String(edition.version) } : {}),
         // 04: the ladder rung the SERVER charged ('1'..'4'), and her cup — the delivery job
-        // picks her reading by `cup`; `cupChosen` tells a real pick ('1') from the default ('0').
+        // sends the reading named by `cup`; `cupDrawn: '1'` says the server drew it (no pick).
         ...(charge.rung ? { rung: String(charge.rung) } : {}),
-        ...(teaCup ? { cup: teaCup.cup, cupChosen: teaCup.chosen ? '1' : '0' } : {}),
+        ...(teaCup ? { cup: teaCup, cupDrawn: '1' } : {}),
       },
       payment_intent_data: {
         // The Stripe Dashboard's Description column, prefixed `BE <nn>` so a backend
@@ -1074,7 +1074,7 @@ router.post('/checkout', async (req: Request, res: Response) => {
       ...(charge.tier ? { tier: charge.tier, spreadKey, drawDate } : {}),
       ...(edition ? { editionId: edition.id, editionVersion: edition.version } : {}),
       ...(charge.rung ? { rung: charge.rung } : {}),
-      ...(teaCup ? { cup: teaCup.cup, cupChosen: teaCup.chosen } : {}),
+      ...(teaCup ? { cup: teaCup } : {}),
     });
 
     return res.json({ url: session.url });
@@ -1136,8 +1136,7 @@ router.get('/order/:sessionId', async (req: Request, res: Response) => {
             retrieveSession: async () => (await getStripe()?.checkout.sessions.retrieve(sessionId)) ?? null,
           })
         : null;
-      const teaCup = row.offer === 'tea-reading' ? await teaCupForReceipt(sessionId) : null;
-      return res.json({ order: await publicOrder(row, shipment, { teaCup }) });
+      return res.json({ order: await publicOrder(row, shipment) });
     }
 
     const stripe = getStripe();
@@ -1172,8 +1171,7 @@ router.get('/order/:sessionId', async (req: Request, res: Response) => {
 
     if (!recorded) return res.status(404).json({ error: 'Order not found.' });
 
-    const teaCup = sessionOffer === 'tea-reading' ? await teaCupForReceipt(sessionId, session) : null;
-    return res.json({ order: await publicOrder(recorded, shipment, { teaCup }) });
+    return res.json({ order: await publicOrder(recorded, shipment) });
   } catch (err) {
     logger.error('backend/order lookup failed:', err);
     return res.status(500).json({ error: 'Could not load your order.' });
@@ -1183,29 +1181,6 @@ router.get('/order/:sessionId', async (req: Request, res: Response) => {
 /** Does this offer key name a physical offer (a parcel to post)? */
 function collectsShipping(offerKey: string): boolean {
   return isBackendOfferKey(offerKey) && Boolean(BACKEND_OFFER_CATALOG[offerKey].collectsShipping);
-}
-
-/**
- * 04 · her cup, for the receipt — read from the Stripe session's metadata, the only place it
- * is stored (no intake column; see /checkout). Uses the session when the caller already has
- * it, else one Stripe retrieve. ⚠ A failure costs only the line naming her cup: `null`, never
- * a guessed cup. Missing/invalid metadata resolves to the default — the same cup the delivery
- * job will send, so the receipt and the email cannot disagree.
- */
-async function teaCupForReceipt(
-  sessionId: string,
-  session?: Stripe.Checkout.Session | null,
-): Promise<TeaCup | null> {
-  try {
-    const s = session ?? (await getStripe()?.checkout.sessions.retrieve(sessionId)) ?? null;
-    return s ? resolveTeaCup(s.metadata?.cup).cup : null;
-  } catch (err) {
-    logger.warn('backend/order: 04 cup lookup failed, receipt renders without it', {
-      session: sessionId,
-      err: err instanceof Error ? err.message : String(err),
-    });
-    return null;
-  }
 }
 
 /** A Date column as ISO, or null. Rows arrive as Date objects from drizzle; a string
@@ -1230,14 +1205,13 @@ function isoOrNull(value: unknown): string | null {
  * whoever holds the session id; no phone, email or Stripe id rides with it. Both keys are
  * ABSENT on a digital offer's receipt, so 02/03/07/08 receipts are unchanged.
  *
- * 04 only: `cup` — the cup her reading follows (a TEA_CUPS slug), or null when Stripe could
- * not be read. ABSENT on every other offer's receipt. The receipt links The Still Cup when
- * `bumpPurchased` is true.
+ * 04: nothing extra. ⛔ Her drawn cup is NOT on the receipt — the reading itself is the reveal
+ * (operator 2026-10-11), and this shape is readable by anyone holding the session id. The
+ * receipt links The Still Cup when `bumpPurchased` is true.
  */
 async function publicOrder(
   row: Awaited<ReturnType<typeof getBeOrderBySession>>,
   shipment: BeShipment | null = null,
-  extras: { teaCup?: TeaCup | null } = {},
 ) {
   if (!row) return null;
 
@@ -1317,9 +1291,6 @@ async function publicOrder(
 
     // ── additive (physical offers only) ───────────────────────────────────────────
     ...(collectsShipping(row.offer) ? publicShipping(shipment) : {}),
-
-    // ── additive (04 only) ────────────────────────────────────────────────────────
-    ...(row.offer === 'tea-reading' ? { cup: extras.teaCup ?? null } : {}),
   };
 }
 

@@ -126,14 +126,16 @@ Query strings that change what you see:
 
 | Screen | Path | Treatment | State |
 |---|---|---|---|
-| Booking — the one-tick page (default, the letters' `{{BOOKING_URL}}`) | `/offers/wiccan/tea-reading` | page | ✅ built · preview |
-| Booking | `/offers/wiccan/tea-reading/chat` | chat | ✅ built · preview |
+| Booking — the one-tick page (default, the letters' `{{BOOKING_URL}}`) | `/offers/wiccan/tea-reading` | page | ✅ built · preview · no cup pick (drawn by the server, 2026-10-11) |
+| Booking | `/offers/wiccan/tea-reading/chat` | chat | ✅ built · preview · greeting → card → bump, no cup turn (2026-10-11) |
 | Upsell 1 → Upsell 2 | `/offers/upsell/welcome1` → `/welcome2` *(shared engine, offer read from the booking session)* | chat | ✅ built · walked with stubs (`scripts/walk-04-upsells.mjs`, 36/36 — evidence `upsells/`). ⚠ No `?demo=true` on these pages: real use needs a paid booking session |
 | Thank-you *(receipt)* | `/offers/wiccan/tea-reading/success?s=<session>` | page | ✅ built · preview |
 | The Still Cup *(the bump's deliverable)* | `/offers/wiccan/tea-reading/still-cup` | page | ✅ built · noindex |
 
 ⛔ `readyForMoney: false`, and with `VITE_BACKEND_CHECKOUT_LIVE` unset both booking treatments log
-`[preview] would checkout {…, quotedDay, cup}` and stop. Locally there is no `.env`: run the client
+`[preview] would checkout {…, quotedDay}` and stop. Neither sends a cup: which of the three readings
+she gets is **drawn at random by the server at checkout** (Stripe metadata `cup` + `cupDrawn: '1'`;
+operator 2026-10-11 — no pick). Locally there is no `.env`: run the client
 alone with `npx vite dev --port 5094` — the price endpoint and the order lookup then need a server
 (or the walk's stubs) to answer.
 
@@ -146,7 +148,7 @@ Query strings that change what you see:
 | `?cancelled=1` | the page | the back-from-checkout line: *Nothing has been taken. Your cup is still here.* |
 | `?cancelled=1` | the chat | the back-from-checkout resume copy, at the card, nothing ticked |
 | *(a refresh)* | the chat | the refresh resume copy — no greeting for coming back |
-| `?s=<session>` | the receipt | the receipt for that order (`?offer=tea-reading` is added by the page). No `?s=`, or any other offer's session → the fallback |
+| `?s=<session>` | the receipt | the receipt for that order (`?offer=tea-reading` is added by the page). No `?s=`, or any other offer's session → the fallback. ⛔ It never names her cup — the reading is the reveal |
 
 ### 05 — Hex Her
 
@@ -190,7 +192,7 @@ specs and proposes the answers; you confirm.
 |---|---|
 | Reading or Act? | **Reading** (`04-C1`:5). Thank-you page is a **receipt** |
 | How is it priced? | **Ladder by day since the letter**: day 1 $35 → day 2 $47 → day 3 $57 → day 4 $67 (`04-E5`:5). Booking page shows `{{TODAYS_RUNG}}`, no email carries a number. Bump $12.77 at every rung (`04-C3`:5). ⚠ The resolver (`S9`) is **not built** — nothing in the code knows what day she is on |
-| Does the work need a reply from her? | **No.** `04-T1`:22, `04-T3`:52, `04-E2`:218. Her only input is the optional cup pick on the booking page (Turned Handle / Divided Rim / Sunken Leaf, default Divided Rim, `04-C1`:88–137), made **before** she pays |
+| Does the work need a reply from her? | **No.** `04-T1`:22, `04-T3`:52, `04-E2`:218. ~~Her only input is the optional cup pick on the booking page~~ — since 2026-10-11 she gives **no input at all**: the server draws one of the three cups (Turned Handle / Divided Rim / Sunken Leaf) at random at checkout (`04-C1` build notes) |
 | Does the booking page promise anything only code can keep? | **The rising price** (`S9`) and **24h delivery** (`04-C1`:52, :114). No capacity cap — statement 4's scarcity is the leaves drying, which needs no code (`04-C1`:123). ⚠ Later screens promise *sooner* than 24h: "tonight" (`04-T3`:40, :49), "by morning" (`04-U`:20, :129), "look out for it tomorrow" (`04-T1`:15) |
 | What is the one sentence both upsells sell? | *The sequence gives you the words and the weeks; it does nothing about what reaches you while you keep them* (`04-U`:48–49). U1 = V1 lava stone, left wrist — keeps a well-meaning friend from talking her out of the quiet days. U2 = manifestation bracelet, right wrist — charged to the bridge, lighthouse or butterfly. ⚠ `04-U`:52, :136, :156 hard-code **Divided Rim's** days ("days sixteen to eighteen"); wrong for the other two cups, and the cup pick is her data, so the settled rule says cut the day numbers |
 | How long is the product, and how many cards? | ⚠ **Under range for any one buyer.** The file is 3,714 words raw (the master's figure) but 2,858 of reading across **all three** cup versions; she gets one: **~2,100–2,300 words + the ~500-word rim calendar (`04-P3`) ≈ 2,600–2,850.** D5 applies at B1. **Zero `[IMG-…]` tags** — no images in the product at all; seven symbols, one section each (heart, bird, tree, boat, lighthouse, bridge, butterfly). D6 needs its own answer, as on 03 |
