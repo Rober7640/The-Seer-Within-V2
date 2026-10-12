@@ -7,10 +7,13 @@ import {
   backendOfferForStripeProduct,
   isBackendOfferKey,
   isBookingTreatment,
+  resolveTeaCup,
   type BackendOffer,
+  type TeaCup,
 } from '@shared/backendOffers';
 import { addBackendCustomer } from './aweber';
-import { logBeBookingConversion } from './experiments';
+import { getStripe } from './stripeAccount';
+import { BE_04_BOOKING_EVENT, BE_04_PRICE_KEY, logBeBookingConversion } from './experiments';
 import logger from './logger';
 import { getBe08Edition } from './be08Editions';
 import { parseDateOfBirth, readBe08CustomFields, splitBirthName, type Be08CustomFields } from './be08Birth';
@@ -58,8 +61,11 @@ interface BackendSessionMeta {
   readingCents?: string;
   bump?: string;
   bumpProduct?: string;
-  /** The booking-treatment A/B visitor subject, for purchase attribution. */
+  /** The A/B visitor subject (02's booking treatment, 04's price test), for purchase attribution. */
   expSubject?: string;
+  /** 04 only: the price experiment she was quoted under (`be_04_price_2026`) and her arm. */
+  priceExp?: string;
+  priceArm?: string;
   /** 08 backstop only — the intake row is the source; these are read when it is missing. */
   editionId?: string;
   editionVersion?: string;
@@ -313,6 +319,16 @@ export async function recordBackendOrder(
   if (offer.key === 'twin-flame' && metadata.expSubject) {
     await logBeBookingConversion(metadata.expSubject, amountCents).catch((err) =>
       logger.error('be_order: booking-conversion log failed (order still recorded)', {
+        session: session.id,
+        error: err instanceof Error ? err.message : String(err),
+      }),
+    );
+  }
+  // 04's price split test: the booking's amount_total (the bump included) is this arm's
+  // revenue. Each upsell adds its own conversion from the webhook. Same guarantees as above.
+  if (offer.key === 'tea-reading' && metadata.priceExp === BE_04_PRICE_KEY && metadata.expSubject) {
+    await logBeBookingConversion(metadata.expSubject, amountCents, BE_04_PRICE_KEY, BE_04_BOOKING_EVENT).catch((err) =>
+      logger.error('be_order: 04 price-test conversion log failed (order still recorded)', {
         session: session.id,
         error: err instanceof Error ? err.message : String(err),
       }),
@@ -587,6 +603,50 @@ export async function marcusAudioContentFields(
   return { m8_question: all.m8_question, m8_hours: all.m8_hours };
 }
 
+// 04 The Turn — the per-buyer reading link the delivery email merges. She is dealt one of three
+// cups at checkout (stored only in Stripe metadata — there is no be_orders column), so read it
+// back from Stripe and map it to that cup's hosted PDF. Written as a content field at PURCHASE,
+// so AWeber alone owns the delivery TIMING: a Campaign on the `be-04-tea-reading` tag, with its
+// own wait, merges `04_tea_reading_url`. ⭐ 04's OWN field, never the shared `reading_url` — on
+// the shared BE list a multi-offer buyer's links would otherwise overwrite each other.
+// `undefined` on any miss (not 04, Stripe unreadable, or no https link set for her cup): the
+// thank-you still sends, and a blank delivery link is caught by the seed-test before go-live.
+// ⚠ These env var names must match be04ReadingUrlEnv() in be04Delivery.ts.
+function be04ReadingUrlFor(cup: TeaCup): string | null {
+  const raw = (process.env[`BE04_READING_URL_${cup.toUpperCase().replace(/-/g, '_')}`] ?? '').trim();
+  if (!/^https:\/\/\S+$/i.test(raw)) return null;
+  try {
+    return new URL(raw).protocol === 'https:' ? raw : null;
+  } catch {
+    return null;
+  }
+}
+
+async function teaReading04ContentFields(row: BeOrder): Promise<Record<string, string> | undefined> {
+  if (row.offer !== 'tea-reading') return undefined;
+  let cup: TeaCup;
+  try {
+    const stripe = getStripe();
+    if (!stripe) throw new Error('Stripe is not configured');
+    const session = await stripe.checkout.sessions.retrieve(row.stripeSessionId);
+    cup = resolveTeaCup(session.metadata?.cup ?? null);
+  } catch (err) {
+    logger.error('be_04: could not read her cup from Stripe — thank-you still sends, but the ' +
+      'delivery email has no link until this order is reconciled', {
+      session: row.stripeSessionId,
+      error: err instanceof Error ? err.message : String(err),
+    });
+    return undefined;
+  }
+  const url = be04ReadingUrlFor(cup);
+  if (!url) {
+    logger.error('be_04: no https reading link set for this cup — set its BE04_READING_URL_* env ' +
+      'var; the delivery email has no link until then', { session: row.stripeSessionId, cup });
+    return undefined;
+  }
+  return { '04_tea_reading_url': url };
+}
+
 /**
  * Put her on the backend customer list, unless that already happened.
  *
@@ -616,9 +676,15 @@ export async function writeToCustomerList(
     return stamp(row, 'no email on the session');
   }
 
-  // 08 Marcus: the per-order fields the confirmation/delivery emails merge (question,
-  // spread, paid count, 12/24h). undefined for every other offer.
-  const contentFields = await marcus08ContentFields(row);
+  // Per-order fields the reading list's confirmation/delivery emails merge; each offer that has
+  // them computes its own, undefined elsewhere. 08 Marcus: the reading details. 04 The Turn: the
+  // buyer's reading link, so AWeber's delivery Campaign can merge a different PDF per buyer.
+  const contentFields =
+    row.offer === 'marcus-reading'
+      ? await marcus08ContentFields(row)
+      : row.offer === 'tea-reading'
+        ? await teaReading04ContentFields(row)
+        : undefined;
 
   const result = await addBackendCustomer({
     email: row.email,

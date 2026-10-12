@@ -2179,3 +2179,75 @@ Not covered — needs a live walk on DEV (test card):
 - [ ] Downsell ($25) checkout on `/fb-read` shows it too
 - [ ] Webhook retry (resend the event from Stripe) does NOT add a second row or change the first
 - [ ] Terms + Privacy links in the disclosure open the pages with the new SMS sections
+
+## Backend offer 04 — The Turn (tea reading), built 2026-10-11
+
+Record: `improve-v1/v1-one-time-BEs/docs/04/04-DELIVERABLES.md`. Dark (`readyForMoney: false`).
+
+Covered by unit tests (`server/lib/backendOffers.teaReading.test.ts`,
+`server/routes/backendOffers.teaReading.test.ts`, `server/lib/experiments.be04Price.test.ts`,
+`server/lib/be04Delivery.test.ts`, `client/src/lib/upsellCopy/teaReading.test.ts`, plus the 04 rows in
+`backendCustomerList.test.ts`, `beOrders.test.ts`, `webhooks.backend.test.ts` and `backendPurchaseAnalytics.test.ts`):
+
+**The price test** (operator 2026-10-11: no price hike — the day ladder is retired; one fixed price, `be_04_price_2026`, A $35 vs B $45):
+
+- [x] Catalog: fixed $35 with the closed test set {3500, 4500}; no ladder exports (`ladderRungAt`, `TEA_READING_RUNG_CENTS`, …) remain; no offer has a `ladder` model
+- [x] `priceBackendOffer` charges `armCents` only inside {3500, 4500} — anything else (4700, 6700, 1, '4500', NaN) is $35; every other offer ignores `armCents`
+- [x] `resolveBe04Price`: no row / draft / paused / no visitor id / DB error / payload outside {3500, 4500} ⇒ arm A $35, no exposure; running ⇒ sticky ~50/50, one exposure (surface `be_04_price`); `freezeAssignment` keeps her arm after a re-weight; a concluded test rolls its winner out
+- [x] Checkout re-resolves her arm from `expSubject` and charges it; `amountCents` / `tier` / `quotedDay` / a posted price can never change it
+- [x] `quotedArm` ≠ the server's arm (or missing / junk / an old `quotedDay`-only page) ⇒ 409 `price_changed` with `current: { arm, cents, label }` — nothing created, nothing drawn; the re-press with the server's arm goes through
+- [x] Stripe metadata `priceExp: 'be_04_price_2026'` + `priceArm`, no `rung`; 02/03 get no price arm and never call the resolver
+- [x] Price endpoint `GET /api/backend/offers/tea-reading/price?subject=` → `{ offer, arm, cents, label }`, `no-store`; `?arm=A|B` preview only while dark (flagged, enrols nobody), ignored once open; the preview never reaches checkout (409 with the real price); 404 for an offer with no price test
+- [x] Both upsell charge paths (1-click PI, hosted fallback session) carry `expSubject` / `priceExp` / `priceArm` off the booking — only for 04
+- [x] Conversions: the booking logs `be_04_booking_purchased` = amount_total (bump included); each upsell product logs `be_04_upsell_purchased:<product>`; once per (visitor, event); no exposure ⇒ nothing; 02's booking conversion unchanged
+- [x] PostHog `purchase_completed` carries `price_arm` (booking + both upsell paths), `null` on other offers
+- [x] The client's visitor id is memoised for the page life, so private mode (no storage) uses ONE id for the price fetch and the checkout
+
+**The rest of 04:**
+
+- [x] Cup is DRAWN, not picked (operator 2026-10-11): `drawTeaCup` is uniform over the three slugs given an injected random; the real draw (`crypto.randomInt`) only deals valid slugs
+- [x] Stripe metadata `cup` (the server's draw, always a valid slug), `cupDrawn: '1'`; no `cupChosen`
+- [x] A `cup` the client sends (valid, invalid, junk) is ignored — never a 400, never changes the drawn cup; other offers get no `cup` and no draw
+- [x] Receipt (`GET /api/backend/order/:session`) never returns a `cup` for 04
+- [x] Receipt `deliveryHours` is 24 for 04 even with the bump — the Double Turning is not a speed bump (08 keeps 12)
+- [x] Bump is the Double Turning (operator 2026-10-11, intangible): key `double_turning` (its own — not another offer's, not the retired `still_cup`), $12.77, Stripe line "The Double Turning"; no `TEA_READING_STILL_CUP_PATH`
+- [x] AWeber tags are the literal strings `be-04-tea-reading` / `be-04-bump` / `be-04-delivered` / `be-04-upsell1-protection` / `be-04-upsell2-bracelet`
+- [x] Delivery job: off unless `BE04_DELIVERY_ENABLED=true`; only paid, undelivered orders past the delay; link chosen by cup; missing / non-https link ⇒ skipped, never sent; idempotent; one failure doesn't stop the rest
+- [x] Upsell copy: no day numbers, no merge token but `{firstName}`, no "clearing" / "energy field" / "our conversation", same bucket block for everyone, U2 skips the AI passages
+
+Not covered — needs a DEV walk with a Stripe test card (`BACKEND_CHECKOUT_TEST_MODE=true`):
+
+- [ ] Draft (as shipped): every visitor sees and pays $35; `experiment_exposures` stays empty for `be_04_price_2026`
+- [ ] Start `be_04_price_2026` (dev — dev and prod share one database, so clear any force-run rows first): new visitors split ~50/50; a visitor keeps her price across reloads and days; arm B's Stripe line is $45 (+ $12.77 with the bump)
+- [ ] A page opened before Start (shows $35) and pressed after, as a B visitor: 409, the page shows $45 and asks her to press again; the re-press pays $45. Pause: a $45 page gets $35 the same way
+- [ ] One B purchase with the bump and both upsells writes three `experiment_conversions` rows (booking 5777, U1, U2) on arm B; a webhook retry adds none; `/admin/experiments` revenue per viewer counts all three
+- [ ] Private-mode browser: the price fetch and the checkout POST carry the same `subject` / `expSubject`
+- [ ] A drawn cup is in Stripe metadata (`cup` = one of the three slugs, `cupDrawn=1`); over several test orders more than one cup turns up
+- [ ] Bump ticked ⇒ second line item "The Double Turning" $12.77 (and on her card receipt), `bumpProduct=double_turning`; receipt shows the Double Turning P.S. (no link); `be-04-bump` tag lands; no bump email is sent (there is no bump Campaign)
+- [ ] Pay → `/offers/upsell/welcome1` → welcome2 → `/offers/wiccan/tea-reading/success?s=…` shows her order (not another offer's)
+- [ ] 1-click U1 / U2 charges succeed on the saved card; fallback checkout works when off-session fails
+- [ ] Stripe cancel returns to the treatment she came from with `?cancelled=1` and "nothing has been taken"
+- [ ] Webhook retry does not double the `be_orders` row or the AWeber write
+- [ ] With the delivery job on and the delay set to 1h: the `be-04-delivered` tag + her cup's `reading_url` arrive once; the T4 email links to the right PDF
+- [ ] An order still undelivered at 23h logs the overdue error
+- [ ] Live V1 funnel `/` and the 03 / 06 / 09 offers unchanged
+
+### 04 client pages — booking page, chat, receipt (built 2026-10-11; bump → the Double Turning same day)
+
+Covered by `client/src/lib/teaReadingBooking.test.ts`, `teaReadingReceipt.test.ts`, `funnel.teaReading.test.ts`
+and the walk `improve-v1/v1-one-time-BEs/scripts/walk-04-smoke.mjs` (API stubbed):
+
+- [x] Page: headline, image, price line, tick and button inside the first 390×844 screen, unticked
+- [x] Price is her arm's, from the endpoint, requested with her visitor id (blank bar while loading, retry line on failure, button disabled); `?arm=A` / `?arm=B` shows $35 / $45 and sends that `quotedArm`; the button stays on the first phone screen at either price
+- [x] No ladder copy anywhere: price line "Paid once · Your reading within 24 hours", small print "Paid once · …", no "Why today's price" section, chat statement 3 is just "Yes — I'll pay $35, once.", card small print "Paid once. …"
+- [x] Bump appears only after the tick, never pre-checked, and reads the Double Turning word for word (page label + line; chat question ends "?", "Yes, double the strength" / "No, just my reading"); it promises nothing to open or wait for; NO cup pick on the page or in the chat (no picker, no cup names, no question); the checkout request sends no `cup`
+- [x] 409 `price_changed` shows the server's price and "press again"; the re-press sends its `quotedArm` and the same visitor id (page and chat)
+- [x] Chat: typing indicator first, one line per turn, card gets its own beat; refresh vs `?cancelled=1` resume copy; post-commit lines render below the card
+- [x] Receipt: polls through 402s; bump ⇒ the Double Turning P.S. (bump buyers only, no link, "nothing extra to look out for"); no bump ⇒ no P.S.; no name ⇒ "dear — your cup is turned"; other offers' sessions ⇒ fallback; no price; no "Your reading follows" line, even if an order carries a `cup`
+- [x] No `/still-cup` route: App.tsx has none, the page and `stillCup.ts` are deleted, the URL renders the 404 (walk), and PostHog maps it to `unknown`
+
+Not covered — needs a real server + Stripe test card:
+
+- [ ] Stripe cancel from the chat lands on `/offers/wiccan/tea-reading/chat?cancelled=1` (treatment `chat`), from the page on the page
+- [ ] Back button from Stripe (bfcache restore) re-arms the button and re-fetches her price
+- [ ] Receipt shows the delivered variant once `deliveredAt` is set (and never names the drawn cup)

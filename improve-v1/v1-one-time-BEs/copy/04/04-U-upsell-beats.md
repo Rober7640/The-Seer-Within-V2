@@ -1,5 +1,7 @@
 # 04-U1a · 04-U2a · 04-U2b — Upsell beats *(The Turn)*
 
+> ⛔ **Superseded 2026-10-11** by [`04-U-upsell-copy-v2.md`](./04-U-upsell-copy-v2.md) (no day numbers, U2 no longer promises his return, V1 leaks fixed); the live copy is `client/src/lib/upsellCopy/teaReading.ts`. Kept as the source draft.
+
 ✅ **The full ladder runs after 04** *(operator, 2026-08-04)* — U1 then U2. An earlier draft
 recommended routing past U1; that is superseded, and `04-U1a` below was rebuilt for shipping rather
 than left as a placeholder.

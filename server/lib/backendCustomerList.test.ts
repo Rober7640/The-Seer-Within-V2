@@ -639,3 +639,73 @@ describe('09 has no reading, so no reading-delivery write', () => {
     expect(f).not.toHaveBeenCalled();
   });
 });
+
+// ─── 04 · The Turn (tea-leaf reading) ──────────────────────────────────────────
+// A reading offer on 02's shared lists, told apart only by the be-04 tags (like 03). Its
+// Campaign triggers are the purchase tag (thank-you), the bump tag, and the DELIVERED tag —
+// applied by the in-app delivery job with `reading_url`. Literals, because three external
+// systems exact-match them.
+describe('04 · the tag strings and lists', () => {
+  it('are the exact strings the 04 AWeber Campaigns are triggered by', () => {
+    expect(BACKEND_OFFERS['tea-reading']).toEqual({
+      number: '04',
+      name: 'The Turn',
+      tag: 'be-04-tea-reading',
+      bumpTag: 'be-04-bump',
+      deliveredTag: 'be-04-delivered',
+      initialListId: '6972552',
+      bumpListId: '6972554',
+    });
+    expect(deliveredTag('tea-reading')).toBe('be-04-delivered');
+  });
+
+  it('adds be-04-bump only when she took the bump', () => {
+    expect(purchaseTags('tea-reading', false)).toEqual(['be-customer', 'be-04-tea-reading']);
+    expect(purchaseTags('tea-reading', true)).toEqual(['be-customer', 'be-04-tea-reading', 'be-04-bump']);
+  });
+
+  it('a bump buyer gets a SECOND write to the order-bump list; a non-bump buyer only the first', () => {
+    expect(purchaseListWrites('tea-reading', false)).toEqual([
+      { listId: '6972552', tags: ['be-customer', 'be-04-tea-reading'], role: 'initial' },
+    ]);
+    expect(purchaseListWrites('tea-reading', true)).toEqual([
+      { listId: '6972552', tags: ['be-customer', 'be-04-tea-reading'], role: 'initial' },
+      { listId: '6972554', tags: ['be-customer', 'be-04-tea-reading', 'be-04-bump'], role: 'bump' },
+    ]);
+  });
+
+  it('tags a 04 upsell buyer be-04-upsell1-protection / be-04-upsell2-bracelet', () => {
+    expect(upsellPurchaseTags('tea-reading', 'be_protection_ritual'))
+      .toEqual(['be-customer', 'be-04-tea-reading', 'be-04-upsell1-protection']);
+    expect(upsellPurchaseTags('tea-reading', 'be_bracelet'))
+      .toEqual(['be-customer', 'be-04-tea-reading', 'be-04-upsell2-bracelet']);
+  });
+
+  it('writes a 04 buyer to 6972552 with stripe_order_id + offer', async () => {
+    const f = okFetch();
+    await addBackendCustomer({ email: 'she@example.com', offer: 'tea-reading', stripeOrderId: 'cs_test_04' });
+    expect(f.mock.calls[0][0]).toContain('/lists/6972552/subscribers');
+    const body = sentBody(f);
+    expect(body.tags).toEqual(['be-customer', 'be-04-tea-reading']);
+    expect(body.custom_fields).toEqual({ stripe_order_id: 'cs_test_04', offer: 'tea-reading' });
+  });
+
+  it('the delivery write applies be-04-delivered with reading_url on the reading list', async () => {
+    const f = okFetch();
+    const result = await markBackendReadingDelivered({
+      email: 'she@example.com',
+      offer: 'tea-reading',
+      stripeOrderId: 'cs_test_04_d',
+      readingUrl: 'https://files.example.com/04/divided-rim.pdf',
+    });
+    expect(result.success).toBe(true);
+    expect(f.mock.calls[0][0]).toContain('/lists/6972552/subscribers');
+    const body = sentBody(f);
+    expect(body.tags).toEqual(['be-04-delivered']);
+    expect(body.custom_fields).toEqual({
+      stripe_order_id: 'cs_test_04_d',
+      offer: 'tea-reading',
+      reading_url: 'https://files.example.com/04/divided-rim.pdf',
+    });
+  });
+});

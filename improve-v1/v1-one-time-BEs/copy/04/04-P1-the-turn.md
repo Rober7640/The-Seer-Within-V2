@@ -1,5 +1,7 @@
 # 04-P1 — The delivered product *(The Turn)*
 
+> ⛔ **Superseded 2026-10-11** by the three per-cup readings in [`product/`](./product/) — this file gave two of the three cups two different plans and ~2,200 words per buyer. Kept as the source draft. Record: `docs/04/04-DELIVERABLES.md`.
+
 | | |
 |---|---|
 | **Subject** | `%FIRSTNAME% — your cup is turned` — **must match `04-T1`/`04-T3`** |

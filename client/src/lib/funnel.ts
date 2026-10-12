@@ -102,6 +102,7 @@ export function skipEmail(search?: string): boolean {
 // deliberately holds no copy, so routing can never depend on it.
 export const TWIN_FLAME_PREFIX = "/tarot/twin-flame"; // 02 Twin Flame Tarot
 export const JUDGEMENT_PREFIX = "/offers/wiccan/judgement-day"; // 03 Judgement Day
+export const TEA_READING_PREFIX = "/offers/wiccan/tea-reading"; // 04 The Turn (tea-leaf reading)
 export const PIXIU_PREFIX = "/offers/wiccan/pixiu-bracelet"; // 06 Pixiu (Wishing) Bracelet
 export const HEART_CLEANSER_PREFIX = "/offers/heart-cleanser"; // 09 Heart Cleanser Love Charm
 
@@ -237,7 +238,7 @@ export function funnelPath(v1Path: string, pathname?: string): string {
 export type PostHogFunnel =
   | "soulmate" | "fb" | "fb2" | "gdn" | "palm" | "tarot" | "read" | "v1" | "evelyn" | "aiden"
   | "marcus" | "luna" | "nova" | "maren" | "seven-seven" | "twinflame" | "judgement" | "pixiu"
-  | "heartcleanser" | "marcusreading";
+  | "heartcleanser" | "marcusreading" | "teareading";
 
 // Generalized persona landers → their PostHog funnel name. One route each.
 const PERSONA_LANDER_FUNNELS: Record<string, PostHogFunnel> = {
@@ -256,6 +257,10 @@ function normalize(path: string): string {
 export function getPostHogFunnel(pathname?: string): PostHogFunnel | null {
   const p = normalize(pathname ?? currentPath());
   if (p === TWIN_FLAME_PREFIX || p.startsWith(`${TWIN_FLAME_PREFIX}/`)) return "twinflame";
+  // 04 The Turn — booking page (root) + chat + receipt, all under its prefix. Its
+  // upsells are the SHARED /offers/upsell/* pages, which fire their own offer-aware
+  // lander_view. Matches the server's BACKEND_FUNNEL['tea-reading'].
+  if (p === TEA_READING_PREFIX || p.startsWith(`${TEA_READING_PREFIX}/`)) return "teareading";
   // 06 Pixiu Bracelet — email → booking page + /success. Registering it here is
   // all App.tsx needs to fire lander_view with the letter's utm_* attached, so a
   // mailed Pixiu link reports clicks (revenue is grouped server-side, BACKEND_FUNNEL).
@@ -297,6 +302,7 @@ export function backendOfferFunnel(offer: string): string {
   switch (offer) {
     case "twin-flame": return "twinflame";
     case "judgement-day": return "judgement";
+    case "tea-reading": return "teareading";
     case "pixiu-bracelet": return "pixiu";
     case "heart-cleanser": return "heartcleanser";
     default: return offer;
@@ -329,6 +335,14 @@ export function getPostHogStep(pathname?: string): string {
       if (sub === "" || sub === "/preview-page" || sub === "/preview-chat") return "booking";
       if (sub === "/welcome1") return "upsell1";
       if (sub === "/welcome2") return "upsell2";
+      if (sub === "/success") return "thank_you";
+      return "unknown";
+    }
+    case "teareading": {
+      // 04: the page at the root, the chat at /chat, and the receipt. The bump (the Double
+      // Turning) is intangible — it has no page, so no step of its own.
+      const sub = p.slice(TEA_READING_PREFIX.length); // "" at the booking root (the page)
+      if (sub === "" || sub === "/chat") return "booking";
       if (sub === "/success") return "thank_you";
       return "unknown";
     }
