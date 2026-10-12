@@ -12,6 +12,8 @@ _Subject history (v1, 2026-10-08; bytes measured with `len(s.encode())`, emoji +
 
 **Bucket:** love
 
+**Short Link:** `https://www.theseerwithin.com/e/9E1E60w?email={!email}`
+
 **Big Idea:** Dr. Seuss's 50-word bet — say your love question in 50 words or fewer
 
 **Reading Recap:** You told them the true story behind Green Eggs and Ham: Dr. Seuss's publisher, Bennett Cerf, bet him $50 that he couldn't write a children's book using only 50 different words. Seuss took the bet and kept charts and checklists to track his words; he said that when a verse didn't work it was like unraveling a sock — "You take some of your best stuff and throw it away." The book came out in 1960, and by 2000 it had outsold his 236-word The Cat in the Hat in America, with more than 8 million copies. Seuss said later that Cerf never paid up. You drew one point from it: when you can't use many words, you have to use the true ones. You said love questions usually come out long (what he said, what he didn't say, what a friend thinks, "I know I'm overthinking this, but…"), and that the rules people hear in love — play it cool, don't text first, don't ask or you'll scare him off — are dares too, the wrong kind: every one dares you to stay quiet. So you dared them the opposite: say their love question in 50 words or fewer — cut what happened, cut who said what — and if they get stuck, carry one question: "What would I ask if I wasn't scared of the answer?" In the P.S. you said 50 words are hard to read on your own, because you know every bit of the story you cut and start explaining again; you're not inside that story, so you can read their words as they are, and look with them at what's really in them. You did not promise any outcome. Don't police the word count: if they go over 50, or haven't found their question yet, that's fine.
@@ -64,13 +66,13 @@ __That's usually the real one.__
 
 That's the whole dare. Bring me your 50 words, about him or about love in general.
 
-[LINK] Evelyn, I'll take your dare
-
 **→ Ask Evelyn in 50 words**
 
 — Evelyn
 
 **P.S.** One more thing about those 50 words. They're hard to read on your own. You know every bit of the story you cut, so you read them back and start explaining all over again. I'm not inside that story. I can read your words just as they are, and we can look at what's really in them. New here? **The first 3 minutes are on me.** Seuss needed charts and checklists for his 50 words. You only need one question.
+
+[LINK] Evelyn, I'll take your dare
 
 ---
 

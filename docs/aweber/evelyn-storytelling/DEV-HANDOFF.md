@@ -1,5 +1,7 @@
 # DEV HANDOFF — Evelyn V2 daily emails 01–07 + 09
 
+> **Update 2026-10-12:** from 09 on, the operator schedules through the API with the `/schedule-evelyn-email NN` command (README, top of the workflow) — one de-duped broadcast on `theseerwithin_free` + 14 include lists, the way you sent 02. You don't need to do steps 1–6 below for new emails. 09 is scheduled (AWeber 61495170, Thu 15 Oct). Open question for you: are `/e/` visits logged on our side? AWeber shows 0 clicks for any link containing `{!email}`, so it can't measure these emails.
+
 **For: the developer.** The operator has approved the copy for all 7 emails (2026-10-08: "All good"). The remaining technical steps are **yours** — the operator won't do them. Branch: `daily-evelyn-7oct`. Folder: `docs/aweber/evelyn-storytelling/`. Read `README.md` (workflow) first.
 
 ⚠ **Email 05 is time-sensitive: it must be SENT by Sunday 18 Oct 2026** (it's based on a news story).
@@ -15,7 +17,7 @@
 | 05 | `05-tuesday-rose` | ✅ (minted 2026-10-08) | `/e/g4UKAUY` — **not yet in the file** | ❌ | ❌ |
 | 06 | `06-north-wind-sun` | ✅ (minted 2026-10-08) | `/e/K4T6TCI` — **not yet in the file** | ❌ | ❌ |
 | 07 | `07-burning-ears` | ✅ (minted 2026-10-08) | `/e/e0LSkBI` — **not yet in the file** | ❌ | ❌ |
-| 09 | `09-fifty-words` (🔒 locked 2026-10-08) | ❌ **not minted** — brief text operator-approved in the file | — (you mint it) | ❌ | ❌ |
+| 09 | `09-fifty-words` (🔒 locked 2026-10-08) | ✅ (minted 2026-10-12) | `/e/9E1E60w` ✅ in file (redirect checked) | ✅ `evelyn/story/09-fifty-words.jpg` | ✅ · **scheduled via API Thu 15 Oct 10:30 UTC (AWeber 61495170)** |
 
 All 7 reading briefs are rows in **production** `email_link_codes` (persona `evelyn-cross`, campaigns `story-0N-<slug>`). The "reading brief" is what lets Evelyn's chat continue the email instead of greeting the reader cold — see README "Reading brief + short link". It only reaches the chat if the reader arrived within 24 h and only for the first 4 messages (`server/lib/arrivalReading.ts`).
 
