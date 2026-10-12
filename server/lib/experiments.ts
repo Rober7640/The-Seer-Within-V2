@@ -1080,6 +1080,154 @@ export async function tallyV1Main(opts: V1MainTallyOptions): Promise<TallyResult
   return stats;
 }
 
+// ── STRIPE vs PAYMENTS.AI (v1_gateway_split_2026) ────────────────────────────────
+//
+// Conversion type `gateway_split`. The exposure is logged at the CHECKOUT CLICK
+// (/api/checkout), on both arms, so the denominator is "headed to pay" — the point
+// where the two arms first differ. Read three ways:
+//
+//   rows          checkouts → paid buyers → ALL revenue (main + bump + both upsells).
+//                 Revenue per checkout is the headline: it is what the business keeps.
+//   gatewayDetail the same per arm, broken out by stage, plus how many buyers in each
+//                 arm actually paid on each processor (a Payments.AI-arm buyer whose
+//                 browser could not load the card form is sent to Stripe — counted in
+//                 her assigned arm, as intent-to-treat, and shown here so it is visible).
+//   attempts      approval rate per processor × step × who initiated, from
+//                 payment_attempts — the question the split exists to answer. Only
+//                 attempts on THIS test's orders, so other funnels' Stripe traffic
+//                 cannot leak in.
+//
+// Same purchase definition as tallyV1Main (paid AFTER the exposure).
+
+export interface GatewayArmDetail {
+  variant: string;
+  checkouts: number;
+  buyers: number;
+  paidOnStripe: number;
+  paidOnPaymentsai: number;
+  mainRevenueUsd: number;
+  bumpRevenueUsd: number;
+  upsell1Buyers: number;
+  upsell1RevenueUsd: number;
+  upsell2Buyers: number;
+  upsell2RevenueUsd: number;
+  totalRevenueUsd: number;
+  revPerCheckoutUsd: number;
+}
+
+export interface GatewayAttemptRow {
+  variant: string;
+  gateway: string;
+  step: string;
+  initiator: string;
+  attempts: number;
+  approved: number;
+  declined: number;
+  needsAction: number;
+  approvalPct: number;
+}
+
+export interface GatewaySplitResult extends TallyResult {
+  gatewayDetail: GatewayArmDetail[];
+  attempts: GatewayAttemptRow[];
+}
+
+const usd = (cents: unknown) => Math.round(Number(cents) || 0) / 100;
+
+export async function tallyGatewaySplit(opts: V1MainTallyOptions): Promise<GatewaySplitResult> {
+  const result = await db.execute(sql`
+    SELECT e.variant AS variant,
+           count(*)                                                                AS viewers,
+           count(*) FILTER (WHERE ${V1_IN_TEST_PURCHASE})                          AS buyers,
+           count(*) FILTER (WHERE ${V1_IN_TEST_PURCHASE} AND c.payment_gateway = 'paymentsai') AS paid_pai,
+           count(*) FILTER (WHERE ${V1_IN_TEST_PURCHASE} AND COALESCE(c.payment_gateway, 'stripe') = 'stripe') AS paid_stripe,
+           COALESCE(sum(c.main_purchase_amount)          FILTER (WHERE ${V1_IN_TEST_PURCHASE}), 0) AS main_cents,
+           COALESCE(sum(COALESCE(c.bump_amount_cents, 0)) FILTER (WHERE ${V1_IN_TEST_PURCHASE}), 0) AS bump_cents,
+           count(*) FILTER (WHERE ${V1_IN_TEST_PURCHASE} AND c.upsell_purchased)   AS u1_buyers,
+           COALESCE(sum(COALESCE(c.upsell_amount, 0))  FILTER (WHERE ${V1_IN_TEST_PURCHASE} AND c.upsell_purchased), 0)  AS u1_cents,
+           count(*) FILTER (WHERE ${V1_IN_TEST_PURCHASE} AND c.upsell2_purchased)  AS u2_buyers,
+           COALESCE(sum(COALESCE(c.upsell2_amount, 0)) FILTER (WHERE ${V1_IN_TEST_PURCHASE} AND c.upsell2_purchased), 0) AS u2_cents
+    FROM experiment_exposures e
+    LEFT JOIN conversations c ON c.id = e.context->>'conversationId'
+    WHERE e.experiment_key = ${opts.key}
+      AND e.created_at >= ${opts.startISO}
+    GROUP BY e.variant;
+  `);
+
+  const raw = result.rows as Record<string, unknown>[];
+  // `revenue_cents` = EVERYTHING the order earned — the headline revenue per checkout.
+  const withRevenue = raw.map((r) => ({
+    ...r,
+    revenue_cents:
+      (Number(r.main_cents) || 0) + (Number(r.bump_cents) || 0) +
+      (Number(r.u1_cents) || 0) + (Number(r.u2_cents) || 0),
+  }));
+
+  const controlKey = opts.controlKey ?? 'stripe';
+  const treatmentKey = opts.treatmentKey ?? 'paymentsai';
+  const { rows, byVariant } = assembleRows(withRevenue, controlKey, treatmentKey);
+  const stats = finalizeStats(rows, controlKey, treatmentKey);
+
+  const gatewayDetail: GatewayArmDetail[] = rows.map((row) => {
+    const q = byVariant.get(row.variant) ?? {};
+    const checkouts = Number(q.viewers) || 0;
+    const total = Number((q as { revenue_cents?: unknown }).revenue_cents) || 0;
+    return {
+      variant: row.variant,
+      checkouts,
+      buyers: Number(q.buyers) || 0,
+      paidOnStripe: Number(q.paid_stripe) || 0,
+      paidOnPaymentsai: Number(q.paid_pai) || 0,
+      mainRevenueUsd: usd(q.main_cents),
+      bumpRevenueUsd: usd(q.bump_cents),
+      upsell1Buyers: Number(q.u1_buyers) || 0,
+      upsell1RevenueUsd: usd(q.u1_cents),
+      upsell2Buyers: Number(q.u2_buyers) || 0,
+      upsell2RevenueUsd: usd(q.u2_cents),
+      totalRevenueUsd: usd(total),
+      revPerCheckoutUsd: checkouts ? Math.round(total / checkouts) / 100 : 0,
+    };
+  });
+
+  // Attempts on THIS test's orders only. The main charge joins on email as well as the
+  // order id: a DECLINED Payments.AI main charge never becomes the conversation's order
+  // id (only an approved one is written), but it is still her attempt.
+  const att = await db.execute(sql`
+    SELECT e.variant AS variant, a.gateway, a.step, a.initiator,
+           count(*)                                         AS attempts,
+           count(*) FILTER (WHERE a.result = 'approved')     AS approved,
+           count(*) FILTER (WHERE a.result = 'declined')     AS declined,
+           count(*) FILTER (WHERE a.result = 'needs_action') AS needs_action
+    FROM experiment_exposures e
+    JOIN conversations c ON c.id = e.context->>'conversationId'
+    JOIN payment_attempts a
+      ON a.order_ref = c.stripe_session_id
+      OR (a.step = 'main' AND lower(a.email) = lower(c.email))
+    WHERE e.experiment_key = ${opts.key}
+      AND e.created_at >= ${opts.startISO}
+      AND a.created_at >= e.created_at
+    GROUP BY 1, 2, 3, 4
+    ORDER BY 3, 1, 2, 4;
+  `);
+  const attempts: GatewayAttemptRow[] = (att.rows as Record<string, unknown>[]).map((r) => {
+    const n = Number(r.attempts) || 0;
+    const ok = Number(r.approved) || 0;
+    return {
+      variant: String(r.variant),
+      gateway: String(r.gateway),
+      step: String(r.step),
+      initiator: String(r.initiator),
+      attempts: n,
+      approved: ok,
+      declined: Number(r.declined) || 0,
+      needsAction: Number(r.needs_action) || 0,
+      approvalPct: n ? Math.round((1000 * ok) / n) / 10 : 0,
+    };
+  });
+
+  return { ...stats, gatewayDetail, attempts };
+}
+
 export interface TallyBySignRow {
   sign: string;
   rows: TallyVariantRow[];

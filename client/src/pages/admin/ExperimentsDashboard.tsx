@@ -1,4 +1,9 @@
 import { useCallback, useEffect, useState } from "react";
+import {
+  GatewaySplitPanel,
+  type GatewayArmDetail,
+  type GatewayAttemptRow,
+} from "@/components/admin/GatewaySplitPanel";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { adminFetch } from "@/hooks/useAdmin";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -115,6 +120,9 @@ interface ResultsResponse {
     paidWithBump: number;
     bumpRevenueUsd: number;
   }>;
+  // Stripe vs Payments.AI (conversion type gateway_split) — see GatewaySplitPanel.
+  gatewayDetail?: GatewayArmDetail[];
+  attempts?: GatewayAttemptRow[];
   // What the superseded buyer definition would have counted, and why each row was
   // dropped. Present on v1_main_funnel tallies only.
   excluded?: Array<{
@@ -1215,6 +1223,11 @@ export default function ExperimentsDashboard() {
                           verdict.
                         </div>
                       </div>
+
+                      <GatewaySplitPanel
+                        detail={results.gatewayDetail}
+                        attempts={results.attempts}
+                      />
 
                       {/* Order-bump take rate. Deliberately ABOVE the per-lander
                           diagnostics: it is a headline number people actually ask

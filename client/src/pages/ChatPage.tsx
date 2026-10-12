@@ -9,6 +9,9 @@ import { CommitmentGateCard } from "../components/CommitmentGateCard";
 import { BumpOfferCard } from "../components/BumpOfferCard";
 import { DownsellCTA } from "../components/DownsellCTA";
 import { BackgroundMusic } from "../components/BackgroundMusic";
+// The Payments.AI half of the live gateway split. Renders nothing unless
+// /api/checkout put this buyer on Payments.AI (or she is back from its 3DS check).
+import { PaiCheckoutHost } from "../components/PaiCheckoutHost";
 import { useConversation } from "../hooks/useConversation";
 import { isSlidingCloseVariant } from "@shared/types";
 import { resolveBumpCents, V1_BUMP_CENTS, pairedBumpBucket } from "@shared/orderBump";
@@ -118,6 +121,7 @@ export default function ChatPage() {
     <div className="fixed inset-0 flex flex-col items-center justify-center p-0 md:p-4 overflow-hidden">
       <CosmicBackground />
       <BackgroundMusic />
+      <PaiCheckoutHost />
 
       <div className="w-full max-w-lg h-full md:h-[90vh] flex flex-col bg-white/95 backdrop-blur-md md:rounded-2xl shadow-2xl overflow-hidden border border-white/20 relative z-10">
         {/* Header */}
