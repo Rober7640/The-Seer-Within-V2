@@ -2387,3 +2387,4 @@ Not covered — needs a live walk or a future Playwright pass:
 - [ ] /admin/experiments shows "Revenue by stage" and "Approval rate" for the test; Start refused when PAI_LIVE_* is not set
 - [ ] Stripe upsell 1-click approved AND declined both write a payment_attempts row (gateway=stripe, initiator=mit)
 - [ ] `<funnel>/checkout` opened directly (no order in this tab) says "expired" with a link back to the reading; "Back" returns to the chat
+- [ ] `/fb/checkout` and `/fb-tarot/checkout` fire NO Facebook PageView (Stripe's hosted page fires none); PostHog $pageview still fires

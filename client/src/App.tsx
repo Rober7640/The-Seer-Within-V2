@@ -191,7 +191,12 @@ function Router() {
       location === '/home' ||
       location.startsWith('/products/') ||
       location === '/order/success';
-    if (isTrackedFunnel) {
+    // The Payments.AI checkout page (live gateway split) stays quiet for the FB
+    // PageView: its Stripe counterpart is Stripe's hosted page, which fires none, so
+    // firing here would give one arm an extra PageView per checkout. PostHog still
+    // records it above.
+    const isPaiCheckout = location === '/fb/checkout' || location === '/fb-tarot/checkout';
+    if (isTrackedFunnel && !isPaiCheckout) {
       trackPageView();
     }
 
