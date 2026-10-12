@@ -2,7 +2,7 @@
 
 **Status:** Review draft — not gated, not built, not in AWeber. 2026-10-11.
 
-## Subject options (operator picks one)
+## Subject — CHOSEN (a) (operator, 2026-10-12). Alternates kept for a later test:
 
 - (a) 🌉 {{ subscriber.first_name | capitalize }}, your bridge week is coming
 - (b) 😶 Why does everything you say to him land wrong?

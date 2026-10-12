@@ -1,7 +1,8 @@
 # 04 The Turn — handover to dev
 
-**Branch:** `04-tea-reading` (pushed, based on `development` `48a7ded1`). **State:** built and
-tested in preview. **Dark:** `readyForMoney: false`, so nothing can charge. Nothing is deployed.
+**Branch:** `04-tea-reading` (pushed, based on `development` `48a7ded1`; `git log` for the head). **State:**
+built and tested in preview. **Dark:** `readyForMoney: false`, so nothing can charge. Nothing is
+deployed, uploaded or sent. *Updated 2026-10-12.*
 
 Full record of what was built and why: [`04-DELIVERABLES.md`](./04-DELIVERABLES.md). Tick sheet:
 [`0-WORKFLOW-04.md`](./0-WORKFLOW-04.md).
@@ -10,12 +11,15 @@ Full record of what was built and why: [`04-DELIVERABLES.md`](./04-DELIVERABLES.
 
 ## In plain English
 
-The whole funnel exists: a booking page at one fixed price (split-tested: half the visitors see $35,
-half $45 — once the test is switched on), an order bump, two upsells, a thank-you page, three
-versions of the reading as PDFs, and the emails.
-It works on a laptop with fake payments. **What's left is switching it on**: put the PDFs online,
-build the emails in AWeber, do one real test purchase, then flip the switch. A few copy reviews and
-two decisions come first, and they're Joel's.
+The whole funnel exists and every decision is made: a booking page at one fixed price (split-tested:
+half the visitors see $35, half $45 — once the test is switched on), an order bump (the Double
+Turning — nothing to deliver), two upsells, a thank-you page, three versions of the reading as PDFs
+(each buyer gets one, drawn at random), the two after-purchase emails, and three approved sales
+emails with their subject lines. It works on a laptop with fake payments.
+
+**What's left is switching it on**: put the PDFs and the email photo online, build the emails in
+AWeber, do one real test purchase, flip the switch, then send. Joel's only open item is confirming
+which AWeber lists the sales emails go to (J6).
 
 ---
 
@@ -26,8 +30,19 @@ two decisions come first, and they're Joel's.
 | J1 | **Read the three readings** (the product — what she pays for) | `docs/04/product/pdf/04-the-turn-{divided-rim,turned-handle,sunken-leaf}.pdf` |
 | J2 | **Read the funnel copy**: booking page, booking chat, receipt, upsells | `copy/04/04-C1-booking-page-v2.md`, `04-C2-booking-chat.md`, `04-T1-thank-you-page.md`, `04-U-upsell-copy-v2.md`. Screenshots: `improve-v1/evidence/04-tea-reading-2026-10-11/` |
 | J3 | **Read the two emails** | `copy/04/04-T3-confirmation-email`, `04-T4-delivery-email` (.html/.txt), also `~/Desktop/04-tea-reading-emails/`. (The bump is intangible, so there is no bump email — the old `04-T5` Still Cup email is deleted) |
-| J6 | **Sales emails — pick the subjects and the lists.** The approved sequence is **email 1 → "RE:" → email 2** (built, send-ready: `copy/04/sales/html/`, handoff `copy/04/sales/AWeber-handoff.md`, copies in `~/Desktop/04-tea-reading-emails/sales/`). Built with subject option (a) of each as the working choice — confirm or swap. Lists: default as 09 (`theseerwithin_free` + palm + tarot), buyers excluded | `copy/04/sales/04-S1/S4/S2-*.md` |
-| J7 | **OK to put the PDFs online.** The links will be public but unguessable | step D3 |
+| J6 | **Confirm the lists for the sales emails.** Default, as 09: `theseerwithin_free` + palm + tarot, buyers excluded. Everything else about the emails is approved (below) | `copy/04/sales/AWeber-handoff.md` |
+
+**Already decided by Joel** (don't re-ask):
+
+| Decision | Answer |
+|---|---|
+| Sales emails | **Three, approved 2026-10-11:** email 1 → "RE:" → email 2, each standalone. Built send-ready in `copy/04/sales/html/` |
+| Subject lines | **Approved 2026-10-12:** email 1 "🌉 [name], your bridge week is coming" · RE: email "RE: 🌉 [name], your bridge week is coming" · email 2 "🕊️ [name], when did he really start pulling away?" |
+| Price | **No price rise.** Fixed price with a 50/50 split test, $35 vs $45 (draft until started) |
+| Which reading she gets | **Random draw** at checkout — no pick on the booking page |
+| Order bump | **The Double Turning**, $12.77 — intangible, nothing to deliver |
+| PDFs online | **Yes** (2026-10-11) — public but unguessable links (D3) |
+| Images | **The source letter's real cup photo** everywhere — no generated images |
 
 ---
 
@@ -42,7 +57,7 @@ two decisions come first, and they're Joel's.
 | D5 | **AWeber, by hand** (the API can't build Campaigns) | **T3 confirmation** — list `6972552`, trigger tag `be-04-tea-reading`, no wait. ⛔ Not on `6972554`: bump buyers get `be-04-tea-reading` there too, so it would send twice. **T4 delivery** — list `6972552`, trigger `be-04-delivered`, no wait; swap `{{AWEBER_READING_URL}}` for the `reading_url` custom field (HTML *and* text); subject `{{ subscriber.first_name \| default: "dear" }} — your cup is turned`. **No bump Campaign:** the bump (the Double Turning) is intangible — nothing to send. `be-04-bump` on `6972554` stays as a segment only. Check `reading_url` exists as a custom field on `6972552` (02 uses it). Seed-test each with and without a first name |
 | D6 | **One real test purchase** on dev (`BACKEND_CHECKOUT_TEST_MODE=true` + a `sk_test_` key) | Run the checklist in `docs/test-ideas.md` → "Backend offer 04". The ones that matter most: a drawn cup is in Stripe metadata · bump adds "The Double Turning" $12.77 (`bumpProduct=double_turning`) · pay → upsell 1 → upsell 2 → receipt shows *her* order · the confirmation email lands once · with the delay set to 1 hour, the delivery email arrives once with **her cup's** PDF link · the live V1 funnel `/` and offers 03/06/09 unchanged |
 | D7 | **Switch it on** | `readyForMoney: true` for `'tea-reading'` in `shared/backendOffers.ts`, then deploy |
-| D8 | **On the day the letter sends** | **To split-test the price, press Start on `be_04_price_2026` in `/admin/experiments`** (before the send, so every visitor is in it). Leave it as a draft to sell at $35 to everyone. The email links are already built in (see D9). Link codes: `61–63` email 1, `91–92` the RE: email, `71–73` email 2 (the old letter, ladder and nudge emails are retired) |
+| D8 | **Before the first sales email sends** | **To split-test the price, press Start on `be_04_price_2026` in `/admin/experiments`** (before the send, so every visitor is in it). Leave it as a draft to sell at $35 to everyone. The email links are already built in (see D9). Link codes: `61–63` email 1, `91–92` the RE: email, `71–73` email 2 (the old letter, ladder and nudge emails are retired) |
 | D9 | **Load and schedule the 3 sales emails** — after D7, never before | Everything is in `copy/04/sales/AWeber-handoff.md`: upload the photo (`evelyn/backend-04/esl-cup-640.jpg`) first, test the `{{ subscriber.first_name \| url_encode }}` link filter in a seed send (drop `fn=` if AWeber rejects it), supply each plain text from its `.txt`, exclude everyone tagged `be-04-tea-reading` (confirm how AWeber excludes another list's tag), suggested timing email 1 day 0 · RE: day 1 to non-openers · email 2 day 3. ⛔ Never schedule to the customer list 6972552. No price in any email (the price test lives on the booking page) |
 
 ---
@@ -55,6 +70,7 @@ two decisions come first, and they're Joel's.
 | **The cup draw** | No pick (operator 2026-10-11). At checkout the server draws Turned Handle / Divided Rim / Sunken Leaf uniformly at random (`crypto.randomInt`) and writes it to Stripe as `metadata.cup` (+ `cupDrawn: '1'`). A `cup` the browser sends is ignored. Decides which PDF she gets; the receipt doesn't name it — the reading is the reveal. No database column — the job reads it back from Stripe | `client/src/pages/offers/tea-reading/`, `server/routes/backendOffers.ts` |
 | **Delivery** | A cron job every 10 minutes (off unless `BE04_DELIVERY_ENABLED=true`): paid, undelivered 04 orders older than the delay get their cup's link sent to AWeber (`be-04-delivered` + `reading_url`), then `reading_url` / `delivered_at` are stamped. No link or Stripe unreadable → skipped and retried, never a guessed link. Still undelivered at 23 hours → an error log every run | `server/lib/be04Delivery.ts`, registered in `server/lib/cronJobs.ts` |
 | **AWeber tags** | `be-04-tea-reading`, `be-04-bump`, `be-04-delivered`, upsells `be-04-upsell1-protection` / `be-04-upsell2-bracelet`. ⛔ Add tags, never rename (Campaigns and n8n match them exactly) | `server/lib/backendCustomerList.ts` |
+| **Sales emails** | Three standalone emails, one idea — "your bridge week" — no price in any (the price test lives on the booking page). Built from markdown into the Evelyn shell by a script; never hand-edit the HTML. Photo: `esl-cup-640.jpg` → S3 `evelyn/backend-04/`. Links carry `?c=<code>&fn={{ subscriber.first_name \| url_encode }}` | `copy/04/sales/` — `build-04-sales.py all`, `html/`, `AWeber-handoff.md` |
 | **Upsells** | The shared `/offers/upsell/welcome1` → `welcome2` chain, 04's copy plugged in. No `?demo=true` on these pages: they need a real paid session | `client/src/lib/upsellCopy/teaReading.ts` |
 | **The PDFs** | Built from markdown by a script; one real cup photo throughout | `node improve-v1/v1-one-time-BEs/scripts/build-04-pdf.mjs` (gate: `scripts/check-04-pdf.py`) |
 
@@ -67,7 +83,12 @@ two decisions come first, and they're Joel's.
 | 1,617 unit tests pass; the 28 failures are the same as on `development` | Anything against real Stripe, AWeber or the database |
 | Type check at its 46-error baseline; production build passes | The delivery job running for real |
 | Booking walk-through 210/210 (both price arms) and upsell walk-through 36/36 (server calls faked in the browser) | The price test running on real traffic: the split, the `409 price_changed` path and the conversion rows against a real server and database (proven only with fakes) |
-| PDF gate 21/21 (no leftovers, every image, calendar last, layout, fonts, size) | PDFs on a phone and printed; the `.docx` opened in Word; seed emails in Gmail/Outlook |
+| PDF gate 21/21 (no leftovers, every image, calendar last, layout, fonts, size) | PDFs on a phone and printed; the `.docx` opened in Word |
+| The 3 sales emails build with their checks passing (same words as the approved source, links, no price, no leftover markdown); email 1 viewed at phone width | Seed sends in Gmail/Outlook; the `url_encode` link filter in AWeber; excluding buyers across lists |
+
+Click through the whole journey yourself (booking → U1 → U2 → receipt, fake server, nothing charges):
+`npx tsx improve-v1/v1-one-time-BEs/scripts/preview-04-journey.ts`, then open
+`http://localhost:5096/offers/wiccan/tea-reading?fn=Sarah` (add `&arm=B` for the $45 arm).
 
 Re-run the walk-throughs (client only, no `.env` needed):
 
@@ -105,6 +126,7 @@ BASE=http://localhost:5094 node improve-v1/v1-one-time-BEs/scripts/walk-04-upsel
 | Price test | `improve-v1/create-be-04-price-experiment-2026-10-11.sql` (run once), `server/lib/experiments.ts` (`resolveBe04Price`, the conversion loggers) |
 | Tests | `server/lib/backendOffers.teaReading.test.ts`, `server/routes/backendOffers.teaReading.test.ts`, `server/lib/experiments.be04Price.test.ts`, `server/lib/be04Delivery.test.ts`, `client/src/lib/{teaReadingBooking,teaReadingReceipt,funnel.teaReading,backendVisitor}.test.ts`, `client/src/lib/upsellCopy/teaReading.test.ts` |
 | Copy specs | `improve-v1/v1-one-time-BEs/copy/04/` (old drafts are marked *Superseded*) |
+| Sales emails | `copy/04/sales/` — sources `04-S1/S4/S2-*.md`, builds `html/`, builder `build-04-sales.py`, handoff `AWeber-handoff.md` (`04-S3` drafted, not used) |
 | Product | `copy/04/product/` (readings + calendars), `docs/04/product/` (images, cup map, fonts, PDFs) |
 | Env vars | `.env.example` → `BE04_*` |
 | Evidence | `improve-v1/evidence/04-tea-reading-2026-10-11/` |

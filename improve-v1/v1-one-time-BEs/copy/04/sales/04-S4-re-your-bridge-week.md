@@ -3,7 +3,7 @@
 **Status:** Review draft — not gated, not built, not in AWeber. 2026-10-11. Operator request: a short
 RE: follow-up to `04-S1`.
 
-## Subject options (the RE: of whichever email-1 subject the operator picks)
+## Subject — CHOSEN (a), the RE: of email 1's chosen subject (operator, 2026-10-12):
 
 - (a) RE: 🌉 {{ subscriber.first_name | capitalize }}, your bridge week is coming
 - (b) RE: 😶 Why does everything you say to him land wrong?

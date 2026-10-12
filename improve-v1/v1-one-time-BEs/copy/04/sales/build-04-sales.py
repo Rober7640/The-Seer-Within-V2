@@ -46,7 +46,7 @@ SEQUENCE = [
 ]
 
 # ── Subjects ────────────────────────────────────────────────────────────────────────────────
-# The operator has not picked yet (2026-10-11). WORKING choice = option (a) of each.
+# Approved by the operator 2026-10-12: option (a) of each (the variable keeps its old name).
 # To change: edit the letter here, rebuild. The RE: email always takes "RE: " + email 1's subject.
 WORKING_SUBJECT = {
     '04-S1-your-bridge-week': 'a',

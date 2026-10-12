@@ -12,7 +12,7 @@ dark until then.
 Approved by the operator 2026-10-11: email 1 → the RE: email → email 2. Each email stands alone;
 only the RE: email points back (its opening line, on purpose).
 
-| Order | Stem | First line (after the greeting) | Subject (WORKING choice) | Preheader | Links |
+| Order | Stem | First line (after the greeting) | Subject (approved) | Preheader | Links |
 |---|---|---|---|---|---|
 | 1 | `04-S1-your-bridge-week` | "I saw your bridge week in the tea leaves." | (a) 🌉 {{ subscriber.first_name \| capitalize }}, your bridge week is coming | For a few days in your next three weeks, what you say lands as an invitation, not pressure. | `c=61` text · `c=62` button · `c=63` P.S. |
 | RE: | `04-S4-re-your-bridge-week` | "I'm writing to you about this a second time, on purpose." | RE: 🌉 {{ subscriber.first_name \| capitalize }}, your bridge week is coming | The short version, in case it got buried. | `c=91` text · `c=92` button |
@@ -20,13 +20,12 @@ only the RE: email points back (its opening line, on purpose).
 
 `04-S3-the-message-you-havent-sent` was NOT approved. The builder refuses it (`--draft` overrides).
 
-### ⚠ Subjects are a working choice, not the operator's pick
+### ✅ Subjects approved — option (a) of each (operator, 2026-10-12)
 
-The operator hasn't picked yet. Every build uses option (a); the RE: email always takes "RE: " +
-email 1's subject. To change: set the letter in `WORKING_SUBJECT` in `build-04-sales.py`, rebuild.
-The RE: subject follows email 1 by itself.
+Every build uses option (a); the RE: email takes "RE: " + email 1's subject. To change later: set the
+letter in `WORKING_SUBJECT` in `build-04-sales.py` and rebuild. The RE: subject follows email 1 by itself.
 
-Alternates:
+Alternates, kept for a later subject test:
 
 - **Email 1:** (b) 😶 Why does everything you say to him land wrong? · (c) 🔮 {{ subscriber.first_name | capitalize }}, I saw the week to speak to him · (d) 🤐 Before you text him again, read this
 - **RE: email:** "RE: " + whichever email-1 subject is chosen (all four are listed in `04-S4-re-your-bridge-week.md`)
@@ -71,7 +70,7 @@ read rate.
    from every link in the three `.md` files and rebuild. The booking page works without it and
    says "dear".
 3. **Seed-test** on a phone, with images off (the alt text and the caption still say what the
-   photo shows), and to a contact with no first name (the greeting, the P.S. and all three working
+   photo shows), and to a contact with no first name (the greeting, the P.S. and all three
    subjects then show a bare comma, e.g. "🌉 , your bridge week is coming"; there is no fallback
    filter, same as every other email).
 4. **Plain text:** paste each `.txt` as the plain-text part. AWeber's auto-text strips the links.

@@ -139,7 +139,7 @@ contained", then "email 1, 4, 2 approved". The sequence is three standalone emai
 
 Built by `copy/04/sales/build-04-sales.py all` → `copy/04/sales/html/*.html|.txt` (Evelyn shell
 from 09); photo `docs/04/product/images/esl/esl-cup-640.jpg` → S3 `evelyn/backend-04/` (not
-uploaded). Handoff: `copy/04/sales/AWeber-handoff.md`. `04-S3` was drafted and not approved.
+uploaded). Handoff: `copy/04/sales/AWeber-handoff.md`. `04-S3` was drafted and not approved. **Subjects approved 2026-10-12:** email 1 "🌉 [name], your bridge week is coming" · the RE: email "RE: " + the same · email 2 "🕊️ [name], when did he really start pulling away?".
 Because a buyer may have read only one email, the readings, the confirmation email and the
 upsells no longer say "my letter said…", and the invented "woman in my letter" story is gone.
 
