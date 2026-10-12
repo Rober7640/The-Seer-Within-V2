@@ -35,6 +35,7 @@ export interface GatewayAttemptRow {
   approved: number;
   declined: number;
   needsAction: number;
+  errors: number;
   approvalPct: number;
 }
 
@@ -131,6 +132,7 @@ export function GatewaySplitPanel({
                 <th className="py-2 pr-4">Approved</th>
                 <th className="py-2 pr-4">Declined</th>
                 <th className="py-2 pr-4">Needed 3DS</th>
+                <th className="py-2 pr-4" title="Refused before any bank decided — not counted in Approval %">Errors</th>
                 <th className="py-2 pr-4">Approval %</th>
               </tr>
             </thead>
@@ -150,13 +152,15 @@ export function GatewaySplitPanel({
                   <td className="py-2 pr-4">{a.approved}</td>
                   <td className="py-2 pr-4">{a.declined}</td>
                   <td className="py-2 pr-4">{a.needsAction}</td>
+                  <td className="py-2 pr-4 text-gray-500">{a.errors}</td>
                   <td className="py-2 pr-4 font-semibold text-emerald-300">{a.approvalPct.toFixed(1)}%</td>
                 </tr>
               ))}
             </tbody>
           </table>
           <p className="text-xs text-gray-500">
-            Stripe's main checkout is a hosted page, so its declines happen on Stripe's side and are
+            Approval % = approved ÷ everything a bank decided; "Errors" (refused before any bank
+            saw it) are shown but not counted. Stripe's main checkout is a hosted page, so its declines happen on Stripe's side and are
             not visible here — compare main-offer conversion in the table above instead. The upsell
             rows compare like with like: both processors charge the saved card in one click.
           </p>

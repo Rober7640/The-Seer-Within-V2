@@ -1124,6 +1124,9 @@ export interface GatewayAttemptRow {
   approved: number;
   declined: number;
   needsAction: number;
+  /** Refused before the bank decided (bad request, API down). NOT in approvalPct. */
+  errors: number;
+  /** approved ÷ (approved + declined + needsAction) — what the BANK decided. */
   approvalPct: number;
 }
 
@@ -1197,7 +1200,8 @@ export async function tallyGatewaySplit(opts: V1MainTallyOptions): Promise<Gatew
            count(*)                                         AS attempts,
            count(*) FILTER (WHERE a.result = 'approved')     AS approved,
            count(*) FILTER (WHERE a.result = 'declined')     AS declined,
-           count(*) FILTER (WHERE a.result = 'needs_action') AS needs_action
+           count(*) FILTER (WHERE a.result = 'needs_action') AS needs_action,
+           count(*) FILTER (WHERE a.result = 'error')        AS errors
     FROM experiment_exposures e
     JOIN conversations c ON c.id = e.context->>'conversationId'
     JOIN payment_attempts a
@@ -1212,6 +1216,9 @@ export async function tallyGatewaySplit(opts: V1MainTallyOptions): Promise<Gatew
   const attempts: GatewayAttemptRow[] = (att.rows as Record<string, unknown>[]).map((r) => {
     const n = Number(r.attempts) || 0;
     const ok = Number(r.approved) || 0;
+    // A request refused before any bank saw it (our bug, their outage) says nothing
+    // about which processor approves more cards, so it is shown but not counted.
+    const decided = n - (Number(r.errors) || 0);
     return {
       variant: String(r.variant),
       gateway: String(r.gateway),
@@ -1221,7 +1228,8 @@ export async function tallyGatewaySplit(opts: V1MainTallyOptions): Promise<Gatew
       approved: ok,
       declined: Number(r.declined) || 0,
       needsAction: Number(r.needs_action) || 0,
-      approvalPct: n ? Math.round((1000 * ok) / n) / 10 : 0,
+      errors: Number(r.errors) || 0,
+      approvalPct: decided ? Math.round((1000 * ok) / decided) / 10 : 0,
     };
   });
 
