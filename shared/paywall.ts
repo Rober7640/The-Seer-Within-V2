@@ -158,41 +158,71 @@ export interface CustomBonusQuote {
   coins: number;
   bonusCoins: number;
   totalCoins: number;
-  /** "+N min FREE" — copied from the pack the bonus came from; 0 = no pill. */
+  /** "+N min FREE" = floor(bonusCoins / rate); 0 = no pill. */
   freeMinutesShown: number;
-  /** Whole minutes she gets, floored (never overstated). */
+  /** "N min total" = floor(totalCoins / rate) — whole minutes, never overstated. */
   totalMinutesShown: number;
-  /** The pack whose bonus was copied, or null if the amount is below every pack. */
+  /** The pack whose price per minute the amount gets, or null if it is below every pack. */
   fromPackageType: string | null;
 }
 
 /**
- * A custom amount gets the free minutes of the LARGEST pack priced at or below it
- * (bonus coins copied from that pack), so every custom amount is worth at least
- * the pack below it. E.g. repeat $60 → 20:04 + 13:17 = "33 min";
- * first-timer $40 → 13:22 + 5:00 = "18 min".
+ * The ladder EVERY custom amount is priced against: the full five-pack ladder, on
+ * BOTH screens. A first-timer whose card only shows $10/$20/$30 still gets the $100
+ * pack's price per minute if she types $100 — so both screens quote the same amount
+ * identically.
+ */
+export const CUSTOM_RATE_LADDER: BonusPackSpec[] = REPEAT_BUYER_LADDER;
+
+/**
+ * A custom amount gets the SAME PRICE PER MINUTE as the biggest pack priced at or
+ * below it (on CUSTOM_RATE_LADDER, whatever screen she is on):
+ *   totalCoins = floor(amount × pack.totalCoins / pack.priceCents)
+ *   bonusCoins = totalCoins − amount
+ *   shown free = floor(bonusCoins / rate) · shown total = floor(totalCoins / rate)
+ * So the price per minute never creeps back up between two packs (the old rule
+ * copied the pack's bonus as a fixed number: $99 got 46 min against 70 for $100).
+ * At exactly a pack's price the quote IS that pack (same coins, same two claims).
+ * Below the cheapest pack: flat rate, no bonus.
+ * At 299¢/min: $25 → "+2 min FREE · 11 min total"; $60 → "+15 · 36"; $99 → "+26 · 59";
+ * $150 → "+54 · 105"; $200 → "+73 · 140".
+ * Checked by scripts/check-paywall-bonus-honesty.ts.
  *
- * PREVIEW ONLY. The server checkout charges a custom amount at the flat rate today
- * (coins = cents, bonusCoins = 0 — see usdCentsToCoins / CUSTOM_PACKAGE_TYPE), so
- * wiring this live needs a server change to grant the copied bonus.
+ * PREVIEW ONLY. The server checkout still charges a custom amount at the FLAT rate
+ * (coins = cents, bonusCoins = 0 — see usdCentsToCoins / CUSTOM_PACKAGE_TYPE). Going
+ * live needs the server to grant the bonus with THIS function (same ladder, same
+ * rate), so the minutes she is shown are the minutes she is credited.
  */
 export function quoteCustomAmount(
   cents: number,
-  tiers: BonusPreviewTier[],
   coinsPerMinute: number = COINS_PER_MINUTE,
 ): CustomBonusQuote {
+  const rate = Math.max(1, coinsPerMinute);
   const coins = cents > 0 ? usdCentsToCoins(cents) : 0;
-  const base = [...tiers]
-    .filter((t) => t.priceUsd <= cents)
+  const base = buildBonusTiers(CUSTOM_RATE_LADDER, coinsPerMinute)
+    .filter((t) => t.priceUsd <= coins)
     .sort((a, b) => b.priceUsd - a.priceUsd)[0];
-  const bonusCoins = base ? base.bonusCoins : 0;
-  const totalCoins = coins + bonusCoins;
+  // Exactly a pack's price: return the pack itself, so the Custom field and the pack
+  // tile never disagree (at a non-default rate the floors could differ by a minute).
+  if (base && base.priceUsd === coins) {
+    return {
+      coins,
+      bonusCoins: base.bonusCoins,
+      totalCoins: base.totalCoins,
+      freeMinutesShown: base.freeMinutesShown,
+      totalMinutesShown: base.totalMinutesShown,
+      fromPackageType: base.packageType,
+    };
+  }
+  // Every pack has totalCoins ≥ priceCents, so totalCoins ≥ coins (bonus never < 0).
+  const totalCoins = base ? Math.floor((coins * base.totalCoins) / base.priceUsd) : coins;
+  const bonusCoins = totalCoins - coins;
   return {
     coins,
     bonusCoins,
     totalCoins,
-    freeMinutesShown: base && bonusCoins > 0 ? base.freeMinutesShown : 0,
-    totalMinutesShown: Math.floor(totalCoins / Math.max(1, coinsPerMinute)),
+    freeMinutesShown: Math.floor(bonusCoins / rate),
+    totalMinutesShown: Math.floor(totalCoins / rate),
     fromPackageType: base?.packageType ?? null,
   };
 }

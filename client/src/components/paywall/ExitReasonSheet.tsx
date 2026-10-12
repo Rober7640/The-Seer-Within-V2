@@ -6,6 +6,7 @@
 // PREVIEW ONLY for now: rendered on /paywall-preview?surface=exit. No server
 // endpoint yet — the host decides what to do with the pick.
 
+import { X } from "lucide-react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { PAYMENT_DIALOG_MOBILE_SHEET } from "@/lib/paymentDialog";
 
@@ -28,6 +29,17 @@ export function ExitReasonPanel({ onPick }: ExitReasonSheetProps) {
     <div className="relative overflow-hidden rounded-2xl shadow-2xl max-sm:rounded-b-none">
       <div className="absolute inset-0 bg-gradient-to-b from-[#0f1628] via-[#162040] to-[#1a2550]" />
       <div className="absolute inset-x-0 top-0 h-28 bg-gradient-to-b from-purple-900/30 to-transparent" />
+
+      {/* ✕ = Skip. She must always have an obvious way out of a survey. */}
+      <button
+        onClick={() => onPick(null)}
+        aria-label="Close"
+        className="group absolute right-2 top-2 z-20 flex h-10 w-10 items-center justify-center rounded-full focus-visible:outline-none"
+      >
+        <span className="flex h-7 w-7 items-center justify-center rounded-full bg-white/10 text-white/60 transition-all group-hover:bg-white/20 group-hover:text-white group-focus-visible:ring-2 group-focus-visible:ring-white/60">
+          <X className="h-4 w-4" />
+        </span>
+      </button>
 
       <div className="relative z-10 px-5 pb-4 pt-6">
         <h2 className="text-center font-serif text-[22px] font-bold leading-tight text-white">What stopped you?</h2>

@@ -73,14 +73,16 @@ export function LongCopyPaywallPanel({
   const [customInput, setCustomInput] = useState("");
 
   // --- Custom amount: same floor/cap rules as BuyCreditsModal (floor = cheapest pack,
-  // cap = platform max). It also gets the free minutes of the largest pack at or below
-  // it (quoteCustomAmount). PREVIEW ONLY: the server charges custom amounts at the flat
-  // rate today, so going live needs a server change to grant that bonus.
+  // cap = platform max). It gets the price per minute of the biggest pack at or below
+  // it on the FULL five-pack ladder (quoteCustomAmount), not just the three shown here:
+  // $100 typed → 70 min, same as the repeat-buyer card. PREVIEW ONLY: the server checkout
+  // still charges custom amounts at the flat rate, so going live needs the server to
+  // grant the bonus with that same function.
   const floorCents = presetTiers.length ? presetTiers[0].priceUsd : 1000;
   const floorUsd = Math.round(floorCents / 100);
   const customDollars = parseFloat(customInput);
   const customCents = Number.isFinite(customDollars) ? Math.round(customDollars * 100) : 0;
-  const customQuote = quoteCustomAmount(customCents, presetTiers, coinsPerMinute);
+  const customQuote = quoteCustomAmount(customCents, coinsPerMinute);
   const customTooLow = customInput.trim() !== "" && customCents > 0 && customCents < floorCents;
   const customTooHigh = customCents > CUSTOM_TOPUP_MAX_USD * 100;
   const customValid = mode === "custom" && customCents >= floorCents && !customTooHigh;

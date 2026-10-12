@@ -108,6 +108,9 @@ export default function LongCopyPreviewScene({ surface }: { surface: View }) {
   });
   const [view, setView] = useState<View>(surface);
   const [lastAction, setLastAction] = useState<string>("");
+  // True after she closes the sheet (Skip / an answer / ✕ / End Chat): the preview then
+  // shows the bare chat, as the live app would, with "Reopen" in the top bar.
+  const [sheetClosed, setSheetClosed] = useState(false);
   // Phones: the sheet covers most of the chat, so let the reviewer hide it to read the ending.
   const [peek, setPeek] = useState(false);
   const forceFallback = params.get("still") === "none";
@@ -132,12 +135,14 @@ export default function LongCopyPreviewScene({ surface }: { surface: View }) {
     onContinue: (t: PricingTier) => setLastAction(continueLog(t)),
     onNotNow: () => {
       setLastAction("Not now → exit question");
+      setSheetClosed(false);
       setView("exit");
       setParam("surface", "exit");
     },
   };
   const onPick = (r: ExitReason | null) => {
-    setLastAction(r ? `Picked: ${EXIT_REASONS.find((x) => x.id === r)?.label}` : "Skipped");
+    setLastAction(r ? `Picked: ${EXIT_REASONS.find((x) => x.id === r)?.label} → sheet closed` : "Skipped → sheet closed");
+    setSheetClosed(true);
   };
 
   const repeatProps = {
@@ -147,7 +152,10 @@ export default function LongCopyPreviewScene({ surface }: { surface: View }) {
     tiers: repeatTiers,
     coinsPerMinute,
     onContinue: (t: PricingTier) => setLastAction(continueLog(t)),
-    onClose: () => setLastAction(repeatOutOfCredits ? "End Chat" : "Maybe later"),
+    onClose: () => {
+      setLastAction(`${repeatOutOfCredits ? "End Chat" : "Maybe later"} → sheet closed`);
+      setSheetClosed(true);
+    },
   };
 
   const sheet =
@@ -206,12 +214,21 @@ export default function LongCopyPreviewScene({ surface }: { surface: View }) {
             <button
               onClick={() => {
                 const next = view === "longcopy" ? "exit" : "longcopy";
+                setSheetClosed(false);
                 setView(next);
                 setParam("surface", next);
               }}
               className="rounded bg-white/10 px-2 py-0.5 text-white hover:bg-white/20"
             >
               {view === "longcopy" ? "Exit question" : "Paywall"}
+            </button>
+          )}
+          {sheetClosed && (
+            <button
+              onClick={() => setSheetClosed(false)}
+              className="rounded bg-teal-400/25 px-2 py-0.5 font-semibold text-teal-100 hover:bg-teal-400/40"
+            >
+              Reopen
             </button>
           )}
           {!realFrame && (
@@ -236,9 +253,13 @@ export default function LongCopyPreviewScene({ surface }: { surface: View }) {
             <div className={view === "exit" ? "pb-[52vh]" : "pb-[78vh]"}>
               <ChatMoment sample={sample} ending={ending} personaName={persona.name} avatarUrl={persona.avatarUrl} lockText={lockText} />
             </div>
-            {!realFrame && !peek && (
+            {!realFrame && !peek && !sheetClosed && (
               <>
-                <div className="pointer-events-none fixed inset-0 z-40 bg-black/35" />
+                {/* Tapping the dimmed chat skips the exit question, like the real dialog does. */}
+                <div
+                  onClick={view === "exit" ? () => onPick(null) : undefined}
+                  className={`fixed inset-0 z-40 bg-black/35 ${view === "exit" ? "" : "pointer-events-none"}`}
+                />
                 <div className="fixed inset-x-0 bottom-0 z-50 mx-auto w-full sm:max-w-md sm:pb-4">{sheet}</div>
               </>
             )}
@@ -250,7 +271,7 @@ export default function LongCopyPreviewScene({ surface }: { surface: View }) {
               <div className="overflow-hidden rounded-2xl border border-gray-200 shadow-sm">
                 <ChatMoment sample={sample} ending={ending} personaName={persona.name} avatarUrl={persona.avatarUrl} lockText={lockText} />
               </div>
-              {!realFrame && <div className="mx-auto w-full max-w-md">{sheet}</div>}
+              {!realFrame && !sheetClosed && <div className="mx-auto w-full max-w-md">{sheet}</div>}
             </div>
           </div>
 
@@ -258,8 +279,13 @@ export default function LongCopyPreviewScene({ surface }: { surface: View }) {
           {realFrame && view === "longcopy" && (
             <LongCopyPaywallDialog key={sample.id} open onOpenChange={() => {}} {...panelProps} />
           )}
-          {realFrame && view === "exit" && <ExitReasonDialog open onOpenChange={() => {}} onPick={onPick} />}
-          {realFrame && view === "repeat" && <RepeatBuyerPaywallDialog open onOpenChange={() => {}} {...repeatProps} />}
+          {/* Tap outside / Esc = Skip, so the survey can never trap her. */}
+          {realFrame && view === "exit" && (
+            <ExitReasonDialog open={!sheetClosed} onOpenChange={(o) => !o && onPick(null)} onPick={onPick} />
+          )}
+          {realFrame && view === "repeat" && (
+            <RepeatBuyerPaywallDialog open={!sheetClosed} onOpenChange={(o) => !o && repeatProps.onClose()} {...repeatProps} />
+          )}
         </>
       )}
     </div>

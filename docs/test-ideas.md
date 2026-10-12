@@ -2184,10 +2184,13 @@ Not covered — needs a live walk on DEV (test card):
 
 `/paywall-preview?surface=longcopy` (first-timer, 3 packs) and `?surface=repeat` (repeat buyer,
 $10/$20/$30/$50/$100 + Custom). Pack claims live in `shared/paywall.ts`
-(`FIRST_TIMER_LADDER`, `REPEAT_BUYER_LADDER`, `quoteCustomAmount`); the number check is
+(`FIRST_TIMER_LADDER`, `REPEAT_BUYER_LADDER`, `CUSTOM_RATE_LADDER`, `quoteCustomAmount`); the number check is
 `npx tsx scripts/check-paywall-bonus-honesty.ts`. Nothing live reads any of it yet.
 
-- [ ] Honesty script runs in CI and exits 0: for every pack and custom $10–$200 on both screens, `floor(totalCoins/299)` ≥ shown total and bonus coins ≥ shown free × 299
+- [ ] Honesty script runs in CI and exits 0: for every pack and custom $10–$200 on both screens, `floor(totalCoins/299)` ≥ shown total, bonus coins ≥ shown free × 299, totals rise, price per minute never rises (to the whole coin), custom at a pack price = that pack, and both screens quote custom amounts identically
 - [ ] Tiles show price → "+N min FREE" → "N min total" ($10 shows just "3 min"); no `m:ss` clock text anywhere on either card; $20 is pre-selected with MOST POPULAR
-- [ ] Custom amount copies the bonus of the largest pack at or below it: repeat $60 → "+13 min FREE · 33 min total"; first-timer $40 → "+5 min FREE · 18 min total"; $5 and $250 disable the buy button with the min/max hint
+- [ ] Custom amount gets the same price per minute as the biggest pack at or below it on the FULL five-pack ladder, on BOTH screens (`totalCoins = floor(amount × pack.totalCoins / pack.priceCents)`): $15 → "5 min" (no pill); $25 → "+2 min FREE · 11 min total"; $60 → "+15 · 36"; $99 → "+26 · 59"; $150 → "+54 · 105"; $200 → "+73 · 140"
+- [ ] First-timer card (only $10/$20/$30 tiles) with $100 typed shows "+36 min FREE · 70 min total" — the same as the repeat card's $100 pack; the same typed amount shows the same text on both cards
+- [ ] Custom at exactly a pack price ($20/$30/$50/$100) shows exactly that pack's tile numbers; $5 and $250 disable the buy button with the min/max hint
+- [ ] When wired live: the server grants custom top-ups via the SAME `quoteCustomAmount` (today it charges the flat rate, no bonus), so credited minutes = shown minutes
 - [ ] At 375×667 the buy button ("Continue my reading" / "Continue") is fully on screen without scrolling, and no badge or selected tick overlaps another tile (repeat 3×2 grid included)

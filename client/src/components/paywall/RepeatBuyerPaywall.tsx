@@ -70,14 +70,16 @@ export function RepeatBuyerPaywallPanel({
   const [customInput, setCustomInput] = useState("");
 
   // --- Custom amount: same floor/cap as BuyCreditsModal (floor = cheapest pack, cap =
-  // platform max), plus the free minutes of the largest pack at or below the amount
-  // (quoteCustomAmount). PREVIEW ONLY: the server checkout charges custom amounts at
-  // the flat rate today (no bonus), so wiring this live needs a server change.
+  // platform max), at the price per minute of the biggest pack at or below the amount
+  // on the full five-pack ladder (quoteCustomAmount) — identical to the first-timer
+  // card's quote. PREVIEW ONLY: the server checkout still charges custom amounts at the
+  // flat rate (no bonus), so going live needs the server to grant the bonus with that
+  // same function.
   const floorCents = presetTiers.length ? presetTiers[0].priceUsd : 1000;
   const floorUsd = Math.round(floorCents / 100);
   const customDollars = parseFloat(customInput);
   const customCents = Number.isFinite(customDollars) ? Math.round(customDollars * 100) : 0;
-  const customQuote = quoteCustomAmount(customCents, presetTiers, coinsPerMinute);
+  const customQuote = quoteCustomAmount(customCents, coinsPerMinute);
   const customTooLow = customInput.trim() !== "" && customCents > 0 && customCents < floorCents;
   const customTooHigh = customCents > CUSTOM_TOPUP_MAX_USD * 100;
   const customValid = mode === "custom" && customCents >= floorCents && !customTooHigh;
