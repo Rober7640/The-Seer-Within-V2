@@ -21,6 +21,8 @@ import TarotBridge from "@/pages/TarotBridge";
 import PaiFunnelPage from "@/pages/PaiFunnelPage";
 // Live gateway split: the upsell card page for a declined 1-click on a Payments.AI order.
 import PaiPayPage from "@/pages/PaiPayPage";
+// Live gateway split: the Payments.AI checkout page (Stripe-arm buyers go to Stripe's).
+import PaiCheckoutPage from "@/pages/PaiCheckoutPage";
 import ReadBridge from "@/pages/ReadBridge";
 import ChatPage from "@/pages/ChatPage";
 import SuccessPage from "@/pages/SuccessPage";
@@ -259,6 +261,7 @@ function Router() {
             Stripe products carry the "- FB" suffix. */}
         <Route path="/fb" component={LandingPage} />
         <Route path="/fb/chat" component={ChatPage} />
+        <Route path="/fb/checkout" component={PaiCheckoutPage} />
         <Route path="/fb/welcome1" component={UpsellPage} />
         <Route path="/fb/welcome2" component={Upsell2Page} />
         <Route path="/fb/success" component={SuccessPage} />
@@ -306,6 +309,7 @@ function Router() {
         <Route path="/fb-tarot/pai" component={PaiFunnelPage} />
         <Route path="/pai/pay" component={PaiPayPage} />
         <Route path="/fb-tarot/chat" component={ChatPage} />
+        <Route path="/fb-tarot/checkout" component={PaiCheckoutPage} />
         <Route path="/fb-tarot/welcome1" component={UpsellPage} />
         <Route path="/fb-tarot/welcome2" component={Upsell2Page} />
         <Route path="/fb-tarot/success" component={SuccessPage} />

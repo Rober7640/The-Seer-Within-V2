@@ -2,26 +2,29 @@
  * The live Stripe-vs-Payments.AI split — browser side.
  *
  * When /api/checkout puts a buyer on Payments.AI it answers with a signed ORDER
- * instead of a Stripe URL (server/lib/paiLive.ts). The chat hook hands that order
- * here, and <PaiCheckoutHost/> (mounted on the chat page) opens the card form for it.
- * A tiny store rather than more chat state, so the Stripe path through
- * useConversation stays exactly as it was: it only ever sees `{ url }`.
+ * instead of a Stripe URL (server/lib/paiLive.ts). Just as a Stripe buyer is sent to
+ * Stripe's hosted checkout, a Payments.AI buyer is sent to OUR checkout page,
+ * `<funnel>/checkout` (pages/PaiCheckoutPage.tsx). The order rides along in this
+ * tab's sessionStorage — never in the URL, which would put her email in the address
+ * bar, the browser history and the analytics page views.
  */
 
-export interface PaiCheckoutRequest {
+export interface PaiCheckoutOrder {
   orderToken: string;
   totalCents: number;
   mainCents: number;
   bumpCents: number;
   productName: string;
-  /** The bump's line name, exactly as the Stripe checkout shows it. */
+  productDescription?: string;
+  /** The bump's line, exactly as the Stripe checkout shows it. */
   bumpName?: string;
+  bumpDescription?: string;
   email?: string;
   firstName?: string;
   /** FunnelParam of this chat ('v1-fb', 'v1-tarot', …) — for the SMS question. */
   funnel?: string;
-  /** She closed the form without paying: put the buy button back. */
-  onCancel: () => void;
+  /** "Back" goes here — the chat she came from, as Stripe's cancel_url does. */
+  backUrl: string;
   /**
    * The card form could not load in this browser. Re-asks /api/checkout for Stripe
    * (`forceStripe`) with the same body, so she can still pay.
@@ -29,40 +32,44 @@ export interface PaiCheckoutRequest {
   stripeFallbackBody: Record<string, unknown>;
 }
 
-type Listener = (req: PaiCheckoutRequest | null) => void;
-
-let current: PaiCheckoutRequest | null = null;
-const listeners = new Set<Listener>();
-
-export function openPaiCheckout(req: PaiCheckoutRequest): void {
-  current = req;
-  listeners.forEach((l) => l(current));
-}
-
-export function closePaiCheckout(): void {
-  current = null;
-  listeners.forEach((l) => l(null));
-}
-
-export function subscribePaiCheckout(l: Listener): () => void {
-  listeners.add(l);
-  l(current);
-  return () => {
-    listeners.delete(l);
-  };
-}
+const ORDER_KEY = 'pai-live-order';
 
 /**
- * What survives the 3DS round trip (Payments.AI sends her to her bank and back to
- * <funnel>/chat?paiReturn=1). Tab-scoped, like the rest of the funnel's state.
+ * Store the order and go to the checkout page. Returns false (and goes nowhere)
+ * when this browser will not store it — the caller then sends her to Stripe.
  */
+export function goToPaiCheckout(order: PaiCheckoutOrder, checkoutPath: string): boolean {
+  try {
+    sessionStorage.setItem(ORDER_KEY, JSON.stringify(order));
+  } catch {
+    return false;
+  }
+  window.location.href = checkoutPath;
+  return true;
+}
+
+export function readPaiOrder(): PaiCheckoutOrder | null {
+  try {
+    const raw = sessionStorage.getItem(ORDER_KEY);
+    return raw ? (JSON.parse(raw) as PaiCheckoutOrder) : null;
+  } catch {
+    return null;
+  }
+}
+
+export function clearPaiOrder(): void {
+  try {
+    sessionStorage.removeItem(ORDER_KEY);
+  } catch {
+    /* ignore */
+  }
+}
+
+/** What survives the 3DS round trip (her bank → `<funnel>/checkout?paiReturn=1`). */
 export interface PaiPending3ds {
-  orderToken: string;
   transactionId: string;
   phone: string;
   smsConsent?: string;
-  totalCents: number;
-  email?: string;
 }
 
 const PENDING_KEY = 'pai-live-3ds';

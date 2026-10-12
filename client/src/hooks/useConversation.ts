@@ -37,7 +37,7 @@ import {
 } from '@/lib/intent'
 import { trackLead, trackInitiateCheckout, getTrackdeskClickId } from '@/lib/facebook'
 import { currentFunnel, funnelPath, getPostHogFunnel, linkParams, skipEmail } from '@/lib/funnel'
-import { openPaiCheckout } from '@/lib/paiCheckout'
+import { goToPaiCheckout } from '@/lib/paiCheckout'
 import { track as trackPH, identifyUser as identifyPH, getDistinctId } from '@/lib/posthog'
 import {
   tarotEventProps,
@@ -2396,31 +2396,45 @@ export function useConversation() {
       })
       const data = await response.json()
       // The live gateway split: a Payments.AI buyer gets a signed order instead of a
-      // Stripe URL, and pays on our page (components/PaiCheckoutHost). Every Stripe
+      // Stripe URL and is sent to OUR checkout page, <funnel>/checkout
+      // (pages/PaiCheckoutPage), as a Stripe buyer is sent to Stripe's. Every Stripe
       // buyer gets `{ url }` exactly as before.
       if (data?.gateway === 'paymentsai' && typeof data.orderToken === 'string') {
-        openPaiCheckout({
-          orderToken: data.orderToken,
-          totalCents: data.totalCents,
-          mainCents: data.mainCents,
-          bumpCents: data.bumpCents ?? 0,
-          productName: data.productName ?? 'Energy Clearing Ritual',
-          bumpName: data.bumpName,
-          email: chat.userData.email ?? undefined,
-          firstName: chat.userData.firstName ?? undefined,
-          funnel: currentFunnel() ?? undefined,
-          stripeFallbackBody: checkoutBody,
-          // Closed without paying: put the button she pressed back.
-          onCancel: () =>
-            updateState(type === 'downsell' ? { showDownsellCTA: true } : { showPurchaseCTA: true }),
+        const went = goToPaiCheckout(
+          {
+            orderToken: data.orderToken,
+            totalCents: data.totalCents,
+            mainCents: data.mainCents,
+            bumpCents: data.bumpCents ?? 0,
+            productName: data.productName ?? 'Energy Clearing Ritual',
+            productDescription: data.productDescription,
+            bumpName: data.bumpName,
+            bumpDescription: data.bumpDescription,
+            email: chat.userData.email ?? undefined,
+            firstName: chat.userData.firstName ?? undefined,
+            funnel: currentFunnel() ?? undefined,
+            backUrl: `${funnelPath('/chat')}?cancelled=true`,
+            stripeFallbackBody: checkoutBody,
+          },
+          funnelPath('/checkout'),
+        )
+        if (went) return
+        // This browser will not hold the order (storage blocked) — take her to Stripe
+        // instead, so she can still pay.
+        const retry = await fetch('/api/checkout', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ...checkoutBody, forceStripe: true }),
         })
+        const again = await retry.json()
+        if (again?.url) window.location.href = again.url
         return
       }
       if (data?.url) window.location.href = data.url
     } catch (error) {
       console.error('Checkout error:', error)
     }
-  }, [chat.userData, updateState])
+  }, [chat.userData])
 
   // === ORDER BUMP: the extra turn between the buy CTA and Stripe ===
 
