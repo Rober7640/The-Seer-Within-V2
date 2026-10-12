@@ -2,13 +2,13 @@
 
 📝 **DRAFT 2026-10-12 — not reviewed, not scheduled, not sent. No short link minted, nothing on S3.** Format A · Story (`../formats/A-story.md`), gold `01-grandma-moses.md`. Substance device: **The timeline** (assigned, replaces "3 things"). Pitch shape: **The if-filter** (assigned). Build HTML with `scripts/build-email.py`.
 
-**Subject:** `🚪 Think love can't find you where you are?`
+**Subject:** `💌 {{ subscriber.first_name | capitalize }}, she'd barely left one room in years. Then a letter came.`
 
 **Preheader:** The true story of Elizabeth Barrett, and the stranger's letter that found her.
 
 **Campaign:** story-14-the-first-letter
 
-_Subject history (v1, 2026-10-12; bytes measured with `len(s.encode())`, emoji included; **no name** on the pick as assigned): pick 🚪 "Think love can't find you where you are?" (45 bytes · direct question about her pain + desire · paid off in lines 1–3: **"Nobody's going to find me here."** / "Here, since he left…") · challenger 🏠 "Nobody's going to find me here." (with the quote marks) (38 bytes · her own thought as a quote — Furey's quote-as-subject · paid off in line 2, the same bold line · works with the same preheader) · backups: 💌 "She barely left one room. Love found her anyway." (53 bytes · curiosity + proof; leans on the story, not her — weaker by the "lead with HER" rule) · ✉️ "{{ subscriber.first_name | capitalize }}, when did someone last write to you like this?" (94 bytes · name-first question; NOT paid off until the quote ~150 words in, so it breaks the "pay off early" rule — listed only for the name test)._
+_Subject history (v1, 2026-10-12; bytes measured with `len(s.encode())`, emoji included; **no name** on the pick as assigned): pick 🚪 "Think love can't find you where you are?" (45 bytes · direct question about her pain + desire · paid off in lines 1–3: **"Nobody's going to find me here."** / "Here, since he left…") · challenger 🏠 "Nobody's going to find me here." (with the quote marks) (38 bytes · her own thought as a quote — Furey's quote-as-subject · paid off in line 2, the same bold line · works with the same preheader) · backups: 💌 "She barely left one room. Love found her anyway." (53 bytes · curiosity + proof; leans on the story, not her — weaker by the "lead with HER" rule) · ✉️ "{{ subscriber.first_name | capitalize }}, when did someone last write to you like this?" (94 bytes · name-first question; NOT paid off until the quote ~150 words in, so it breaks the "pay off early" rule — listed only for the name test). **2026-10-12 re-pick (operator: "the subject lines are terrible"):** open-rate data from the last 40 sends — winners (31–33%) are name-first + a one-line story/detail ("she said 'I'm happy for them' twice. Nobody had asked."); losers describe an object or ask a broad no-name question (story series slid 28.6% → 18.4%). New subject = reviewer's pick A; previous subject `🚪 Think love can't find you where you are?`. AWeber broadcast updated in place (cancel → PUT → reschedule, same time/body/lists)._
 
 **Bucket:** love
 
