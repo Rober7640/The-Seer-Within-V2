@@ -3,7 +3,7 @@
  * SMS question at the main checkout, + a shipping address on the upsell card page).
  *
  * Used by the live Stripe-vs-Payments.AI split in two places:
- *   - <PaiCheckoutHost/> — the main checkout, in place of the Stripe redirect
+ *   - <PaiCheckoutPage/> — `<funnel>/checkout`, where the chat sends her instead of Stripe
  *   - <PaiPayPage/>      — an upsell whose 1-click charge was declined
  *
  * The card number never touches our page or server: FramePay draws it in its own

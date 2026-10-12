@@ -114,9 +114,9 @@ export function createPaiLiveRouter(deps: PaiLiveDeps): Router {
       return res.status(400).json({ ok: false, error: 'Please enter your phone number with the country code, e.g. +1 555 555 0123' });
     }
 
-    // Where 3DS sends her back: the funnel's own chat page, flagged to finish.
+    // Where 3DS sends her back: the funnel's own checkout page, flagged to finish.
     const returnUrl =
-      `${requestOrigin(req)}${deps.funnelPath('/chat', order.funnel ?? undefined)}?paiReturn=1`;
+      `${requestOrigin(req)}${deps.funnelPath('/checkout', order.funnel ?? undefined)}?paiReturn=1`;
     try {
       const out = await chargeMain(
         {

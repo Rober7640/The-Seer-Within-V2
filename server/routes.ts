@@ -1269,9 +1269,19 @@ export async function registerRoutes(
             mainCents: priceAmount,
             bumpCents: order.bumpCents,
             productName,
-            // The bump's line name, exactly as the Stripe checkout itemises it.
+            // The line items exactly as the Stripe checkout itemises them, so the
+            // Payments.AI checkout page shows her the same order.
+            productDescription: `Personalized reading for ${firstName}`,
             ...(bumpApplied
-              ? { bumpName: bumpProductName(fbSuffix(funnel, readDevice), bumpArm.copy) }
+              ? {
+                  bumpName: bumpProductName(fbSuffix(funnel, readDevice), bumpArm.copy),
+                  bumpDescription: bumpCopy(
+                    bumpArm.copy,
+                    bumpBucket as BumpBucket,
+                    undefined,
+                    bumpCentsResolved,
+                  ).lineDescription,
+                }
               : {}),
           });
         }
