@@ -20,6 +20,7 @@ import {
   toTierView,
   type PaywallVariant,
 } from "./paywallCopy";
+import { cleanDollarInput, parseDollarInput, DOLLAR_INPUT_HINT } from "@/lib/parseDollarInput";
 
 /** A guide + its per-minute rate, for the "what your balance buys" grid. */
 export interface GuideRate {
@@ -72,8 +73,7 @@ export default function CreditsStoreView({
   const floorCents = tiers.length ? Math.min(...tiers.map((t) => t.priceUsd)) : 1000;
   const floorUsd = Math.round(floorCents / 100);
   const [customInput, setCustomInput] = useState("");
-  const customDollars = parseFloat(customInput);
-  const customCents = Number.isFinite(customDollars) ? Math.round(customDollars * 100) : 0;
+  const { cents: customCents, invalid: customInvalid } = parseDollarInput(customInput);
   const customCoins = customCents > 0 ? usdCentsToCoins(customCents) : 0;
   const customTooLow = customInput.trim() !== "" && customCents > 0 && customCents < floorCents;
   const customTooHigh = customCents > CUSTOM_TOPUP_MAX_USD * 100;
@@ -208,7 +208,7 @@ export default function CreditsStoreView({
               tabIndex={0}
               aria-pressed={isPreview}
               onClick={() => setPreview(isPreview ? null : tier)}
-              onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setPreview(isPreview ? null : tier); } }}
+              onKeyDown={(e) => { if (e.target !== e.currentTarget) return; if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setPreview(isPreview ? null : tier); } }}
               className={`relative block w-full cursor-pointer rounded-2xl border p-4 text-left transition-colors ${
                 isPreview
                   ? "border-purple-400 bg-purple-400/[0.08] ring-1 ring-purple-400/60"
@@ -249,7 +249,7 @@ export default function CreditsStoreView({
       {/* Custom amount */}
       <div
         className={`rounded-2xl border p-4 transition-colors ${
-          customTooLow || customTooHigh ? "border-rose-400/50 bg-rose-400/[0.05]" : "border-white/10 bg-white/[0.03]"
+          customTooLow || customTooHigh || customInvalid ? "border-rose-400/50 bg-rose-400/[0.05]" : "border-white/10 bg-white/[0.03]"
         }`}
       >
         <div className="flex items-center justify-between gap-3">
@@ -262,11 +262,7 @@ export default function CreditsStoreView({
                 inputMode="decimal"
                 placeholder="Custom Amount"
                 value={customInput}
-                onChange={(e) => {
-                  const raw = e.target.value.replace(/[^0-9.]/g, "");
-                  const parts = raw.split(".");
-                  setCustomInput(parts.length > 2 ? `${parts[0]}.${parts.slice(1).join("")}` : raw);
-                }}
+                onChange={(e) => setCustomInput(cleanDollarInput(e.target.value))}
                 className="w-full max-w-[8rem] bg-transparent text-[16px] text-white placeholder:text-white/40 focus:outline-none"
               />
             </div>
@@ -279,9 +275,13 @@ export default function CreditsStoreView({
             Buy
           </button>
         </div>
-        {(customTooLow || customTooHigh) && (
+        {(customTooLow || customTooHigh || customInvalid) && (
           <p className="mt-2 text-[11px] text-rose-300/90">
-            {customTooHigh ? `Maximum top-up is $${CUSTOM_TOPUP_MAX_USD}.` : `Minimum top-up is $${floorUsd}.`}
+            {customInvalid
+              ? DOLLAR_INPUT_HINT
+              : customTooHigh
+                ? `Maximum top-up is $${CUSTOM_TOPUP_MAX_USD}.`
+                : `Minimum top-up is $${floorUsd}.`}
           </p>
         )}
       </div>

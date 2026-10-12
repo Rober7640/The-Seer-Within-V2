@@ -12,6 +12,7 @@ import {
 } from "@shared/types";
 import PaymentModal from "@/components/PaymentModal";
 import { PAYMENT_DIALOG_MOBILE_SHEET } from "@/lib/paymentDialog";
+import { cleanDollarInput, parseDollarInput, DOLLAR_INPUT_HINT } from "@/lib/parseDollarInput";
 
 interface BuyCreditsModalProps {
   open: boolean;
@@ -96,8 +97,7 @@ export default function BuyCreditsModal({
   }, [open]);
 
   // --- Custom amount math (all derived from the shared $/min rate) ---
-  const customDollars = parseFloat(customInput);
-  const customCents = Number.isFinite(customDollars) ? Math.round(customDollars * 100) : 0;
+  const { cents: customCents, invalid: customInvalid } = parseDollarInput(customInput);
   const customCoins = customCents > 0 ? usdCentsToCoins(customCents) : 0;
   const customClock = coinsToClock(customCoins, coinsPerMinute);
   const customTooLow = customInput.trim() !== "" && customCents > 0 && customCents < floorCents;
@@ -221,10 +221,10 @@ export default function BuyCreditsModal({
               <div
                 className={`mb-2 rounded-2xl border-2 px-3.5 py-3 transition-colors ${
                   mode === "custom"
-                    ? customTooLow || customTooHigh
+                    ? customTooLow || customTooHigh || customInvalid
                       ? "border-rose-400/60 bg-rose-400/[0.06]"
                       : "border-teal-400 bg-teal-400/10"
-                    : "border-white/10 bg-white/[0.04]"
+                    : "border-white/10 bg-white/[0.04] focus-within:border-white/30"
                 }`}
               >
                 <div className="flex items-center justify-between gap-3">
@@ -235,13 +235,13 @@ export default function BuyCreditsModal({
                       inputMode="decimal"
                       placeholder="Custom Amount"
                       value={customInput}
-                      onFocus={() => setMode("custom")}
                       onChange={(e) => {
-                        // digits + one optional decimal point
-                        const raw = e.target.value.replace(/[^0-9.]/g, "");
-                        const parts = raw.split(".");
-                        const clean = parts.length > 2 ? `${parts[0]}.${parts.slice(1).join("")}` : raw;
-                        setMode("custom");
+                        // digits + decimal separators (a comma is a decimal point)
+                        const clean = cleanDollarInput(e.target.value);
+                        // Only typing switches to custom (focus alone must not clear the
+                        // pack, or Continue disables and keyboard users can't reach it);
+                        // emptying the field hands back the pack she had selected.
+                        setMode(clean === "" ? "preset" : "custom");
                         setCustomInput(clean);
                       }}
                       className="w-full bg-transparent text-[15px] text-white placeholder:text-white/40 focus:outline-none"
@@ -254,11 +254,13 @@ export default function BuyCreditsModal({
               </div>
 
               {/* Custom validation hint */}
-              {mode === "custom" && (customTooLow || customTooHigh) && (
+              {mode === "custom" && (customTooLow || customTooHigh || customInvalid) && (
                 <p className="mb-2 text-center text-[11px] text-rose-300/90">
-                  {customTooHigh
-                    ? `Maximum top-up is $${CUSTOM_TOPUP_MAX_USD}.`
-                    : `Minimum top-up is $${floorUsd}.`}
+                  {customInvalid
+                    ? DOLLAR_INPUT_HINT
+                    : customTooHigh
+                      ? `Maximum top-up is $${CUSTOM_TOPUP_MAX_USD}.`
+                      : `Minimum top-up is $${floorUsd}.`}
                 </p>
               )}
 
