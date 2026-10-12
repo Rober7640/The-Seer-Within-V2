@@ -30,6 +30,15 @@
  *     Either guard failing → ONE regeneration told what broke (buildFinalReplyRetryNote),
  *     checked the same way; whichever of the two has fewer problems ships.
  *
+ *   Live-safety (2026-10-12, before any wiring): runFinalReplyChain runs the whole
+ *   final-reply chain under a time budget. Still-see and the fact check each have a
+ *   timeout and a try/catch — a failure or timeout falls back (no lines → the no-thread
+ *   PART 2; no fact check → the draft is judged on its shape alone) instead of
+ *   holding up or breaking her reply. Matching is Unicode-aware (her quotes in any
+ *   script; names that start or end with an accented letter), and the sentence split
+ *   skips "Mr." / "Mrs." / "Ms." / "Dr.". Proven offline by
+ *   scripts/check-paywall-teaser-guards.ts.
+ *
  * Prompt rule for this file: no quoted example sentences. A quoted example gets
  * copied nearly word for word (seen in 11 of 12 outputs in another project), so
  * every rule describes the move instead of showing a sample of it.
@@ -353,8 +362,48 @@ export function buildStillSeeRequest(turns: TranscriptTurn[], personaName: strin
 
 // ── Mechanical checks (QA, the retry trigger, and the preview run's grader) ──
 
-const normalise = (s: string) =>
-  s.toLowerCase().replace(/[’‘`]/g, "'").replace(/[^a-z0-9\u00c0-\u024f' ]+/g, ' ').replace(/\s+/g, ' ').trim();
+// RegExp constructors (not literals) for the `u` flag: the project's tsconfig target
+// rejects `u` on a regex literal (TS1501); Node supports it.
+const NOT_LETTER_OR_DIGIT = new RegExp("[^\\p{L}\\p{M}\\p{N}' ]+", 'gu');
+const HAS_LETTER_OR_DIGIT = new RegExp('[\\p{L}\\p{N}]', 'u');
+
+/**
+ * Text as compared for quotes, names and line reuse: lower case, curly apostrophes
+ * straightened, everything but letters / digits / apostrophes turned into one space.
+ * Unicode-aware (\p{L}\p{M}\p{N}, NFC first), so a quote in Russian, Chinese,
+ * Hindi… survives — the old [a-z0-9 + Latin-extended] class blanked it, so every
+ * non-Latin quote failed the "is it in her messages" check. For English text the
+ * result is identical to the old one (checked in scripts/check-paywall-teaser-guards.ts).
+ */
+export const normalise = (s: string) =>
+  s
+    .normalize('NFC')
+    .toLowerCase()
+    .replace(/[’‘`]/g, "'")
+    .replace(NOT_LETTER_OR_DIGIT, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+/** A first name as a whole word, case-insensitive. Unicode-aware boundaries: `\b` only
+ *  knows ASCII letters, so it never matched a name that starts or ends with an accented
+ *  letter (José, Zoë, Élodie) — and could match inside a word next to one. */
+export function nameMatcher(name: string): RegExp {
+  const n = name.normalize('NFC').replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  return new RegExp(`(?<![\\p{L}\\p{M}\\p{N}_])${n}(?![\\p{L}\\p{M}\\p{N}_])`, 'iu');
+}
+
+/** True when `text` contains `name` as a whole word (see nameMatcher). */
+export function containsName(text: string, name: string): boolean {
+  return nameMatcher(name).test(text.normalize('NFC'));
+}
+
+/** Splits a paragraph into sentences at . ! … (plus any closing quote/bracket) and the
+ *  space after — but not after a title (Mr. Mrs. Ms. Dr.), which a name follows.
+ *  Pieces with no letter or digit (in any script) are dropped. */
+const SENTENCE_BREAK = /(?<=[.!…])(?<!\b(?:mr|mrs|ms|dr)\.)["'”’)]*\s+(?=\S)/i;
+export function splitSentences(paragraph: string): string[] {
+  return paragraph.split(SENTENCE_BREAK).filter((x) => HAS_LETTER_OR_DIGIT.test(x));
+}
 
 const STOPWORDS = new Set((
   'the a an and or but to of in on for with from about at into onto by as so then than when while ' +
@@ -405,7 +454,7 @@ export function checkStillSeeLines(lines: string[], opts: { forbiddenNames?: str
       v.push(`line ${n}: time/date wording`);
     }
     for (const name of names) {
-      if (new RegExp(`\\b${name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i').test(line)) v.push(`line ${n}: contains a name`);
+      if (containsName(line, name)) v.push(`line ${n}: contains a name`);
     }
   });
   const openers = lines.map((l) => l.trim().split(/\s+/).slice(0, 2).join(' ').toLowerCase());
@@ -468,23 +517,33 @@ export interface StillSeeResult {
   totalMs: number;
 }
 
+/** The still-see model call. `signal` (when given) is aborted on a timeout, so a live
+ *  caller can pass it to the SDK request and stop paying for an answer nobody waits for. */
+export type StillSeeCaller = (
+  req: ReturnType<typeof buildStillSeeRequest>,
+  o?: { signal?: AbortSignal },
+) => Promise<{ json: any; ms: number; servedBy?: string }>;
+
 /**
  * Generate → validate → retry once (telling the model what it broke) → fallback.
  * `callModel` is injected so this stays testable and transport-agnostic; it must
- * return the parsed structured output plus how long the call took.
+ * return the parsed structured output plus how long the call took. It THROWS if the
+ * call does — live code should use generateStillSeeSafe (timeout + fallback).
  */
 export async function generateStillSee(
-  callModel: (req: ReturnType<typeof buildStillSeeRequest>) => Promise<{ json: any; ms: number; servedBy?: string }>,
+  callModel: StillSeeCaller,
   turns: TranscriptTurn[],
   personaName: string,
-  opts: { forbiddenNames?: string[] } = {},
+  opts: { forbiddenNames?: string[]; signal?: AbortSignal } = {},
 ): Promise<StillSeeResult> {
   const attempts: StillSeeResult['attempts'] = [];
   let retryWith: string[] = [];
   let factsOut: ReturnType<typeof checkFacts> = { facts: { hers: [], knownBefore: [] }, dropped: [] };
   const total = () => attempts.reduce((a, x) => a + x.ms, 0);
   for (let i = 0; i < 2; i++) {
-    const res = await callModel(buildStillSeeRequest(turns, personaName, retryWith));
+    // Timed out during the first attempt: don't start (or pay for) the retry.
+    if (opts.signal?.aborted) throw new Error('still-see aborted before its retry');
+    const res = await callModel(buildStillSeeRequest(turns, personaName, retryWith), { signal: opts.signal });
     const lines: StillSeeLine[] = (res.json?.lines ?? []).map((l: any) => ({
       line: String(l.line ?? '').trim(),
       source: l.source === 'known_before' ? 'known_before' : 'her_words',
@@ -517,7 +576,7 @@ export function finalReplyShapeViolations(text: string): string[] {
     return v;
   }
   const last = paras[paras.length - 1];
-  const sentences = last.split(/(?<=[.!…])["'”’)]*\s+(?=\S)/).filter((s) => /\w/.test(s));
+  const sentences = splitSentences(last);
   const lastWords = last.split(/\s+/).filter(Boolean).length;
   if (sentences.length > 1) v.push(`PART 2 is ${sentences.length} sentences, not one`);
   // A question-word opener is a heading ("Why nothing is showing up…") unless the
@@ -640,7 +699,7 @@ export function checkTeaserEnding(text: string, opts: { thread?: string | null }
   const paras = t.split(/\n\s*\n/).map((p) => p.trim()).filter(Boolean);
   if (paras.length < 2) v.push('no separate PART 2 paragraph');
   const last = paras[paras.length - 1] ?? '';
-  const sentences = last.split(/(?<=[.!…])["'”’)]*\s+(?=\S)/).filter((s) => /\w/.test(s));
+  const sentences = splitSentences(last);
   if (paras.length >= 2 && sentences.length > 1) v.push(`PART 2 has ${sentences.length} sentences`);
   if (/\b(minutes?|pay|paying|buy|buying|top.?up|credits?|trial)\b/i.test(t)) v.push('mentions minutes/paying/trial');
   if (/\bfree\b/i.test(t)) v.push('says "free" (review)');
@@ -673,4 +732,265 @@ export function checkTeaserEnding(text: string, opts: { thread?: string | null }
     if (want.size && !Array.from(want).some((w) => got.has(w))) v.push('PART 2 shares no word with line 1 (review)');
   }
   return v;
+}
+
+// ── Live-safety: timeouts, fallbacks and one time budget for the chain ───────
+//
+// The final free reply waits for still-see (line 1 is its thread) and, from round
+// 6b, for the fact check. Neither may hold her reply hostage or break it:
+//   - still-see fails or times out → no lines (the paywall shows its own line) and
+//     no facts, so the final reply gets the no-thread PART 2;
+//   - the fact check fails or times out → no findings; the draft is judged on the
+//     code shape check alone;
+//   - the regeneration fails or times out → the draft ships;
+//   - an optional step that would start with too little of the budget left is
+//     skipped (and named in `skipped`).
+// The draft itself is her reply, so it always runs and is NOT timed out here (the
+// live send path keeps its own timeout); if it throws, the chain throws.
+//
+// Defaults are starting points from the round-6 preview (one laptop, 4 chats in
+// parallel): still-see 4.5–11.2 s including its retry; a reply path 3.5–14.4 s.
+// Tune them on real traffic before relying on them.
+
+export const STILL_SEE_TIMEOUT_MS = 12_000;
+export const FACT_CHECK_TIMEOUT_MS = 8_000;
+/** Whole chain: still-see + draft + fact check + (maybe) regeneration + second check. */
+export const FINAL_CHAIN_BUDGET_MS = 30_000;
+/** Time kept back for the draft when capping still-see. */
+const DRAFT_RESERVE_MS = 8_000;
+/** Don't start a fact check with less than this left. */
+const MIN_FACT_CHECK_MS = 1_500;
+/** Don't start a regeneration with less than this left. */
+const MIN_REGEN_MS = 4_000;
+
+export class TeaserTimeoutError extends Error {
+  constructor(label: string, ms: number) {
+    super(`${label} timed out after ${ms} ms`);
+    this.name = 'TeaserTimeoutError';
+  }
+}
+
+/** One step that ran out of time or threw, as the chain records it. */
+export interface StepFailure {
+  kind: 'timeout' | 'error';
+  message: string;
+}
+
+const failureOf = (e: unknown): StepFailure => ({
+  kind: e instanceof TeaserTimeoutError ? 'timeout' : 'error',
+  message: e instanceof Error ? e.message : String(e),
+});
+
+/** Runs `run` with an AbortSignal; rejects with TeaserTimeoutError after `ms` (and
+ *  aborts the signal). A late result or error from `run` is ignored. */
+export async function withTimeout<T>(run: (signal: AbortSignal) => Promise<T>, ms: number, label: string): Promise<T> {
+  const ctrl = new AbortController();
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const timeout = new Promise<never>((_, reject) => {
+    timer = setTimeout(() => {
+      ctrl.abort();
+      reject(new TeaserTimeoutError(label, ms));
+    }, Math.max(0, ms));
+  });
+  try {
+    return await Promise.race([Promise.resolve().then(() => run(ctrl.signal)), timeout]);
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+export interface SafeStillSeeResult extends StillSeeResult {
+  /** null = the generator finished (its own retry/fallback rules applied). */
+  failure: StepFailure | null;
+}
+
+/** generateStillSee with a timeout and a catch: any failure → the no-lines fallback
+ *  (lines null, no facts), never a thrown error. */
+export async function generateStillSeeSafe(
+  callModel: StillSeeCaller,
+  turns: TranscriptTurn[],
+  personaName: string,
+  opts: { forbiddenNames?: string[]; timeoutMs?: number } = {},
+): Promise<SafeStillSeeResult> {
+  const t0 = Date.now();
+  try {
+    const res = await withTimeout(
+      (signal) => generateStillSee(callModel, turns, personaName, { forbiddenNames: opts.forbiddenNames, signal }),
+      opts.timeoutMs ?? STILL_SEE_TIMEOUT_MS,
+      'still-see',
+    );
+    return { ...res, failure: null };
+  } catch (e) {
+    return {
+      lines: null,
+      facts: { hers: [], knownBefore: [] },
+      droppedFacts: [],
+      attempts: [],
+      totalMs: Date.now() - t0,
+      failure: failureOf(e),
+    };
+  }
+}
+
+/** The fact-check model call (structured output, FACT_CHECK_SCHEMA). */
+export type FactCheckCaller = (
+  req: ReturnType<typeof buildFactCheckRequest>,
+  o?: { signal?: AbortSignal },
+) => Promise<{ json: any }>;
+
+export interface FactCheckResult {
+  invented: InventedDetail[];
+  advice: InventedDetail[];
+  ms: number;
+  /** Set when the check did not finish: its lists are then empty (no findings). */
+  failure: StepFailure | null;
+}
+
+/** The fact check with a timeout and a catch: a failure counts as "no findings",
+ *  flagged in `failure` so it can be monitored. */
+export async function runFactCheckSafe(
+  callModel: FactCheckCaller,
+  reply: string,
+  turns: TranscriptTurn[],
+  facts: HerFacts,
+  personaName: string,
+  clientFirstName: string | null | undefined,
+  opts: { timeoutMs?: number } = {},
+): Promise<FactCheckResult> {
+  const t0 = Date.now();
+  const list = (xs: any[] | undefined): InventedDetail[] =>
+    (Array.isArray(xs) ? xs : []).map((d: any) => ({ words: String(d?.words ?? ''), why: String(d?.why ?? '') }));
+  try {
+    const res = await withTimeout(
+      (signal) => callModel(buildFactCheckRequest(reply, turns, facts, personaName, clientFirstName), { signal }),
+      opts.timeoutMs ?? FACT_CHECK_TIMEOUT_MS,
+      'fact check',
+    );
+    return { invented: list(res.json?.invented), advice: list(res.json?.advice), ms: Date.now() - t0, failure: null };
+  } catch (e) {
+    return { invented: [], advice: [], ms: Date.now() - t0, failure: failureOf(e) };
+  }
+}
+
+/** What a final reply broke, in the words the regeneration is told (same wording as
+ *  the preview script's round-6 problemsOf). */
+export function finalReplyProblems(shape: string[], check: Pick<FactCheckResult, 'invented' | 'advice'> | null): string[] {
+  return [
+    ...shape,
+    ...(check?.invented ?? []).map((d) => `it states "${d.words}" as fact, but her messages never give it (${d.why}) — leave it out`),
+    ...(check?.advice ?? []).map((d) => `it gives her advice for later: "${d.words}" — leave it out`),
+  ];
+}
+
+export interface FinalReplyChainDeps {
+  callStillSee: StillSeeCaller;
+  callFactCheck: FactCheckCaller;
+  /** Writes the final free reply. `systemSuffix` goes at the end of the system prompt
+   *  (as freeTrialSystemSuffix would); `retryNote` (regeneration only) goes after
+   *  FREE_TRIAL_FINAL_REPLY_REMINDER. `signal` is only given on the regeneration. */
+  writeReply: (o: { systemSuffix: string; retryNote: string | null; signal?: AbortSignal }) => Promise<string>;
+}
+
+export interface FinalReplyChainResult {
+  text: string;
+  shipped: 'draft' | 'regen';
+  stillSee: SafeStillSeeResult;
+  /** Still-see line 1 handed to the final reply; null = the no-thread PART 2. */
+  thread: FinalReplyThread | null;
+  systemSuffix: string;
+  draft: { text: string; shape: string[]; check: FactCheckResult | null };
+  regen: { text: string; shape: string[]; check: FactCheckResult | null } | null;
+  /** Optional steps that did not run or did not finish, with why. */
+  skipped: string[];
+  elapsedMs: number;
+}
+
+/**
+ * The whole final-free-reply chain, as live would run it, under one time budget:
+ *   still-see (capped; fallback = no lines) → draft → code shape check + fact check
+ *   (if time) → if anything is wrong and there is time: ONE regeneration told what
+ *   broke → its shape check + fact check (if time) → whichever has fewer problems
+ *   ships (a tie goes to the regeneration). When the regeneration could not be fact
+ *   checked, it ships unless it breaks more shape rules than the draft.
+ */
+export async function runFinalReplyChain(
+  deps: FinalReplyChainDeps,
+  input: {
+    /** The chat up to and including her last message. */
+    turns: TranscriptTurn[];
+    personaName: string;
+    clientFirstName?: string | null;
+    forbiddenNames?: string[];
+  },
+  opts: { budgetMs?: number; stillSeeTimeoutMs?: number; factCheckTimeoutMs?: number; now?: () => number } = {},
+): Promise<FinalReplyChainResult> {
+  const now = opts.now ?? Date.now;
+  const start = now();
+  const budget = opts.budgetMs ?? FINAL_CHAIN_BUDGET_MS;
+  const left = () => budget - (now() - start);
+  const factTimeout = opts.factCheckTimeoutMs ?? FACT_CHECK_TIMEOUT_MS;
+  const skipped: string[] = [];
+  const { turns, personaName, clientFirstName = null } = input;
+
+  // 1 — still-see, capped so the draft keeps its reserve of the budget.
+  const stillSee = await generateStillSeeSafe(deps.callStillSee, turns, personaName, {
+    forbiddenNames: input.forbiddenNames,
+    timeoutMs: Math.max(0, Math.min(opts.stillSeeTimeoutMs ?? STILL_SEE_TIMEOUT_MS, left() - DRAFT_RESERVE_MS)),
+  });
+  if (stillSee.failure) skipped.push(`still-see (${stillSee.failure.kind}: ${stillSee.failure.message}) → no lines, no-thread PART 2`);
+  const first = stillSee.lines?.[0];
+  const thread: FinalReplyThread | null = first ? { line: first.line, basis: first.basis, source: first.source } : null;
+  const systemSuffix = `\n\n${buildFreeTrialFinalReplyNote(thread, stillSee.facts)}`;
+
+  const check = async (text: string, label: string): Promise<FactCheckResult | null> => {
+    if (left() < MIN_FACT_CHECK_MS) {
+      skipped.push(`${label} (no time left)`);
+      return null;
+    }
+    const res = await runFactCheckSafe(deps.callFactCheck, text, turns, stillSee.facts, personaName, clientFirstName, {
+      timeoutMs: Math.min(factTimeout, left()),
+    });
+    if (res.failure) skipped.push(`${label} (${res.failure.kind}: ${res.failure.message}) → judged on shape only`);
+    return res;
+  };
+  const done = (r: Omit<FinalReplyChainResult, 'stillSee' | 'thread' | 'systemSuffix' | 'skipped' | 'elapsedMs'>): FinalReplyChainResult => ({
+    ...r,
+    stillSee,
+    thread,
+    systemSuffix,
+    skipped,
+    elapsedMs: now() - start,
+  });
+
+  // 2 — the draft: her reply, always written.
+  const draftText = await deps.writeReply({ systemSuffix, retryNote: null });
+  const shape = finalReplyShapeViolations(draftText);
+  const check1 = await check(draftText, 'fact check');
+  const problems = finalReplyProblems(shape, check1);
+  const draft = { text: draftText, shape, check: check1 };
+  if (!problems.length) return done({ text: draftText, shipped: 'draft', draft, regen: null });
+
+  // 3 — one regeneration, only with time for it; any failure ships the draft.
+  if (left() < MIN_REGEN_MS) {
+    skipped.push('regeneration (no time left) → draft ships');
+    return done({ text: draftText, shipped: 'draft', draft, regen: null });
+  }
+  let againText: string;
+  try {
+    againText = await withTimeout(
+      (signal) => deps.writeReply({ systemSuffix, retryNote: buildFinalReplyRetryNote(problems), signal }),
+      left(),
+      'regeneration',
+    );
+  } catch (e) {
+    const f = failureOf(e);
+    skipped.push(`regeneration (${f.kind}: ${f.message}) → draft ships`);
+    return done({ text: draftText, shipped: 'draft', draft, regen: null });
+  }
+  const shape2 = finalReplyShapeViolations(againText);
+  const check2 = await check(againText, 'second fact check');
+  const regen = { text: againText, shape: shape2, check: check2 };
+  const checked = !!check2 && !check2.failure;
+  const useDraft = checked ? finalReplyProblems(shape2, check2).length > problems.length : shape2.length > shape.length;
+  return done({ text: useDraft ? draftText : againText, shipped: useDraft ? 'draft' : 'regen', draft, regen });
 }

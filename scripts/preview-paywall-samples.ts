@@ -40,9 +40,16 @@
  * buildMinutesMeterLine / buildFreeTrialMeterLine, so "61–179 s" is exact.
  *
  * Needs DATABASE_URL (pull) and ANTHROPIC_API_KEY (generate) in the environment.
+ *
+ * Safety: PREVIEW_RAW_DIR must be OUTSIDE any git checkout (it holds raw transcripts
+ * with PII) — the script refuses to start otherwise. The fixture and the review doc
+ * are written under the repo root whatever folder the script is run from. Every note
+ * that quotes generated text (the shape check's opening words, the still-see key-word
+ * check) is scrubbed with the rest before it can reach the in-repo review doc.
  */
 import fs from 'node:fs';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import pg from 'pg';
 import Anthropic from '@anthropic-ai/sdk';
 import { buildMinutesMeterLine } from '../server/lib/minutesMeter';
@@ -61,6 +68,7 @@ import {
   generateStillSee,
   validateStillSee,
   checkTeaserEnding,
+  containsName,
   finalReplyShapeViolations,
   buildFactCheckRequest,
   buildFactCheckSystem,
@@ -97,16 +105,61 @@ function ROUND_ENV() { return process.env.PREVIEW_ROUND ?? '6a'; }
 /** The keep-reading arm is only re-run when its rule changes (not in round 6). */
 const RUN_KEEP = process.env.PREVIEW_KEEP === '1' || ROUND_ENV().startsWith('5');
 
-const RAW_DIR = process.env.PREVIEW_RAW_DIR;
-if (!RAW_DIR) throw new Error('Set PREVIEW_RAW_DIR to a scratch directory outside the repo.');
+/** The repo root, from this file's own location — never the folder it is run from. */
+const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+
+/** The real path of `p`, resolving symlinks on the part that exists (the raw folder
+ *  may not exist yet before `pull`). Lower case on case-insensitive file systems
+ *  (for comparing; `fold = false` keeps the case for messages). */
+function realish(p: string, fold = true): string {
+  let cur = path.resolve(p);
+  const rest: string[] = [];
+  while (!fs.existsSync(cur)) {
+    const up = path.dirname(cur);
+    if (up === cur) break;
+    rest.unshift(path.basename(cur));
+    cur = up;
+  }
+  const out = path.join(fs.existsSync(cur) ? fs.realpathSync.native(cur) : cur, ...rest);
+  return fold && (process.platform === 'darwin' || process.platform === 'win32') ? out.toLowerCase() : out;
+}
+const isInside = (child: string, parent: string) => {
+  const rel = path.relative(parent, child);
+  return rel === '' || (!rel.startsWith('..') && !path.isAbsolute(rel));
+};
+/** The nearest folder at or above `p` that is a git checkout (has a .git entry), if any. */
+function enclosingCheckout(p: string): string | null {
+  let cur = realish(p, false);
+  for (;;) {
+    if (fs.existsSync(path.join(cur, '.git'))) return cur;
+    const up = path.dirname(cur);
+    if (up === cur) return null;
+    cur = up;
+  }
+}
+
+const RAW_DIR_ENV = process.env.PREVIEW_RAW_DIR;
+if (!RAW_DIR_ENV) throw new Error('Set PREVIEW_RAW_DIR to a scratch directory outside the repo.');
+const RAW_DIR = path.resolve(RAW_DIR_ENV);
+// The raw folder holds real transcripts (PII). Inside this repo — or any other git
+// checkout, such as the main clone this worktree belongs to — one `git add -A` would
+// commit them, so refuse to start.
+if (isInside(realish(RAW_DIR), realish(REPO_ROOT))) {
+  throw new Error(`PREVIEW_RAW_DIR (${RAW_DIR}) is inside the repo (${REPO_ROOT}). It holds raw transcripts with PII — use a scratch folder outside the repo.`);
+}
+const rawCheckout = enclosingCheckout(RAW_DIR);
+if (rawCheckout) {
+  throw new Error(`PREVIEW_RAW_DIR (${RAW_DIR}) is inside a git checkout (${rawCheckout}). It holds raw transcripts with PII — use a scratch folder outside every repo.`);
+}
 const RAW_FILE = path.join(RAW_DIR, 'raw-samples.json');
 const runFile = (round: string) => path.join(RAW_DIR!, `generate-run-r${round}.json`);
 const gradesFile = (round: string) => path.join(RAW_DIR!, `grades-r${round}.json`);
 const ROUND = process.env.PREVIEW_ROUND ?? '6a';
 const ROUNDS = (process.env.PREVIEW_ROUNDS ?? ROUND).split(',').map((r) => r.trim()).filter(Boolean);
 
-const FIXTURE_FILE = path.resolve('client/src/components/paywall/preview-samples.local.json');
-const REVIEW_FILE = path.resolve('improve-v2/paywall-longcopy/samples.local.md');
+// Both are git-ignored (.gitignore) — they hold anonymised real chats.
+const FIXTURE_FILE = path.join(REPO_ROOT, 'client/src/components/paywall/preview-samples.local.json');
+const REVIEW_FILE = path.join(REPO_ROOT, 'improve-v2/paywall-longcopy/samples.local.md');
 
 interface RawMessage { id: string; role: 'user' | 'assistant'; content: string; sentAt: string }
 interface RawSample {
@@ -312,7 +365,7 @@ function findKeepReadingReply(s: RawSample, m: SessionMeter) {
 /** Pull the fixed guard blocks out of chatEngine.ts so the rebuilt system prompt
  *  matches what production sends (they are module-private constants). */
 function loadEngineBlocks() {
-  const src = fs.readFileSync(path.resolve('server/lib/chatEngine.ts'), 'utf8');
+  const src = fs.readFileSync(path.join(REPO_ROOT, 'server/lib/chatEngine.ts'), 'utf8');
   const tpl = (name: string) => {
     const m = src.match(new RegExp(`const ${name} = \`([\\s\\S]*?)\`;`));
     if (!m) throw new Error(`could not extract ${name} from chatEngine.ts`);
@@ -636,7 +689,25 @@ async function generate() {
       ...(r.regen?.check2.invented ?? []).map((d, j) => [`d${k + 1}w${j + 1}`, `${d.words} — ${d.why}`]),
       ...(r.regen?.check2.advice ?? []).map((d, j) => [`d${k + 1}a${j + 1}`, `${d.words} — ${d.why}`]),
     ]));
+    // Mechanical notes are worked out on the RAW text, and two kinds quote it: the
+    // shape check ("…opens with a question word, like a heading ("<her words>…")") and
+    // the still-see key-word check ("…share a key word (<word>)"). They go into the
+    // review doc, so they are scrubbed with everything else (same call, no extra cost).
+    const stillSeeChecks = ss.lines ? validateStillSee(ss.lines, beforeFinal, { forbiddenNames: names }) : lastAttempt.violations;
+    const finalChecks = finals.map((f) => checkTeaserEnding(f, { thread: thread?.line ?? null }));
+    const actualChecks = checkTeaserEnding(actualEnding);
+    const rawNotes = Array.from(new Set([
+      ...runs.flatMap((r) => [...r.shape, ...(r.regen?.shape ?? [])]),
+      ...ss.attempts.flatMap((a) => a.violations),
+      ...stillSeeChecks,
+      ...finalChecks.flat(),
+      ...actualChecks,
+    ]));
+    const noteKey = new Map(rawNotes.map((n, k) => [n, `note${k + 1}`]));
     const clean = await scrub(anthropic, {
+      ...Object.fromEntries(rawNotes.map((n) => [noteKey.get(n)!, n])),
+      // The retry note repeats the raw notes + the fact check's quoted words.
+      ...Object.fromEntries(runs.flatMap((r, k) => (r.regen ? [[`retry${k + 1}`, r.regen.retryNote]] : []))),
       herLastMessage: short(herLast, 160),
       actualEnding,
       final1: finals[0],
@@ -651,7 +722,9 @@ async function generate() {
       keepControl: keep?.[0] ?? '',
       keepNew: keep?.[1] ?? '',
     });
-    const nameLeak = names.some((n) => n.length > 1 && new RegExp(`\\b${n.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i').test(JSON.stringify(clean)));
+    // Unicode-aware whole-word match (José, Zoë…), as the still-see name check.
+    const nameLeak = names.some((n) => n.length > 1 && containsName(JSON.stringify(clean), n));
+    const sn = (xs: string[]) => xs.map((x) => clean[noteKey.get(x) ?? ''] ?? x);
 
     const row = {
       id,
@@ -673,7 +746,7 @@ async function generate() {
         draft: clean[`draft${k + 1}`],
         draftWords: wordCount(r.draft),
         draftMs: r.draftMs,
-        shape: r.shape,
+        shape: sn(r.shape),
         check: {
           invented: r.check.invented.map((_, j) => clean[`c${k + 1}w${j + 1}`]),
           advice: r.check.advice.map((_, j) => clean[`c${k + 1}a${j + 1}`]),
@@ -682,8 +755,8 @@ async function generate() {
         regen: r.regen ? {
           text: clean[`regen${k + 1}`],
           ms: r.regen.ms,
-          retryNote: r.regen.retryNote,
-          shape: r.regen.shape,
+          retryNote: clean[`retry${k + 1}`],
+          shape: sn(r.regen.shape),
           check2: {
             invented: r.regen.check2.invented.map((_, j) => clean[`d${k + 1}w${j + 1}`]),
             advice: r.regen.check2.advice.map((_, j) => clean[`d${k + 1}a${j + 1}`]),
@@ -699,7 +772,7 @@ async function generate() {
       stillSeeNone: !!ss.lines && ss.lines.length === 0,
       stillSeeAttempts: ss.attempts.map((a, ai) => ({
         lines: a.lines.map((l, k) => ({ line: clean[`a${ai + 1}line${k + 1}`], rawChars: l.line.length, source: l.source })),
-        violations: a.violations,
+        violations: sn(a.violations),
         ms: a.ms,
         servedBy: a.servedBy,
       })),
@@ -720,12 +793,15 @@ async function generate() {
         },
       } : null,
       checks: {
-        stillSee: ss.lines ? validateStillSee(ss.lines, beforeFinal, { forbiddenNames: names }) : lastAttempt.violations,
-        finals: finals.map((f) => checkTeaserEnding(f, { thread: thread?.line ?? null })),
+        stillSee: sn(stillSeeChecks),
+        finals: finalChecks.map(sn),
         finalWords: finals.map(wordCount),
-        actualEnding: checkTeaserEnding(actualEnding),
+        actualEnding: sn(actualChecks),
         nameLeak,
       },
+      /** The notes above went through the scrub (rows from before 2026-10-12 did not —
+       *  the doc withholds their quoted words instead; see docNote). */
+      notesScrubbed: true,
       // Unscrubbed text for grading. Lives only in the scratch run file (PII) —
       // never written to the fixture or the review doc.
       raw: {
@@ -785,6 +861,20 @@ function roundStats(run: any, grades: Record<string, Grade>) {
     msTotalMedian: median(s.map((x) => x.stillSeeMs.total)),
     msTotalMax: Math.max(...s.map((x) => x.stillSeeMs.total)),
   };
+}
+
+/**
+ * A row's mechanical notes as printed in the review doc. From 2026-10-12 generate
+ * scrubs them (notesScrubbed). Older rows hold notes worked out on the RAW text, and
+ * two kinds quote it — for those the quoted words are withheld here (no API call at
+ * write time) so nothing raw reaches the in-repo doc.
+ */
+function docNotes(row: any, notes: string[] | undefined): string[] {
+  const xs = notes ?? [];
+  if (row?.notesScrubbed) return xs;
+  return xs.map((n) =>
+    n.replace(/like a heading \(".*…"\)/, 'like a heading ("[words withheld]…")').replace(/share a key word \(.*\)$/, 'share a key word'),
+  );
 }
 
 function writeOutputs() {
@@ -856,14 +946,14 @@ function writeOutputs() {
     if (s.stillSeeAttempts.length > 1 || s.stillSeeFallback) {
       s.stillSeeAttempts.forEach((a: any, ai: number) => {
         if (ai === s.stillSeeAttempts.length - 1 && !s.stillSeeFallback) return;
-        md.push(`- attempt ${ai + 1} (rejected): ${a.lines.map((l: any) => `"${l.line}" (${l.rawChars})`).join(' / ')} — ${a.violations.join('; ')}`);
+        md.push(`- attempt ${ai + 1} (rejected): ${a.lines.map((l: any) => `"${l.line}" (${l.rawChars})`).join(' / ')} — ${docNotes(s, a.violations).join('; ')}`);
       });
     }
     md.push('');
     s.finals.forEach((f: string, k: number) => {
       const rj = s.finalRejected?.[k];
-      if (rj) md.push(`_Run ${k + 1} first draft, rejected by the code check (${rj.violations.join('; ')}) and regenerated once:_`, quoteBlock(rj.text), '');
-      md.push(`**New ending, run ${k + 1}** (${s.checks.finalWords[k]} words; checks: ${s.checks.finals[k].join('; ') || 'clean'}):`, quoteBlock(f), '');
+      if (rj) md.push(`_Run ${k + 1} first draft, rejected by the code check (${docNotes(s, rj.violations).join('; ')}) and regenerated once:_`, quoteBlock(rj.text), '');
+      md.push(`**New ending, run ${k + 1}** (${s.checks.finalWords[k]} words; checks: ${docNotes(s, s.checks.finals[k]).join('; ') || 'clean'}):`, quoteBlock(f), '');
       if (g?.finals?.[k]) md.push(`Grade run ${k + 1}: **${g.finals[k].pass ? 'PASS' : 'FAIL'}**${g.finals[k].note ? ` — ${g.finals[k].note}` : ''}`, '');
     });
     if (s.keep) {
@@ -878,7 +968,7 @@ function writeOutputs() {
     } else {
       md.push('**Keep-reading test:** skipped — no guide reply in this chat was generated with 61–179 s left (her only reply came at 180 s).', '');
     }
-    md.push(`Still-see checks: ${s.checks.stillSee.join('; ') || 'clean'} · latency ${s.stillSeeMs.first} ms${s.stillSeeAttempts.length > 1 ? ` (+ retry = ${s.stillSeeMs.total} ms)` : ''} · name leak after scrub: ${s.checks.nameLeak ? 'YES' : 'no'}`);
+    md.push(`Still-see checks: ${docNotes(s, s.checks.stillSee).join('; ') || 'clean'} · latency ${s.stillSeeMs.first} ms${s.stillSeeAttempts.length > 1 ? ` (+ retry = ${s.stillSeeMs.total} ms)` : ''} · name leak after scrub: ${s.checks.nameLeak ? 'YES' : 'no'}`);
     if (g) md.push(`Grade — still-see **${g.stillSee.pass ? 'PASS' : 'FAIL'}**${g.stillSee.note ? ` — ${g.stillSee.note}` : ''}`);
     md.push('');
   }
@@ -889,11 +979,11 @@ function writeOutputs() {
     if (ITERATION_NOTES[round]) md.push(ITERATION_NOTES[round], '');
     for (const s of run.samples) {
       md.push(`**${s.id}** — still-see: ${s.stillSee ? s.stillSee.map((l: any) => `${l.line} (${l.rawChars})`).join(' / ') : 'FALLBACK'}${g[s.id] ? ` — ${g[s.id].stillSee.pass ? 'PASS' : 'FAIL'}: ${g[s.id].stillSee.note}` : ''}`, '');
-      if (s.stillSeeFallback) md.push(`rejected still-see attempts: ${s.stillSeeAttempts.map((a: any) => `${a.lines.map((l: any) => `"${l.line}"`).join(' / ')} (${a.violations.join('; ')})`).join(' || ')}`, '');
+      if (s.stillSeeFallback) md.push(`rejected still-see attempts: ${s.stillSeeAttempts.map((a: any) => `${a.lines.map((l: any) => `"${l.line}"`).join(' / ')} (${docNotes(s, a.violations).join('; ')})`).join(' || ')}`, '');
       s.finals.forEach((f: string, k: number) => {
         const rj = s.finalRejected?.[k];
-        if (rj) md.push(`_run ${k + 1} first draft, rejected by the code check (${rj.violations.join('; ')}):_`, quoteBlock(rj.text), '');
-        md.push(`run ${k + 1} (${s.checks.finalWords[k]} words; ${s.checks.finals[k].join('; ') || 'clean'})${g[s.id]?.finals?.[k] ? ` — **${g[s.id].finals[k].pass ? 'PASS' : 'FAIL'}**: ${g[s.id].finals[k].note}` : ''}`, quoteBlock(f), '');
+        if (rj) md.push(`_run ${k + 1} first draft, rejected by the code check (${docNotes(s, rj.violations).join('; ')}):_`, quoteBlock(rj.text), '');
+        md.push(`run ${k + 1} (${s.checks.finalWords[k]} words; ${docNotes(s, s.checks.finals[k]).join('; ') || 'clean'})${g[s.id]?.finals?.[k] ? ` — **${g[s.id].finals[k].pass ? 'PASS' : 'FAIL'}**: ${g[s.id].finals[k].note}` : ''}`, quoteBlock(f), '');
       });
       if (s.keep && g[s.id]?.keep) md.push(`keep-reading — control ${g[s.id].keep!.control.wrap ? 'WRAPS' : 'reads'} (${g[s.id].keep!.control.what}) · new ${g[s.id].keep!.new.wrap ? 'WRAPS' : 'reads'} (${g[s.id].keep!.new.what})`, '');
     }
@@ -1049,8 +1139,8 @@ function writeRound6(raw: RawFile, runs: { round: string; run: any }[]) {
     out.push(`**KNOWN BEFORE:** ${x.facts.knownBefore.length ? x.facts.knownBefore.map((f: any) => `${f.fact} ("${f.quote}")`).join('; ') : 'none'}${x.facts.dropped ? ` · ${x.facts.dropped} fact(s) dropped by the code check (quote not found)` : ''}`);
     return out;
   };
-  const guardLine = (gd: any) => {
-    const flags = [...gd.shape, ...gd.check.invented.map((d: string) => `invented: ${d}`), ...(gd.check.advice ?? []).map((d: string) => `advice: ${d}`)];
+  const guardLine = (x: any, gd: any) => {
+    const flags = [...docNotes(x, gd.shape), ...gd.check.invented.map((d: string) => `invented: ${d}`), ...(gd.check.advice ?? []).map((d: string) => `advice: ${d}`)];
     return flags;
   };
   for (const x of featured.run.samples) {
@@ -1062,16 +1152,16 @@ function writeRound6(raw: RawFile, runs: { round: string; run: any }[]) {
     if (x.stillSeeFallback) md.push('- FALLBACK — no lines passed the checks; the paywall shows its own line.');
     else if (!x.stillSee.length) md.push('- NONE — the chat gives no line (thin chat); the paywall shows its own line: "Evelyn has more to tell you about your question."');
     else x.stillSee.forEach((l: any, k: number) => md.push(`${k + 1}. ➤ ${l.line} — **${l.rawChars} chars** · ${l.source === 'her_words' ? 'her words' : 'known before this chat'} · quote: "${l.quote}"`));
-    if (x.stillSeeAttempts.length > 1) x.stillSeeAttempts.slice(0, -1).forEach((a: any, ai: number) => md.push(`- attempt ${ai + 1} (rejected): ${a.lines.map((l: any) => `"${l.line}" (${l.rawChars})`).join(' / ')} — ${a.violations.join('; ')}`));
+    if (x.stillSeeAttempts.length > 1) x.stillSeeAttempts.slice(0, -1).forEach((a: any, ai: number) => md.push(`- attempt ${ai + 1} (rejected): ${a.lines.map((l: any) => `"${l.line}" (${l.rawChars})`).join(' / ')} — ${docNotes(x, a.violations).join('; ')}`));
     if (g) md.push(`Grade — still-see **${g.stillSee.pass ? 'PASS' : 'FAIL'}** — ${g.stillSee.note}`);
     md.push('');
     x.guards.forEach((gd: any, k: number) => {
       if (gd.regen) {
-        md.push(`_Run ${k + 1} draft (${gd.draftWords} words) — flagged: ${guardLine(gd).join('; ')}:_`, quoteBlock(gd.draft), '');
-        const f2 = [...gd.regen.shape, ...gd.regen.check2.invented.map((d: string) => `invented: ${d}`), ...(gd.regen.check2.advice ?? []).map((d: string) => `advice: ${d}`)];
+        md.push(`_Run ${k + 1} draft (${gd.draftWords} words) — flagged: ${guardLine(x, gd).join('; ')}:_`, quoteBlock(gd.draft), '');
+        const f2 = [...docNotes(x, gd.regen.shape), ...gd.regen.check2.invented.map((d: string) => `invented: ${d}`), ...(gd.regen.check2.advice ?? []).map((d: string) => `advice: ${d}`)];
         md.push(`_Regenerated once — second check: ${f2.join('; ') || 'clean'} → **${gd.shipped === 'regen' ? 'regeneration ships' : 'draft ships'}**._`, '');
       }
-      md.push(`**New ending, run ${k + 1}** (${x.checks.finalWords[k]} words${gd.regen ? `, the ${gd.shipped}` : ''}; code notes: ${x.checks.finals[k].join('; ') || 'none'}):`, quoteBlock(x.finals[k]), '');
+      md.push(`**New ending, run ${k + 1}** (${x.checks.finalWords[k]} words${gd.regen ? `, the ${gd.shipped}` : ''}; code notes: ${docNotes(x, x.checks.finals[k]).join('; ') || 'none'}):`, quoteBlock(x.finals[k]), '');
       if (g?.finals?.[k]) md.push(`Grade run ${k + 1}: **${g.finals[k].pass ? 'PASS' : 'FAIL'}** — ${g.finals[k].note}`, '');
     });
     md.push(`Latency: still-see ${secs(x.stillSeeMs.first)}${x.stillSeeAttempts.length > 1 ? ` (+ retry = ${secs(x.stillSeeMs.total)})` : ''} · reply paths ${x.guards.map((gd: any) => secs(gd.liveMs)).join(' / ')} · name leak after scrub: ${x.checks.nameLeak ? 'YES' : 'no'}`, '');
@@ -1086,8 +1176,8 @@ function writeRound6(raw: RawFile, runs: { round: string; run: any }[]) {
       md.push(`still-see: ${x.stillSeeFallback ? 'FALLBACK' : x.stillSee.length ? x.stillSee.map((l: any) => `${l.line} (${l.rawChars})`).join(' / ') : 'NONE (thin chat)'}${g[x.id] ? ` — **${g[x.id].stillSee.pass ? 'PASS' : 'FAIL'}**: ${g[x.id].stillSee.note}` : ''}`, '');
       x.guards.forEach((gd: any, k: number) => {
         if (gd.regen) {
-          md.push(`_run ${k + 1} draft — flagged: ${guardLine(gd).join('; ')}:_`, quoteBlock(gd.draft), '');
-          md.push(`_regenerated; second check (6a did not wait for it): ${[...gd.regen.shape, ...gd.regen.check2.invented.map((d: string) => `invented: ${d}`), ...(gd.regen.check2.advice ?? []).map((d: string) => `advice: ${d}`)].join('; ') || 'clean'} → ${gd.shipped} ships_`, '');
+          md.push(`_run ${k + 1} draft — flagged: ${guardLine(x, gd).join('; ')}:_`, quoteBlock(gd.draft), '');
+          md.push(`_regenerated; second check (6a did not wait for it): ${[...docNotes(x, gd.regen.shape), ...gd.regen.check2.invented.map((d: string) => `invented: ${d}`), ...(gd.regen.check2.advice ?? []).map((d: string) => `advice: ${d}`)].join('; ') || 'clean'} → ${gd.shipped} ships_`, '');
         }
         md.push(`run ${k + 1} (${x.checks.finalWords[k]} words${gd.regen ? `, the ${gd.shipped}` : ''})${g[x.id]?.finals?.[k] ? ` — **${g[x.id].finals[k].pass ? 'PASS' : 'FAIL'}**: ${g[x.id].finals[k].note}` : ''}`, quoteBlock(x.finals[k]), '');
       });

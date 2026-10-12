@@ -1,12 +1,25 @@
-// Shared pack tile for the PREVIEW-ONLY bonus-minute paywalls (LongCopyPaywall,
-// RepeatBuyerPaywall). Top to bottom: price big → "+N min FREE" pill → whole-minute
-// total small. It renders the pack's CLAIMED numbers (freeMinutesShown /
-// totalMinutesShown from shared/paywall.ts) — never a m:ss clock and never a
-// re-derived rounding. The coins behind each claim are proven by
-// scripts/check-paywall-bonus-honesty.ts.
+// Shared pieces for the PREVIEW-ONLY bonus-minute paywalls (LongCopyPaywall,
+// RepeatBuyerPaywall, and the dialog helpers ExitReasonSheet uses too).
+//
+// The pack tile, top to bottom: price big → "+N min FREE" pill → whole-minute total
+// small. It renders the pack's CLAIMED numbers (freeMinutesShown / totalMinutesShown
+// from shared/paywall.ts) — never a m:ss clock and never a re-derived rounding. The
+// coins behind each claim are proven by scripts/check-paywall-bonus-honesty.ts.
+//
+// usePackSelection holds the pack + custom-amount state both paywalls share.
 
+import { useId, useState, type ChangeEvent, type KeyboardEvent, type ReactElement } from "react";
+import { Description as DialogDescriptionPrimitive, Title as DialogTitlePrimitive } from "@radix-ui/react-dialog";
 import { Check } from "lucide-react";
-import type { BonusPreviewTier } from "@shared/paywall";
+import {
+  CUSTOM_AMOUNT_FORMAT_HINT,
+  cleanCustomAmountInput,
+  parseCustomAmountInput,
+  quoteCustomAmount,
+  tidyCustomAmountInput,
+  type BonusPreviewTier,
+} from "@shared/paywall";
+import { CUSTOM_PACKAGE_TYPE, CUSTOM_TOPUP_MAX_USD, type PricingTier } from "@shared/types";
 
 /** "9 min total" when there is a bonus, plain "3 min" when there isn't. */
 export function minutesLabel(totalMinutes: number, freeMinutes: number): string {
@@ -97,4 +110,130 @@ export function BonusPackTile({
       </div>
     </button>
   );
+}
+
+// ---------------------------------------------------------------------------
+// Pack + custom-amount selection (both paywalls).
+//
+// The chosen pack is never cleared by the custom field. Custom mode simply means "the
+// field holds something": focusing it (a Tab on the way to the buy button, a stray tap
+// on a phone) changes nothing, the first typed character switches to the custom
+// amount, and emptying the field brings the chosen pack straight back. If the tiers
+// arrive late or the chosen pack disappears, the recommended pack is used.
+// ---------------------------------------------------------------------------
+
+export function usePackSelection(
+  presetTiers: BonusPreviewTier[],
+  coinsPerMinute: number,
+  onContinue: (tier: PricingTier) => void,
+) {
+  const recommended =
+    presetTiers.find((t) => t.recommended)?.packageType ??
+    presetTiers[1]?.packageType ??
+    presetTiers[0]?.packageType ??
+    "";
+  const [chosenPackage, setChosenPackage] = useState(recommended);
+  const [customInput, setCustomInput] = useState("");
+  const selectedPackage = presetTiers.some((t) => t.packageType === chosenPackage) ? chosenPackage : recommended;
+  const customMode = customInput !== "";
+
+  // Same floor/cap rules as BuyCreditsModal: floor = cheapest pack, cap = platform max.
+  const floorCents = presetTiers[0]?.priceUsd ?? 1000;
+  const floorUsd = Math.round(floorCents / 100);
+  const maxCents = CUSTOM_TOPUP_MAX_USD * 100;
+  const parsed = parseCustomAmountInput(customInput);
+  const customCents = parsed.kind === "amount" ? parsed.cents : 0;
+  const quote = quoteCustomAmount(customCents, coinsPerMinute);
+  // Every state that greys out the buy button says why: "0" → the minimum, "." or
+  // "1.000,00" → the format hint, over the cap → the maximum.
+  const customError =
+    parsed.kind === "invalid"
+      ? CUSTOM_AMOUNT_FORMAT_HINT
+      : parsed.kind === "amount" && customCents > maxCents
+        ? `Maximum top-up is $${CUSTOM_TOPUP_MAX_USD}.`
+        : parsed.kind === "amount" && customCents < floorCents
+          ? `Minimum top-up is $${floorUsd}.`
+          : null;
+  const customValid = parsed.kind === "amount" && customError === null;
+  /** Minutes beside the field: any typed amount up to the cap (not for "0", "." or over the cap). */
+  const showQuote = parsed.kind === "amount" && customCents > 0 && customCents <= maxCents;
+  const canContinue = customMode ? customValid : !!selectedPackage;
+
+  const handleContinue = () => {
+    if (customMode) {
+      if (!customValid) return;
+      onContinue({
+        packageType: CUSTOM_PACKAGE_TYPE,
+        coins: quote.coins,
+        bonusCoins: quote.bonusCoins,
+        totalCoins: quote.totalCoins,
+        priceUsd: customCents,
+        label: `$${(customCents / 100).toFixed(2)}`,
+      });
+      return;
+    }
+    const tier = presetTiers.find((t) => t.packageType === selectedPackage);
+    if (tier) onContinue(tier);
+  };
+
+  const errorId = useId();
+  const inputProps = {
+    type: "text",
+    inputMode: "decimal" as const,
+    autoComplete: "off",
+    value: customInput,
+    onChange: (e: ChangeEvent<HTMLInputElement>) => setCustomInput(cleanCustomAmountInput(e.target.value)),
+    onBlur: () => setCustomInput((v) => tidyCustomAmountInput(v)),
+    // Enter in the field = the buy button, but only for an amount she can buy.
+    onKeyDown: (e: KeyboardEvent<HTMLInputElement>) => {
+      if (e.key !== "Enter" || e.nativeEvent.isComposing) return;
+      e.preventDefault();
+      if (customMode && customValid) handleContinue();
+    },
+    "aria-invalid": customMode && customError !== null,
+    "aria-describedby": customMode && customError ? errorId : undefined,
+  };
+
+  return {
+    selectedPackage,
+    customMode,
+    customInput,
+    customError: customMode ? customError : null,
+    customValid,
+    showQuote,
+    quote,
+    floorUsd,
+    canContinue,
+    handleContinue,
+    /** A pack tile tap: select it and clear the field. */
+    pickPack: (packageType: string) => {
+      setChosenPackage(packageType);
+      setCustomInput("");
+    },
+    inputProps,
+    errorId,
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Dialog helpers. The panels render both inside the real Dialog and bare on the
+// preview page; a Radix Title/Description outside a Dialog throws, so they only wrap
+// the existing heading/text when `on` (= inside the Dialog). asChild keeps the panel's
+// own element and classes.
+// ---------------------------------------------------------------------------
+
+export function DialogTitleIf({ on, children }: { on?: boolean; children: ReactElement }) {
+  return on ? <DialogTitlePrimitive asChild>{children}</DialogTitlePrimitive> : children;
+}
+
+export function DialogDescriptionIf({ on, children }: { on?: boolean; children: ReactElement }) {
+  return on ? <DialogDescriptionPrimitive asChild>{children}</DialogDescriptionPrimitive> : children;
+}
+
+/** Focus the dialog box itself when it opens: not the ✕ (no focus ring at open) and not
+ *  the custom field (no phone keyboard popping up). Cancelling the auto-focus without
+ *  this left focus outside the dialog, so the first Tab escaped to the page behind. */
+export function focusDialogItself(e: Event) {
+  e.preventDefault();
+  (e.currentTarget as HTMLElement | null)?.focus({ preventScroll: true });
 }

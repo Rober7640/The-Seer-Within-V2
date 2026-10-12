@@ -45,9 +45,14 @@ const AidenQuizPage = lazyWithRetry(() => import("@/pages/AidenQuizPage"));
 const EvelynLanderPage = lazyWithRetry(() => import("@/pages/EvelynLanderPage"));
 const PersonaLanderPage = lazyWithRetry(() => import("@/pages/PersonaLanderPage"));
 
-// DEV-only paywall design preview (Problem 4). Gated below by import.meta.env.DEV
-// so it is excluded from the production bundle.
-const PaywallPreviewPage = lazyWithRetry(() => import("@/pages/PaywallPreviewPage"));
+// DEV-only paywall design preview (Problem 4). The import ITSELF is gated, not just
+// the route: Vite replaces import.meta.env.DEV with `false` in a production build,
+// so the dynamic import is dead code and no PaywallPreviewPage chunk is emitted. A
+// route-only gate is not enough — the lazy import alone makes Rollup emit the chunk,
+// and with it previewSamples.ts's local real-chat samples.
+const PaywallPreviewPage = import.meta.env.DEV
+  ? lazyWithRetry(() => import("@/pages/PaywallPreviewPage"))
+  : null;
 
 // Soulmate Sketch funnel pages (lazy loaded)
 const SoulmateLandingPage = lazyWithRetry(() => import("@/pages/SoulmateLandingPage"));
@@ -215,7 +220,7 @@ function Router() {
     <Suspense fallback={<LazyFallback />}>
       <Switch>
         {/* DEV-only paywall design preview (Problem 4) — never in prod build */}
-        {import.meta.env.DEV && (
+        {import.meta.env.DEV && PaywallPreviewPage && (
           <Route path="/paywall-preview" component={PaywallPreviewPage} />
         )}
 

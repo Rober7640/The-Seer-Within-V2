@@ -13,18 +13,21 @@
 // card itself; the default export wraps it in the same Dialog + mobile bottom
 // sheet as BuyCreditsModal so integration is a drop-in.
 
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import { Star, X } from "lucide-react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { PAYMENT_DIALOG_MOBILE_SHEET } from "@/lib/paymentDialog";
+import { COINS_PER_MINUTE, CUSTOM_TOPUP_MAX_USD, type PricingTier } from "@shared/types";
+import type { BonusPreviewTier } from "@shared/paywall";
 import {
-  COINS_PER_MINUTE,
-  CUSTOM_PACKAGE_TYPE,
-  CUSTOM_TOPUP_MAX_USD,
-  type PricingTier,
-} from "@shared/types";
-import { quoteCustomAmount, type BonusPreviewTier } from "@shared/paywall";
-import { BonusPackTile, FreeMinutesPill, minutesLabel } from "./BonusPackTile";
+  BonusPackTile,
+  DialogDescriptionIf,
+  DialogTitleIf,
+  FreeMinutesPill,
+  focusDialogItself,
+  minutesLabel,
+  usePackSelection,
+} from "./BonusPackTile";
 
 export interface LongCopyPersona {
   name: string;
@@ -45,7 +48,13 @@ export interface LongCopyPaywallProps {
   coinsPerMinute?: number;
   /** Called with the chosen pack (a preset, or a synthesized custom tier). */
   onContinue: (tier: PricingTier) => void;
+  /** "Not now", the ✕ — and, in the Dialog, Esc or a tap outside. */
   onNotNow: () => void;
+  /** Rendered inside the real Dialog (the default export): the heading becomes its title. */
+  inDialog?: boolean;
+  /** Preview page only: a tighter cap on the sheet's height (CSS length), so the sheet
+   *  never slides under the preview bar. The Dialog leaves it unset. */
+  maxHeight?: string;
 }
 
 const FALLBACK_AVATAR = "/evelyn-avatar.png";
@@ -57,53 +66,22 @@ export function LongCopyPaywallPanel({
   coinsPerMinute = COINS_PER_MINUTE,
   onContinue,
   onNotNow,
+  inDialog,
+  maxHeight,
 }: LongCopyPaywallProps) {
   const firstName = (persona.name || "your guide").split(" ")[0];
 
   // The three packs, ascending.
   const presetTiers = useMemo(() => [...tiers].sort((a, b) => a.priceUsd - b.priceUsd).slice(0, 3), [tiers]);
-  const defaultPackage =
-    presetTiers.find((t) => t.recommended)?.packageType ??
-    presetTiers[1]?.packageType ??
-    presetTiers[0]?.packageType ??
-    "";
 
-  const [mode, setMode] = useState<"preset" | "custom">("preset");
-  const [selectedPackage, setSelectedPackage] = useState(defaultPackage);
-  const [customInput, setCustomInput] = useState("");
-
-  // --- Custom amount: same floor/cap rules as BuyCreditsModal (floor = cheapest pack,
-  // cap = platform max). It gets the price per minute of the biggest pack at or below
-  // it on the FULL five-pack ladder (quoteCustomAmount), not just the three shown here:
-  // $100 typed → 70 min, same as the repeat-buyer card. PREVIEW ONLY: the server checkout
-  // still charges custom amounts at the flat rate, so going live needs the server to
-  // grant the bonus with that same function.
-  const floorCents = presetTiers.length ? presetTiers[0].priceUsd : 1000;
-  const floorUsd = Math.round(floorCents / 100);
-  const customDollars = parseFloat(customInput);
-  const customCents = Number.isFinite(customDollars) ? Math.round(customDollars * 100) : 0;
-  const customQuote = quoteCustomAmount(customCents, coinsPerMinute);
-  const customTooLow = customInput.trim() !== "" && customCents > 0 && customCents < floorCents;
-  const customTooHigh = customCents > CUSTOM_TOPUP_MAX_USD * 100;
-  const customValid = mode === "custom" && customCents >= floorCents && !customTooHigh;
-  const canContinue = mode === "preset" ? !!selectedPackage : customValid;
-
-  const handleContinue = () => {
-    if (mode === "custom") {
-      if (!customValid) return;
-      onContinue({
-        packageType: CUSTOM_PACKAGE_TYPE,
-        coins: customQuote.coins,
-        bonusCoins: customQuote.bonusCoins,
-        totalCoins: customQuote.totalCoins,
-        priceUsd: customCents,
-        label: `$${(customCents / 100).toFixed(2)}`,
-      });
-      return;
-    }
-    const tier = presetTiers.find((t) => t.packageType === selectedPackage) ?? presetTiers[0];
-    if (tier) onContinue(tier);
-  };
+  // Pack + custom amount (usePackSelection): typing switches to the custom amount;
+  // focusing or emptying the field keeps / restores the chosen pack. Same floor/cap as
+  // BuyCreditsModal. A custom amount gets the price per minute of the biggest pack at
+  // or below it on the FULL five-pack ladder (quoteCustomAmount), not just the three
+  // shown here: $100 typed → 70 min, same as the repeat-buyer card. PREVIEW ONLY: the
+  // server checkout still charges custom amounts at the flat rate, so going live needs
+  // the server to grant the bonus with that same function.
+  const sel = usePackSelection(presetTiers, coinsPerMinute, onContinue);
 
   const lines = (stillSee ?? []).map((l) => l.trim()).filter(Boolean).slice(0, 3);
   const showRating = typeof persona.rating === "number" && (persona.ratingCount ?? 0) > 0;
@@ -123,7 +101,10 @@ export function LongCopyPaywallPanel({
           minus a 40px strip so the chat still shows above the sheet. Browsers without
           dvh keep 88vh. Measured: no scrolling down to 360×560 / 375×548 with up to two
           still-see lines wrapping; if all three wrap, ≤ 14px scrolls there. */}
-      <div className="relative z-10 max-h-[88vh] overflow-y-auto px-5 pb-2 max-sm:max-h-[calc(100dvh-40px)] [@media(max-height:620px)]:px-4 [@media(max-height:620px)]:pb-0">
+      <div
+        style={maxHeight ? { maxHeight } : undefined}
+        className="relative z-10 max-h-[88vh] overflow-y-auto px-5 pb-2 max-sm:max-h-[calc(100dvh-40px)] [@media(max-height:620px)]:px-4 [@media(max-height:620px)]:pb-0"
+      >
         {/* Guide + real rating — a sticky top bar that owns the close button, so the ✕
             never floats over scrolled text. Its fill matches the sheet's top gradient. */}
         <div className="sticky top-0 z-20 -mx-5 flex items-center gap-3 bg-gradient-to-b from-[#28164a] to-[#201840] px-5 pb-2 pt-5 [@media(min-height:621px)_and_(max-height:700px)]:pb-1.5 [@media(min-height:621px)_and_(max-height:700px)]:pt-4 [@media(max-height:620px)]:-mx-4 [@media(max-height:620px)]:gap-2.5 [@media(max-height:620px)]:px-4 [@media(max-height:620px)]:pb-1 [@media(max-height:620px)]:pt-2.5">
@@ -161,32 +142,36 @@ export function LongCopyPaywallPanel({
           </button>
         </div>
 
-        {/* Headline */}
-        <h2 className="mt-2 font-serif text-[22px] font-bold leading-[1.2] text-white [@media(min-height:621px)_and_(max-height:700px)]:mt-1.5 [@media(min-height:621px)_and_(max-height:700px)]:text-[20px] [@media(max-height:620px)]:mt-0.5 [@media(max-height:620px)]:text-[18px] [@media(max-height:620px)]:leading-[1.15]">
-          Your free minutes are up, but your reading isn't.
-        </h2>
+        {/* Headline (the Dialog's accessible title) */}
+        <DialogTitleIf on={inDialog}>
+          <h2 className="mt-2 font-serif text-[22px] font-bold leading-[1.2] text-white [@media(min-height:621px)_and_(max-height:700px)]:mt-1.5 [@media(min-height:621px)_and_(max-height:700px)]:text-[20px] [@media(max-height:620px)]:mt-0.5 [@media(max-height:620px)]:text-[18px] [@media(max-height:620px)]:leading-[1.15]">
+            Your free minutes are up, but your reading isn't.
+          </h2>
+        </DialogTitleIf>
 
         {/* What the guide still sees — HER reading, not minutes. Lines stay 14px on
-            every phone; a long line may wrap to two rows. */}
-        <div className="mt-3.5 rounded-2xl border border-amber-200/15 bg-white/[0.04] px-4 py-3 [@media(min-height:621px)_and_(max-height:700px)]:mt-2.5 [@media(min-height:621px)_and_(max-height:700px)]:px-3.5 [@media(min-height:621px)_and_(max-height:700px)]:py-2.5 [@media(max-height:620px)]:mt-2 [@media(max-height:620px)]:px-3 [@media(max-height:620px)]:py-1.5">
-          {lines.length > 0 ? (
-            <>
-              <p className="text-[13px] font-semibold leading-snug text-amber-200/90">What I still see for you:</p>
-              <ul className="mt-2 space-y-1.5 [@media(min-height:621px)_and_(max-height:700px)]:mt-1.5 [@media(min-height:621px)_and_(max-height:700px)]:space-y-1 [@media(max-height:620px)]:mt-1 [@media(max-height:620px)]:space-y-0.5">
-                {lines.map((line, i) => (
-                  <li key={i} className="flex gap-2 text-[14px] leading-snug text-white/90 [@media(max-height:620px)]:gap-1.5 [@media(max-height:620px)]:leading-[1.3]">
-                    <span aria-hidden className="shrink-0 text-amber-300">➤</span>
-                    <span>{line}</span>
-                  </li>
-                ))}
-              </ul>
-            </>
-          ) : (
-            <p className="text-[14px] leading-snug text-white/90">
-              {firstName} has more to tell you about your question.
-            </p>
-          )}
-        </div>
+            every phone; a long line may wrap to two rows. The Dialog's description. */}
+        <DialogDescriptionIf on={inDialog}>
+          <div className="mt-3.5 rounded-2xl border border-amber-200/15 bg-white/[0.04] px-4 py-3 [@media(min-height:621px)_and_(max-height:700px)]:mt-2.5 [@media(min-height:621px)_and_(max-height:700px)]:px-3.5 [@media(min-height:621px)_and_(max-height:700px)]:py-2.5 [@media(max-height:620px)]:mt-2 [@media(max-height:620px)]:px-3 [@media(max-height:620px)]:py-1.5">
+            {lines.length > 0 ? (
+              <>
+                <p className="text-[13px] font-semibold leading-snug text-amber-200/90">What I still see for you:</p>
+                <ul className="mt-2 space-y-1.5 [@media(min-height:621px)_and_(max-height:700px)]:mt-1.5 [@media(min-height:621px)_and_(max-height:700px)]:space-y-1 [@media(max-height:620px)]:mt-1 [@media(max-height:620px)]:space-y-0.5">
+                  {lines.map((line, i) => (
+                    <li key={i} className="flex gap-2 text-[14px] leading-snug text-white/90 [@media(max-height:620px)]:gap-1.5 [@media(max-height:620px)]:leading-[1.3]">
+                      <span aria-hidden className="shrink-0 text-amber-300">➤</span>
+                      <span>{line}</span>
+                    </li>
+                  ))}
+                </ul>
+              </>
+            ) : (
+              <p className="text-[14px] leading-snug text-white/90">
+                {firstName} has more to tell you about your question.
+              </p>
+            )}
+          </div>
+        </DialogDescriptionIf>
 
         {/* Packs — price big, the FREE minutes as the eye-catcher, whole-minute total small.
             Bonus minutes grow faster than the price. The top gap leaves room for the badges. */}
@@ -195,67 +180,58 @@ export function LongCopyPaywallPanel({
             <BonusPackTile
               key={tier.packageType}
               tier={tier}
-              selected={mode === "preset" && selectedPackage === tier.packageType}
-              onSelect={() => {
-                setMode("preset");
-                setSelectedPackage(tier.packageType);
-                setCustomInput("");
-              }}
+              selected={!sel.customMode && sel.selectedPackage === tier.packageType}
+              onSelect={() => sel.pickPack(tier.packageType)}
             />
           ))}
         </div>
 
         {/* Custom amount (compact) — ~20% of revenue, so it stays. A <label>, so a tap
-            anywhere on the row (≥ 40px tall) focuses the field. */}
+            anywhere on the row (≥ 40px tall) focuses the field. Focusing it never drops
+            the chosen pack; only typing switches to the custom amount. With no amount to
+            quote (empty, "0", ".", over the cap) the right side shows the allowed range,
+            as the repeat-buyer card does — never "0 min". */}
         <label
           className={`mt-2.5 flex min-h-11 cursor-text items-center justify-between gap-3 rounded-xl border px-3 transition-colors [@media(max-height:620px)]:mt-2 [@media(max-height:620px)]:min-h-10 ${
-            mode === "custom"
-              ? customTooLow || customTooHigh
+            sel.customMode
+              ? sel.customError
                 ? "border-rose-400/60 bg-rose-400/[0.06]"
                 : "border-teal-400 bg-teal-400/10"
-              : "border-white/10 bg-white/[0.03]"
+              : "border-white/10 bg-white/[0.03] focus-within:border-white/30"
           }`}
         >
           <span className="flex flex-1 items-center gap-1.5">
             <span className="text-[15px] font-semibold text-white/60">$</span>
             <input
-              type="text"
-              inputMode="decimal"
+              {...sel.inputProps}
               aria-label="Other amount in dollars"
               placeholder="Other amount"
-              value={customInput}
-              onFocus={() => setMode("custom")}
-              onChange={(e) => {
-                const raw = e.target.value.replace(/[^0-9.]/g, "");
-                const parts = raw.split(".");
-                const clean = parts.length > 2 ? `${parts[0]}.${parts.slice(1).join("")}` : raw;
-                setMode("custom");
-                setCustomInput(clean);
-              }}
               className="w-full bg-transparent py-2 text-[14px] text-white placeholder:text-white/40 focus:outline-none"
             />
           </span>
-          {customCents > 0 && !customTooHigh ? (
+          {sel.showQuote ? (
             <span className="flex shrink-0 items-center gap-1.5">
-              {customQuote.freeMinutesShown > 0 && <FreeMinutesPill minutes={customQuote.freeMinutesShown} />}
+              {sel.quote.freeMinutesShown > 0 && <FreeMinutesPill minutes={sel.quote.freeMinutesShown} />}
               <span className="text-[12px] font-medium text-white/60">
-                {minutesLabel(customQuote.totalMinutesShown, customQuote.freeMinutesShown)}
+                {minutesLabel(sel.quote.totalMinutesShown, sel.quote.freeMinutesShown)}
               </span>
             </span>
           ) : (
-            <span className="shrink-0 text-[12px] font-medium text-white/40">0 min</span>
+            <span className="shrink-0 text-[12px] font-medium text-white/40">
+              ${sel.floorUsd}–${CUSTOM_TOPUP_MAX_USD}
+            </span>
           )}
         </label>
-        {mode === "custom" && (customTooLow || customTooHigh) && (
-          <p className="mt-1.5 text-center text-[11px] text-rose-300/90">
-            {customTooHigh ? `Maximum top-up is $${CUSTOM_TOPUP_MAX_USD}.` : `Minimum top-up is $${floorUsd}.`}
+        {sel.customError && (
+          <p id={sel.errorId} className="mt-1.5 text-center text-[11px] text-rose-300/90">
+            {sel.customError}
           </p>
         )}
 
         {/* CTA — never under 48px tall */}
         <button
-          onClick={handleContinue}
-          disabled={!canContinue}
+          onClick={sel.handleContinue}
+          disabled={!sel.canContinue}
           className="mt-3.5 flex min-h-12 w-full items-center justify-center rounded-2xl bg-gradient-to-r from-teal-400 to-emerald-500 py-3.5 text-center text-[15px] font-bold text-[#0f1628] shadow-lg shadow-emerald-500/20 transition-transform active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-50 [@media(min-height:621px)_and_(max-height:700px)]:mt-3 [@media(max-height:620px)]:mt-2 [@media(max-height:620px)]:py-3"
         >
           Continue my reading
@@ -292,20 +268,26 @@ export function LongCopyPaywallPanel({
   );
 }
 
-/** The panel inside the same Dialog + phone bottom-sheet as BuyCreditsModal. */
+/** The panel inside the same Dialog + phone bottom-sheet as BuyCreditsModal.
+ *  It closes itself: ✕, "Not now", Esc and a tap outside all call onNotNow and then
+ *  onOpenChange(false), so no host can leave her stuck behind it. */
 export default function LongCopyPaywall({
   open,
   onOpenChange,
   ...props
-}: LongCopyPaywallProps & { open: boolean; onOpenChange: (open: boolean) => void }) {
+}: Omit<LongCopyPaywallProps, "inDialog" | "maxHeight"> & { open: boolean; onOpenChange: (open: boolean) => void }) {
+  const notNow = () => {
+    props.onNotNow();
+    onOpenChange(false);
+  };
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={(o) => (o ? onOpenChange(true) : notNow())}>
       <DialogContent
-        // Don't land focus (and its ring) on the close button when the sheet opens.
-        onOpenAutoFocus={(e) => e.preventDefault()}
-        className={`sm:max-w-md p-0 bg-transparent border-0 shadow-none [&>button:last-child]:hidden ${PAYMENT_DIALOG_MOBILE_SHEET}`}
+        // Focus the sheet itself, not the ✕ or the custom field (see focusDialogItself).
+        onOpenAutoFocus={focusDialogItself}
+        className={`sm:max-w-md p-0 bg-transparent border-0 shadow-none focus:outline-none [&>button:last-child]:hidden ${PAYMENT_DIALOG_MOBILE_SHEET}`}
       >
-        <LongCopyPaywallPanel {...props} />
+        <LongCopyPaywallPanel {...props} onNotNow={notNow} inDialog />
       </DialogContent>
     </Dialog>
   );

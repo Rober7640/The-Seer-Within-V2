@@ -226,3 +226,57 @@ export function quoteCustomAmount(
     fromPackageType: base?.packageType ?? null,
   };
 }
+
+// ---------------------------------------------------------------------------
+// PREVIEW ONLY — reading the custom-amount field on the bonus-pack paywalls.
+//
+// What she types is what she is charged, so nothing here may quietly turn one amount
+// into another. The old filter dropped every character but digits and ".", which made
+// "12,5" (a comma-decimal keyboard) into $125. Now:
+//   - a comma IS the decimal point ("12,5" → 12.50);
+//   - more than one separator ("1.000,00", "$1,000.00") is refused with the format
+//     hint, never guessed at;
+//   - more than two decimals ("25.555", or a pasted "12,345" that meant twelve
+//     thousand) is refused with the same hint, never cut down to an amount she did
+//     not type;
+//   - the amount is worked out in whole cents from the digits (no float rounding).
+// ---------------------------------------------------------------------------
+
+/** Shown when the field holds something that is not a plain amount. */
+export const CUSTOM_AMOUNT_FORMAT_HINT = "Enter an amount like 25 or 25.50";
+
+export type CustomAmountInput =
+  | { kind: "empty" }
+  /** Not a plain amount: no digit ("."), two separators, or three-plus decimals. */
+  | { kind: "invalid" }
+  | { kind: "amount"; cents: number };
+
+/** Keystroke/paste filter: a comma becomes the decimal point; everything that is not a
+ *  digit or a point is dropped ("$30" → "30", "USD 30" → "30", " 45 " → "45").
+ *  Separators are KEPT, so "1.000,00" stays visibly wrong instead of becoming 1000. */
+export function cleanCustomAmountInput(raw: string): string {
+  return raw.replace(/,/g, ".").replace(/[^0-9.]/g, "");
+}
+
+/** Read a cleaned field value. */
+export function parseCustomAmountInput(value: string): CustomAmountInput {
+  const v = value.trim();
+  if (v === "") return { kind: "empty" };
+  const m = /^(\d*)(?:\.(\d{0,2}))?$/.exec(v);
+  if (!m || !/\d/.test(v)) return { kind: "invalid" };
+  const whole = m[1] ? Number(m[1]) : 0;
+  const frac = Number(((m[2] ?? "") + "00").slice(0, 2));
+  return { kind: "amount", cents: whole * 100 + frac };
+}
+
+/** On blur, written the way money is: leading zeros dropped ("030" → "30"), a missing
+ *  zero added (".5" → "0.50"), one decimal padded to cents ("12,5" → "12.50"), a
+ *  dangling point dropped ("10." → "10"). Never changes the amount. Anything invalid
+ *  is left exactly as typed so its hint stays next to it. */
+export function tidyCustomAmountInput(value: string): string {
+  const v = value.trim();
+  if (parseCustomAmountInput(v).kind !== "amount") return value;
+  const [rawWhole, frac = ""] = v.split(".");
+  const whole = rawWhole.replace(/^0+(?=\d)/, "") || "0";
+  return frac ? `${whole}.${frac.padEnd(2, "0")}` : whole;
+}

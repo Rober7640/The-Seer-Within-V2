@@ -9,6 +9,7 @@
 import { X } from "lucide-react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { PAYMENT_DIALOG_MOBILE_SHEET } from "@/lib/paymentDialog";
+import { DialogTitleIf, focusDialogItself } from "./BonusPackTile";
 
 export type ExitReason = "price" | "not_sure_real" | "got_what_needed" | "just_looking";
 
@@ -20,11 +21,20 @@ export const EXIT_REASONS: { id: ExitReason; label: string }[] = [
 ];
 
 export interface ExitReasonSheetProps {
-  /** Called with the tapped reason, or null when she taps Skip. */
+  /** Called with the tapped reason, or null for Skip / ✕ (and, in the Dialog, Esc or a tap outside). */
   onPick: (reason: ExitReason | null) => void;
 }
 
-export function ExitReasonPanel({ onPick }: ExitReasonSheetProps) {
+export function ExitReasonPanel({
+  onPick,
+  inDialog,
+  maxHeight,
+}: ExitReasonSheetProps & {
+  /** Rendered inside the real Dialog: the heading becomes its title. */
+  inDialog?: boolean;
+  /** Preview page only: a tighter height cap (CSS length) so it never sits under the preview bar. */
+  maxHeight?: string;
+}) {
   return (
     <div className="relative overflow-hidden rounded-2xl shadow-2xl max-sm:rounded-b-none">
       <div className="absolute inset-0 bg-gradient-to-b from-[#0f1628] via-[#162040] to-[#1a2550]" />
@@ -41,8 +51,16 @@ export function ExitReasonPanel({ onPick }: ExitReasonSheetProps) {
         </span>
       </button>
 
-      <div className="relative z-10 px-5 pb-4 pt-6">
-        <h2 className="text-center font-serif text-[22px] font-bold leading-tight text-white">What stopped you?</h2>
+      {/* Same height cap + internal scroll as the paywalls, so on a short landscape
+          screen (667×320) the heading, every answer and Skip can be scrolled to; the ✕
+          sits outside the scroller and stays put. */}
+      <div
+        style={maxHeight ? { maxHeight } : undefined}
+        className="relative z-10 max-h-[88vh] overflow-y-auto px-5 pb-4 pt-6 max-sm:max-h-[calc(100dvh-40px)]"
+      >
+        <DialogTitleIf on={inDialog}>
+          <h2 className="px-8 text-center font-serif text-[22px] font-bold leading-tight text-white">What stopped you?</h2>
+        </DialogTitleIf>
 
         <div className="mt-5 space-y-2.5">
           {EXIT_REASONS.map((r) => (
@@ -67,19 +85,27 @@ export function ExitReasonPanel({ onPick }: ExitReasonSheetProps) {
   );
 }
 
-/** The panel inside the same Dialog + phone bottom-sheet as the paywall. */
+/** The panel inside the same Dialog + phone bottom-sheet as the paywall. It closes
+ *  itself so a survey can never trap her: an answer calls onPick(reason), and Skip, ✕,
+ *  Esc and a tap outside call onPick(null) — each followed by onOpenChange(false). */
 export default function ExitReasonSheet({
   open,
   onOpenChange,
   onPick,
 }: ExitReasonSheetProps & { open: boolean; onOpenChange: (open: boolean) => void }) {
+  const pick = (reason: ExitReason | null) => {
+    onPick(reason);
+    onOpenChange(false);
+  };
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={(o) => (o ? onOpenChange(true) : pick(null))}>
       <DialogContent
-        onOpenAutoFocus={(e) => e.preventDefault()}
-        className={`sm:max-w-sm p-0 bg-transparent border-0 shadow-none [&>button:last-child]:hidden ${PAYMENT_DIALOG_MOBILE_SHEET}`}
+        onOpenAutoFocus={focusDialogItself}
+        // The heading is the whole message; there is no separate description.
+        aria-describedby={undefined}
+        className={`sm:max-w-sm p-0 bg-transparent border-0 shadow-none focus:outline-none [&>button:last-child]:hidden ${PAYMENT_DIALOG_MOBILE_SHEET}`}
       >
-        <ExitReasonPanel onPick={onPick} />
+        <ExitReasonPanel onPick={pick} inDialog />
       </DialogContent>
     </Dialog>
   );

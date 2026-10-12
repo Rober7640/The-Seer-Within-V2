@@ -97,3 +97,10 @@ docs/aweber/*/sends/*/_build/
 # was picked FROM, and are reproducible from the prompts in prompts/. No other
 # funnel tracks its candidates either.
 improve-v1/fb-read/images/candidates/
+
+# Paywall long-copy preview: anonymised REAL chat excerpts (the dev-only fixture the
+# /paywall-preview scene reads) and the local review docs built from them. Written by
+# scripts/preview-paywall-samples.ts; never commit. Kept specific on purpose — a
+# global *.local.json / *.local.md would also hide legitimate files.
+client/src/components/paywall/preview-samples.local.json
+improve-v2/**/*.local.md
