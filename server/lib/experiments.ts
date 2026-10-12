@@ -36,6 +36,9 @@ import {
 // the version test overrule a URL the redirect deliberately let through. tarotRedirect
 // imports nothing, so this adds no import cycle.
 import { TAROT_C_EXEMPT_HOOKS } from './tarotRedirect';
+// 04's price test: the control price and the closed set of arm prices. The catalog imports
+// nothing from the server, so this adds no import cycle.
+import { TEA_READING_PRICE_CENTS, TEA_READING_TEST_CENTS } from '@shared/backendOffers';
 
 // ── Paywall test constants (the one experiment Phase 1 folds in) ──────────────
 export const PAYWALL_EXPERIMENT_KEY = 'paywall_copy_2026';
@@ -1951,15 +1954,35 @@ export async function resolveBeBookingTreatment(
  *
  * No exposure for the subject → she was never in the test (bought from a /preview
  * URL, or before it started), so nothing is logged and she is not counted. One
- * conversion per subject, because Stripe retries checkout.session.completed.
- * Failures are logged, never thrown: a measurement miss must not fail a paid order.
+ * conversion per (subject, event), because Stripe retries checkout.session.completed
+ * and the thank-you page records the same order. Failures are logged, never thrown:
+ * a measurement miss must not fail a paid order.
+ *
+ * `key`/`event` default to 02's booking-treatment test, which logs one event only, so
+ * its behaviour is unchanged. 04's price test passes its own key and BE_04_BOOKING_EVENT.
  */
 export async function logBeBookingConversion(
   subjectId: string | null | undefined,
   valueCents: number,
   key: string = BE_BOOKING_EXPERIMENT_KEY,
+  event: string = 'be_02_booking_purchased',
 ): Promise<void> {
   if (!subjectId) return;
+  await recordBeConversion(key, subjectId, event, valueCents, 'BE booking conversion insert failed');
+}
+
+/**
+ * The shared write behind every backend conversion: look up the subject's exposure (no
+ * exposure ⇒ not in the test ⇒ nothing written), skip a (key, subject, event) already on
+ * record, else insert one row carrying the exposed arm. ⛔ Never throws.
+ */
+async function recordBeConversion(
+  key: string,
+  subjectId: string,
+  event: string,
+  valueCents: number,
+  failureMessage: string,
+): Promise<void> {
   try {
     const [exposure] = await db
       .select({ variant: experimentExposures.variant })
@@ -1971,7 +1994,13 @@ export async function logBeBookingConversion(
     const [existing] = await db
       .select({ id: experimentConversions.id })
       .from(experimentConversions)
-      .where(and(eq(experimentConversions.experimentKey, key), eq(experimentConversions.subjectId, subjectId)))
+      .where(
+        and(
+          eq(experimentConversions.experimentKey, key),
+          eq(experimentConversions.subjectId, subjectId),
+          eq(experimentConversions.event, event),
+        ),
+      )
       .limit(1);
     if (existing) return;
 
@@ -1979,10 +2008,108 @@ export async function logBeBookingConversion(
       experimentKey: key,
       subjectId,
       variant: exposure.variant,
-      event: 'be_02_booking_purchased',
+      event,
       value: Number.isFinite(valueCents) ? Math.round(valueCents) : 0,
     });
   } catch (err) {
-    logger.error('BE booking conversion insert failed', { key, error: (err as Error).message });
+    logger.error(failureMessage, { key, event, error: (err as Error).message });
   }
+}
+
+// ── BE 04 PRICE SPLIT TEST: $35 (A, control) vs $45 (B) ───────────────────────
+// Offer 04 (The Turn) charges ONE fixed price, and this test decides which: arm A $35
+// (control, variants[0]) or arm B $45, carried in payload.priceCents. Operator
+// 2026-10-11: no price hike — the old day ladder is gone, and this split replaces it.
+//
+// Same shape as the 02 booking-treatment test above: subject = the per-browser visitor
+// id (client/src/lib/backendVisitor.ts), assigned when the booking screen asks for its
+// price (GET /api/backend/offers/tea-reading/price) and RE-RESOLVED at checkout, which
+// charges the server's arm and refuses (409) a page that printed another one. Scored as
+// an 'event' test (tallyEvent): one conversion for the booking (amount_total, bump
+// included) and one per upsell payment, so revenue per visitor per arm counts all three.
+//
+// 🔴 FAILS SAFE TO $35. Draft, paused, out of scope, no visitor id, a DB read error, or a
+// payload outside the closed set {3500, 4500} — every one of them is arm A at $35 and no
+// exposure. A concluded test with a declared winner rolls that winner's price out
+// (applied, not enrolled), exactly as every other framework test does.
+export const BE_04_PRICE_KEY = 'be_04_price_2026';
+
+/** The control arm's key — what every fallback reports, because it is what it charges. */
+export const BE_04_CONTROL_ARM = 'A';
+
+/** 04's booking conversion: the order's amount_total, bump included. */
+export const BE_04_BOOKING_EVENT = 'be_04_booking_purchased';
+
+/** 04's upsell conversion — one event per upsell PRODUCT, so U1 and U2 both count once. */
+export function be04UpsellEvent(productKey: string): string {
+  return `be_04_upsell_purchased:${productKey}`;
+}
+
+/**
+ * The visitor subject exactly as checkout writes it to Stripe metadata (`expSubject`, capped
+ * at 64 characters), so the exposure, the metadata and the conversion all share one id.
+ */
+function be04Subject(subjectId: string | null | undefined): string | null {
+  return typeof subjectId === 'string' && subjectId ? subjectId.slice(0, 64) : null;
+}
+
+/**
+ * Which price does this visitor pay for 04 — and log her exposure if she is in the test.
+ *
+ * Mirrors resolveBeBookingTreatment: a thin wrapper over assign(). `payload.priceCents` is
+ * read only when the assignment is `applied`, and only a value in TEA_READING_TEST_CENTS is
+ * used; anything else is the control ($35, arm 'A', not enrolled — so a typo'd arm can
+ * never charge a number nobody configured, and never lands in the denominator).
+ *
+ * Called from TWO places that must agree: the price endpoint (what the page prints) and
+ * checkout (what Stripe charges). Same subject + scope.freezeAssignment ⇒ same arm. The
+ * exposure insert is idempotent, so the second call is a no-op.
+ */
+export async function resolveBe04Price(
+  subjectId: string | null | undefined,
+  key: string = BE_04_PRICE_KEY, // overridable so tests never touch the live experiment
+): Promise<{ key: string; arm: string; cents: number; variant: string | null; enrolled: boolean }> {
+  const subject = be04Subject(subjectId);
+  const control = { key, arm: BE_04_CONTROL_ARM, cents: TEA_READING_PRICE_CENTS, enrolled: false };
+  let a: Assignment | null;
+  try {
+    a = await assign(key, subject, {});
+  } catch (err) {
+    // assign() already fails safe on a config read error; this is the belt to its braces —
+    // a price must always come back, and the only safe one is the control.
+    logger.error('BE 04 price assignment failed — charging the control', { key, error: (err as Error).message });
+    return { ...control, variant: null };
+  }
+  if (!a) return { ...control, variant: null };
+  const cents = (a.payload as { priceCents?: unknown } | null)?.priceCents;
+  if (!a.applied || typeof cents !== 'number' || !TEA_READING_TEST_CENTS.includes(cents)) {
+    return { ...control, variant: a.variant };
+  }
+  if (a.enrolled && subject) {
+    await logExposure(key, subject, a.variant, 'be_04_price', { priceCents: cents });
+  }
+  return { key, arm: a.variant, cents, variant: a.variant, enrolled: a.enrolled };
+}
+
+/**
+ * Credit an UPSELL payment to the 04 price arm she booked under. The booking session's
+ * `priceExp` / `expSubject` ride onto every upsell charge (server/routes/backendOffers.ts),
+ * so this reads them off the upsell's own metadata. No `priceExp` ⇒ she was not booked under
+ * the price test (every other offer) ⇒ a no-op. Deduped per upsell product; never throws.
+ */
+export async function logBe04UpsellConversion(
+  meta: { priceExp?: string | null; expSubject?: string | null } | null | undefined,
+  productKey: string,
+  valueCents: number,
+): Promise<void> {
+  if (meta?.priceExp !== BE_04_PRICE_KEY) return;
+  const subject = be04Subject(meta.expSubject);
+  if (!subject) return;
+  await recordBeConversion(
+    BE_04_PRICE_KEY,
+    subject,
+    be04UpsellEvent(productKey),
+    valueCents,
+    'BE 04 upsell conversion insert failed',
+  );
 }

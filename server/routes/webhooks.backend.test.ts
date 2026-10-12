@@ -65,6 +65,13 @@ vi.mock('../lib/soulmateOrders', () => ({
 vi.mock('@shared/funnelConfig', () => ({ funnelDefForParam: () => null }));
 vi.mock('@shared/landerBumpRouting', () => ({ bumpPaidListWanted: () => false }));
 
+// 04's price test: the upsell conversion write has its own tests (experiments.be04Price.test.ts);
+// here it is a spy, so WHICH payment reaches it, with what amount, can be pinned.
+const logBe04UpsellConversion = vi.fn(async (..._a: unknown[]) => undefined);
+vi.mock('../lib/experiments', () => ({
+  logBe04UpsellConversion: (...a: unknown[]) => logBe04UpsellConversion(...a),
+}));
+
 const recordBackendShipment = vi.fn();
 const handleBackendRefund = vi.fn();
 vi.mock('../lib/beShipments', () => ({
@@ -94,7 +101,7 @@ function completed(product: string, extra: Record<string, unknown> = {}) {
 
 beforeEach(() => {
   state.event = null;
-  for (const fn of [recordBackendOrder, recordBackendShipment, handleBackendRefund, addBackendUpsellCustomer, capture, fireStripePurchaseEvent, piRetrieve, recordBackendUpsellOrder, marcusAudioContentFields]) {
+  for (const fn of [recordBackendOrder, recordBackendShipment, handleBackendRefund, addBackendUpsellCustomer, capture, fireStripePurchaseEvent, piRetrieve, recordBackendUpsellOrder, marcusAudioContentFields, logBe04UpsellConversion]) {
     fn.mockClear();
   }
   recordBackendOrder.mockReset();
@@ -184,6 +191,63 @@ describe('checkout.session.completed — the be_ booking branch', () => {
     });
     await post();
     expect(recordBackendUpsellOrder).not.toHaveBeenCalled();
+  });
+});
+
+// ─── 04's price split test: upsell revenue lands on the arm she booked under ─────────────
+describe('04 price test — attribution', () => {
+  const ARM_META = { expSubject: 'visitor-04', priceExp: 'be_04_price_2026', priceArm: 'B' };
+
+  function oneClick(metadata: Record<string, string>, amount = 4700) {
+    const pi = { id: 'pi_test_04_u1', amount, metadata };
+    state.event = { type: 'payment_intent.succeeded', data: { object: pi } };
+    return pi;
+  }
+
+  it('a 1-click upsell hands its metadata, product and charged amount to the conversion logger', async () => {
+    const pi = oneClick({ product: 'be_protection_ritual', offer: 'tea-reading', flow: '1click', email: 'she@example.com', ...ARM_META });
+    const res = await post();
+    expect(res.status).toBe(200);
+    expect(logBe04UpsellConversion).toHaveBeenCalledTimes(1);
+    expect(logBe04UpsellConversion).toHaveBeenCalledWith(pi.metadata, 'be_protection_ritual', 4700);
+  });
+
+  it('a hosted (fallback) upsell does too, with the session\'s amount_total', async () => {
+    const session = completed('be_bracelet', {
+      amount_total: 3000,
+      metadata: { product: 'be_bracelet', offer: 'tea-reading', originalSession: 'cs_booking', ...ARM_META },
+    });
+    await post();
+    expect(logBe04UpsellConversion).toHaveBeenCalledTimes(1);
+    expect(logBe04UpsellConversion).toHaveBeenCalledWith(session.metadata, 'be_bracelet', 3000);
+  });
+
+  it('a booking never reaches the UPSELL logger (its conversion is recordBackendOrder\'s)', async () => {
+    completed('be_tea_reading', { metadata: { product: 'be_tea_reading', offer: 'tea-reading', ...ARM_META } });
+    await post();
+    expect(logBe04UpsellConversion).not.toHaveBeenCalled();
+    expect(recordBackendOrder).toHaveBeenCalledTimes(1);
+  });
+
+  it('PostHog purchase_completed carries price_arm on the booking and on both upsell paths', async () => {
+    completed('be_tea_reading', { amount_total: 4500, metadata: { product: 'be_tea_reading', offer: 'tea-reading', ...ARM_META } });
+    await post();
+    oneClick({ product: 'be_protection_ritual', offer: 'tea-reading', flow: '1click', email: 'she@example.com', ...ARM_META });
+    await post();
+    completed('be_bracelet', { amount_total: 4700, metadata: { product: 'be_bracelet', offer: 'tea-reading', ...ARM_META } });
+    await post();
+    const props = capture.mock.calls.map((c) => (c[0] as { properties: Record<string, unknown> }).properties);
+    expect(props.map((p) => [p.product, p.price_arm])).toEqual([
+      ['be_tea_reading', 'B'],
+      ['be_protection_ritual', 'B'],
+      ['be_bracelet', 'B'],
+    ]);
+  });
+
+  it('every other offer\'s purchase event says price_arm: null', async () => {
+    completed('be_heart_cleanser');
+    await post();
+    expect((capture.mock.calls[0][0] as { properties: Record<string, unknown> }).properties.price_arm).toBeNull();
   });
 });
 

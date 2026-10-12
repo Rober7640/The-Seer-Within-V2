@@ -24,6 +24,9 @@ export interface BackendPurchaseInput {
   dedupeId: string;
   /** The bump's product code, present only when the order bump was bought (booking only). */
   bumpProduct?: string;
+  /** 04's price-test arm ('A' $35 / 'B' $45), threaded through Stripe metadata `priceArm` —
+   *  on the booking and on its upsells. Absent on every other offer. */
+  priceArm?: string;
 }
 
 /** The five standard UTM params. Joel's link may carry his tag in any one of them. */
@@ -79,6 +82,7 @@ export function dedupeUuid(dedupeId: string): string {
 const BACKEND_STEP: Record<string, string> = {
   be_twin_flame: 'sales',
   be_judgement_day: 'sales',
+  be_tea_reading: 'sales',
   be_pixiu_bracelet: 'sales',
   be_heart_cleanser: 'sales',
   be_marcus_reading: 'sales',
@@ -91,6 +95,7 @@ const BACKEND_STEP: Record<string, string> = {
 const BACKEND_FUNNEL: Record<string, string> = {
   'twin-flame': 'twinflame',
   'judgement-day': 'judgement',
+  'tea-reading': 'teareading',
   'pixiu-bracelet': 'pixiu',
   'heart-cleanser': 'heartcleanser',
   'marcus-reading': 'marcusreading',
@@ -120,6 +125,8 @@ export function buildBackendPurchaseEvent(input: BackendPurchaseInput): BackendP
       is_backend: true,
       bump: !!input.bumpProduct,
       bump_product: input.bumpProduct ?? null,
+      // Present-or-null like the UTMs, so "revenue by price arm" is one PostHog breakdown.
+      price_arm: input.priceArm || null,
       // Raw Stripe id kept as a filterable property for debugging/reconciliation (the uuid
       // above is now a hash, no longer the cs_/pi_ id at a glance).
       dedupe_ref: input.dedupeId,
