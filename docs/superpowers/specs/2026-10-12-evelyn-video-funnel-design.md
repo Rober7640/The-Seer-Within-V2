@@ -10,7 +10,7 @@ watches the pitch, and buys a $19 "Soulmate Initials Reading" — then goes thro
 Protection Ritual (U1) and Manifestation Bracelet (U2) upsells. Modelled on the competitor funnel
 walked on 2026-10-11 (`docs/evelyn-video-funnel/reference/12-competitor-funnel-pages.md`), built in our own code so the stone pick, tracking and checkout are ours.
 
-Videos (finished; not in git — see `HANDOFF-evelyn-video-funnel.md`):
+Videos (finished; 720p web versions in `docs/evelyn-video-funnel/videos/`, masters off git):
 - Welcome — `EVELYN_WELCOME_v2_captioned.mp4`, 61.5s, captions burned in, ends "tap yours below".
 - Pitch — `EVELYN_PITCH_v2_final.mp4`, 6:50, captions burned in, cards build up on the table.
 
@@ -124,7 +124,7 @@ within 24 hours" (`DELIVERY_PROMISE`), check-spam line, support email.
 - AWeber: buyer added to a new list/tag for this product at purchase (Job B emails from it).
 
 ## 8. Video delivery
-- Re-encode for the web: H.264 720×1280, `+faststart`; welcome ≈ 10 MB, pitch ≈ 50 MB (target
+- Re-encode for the web (**done** — `docs/evelyn-video-funnel/videos/`): H.264 720×1280, `+faststart`; welcome ≈ 10 MB, pitch ≈ 50 MB (target
   ~1 Mbps video + 96k AAC). Poster JPG = first frame of each.
 - Upload to S3 `luna-assets-tsw` under `evelyn/vsl/v1/`; serve through a **CloudFront** distribution
   (US edges, range requests on). If our AWS key can't create the distribution, give the operator the

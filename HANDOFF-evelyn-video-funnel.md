@@ -36,15 +36,29 @@ All under `docs/evelyn-video-funnel/reference/`.
 | 02 Twin Flame n8n template that Job B copies — `02-fulfilment-OPENAI.n8n.json`, generator `build-02-n8n.py`, lessons `02-HANDOVER.md` | branch **`origin/02-fulfillment`**, under `improve-v1/v1-one-time-BEs/docs/02/n8n/` (not on `development`) |
 | 08 numerology Stage-1 node (Job B step 5) | this branch: `improve-v1/v1-one-time-BEs/docs/08-marcus/n8n/08-marcus-numerology-stage1.n8n.json` |
 
-## The videos — NOT in git
-| File | Length | Format | Note |
-|---|---|---|---|
-| `EVELYN_WELCOME_v2_captioned.mp4` | 61.5s | 1080×1920, 51 MB | needs the 720p web re-encode (Job A §8) |
-| `EVELYN_PITCH_v2_final.mp4` | 6:50 | 1080×1920, 342 MB | master |
-| `EVELYN_PITCH_v2_final_phone.mp4` | 6:50 | 720×1280, 28 MB | already web size |
+## The videos — on S3 (and the web versions on this branch)
+The web versions are already the encodes Job A §8 asks for (H.264 720×1280, ~1 Mbps video + 96k AAC,
+`+faststart`, captions burned in), each with a poster JPG made from its first frame. Copies are also in
+`docs/evelyn-video-funnel/videos/`.
 
-Right now these are only on the operator's machine — **ask the operator for them.** Their target home is
-S3 `luna-assets-tsw` → `evelyn/vsl/v1/`, served through CloudFront (Job A §8). Captions are burned in.
+**Live on S3** — bucket `luna-assets-tsw` (public-read, region `ap-southeast-2`), uploaded 2026-10-12.
+Range requests work (206), `Cache-Control: public, max-age=31536000, immutable`.
+
+| File | Length | Size | Key moment | URL |
+|---|---|---|---|---|
+| Welcome, 720p | 61.5s | 8 MB | stones go live at **48.6s** | https://luna-assets-tsw.s3.ap-southeast-2.amazonaws.com/evelyn/vsl/v1/evelyn-welcome-v2-720p.mp4 |
+| Welcome poster | — | 0.1 MB | — | https://luna-assets-tsw.s3.ap-southeast-2.amazonaws.com/evelyn/vsl/v1/evelyn-welcome-v2-720p-poster.jpg |
+| Pitch, 720p | 6:50 | 56 MB | buy button at **368.2s** ("$19") | https://luna-assets-tsw.s3.ap-southeast-2.amazonaws.com/evelyn/vsl/v1/evelyn-pitch-v2-720p.mp4 |
+| Pitch poster | — | 0.1 MB | — | https://luna-assets-tsw.s3.ap-southeast-2.amazonaws.com/evelyn/vsl/v1/evelyn-pitch-v2-720p-poster.jpg |
+| Welcome master, 1080p | 61.5s | 51 MB | source only, don't serve | https://luna-assets-tsw.s3.ap-southeast-2.amazonaws.com/evelyn/vsl/masters/EVELYN_WELCOME_v2_captioned.mp4 |
+| Pitch master, 1080p | 6:50 | 342 MB | source only, don't serve | https://luna-assets-tsw.s3.ap-southeast-2.amazonaws.com/evelyn/vsl/masters/EVELYN_PITCH_v2_final.mp4 |
+
+So `EVELYN_VSL_ASSET_BASE` = `https://luna-assets-tsw.s3.ap-southeast-2.amazonaws.com/evelyn/vsl/v1` until CloudFront exists (open item 3). The keys are immutable: a
+new cut goes to a new prefix (`v2/`), never over these.
+
+⚠ The bucket is in **Sydney** and the ad traffic is **US**. Straight from S3, a US phone waits longer for the
+first frame, so CloudFront in front of it still matters before real ad spend.
+
 The videos are final: a re-render costs HeyGen credits, so ask the operator before asking for one.
 
 ## Rules — don't break these
@@ -63,7 +77,7 @@ The videos are final: a re-render costs HeyGen credits, so ask the operator befo
 |---|---|---|
 | 1 | **Job B step 12** waits until `paidAt + 20h`, but `paidAt` comes from our app's own Stripe webhook. That webhook and n8n's fire at the same moment, so `paidAt` may still be empty when n8n reads it. Suggested fix: count from the Stripe event's `created` time. **Not decided yet.** | dev + operator |
 | 2 | Welcome video's last line — does she say "pick" or "picked"? The script says "pick". Operator to listen. | operator |
-| 3 | Can our AWS key create a CloudFront distribution? Unknown. If not, give the operator the exact console steps. | dev |
+| 3 | **CloudFront is still needed** (bucket is in Sydney, traffic is US). Our AWS key can't create it — the IAM user `luna-s3-uploader` only has `s3:PutObject` (per `docs/kit/luna-voss-emails/RESUME-PROMPT.md`). Give the operator exact console steps: distribution on origin `luna-assets-tsw.s3.ap-southeast-2.amazonaws.com`, path `evelyn/vsl/*`, then switch `EVELYN_VSL_ASSET_BASE` to it. | dev → operator |
 | 4 | Operator setup for Job B (spec §4): arm the n8n webhook, add a Stripe endpoint → n8n, create the AWeber list + campaign, confirm the Supabase bucket, add an n8n SMTP credential for alerts. | operator |
 | 5 | Checkout product image (Job A §4, item 1) is not made yet. | operator |
 | 6 | The specs record decisions made with the operator on 2026-10-11/12. The operator handed this over before reading the written specs line by line, so check with them if something looks off. | — |
