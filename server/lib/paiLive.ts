@@ -82,6 +82,20 @@ import { funnelDefForParam, type FunnelParam } from '@shared/funnelConfig';
 import { paymentAttempts, type Conversation } from '@shared/schema';
 import { eq } from 'drizzle-orm';
 
+/**
+ * A fresh idempotency key for one charge.
+ *
+ * 🔴 PAYMENTS.AI CAPS idempotencyKey AT 50 CHARACTERS and answers a longer one with an
+ * opaque 422 "Transaction action failed." (no detail) — proven in the sandbox
+ * 2026-10-12: 54 chars refused, the same request at 50 accepted. A `prefix-<uuid>`
+ * key silently crosses the line once the prefix passes 13 characters, which is how
+ * the upsell card page broke. Kept to ≤ 40 here.
+ */
+export function idemKey(tag: string): string {
+  const key = `live-${tag}-${crypto.randomBytes(10).toString('hex')}`;
+  return key.length <= 50 ? key : key.slice(0, 50);
+}
+
 /** A housekeeping timer that never keeps the process alive on its own. */
 function later(fn: () => void, ms: number): void {
   setTimeout(fn, ms).unref?.();
@@ -303,6 +317,16 @@ export async function funnelForPaiPayment(processorRef: string | null | undefine
   }
 }
 
+/**
+ * A refused charge request, as text for the log and payment_attempts. Their `message`
+ * alone is often just "Transaction action failed." — the body says why.
+ */
+function chargeErrorText(tx: { error?: string; status: number; raw?: string }): string {
+  const text = `${tx.error ?? `HTTP ${tx.status}`} · HTTP ${tx.status}${tx.raw ? ` · ${tx.raw.slice(0, 220)}` : ''}`;
+  logger.warn(`[pai-live] charge refused: ${text}`);
+  return text;
+}
+
 /** Map a settled transaction onto an attempt result. */
 function resultOf(tx: PaiTransaction | null | undefined): AttemptRecord['result'] {
   const r = String(tx?.result ?? '').toLowerCase();
@@ -429,7 +453,7 @@ async function chargeMainOnce(input: MainChargeInput, deps: PaiLiveDeps): Promis
       customerId: cust.data.id,
       amountCents: total,
       metadata: mainMetadata(order),
-      idempotencyKey: `live-main-${crypto.randomUUID()}`,
+      idempotencyKey: idemKey('main'),
       token: input.cardToken,
       isMerchantInitiated: false,
       redirectUrl: input.returnUrl,
@@ -438,7 +462,7 @@ async function chargeMainOnce(input: MainChargeInput, deps: PaiLiveDeps): Promis
   );
   if (!tx.ok || !tx.data?.id) {
     logger.error('[pai-live] main charge failed', { error: tx.error, status: tx.status });
-    recordPaymentAttempt({ ...attemptBase, result: 'error', declineReason: tx.error ?? `HTTP ${tx.status}` });
+    recordPaymentAttempt({ ...attemptBase, result: 'error', declineReason: chargeErrorText(tx) });
     return { kind: 'error', message: 'We could not complete the payment. Please try again.' };
   }
 
@@ -674,22 +698,26 @@ async function fulfilMain(order: PaiOrder, settled: PaiTransaction, x: BuyerExtr
   const purchaseTypeTag = order.type === 'downsell' ? 'downsell' : 'initial-purchase';
   const paidTags = [order.bucket || 'seer-within', 'paid', purchaseTypeTag];
   if (deps.isFbFunnel(funnel)) paidTags.push(`${purchaseTypeTag}${deps.fbTagSuffix(funnel)}`);
+  const paidListTags = [...deps.fbifyAweberTags(paidTags, funnel), PAI_TAG];
+  logger.info(`[pai-live] AWeber paid list ← ${txn} tags=${paidListTags.join(',')}`);
   addPaidSubscriber({
     email: order.email,
     name: order.firstName || undefined,
     stripeOrderId: txn,
-    tags: [...deps.fbifyAweberTags(paidTags, funnel), PAI_TAG],
+    tags: paidListTags,
     phone: x.phone,
   }).catch((err) => logger.warn('[pai-live] AWeber paid list error (non-blocking)', { err: String(err) }));
 
   // AWeber order-bump list — the webhook's rule: only when the stamped key wants it.
   if (order.bumpApplied && bumpPaidListWanted(order.bumpProduct)) {
     const suffix = funnelDefForParam(funnel)?.aweberSuffix ?? '';
+    const bumpTags = ['order-bump', 'paid', order.bucket || 'seer-within', `initial-purchase${suffix}`, PAI_TAG];
+    logger.info(`[pai-live] AWeber order-bump list ← ${txn} tags=${bumpTags.join(',')}`);
     addBumpPaidSubscriber({
       email: order.email,
       name: order.firstName || undefined,
       stripeOrderId: txn,
-      tags: ['order-bump', 'paid', order.bucket || 'seer-within', `initial-purchase${suffix}`, PAI_TAG],
+      tags: bumpTags,
     }).catch((err) => logger.error('[pai-live] AWeber bump list error (non-blocking)', { err: String(err) }));
   }
 }
@@ -860,11 +888,13 @@ async function fulfilUpsell(f: Fulfil, deps: PaiLiveDeps): Promise<void> {
 
   if (spec.step === 'upsell1') {
     const base = f.noemail ? ['seer-within-upsell', 'noemail'] : ['seer-within-upsell'];
+    const u1Tags = [...deps.fbifyAweberTags(base, f.funnel), PAI_TAG];
+    logger.info(`[pai-live] AWeber upsell-1 list ← ${f.txnId} tags=${u1Tags.join(',')}`);
     addUpsellSubscriber({
       email: f.email,
       name: f.firstName,
       stripeOrderId: f.txnId,
-      tags: [...deps.fbifyAweberTags(base, f.funnel), PAI_TAG],
+      tags: u1Tags,
       shipping: shippingFor(f.shipping),
     }).catch((err) => logger.error('[pai-live] upsell1 AWeber error', { err: String(err) }));
     return;
@@ -900,11 +930,13 @@ async function fulfilUpsell(f: Fulfil, deps: PaiLiveDeps): Promise<void> {
       const base = f.noemail
         ? ['seer-within-upsell2', `bracelet-${type}`, 'noemail']
         : ['seer-within-upsell2', `bracelet-${type}`];
+      const u2Tags = [...deps.fbifyAweberTags(base, f.funnel), PAI_TAG];
+      logger.info(`[pai-live] AWeber upsell-2 list ← ${f.txnId} tags=${u2Tags.join(',')} shipping=${ship ? 'yes' : 'no'}`);
       await addUpsell2Subscriber({
         email: f.email,
         name: f.firstName,
         stripeOrderId: f.txnId,
-        tags: [...deps.fbifyAweberTags(base, f.funnel), PAI_TAG],
+        tags: u2Tags,
         shipping: ship,
       });
     } catch (err) {
@@ -979,7 +1011,7 @@ async function chargeUpsellMit(body: UpsellBody, spec: UpsellSpec, deps: PaiLive
       {
         customerId: convo.stripeCustomerId,
         amountCents: spec.cents,
-        idempotencyKey: `live-${spec.step}-${crypto.randomUUID()}`,
+        idempotencyKey: idemKey(spec.step),
         paymentInstrumentId: convo.stripePaymentMethodId,
         isMerchantInitiated: true,
         metadata: upsellMetadata(spec, orderId, email, firstName, body.funnel, mainMd, '1click'),
@@ -987,7 +1019,7 @@ async function chargeUpsellMit(body: UpsellBody, spec: UpsellSpec, deps: PaiLive
       cfg,
     );
     if (!tx.ok || !tx.data?.id) {
-      recordPaymentAttempt({ ...attemptBase, result: 'error', declineReason: tx.error ?? `HTTP ${tx.status}` });
+      recordPaymentAttempt({ ...attemptBase, result: 'error', declineReason: chargeErrorText(tx) });
       return { status: 200, body: { success: false, fallback: true } };
     }
     const settled = (await settleTransaction(tx.data.id, 6, 1500, cfg)) ?? tx.data;
@@ -1109,7 +1141,7 @@ export async function payUpsellWithCard(
       {
         customerId: convo.stripeCustomerId!,
         amountCents: spec.cents,
-        idempotencyKey: `live-${args.step}-card-${crypto.randomUUID()}`,
+        idempotencyKey: idemKey(`${args.step}-card`),
         token: args.cardToken,
         isMerchantInitiated: false,
         redirectUrl: args.returnUrl,
@@ -1118,7 +1150,7 @@ export async function payUpsellWithCard(
       cfg,
     );
     if (!tx.ok || !tx.data?.id) {
-      recordPaymentAttempt({ ...attemptBase, result: 'error', declineReason: tx.error ?? `HTTP ${tx.status}` });
+      recordPaymentAttempt({ ...attemptBase, result: 'error', declineReason: chargeErrorText(tx) });
       return { kind: 'error', message: 'We could not complete the payment. Please try again.' };
     }
     const settled = (await settleTransaction(tx.data.id, 6, 1500, cfg)) ?? tx.data;

@@ -35,18 +35,31 @@ const PENDING_KEY = 'pai-live-upsell-3ds';
 interface Pending {
   orderId: string;
   step: string;
+  type: string;
   transactionId: string;
   shipping?: ShippingAddress;
+}
+
+function readPending(): Pending | null {
+  try {
+    const raw = sessionStorage.getItem(PENDING_KEY);
+    return raw ? (JSON.parse(raw) as Pending) : null;
+  } catch {
+    return null;
+  }
 }
 
 const money = (cents: number) => `$${(cents / 100).toFixed(2)}`;
 
 export default function PaiPayPage() {
   const params = new URLSearchParams(window.location.search);
-  const orderId = params.get('order') ?? '';
-  const step = params.get('step') ?? '';
-  const type = params.get('type') === 'downsell' ? 'downsell' : 'full';
   const isReturn = params.get('paiReturn') === '1';
+  // Back from her bank the URL carries only ?paiReturn=1 (Payments.AI refuses a longer
+  // redirect URL), so the order comes from what this tab stored before leaving.
+  const [pendingAtLoad] = useState<Pending | null>(() => (isReturn ? readPending() : null));
+  const orderId = params.get('order') ?? pendingAtLoad?.orderId ?? '';
+  const step = params.get('step') ?? pendingAtLoad?.step ?? '';
+  const type = (params.get('type') ?? pendingAtLoad?.type) === 'downsell' ? 'downsell' : 'full';
 
   const [info, setInfo] = useState<UpsellInfo | null>(null);
   const [config, setConfig] = useState<PaiFormConfig | null>(null);
@@ -82,13 +95,7 @@ export default function PaiPayPage() {
   // Back from a 3DS challenge.
   useEffect(() => {
     if (!isReturn) return;
-    let pending: Pending | null = null;
-    try {
-      const raw = sessionStorage.getItem(PENDING_KEY);
-      pending = raw ? (JSON.parse(raw) as Pending) : null;
-    } catch {
-      pending = null;
-    }
+    const pending = pendingAtLoad;
     if (!pending || pending.orderId !== orderId) {
       setConfirming(false);
       setFatal('We could not confirm this payment in this browser tab. Please contact support if you were charged.');
@@ -149,7 +156,7 @@ export default function PaiPayPage() {
         try {
           sessionStorage.setItem(
             PENDING_KEY,
-            JSON.stringify({ orderId, step, transactionId: data.transactionId, shipping: s.shipping }),
+            JSON.stringify({ orderId, step, type, transactionId: data.transactionId, shipping: s.shipping }),
           );
         } catch {
           setError('Your browser blocked a step this card needs. Please try a different card.');

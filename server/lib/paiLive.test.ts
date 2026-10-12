@@ -236,3 +236,13 @@ describe('chargeMain against a stubbed Payments.AI', () => {
     }
   });
 });
+
+describe('idempotency keys', () => {
+  it('never exceed Payments.AI’s 50-character cap, for every tag in use', () => {
+    for (const tag of ['main', 'upsell1', 'upsell2', 'upsell1-card', 'upsell2-card']) {
+      const k = live.idemKey(tag);
+      assert.ok(k.length <= 50, `${tag}: ${k.length} chars`);
+      assert.notEqual(k, live.idemKey(tag));
+    }
+  });
+});

@@ -232,7 +232,6 @@ export function createPaiLiveRouter(deps: PaiLiveDeps): Router {
     if (!shipping && (step === 'upsell1' || !convo.shippingLine1)) {
       return res.status(400).json({ ok: false, error: 'Please enter your full shipping address.' });
     }
-    const q = new URLSearchParams({ order: orderId, step, type, paiReturn: '1' });
     try {
       const out = await payUpsellWithCard(
         {
@@ -242,7 +241,9 @@ export function createPaiLiveRouter(deps: PaiLiveDeps): Router {
           braceletType: type,
           cardToken,
           shipping,
-          returnUrl: `${requestOrigin(req)}/pai/pay?${q.toString()}`,
+          // Carries no order data: the page keeps the order, step and type in this
+          // tab's sessionStorage across the bank's round trip, as the main checkout does.
+          returnUrl: `${requestOrigin(req)}/pai/pay?paiReturn=1`,
         },
         deps,
       );
