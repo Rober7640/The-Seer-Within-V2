@@ -44,7 +44,7 @@ When this file and a gold email disagree, the gold wins.
 
 ## The workflow — idea to send-ready
 
-Delegate the writing to a subagent; the main thread decides, briefs, checks facts and audits. Show the operator each draft **before** running the gates.
+Delegate the writing to a subagent (give it [`WRITER-BRIEF.md`](WRITER-BRIEF.md)); the main thread decides, briefs, checks facts and audits. Show the operator each draft **before** running the gates.
 
 > **Steps 8 and 10–13 are one command (since 2026-10-12):** once the operator approves an email, they run **`/schedule-evelyn-email NN`** (several: `/schedule-evelyn-email 12 16 13`; a date: `… 14 on 19 Oct`). It saves the reading brief to production, checks the redirect, uploads the picture, builds the send files, creates ONE de-duped 15-list AWeber broadcast, schedules it at 6:30pm SGT on the next free day, logs the AWeber id here and pushes to `daily-evelyn-7oct`. The skill lives at `~/.claude/skills/schedule-evelyn-email/SKILL.md` (on the operator's machine); the AWeber part is `scripts/schedule-broadcast.mjs`. The operator doesn't schedule by hand. The in-chat test (step 9) is still a separate, manual check.
 
