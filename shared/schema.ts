@@ -1088,7 +1088,9 @@ export interface ExperimentConversion {
   // credit_purchase = join to credit_purchases (V2); upsell1_funnel = V1
   // conversations Upsell-1 take-rate; v1_main_funnel = V1 main/downsell purchase;
   // event = generic visitor conversion.
-  type: "credit_purchase" | "upsell1_funnel" | "v1_main_funnel" | "event";
+  // gateway_split = the Stripe-vs-Payments.AI split (exposure at checkout → paid →
+  // all revenue, + per-processor approval rates from payment_attempts).
+  type: "credit_purchase" | "upsell1_funnel" | "v1_main_funnel" | "event" | "gateway_split";
   windowDays?: number;                  // attribution window after first exposure (default 7)
   name?: string;                        // event name (type='event')
   targetN?: number;                     // pre-registered per-arm exposure target (fixed-horizon,
@@ -2212,3 +2214,46 @@ export const smsConsents = pgTable("sms_consents", {
 
 export type SmsConsent = typeof smsConsents.$inferSelect;
 export type InsertSmsConsent = typeof smsConsents.$inferInsert;
+
+// ── payment_attempts — every charge attempt, approved OR declined (2026-10-12) ──
+//
+// WHY THIS EXISTS. The Stripe-vs-Payments.AI split (shared/paymentGateway.ts) is
+// about ONE question: which processor approves more of our charges, above all the
+// 1-click upsells (24% of Stripe's off-session upsell charges decline). Until now a
+// DECLINED charge left nothing in our database — only successful sales are written to
+// `conversations` — so approval rate could only be read off two dashboards in two
+// formats. One row per attempt, written by both processors the same way, makes it a
+// single GROUP BY.
+//
+// Written fire-and-forget: a failed insert here never fails or delays a charge.
+// Brand-new table — no existing row or query is touched by its arrival.
+export const paymentAttempts = pgTable("payment_attempts", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  /** 'stripe' | 'paymentsai' */
+  gateway: text("gateway").notNull(),
+  /** 'main' | 'upsell1' | 'upsell2' (main includes the bump — it is one charge). */
+  step: text("step").notNull(),
+  /** 'cit' = she entered/confirmed the card · 'mit' = 1-click on the saved card. */
+  initiator: text("initiator").notNull(),
+  /** 'approved' | 'declined' | 'error' | 'needs_action' (3DS / authentication). */
+  result: text("result").notNull(),
+  amountCents: integer("amount_cents").notNull(),
+  /** The processor's id for THIS attempt (txn_… / pi_…), when it gave one. */
+  processorRef: text("processor_ref"),
+  /** The main order this attempt belongs to (txn_… / cs_…) — the join to conversations. */
+  orderRef: text("order_ref"),
+  /** The processor's reason on a decline/error, verbatim, capped. */
+  declineReason: text("decline_reason"),
+  email: text("email"),
+  /** FunnelParam ('v1-fb', 'v1-tarot', …) or null for root. */
+  funnel: text("funnel"),
+  /** /fb-tarot hook, when there is one. */
+  hook: text("hook"),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+}, (table) => [
+  index("idx_payment_attempts_created").on(table.createdAt),
+  index("idx_payment_attempts_order").on(table.orderRef),
+]);
+
+export type PaymentAttempt = typeof paymentAttempts.$inferSelect;
+export type InsertPaymentAttempt = typeof paymentAttempts.$inferInsert;

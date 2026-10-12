@@ -2265,3 +2265,22 @@ $35 alone (A) vs $35 + $12.77 "+ Double-Strength Clearing" (B), 50/50, /fb only.
 - [ ] Browser walk on /fb arm B: offer card shows the /fb-tarot wording word for word, both buttons work
 - [ ] Downsell ($25) checkout on arm B — confirm the agreed behaviour (bump or no bump)
 - [ ] Admin /admin/experiments shows the /fb test with the bump take-rate block (control row "never offered")
+
+## Live Stripe-vs-Payments.AI split — `v1_gateway_split_2026` (2026-10-12)
+
+- [ ] Experiment DRAFT: a buyer on /fb, /fb-tarot/c?hook=cards-meant-alone and ?hook=cards-come-back is sent to Stripe (`{url}`), no exposure row
+- [ ] Experiment RUNNING: a `paymentsai`-arm email gets the card form (no Stripe redirect); a `stripe`-arm email gets the Stripe redirect; both log ONE exposure (surface `checkout`)
+- [ ] Any other lander (e.g. /fb-tarot/c?hook=cards-return, /fb-palm, root /) is Stripe and NOT enrolled while the test runs
+- [ ] PAUSE: everyone back on Stripe; an order already paid on Payments.AI still charges its upsells on Payments.AI
+- [ ] PAI main + bump: one charge for the total; lands on `<funnel>/welcome1?session_id=txn_…`; DB row payment_gateway=paymentsai, main 3500, bump 1277, main_paid_at set, phone saved
+- [ ] PAI decline (card …2013): stays on the form with "declined", no DB row, a payment_attempts row result=declined
+- [ ] PAI 3DS (card …1072): challenge → back to `<funnel>/chat?paiReturn=1` → /welcome1; fulfilled once even on refresh
+- [ ] PAI upsell 1 + 2 one-click: approved, MIT on the saved card, DB flags set, AWeber lists 6937139 / 6939683 with live tags + `paymentsAI`
+- [ ] PAI upsell double-click / refresh: charged once
+- [ ] PAI upsell decline → /pai/pay card page (with shipping) → pays → next page; "No thanks" skips forward
+- [ ] Card form fails to load → buyer is sent to Stripe (forceStripe) and can still pay
+- [ ] FB InitiateCheckout value = main + bump when the bump is accepted, = main otherwise (both arms); Purchase unchanged
+- [ ] FB Purchase / Upsell event_ids for a PAI order = purchase_<txn>, upsell_u1_<txn>, upsell2_<txn> (browser + CAPI dedup)
+- [ ] PostHog purchase_completed carries payment_gateway on both arms (incl. Stripe 1-click upsells)
+- [ ] /admin/experiments shows "Revenue by stage" and "Approval rate" for the test; Start refused when PAI_LIVE_* is not set
+- [ ] Stripe upsell 1-click approved AND declined both write a payment_attempts row (gateway=stripe, initiator=mit)

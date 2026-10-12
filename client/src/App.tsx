@@ -19,6 +19,8 @@ import TarotBridge from "@/pages/TarotBridge";
 // DEV-ONLY Payments.AI dummy funnel. Its server routes 404 unless
 // PAI_DEV_FUNNEL=1 on a non-production env, so this page is inert in prod.
 import PaiFunnelPage from "@/pages/PaiFunnelPage";
+// Live gateway split: the upsell card page for a declined 1-click on a Payments.AI order.
+import PaiPayPage from "@/pages/PaiPayPage";
 import ReadBridge from "@/pages/ReadBridge";
 import ChatPage from "@/pages/ChatPage";
 import SuccessPage from "@/pages/SuccessPage";
@@ -289,6 +291,7 @@ function Router() {
         {/* DEV-ONLY Payments.AI mirror of /fb-tarot/c. Deliberately a separate
             path: the live lander above is untouched. */}
         <Route path="/fb-tarot/pai" component={PaiFunnelPage} />
+        <Route path="/pai/pay" component={PaiPayPage} />
         <Route path="/fb-tarot/chat" component={ChatPage} />
         <Route path="/fb-tarot/welcome1" component={UpsellPage} />
         <Route path="/fb-tarot/welcome2" component={Upsell2Page} />
