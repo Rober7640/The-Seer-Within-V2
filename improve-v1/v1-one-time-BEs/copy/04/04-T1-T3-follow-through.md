@@ -1,5 +1,7 @@
 # 04-T1 · 04-T3 — Thank-you page and confirmation email *(The Turn)*
 
+> ⛔ **Superseded 2026-10-11**: T1 by [`04-T1-thank-you-page.md`](./04-T1-thank-you-page.md), T3 by [`04-T3-confirmation-email.md`](./04-T3-confirmation-email.md) (timing fixed: no "tomorrow", "by morning", weekdays). Kept as the source draft.
+
 Two asset IDs in one file. 04 is a **READING** with no reply needed, so the thank-you page is a
 receipt (P7) and the confirmation carries the wait-filler.
 

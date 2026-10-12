@@ -16,6 +16,10 @@
 // here, server-side. If the client could send a price, anyone could buy a $35 reading
 // for one cent.
 //
+// A PRICE-TESTED offer (04) is still a fixed price. The SERVER resolves which arm of the
+// split test she is in and passes that arm's price as `armCents`; it is honoured only when
+// the catalog lists it in `testCents` — see `priceBackendOffer()`.
+//
 // ── Why the Stripe product keys are new strings ──────────────────────────────────
 // Every branch of the live Stripe webhook is keyed on `metadata.product`, and skips a
 // value it does not recognise (the same trick `bracelet_*` uses — see
@@ -32,6 +36,7 @@ import { STRIPE_CHECKOUT_SHIPPING_COUNTRIES } from './shippingCountries';
 export type BackendOfferKey =
   | 'twin-flame'
   | 'judgement-day'
+  | 'tea-reading'
   | 'pixiu-bracelet'
   | 'marcus-daily'
   | 'marcus-reading'
@@ -64,6 +69,77 @@ export const JUDGEMENT_BUMP_CENTS = 1277;
 
 // ⛔ 03's bump key — see the note on 02's above.
 export const JUDGEMENT_BUMP_PRODUCT_KEY = 'unburdening';
+
+// 04 — The Turn, a tea-leaf reading by Evelyn Cross. ONE FIXED PRICE, under a 50/50 PRICE
+// SPLIT TEST (operator 2026-10-11: "no price hike" — the day ladder $35/$47/$57/$67 is retired):
+// arm A $35 (control) vs arm B $45. The arm is decided by the SERVER and sticky per visitor —
+// experiment `be_04_price_2026`, resolved by resolveBe04Price() in server/lib/experiments.ts.
+// The test ships DRAFT: until someone starts it in /admin/experiments, everyone pays $35.
+//
+// 🔴 The browser never names a price. Checkout re-resolves her arm and hands its cents to
+//    priceBackendOffer() as `armCents`, which is honoured only when it is one of
+//    TEA_READING_TEST_CENTS — so the worst a bad payload can do is fall back to $35.
+export const TEA_READING_PRICE_CENTS = 3500;
+
+/**
+ * The split test's arms and what each charges. A is the control and lists first, exactly as
+ * the experiment row does. Used for the closed set below and for the `?arm=` PREVIEW only —
+ * a live price comes from the experiment's payload, checked against TEA_READING_TEST_CENTS.
+ */
+export const TEA_READING_PRICE_ARMS = { A: 3500, B: 4500 } as const;
+export type TeaReadingPriceArm = keyof typeof TEA_READING_PRICE_ARMS;
+
+/** ⛔ The ONLY prices 04 can ever charge. Anything else the server is handed is ignored. */
+export const TEA_READING_TEST_CENTS: readonly number[] = Object.values(TEA_READING_PRICE_ARMS);
+
+export function isTeaReadingPriceArm(value: unknown): value is TeaReadingPriceArm {
+  return value === 'A' || value === 'B';
+}
+
+// 04's bump — "The Double Turning": Evelyn reads her cup a second time, to put twice the
+// strength into the same reading. $12.77 flat at either price. ⭐ INTANGIBLE (operator
+// 2026-10-11): nothing extra is delivered — no page, no email, no link. Same reading, same 21
+// days. ⛔ NOT a speed bump: it does not change the 24-hour delivery (unlike 08's).
+// (It replaced "The Still Cup", a delivered nightly instructional, on 2026-10-11.)
+export const TEA_READING_BUMP_CENTS = 1277;
+
+// ⛔ 04's bump key — see the note on 02's above. n8n exact-matches `metadata.bumpProduct`, so
+// this is a NEW key of its own, never another offer's (and not the retired 'still_cup').
+export const TEA_READING_BUMP_PRODUCT_KEY = 'double_turning';
+
+/** Every 04 reading arrives within this many hours, bump or no bump. */
+export const TEA_READING_DELIVERY_HOURS = 24;
+
+/**
+ * The three interpretations of 04's one cup photo — one finished reading each (04-DELIVERABLES
+ * D7). ⭐ Operator 2026-10-11: she does NOT pick. The server draws one at random at checkout
+ * (server/lib/be04Draw.ts) and writes it to Stripe metadata `cup`.
+ *
+ * ⛔ These slugs are an API: Stripe metadata `cup`, and the env var names that hold each
+ *    reading's link (BE04_READING_URL_TURNED_HANDLE, …). Add slugs; never rename one.
+ */
+export const TEA_CUPS = ['turned-handle', 'divided-rim', 'sunken-leaf'] as const;
+export type TeaCup = (typeof TEA_CUPS)[number];
+
+/**
+ * The fallback for a session whose metadata has no valid `cup` — The Divided Rim. Checkout
+ * never writes one (it always writes a drawn cup); this only keeps the delivery job from
+ * stalling on an old or hand-made session.
+ */
+export const TEA_CUP_DEFAULT: TeaCup = 'divided-rim';
+
+export function isTeaCup(value: unknown): value is TeaCup {
+  return typeof value === 'string' && (TEA_CUPS as readonly string[]).includes(value);
+}
+
+/**
+ * Her cup, read back off Stripe metadata (the delivery job). A valid slug is kept; anything
+ * else is TEA_CUP_DEFAULT. ⛔ Never used to read a cup from the browser — the cup is drawn.
+ */
+export function resolveTeaCup(value: unknown): TeaCup {
+  const slug = typeof value === 'string' ? value.trim().toLowerCase() : value;
+  return isTeaCup(slug) ? slug : TEA_CUP_DEFAULT;
+}
 
 // 06 — fixed price, decision D2 (2026-09-02, HANDOVER §2). A real physical object
 // (black agate + cast Pixiu + sealed capsule), priced accordingly. No PWYW, no ladder.
@@ -162,7 +238,16 @@ export interface BackendTierListing {
 }
 
 export type BackendPricing =
-  | { model: 'fixed'; priceCents: number }
+  | {
+      model: 'fixed';
+      priceCents: number;
+      /**
+       * ⭐ A PRICE SPLIT TEST's closed set of arm prices (04 only). `priceCents` stays the
+       * control. The server may hand priceBackendOffer() an `armCents`; it is charged ONLY when
+       * it is in this list. ⛔ Never filled from the browser. Undefined ⇒ `armCents` is ignored.
+       */
+      testCents?: readonly number[];
+    }
   | { model: 'pwyw'; minCents: number; maxCents: number }
   /**
    * ⭐ One offer, several prices, chosen by a NAMED RUNG.
@@ -173,6 +258,23 @@ export type BackendPricing =
    * this file has, and a tiered offer is the easiest place to lose it.
    */
   | { model: 'tiered'; tiers: Record<BackendTier, BackendTierListing> };
+
+/** `$35`, or `$12.77` when there are cents. For display only — never parsed back. */
+export function priceLabel(cents: number): string {
+  return cents % 100 === 0 ? `$${cents / 100}` : `$${(cents / 100).toFixed(2)}`;
+}
+
+/**
+ * The split-test arm price to charge on a fixed offer, or null to charge its `priceCents`.
+ * Null unless the offer lists a `testCents` set AND `armCents` is a whole number inside it.
+ */
+function testArmCents(
+  pricing: Extract<BackendPricing, { model: 'fixed' }>,
+  armCents: unknown,
+): number | null {
+  if (!pricing.testCents || typeof armCents !== 'number' || !Number.isInteger(armCents)) return null;
+  return pricing.testCents.includes(armCents) ? armCents : null;
+}
 
 export interface BackendOfferBump {
   /** ⛔ n8n exact-matches this. Add keys; never rename one. */
@@ -192,7 +294,7 @@ export interface BackendOfferBump {
 export interface BackendOffer {
   key: BackendOfferKey;
   /** The deck's number, as every doc cites it. */
-  number: '02' | '03' | '06' | '07' | '08' | '09';
+  number: '02' | '03' | '04' | '06' | '07' | '08' | '09';
   /** What Stripe shows her at checkout. */
   stripeName: string;
   stripeDescription: string;
@@ -337,6 +439,45 @@ export const BACKEND_OFFER_CATALOG: Record<BackendOfferKey, BackendOffer> = {
     // is out of scope — booking directs her to reply by email instead.
     readyForMoney: true,
   },
+
+  // ⭐ 04 — The Turn. A tea-leaf READING by Evelyn Cross, sold by email to past buyers, at one
+  // fixed price under the deck's first PRICE SPLIT TEST, $35 vs $45 (see TEA_READING_PRICE_ARMS).
+  // Checkout draws one of three cups at random (TEA_CUPS, operator 2026-10-11 — no pick); the
+  // cup decides which of three finished readings she is sent, by AWeber tag + `reading_url`
+  // within 24 hours (server/lib/be04Delivery.ts).
+  'tea-reading': {
+    key: 'tea-reading',
+    number: '04',
+    // ⚠ Both lines print on her card receipt, so they are plain and true. Deck-wide rule:
+    // the verb is never "buy".
+    stripeName: 'The Turn — tea-leaf reading by Evelyn Cross',
+    stripeDescription: 'Your 21-day reading, delivered within 24 hours.',
+    stripeProduct: 'be_tea_reading',
+    // $35 unless the server resolved her into arm B of `be_04_price_2026` — and then only a
+    // price in this closed set (the checkout route passes it as `armCents`).
+    pricing: { model: 'fixed', priceCents: TEA_READING_PRICE_CENTS, testCents: TEA_READING_TEST_CENTS },
+    bump: {
+      productKey: TEA_READING_BUMP_PRODUCT_KEY,
+      cents: TEA_READING_BUMP_CENTS,
+      // Prints on her card receipt — plain.
+      stripeName: 'The Double Turning',
+    },
+    bookingPath: {
+      page: '/offers/wiccan/tea-reading',
+      chat: '/offers/wiccan/tea-reading/chat',
+    },
+    successPath: '/offers/wiccan/tea-reading/success',
+    // V1's two upsells through the shared backend upsell engine, exactly as 03/06/09.
+    upsellEntryPath: '/offers/upsell/welcome1',
+    // A digital reading: email only, no mailing address.
+    collectsShipping: false,
+    // 🔴 FALSE. Flip only when the booking page, chat and receipt render, the
+    //    three reading PDFs are hosted (BE04_READING_URL_*), the AWeber Campaigns on the be-04
+    //    tags exist, the `be_04_price_2026` draft row has been created, and a Stripe TEST-mode
+    //    order has been walked end to end — delivery email included.
+    readyForMoney: false,
+  },
+
   'pixiu-bracelet': {
     key: 'pixiu-bracelet',
     number: '06',
@@ -613,6 +754,12 @@ export interface BackendChargeRequest {
    * rung at that rung's real price.
    */
   tier?: unknown;
+  /**
+   * Price-tested offers only (04) — the price of the split-test ARM the SERVER resolved for
+   * her (resolveBe04Price). ⛔ Supplied by the checkout route, never by the browser, and
+   * charged only when it is in the catalog's `testCents`; anything else charges `priceCents`.
+   */
+  armCents?: number;
 }
 
 export interface BackendChargeLine {
@@ -696,7 +843,9 @@ export function priceBackendOffer(
   let tier: BackendTier | undefined;
 
   if (offer.pricing.model === 'fixed') {
-    readingCents = offer.pricing.priceCents;
+    // ⛔ A split-test arm price (04) only when the catalog lists it — `armCents` comes from the
+    //    server's own resolution of her arm. Every offer without `testCents` ignores it.
+    readingCents = testArmCents(offer.pricing, req.armCents) ?? offer.pricing.priceCents;
   } else if (offer.pricing.model === 'tiered') {
     // ⛔ THE ONE SECURITY RULE, on the model most likely to lose it. The request may
     //    name a rung; the price comes from the catalog. `req.tier` is typed `unknown`

@@ -20,6 +20,7 @@ import { backendUpsellFor } from '../lib/backendCustomerList';
 import { buildBackendPurchaseEvent, utmsFromMetadata } from '../lib/backendPurchaseAnalytics';
 import { BACKEND_STRIPE_PRODUCT_PREFIX, resolveOfferKey } from '@shared/backendOffers';
 import { recordBackendUpsellOrder } from '../lib/beUpsellOrders';
+import { logBe04UpsellConversion } from '../lib/experiments';
 import { handleBackendRefund, recordBackendShipment } from '../lib/beShipments';
 import { migrateAndEmailFunnelUser } from '../lib/funnelMigrationEmail';
 import { fireGoogleAdsConversion, gadsStepForProduct } from '../lib/googleAds';
@@ -1010,6 +1011,9 @@ router.post('/stripe', async (req: Request, res: Response) => {
             utm: utmsFromMetadata(metadata),
             dedupeId: session.id,
             bumpProduct: metadata.bumpProduct,
+            // 04's price-test arm ('A' $35 / 'B' $45) — on the booking AND on a hosted
+            // upsell, which inherits it from the booking session. Absent on every other offer.
+            priceArm: metadata.priceArm,
           }),
         );
       }
@@ -1018,6 +1022,9 @@ router.post('/stripe', async (req: Request, res: Response) => {
         // A BE UPSELL bought via HOSTED checkout (the 1-click fallback). The 1-click
         // happy path writes from payment_intent.succeeded; this covers the fallback.
         // recordBackendOrder is for BOOKING offers only and does not know upsell keys.
+        // 04's price test: credit this upsell's revenue to the arm she booked under. A no-op
+        // unless the session carries `priceExp`; deduped per product; never throws.
+        await logBe04UpsellConversion(metadata, beUpsell.productKey, session.amount_total ?? 0);
         const upsellEmail =
           session.customer_details?.email || session.customer_email || metadata.email || null;
         if (upsellEmail) {
@@ -1273,9 +1280,14 @@ router.post('/stripe', async (req: Request, res: Response) => {
             distinctId: metadata.posthogDistinctId,
             utm: utmsFromMetadata(metadata),
             dedupeId: pi.id,
+            // 04's price-test arm, copied off the booking session by the 1-click charge.
+            priceArm: metadata.priceArm,
           }),
         );
       }
+      // 04's price test: credit this upsell's revenue to the arm she booked under. A no-op
+      // unless the PI carries `priceExp`; deduped per product (Stripe retries); never throws.
+      await logBe04UpsellConversion(metadata, beUpsell.productKey, pi.amount);
       await recordBackendUpsellOrder(pi); // idempotent, self-logging, never throws
       if (metadata.email) {
         const offer = resolveOfferKey(metadata) ?? 'twin-flame';
