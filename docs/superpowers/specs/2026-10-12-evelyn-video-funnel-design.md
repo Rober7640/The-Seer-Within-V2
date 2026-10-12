@@ -1,16 +1,16 @@
 # Evelyn video funnel — pages, checkout, upsells (Job A)
 
-Status: design approved in conversation 2026-10-11/12 · Owner: operator · Delivery of the product is
+Status: design approved in conversation 2026-10-11/12 · Owner: operator · **Start at
+`HANDOFF-evelyn-video-funnel.md` (repo root).** · Delivery of the product is
 Job B (`2026-10-12-evelyn-soulmate-initials-n8n-delivery-design.md`).
 
 ## 1. Goal
 Facebook-ad traffic watches two AI videos of Evelyn, picks a stone **by tapping it in the video**,
 watches the pitch, and buys a $19 "Soulmate Initials Reading" — then goes through the existing
 Protection Ritual (U1) and Manifestation Bracelet (U2) upsells. Modelled on the competitor funnel
-walked on 2026-10-11 (`improve-v1/spiritual-clone/pilot/12-competitor-funnel-pages.md`, other repo
-copy), built in our own code so the stone pick, tracking and checkout are ours.
+walked on 2026-10-11 (`docs/evelyn-video-funnel/reference/12-competitor-funnel-pages.md`), built in our own code so the stone pick, tracking and checkout are ours.
 
-Videos (finished, other repo copy `improve-v1/spiritual-clone/pilot/clips/final/`):
+Videos (finished; not in git — see `HANDOFF-evelyn-video-funnel.md`):
 - Welcome — `EVELYN_WELCOME_v2_captioned.mp4`, 61.5s, captions burned in, ends "tap yours below".
 - Pitch — `EVELYN_PITCH_v2_final.mp4`, 6:50, captions burned in, cards build up on the table.
 
@@ -34,7 +34,7 @@ a message for you." (copy rules: say "cards", not "tarot").
   If autoplay is blocked: poster (first frame) + big ▶ "Tap to hear Evelyn".
 - No seek bar, no native controls. A tap toggles pause/play. Thin progress line along the bottom.
 - **Stone tap zones** — three invisible buttons positioned over the decks as fractions of the video
-  box (camera never moves; from `stills_phone/scene_03.png`):
+  box (camera never moves; from `docs/evelyn-video-funnel/reference/scene_03-tap-zones-source.jpg`):
 
   | stone | left → right | x from–to | y from–to |
   |---|---|---|---|
