@@ -24,16 +24,21 @@ export const GATEWAY_ARM_PAI = 'paymentsai';
 
 /**
  * Every lander Payments.AI may serve. `hook: null` = the funnel's own lander with no
- * tarot hook (/fb). Tarot entries are (funnel, hook) — the deck is not listed because
- * these hooks only run on the default face-down deck.
+ * tarot hook (e.g. /fb). Tarot entries are (funnel, hook) — the deck is not listed
+ * because these hooks only run on the default face-down deck.
  *
- * Lewis, 2026-10-12 — the three with live FB traffic (Rubie):
- *   /fb · /fb-tarot/c?hook=cards-meant-alone · /fb-tarot/c?hook=cards-come-back
- * Neither hook is a soulmate or money lander, so all three file to the shared V1
- * AWeber lists with the default bump key — the path that was walked on Payments.AI.
+ * Lewis, 2026-10-12 — the landers with live FB traffic (Rubie):
+ *   /fb-tarot/c?hook=cards-meant-alone · /fb-tarot/c?hook=cards-come-back
+ * Neither hook is a soulmate or money lander, so both file to the shared V1 AWeber
+ * lists with the default bump key — the path that was walked on Payments.AI.
+ *
+ * ⏸️ /fb is OUT for now (Lewis, 2026-10-13): /fb is running its own $35 vs
+ * $35 + bump test, and splitting the same buyers by gateway too would muddy both
+ * reports. Everything else for /fb (its /fb/checkout page, the upsell paths) is still
+ * built and tested — putting it back is `{ funnel: 'v1-fb', hook: null }` here plus
+ * "v1-fb" in the experiment's scope.
  */
 export const PAI_ELIGIBLE_LANDERS: ReadonlyArray<{ funnel: string; hook: string | null }> = [
-  { funnel: 'v1-fb', hook: null },
   { funnel: 'v1-tarot', hook: 'cards-meant-alone' },
   { funnel: 'v1-tarot', hook: 'cards-come-back' },
 ];

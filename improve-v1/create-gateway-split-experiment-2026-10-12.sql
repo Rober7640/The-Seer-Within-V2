@@ -1,12 +1,13 @@
 -- ============================================================================
 -- CREATE the live Stripe-vs-Payments.AI split — v1_gateway_split_2026
--- 2026-10-12 · Lewis: 50/50 on the three landers with live FB traffic (Rubie):
---   /fb · /fb-tarot/c?hook=cards-meant-alone · /fb-tarot/c?hook=cards-come-back
+-- 2026-10-12 · Lewis: 50/50 on the landers with live FB traffic (Rubie):
+--   /fb-tarot/c?hook=cards-meant-alone · /fb-tarot/c?hook=cards-come-back
+-- ⏸️ 2026-10-13 · Lewis: /fb is OUT for now — it runs its own $35 vs $35+bump test.
 --
 --   key            v1_gateway_split_2026
 --   variants       stripe w50 (CONTROL, first) / paymentsai w50
 --   subject_type   email     ← hashEmail(email), assigned at the CHECKOUT CLICK
---   scope          funnel ["v1-fb","v1-tarot"] + freezeAssignment
+--   scope          funnel ["v1-tarot"] + freezeAssignment
 --   conversion     gateway_split
 --   status         DRAFT  ← inert. Every buyer pays on Stripe exactly as today.
 --
@@ -62,7 +63,7 @@ VALUES (
      {"key": "paymentsai", "weight": 50, "payload": {}}
    ]'::jsonb,
   '{
-     "funnel": ["v1-fb", "v1-tarot"],
+     "funnel": ["v1-tarot"],
      "freezeAssignment": true
    }'::jsonb,
   '{"type": "gateway_split", "windowDays": 7}'::jsonb
