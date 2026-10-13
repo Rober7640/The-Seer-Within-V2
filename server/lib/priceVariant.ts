@@ -39,7 +39,7 @@ import {
   U1_PRICE_EXPERIMENT_KEY,
   V1_MAIN_EXPERIMENT_KEY,
   PALM_GATE_EXPERIMENT_KEY,
-  V1_BUMP_EXPERIMENT_KEY,
+  v1BumpKeyFor,
   V1_CLOSE_DEPTH_EXPERIMENT_KEY,
 } from './experiments';
 import {
@@ -404,7 +404,8 @@ export async function assignVariantIfMissing(
       // soulmate-timing, already-met, love-again … — so without this, "did the bump
       // do better on soulmate-timing than on the other hooks?" would be permanently
       // unanswerable, exactly as the per-sign split would have been without `sign`.
-      await logExposure(V1_BUMP_EXPERIMENT_KEY, hashEmail(email), bump.variant, 'bump_assigned', {
+      // Same key resolveV1Bump just read — /fb logs under its own test.
+      await logExposure(v1BumpKeyFor(funnel), hashEmail(email), bump.variant, 'bump_assigned', {
         conversationId: row.id,
         sign: gateSign,
         funnel: funnel ?? null,

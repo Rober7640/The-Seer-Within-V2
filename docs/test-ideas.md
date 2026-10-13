@@ -2251,3 +2251,17 @@ Not covered — needs a real server + Stripe test card:
 - [ ] Stripe cancel from the chat lands on `/offers/wiccan/tea-reading/chat?cancelled=1` (treatment `chat`), from the page on the page
 - [ ] Back button from Stripe (bfcache restore) re-arms the button and re-fetches her price
 - [ ] Receipt shows the delivered variant once `deliveredAt` is set (and never names the drawn cup)
+
+## /fb order bump test — `v1_fb_order_bump_2026` (2026-10-13)
+
+$35 alone (A) vs $35 + $12.77 "+ Double-Strength Clearing" (B), 50/50, /fb only. Own experiment key so palm/tarot/read keep their concluded bump.
+
+- [x] `v1BumpKeyFor('v1-fb')` = the /fb key; every other funnel (incl. null) = the existing bump key (`server/lib/fbBump.test.ts`, mutation-checked)
+- [x] Running: /fb lead logs an exposure under `v1_fb_order_bump_2026`; arm B gets `orderBump:true` + `bumpCopy:'A'`, arm A gets no bump (local sandbox walk)
+- [x] Arm B checkout = $47.77, lines "Energy Clearing Ritual - FB" + "+ Double-Strength Clearing - FB", metadata `product=energy_clearing_ritual`, `bumpProduct=double_reading`, `funnel=v1-fb`
+- [x] Arm A checkout with a tampered `bumpAccepted:true` = $35, no bump line, no `bumpProduct`
+- [x] /fb-tarot unchanged: still bump + Double-Strength copy, never enrolled in the /fb test
+- [x] Draft: no /fb lead sees the bump, no exposure logged
+- [ ] Browser walk on /fb arm B: offer card shows the /fb-tarot wording word for word, both buttons work
+- [ ] Downsell ($25) checkout on arm B — confirm the agreed behaviour (bump or no bump)
+- [ ] Admin /admin/experiments shows the /fb test with the bump take-rate block (control row "never offered")
