@@ -246,3 +246,66 @@ describe('idempotency keys', () => {
     }
   });
 });
+
+describe('shipping on the Payments.AI upsell payment', () => {
+  const realFetch = globalThis.fetch;
+  let patches: Array<{ url: string; body: any }> = [];
+
+  before(() => {
+    process.env.PAI_LIVE_API_KEY = 'k';
+    process.env.PAI_LIVE_ORG_ID = 'o';
+    globalThis.fetch = (async (url: string | URL, init?: RequestInit) => {
+      const u = String(url);
+      if (init?.method === 'PATCH') {
+        patches.push({ url: u, body: JSON.parse(String(init.body)) });
+        return new Response(JSON.stringify({ data: { id: 'txn_SHIP' } }), { status: 200 });
+      }
+      return new Response(
+        JSON.stringify({ data: { id: 'txn_SHIP', customer: { id: 'cus_SHIP' }, metadata: { product: 'protection_ritual', email: 'b@x.com', originalSession: 'txn_MAIN' } } }),
+        { status: 200 },
+      );
+    }) as typeof fetch;
+  });
+  after(() => {
+    globalThis.fetch = realFetch;
+  });
+  beforeEach(() => {
+    patches = [];
+  });
+
+  const addr = { name: 'Ann Lee', line1: '1 Main St', city: 'Austin', state: 'TX', postal: '73301', country: 'US' };
+
+  it('KEEPS the existing metadata — their PATCH replaces the whole object', async () => {
+    await live.attachShippingToPaiPayment('txn_SHIP', addr);
+    const txnPatch = patches.filter((p) => p.url.includes('/transactions/txn_SHIP'));
+    assert.equal(txnPatch.length, 1);
+    assert.deepEqual(txnPatch[0].body.metadata, {
+      product: 'protection_ritual',
+      email: 'b@x.com',
+      originalSession: 'txn_MAIN',
+      shipping_name: 'Ann Lee',
+      shipping_line1: '1 Main St',
+      shipping_line2: '',
+      shipping_city: 'Austin',
+      shipping_state: 'TX',
+      shipping_postal: '73301',
+      shipping_country: 'US',
+    });
+  });
+
+  it('also puts the address on her Payments.AI customer (shows on the dashboard today)', async () => {
+    await live.attachShippingToPaiPayment('txn_SHIP', addr);
+    const cus = patches.filter((p) => p.url.includes('/customers/cus_SHIP'));
+    assert.equal(cus.length, 1);
+    assert.deepEqual(cus[0].body, {
+      address: { address1: '1 Main St', address2: '', city: 'Austin', region: 'TX', zip: '73301', country: 'US' },
+    });
+  });
+
+  it('never touches a Stripe id or an empty address', async () => {
+    await live.attachShippingToPaiPayment('pi_STRIPE', addr);
+    await live.attachShippingToPaiPayment('txn_SHIP', undefined);
+    await live.attachShippingToPaiPayment('txn_SHIP', { ...addr, line1: '' });
+    assert.equal(patches.length, 0);
+  });
+});

@@ -34,6 +34,8 @@ import {
   instrumentIdOf,
   pendingChallengeLink,
   getTransaction,
+  mergeTransactionMetadata,
+  updateCustomerAddress,
   liveConfig,
   paiLiveReady,
   isSandboxBase,
@@ -76,6 +78,7 @@ import { bumpPaidListWanted } from '@shared/landerBumpRouting';
 import {
   GATEWAY_ARM_PAI,
   GATEWAY_EXPERIMENT_KEY,
+  isPaiOrderId,
   paiEligibleLander,
 } from '@shared/paymentGateway';
 import { funnelDefForParam, type FunnelParam } from '@shared/funnelConfig';
@@ -766,6 +769,48 @@ interface UpsellSpec {
   braceletType?: 'full' | 'downsell';
 }
 
+/**
+ * The shipping address onto Payments.AI, in two places:
+ *   1. the upsell's own transaction, under the SAME seven keys Stripe's upsell
+ *      PaymentIntent carries. 🔴 Until Payments.AI enables those seven fields on their
+ *      side they are silently dropped (registering them through the API is not enough —
+ *      proven 13 Oct); nothing breaks, the keys just don't show yet.
+ *   2. the customer's address, a built-in field — visible on the dashboard today.
+ * Never throws: the sale is already made.
+ */
+export async function attachShippingToPaiPayment(
+  txnId: string | null | undefined,
+  s: ShippingInput | null | undefined,
+): Promise<void> {
+  if (!txnId || !isPaiOrderId(txnId) || !s?.line1) return;
+  const cfg = liveConfig();
+  const tx = await getTransaction(txnId, cfg).catch(() => null);
+  const customerId = tx?.data?.customer?.id;
+  if (customerId) {
+    const c = await updateCustomerAddress(customerId, s, cfg)
+      .catch((err) => ({ ok: false, status: 0, error: String(err) }) as const);
+    if (c.ok) logger.info(`[pai-live] shipping address on customer ${customerId}`);
+    else logger.error(`[pai-live] could not set customer address ${customerId}`, { status: c.status, error: c.error });
+  } else {
+    logger.warn(`[pai-live] no customer on ${txnId} — customer address not set`);
+  }
+  const r = await mergeTransactionMetadata(
+    txnId,
+    {
+      shipping_name: s.name || '',
+      shipping_line1: s.line1 || '',
+      shipping_line2: s.line2 || '',
+      shipping_city: s.city || '',
+      shipping_state: s.state || '',
+      shipping_postal: s.postal || '',
+      shipping_country: s.country || '',
+    },
+    cfg,
+  ).catch((err) => ({ ok: false, status: 0, error: String(err) }) as const);
+  if (r.ok) logger.info(`[pai-live] shipping keys sent to ${txnId} (kept only once Payments.AI enables the fields)`);
+  else logger.error(`[pai-live] could not add shipping to ${txnId}`, { status: r.status, error: r.error });
+}
+
 export function upsell2Cents(type: 'full' | 'downsell'): number {
   return type === 'full' ? 4700 : 3000;
 }
@@ -834,6 +879,10 @@ async function fulfilUpsell(f: Fulfil, deps: PaiLiveDeps): Promise<void> {
     await markUpsell2Purchased(f.orderId, f.txnId, spec.cents, spec.braceletType ?? 'full');
     if (f.shipping) await saveShipping2Address(f.orderId, f.shipping);
   }
+  // Card page: the address came with the payment — put it on the transaction, as
+  // Stripe's hosted fallback checkout does. (Upsell 2 is handled below with the
+  // address it finds; the 1-click upsell 1 gets it from the shipping save.)
+  if (spec.step === 'upsell1' && f.shipping) void attachShippingToPaiPayment(f.txnId, f.shipping);
 
   if (f.trackdeskClickId) {
     reportTrackdeskConversion({
@@ -927,6 +976,8 @@ async function fulfilUpsell(f: Fulfil, deps: PaiLiveDeps): Promise<void> {
               }
             : undefined;
       }
+      // Stripe's 1-click upsell 2 writes this same address onto its PaymentIntent.
+      if (ship) await attachShippingToPaiPayment(f.txnId, ship);
       const base = f.noemail
         ? ['seer-within-upsell2', `bracelet-${type}`, 'noemail']
         : ['seer-within-upsell2', `bracelet-${type}`];
