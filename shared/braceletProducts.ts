@@ -53,7 +53,7 @@ export const BRACELET_PRODUCTS: BraceletProduct[] = [
     tagline: 'Manifesting · Grounding · Calming',
     blurb: 'Genuine black lava stone born of volcanic eruption, set with a gold-plated wish capsule.',
     priceCents: 9900,
-    compareAtCents: 19900,
+    compareAtCents: 17500,
     images: ['/products/lava-1.jpg', '/products/lava-2.jpg', '/products/lava-3.jpg'],
     intro:
       'Black lava stone is born of volcanic eruption — raw, assertive energy tempered by practical ' +
@@ -80,7 +80,7 @@ export const BRACELET_PRODUCTS: BraceletProduct[] = [
     tagline: 'Wealth · Manifesting · Abundance',
     blurb: 'Eight genuine crystals — Aventurine, Amethyst, Tiger Eye, Citrine, Pyrite and more.',
     priceCents: 9900,
-    compareAtCents: 19900,
+    compareAtCents: 17500,
     images: ['/products/wealth-1.png', '/products/wealth-2.webp', '/products/wealth-3.webp'],
     intro:
       'Eight crystals chosen to draw wealth and abundance, cultivate positive energy, and turn ' +
@@ -108,7 +108,7 @@ export const BRACELET_PRODUCTS: BraceletProduct[] = [
     tagline: 'Love · Self-Care · Heart-Healing',
     blurb: 'Genuine rose quartz, the stone of Aphrodite — for love given, and love returned.',
     priceCents: 9900,
-    compareAtCents: 19900,
+    compareAtCents: 17500,
     images: ['/products/rose-3.jpg', '/products/rose-1.jpg', '/products/rose-2.jpg'],
     intro:
       'Rose quartz carries the oldest story of love there is — Aphrodite, Adonis, and a stone stained ' +
