@@ -142,7 +142,7 @@ function toApiAmount(cents: number): number {
 }
 
 async function call<T>(
-  method: 'GET' | 'POST',
+  method: 'GET' | 'POST' | 'PATCH',
   path: string,
   body?: unknown,
   cfg: PaiConfig = config(),
@@ -208,6 +208,56 @@ export async function createCustomer(params: {
 
 export async function getTransaction(id: string, cfg?: PaiConfig): Promise<PaiResult<PaiTransaction>> {
   return call('GET', `/transactions/${encodeURIComponent(id)}`, undefined, cfg);
+}
+
+/**
+ * Add keys to a transaction's metadata after the charge — what Stripe's
+ * paymentIntents.update does for the upsell shipping address.
+ *
+ * 🔴 PATCH /transactions/{id} is not in their spec but works (sandbox, 13 Oct), and it
+ * REPLACES the whole metadata object: sending only the new keys wipes product, email,
+ * originalSession… So read the current metadata and write it back merged.
+ * Keys must be registered custom fields or they are silently dropped (the 7
+ * shipping_* fields were registered on the sandbox 13 Oct).
+ */
+export async function mergeTransactionMetadata(
+  id: string,
+  extra: Record<string, string>,
+  cfg?: PaiConfig,
+): Promise<PaiResult<PaiTransaction>> {
+  const current = await getTransaction(id, cfg);
+  if (!current.ok || !current.data) {
+    return { ok: false, status: current.status, error: current.error || 'transaction not found', raw: current.raw };
+  }
+  return call<PaiTransaction>(
+    'PATCH',
+    `/transactions/${encodeURIComponent(id)}`,
+    { metadata: { ...(current.data.metadata ?? {}), ...extra } },
+    cfg,
+  );
+}
+
+/**
+ * The customer's address — shown on the dashboard's customer page. A built-in field,
+ * so unlike transaction metadata it needs nothing registered (sandbox, 13 Oct: PATCH
+ * kept name/email). One address per customer: a later upsell's address replaces it.
+ * Lengths are cut to their spec's limits so a long line can't 400 the whole update.
+ */
+export async function updateCustomerAddress(
+  customerId: string,
+  a: { line1: string; line2?: string; city: string; state: string; postal: string; country: string },
+  cfg?: PaiConfig,
+): Promise<PaiResult<{ id: string }>> {
+  return call('PATCH', `/customers/${encodeURIComponent(customerId)}`, {
+    address: {
+      address1: a.line1.slice(0, 60),
+      address2: (a.line2 || '').slice(0, 60),
+      city: a.city.slice(0, 45),
+      region: a.state.slice(0, 45),
+      zip: a.postal.slice(0, 10),
+      country: a.country,
+    },
+  }, cfg);
 }
 
 /**

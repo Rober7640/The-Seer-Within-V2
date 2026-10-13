@@ -46,6 +46,7 @@ import {
   chargeUpsell2Pai,
   recordPaymentAttempt,
   funnelForPaiPayment,
+  attachShippingToPaiPayment,
   PAI_TAG,
   type PaiLiveDeps,
   type PaiOrder,
@@ -3080,9 +3081,11 @@ export async function registerRoutes(
                 );
             }
 
-            // Update Stripe payment intent metadata with shipping (a Payments.AI
-            // upsell's address lives in our DB + AWeber; there is no Stripe object).
-            if (stripe && conversation.upsellPaymentId && !isPaiOrderId(conversation.upsellPaymentId)) {
+            // Update the upsell payment with shipping — on Payments.AI for a `txn_…`
+            // upsell (same seven keys), on the Stripe PaymentIntent otherwise.
+            if (conversation.upsellPaymentId && isPaiOrderId(conversation.upsellPaymentId)) {
+              await attachShippingToPaiPayment(conversation.upsellPaymentId, shippingData);
+            } else if (stripe && conversation.upsellPaymentId) {
               try {
                 await stripe.paymentIntents.update(
                   conversation.upsellPaymentId,
@@ -3846,9 +3849,11 @@ export async function registerRoutes(
               );
           }
 
-          // Update Stripe payment intent metadata with shipping (not for a
-          // Payments.AI upsell — no Stripe object; the address is in our DB + AWeber).
-          if (stripe && conversation.upsell2PaymentId && !isPaiOrderId(conversation.upsell2PaymentId)) {
+          // Update the upsell payment with shipping — on Payments.AI for a `txn_…`
+          // upsell (same seven keys), on the Stripe PaymentIntent otherwise.
+          if (conversation.upsell2PaymentId && isPaiOrderId(conversation.upsell2PaymentId)) {
+            await attachShippingToPaiPayment(conversation.upsell2PaymentId, address);
+          } else if (stripe && conversation.upsell2PaymentId) {
             try {
               await stripe.paymentIntents.update(
                 conversation.upsell2PaymentId,
