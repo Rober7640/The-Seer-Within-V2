@@ -223,13 +223,14 @@ function Router() {
         )}
 
         {/* Existing funnel routes (V1 — email traffic) */}
-        {/* The root "/" serves the original Evelyn LandingPage. Between 2026-07-23
-            and 2026-07-27 it temporarily served the FB-compliance HomePage
-            (storefront) so Facebook's reviewer landed on the compliant page at the
-            domain root; that swap is now REVERTED (agency approval, Joel 2026-07-27).
-            The storefront itself is unchanged and still reachable at /home below.
-            TO RE-SWAP: change this one line back to `component={HomePage}`. */}
-        <Route path="/" component={LandingPage} />
+        {/* The root "/" normally serves the original Evelyn LandingPage (the funnel
+            top for email/direct traffic). It is TEMPORARILY serving the FB-compliance
+            HomePage (storefront) again from 2026-10-13, so Facebook's reviewer lands on
+            the compliant page at the domain root while ad-account approval is pending.
+            (Precedent: the same swap ran 2026-07-23 → 2026-07-27, then reverted on
+            agency approval.) The storefront is unchanged and also reachable at /home.
+            TO REVERT after approval: change this one line back to `component={LandingPage}`. */}
+        <Route path="/" component={HomePage} />
         <Route path="/chat" component={ChatPage} />
         <Route path="/welcome1" component={UpsellPage} />
         <Route path="/welcome2" component={Upsell2Page} />
