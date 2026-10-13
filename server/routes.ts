@@ -93,6 +93,7 @@ import {
   hashEmail,
   PALM_GATE_EXPERIMENT_KEY,
   V1_BUMP_EXPERIMENT_KEY,
+  v1BumpKeyFor,
   V1_DOWNSELL_BUMP_PRICE_KEY,
   V1_TAROT_VERSION_EXPERIMENT_KEY,
   V1_TAROT_SHADOW_EXPERIMENT_KEY,
@@ -997,10 +998,10 @@ export async function registerRoutes(
             email,
             funnel: funnel ?? null,
             tier: type === "downsell" ? "downsell" : "main",
-            experimentKey: V1_BUMP_EXPERIMENT_KEY,
+            experimentKey: v1BumpKeyFor(funnel),
             armVariant: bumpArm.variant,
             enrolled: bumpArm.enrolled,
-            hint: "is v1_bump_copy_2026 running, and does its scope.funnel include this funnel?",
+            hint: "is this experimentKey running, and does its scope.funnel include this funnel?",
           },
         );
       }

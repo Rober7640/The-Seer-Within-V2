@@ -1469,6 +1469,19 @@ export const V1_BUMP_EXPERIMENT_KEY = resolveBumpExperimentKey(
   process.env.V1_BUMP_EXPERIMENT_KEY,
 );
 
+// /fb runs its OWN bump test (Joel, 2026-10-13): plain $35 vs $35 + bump, 50/50.
+// It cannot ride on V1_BUMP_EXPERIMENT_KEY — that test is `done` and serves its
+// winner (bump for everyone) to palm/tarot/read, so adding v1-fb to its scope would
+// give every /fb buyer the bump with no control arm. A separate key keeps the two
+// apart: palm/tarot/read resolve exactly as before, and /fb resolves nothing until
+// this row is started (no row / draft ⇒ bump:false ⇒ today's checkout).
+export const V1_FB_BUMP_EXPERIMENT_KEY = 'v1_fb_order_bump_2026';
+
+/** Which bump experiment governs this funnel. Only /fb has its own. */
+export function v1BumpKeyFor(funnel?: string | null): string {
+  return funnel === 'v1-fb' ? V1_FB_BUMP_EXPERIMENT_KEY : V1_BUMP_EXPERIMENT_KEY;
+}
+
 /**
  * Should this lead be OFFERED the order bump?
  *
@@ -1486,7 +1499,7 @@ export async function resolveV1Bump(
   email: string | null | undefined,
   funnel?: string | null,
   sign?: string | null,
-  key: string = V1_BUMP_EXPERIMENT_KEY, // overridable so tests never touch the live experiment
+  key: string = v1BumpKeyFor(funnel), // overridable so tests never touch the live experiment
 ): Promise<{ bump: boolean; variant: string | null; enrolled: boolean; copy: BumpCopyVariant }> {
   const subject = typeof email === 'string' ? email.trim().toLowerCase() : null;
 
