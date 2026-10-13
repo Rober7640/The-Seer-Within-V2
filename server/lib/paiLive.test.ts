@@ -63,8 +63,7 @@ function order(over: Partial<import('./paiLive').PaiOrder> = {}): import('./paiL
 after(() => setTimeout(() => process.exit(process.exitCode ?? 0), 200).unref());
 
 describe('the allow-list', () => {
-  it('admits exactly the three landers Lewis named', () => {
-    assert.equal(paiEligibleLander('v1-fb', undefined), true);
+  it('admits exactly the two tarot landers — /fb is OUT (Lewis 13 Oct)', () => {
     assert.equal(paiEligibleLander('v1-tarot', 'cards-meant-alone'), true);
     assert.equal(paiEligibleLander('v1-tarot', 'cards-come-back'), true);
   });
@@ -73,6 +72,8 @@ describe('the allow-list', () => {
     assert.equal(paiEligibleLander('v1-tarot', 'cards-meant-alone-still-time'), false);
     assert.equal(paiEligibleLander('v1-tarot', 'cards-return'), false);
     assert.equal(paiEligibleLander('v1-tarot', undefined), false);
+    // /fb is out of the split while its own $35 vs $35+bump test runs (Lewis 13 Oct).
+    assert.equal(paiEligibleLander('v1-fb', undefined), false);
     assert.equal(paiEligibleLander('v1-fb', 'cards-meant-alone'), false);
     assert.equal(paiEligibleLander('v1-fb2', undefined), false);
     assert.equal(paiEligibleLander('v1-palm', undefined), false);
@@ -144,7 +145,7 @@ describe('resolveGateway — Stripe and NOT enrolled unless everything holds', (
 
   it('not configured ⇒ Stripe, not enrolled', async () => {
     delete process.env.PAI_LIVE_ENABLED;
-    const d = await live.resolveGateway({ email: 'a@b.co', funnel: 'v1-fb' });
+    const d = await live.resolveGateway({ email: 'a@b.co', funnel: 'v1-tarot', hook: 'cards-meant-alone' });
     assert.equal(d.gateway, 'stripe');
     assert.equal(d.enrolled, false);
     assert.match(d.reason ?? '', /not ready/);
@@ -158,8 +159,9 @@ describe('resolveGateway — Stripe and NOT enrolled unless everything holds', (
     for (const args of [
       { email: 'a@b.co', funnel: 'v1-palm' as const },
       { email: 'a@b.co', funnel: 'v1-tarot' as const, hook: 'cards-return' },
-      { email: '', funnel: 'v1-fb' as const },
-      { email: 'a@b.co', funnel: 'v1-fb' as const, noemail: true },
+      { email: 'a@b.co', funnel: 'v1-fb' as const },
+      { email: '', funnel: 'v1-tarot' as const, hook: 'cards-meant-alone' },
+      { email: 'a@b.co', funnel: 'v1-tarot' as const, hook: 'cards-meant-alone', noemail: true },
     ]) {
       const d = await live.resolveGateway(args);
       assert.equal(d.gateway, 'stripe', JSON.stringify(args));
@@ -168,7 +170,7 @@ describe('resolveGateway — Stripe and NOT enrolled unless everything holds', (
   });
 
   it('eligible but the experiment cannot be read (DB down) ⇒ Stripe, not enrolled', async () => {
-    const d = await live.resolveGateway({ email: 'a@b.co', funnel: 'v1-fb' });
+    const d = await live.resolveGateway({ email: 'a@b.co', funnel: 'v1-tarot', hook: 'cards-come-back' });
     assert.equal(d.gateway, 'stripe');
     assert.equal(d.enrolled, false);
   });

@@ -2268,7 +2268,8 @@ $35 alone (A) vs $35 + $12.77 "+ Double-Strength Clearing" (B), 50/50, /fb only.
 
 ## Live Stripe-vs-Payments.AI split — `v1_gateway_split_2026` (2026-10-12)
 
-- [ ] Experiment DRAFT: a buyer on /fb, /fb-tarot/c?hook=cards-meant-alone and ?hook=cards-come-back is sent to Stripe (`{url}`), no exposure row
+- [ ] Experiment DRAFT: a buyer on /fb-tarot/c?hook=cards-meant-alone and ?hook=cards-come-back is sent to Stripe (`{url}`), no exposure row
+- [x] /fb is OUT of the split (Lewis 2026-10-13, own bump test running): never Payments.AI, never enrolled, even while the split runs (`paiLive.test.ts`)
 - [ ] Experiment RUNNING: a `paymentsai`-arm email is redirected to `<funnel>/checkout` (order summary with offer + bump lines, card, phone, SMS); a `stripe`-arm email gets the Stripe redirect; both log ONE exposure (surface `checkout`)
 - [ ] Any other lander (e.g. /fb-tarot/c?hook=cards-return, /fb-palm, root /) is Stripe and NOT enrolled while the test runs
 - [ ] PAUSE: everyone back on Stripe; an order already paid on Payments.AI still charges its upsells on Payments.AI
