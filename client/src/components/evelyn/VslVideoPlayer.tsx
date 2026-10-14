@@ -11,6 +11,8 @@ export interface VslVideoPlayerProps {
   onStonePick?: (stone: StoneKey, via: 'video' | 'button') => void;
   onCtaShown?: () => void;
   onProgress?: (pct: ProgressMilestone) => void;
+  /** Fires on every timeupdate tick with the current playback time (seconds). */
+  onTimeUpdate?: (currentTime: number) => void;
   onSoundOn?: () => void;
   onFailure?: () => void;
   resumeAt?: number;
@@ -26,6 +28,7 @@ export function VslVideoPlayer({
   onStonePick,
   onCtaShown,
   onProgress,
+  onTimeUpdate,
   onSoundOn,
   onFailure,
   resumeAt,
@@ -118,22 +121,23 @@ export function VslVideoPlayer({
     if (!video) return;
     const t = video.currentTime;
     setCurrentTime(t);
+    onTimeUpdate?.(t);
     armStallTimer();
 
-    if (kind === 'pitch') {
-      const d = video.duration || duration;
-      const pct = progressPct(t, d);
-      for (const milestone of MILESTONES) {
-        if (pct >= milestone && !firedMilestonesRef.current.has(milestone)) {
-          firedMilestonesRef.current.add(milestone);
-          onProgress?.(milestone);
-        }
+    // Progress milestones fire for BOTH videos (spec §7 lists vsl_progress generically).
+    const d = video.duration || duration;
+    const pct = progressPct(t, d);
+    for (const milestone of MILESTONES) {
+      if (pct >= milestone && !firedMilestonesRef.current.has(milestone)) {
+        firedMilestonesRef.current.add(milestone);
+        onProgress?.(milestone);
       }
+    }
 
-      if (!ctaShownRef.current && ctaVisible(t, ctaShownRef.current)) {
-        ctaShownRef.current = true;
-        onCtaShown?.();
-      }
+    // CTA reveal is pitch-only (the welcome video has no CTA).
+    if (kind === 'pitch' && !ctaShownRef.current && ctaVisible(t, ctaShownRef.current)) {
+      ctaShownRef.current = true;
+      onCtaShown?.();
     }
   };
 

@@ -1,11 +1,10 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'wouter';
 import { VslVideoPlayer } from '@/components/evelyn/VslVideoPlayer';
-import { STONES, stoneLabel, WELCOME_STONES_LIVE_AT, type StoneKey } from '@shared/evelynVsl';
+import { STONES, stoneLabel, isStone, WELCOME_STONES_LIVE_AT, type StoneKey } from '@shared/evelynVsl';
 import { track as trackPH } from '@/lib/posthog';
 
 const STORAGE_KEY = 'evelyn_vsl_v1';
-const PITCH_SAVE_INTERVAL_MS = 5000;
 
 interface VslState {
   stone: StoneKey;
@@ -13,16 +12,12 @@ interface VslState {
   pitchPos: number;
 }
 
-function isStoneKey(x: unknown): x is StoneKey {
-  return typeof x === 'string' && STONES.some((s) => s.key === x);
-}
-
 function loadVslState(): VslState | null {
   try {
     const raw = window.localStorage.getItem(STORAGE_KEY);
     if (!raw) return null;
     const parsed = JSON.parse(raw);
-    if (!parsed || !isStoneKey(parsed.stone)) return null;
+    if (!parsed || !isStone(parsed.stone)) return null;
     return {
       stone: parsed.stone,
       ctaShown: Boolean(parsed.ctaShown),
@@ -55,7 +50,8 @@ export default function ReadingPage() {
   const [showBackupButtons, setShowBackupButtons] = useState(false);
 
   const resumeAtRef = useRef(initialState?.pitchPos ?? 0);
-  const lastKnownPosRef = useRef(initialState?.pitchPos ?? 0);
+  const lastKnownPitchPosRef = useRef(initialState?.pitchPos ?? 0);
+  const lastSavedPitchPosRef = useRef(initialState?.pitchPos ?? 0);
   const pitchViewFiredRef = useRef(false);
 
   const phase: 'welcome' | 'pitch' = stone ? 'pitch' : 'welcome';
@@ -69,25 +65,30 @@ export default function ReadingPage() {
     }
   }, [phase, stone]);
 
-  // Backup stone buttons appear at WELCOME_STONES_LIVE_AT (same moment the in-video tap
-  // zones go live) regardless of welcome-video failure, which shows them immediately below.
-  useEffect(() => {
-    if (phase !== 'welcome') return;
-    const timer = window.setTimeout(() => {
-      setShowBackupButtons(true);
-    }, WELCOME_STONES_LIVE_AT * 1000);
-    return () => window.clearTimeout(timer);
-  }, [phase]);
-
   const handleWelcomeFailure = useCallback(() => {
+    // Welcome video error/stall — surface the backup stone buttons at once.
     setShowBackupButtons(true);
+  }, []);
+
+  // Backup stone buttons appear when the welcome video's REAL playback time crosses
+  // WELCOME_STONES_LIVE_AT (same moment its in-video tap zones go live) — not wall-clock,
+  // so an autoplay-blocked/buffering video doesn't reveal them before a frame has played.
+  const handleWelcomeTimeUpdate = useCallback((t: number) => {
+    if (t >= WELCOME_STONES_LIVE_AT) {
+      setShowBackupButtons(true);
+    }
+  }, []);
+
+  const handleWelcomeProgress = useCallback((pct: number) => {
+    trackPH('vsl_progress', { video: 'welcome', pct });
   }, []);
 
   const pickStone = useCallback((picked: StoneKey, via: 'video' | 'button') => {
     const state: VslState = { stone: picked, ctaShown: false, pitchPos: 0 };
     saveVslState(state);
     resumeAtRef.current = 0;
-    lastKnownPosRef.current = 0;
+    lastKnownPitchPosRef.current = 0;
+    lastSavedPitchPosRef.current = 0;
     trackPH('vsl_stone_pick', { stone: picked, via });
     setCtaShown(false);
     setStone(picked);
@@ -101,10 +102,24 @@ export default function ReadingPage() {
     trackPH('vsl_progress', { video: 'pitch', pct });
   }, []);
 
+  // Track the pitch's current time every tick; persist it only every ~5s so a reload/return
+  // resumes close to where the visitor left off, without a localStorage write per frame.
+  const handlePitchTimeUpdate = useCallback(
+    (t: number) => {
+      lastKnownPitchPosRef.current = t;
+      if (!stone) return;
+      if (t - lastSavedPitchPosRef.current >= 5 || t < lastSavedPitchPosRef.current) {
+        lastSavedPitchPosRef.current = t;
+        saveVslState({ stone, ctaShown, pitchPos: t });
+      }
+    },
+    [stone, ctaShown],
+  );
+
   const handlePitchCtaShown = useCallback(() => {
     if (!stone) return;
     setCtaShown(true);
-    saveVslState({ stone, ctaShown: true, pitchPos: lastKnownPosRef.current });
+    saveVslState({ stone, ctaShown: true, pitchPos: lastKnownPitchPosRef.current });
     trackPH('vsl_cta_shown', { stone });
   }, [stone]);
 
@@ -118,22 +133,6 @@ export default function ReadingPage() {
     if (!stone) return;
     trackPH('vsl_cta_click', { stone });
   }, [stone]);
-
-  // Persist pitch playback position every ~5s so a reload/return resumes close to where the
-  // visitor left off. VslVideoPlayer doesn't expose currentTime via props, so we read it off
-  // the rendered <video data-testid="video-pitch"> element it owns — the same handle
-  // Playwright (Task 12) drives directly to test resume/CTA timing.
-  useEffect(() => {
-    if (phase !== 'pitch' || !stone) return;
-    const interval = window.setInterval(() => {
-      const videoEl = document.querySelector<HTMLVideoElement>('[data-testid="video-pitch"]');
-      if (!videoEl) return;
-      const pos = videoEl.currentTime || 0;
-      lastKnownPosRef.current = pos;
-      saveVslState({ stone, ctaShown, pitchPos: pos });
-    }, PITCH_SAVE_INTERVAL_MS);
-    return () => window.clearInterval(interval);
-  }, [phase, stone, ctaShown]);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-purple-950 via-purple-900 to-black py-8 px-4">
@@ -152,6 +151,8 @@ export default function ReadingPage() {
             <VslVideoPlayer
               kind="welcome"
               onStonePick={(picked, via) => pickStone(picked, via)}
+              onProgress={handleWelcomeProgress}
+              onTimeUpdate={handleWelcomeTimeUpdate}
               onFailure={handleWelcomeFailure}
             />
             {showBackupButtons && (
@@ -179,6 +180,7 @@ export default function ReadingPage() {
               resumeAt={resumeAtRef.current || undefined}
               onSoundOn={handlePitchSoundOn}
               onProgress={handlePitchProgress}
+              onTimeUpdate={handlePitchTimeUpdate}
               onCtaShown={handlePitchCtaShown}
               onFailure={handlePitchFailure}
             />
