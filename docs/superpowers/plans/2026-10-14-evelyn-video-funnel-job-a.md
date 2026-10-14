@@ -169,7 +169,7 @@ git commit -m "feat(evelyn-vsl): add soulmate-initials backend catalog row (\$19
 
 **Files:**
 - Create: `shared/evelynVsl.ts`
-- Test: `shared/evelynVsl.test.ts`
+- Test: `tests/evelynVsl.test.ts`  (NOTE: must live under `tests/` — vitest `include` only matches `shared/*.schema.test.ts`, so a `shared/*.test.ts` file is never discovered)
 
 **Interfaces:**
 - Produces: `EVELYN_VSL_ASSET_BASE: string`; `DELIVERY_PROMISE = 'by email within 24 hours'`; `STONES` = `[{ key:'rose-quartz', label:'Rose Quartz' }, { key:'jade', label:'Jade' }, { key:'garnet', label:'Garnet' }]`; `isStone(x): x is StoneKey`; `stoneLabel(key): string` (unknown → `'your stone'`); `WELCOME_STONES_LIVE_AT = 48.6`; `PITCH_CTA_AT = 368.2`; `TAP_ZONES: Record<StoneKey, { x0:number; x1:number; y0:number; y1:number }>` (fractions 0-1, from spec §3); `VIDEO = { welcome: { src, poster }, pitch: { src, poster } }` built from `EVELYN_VSL_ASSET_BASE`.
@@ -177,9 +177,9 @@ git commit -m "feat(evelyn-vsl): add soulmate-initials backend catalog row (\$19
 - [ ] **Step 1: Write the failing test**
 
 ```ts
-// shared/evelynVsl.test.ts
+// tests/evelynVsl.test.ts
 import { describe, it, expect } from 'vitest';
-import { STONES, isStone, stoneLabel, TAP_ZONES, WELCOME_STONES_LIVE_AT, PITCH_CTA_AT, VIDEO, EVELYN_VSL_ASSET_BASE } from './evelynVsl';
+import { STONES, isStone, stoneLabel, TAP_ZONES, WELCOME_STONES_LIVE_AT, PITCH_CTA_AT, VIDEO, EVELYN_VSL_ASSET_BASE } from '@shared/evelynVsl';
 
 describe('evelyn vsl constants', () => {
   it('has exactly the three stones in deck order', () => {
@@ -207,7 +207,7 @@ describe('evelyn vsl constants', () => {
 
 - [ ] **Step 2: Run test to verify it fails**
 
-Run: `npx vitest run shared/evelynVsl.test.ts`
+Run: `npx vitest run tests/evelynVsl.test.ts`
 Expected: FAIL — module not found.
 
 - [ ] **Step 3: Implement** `shared/evelynVsl.ts`
@@ -256,13 +256,13 @@ export const VIDEO = {
 
 - [ ] **Step 4: Run test to verify it passes**
 
-Run: `npx vitest run shared/evelynVsl.test.ts`
+Run: `npx vitest run tests/evelynVsl.test.ts`
 Expected: PASS.
 
 - [ ] **Step 5: Commit**
 
 ```bash
-git add shared/evelynVsl.ts shared/evelynVsl.test.ts
+git add shared/evelynVsl.ts tests/evelynVsl.test.ts
 git commit -m "feat(evelyn-vsl): funnel constants (asset base, stones, tap zones, key moments)"
 ```
 
@@ -706,7 +706,7 @@ git commit -m "feat(evelyn-vsl): thank-you page, upsell copy, and /evelyn routes
 - Modify: `shared/fbPixelConfig.ts` (add `evelyn` entry)
 - Modify: `client/src/lib/funnel.ts` (`getPostHogStep` evelyn branch ~389-390)
 - Modify: `client/src/lib/facebook.ts` (add `trackViewContent`)
-- Test: `shared/fbPixelConfig.evelyn.test.ts`, `client/src/lib/funnel.evelyn.test.ts`
+- Test: `tests/fbPixelConfig.evelyn.test.ts`, `client/src/lib/funnel.evelyn.test.ts`
 
 **Interfaces:**
 - Produces: `resolveFunnelFromUrl('/evelyn/reading') === 'evelyn'`; `getPostHogStep('/evelyn/reading') === 'reading'`, `/evelyn/checkout → 'checkout'`, `/evelyn/thank-you → 'thank_you'`; `trackViewContent(contentName, email?, sessionId?)` mirroring `trackInitiateCheckout`.
@@ -714,9 +714,9 @@ git commit -m "feat(evelyn-vsl): thank-you page, upsell copy, and /evelyn routes
 - [ ] **Step 1: Write the failing tests**
 
 ```ts
-// shared/fbPixelConfig.evelyn.test.ts
+// tests/fbPixelConfig.evelyn.test.ts
 import { describe, it, expect } from 'vitest';
-import { resolveFunnelFromUrl } from './fbPixelConfig';
+import { resolveFunnelFromUrl } from '@shared/fbPixelConfig';
 describe('evelyn pixel routing', () => {
   it('routes /evelyn paths to the evelyn funnel entry', () => {
     expect(resolveFunnelFromUrl('/evelyn/reading')).toBe('evelyn');
@@ -740,7 +740,7 @@ describe('evelyn posthog steps', () => {
 
 - [ ] **Step 2: Run tests to verify they fail**
 
-Run: `npx vitest run shared/fbPixelConfig.evelyn.test.ts client/src/lib/funnel.evelyn.test.ts`
+Run: `npx vitest run tests/fbPixelConfig.evelyn.test.ts client/src/lib/funnel.evelyn.test.ts`
 Expected: FAIL — no `evelyn` pixel entry; `getPostHogStep` returns only "landing" for evelyn.
 
 - [ ] **Step 3: Implement**
@@ -760,13 +760,13 @@ case "evelyn":
 
 - [ ] **Step 4: Run tests to verify they pass**
 
-Run: `npx vitest run shared/fbPixelConfig.evelyn.test.ts client/src/lib/funnel.evelyn.test.ts && npm run build`
+Run: `npx vitest run tests/fbPixelConfig.evelyn.test.ts client/src/lib/funnel.evelyn.test.ts && npm run build`
 Expected: PASS + compiles.
 
 - [ ] **Step 5: Commit**
 
 ```bash
-git add shared/fbPixelConfig.ts client/src/lib/funnel.ts client/src/lib/facebook.ts shared/fbPixelConfig.evelyn.test.ts client/src/lib/funnel.evelyn.test.ts
+git add shared/fbPixelConfig.ts client/src/lib/funnel.ts client/src/lib/facebook.ts tests/fbPixelConfig.evelyn.test.ts client/src/lib/funnel.evelyn.test.ts
 git commit -m "feat(evelyn-vsl): pixel routing, PostHog steps, ViewContent + gated Purchase"
 ```
 
