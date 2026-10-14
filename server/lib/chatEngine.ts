@@ -15,6 +15,7 @@ import { eq, ne, and, desc, sql } from 'drizzle-orm';
 import { loadUserContext, summarizeSession } from './memoryManager';
 import { loadQuizIntake, buildQuizPromptSection } from './quizMemory';
 import { loadArrivalReading, buildArrivalReadingSection, buildArrivalGreetingInstruction, ARRIVAL_READING_FRESH_MSG_LIMIT } from './arrivalReading';
+import { loadEvelynTyBrief, buildEvelynTyBriefSection, buildEvelynTyGreetingInstruction } from './evelynThankyouGift';
 import { loadCrossPersonaMemories, formatTransferContext } from './memoryTransfer';
 import { startChatSession, endChatSession, checkpointSession } from './creditTracking';
 import { replayPendingReply, findEligibleParkedReply } from './liveThreadReplay';
@@ -628,6 +629,12 @@ async function buildMessageContext(
     : null;
   const arrivalSection = arrivalBrief ? buildArrivalReadingSection(arrivalBrief) : '';
 
+  // /fb thank-you → Evelyn: the ~4 facts from the reading they just bought the ritual
+  // from, as quiet background for the whole session while the arrival is ≤24h old.
+  // Null (no section) for every other reader.
+  const tyBrief = await loadEvelynTyBrief(userId, personaConfig.slug);
+  const tyBriefSection = tyBrief ? buildEvelynTyBriefSection(tyBrief) : '';
+
   // Inject interactive tarot draw instruction for tarot-capable personas.
   // Detection reads the AUTHORED prompt (base, or the variant when a test is
   // running) — not effectiveBasePrompt, which by now carries runtime-injected
@@ -784,6 +791,7 @@ NEVER engage with the technical premise of the question. NEVER say "I can't shar
       : '',
     quizSection,
     arrivalSection,
+    tyBriefSection,
     transferContext,
     intentContext ?? '',
     tarotInstruction,
@@ -854,6 +862,8 @@ export async function generateGreeting(config: {
 
   // Email arrival: did they land here from one of this persona's emails (≤24h)?
   const arrivalReading = await loadArrivalReading(config.userId, personaConfig.slug);
+  // /fb thank-you arrival (≤24h): a short opening that shows Evelyn remembers them.
+  const tyBrief = arrivalReading ? null : await loadEvelynTyBrief(config.userId, personaConfig.slug);
 
   // …and did they ALREADY answer the question that letter left open, on the lander,
   // before they had an account? Observed on development 2026-08-19: a reader typed
@@ -1016,6 +1026,12 @@ Return JSON: {"message": "your greeting"}`;
     greetingPrompt = `${personaVoice}
 
 ${buildArrivalGreetingInstruction(arrivalReading, user[0].firstName, { alreadyAnswered: Boolean(parkedReply) })}
+
+Return JSON: {"message": "your greeting"}`;
+  } else if (tyBrief) {
+    greetingPrompt = `${personaVoice}
+
+${buildEvelynTyGreetingInstruction(tyBrief, user[0].firstName)}
 
 Return JSON: {"message": "your greeting"}`;
   } else if (user[0].migratedFromConversationId && memoryContext) {

@@ -33,6 +33,7 @@ import { extractClientIp, extractUserAgent } from '../lib/fraudDetection';
 import { generateMagicLinkToken, verifyMagicLinkToken } from '../lib/magicLink';
 import { escapeHtml, reissueVerificationEmail } from '../lib/verificationEmail';
 import { resolveWelcomeGrantTier } from '../lib/welcomeGrantTier';
+import { claimEvelynTyGift, EVELYN_TY_CAMPAIGN } from '../lib/evelynThankyouGift';
 import { generateToken, verifyToken } from '../lib/auth';
 import {
   accountDetectionLimiter,
@@ -410,6 +411,19 @@ async function resolveAndInsert(
       logger.error('evelyn-lander insert failed', { error: error?.message });
       // Continue: do not block the user on a logging-table failure.
     }
+  }
+
+  // /fb thank-you → Evelyn 15-min gift. Claimed here, on arrival, ONLY for a reader
+  // whose identity the server has proven (a validated magic token or a signed-in JWT) —
+  // never for the unauthenticated `?email=` hint. Must run AFTER the insert above: the
+  // gift's eligibility check reads this very session row. Brand-new readers claim at
+  // email verification instead (auth.ts). Non-fatal: claimEvelynTyGift never throws.
+  if (
+    data.campaign === EVELYN_TY_CAMPAIGN &&
+    resolved.resolvedUserId &&
+    (resolved.segment === 'token_magic' || resolved.segment === 'v2_active')
+  ) {
+    await claimEvelynTyGift(resolved.resolvedUserId);
   }
 
   // The opener. Two sources, in order:

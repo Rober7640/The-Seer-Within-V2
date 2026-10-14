@@ -46,6 +46,10 @@ import LiveThreadLander, { type LiveThreadOutcome } from "@/components/LiveThrea
 const AUTH_TOKEN_KEY = "seer_auth_token";
 const EVELYN_PERSONA_SLUG = "evelyn-cross";
 const READING_DEST = `/reading?persona=${EVELYN_PERSONA_SLUG}`;
+// /fb thank-you arrivals (server/lib/evelynThankyouGift.ts). These readers have just
+// had their reading and paid, so they skip the lander mechanic entirely and are handed
+// straight into the chat, where Evelyn already knows their reading.
+const THANKYOU_CAMPAIGN = "v1-ty-evelyn";
 const SESSION_KEY = "evelyn_lander_token";
 const HISTORY_KEY = "evelyn_lander_history";
 // Which campaign the cached history belongs to. Without it the cache is replayed
@@ -298,7 +302,11 @@ export default function EvelynLanderPage() {
       params.mechanic === "live_thread")
       ? params.mechanic
       : null;
-  const assignment = useABVariant("evelyn_lander", "mechanic", "quiz");
+  // Thank-you arrivals never see a mechanic, so they must not be enrolled in the
+  // mechanic experiment either: they ask for an experiment-free page id instead
+  // (hooks can't be skipped conditionally), which resolves to the default.
+  const isThankYou = params.campaign === THANKYOU_CAMPAIGN;
+  const assignment = useABVariant(isThankYou ? "evelyn_ty" : "evelyn_lander", "mechanic", "quiz");
   const mechanic = overrideMechanic ?? assignment.variant;
   // Hold first paint until the assignment resolves so we never flash the default
   // mechanic and then swap. A DEV override is immediately ready.
@@ -527,6 +535,16 @@ export default function EvelynLanderPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [authLoading, user]);
 
+  // Thank-you arrival: once /start has created the session (phase leaves
+  // "loading"), go straight to the handoff — once per mount.
+  const thankYouHandedOff = useRef(false);
+  useEffect(() => {
+    if (!isThankYou || phase !== "chat" || thankYouHandedOff.current) return;
+    thankYouHandedOff.current = true;
+    handleCta();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isThankYou, phase]);
+
   async function handleSend() {
     const text = draft.trim();
     if (!text || sending || userTurns >= MAX_USER_TURNS) return;
@@ -612,7 +630,11 @@ export default function EvelynLanderPage() {
     // which makes the arm-vs-arm read this experiment exists for impossible from
     // the event stream alone. handleCta serves BOTH of those arms, so this is the
     // resolved variant, not a literal.
-    trackPH("lander_cta_clicked", { funnel: "evelyn", step: "landing", mechanic });
+    trackPH("lander_cta_clicked", {
+      funnel: "evelyn",
+      step: "landing",
+      mechanic: isThankYou ? "thankyou" : mechanic,
+    });
     try {
       const res = await fetch("/api/evelyn-lander/cta", {
         method: "POST",
@@ -760,6 +782,36 @@ export default function EvelynLanderPage() {
       <div className="min-h-screen relative flex items-center justify-center">
         <CosmicBackground />
         <div className="w-8 h-8 border-2 border-purple-300 border-t-transparent rounded-full animate-spin relative z-10" />
+      </div>
+    );
+  }
+
+  // Thank-you arrival: no mechanic — hand off as soon as /start has recorded the
+  // session (the effect below fires handleCta once). Only an error stops here.
+  if (isThankYou) {
+    return (
+      <div className="min-h-screen relative flex items-center justify-center p-4">
+        <CosmicBackground />
+        <div className="relative z-10 flex flex-col items-center gap-4 text-center max-w-sm">
+          {errorMsg ? (
+            <>
+              <p className="text-purple-100">{errorMsg}</p>
+              <button
+                type="button"
+                onClick={handleCta}
+                data-testid="button-evelyn-ty-retry"
+                className="bg-gradient-to-r from-purple-500 to-indigo-500 text-white font-medium py-3 px-6 rounded-lg"
+              >
+                Continue to Evelyn
+              </button>
+            </>
+          ) : (
+            <>
+              <div className="w-8 h-8 border-2 border-purple-300 border-t-transparent rounded-full animate-spin" />
+              <p className="text-purple-200/80 text-sm">Connecting you with Evelyn…</p>
+            </>
+          )}
+        </div>
       </div>
     );
   }

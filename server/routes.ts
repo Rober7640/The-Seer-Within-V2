@@ -138,6 +138,7 @@ import { collectsPhoneAtCheckout } from "./lib/checkoutPhone";
 import { smsConsentSessionParams, smsConsentSessionMetadata } from "./lib/smsConsent";
 import { addLeadToKit } from "./lib/kit";
 import { resolveLunaTyHandoff } from "./lib/lunaThankyouGift";
+import { isEvelynTyConversation, resolveEvelynTyHandoff } from "./lib/evelynThankyouGift";
 import { addContactToResendAudience } from "./lib/resendAudience";
 import { createSoulmateLanderV2Account } from "./lib/soulmateLanderSignup";
 import { extractClientIp, extractUserAgent } from "./lib/fraudDetection";
@@ -2191,6 +2192,17 @@ export async function registerRoutes(
       const conversation = await getConversationByStripeSession(sessionId);
       if (!conversation || !conversation.email) {
         return res.status(404).json({ error: "Order not found" });
+      }
+      // /fb buyers are handed to Evelyn (15-min gift + reading brief, Joel 2026-10-14);
+      // every other funnel keeps Luna exactly as before. Decided from the server-side
+      // order, never from the client. A response without `persona` means Luna, so an
+      // older cached client keeps working.
+      if (isEvelynTyConversation(conversation.priceVariant)) {
+        const handoff = await resolveEvelynTyHandoff(
+          conversation.email,
+          conversation.firstName ?? null,
+        );
+        return res.json({ ...handoff, persona: "evelyn" });
       }
       const handoff = await resolveLunaTyHandoff(
         conversation.email,
