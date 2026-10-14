@@ -446,6 +446,13 @@ router.post('/upsell/charge', async (req: Request, res: Response) => {
         // Attribution copied off the booking session so payment_intent.succeeded can
         // fire the BE revenue event with the same distinct id + UTM as the booking.
         ...posthogMetaFromStripe(session.metadata),
+        // ⭐ Evelyn VSL (Task 11, spec §7) ONLY: `funnel` is undefined on every other
+        // be_ offer's booking session, so this is a no-op for them. Carried here so
+        // the webhook's payment_intent.succeeded can gate fireStripePurchaseEvent's
+        // resolveStripeEventName on `metadata.funnel === 'evelyn_vsl'` for the U1/U2
+        // charge — without it, this 1-click PI would report `funnel: undefined` and
+        // the Purchase/Upsell/Upsell2 fire would wrongly fall through to null (skipped).
+        ...(session.metadata?.funnel ? { funnel: session.metadata.funnel } : {}),
       },
     });
 
@@ -550,6 +557,9 @@ router.post('/upsell/fallback-checkout', async (req: Request, res: Response) => 
       ...(isDownsell ? { type: 'downsell' } : {}),
       ...(email ? { email } : {}),
       ...(firstName ? { firstName } : {}),
+      // ⭐ Evelyn VSL (Task 11, spec §7) ONLY — see the matching comment in
+      // /upsell/charge above. Undefined on every other be_ offer's booking.
+      ...(booking.metadata?.funnel ? { funnel: booking.metadata.funnel } : {}),
     };
 
     const session = await stripe.checkout.sessions.create({

@@ -126,14 +126,13 @@ export default function OffersUpsell1() {
   // controller ruling, broadening this check would fire a Purchase for every other
   // backend offer and must never happen.
   //
-  // skipServerRelay is NOT set (unlike SoulmateUpsellPage.tsx's Purchase fire):
-  // webhooks.ts's fireStripePurchaseEvent only resolves an event name for V1's
-  // short product names (resolveStripeEventName in server/lib/facebook.ts) — a
-  // `be_` product falls through to its `default: return null` branch and the
-  // call is a deliberate, logged no-op ("Meta/GAds/Trackdesk stay blind by
-  // design" per webhooks.ts's BE comment block). So there is no server-side
-  // CAPI Purchase for this session to dedup against; this browser fire must
-  // relay server-side itself or Meta never sees it at all.
+  // skipServerRelay: true (spec §7's literal instruction, SoulmateUpsellPage.tsx's
+  // idiom) — safe now because server/lib/facebook.ts's resolveStripeEventName was
+  // extended (this task) to resolve `be_soulmate_initials` → Purchase ONLY when
+  // `metadata.funnel === 'evelyn_vsl'` (every other be_ offer still resolves to
+  // null and stays walled off). The webhook's checkout.session.completed handler
+  // fires that CAPI Purchase with the same deterministic `purchase_<sessionId>`
+  // event id this browser fire uses, so the two dedup cleanly.
   //
   // pixelFunnel: 'evelyn' because this page is shared across every be_ offer at
   // ONE url (/offers/upsell/welcome1) — the default path-based pixel lookup
@@ -156,7 +155,7 @@ export default function OffersUpsell1() {
       userData.email,
       "Soulmate Initials Reading",
       sessionId,
-      { pixelFunnel: "evelyn" },
+      { skipServerRelay: true, pixelFunnel: "evelyn" },
     );
   }, [userData, sessionId]);
 
