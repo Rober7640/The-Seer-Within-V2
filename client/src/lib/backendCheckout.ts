@@ -45,6 +45,10 @@ export interface BackendCheckoutRequest {
   /** From the letter's ?c=. Which sales letter she bought from — fulfilment reads it
    *  off Stripe metadata (`c`) to decide which letter's promises the reading owes. */
   letterCode?: string | null;
+  /** Evelyn VSL: stored in intake, kept OUT of Stripe metadata (spec §5). */
+  dateOfBirth?: string | null;
+  stone?: string | null;
+  email?: string | null;
 }
 
 export type BackendCheckoutResult =
@@ -89,6 +93,11 @@ export async function beginBackendCheckout(
         amountCents: req.amountCents ?? undefined,
         firstName: req.firstName ?? undefined,
         letterCode: req.letterCode ?? undefined,
+        // Evelyn VSL intake — sent to OUR server only. Task 5 gates these out of
+        // Stripe metadata (birth date / name must never reach Stripe).
+        ...(req.dateOfBirth ? { dateOfBirth: req.dateOfBirth } : {}),
+        ...(req.stone ? { stone: req.stone } : {}),
+        ...(req.email ? { email: req.email } : {}),
         // The booking-treatment A/B subject, so the purchase attributes back to the
         // arm she saw. Harmless when the test is off (no exposure → not counted).
         expSubject: getBackendVisitorId(),
