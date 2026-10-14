@@ -271,7 +271,7 @@ export function buildEvelynTyGreetingInstruction(brief: EvelynTyBrief, firstName
     ...briefFacts(brief),
     '',
     'RULES:',
-    '- 1-2 short sentences only. No markdown.',
+    '- 1-2 short sentences, under 35 words in total. No markdown.',
     '- Show you remember: name what their reading was about and the block you found, and that their Energy Clearing Ritual is on its way.',
     '- Never mention prices, money paid, orders, or purchases. Name the ritual, not the purchase.',
     '- Do NOT say "welcome", and do not ask them to explain their situation again.',

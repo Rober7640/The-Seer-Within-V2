@@ -57,7 +57,7 @@ test('"specific" bucket reads naturally', () => {
 
 test('greeting is short, names the ritual, never the purchase', () => {
   const g = buildEvelynTyGreetingInstruction(full, 'Mary');
-  assert.match(g, /1-2 short sentences/);
+  assert.match(g, /1-2 short sentences, under 35 words/);
   assert.match(g, /Energy Clearing Ritual is on its way/);
   assert.match(g, /Never mention prices/);
   assert.doesNotMatch(g, /\$\d/);

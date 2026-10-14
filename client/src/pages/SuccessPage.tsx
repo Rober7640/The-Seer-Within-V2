@@ -322,13 +322,23 @@ export default function SuccessPage() {
               isFromLunaThankyouOffer). utm_* params are for ad/analytics only. */}
           <div className="mt-2 mb-6 p-5 rounded-xl bg-gradient-to-br from-purple-600/20 to-indigo-600/20 border border-purple-400/40 text-left">
             <p className="text-purple-100/80 text-sm mb-3">
-              But before you go — there's something the stars want you to know.
+              {tyPersona === "evelyn"
+                ? "But before you go — your reading doesn't have to end here."
+                : "But before you go — there's something the stars want you to know."}
             </p>
-            <p className="text-purple-200/70 text-sm mb-4">
-              A general reading tells you the <em>what</em>. A conversation
-              tells you the <em>why</em>, the <em>when</em>, and the{" "}
-              <em>what now</em>.
-            </p>
+            {tyPersona === "evelyn" ? (
+              <p className="text-purple-200/70 text-sm mb-4">
+                Your reading showed you the <em>what</em>. A conversation with
+                Evelyn tells you the <em>why</em>, the <em>when</em>, and the{" "}
+                <em>what now</em>.
+              </p>
+            ) : (
+              <p className="text-purple-200/70 text-sm mb-4">
+                A general reading tells you the <em>what</em>. A conversation
+                tells you the <em>why</em>, the <em>when</em>, and the{" "}
+                <em>what now</em>.
+              </p>
+            )}
             <div className="flex items-start gap-3 mb-4">
               <MessageCircle className="w-5 h-5 text-purple-300 mt-0.5 flex-shrink-0" />
               {tyPersona === "evelyn" ? (
@@ -405,9 +415,8 @@ export default function SuccessPage() {
             </a>
             <p className="text-purple-200/50 text-xs text-center mt-3">
               {tyPersona === "evelyn"
-                ? "Your 15 free minutes with Evelyn are reserved for the next 24 hours."
-                : "Your 30 free minutes with Luna are reserved for the next 24 hours."}{" "}
-              Verify your email to lock them in.
+                ? "Your 15 free minutes with Evelyn are ready whenever you are."
+                : "Your 30 free minutes with Luna are reserved for the next 24 hours. Verify your email to lock them in."}
             </p>
           </div>
 
