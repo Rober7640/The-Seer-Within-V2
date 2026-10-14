@@ -6,6 +6,7 @@ import {
   isEvelynTyConversation,
   buildEvelynTyBriefSection,
   buildEvelynTyGreetingInstruction,
+  meaningfulAnswer,
   type EvelynTyBrief,
 } from './evelynThankyouGift';
 import { LUNA_TY_FREE_COINS } from './lunaThankyouGift';
@@ -26,7 +27,7 @@ test('only /fb orders go to Evelyn', () => {
 const full: EvelynTyBrief = {
   firstName: 'Mary',
   bucket: 'love',
-  subBucket: null,
+  concern: 'he never has time for me anymore',
   personName: 'David',
   blockSource: 'my mother never let me speak up',
 };
@@ -38,13 +39,14 @@ test('brief carries the ~4 facts + the ritual, and no prices', () => {
   assert.match(s, /David/);
   assert.match(s, /my mother never let me speak up/);
   assert.match(s, /Energy Clearing Ritual/);
+  assert.match(s, /he never has time for me anymore/);
   assert.doesNotMatch(s, /\$\d/);
   assert.match(s, /Never mention prices/);
   assert.match(s, /^<recent_reading>[\s\S]*<\/recent_reading>$/);
 });
 
 test('missing optional facts are simply left out', () => {
-  const s = buildEvelynTyBriefSection({ firstName: null, bucket: 'money', subBucket: null, personName: null, blockSource: null });
+  const s = buildEvelynTyBriefSection({ firstName: null, bucket: 'money', concern: null, personName: null, blockSource: null });
   assert.doesNotMatch(s, /First name/);
   assert.doesNotMatch(s, /The person in their reading/);
   assert.match(s, /about: money/);
@@ -58,7 +60,25 @@ test('"specific" bucket reads naturally', () => {
 test('greeting is short, names the ritual, never the purchase', () => {
   const g = buildEvelynTyGreetingInstruction(full, 'Mary');
   assert.match(g, /1-2 short sentences, under 35 words/);
-  assert.match(g, /Energy Clearing Ritual is on its way/);
+  assert.match(g, /doing their Energy Clearing Ritual for them/);
   assert.match(g, /Never mention prices/);
   assert.doesNotMatch(g, /\$\d/);
+});
+
+test('junk block answers ("No", one-word) are dropped, real ones kept', () => {
+  for (const v of ['No', 'no.', 'Yes', 'idk', 'not sure', '', null]) assert.equal(meaningfulAnswer(v as any), null, String(v));
+  assert.equal(meaningfulAnswer('my father always criticised me'), 'my father always criticised me');
+  const s = buildEvelynTyBriefSection({ ...full, blockSource: meaningfulAnswer('No') });
+  assert.doesNotMatch(s, /"No"/);
+  assert.match(s, /energetic block/);
+});
+
+test('ritual is described exactly as the funnel sells it — performed by Evelyn, written reading by email, nothing physical', () => {
+  const s = buildEvelynTyBriefSection(full);
+  assert.match(s, /YOU perform the ritual for them yourself/);
+  assert.match(s, /2-3 hours of focused work/);
+  assert.match(s, /written reading by email \(5-7 pages\)/);
+  assert.match(s, /Within 24 hours/);
+  assert.match(s, /nothing for them to light, burn/);
+  assert.doesNotMatch(s, /on its way/);
 });
