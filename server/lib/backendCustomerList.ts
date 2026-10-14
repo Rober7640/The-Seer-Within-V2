@@ -179,6 +179,16 @@ export const BACKEND_OFFERS: Record<BackendOfferKey, BackendOfferListing> = {
     initialListId: '6972552',
     bumpListId: '6972554',
   },
+  'soulmate-initials': {
+    number: '10',
+    name: 'Soulmate Initials Reading',
+    tag: 'be-10-soulmate-initials',
+    bumpTag: 'be-10-bump',
+    deliveredTag: 'be-10-delivered',
+    // Operator open item (Job B setup, spec §4): the per-product AWeber list + Campaigns are
+    // created by hand later. Until then initialListId is UNSET → falls back to
+    // AWEBER_BE_CUSTOMER_LIST_ID (the pre-per-product model). Tags follow the be-10-* convention.
+  },
 };
 
 /** Tags to apply at the moment she pays. */
