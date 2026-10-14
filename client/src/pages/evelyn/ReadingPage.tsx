@@ -2,7 +2,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'wouter';
 import { VslVideoPlayer } from '@/components/evelyn/VslVideoPlayer';
 import { STONES, stoneLabel, isStone, WELCOME_STONES_LIVE_AT, type StoneKey } from '@shared/evelynVsl';
-import { track as trackPH } from '@/lib/posthog';
+import { track as trackPH, getDistinctId } from '@/lib/posthog';
+import { trackViewContent } from '@/lib/facebook';
 
 const STORAGE_KEY = 'evelyn_vsl_v1';
 
@@ -39,7 +40,9 @@ function saveVslState(state: VslState) {
 /**
  * /evelyn/reading — the two-video VSL: welcome (stone pick) -> pitch (CTA).
  * Returning visitors with a saved stone skip straight to the pitch, resumed at their
- * last saved position. PostHog events only (vsl_*) — Meta pixel wiring is Task 11's job.
+ * last saved position. PostHog events (vsl_*) plus a Meta ViewContent fire when the
+ * pitch video begins (Task 11, spec §7) — deduped via sessionStorage so a re-render
+ * or a return visit within the same tab never double-fires it.
  */
 export default function ReadingPage() {
   // Read localStorage once; a fresh pick later updates `stone` via setState, not this.
@@ -56,12 +59,21 @@ export default function ReadingPage() {
 
   const phase: 'welcome' | 'pitch' = stone ? 'pitch' : 'welcome';
 
-  // vsl_view fires once the pitch starts — either a return visit (stone already known on
-  // mount) or right after a fresh pick swaps the page into the pitch player.
+  // vsl_view + Meta ViewContent fire once the pitch starts — either a return visit
+  // (stone already known on mount) or right after a fresh pick swaps the page into
+  // the pitch player. ViewContent is deduped via sessionStorage (not just the ref)
+  // so it still fires exactly once across a reload/return within the same tab,
+  // matching the SoulmateUpsellPage.tsx dedup idiom.
   useEffect(() => {
     if (phase === 'pitch' && stone && !pitchViewFiredRef.current) {
       pitchViewFiredRef.current = true;
       trackPH('vsl_view', { stone });
+
+      const dedupKey = 'evelyn_viewcontent_fired';
+      if (typeof window !== 'undefined' && !window.sessionStorage.getItem(dedupKey)) {
+        window.sessionStorage.setItem(dedupKey, '1');
+        trackViewContent('Soulmate Initials Reading', undefined, getDistinctId());
+      }
     }
   }, [phase, stone]);
 

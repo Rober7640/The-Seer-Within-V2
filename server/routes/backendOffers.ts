@@ -10,6 +10,8 @@ import {
   priceBackendOffer,
   resolveBackendCharge,
   upsellChargeFields,
+  SOULMATE_INITIALS_PRICE_CENTS,
+  SOULMATE_INITIALS_BUMP_CENTS,
   type BackendOffer,
   type BookingTreatment,
 } from '@shared/backendOffers';
@@ -290,6 +292,17 @@ router.get('/upsell/user-data', async (req: Request, res: Response) => {
         session.metadata?.email ||
         null,
       offer: session.metadata?.offer ?? null,
+      // ⭐ Evelyn VSL (Task 11, spec §7): the ONLY `funnel` value any booking session
+      // metadata carries today (set at checkout — see the `piiOutOfStripe` branch
+      // above). Surfaced here, additively, so the shared upsell page can gate its
+      // Meta Purchase fire to this one funnel without broadening to every be_
+      // offer. `null` for every other offer, which never set this key.
+      funnel: session.metadata?.funnel ?? null,
+      // Evelyn VSL's main-reading price + optional stone bump, for that same gated
+      // Purchase fire. Both are fixed catalog constants, not session-derived, so
+      // they are safe to return even when `funnel` is null (unused by the caller).
+      mainPriceCents: SOULMATE_INITIALS_PRICE_CENTS,
+      bumpAmountCents: session.metadata?.bump === '1' ? SOULMATE_INITIALS_BUMP_CENTS : 0,
       // 02 collects no bucket / person — the twin-flame upsell copy needs neither.
       bucket: null,
       personName: null,
