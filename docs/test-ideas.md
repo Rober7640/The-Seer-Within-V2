@@ -2179,3 +2179,54 @@ Not covered — needs a live walk on DEV (test card):
 - [ ] Downsell ($25) checkout on `/fb-read` shows it too
 - [ ] Webhook retry (resend the event from Stripe) does NOT add a second row or change the first
 - [ ] Terms + Privacy links in the disclosure open the pages with the new SMS sections
+
+## Evelyn video funnel (Job A) — `/evelyn/reading` → `/evelyn/checkout` → U1/U2 → thank-you (2026-10-14)
+
+Spec: `docs/superpowers/specs/2026-10-12-evelyn-video-funnel-design.md` §10. Covered by
+`tests/evelyn-vsl-funnel.spec.ts` (run with `npx playwright test --config playwright.evelyn-vsl.config.ts`
+against the dev server on `PORT=5008`, not the default `playwright.config.ts`, which auto-starts a
+server on port 5000 — the macOS AirPlay Receiver port).
+
+Covered (client-side legs, real browser, no network/DB/Stripe — ran green on 2026-10-14):
+
+- [x] Stone tap zones are inert (not aria-buttons, `data-live=false`) before 48.6s; a click on a zone falls through to play/pause instead of picking a stone
+- [x] Stone tap zones go live at 48.6s (`data-live=true`, real `aria-label="Pick …"`)
+- [x] Tapping each of the three stone zones (rose quartz, jade, garnet) after 48.6s swaps the welcome video for the pitch video and persists the pick to `localStorage`
+- [x] Backup stone buttons are visible at 48.6s and each one picks the correct stone
+- [x] A welcome-video `error` event shows the backup buttons immediately, without waiting for 48.6s
+- [x] The pitch CTA is absent before 368.2s and appears once the pitch video crosses that timestamp, with "$19" in the link
+- [x] The CTA, once shown, persists across a reload (localStorage `ctaShown`)
+- [x] A pitch-video `error` event shows the CTA immediately, even before 368.2s
+- [x] `/evelyn/checkout?stone=<rose-quartz|jade|garnet>` shows the matching add-on label in the order-bump checkbox for all three stones
+- [x] No stone in the query string or localStorage → the add-on checkbox says "your stone"
+- [x] No `?stone=` query, but a stone was picked earlier on `/evelyn/reading` → checkout falls back to the localStorage pick (not "your stone")
+- [x] Birth-date field refuses an invalid calendar date (Feb 30) with an inline error
+- [x] Birth-date field refuses an under-18 date of birth with the age-gate message
+- [x] A valid 18+ date of birth passes validation with no inline field errors
+- [x] V1 `/welcome1` and `/welcome2` still load without a 500 or a Vite error overlay (regression — read-only, no behavior change)
+- [x] Another backend offer's booking page (`/offers/heart-cleanser`, 09) still renders (regression)
+- [x] `vsl_view`/`ViewContent` dedup key fires exactly once per fresh stone pick and stays set across a reload (no double-fire)
+- [x] `vsl_cta_shown` / the CTA block renders exactly once even when the pitch is seeked back and forward across 368.2s repeatedly
+- [x] `checkout_view` posts to PostHog's capture endpoint at most once per `/evelyn/checkout` load
+
+Covered (full purchase leg, needs `BACKEND_CHECKOUT_TEST_MODE=true` + a Stripe `sk_test_` key +
+`DATABASE_URL` + outbound network to `checkout.stripe.com`/`api.stripe.com` — all present in this
+environment; ran green on 2026-10-14, ~makes a real Stripe TEST-mode charge):
+
+- [x] Buy the $19 Soulmate Initials Reading with the order bump ticked → Stripe TEST-mode hosted Checkout → accept U1 (Protection Ritual) → decline U2 (Manifestation Bracelet) and its downsell → land on `/evelyn/thank-you` with the buyer's first name in the headline
+- [x] `be_orders` row for the session has `offer = 'soulmate-initials'` and `bump_purchased = true`
+- [x] `be_order_intake` row for the session carries `first_name`, `date_of_birth`, and the chosen `stone`
+- [x] Stripe checkout session metadata has NO `firstName` / `dateOfBirth` keys, but DOES have `funnel = 'evelyn_vsl'`, `stone`, and `bump = '1'`
+
+## Refund policy — Soulmate Initials Reading 60-day money-back guarantee (2026-10-14)
+
+`/refund` previously said 30 days on unused purchased minutes only, which contradicted the VSL's
+60-day guarantee claim (spec §9). Added a "2A. Soulmate Initials Reading — 60-Day Money-Back
+Guarantee" section to `client/src/pages/RefundPage.tsx`, scoped to that offer only (reading minutes
+bought elsewhere on the platform stay on the existing 30-day goodwill rule).
+
+Not covered — needs a live walk or a future Playwright pass:
+
+- [ ] `/refund` page visually reads correctly on mobile (320–390px) with both the 30-day and 60-day sections present and not visually merged
+- [ ] A real refund request inside 60 days for the Soulmate Initials Reading is honored by the operator process (manual, not code-enforced)
+- [ ] A real refund request after 60 days for the Soulmate Initials Reading is declined per policy text

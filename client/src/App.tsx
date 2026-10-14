@@ -168,6 +168,10 @@ function Router() {
       location.startsWith('/gdn') ||
       location === '/aiden' ||
       location === '/evelyn' ||
+      // Evelyn video funnel (Job A) — /evelyn/reading, /evelyn/checkout,
+      // /evelyn/thank-you. The exact-match '/evelyn' above is the lander only;
+      // without this the three VSL pages fire no Meta PageView at all.
+      location.startsWith('/evelyn/') ||
       location === '/marcus' ||
       location === '/luna' ||
       location === '/nova' ||
