@@ -48,6 +48,15 @@ const AidenQuizPage = lazyWithRetry(() => import("@/pages/AidenQuizPage"));
 const EvelynLanderPage = lazyWithRetry(() => import("@/pages/EvelynLanderPage"));
 const PersonaLanderPage = lazyWithRetry(() => import("@/pages/PersonaLanderPage"));
 
+// Evelyn video funnel (Job A) — /evelyn/reading → /evelyn/checkout → U1/U2 →
+// /evelyn/thank-you. Registered BEFORE the exact-match "/evelyn" lander route
+// below so these more specific paths are unambiguous (wouter matches "/evelyn"
+// exactly, not as a prefix, so there is no real collision either way — but the
+// brief asks for this ordering explicitly).
+const EvelynReadingPage = lazyWithRetry(() => import("@/pages/evelyn/ReadingPage"));
+const EvelynCheckoutPage = lazyWithRetry(() => import("@/pages/evelyn/CheckoutPage"));
+const EvelynThankYouPage = lazyWithRetry(() => import("@/pages/evelyn/ThankYouPage"));
+
 // DEV-only paywall design preview (Problem 4). Gated below by import.meta.env.DEV
 // so it is excluded from the production bundle.
 const PaywallPreviewPage = lazyWithRetry(() => import("@/pages/PaywallPreviewPage"));
@@ -309,6 +318,13 @@ function Router() {
         <Route path="/home" component={HomePage} />
         <Route path="/products/:slug" component={ProductPage} />
         <Route path="/order/success" component={OrderSuccessPage} />
+
+        {/* Evelyn video funnel (Job A) — registered BEFORE "/evelyn" (the lander,
+            just below) so the specific paths win. See spec §2 / the lazy-import
+            comment above for why this ordering is asked for explicitly. */}
+        <Route path="/evelyn/reading" component={EvelynReadingPage} />
+        <Route path="/evelyn/checkout" component={EvelynCheckoutPage} />
+        <Route path="/evelyn/thank-you" component={EvelynThankYouPage} />
 
         {/* Persona-specific landers (no layout wrapper) */}
         <Route path="/aiden" component={AidenQuizPage} />

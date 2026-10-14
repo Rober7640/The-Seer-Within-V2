@@ -22,6 +22,7 @@ import type { BackendOfferKey } from "@shared/backendOffers";
 import { JUDGEMENT_UPSELL1, JUDGEMENT_UPSELL2 } from "./upsellCopy/judgement";
 import { PIXIU_UPSELL1, PIXIU_UPSELL2 } from "./upsellCopy/pixiu";
 import { HEART_CLEANSER_UPSELL1, HEART_CLEANSER_UPSELL2 } from "./upsellCopy/heartCleanser";
+import { SOULMATE_INITIALS_UPSELL1, SOULMATE_INITIALS_UPSELL2 } from "./upsellCopy/soulmateInitials";
 
 interface BackendOfferCopy {
   upsell1: Upsell1Copy;
@@ -62,6 +63,7 @@ export const BACKEND_UPSELL_PITCH: Partial<Record<BackendOfferKey, BackendOfferC
   'judgement-day': { upsell1: JUDGEMENT_UPSELL1, upsell2: JUDGEMENT_UPSELL2 },
   'pixiu-bracelet': { upsell1: PIXIU_UPSELL1, upsell2: PIXIU_UPSELL2 },
   'heart-cleanser': { upsell1: HEART_CLEANSER_UPSELL1, upsell2: HEART_CLEANSER_UPSELL2 },
+  'soulmate-initials': { upsell1: SOULMATE_INITIALS_UPSELL1, upsell2: SOULMATE_INITIALS_UPSELL2 },
 };
 
 export function upsell1CopyForOffer(offer: BackendOfferKey): Upsell1Copy {
