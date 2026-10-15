@@ -69,20 +69,28 @@ export function buildReadingHtml(input: ReadingHtmlInput): string {
 <meta charset="utf-8"/>
 <title>${esc(firstName)}'s Soulmate Initials Reading</title>
 <style>
-  @page { size: A4; margin: 22mm 13mm; }
+  @page { size: A4; margin: 24mm; }
   * { box-sizing: border-box; }
-  html, body { margin: 0; padding: 0; }
+  html { margin: 0; padding: 0; background: #ffffff; }
   body {
+    margin: 0; padding: 0;
     font-family: Georgia, 'Times New Roman', serif;
-    color: #2b2240; background: #fbf7f0;
+    color: #2b2240; background: transparent;
     font-size: 12.5pt; line-height: 1.7;
-    padding: 0 15mm;
+  }
+  /* The cream page itself — a fixed panel inset from the text box so it extends
+     past the text on every side, repeating on every printed page. @page's 24mm
+     margin insets the text; this panel reaches back out to a 9mm white border,
+     leaving an even ~15mm cream margin around the text on all four sides. */
+  .page-bg {
+    position: fixed; top: -15mm; left: -15mm; right: -15mm; bottom: -15mm;
+    background: #fbf7f0; border-radius: 4px; z-index: -1;
   }
   p { margin: 0 0 0.9em; text-align: justify; hyphens: auto; }
   h1, h2 { font-weight: normal; letter-spacing: 0.02em; }
 
   .cover {
-    height: 253mm; display: flex; flex-direction: column;
+    min-height: 242mm; display: flex; flex-direction: column;
     align-items: center; justify-content: center; text-align: center;
     page-break-after: always;
   }
@@ -120,6 +128,7 @@ export function buildReadingHtml(input: ReadingHtmlInput): string {
 </style>
 </head>
 <body>
+  <div class="page-bg"></div>
   <div class="cover">
     <div class="mark">The Seer Within</div>
     <h1>Soulmate Initials</h1>
