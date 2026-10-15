@@ -69,28 +69,22 @@ export function buildReadingHtml(input: ReadingHtmlInput): string {
 <meta charset="utf-8"/>
 <title>${esc(firstName)}'s Soulmate Initials Reading</title>
 <style>
-  @page { size: A4; margin: 28mm; }
+  @page { size: A4; margin: 24mm; }
   * { box-sizing: border-box; }
   html { margin: 0; padding: 0; background: #ffffff; }
   body {
     margin: 0; padding: 0;
     font-family: Georgia, 'Times New Roman', serif;
-    color: #2b2240; background: transparent;
+    color: #2b2240; background: #ffffff;
     font-size: 12.5pt; line-height: 1.7;
-  }
-  /* The cream page — a fixed panel whose edge sits 13mm from the paper (the
-     same left/right framing already approved), while @page's 28mm margin insets
-     the text. The result: an even 15mm cream margin around the text on all four
-     sides, repeating on every printed page. */
-  .page-bg {
-    position: fixed; top: -15mm; left: -15mm; right: -15mm; bottom: -15mm;
-    background: #fbf7f0; z-index: -1;
   }
   p { margin: 0 0 0.9em; text-align: justify; hyphens: auto; }
   h1, h2 { font-weight: normal; letter-spacing: 0.02em; }
 
   .cover {
-    min-height: 234mm; display: flex; flex-direction: column;
+    /* The one cream page: a framed panel filling the cover's content box, with
+       the @page margin as its white border. Content pages stay plain white. */
+    min-height: 244mm; background: #fbf7f0; display: flex; flex-direction: column;
     align-items: center; justify-content: center; text-align: center;
     page-break-after: always;
   }
@@ -128,7 +122,6 @@ export function buildReadingHtml(input: ReadingHtmlInput): string {
 </style>
 </head>
 <body>
-  <div class="page-bg"></div>
   <div class="cover">
     <div class="mark">The Seer Within</div>
     <h1>Soulmate Initials</h1>
