@@ -69,7 +69,7 @@ export function buildReadingHtml(input: ReadingHtmlInput): string {
 <meta charset="utf-8"/>
 <title>${esc(firstName)}'s Soulmate Initials Reading</title>
 <style>
-  @page { size: A4; margin: 24mm; }
+  @page { size: A4; margin: 28mm; }
   * { box-sizing: border-box; }
   html { margin: 0; padding: 0; background: #ffffff; }
   body {
@@ -78,19 +78,19 @@ export function buildReadingHtml(input: ReadingHtmlInput): string {
     color: #2b2240; background: transparent;
     font-size: 12.5pt; line-height: 1.7;
   }
-  /* The cream page itself — a fixed panel inset from the text box so it extends
-     past the text on every side, repeating on every printed page. @page's 24mm
-     margin insets the text; this panel reaches back out to a 9mm white border,
-     leaving an even ~15mm cream margin around the text on all four sides. */
+  /* The cream page — a fixed panel whose edge sits 13mm from the paper (the
+     same left/right framing already approved), while @page's 28mm margin insets
+     the text. The result: an even 15mm cream margin around the text on all four
+     sides, repeating on every printed page. */
   .page-bg {
     position: fixed; top: -15mm; left: -15mm; right: -15mm; bottom: -15mm;
-    background: #fbf7f0; border-radius: 4px; z-index: -1;
+    background: #fbf7f0; z-index: -1;
   }
   p { margin: 0 0 0.9em; text-align: justify; hyphens: auto; }
   h1, h2 { font-weight: normal; letter-spacing: 0.02em; }
 
   .cover {
-    min-height: 242mm; display: flex; flex-direction: column;
+    min-height: 234mm; display: flex; flex-direction: column;
     align-items: center; justify-content: center; text-align: center;
     page-break-after: always;
   }
