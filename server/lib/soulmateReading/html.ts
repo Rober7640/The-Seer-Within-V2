@@ -69,13 +69,14 @@ export function buildReadingHtml(input: ReadingHtmlInput): string {
 <meta charset="utf-8"/>
 <title>${esc(firstName)}'s Soulmate Initials Reading</title>
 <style>
-  @page { size: A4; margin: 22mm 20mm; }
+  @page { size: A4; margin: 22mm 13mm; }
   * { box-sizing: border-box; }
   html, body { margin: 0; padding: 0; }
   body {
     font-family: Georgia, 'Times New Roman', serif;
     color: #2b2240; background: #fbf7f0;
     font-size: 12.5pt; line-height: 1.7;
+    padding: 0 15mm;
   }
   p { margin: 0 0 0.9em; text-align: justify; hyphens: auto; }
   h1, h2 { font-weight: normal; letter-spacing: 0.02em; }
