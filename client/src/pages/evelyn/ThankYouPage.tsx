@@ -51,6 +51,22 @@ function readStoredStone(): string | null {
   }
 }
 
+// Same fallback precedent as the stone above: CheckoutPage stashes the
+// validated first name into this same blob right before checkout (spec §6)
+// so this page can greet by name even when the fulfilment lookup 401s in
+// the browser and `?s=` yields nothing — the common path. Tolerant of a
+// missing/malformed value, same as every other reader of this key.
+function readStoredFirstName(): string | null {
+  try {
+    const raw = window.localStorage.getItem(STORAGE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    return typeof parsed?.firstName === "string" ? parsed.firstName : null;
+  } catch {
+    return null;
+  }
+}
+
 /**
  * Best-effort lookup. `GET /api/be/soulmate-initials/fulfilment/:sessionId` is
  * n8n's door (shared-secret auth) — a browser call to it will 401, and that is
@@ -103,7 +119,12 @@ export default function ThankYouPage() {
   }, [searchString]);
 
   const known = displayName(details?.firstName, PLACEHOLDER_NAMES);
-  const firstName = known || "dear";
+  // Session/fulfilment lookup first; then the name CheckoutPage stashed
+  // client-side before this page ever had a session to look up; "dear" only
+  // if neither resolved anything (spec §6).
+  const storedFirstName = readStoredFirstName();
+  const fallbackKnown = displayName(storedFirstName, PLACEHOLDER_NAMES);
+  const firstName = known || fallbackKnown || "dear";
 
   // Stone: the fulfilment lookup wins when it resolved one; otherwise fall back
   // to the pick she made on /evelyn/reading (spec requirement — "Fall back to

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link } from 'wouter';
-import { stoneLabel, isStone, DELIVERY_PROMISE, type StoneKey } from '@shared/evelynVsl';
+import { stoneLabel, DELIVERY_PROMISE, type StoneKey } from '@shared/evelynVsl';
+import { SOULMATE_INITIALS_PRICE_CENTS, SOULMATE_INITIALS_BUMP_CENTS } from '@shared/backendOffers';
 import { beginBackendCheckout } from '@/lib/backendCheckout';
 import { trackInitiateCheckout } from '@/lib/facebook';
 import { track as trackPH } from '@/lib/posthog';
@@ -8,8 +9,6 @@ import { resolveStone, validateIntake } from './checkoutIntake';
 
 const STORAGE_KEY = 'evelyn_vsl_v1';
 const SUPPORT_EMAIL = 'hi@theseerwithin.com';
-const BASE_PRICE_CENTS = 1900;
-const BUMP_CENTS = 1111;
 
 // Reviews are hidden until real ones exist (spec §4 item 6) — an empty array
 // means the block below renders nothing, not a placeholder.
@@ -63,6 +62,33 @@ function readStoredStone(): string | null {
 }
 
 /**
+ * Stash the validated first name into the same `evelyn_vsl_v1` blob the stone
+ * pick already lives in (spec §6) — ThankYouPage's fulfilment lookup 401s in
+ * the browser (n8n's Bearer-gated door) and the `?s=` lookup usually yields
+ * nothing, so this is the fallback that lets the thank-you page greet by name
+ * on the common path instead of falling all the way back to "dear". Merges
+ * onto the existing object so `stone`/`ctaShown`/`pitchPos`/etc. survive;
+ * tolerant of a missing or malformed existing value, like the readers above.
+ */
+function storeFirstName(firstName: string): void {
+  try {
+    const raw = window.localStorage.getItem(STORAGE_KEY);
+    let existing: Record<string, unknown> = {};
+    if (raw) {
+      try {
+        const parsed = JSON.parse(raw);
+        if (parsed && typeof parsed === 'object') existing = parsed;
+      } catch {
+        existing = {};
+      }
+    }
+    window.localStorage.setItem(STORAGE_KEY, JSON.stringify({ ...existing, firstName }));
+  } catch {
+    // localStorage unavailable (private mode, quota, etc.) — non-fatal.
+  }
+}
+
+/**
  * /evelyn/checkout — the Soulmate Initials Reading sales page + intake pop-up
  * (spec §4). Mia's structure, our words: no countdown, no pre-ticked add-on,
  * no subscription language, "cards" never "tarot".
@@ -72,7 +98,7 @@ export default function CheckoutPage() {
     () => resolveStone(readQueryStone(), readStoredStone()),
     [],
   );
-  const stoneAddOnLabel = isStone(stone) ? stoneLabel(stone) : 'your stone';
+  const stoneAddOnLabel = stoneLabel(stone);
 
   const [showStickyBar, setShowStickyBar] = useState(false);
   const [popupOpen, setPopupOpen] = useState(false);
@@ -128,8 +154,9 @@ export default function CheckoutPage() {
       setFieldError(null);
       setSubmitError(null);
       setBusy(true);
+      storeFirstName(firstName);
 
-      const priceCents = bump ? BASE_PRICE_CENTS + BUMP_CENTS : BASE_PRICE_CENTS;
+      const priceCents = bump ? SOULMATE_INITIALS_PRICE_CENTS + SOULMATE_INITIALS_BUMP_CENTS : SOULMATE_INITIALS_PRICE_CENTS;
       trackPH('checkout_initiated', { price_cents: priceCents, bump });
       trackInitiateCheckout(priceCents / 100, 'USD', 'Soulmate Initials Reading');
 

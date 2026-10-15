@@ -249,7 +249,10 @@ const FB_PRODUCT_NAMES: Record<string, string> = {
   be_bracelet: 'Manifestation Bracelet',
 };
 
-function resolveStripeEventName(
+// Exported for the money-wall unit test (resolveStripeEventName.test.ts) only —
+// every call site inside this module keeps calling it the same way. No logic
+// changed, just visibility, so that regression test can import it directly.
+export function resolveStripeEventName(
   product: string,
   funnel?: string,
 ): 'Purchase' | 'Upsell' | 'Upsell2' | null {
