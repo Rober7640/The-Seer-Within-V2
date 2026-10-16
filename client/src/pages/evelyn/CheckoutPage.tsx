@@ -5,15 +5,17 @@ import { SOULMATE_INITIALS_PRICE_CENTS, SOULMATE_INITIALS_BUMP_CENTS } from '@sh
 import { beginBackendCheckout } from '@/lib/backendCheckout';
 import { trackInitiateCheckout } from '@/lib/facebook';
 import { track as trackBase } from '@/lib/posthog';
+import { backendOfferFunnel } from '@/lib/funnel';
 import { resolveStone, validateIntake } from './checkoutIntake';
 
 const STORAGE_KEY = 'evelyn_vsl_v1';
 const SUPPORT_EMAIL = 'hi@theseerwithin.com';
 
-// Tag every checkout event funnel=evelynvsl so it groups with the VSL + purchase
-// events in PostHog (see backendPurchaseAnalytics for the server-side value).
+// Same shared helper the other BE offers use, so these events group under one funnel
+// name across client + server (backendPurchaseAnalytics).
+const EVELYN_FUNNEL = backendOfferFunnel('soulmate-initials');
 const trackPH = (event: string, props: Record<string, unknown> = {}) =>
-  trackBase(event, { ...props, funnel: 'evelynvsl' });
+  trackBase(event, { ...props, funnel: EVELYN_FUNNEL });
 
 // Reviews are hidden until real ones exist (spec §4 item 6) — an empty array
 // means the block below renders nothing, not a placeholder.
@@ -162,7 +164,12 @@ export default function CheckoutPage() {
       storeFirstName(firstName);
 
       const priceCents = bump ? SOULMATE_INITIALS_PRICE_CENTS + SOULMATE_INITIALS_BUMP_CENTS : SOULMATE_INITIALS_PRICE_CENTS;
-      trackPH('checkout_initiated', { price_cents: priceCents, bump });
+      trackPH('checkout_initiated', {
+        step: 'sales',
+        product: 'be_soulmate_initials',
+        price_cents: priceCents,
+        bump,
+      });
       trackInitiateCheckout(priceCents / 100, 'USD', 'Soulmate Initials Reading');
 
       const outcome = await beginBackendCheckout({
