@@ -401,7 +401,11 @@ export function getPostHogStep(pathname?: string): string {
       return "booking"; // "" or "/<editionId>"
     }
     case "evelyn":
-      return "landing";
+      if (p === "/evelyn/reading") return "reading";
+      if (p === "/evelyn/checkout") return "checkout";
+      if (p === "/evelyn/thank-you") return "thank_you";
+      if (p === "/evelyn") return "landing";
+      return "unknown";
     case "aiden":
       return "landing";
     case "marcus":

@@ -241,12 +241,37 @@ const FB_PRODUCT_NAMES: Record<string, string> = {
   soulmate_sketch: 'Soulmate Sketch',
   soulmate_bracelet: 'Soulmate Bracelet',
   soulmate_love_tuner: 'Soulmate Love Tuner',
+  // Evelyn VSL (Task 11, spec §7) — `be_` keys, unlike every row above. Reached
+  // ONLY via the `metadata.funnel === 'evelyn_vsl'` gate below; every other be_
+  // product still resolves to `default: null` and stays walled off from Meta.
+  be_soulmate_initials: 'Soulmate Initials Reading',
+  be_protection_ritual: 'Protection Ritual + Volcanic Stone',
+  be_bracelet: 'Manifestation Bracelet',
 };
 
-function resolveStripeEventName(
+// Exported for the money-wall unit test (resolveStripeEventName.test.ts) only —
+// every call site inside this module keeps calling it the same way. No logic
+// changed, just visibility, so that regression test can import it directly.
+export function resolveStripeEventName(
   product: string,
   funnel?: string,
 ): 'Purchase' | 'Upsell' | 'Upsell2' | null {
+  // ⛔ Evelyn VSL ONLY. `be_` is the backend deck's product prefix — every other
+  // be_ offer (02, 03, 06, 07, 08, 09) has no `metadata.funnel` key at all, so
+  // this branch is unreachable for them. Spec §7: "add ONLY this funnel's
+  // products (be_soulmate_initials, its bump, and U1/U2 when metadata.funnel =
+  // evelyn_vsl)". Do NOT widen this gate to `product.startsWith('be_')` alone —
+  // that would fire a Meta Purchase for every other backend offer at once.
+  if (funnel === 'evelyn_vsl') {
+    switch (product) {
+      case 'be_soulmate_initials':
+        return 'Purchase';
+      case 'be_protection_ritual':
+        return 'Upsell';
+      case 'be_bracelet':
+        return 'Upsell2';
+    }
+  }
   switch (product) {
     case 'energy_clearing_ritual':
       return 'Purchase';
@@ -272,10 +297,11 @@ function makeStripeEventId(
 ): string {
   if (eventName === 'Purchase') return `purchase_${mainSessionId}`;
   if (eventName === 'Upsell2') return `upsell2_${mainSessionId}`;
-  // Upsell — disambiguate U1 (protection_ritual), U2 (manifestation_bracelet on
-  // V1), and SM (soulmate_bracelet) since they share event_name.
+  // Upsell — disambiguate U1 (protection_ritual / be_protection_ritual),
+  // U2 (manifestation_bracelet on V1), and SM (soulmate_bracelet) since they
+  // share event_name.
   const suffix =
-    product === 'protection_ritual' ? 'u1'
+    product === 'protection_ritual' || product === 'be_protection_ritual' ? 'u1'
     : product === 'soulmate_bracelet' ? 'sm'
     : 'u2';
   return `upsell_${suffix}_${mainSessionId}`;
@@ -297,6 +323,15 @@ function eventSourceUrlForStripeEvent(product: string, funnel?: string): string 
       return `${baseUrl}/soulmate/gift2`;
     case 'soulmate_love_tuner':
       return `${baseUrl}/soulmate/thank-you`;
+    // Evelyn VSL (Task 11, spec §7) — so an `/evelyn`-contains sGTM trigger can
+    // route these CAPI events to the Evelyn pixel once the operator sets one up
+    // (see shared/fbPixelConfig.ts's TODO). Reached only via the funnel==='evelyn_vsl'
+    // gate in resolveStripeEventName — no other be_ offer hits these cases.
+    case 'be_soulmate_initials':
+      return `${baseUrl}/evelyn/checkout`;
+    case 'be_protection_ritual':
+    case 'be_bracelet':
+      return `${baseUrl}/offers/upsell/welcome1`;
     default:
       return `${baseUrl}${prefix}/`;
   }

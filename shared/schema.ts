@@ -2036,6 +2036,12 @@ export const beOrderIntake = pgTable("be_order_intake", {
   /** Took the '+ 12-hour delivery' bump at booking. Restores her choice on a Stripe cancel. */
   speedBump: boolean("speed_bump").notNull().default(false),
 
+  // ── Evelyn VSL (soulmate-initials): written by POST /checkout before Stripe. Kept out of
+  // Stripe metadata (spec §5); fulfilment (Job B) reads them from here. ──
+  stone: text("stone"),
+  firstName: text("first_name"),
+  email: text("email"),
+
   createdAt: timestamp("created_at").defaultNow().notNull(),
 }, (table) => [
   // The sweep's query: find abandoned intake older than N days.

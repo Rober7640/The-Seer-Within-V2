@@ -46,6 +46,10 @@ export interface BackendCheckoutRequest {
   /** From the letter's ?c=. Which sales letter she bought from — fulfilment reads it
    *  off Stripe metadata (`c`) to decide which letter's promises the reading owes. */
   letterCode?: string | null;
+  /** Evelyn VSL: stored in intake, kept OUT of Stripe metadata (spec §5). */
+  dateOfBirth?: string | null;
+  stone?: string | null;
+  email?: string | null;
   /** PRICE-TESTED offers only (04): the split-test ARM the screen PRINTED ('A' / 'B'), never a
    *  price. The server re-resolves her arm and charges that; a mismatch is a 409 price_changed. */
   quotedArm?: string | null;
@@ -99,6 +103,11 @@ export async function beginBackendCheckout(
         amountCents: req.amountCents ?? undefined,
         firstName: req.firstName ?? undefined,
         letterCode: req.letterCode ?? undefined,
+        // Evelyn VSL intake — sent to OUR server only. Task 5 gates these out of
+        // Stripe metadata (birth date / name must never reach Stripe).
+        ...(req.dateOfBirth ? { dateOfBirth: req.dateOfBirth } : {}),
+        ...(req.stone ? { stone: req.stone } : {}),
+        ...(req.email ? { email: req.email } : {}),
         quotedArm: req.quotedArm ?? undefined,
         // The A/B visitor subject (02's booking treatment, 04's price test), so the purchase
         // attributes back to the arm she saw — and, on 04, so the server re-resolves the SAME

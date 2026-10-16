@@ -264,6 +264,12 @@ router.get('/:offer/fulfilment/:sessionId', async (req: Request, res: Response) 
             fullBirthName: intake.fullBirthName,
             dateOfBirth: dateOnly(intake.dateOfBirth),
             speedBump: intake.speedBump,
+            // Evelyn VSL (soulmate-initials, 10): stone lives ONLY on this intake row,
+            // never on be_orders — Job B reads it from here, alongside the PII written
+            // at checkout (Tasks 3 & 5). NULL on every other offer's intake row.
+            stone: intake.stone,
+            firstName: intake.firstName,
+            email: intake.email,
           }
         : null,
       draw: draw
