@@ -2,10 +2,16 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'wouter';
 import { VslVideoPlayer } from '@/components/evelyn/VslVideoPlayer';
 import { STONES, stoneLabel, isStone, WELCOME_STONES_LIVE_AT, type StoneKey } from '@shared/evelynVsl';
-import { track as trackPH, getDistinctId } from '@/lib/posthog';
+import { track as trackBase, getDistinctId } from '@/lib/posthog';
 import { trackViewContent } from '@/lib/facebook';
 
 const STORAGE_KEY = 'evelyn_vsl_v1';
+
+// Every event this funnel fires is tagged funnel=evelynvsl so the PostHog funnel
+// (vsl_view → checkout_initiated → purchase_completed) and revenue insights group
+// cleanly — matching the server's purchase_completed (backendPurchaseAnalytics).
+const trackPH = (event: string, props: Record<string, unknown> = {}) =>
+  trackBase(event, { ...props, funnel: 'evelynvsl' });
 
 interface VslState {
   stone: StoneKey;
