@@ -202,9 +202,12 @@ export const BACKEND_OFFERS: Record<BackendOfferKey, BackendOfferListing> = {
     tag: 'be-10-soulmate-initials',
     bumpTag: 'be-10-bump',
     deliveredTag: 'be-10-delivered',
-    // Operator open item (Job B setup, spec §4): the per-product AWeber list + Campaigns are
-    // created by hand later. Until then initialListId is UNSET → falls back to
-    // AWEBER_BE_CUSTOMER_LIST_ID (the pre-per-product model). Tags follow the be-10-* convention.
+    // REUSES the shared BE customer list (6972552), told apart only by the be-10-* tags —
+    // exactly as 03/04/06/09 do. Hardcoded (not via AWEBER_BE_CUSTOMER_LIST_ID, which isn't
+    // set anywhere) so the purchase-time write + the n8n delivery flow both land on 6972552.
+    // No bumpListId: the "charge my stone" bump has no separate deliverable, so its tag folds
+    // onto the reading-list write (same subscriber, be-10-bump added) rather than a second list.
+    initialListId: '6972552',
   },
 };
 
