@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react'
-import { useLocation, Link } from 'wouter'
+import { useLocation, useSearch, Link } from 'wouter'
 import { Sparkles, Lock } from 'lucide-react'
 import { CosmicBackground } from '../components/CosmicBackground'
 import { funnelPath } from '../lib/funnel'
 import { track } from '../lib/posthog'
 import { rememberTarotDraw } from '../lib/tarotAttribution'
+import { isRetargetVisit } from '../lib/tarotRetarget'
+import TarotRetargetOffer from './TarotRetargetOffer'
 import {
   DEFAULT_HOOK,
   DEFAULT_DECK,
@@ -48,7 +50,18 @@ function shuffled<T>(input: readonly T[]): T[] {
   return a
 }
 
+// `?src=retarget` → the RETARGETING offer page (pages/TarotRetargetOffer.tsx). She has
+// been here before and left without buying, so the page closes instead of re-running the
+// quiz. The quiz never mounts in that case, so its `seer_conversation` wipe below does not
+// run (the offer page pre-fills her first name from that session). The attribution
+// marker IS the switch, so the two can never disagree. Every other visit renders the
+// quiz below exactly as before.
 export default function TarotBridge() {
+  const search = useSearch()
+  return isRetargetVisit(search ? `?${search}` : '') ? <TarotRetargetOffer /> : <TarotBridgeQuiz />
+}
+
+function TarotBridgeQuiz() {
   const [location, navigate] = useLocation()
 
   // Version from the route: /fb-tarot/b → B, /fb-tarot/c → C, anything else → A.
