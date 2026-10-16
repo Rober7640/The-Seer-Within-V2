@@ -307,6 +307,7 @@ export function backendOfferFunnel(offer: string): string {
     case "tea-reading": return "teareading";
     case "pixiu-bracelet": return "pixiu";
     case "heart-cleanser": return "heartcleanser";
+    case "soulmate-initials": return "evelynvsl";
     default: return offer;
   }
 }

@@ -3,15 +3,17 @@ import { Link } from 'wouter';
 import { VslVideoPlayer } from '@/components/evelyn/VslVideoPlayer';
 import { STONES, stoneLabel, isStone, WELCOME_STONES_LIVE_AT, type StoneKey } from '@shared/evelynVsl';
 import { track as trackBase, getDistinctId } from '@/lib/posthog';
+import { backendOfferFunnel } from '@/lib/funnel';
 import { trackViewContent } from '@/lib/facebook';
 
 const STORAGE_KEY = 'evelyn_vsl_v1';
 
-// Every event this funnel fires is tagged funnel=evelynvsl so the PostHog funnel
-// (vsl_view → checkout_initiated → purchase_completed) and revenue insights group
-// cleanly — matching the server's purchase_completed (backendPurchaseAnalytics).
+// Tag every funnel event with funnel=<backendOfferFunnel('soulmate-initials')> — the
+// same shared helper every other BE offer uses — so the PostHog funnel + revenue
+// insights group on one name across client and server.
+const EVELYN_FUNNEL = backendOfferFunnel('soulmate-initials');
 const trackPH = (event: string, props: Record<string, unknown> = {}) =>
-  trackBase(event, { ...props, funnel: 'evelynvsl' });
+  trackBase(event, { ...props, funnel: EVELYN_FUNNEL });
 
 interface VslState {
   stone: StoneKey;
