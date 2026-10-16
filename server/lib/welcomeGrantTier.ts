@@ -20,6 +20,8 @@
 //   1. luna-thankyou   — the $50/30-min gift is granted SEPARATELY and additively by
 //                        claimLunaTyGift(), so the ordinary welcome grant is skipped
 //                        entirely (0) to avoid stacking a second small grant on top.
+//   1b. evelyn-thankyou — the /fb thank-you 15-min gift (Joel 2026-10-14), granted
+//                        separately by claimEvelynTyGift() exactly like Luna's, so 0 here.
 //   2. soulmate-lander — 5 min. Checked before the Evelyn tiers so a reader linked to
 //                        both (they hit both landers with the same email pre-verify)
 //                        resolves to exactly one tier, deterministically.
@@ -40,11 +42,13 @@ import { eq } from 'drizzle-orm';
 import { db } from './db';
 import { evelynLanderSessions, personas, soulmateLanderSessions } from '@shared/schema';
 import { isFromLunaThankyouOffer } from './lunaThankyouGift';
+import { isFromEvelynThankyouOffer } from './evelynThankyouGift';
 import { userHasLiveThreadReply } from './liveThreadEngagement';
 import logger from './logger';
 
 export type WelcomeGrantTier =
   | 'luna-thankyou'
+  | 'evelyn-thankyou'
   | 'soulmate-lander'
   | 'live-thread'
   | 'evelyn-lander'
@@ -108,6 +112,7 @@ export async function resolveWelcomeGrantTier(
   defaultPersonaId: string | null | undefined,
 ): Promise<WelcomeGrantTier> {
   if (await isFromLunaThankyouOffer(userId)) return 'luna-thankyou';
+  if (await isFromEvelynThankyouOffer(userId)) return 'evelyn-thankyou';
 
   // Both remaining lander tiers require Evelyn as the default persona, so this one
   // check gates all three of them.

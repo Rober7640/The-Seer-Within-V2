@@ -1,0 +1,17 @@
+Dear {{ subscriber.first_name | default: "friend" }},
+
+Your cup's turned. Open your reading here: {{AWEBER_READING_URL}}
+
+Before you open it, hear this part.
+
+The first days of the twenty-one are quiet, and they'll feel like losing ground. Expect him to go quieter as well for a few days, before anything warms up. I've put that in the reading because it happens so often, and it's exactly where women give up on the sequence, around day five. Don't stop on day five.
+
+And the bird. I told you it was the first thing I'd look at, and it took me longer than anything else in the cup. I turned the cup three times before I'd commit to where it sat. What I found is near the start, before the days begin, and it changes what the days are for. Read that part first, and slowly.
+
+Then read right to the end. Your rim calendar is the last page, and I made it for you to keep.
+
+If the link won't open, reply to this email and I'll send it another way.
+
+I'm glad you didn't leave it any longer, dear.
+
+— Evelyn

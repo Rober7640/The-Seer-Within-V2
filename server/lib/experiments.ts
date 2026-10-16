@@ -36,6 +36,9 @@ import {
 // the version test overrule a URL the redirect deliberately let through. tarotRedirect
 // imports nothing, so this adds no import cycle.
 import { TAROT_C_EXEMPT_HOOKS } from './tarotRedirect';
+// 04's price test: the control price and the closed set of arm prices. The catalog imports
+// nothing from the server, so this adds no import cycle.
+import { TEA_READING_PRICE_CENTS, TEA_READING_TEST_CENTS } from '@shared/backendOffers';
 
 // ── Paywall test constants (the one experiment Phase 1 folds in) ──────────────
 export const PAYWALL_EXPERIMENT_KEY = 'paywall_copy_2026';
@@ -1077,6 +1080,162 @@ export async function tallyV1Main(opts: V1MainTallyOptions): Promise<TallyResult
   return stats;
 }
 
+// ── STRIPE vs PAYMENTS.AI (v1_gateway_split_2026) ────────────────────────────────
+//
+// Conversion type `gateway_split`. The exposure is logged at the CHECKOUT CLICK
+// (/api/checkout), on both arms, so the denominator is "headed to pay" — the point
+// where the two arms first differ. Read three ways:
+//
+//   rows          checkouts → paid buyers → ALL revenue (main + bump + both upsells).
+//                 Revenue per checkout is the headline: it is what the business keeps.
+//   gatewayDetail the same per arm, broken out by stage, plus how many buyers in each
+//                 arm actually paid on each processor (a Payments.AI-arm buyer whose
+//                 browser could not load the card form is sent to Stripe — counted in
+//                 her assigned arm, as intent-to-treat, and shown here so it is visible).
+//   attempts      approval rate per processor × step × who initiated, from
+//                 payment_attempts — the question the split exists to answer. Only
+//                 attempts on THIS test's orders, so other funnels' Stripe traffic
+//                 cannot leak in.
+//
+// Same purchase definition as tallyV1Main (paid AFTER the exposure).
+
+export interface GatewayArmDetail {
+  variant: string;
+  checkouts: number;
+  buyers: number;
+  paidOnStripe: number;
+  paidOnPaymentsai: number;
+  mainRevenueUsd: number;
+  bumpRevenueUsd: number;
+  upsell1Buyers: number;
+  upsell1RevenueUsd: number;
+  upsell2Buyers: number;
+  upsell2RevenueUsd: number;
+  totalRevenueUsd: number;
+  revPerCheckoutUsd: number;
+}
+
+export interface GatewayAttemptRow {
+  variant: string;
+  gateway: string;
+  step: string;
+  initiator: string;
+  attempts: number;
+  approved: number;
+  declined: number;
+  needsAction: number;
+  /** Refused before the bank decided (bad request, API down). NOT in approvalPct. */
+  errors: number;
+  /** approved ÷ (approved + declined + needsAction) — what the BANK decided. */
+  approvalPct: number;
+}
+
+export interface GatewaySplitResult extends TallyResult {
+  gatewayDetail: GatewayArmDetail[];
+  attempts: GatewayAttemptRow[];
+}
+
+const usd = (cents: unknown) => Math.round(Number(cents) || 0) / 100;
+
+export async function tallyGatewaySplit(opts: V1MainTallyOptions): Promise<GatewaySplitResult> {
+  const result = await db.execute(sql`
+    SELECT e.variant AS variant,
+           count(*)                                                                AS viewers,
+           count(*) FILTER (WHERE ${V1_IN_TEST_PURCHASE})                          AS buyers,
+           count(*) FILTER (WHERE ${V1_IN_TEST_PURCHASE} AND c.payment_gateway = 'paymentsai') AS paid_pai,
+           count(*) FILTER (WHERE ${V1_IN_TEST_PURCHASE} AND COALESCE(c.payment_gateway, 'stripe') = 'stripe') AS paid_stripe,
+           COALESCE(sum(c.main_purchase_amount)          FILTER (WHERE ${V1_IN_TEST_PURCHASE}), 0) AS main_cents,
+           COALESCE(sum(COALESCE(c.bump_amount_cents, 0)) FILTER (WHERE ${V1_IN_TEST_PURCHASE}), 0) AS bump_cents,
+           count(*) FILTER (WHERE ${V1_IN_TEST_PURCHASE} AND c.upsell_purchased)   AS u1_buyers,
+           COALESCE(sum(COALESCE(c.upsell_amount, 0))  FILTER (WHERE ${V1_IN_TEST_PURCHASE} AND c.upsell_purchased), 0)  AS u1_cents,
+           count(*) FILTER (WHERE ${V1_IN_TEST_PURCHASE} AND c.upsell2_purchased)  AS u2_buyers,
+           COALESCE(sum(COALESCE(c.upsell2_amount, 0)) FILTER (WHERE ${V1_IN_TEST_PURCHASE} AND c.upsell2_purchased), 0) AS u2_cents
+    FROM experiment_exposures e
+    LEFT JOIN conversations c ON c.id = e.context->>'conversationId'
+    WHERE e.experiment_key = ${opts.key}
+      AND e.created_at >= ${opts.startISO}
+    GROUP BY e.variant;
+  `);
+
+  const raw = result.rows as Record<string, unknown>[];
+  // `revenue_cents` = EVERYTHING the order earned — the headline revenue per checkout.
+  const withRevenue = raw.map((r) => ({
+    ...r,
+    revenue_cents:
+      (Number(r.main_cents) || 0) + (Number(r.bump_cents) || 0) +
+      (Number(r.u1_cents) || 0) + (Number(r.u2_cents) || 0),
+  }));
+
+  const controlKey = opts.controlKey ?? 'stripe';
+  const treatmentKey = opts.treatmentKey ?? 'paymentsai';
+  const { rows, byVariant } = assembleRows(withRevenue, controlKey, treatmentKey);
+  const stats = finalizeStats(rows, controlKey, treatmentKey);
+
+  const gatewayDetail: GatewayArmDetail[] = rows.map((row) => {
+    const q = byVariant.get(row.variant) ?? {};
+    const checkouts = Number(q.viewers) || 0;
+    const total = Number((q as { revenue_cents?: unknown }).revenue_cents) || 0;
+    return {
+      variant: row.variant,
+      checkouts,
+      buyers: Number(q.buyers) || 0,
+      paidOnStripe: Number(q.paid_stripe) || 0,
+      paidOnPaymentsai: Number(q.paid_pai) || 0,
+      mainRevenueUsd: usd(q.main_cents),
+      bumpRevenueUsd: usd(q.bump_cents),
+      upsell1Buyers: Number(q.u1_buyers) || 0,
+      upsell1RevenueUsd: usd(q.u1_cents),
+      upsell2Buyers: Number(q.u2_buyers) || 0,
+      upsell2RevenueUsd: usd(q.u2_cents),
+      totalRevenueUsd: usd(total),
+      revPerCheckoutUsd: checkouts ? Math.round(total / checkouts) / 100 : 0,
+    };
+  });
+
+  // Attempts on THIS test's orders only. The main charge joins on email as well as the
+  // order id: a DECLINED Payments.AI main charge never becomes the conversation's order
+  // id (only an approved one is written), but it is still her attempt.
+  const att = await db.execute(sql`
+    SELECT e.variant AS variant, a.gateway, a.step, a.initiator,
+           count(*)                                         AS attempts,
+           count(*) FILTER (WHERE a.result = 'approved')     AS approved,
+           count(*) FILTER (WHERE a.result = 'declined')     AS declined,
+           count(*) FILTER (WHERE a.result = 'needs_action') AS needs_action,
+           count(*) FILTER (WHERE a.result = 'error')        AS errors
+    FROM experiment_exposures e
+    JOIN conversations c ON c.id = e.context->>'conversationId'
+    JOIN payment_attempts a
+      ON a.order_ref = c.stripe_session_id
+      OR (a.step = 'main' AND lower(a.email) = lower(c.email))
+    WHERE e.experiment_key = ${opts.key}
+      AND e.created_at >= ${opts.startISO}
+      AND a.created_at >= e.created_at
+    GROUP BY 1, 2, 3, 4
+    ORDER BY 3, 1, 2, 4;
+  `);
+  const attempts: GatewayAttemptRow[] = (att.rows as Record<string, unknown>[]).map((r) => {
+    const n = Number(r.attempts) || 0;
+    const ok = Number(r.approved) || 0;
+    // A request refused before any bank saw it (our bug, their outage) says nothing
+    // about which processor approves more cards, so it is shown but not counted.
+    const decided = n - (Number(r.errors) || 0);
+    return {
+      variant: String(r.variant),
+      gateway: String(r.gateway),
+      step: String(r.step),
+      initiator: String(r.initiator),
+      attempts: n,
+      approved: ok,
+      declined: Number(r.declined) || 0,
+      needsAction: Number(r.needs_action) || 0,
+      errors: Number(r.errors) || 0,
+      approvalPct: decided ? Math.round((1000 * ok) / decided) / 10 : 0,
+    };
+  });
+
+  return { ...stats, gatewayDetail, attempts };
+}
+
 export interface TallyBySignRow {
   sign: string;
   rows: TallyVariantRow[];
@@ -1466,6 +1625,19 @@ export const V1_BUMP_EXPERIMENT_KEY = resolveBumpExperimentKey(
   process.env.V1_BUMP_EXPERIMENT_KEY,
 );
 
+// /fb runs its OWN bump test (Joel, 2026-10-13): plain $35 vs $35 + bump, 50/50.
+// It cannot ride on V1_BUMP_EXPERIMENT_KEY — that test is `done` and serves its
+// winner (bump for everyone) to palm/tarot/read, so adding v1-fb to its scope would
+// give every /fb buyer the bump with no control arm. A separate key keeps the two
+// apart: palm/tarot/read resolve exactly as before, and /fb resolves nothing until
+// this row is started (no row / draft ⇒ bump:false ⇒ today's checkout).
+export const V1_FB_BUMP_EXPERIMENT_KEY = 'v1_fb_order_bump_2026';
+
+/** Which bump experiment governs this funnel. Only /fb has its own. */
+export function v1BumpKeyFor(funnel?: string | null): string {
+  return funnel === 'v1-fb' ? V1_FB_BUMP_EXPERIMENT_KEY : V1_BUMP_EXPERIMENT_KEY;
+}
+
 /**
  * Should this lead be OFFERED the order bump?
  *
@@ -1483,7 +1655,7 @@ export async function resolveV1Bump(
   email: string | null | undefined,
   funnel?: string | null,
   sign?: string | null,
-  key: string = V1_BUMP_EXPERIMENT_KEY, // overridable so tests never touch the live experiment
+  key: string = v1BumpKeyFor(funnel), // overridable so tests never touch the live experiment
 ): Promise<{ bump: boolean; variant: string | null; enrolled: boolean; copy: BumpCopyVariant }> {
   const subject = typeof email === 'string' ? email.trim().toLowerCase() : null;
 
@@ -1951,15 +2123,35 @@ export async function resolveBeBookingTreatment(
  *
  * No exposure for the subject → she was never in the test (bought from a /preview
  * URL, or before it started), so nothing is logged and she is not counted. One
- * conversion per subject, because Stripe retries checkout.session.completed.
- * Failures are logged, never thrown: a measurement miss must not fail a paid order.
+ * conversion per (subject, event), because Stripe retries checkout.session.completed
+ * and the thank-you page records the same order. Failures are logged, never thrown:
+ * a measurement miss must not fail a paid order.
+ *
+ * `key`/`event` default to 02's booking-treatment test, which logs one event only, so
+ * its behaviour is unchanged. 04's price test passes its own key and BE_04_BOOKING_EVENT.
  */
 export async function logBeBookingConversion(
   subjectId: string | null | undefined,
   valueCents: number,
   key: string = BE_BOOKING_EXPERIMENT_KEY,
+  event: string = 'be_02_booking_purchased',
 ): Promise<void> {
   if (!subjectId) return;
+  await recordBeConversion(key, subjectId, event, valueCents, 'BE booking conversion insert failed');
+}
+
+/**
+ * The shared write behind every backend conversion: look up the subject's exposure (no
+ * exposure ⇒ not in the test ⇒ nothing written), skip a (key, subject, event) already on
+ * record, else insert one row carrying the exposed arm. ⛔ Never throws.
+ */
+async function recordBeConversion(
+  key: string,
+  subjectId: string,
+  event: string,
+  valueCents: number,
+  failureMessage: string,
+): Promise<void> {
   try {
     const [exposure] = await db
       .select({ variant: experimentExposures.variant })
@@ -1971,7 +2163,13 @@ export async function logBeBookingConversion(
     const [existing] = await db
       .select({ id: experimentConversions.id })
       .from(experimentConversions)
-      .where(and(eq(experimentConversions.experimentKey, key), eq(experimentConversions.subjectId, subjectId)))
+      .where(
+        and(
+          eq(experimentConversions.experimentKey, key),
+          eq(experimentConversions.subjectId, subjectId),
+          eq(experimentConversions.event, event),
+        ),
+      )
       .limit(1);
     if (existing) return;
 
@@ -1979,10 +2177,108 @@ export async function logBeBookingConversion(
       experimentKey: key,
       subjectId,
       variant: exposure.variant,
-      event: 'be_02_booking_purchased',
+      event,
       value: Number.isFinite(valueCents) ? Math.round(valueCents) : 0,
     });
   } catch (err) {
-    logger.error('BE booking conversion insert failed', { key, error: (err as Error).message });
+    logger.error(failureMessage, { key, event, error: (err as Error).message });
   }
+}
+
+// ── BE 04 PRICE SPLIT TEST: $35 (A, control) vs $45 (B) ───────────────────────
+// Offer 04 (The Turn) charges ONE fixed price, and this test decides which: arm A $35
+// (control, variants[0]) or arm B $45, carried in payload.priceCents. Operator
+// 2026-10-11: no price hike — the old day ladder is gone, and this split replaces it.
+//
+// Same shape as the 02 booking-treatment test above: subject = the per-browser visitor
+// id (client/src/lib/backendVisitor.ts), assigned when the booking screen asks for its
+// price (GET /api/backend/offers/tea-reading/price) and RE-RESOLVED at checkout, which
+// charges the server's arm and refuses (409) a page that printed another one. Scored as
+// an 'event' test (tallyEvent): one conversion for the booking (amount_total, bump
+// included) and one per upsell payment, so revenue per visitor per arm counts all three.
+//
+// 🔴 FAILS SAFE TO $35. Draft, paused, out of scope, no visitor id, a DB read error, or a
+// payload outside the closed set {3500, 4500} — every one of them is arm A at $35 and no
+// exposure. A concluded test with a declared winner rolls that winner's price out
+// (applied, not enrolled), exactly as every other framework test does.
+export const BE_04_PRICE_KEY = 'be_04_price_2026';
+
+/** The control arm's key — what every fallback reports, because it is what it charges. */
+export const BE_04_CONTROL_ARM = 'A';
+
+/** 04's booking conversion: the order's amount_total, bump included. */
+export const BE_04_BOOKING_EVENT = 'be_04_booking_purchased';
+
+/** 04's upsell conversion — one event per upsell PRODUCT, so U1 and U2 both count once. */
+export function be04UpsellEvent(productKey: string): string {
+  return `be_04_upsell_purchased:${productKey}`;
+}
+
+/**
+ * The visitor subject exactly as checkout writes it to Stripe metadata (`expSubject`, capped
+ * at 64 characters), so the exposure, the metadata and the conversion all share one id.
+ */
+function be04Subject(subjectId: string | null | undefined): string | null {
+  return typeof subjectId === 'string' && subjectId ? subjectId.slice(0, 64) : null;
+}
+
+/**
+ * Which price does this visitor pay for 04 — and log her exposure if she is in the test.
+ *
+ * Mirrors resolveBeBookingTreatment: a thin wrapper over assign(). `payload.priceCents` is
+ * read only when the assignment is `applied`, and only a value in TEA_READING_TEST_CENTS is
+ * used; anything else is the control ($35, arm 'A', not enrolled — so a typo'd arm can
+ * never charge a number nobody configured, and never lands in the denominator).
+ *
+ * Called from TWO places that must agree: the price endpoint (what the page prints) and
+ * checkout (what Stripe charges). Same subject + scope.freezeAssignment ⇒ same arm. The
+ * exposure insert is idempotent, so the second call is a no-op.
+ */
+export async function resolveBe04Price(
+  subjectId: string | null | undefined,
+  key: string = BE_04_PRICE_KEY, // overridable so tests never touch the live experiment
+): Promise<{ key: string; arm: string; cents: number; variant: string | null; enrolled: boolean }> {
+  const subject = be04Subject(subjectId);
+  const control = { key, arm: BE_04_CONTROL_ARM, cents: TEA_READING_PRICE_CENTS, enrolled: false };
+  let a: Assignment | null;
+  try {
+    a = await assign(key, subject, {});
+  } catch (err) {
+    // assign() already fails safe on a config read error; this is the belt to its braces —
+    // a price must always come back, and the only safe one is the control.
+    logger.error('BE 04 price assignment failed — charging the control', { key, error: (err as Error).message });
+    return { ...control, variant: null };
+  }
+  if (!a) return { ...control, variant: null };
+  const cents = (a.payload as { priceCents?: unknown } | null)?.priceCents;
+  if (!a.applied || typeof cents !== 'number' || !TEA_READING_TEST_CENTS.includes(cents)) {
+    return { ...control, variant: a.variant };
+  }
+  if (a.enrolled && subject) {
+    await logExposure(key, subject, a.variant, 'be_04_price', { priceCents: cents });
+  }
+  return { key, arm: a.variant, cents, variant: a.variant, enrolled: a.enrolled };
+}
+
+/**
+ * Credit an UPSELL payment to the 04 price arm she booked under. The booking session's
+ * `priceExp` / `expSubject` ride onto every upsell charge (server/routes/backendOffers.ts),
+ * so this reads them off the upsell's own metadata. No `priceExp` ⇒ she was not booked under
+ * the price test (every other offer) ⇒ a no-op. Deduped per upsell product; never throws.
+ */
+export async function logBe04UpsellConversion(
+  meta: { priceExp?: string | null; expSubject?: string | null } | null | undefined,
+  productKey: string,
+  valueCents: number,
+): Promise<void> {
+  if (meta?.priceExp !== BE_04_PRICE_KEY) return;
+  const subject = be04Subject(meta.expSubject);
+  if (!subject) return;
+  await recordBeConversion(
+    BE_04_PRICE_KEY,
+    subject,
+    be04UpsellEvent(productKey),
+    valueCents,
+    'BE 04 upsell conversion insert failed',
+  );
 }

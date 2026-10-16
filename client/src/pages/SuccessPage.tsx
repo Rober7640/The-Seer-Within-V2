@@ -12,6 +12,11 @@ import { currentFunnel } from "../lib/funnel";
 // re-triggering.
 const LUNA_UTM =
   "campaign=v1-ty-luna&utm_source=v1_ty&utm_medium=thankyou&utm_campaign=luna_50";
+// /fb buyers get Evelyn instead (15 free minutes + she already knows their reading —
+// Joel 2026-10-14). campaign=v1-ty-evelyn is the functional tag: the server keys the
+// gift and the reading brief off it (server/lib/evelynThankyouGift.ts).
+const EVELYN_UTM =
+  "campaign=v1-ty-evelyn&utm_source=v1_ty&utm_medium=thankyou&utm_campaign=evelyn_15";
 
 interface OrderData {
   firstName: string;
@@ -32,6 +37,12 @@ export default function SuccessPage() {
   // brand-new signup flow); upgraded after the handoff call to a magic-login link for
   // buyers who already have a V2 account, or a prefilled-signup link otherwise.
   const [lunaHref, setLunaHref] = useState(`/luna?${LUNA_UTM}`);
+  // Which reader the chat offer shows. The SERVER decides (handoff `persona`, from the
+  // paid order); the /fb URL is only the first-paint guess so /fb buyers don't see the
+  // Luna card flash first. Anything but an /fb order stays on Luna, as today.
+  const [tyPersona, setTyPersona] = useState<"luna" | "evelyn">(
+    currentFunnel() === "v1-fb" ? "evelyn" : "luna",
+  );
 
   useEffect(() => {
     const params = new URLSearchParams(searchString);
@@ -44,6 +55,8 @@ export default function SuccessPage() {
       if (!sessionId) {
         setHasUpsell(upsellFromUrl);
         setHasUpsell2(upsell2FromUrl);
+        // No order to check ⇒ no Evelyn handoff; keep today's Luna card + link.
+        setTyPersona("luna");
         return;
       }
 
@@ -195,18 +208,37 @@ export default function SuccessPage() {
         });
         if (hres.ok) {
           const h = await hres.json();
-          if (h.mode === "login" && h.token) {
+          if (h.persona === "evelyn") {
+            setTyPersona("evelyn");
+            if (h.mode === "login" && h.token) {
+              setLunaHref(`/evelyn?token=${encodeURIComponent(h.token)}&${EVELYN_UTM}`);
+            } else {
+              const q = new URLSearchParams();
+              if (h.email) q.set("email", h.email);
+              if (h.firstName) q.set("name", h.firstName);
+              const extra = q.toString();
+              setLunaHref(`/evelyn?${EVELYN_UTM}${extra ? `&${extra}` : ""}`);
+            }
+          } else if (h.mode === "login" && h.token) {
+            setTyPersona("luna");
             setLunaHref(`/luna?token=${encodeURIComponent(h.token)}&${LUNA_UTM}`);
           } else if (h.mode === "signup") {
+            setTyPersona("luna");
             const q = new URLSearchParams();
             if (h.email) q.set("email", h.email);
             if (h.firstName) q.set("name", h.firstName);
             const extra = q.toString();
             setLunaHref(`/luna?${LUNA_UTM}${extra ? `&${extra}` : ""}`);
           }
+        } else {
+          // Handoff failed: fall back to the Luna card and its plain link, which still
+          // works (exactly today's behaviour), so a first-painted /fb visitor never sees
+          // an Evelyn card pointing at Luna.
+          setTyPersona("luna");
         }
       } catch (err) {
         console.error("Luna handoff failed (using default link):", err);
+        setTyPersona("luna");
       }
     }
 
@@ -290,28 +322,52 @@ export default function SuccessPage() {
               isFromLunaThankyouOffer). utm_* params are for ad/analytics only. */}
           <div className="mt-2 mb-6 p-5 rounded-xl bg-gradient-to-br from-purple-600/20 to-indigo-600/20 border border-purple-400/40 text-left">
             <p className="text-purple-100/80 text-sm mb-3">
-              But before you go — there's something the stars want you to know.
+              {tyPersona === "evelyn"
+                ? "But before you go — your reading doesn't have to end here."
+                : "But before you go — there's something the stars want you to know."}
             </p>
-            <p className="text-purple-200/70 text-sm mb-4">
-              A general reading tells you the <em>what</em>. A conversation
-              tells you the <em>why</em>, the <em>when</em>, and the{" "}
-              <em>what now</em>.
-            </p>
+            {tyPersona === "evelyn" ? (
+              <p className="text-purple-200/70 text-sm mb-4">
+                Your reading showed you the <em>what</em>. A conversation with
+                Evelyn tells you the <em>why</em>, the <em>when</em>, and the{" "}
+                <em>what now</em>.
+              </p>
+            ) : (
+              <p className="text-purple-200/70 text-sm mb-4">
+                A general reading tells you the <em>what</em>. A conversation
+                tells you the <em>why</em>, the <em>when</em>, and the{" "}
+                <em>what now</em>.
+              </p>
+            )}
             <div className="flex items-start gap-3 mb-4">
               <MessageCircle className="w-5 h-5 text-purple-300 mt-0.5 flex-shrink-0" />
-              <p className="text-white text-sm">
-                As a welcome gift, we've reserved{" "}
-                <span className="font-semibold text-purple-200">
-                  30 minutes of free chat (a $50 value)
-                </span>{" "}
-                for you to speak directly with{" "}
-                <span className="font-semibold">Astrologer Luna Voss</span> —
-                one of our most sought-after readers, known for cutting straight
-                to the truth others tip-toe around.
-              </p>
+              {tyPersona === "evelyn" ? (
+                <p className="text-white text-sm">
+                  As a welcome gift, we've reserved{" "}
+                  <span className="font-semibold text-purple-200">
+                    15 minutes of free chat
+                  </span>{" "}
+                  for you to speak directly with{" "}
+                  <span className="font-semibold">Evelyn Cross</span> — the
+                  reader who just read for you.
+                </p>
+              ) : (
+                <p className="text-white text-sm">
+                  As a welcome gift, we've reserved{" "}
+                  <span className="font-semibold text-purple-200">
+                    30 minutes of free chat (a $50 value)
+                  </span>{" "}
+                  for you to speak directly with{" "}
+                  <span className="font-semibold">Astrologer Luna Voss</span> —
+                  one of our most sought-after readers, known for cutting straight
+                  to the truth others tip-toe around.
+                </p>
+              )}
             </div>
             <p className="text-purple-200/70 text-sm mb-4">
-              Bring her your real question. The one you didn't put into a form.
+              {tyPersona === "evelyn"
+                ? "She already knows your reading, so you can pick up right where you left off."
+                : "Bring her your real question. The one you didn't put into a form."}
             </p>
 
             {/* $50 gift-voucher visual (pure CSS ticket — no image asset). */}
@@ -319,10 +375,10 @@ export default function SuccessPage() {
               {/* Amount stub */}
               <div className="flex flex-col items-center justify-center px-5 py-4 bg-gradient-to-br from-amber-400/25 to-yellow-500/15">
                 <span className="text-[10px] uppercase tracking-[0.2em] text-amber-200/80">
-                  Value
+                  {tyPersona === "evelyn" ? "Free" : "Value"}
                 </span>
                 <span className="font-serif text-4xl font-bold text-amber-100 leading-none drop-shadow-sm">
-                  $50
+                  {tyPersona === "evelyn" ? "15 min" : "$50"}
                 </span>
               </div>
               {/* Perforated divider */}
@@ -340,24 +396,27 @@ export default function SuccessPage() {
                   </span>
                 </div>
                 <p className="text-white font-semibold text-sm leading-tight">
-                  30 Minutes of Free Chat
+                  {tyPersona === "evelyn" ? "15 Minutes of Free Chat" : "30 Minutes of Free Chat"}
                 </p>
                 <p className="text-amber-100/70 text-xs mt-0.5">
-                  with Astrologer Luna Voss
+                  {tyPersona === "evelyn" ? "with Evelyn Cross" : "with Astrologer Luna Voss"}
                 </p>
               </div>
             </div>
 
             <a
               href={lunaHref}
-              data-testid="link-luna-offer"
+              data-testid={tyPersona === "evelyn" ? "link-evelyn-offer" : "link-luna-offer"}
               className="block w-full text-center bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-400 hover:to-indigo-400 text-white font-medium py-3 px-4 rounded-lg transition-colors"
             >
-              Start My Conversation with Luna →
+              {tyPersona === "evelyn"
+                ? "Continue My Conversation with Evelyn →"
+                : "Start My Conversation with Luna →"}
             </a>
             <p className="text-purple-200/50 text-xs text-center mt-3">
-              Your 30 free minutes with Luna are reserved for the next 24 hours.
-              Verify your email to lock them in.
+              {tyPersona === "evelyn"
+                ? "Your 15 free minutes with Evelyn are ready whenever you are."
+                : "Your 30 free minutes with Luna are reserved for the next 24 hours. Verify your email to lock them in."}
             </p>
           </div>
 

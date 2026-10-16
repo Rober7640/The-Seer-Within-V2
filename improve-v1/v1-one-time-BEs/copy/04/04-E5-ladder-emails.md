@@ -1,3 +1,5 @@
+⛔ Superseded 2026-10-11 by copy/04/sales/ (1 → RE: → 2)
+
 # 04-E5a/b/c — The ladder emails *(days 2, 3 and 4)*
 
 | | |

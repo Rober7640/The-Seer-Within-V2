@@ -1,3 +1,5 @@
+> ⛔ **SUPERSEDED** (operator, 2026-10-11): the bump is now the intangible **Double Turning** — nothing delivered. Live copy: `04-C1-booking-page-v2.md` (page), `04-C2-booking-chat.md` (chat), `04-T1-thank-you-page.md` (P.S.).
+
 # 04-C4 — The bump deliverable *(the Still Cup)*
 
 | | |

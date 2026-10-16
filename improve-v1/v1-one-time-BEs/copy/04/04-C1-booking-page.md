@@ -1,5 +1,7 @@
 # 04-C1 — Booking page *(The Turn)*
 
+> ⛔ **Superseded 2026-10-11** by [`04-C1-booking-page-v2.md`](./04-C1-booking-page-v2.md) (one tick, price + button on the first phone screen) and [`04-C2-booking-chat.md`](./04-C2-booking-chat.md). Kept as the source draft.
+
 | | |
 |---|---|
 | **Offer** | 04 The Turn — READING · ladder `$35 → $47 → $57 → $67` · 24h · **no reply needed** |

@@ -14,6 +14,8 @@ import { db } from '../../lib/db';
 import { experiments, experimentExposures, type ExperimentScope, type ExperimentConversion } from '@shared/schema';
 import { desc, eq, sql } from 'drizzle-orm';
 import logger from '../../lib/logger';
+import { paiLiveReady } from '../../lib/paymentsai';
+import { GATEWAY_ARM_PAI, GATEWAY_ARM_STRIPE, GATEWAY_EXPERIMENT_KEY } from '@shared/paymentGateway';
 import {
   tally,
   tallyUpsell1,
@@ -24,6 +26,7 @@ import {
   tallyV1MainByVisitor,
   tallyV1MainByTarotHook,
   tallyV1BumpTakeRate,
+  tallyGatewaySplit,
   type TallyBySignRow,
   type TallyByTarotLanderRow,
   type TallyByHookRow,
@@ -35,6 +38,7 @@ import {
   V1_MAIN_EXPERIMENT_KEY,
   PALM_GATE_EXPERIMENT_KEY,
   V1_BUMP_EXPERIMENT_KEY,
+  V1_FB_BUMP_EXPERIMENT_KEY,
   V1_DOWNSELL_BUMP_PRICE_KEY,
   V1_TAROT_VERSION_EXPERIMENT_KEY,
   V1_TAROT_SHADOW_EXPERIMENT_KEY,
@@ -90,7 +94,7 @@ const scopeSchema = z
 
 const conversionSchema = z
   .object({
-    type: z.enum(['credit_purchase', 'upsell1_funnel', 'v1_main_funnel', 'event']),
+    type: z.enum(['credit_purchase', 'upsell1_funnel', 'v1_main_funnel', 'event', 'gateway_split']),
     windowDays: z.number().int().positive().max(365).optional(),
     name: z.string().optional(),
     targetN: z.number().int().nonnegative().max(10_000_000).optional(), // pre-registered per-arm N
@@ -187,6 +191,8 @@ const V1_MAIN_FUNNEL_KEYS: readonly string[] = [
   V1_MAIN_EXPERIMENT_KEY,
   PALM_GATE_EXPERIMENT_KEY,
   V1_BUMP_EXPERIMENT_KEY,
+  // /fb's own bump test — same terms as the bump above, scoped to v1-fb only.
+  V1_FB_BUMP_EXPERIMENT_KEY,
   V1_TAROT_VERSION_EXPERIMENT_KEY,
   V1_TAROT_SHADOW_EXPERIMENT_KEY,
   V1_CLOSE_DEPTH_EXPERIMENT_KEY,
@@ -702,6 +708,30 @@ router.get('/:key/results', async (req: Request, res: Response) => {
       if (takeRows.length > 0) {
         bumpTakeRate = takeRows;
       }
+    } else if (conversionType === 'gateway_split') {
+      // Stripe vs Payments.AI. Own response shape (gatewayDetail + attempts) on top of
+      // the standard rows, so the generic table still renders the headline numbers.
+      if (!controlKey || !treatmentKey) {
+        return res.json({
+          experiment: meta,
+          started: true,
+          unsupported: 'experiment needs at least 2 arms to measure',
+          params,
+          rows: [],
+        });
+      }
+      const g = await tallyGatewaySplit({ key, startISO, controlKey, treatmentKey });
+      return res.json({
+        experiment: meta,
+        started: true,
+        params,
+        rows: g.rows,
+        gatewayDetail: g.gatewayDetail,
+        attempts: g.attempts,
+        srm: await augmentSrm(g.srm, exp.variants, exp, controlKey, treatmentKey),
+        significance: g.significance,
+        progress: await progressOf(exp, key),
+      });
     } else if (conversionType === 'event') {
       // Generic event conversions (e.g. visitor page-copy lander tests).
       if (!controlKey || !treatmentKey) {
@@ -767,6 +797,13 @@ router.post('/', async (req: Request, res: Response) => {
       }
       const err = u1PayloadError(data.variants);
       if (err) return res.status(400).json({ error: err });
+    }
+    // gateway_split is read by ONE code path (the /api/checkout gateway fork), keyed
+    // on GATEWAY_EXPERIMENT_KEY; any other key would run inert. Reject it.
+    if (data.conversion?.type === 'gateway_split' && data.key !== GATEWAY_EXPERIMENT_KEY) {
+      return res.status(400).json({
+        error: `conversion type 'gateway_split' is only supported for the '${GATEWAY_EXPERIMENT_KEY}' experiment`,
+      });
     }
     if (data.conversion?.type === 'v1_main_funnel') {
       if (!V1_MAIN_FUNNEL_KEYS.includes(data.key)) {
@@ -1084,6 +1121,29 @@ router.post('/:key/start', async (req: Request, res: Response) => {
             error: `another persona-prompt test is already running for this persona ('${String(other.key)}') — pause it first`,
           });
         }
+      }
+    }
+    // The Stripe-vs-Payments.AI split moves REAL buyers' payments. Refuse to start it
+    // unless (a) the arms are exactly stripe (control, first) + paymentsai — pausing
+    // or a draft serves arm 0 to everyone, so arm 0 MUST be Stripe — and (b) this
+    // server can actually charge on Payments.AI. Without (b) nobody would be sent there
+    // anyway (resolveGateway refuses), but the dashboard would read "running".
+    if (key === GATEWAY_EXPERIMENT_KEY) {
+      const armKeys = variants.map((v) => v.key);
+      const armsOk =
+        armKeys[0] === GATEWAY_ARM_STRIPE &&
+        armKeys.includes(GATEWAY_ARM_PAI) &&
+        armKeys.every((k) => k === GATEWAY_ARM_STRIPE || k === GATEWAY_ARM_PAI);
+      if (!armsOk) {
+        return res.status(400).json({
+          error: `the '${key}' test needs exactly two arms: '${GATEWAY_ARM_STRIPE}' first (control) and '${GATEWAY_ARM_PAI}'`,
+        });
+      }
+      const ready = paiLiveReady();
+      if (!ready.ready) {
+        return res.status(400).json({
+          error: `Payments.AI is not set up on this server (${ready.reason}) — nobody could be sent to it`,
+        });
       }
     }
     // Set the cohort start once; resuming from pause keeps the original start.

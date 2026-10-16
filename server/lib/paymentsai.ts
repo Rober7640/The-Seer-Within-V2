@@ -63,23 +63,72 @@ export interface PaiResult<T> {
   raw?: string;
 }
 
-function config() {
+/**
+ * Where a call goes and with which key.
+ *
+ * TWO CONFIGS, NEVER MIXED:
+ *   - the DEV HARNESS (/fb-tarot/pai) reads PAYMENTSAI_* and is STAGING-ONLY — a
+ *     non-staging base is refused outright. Unchanged.
+ *   - the LIVE SPLIT (shared/paymentGateway.ts) reads PAI_LIVE_*, which may point at
+ *     production. Separate names on purpose: the 24 scripts/audit/pai-*.mjs read
+ *     PAYMENTSAI_API_KEY, several of them CHARGE, and a production key must never be
+ *     reachable through that name.
+ */
+export interface PaiConfig {
+  apiKey?: string;
+  orgId?: string;
+  base: string;
+  /** False = refuse any base that is not the sandbox (the dev harness). */
+  allowProduction: boolean;
+}
+
+function config(): PaiConfig {
   const apiKey = process.env.PAYMENTSAI_API_KEY;
   const orgId = process.env.PAYMENTSAI_ORG_ID;
   // Deliberately defaults to staging. A production base must be set explicitly.
   const base = process.env.PAYMENTSAI_BASE || STAGING_BASE;
-  return { apiKey, orgId, base };
+  return { apiKey, orgId, base, allowProduction: false };
+}
+
+/** The live split's account — sandbox on the dev deploy, production on the live one. */
+export function liveConfig(): PaiConfig {
+  return {
+    apiKey: process.env.PAI_LIVE_API_KEY,
+    orgId: process.env.PAI_LIVE_ORG_ID,
+    base: process.env.PAI_LIVE_BASE || STAGING_BASE,
+    allowProduction: true,
+  };
+}
+
+/** True when the base is the sandbox — drives the `sandbox` marker on analytics. */
+export function isSandboxBase(cfg: PaiConfig): boolean {
+  return cfg.base.includes('staging');
+}
+
+function readiness(cfg: PaiConfig): { ready: boolean; reason?: string } {
+  if (!cfg.apiKey) return { ready: false, reason: 'API key not set' };
+  if (!cfg.orgId) return { ready: false, reason: 'organisation id not set' };
+  if (!cfg.allowProduction && !isSandboxBase(cfg)) {
+    return { ready: false, reason: `refusing a non-staging base (${cfg.base})` };
+  }
+  return { ready: true };
 }
 
 /** True only when we have credentials AND are pointed at a sandbox. */
 export function paymentsAiReady(): { ready: boolean; reason?: string } {
+  const r = readiness(config());
+  if (r.ready) return r;
+  // Keep the harness's original wording, which its 404 diagnostics surface.
   const { apiKey, orgId, base } = config();
   if (!apiKey) return { ready: false, reason: 'PAYMENTSAI_API_KEY not set' };
   if (!orgId) return { ready: false, reason: 'PAYMENTSAI_ORG_ID not set' };
-  if (!base.includes('staging')) {
-    return { ready: false, reason: `refusing a non-staging base (${base})` };
-  }
-  return { ready: true };
+  return { ready: false, reason: `refusing a non-staging base (${base})` };
+}
+
+/** The live split can charge: PAI_LIVE_ENABLED=1 and a complete PAI_LIVE_* config. */
+export function paiLiveReady(): { ready: boolean; reason?: string } {
+  if (process.env.PAI_LIVE_ENABLED !== '1') return { ready: false, reason: 'PAI_LIVE_ENABLED is not 1' };
+  return readiness(liveConfig());
 }
 
 /**
@@ -93,12 +142,13 @@ function toApiAmount(cents: number): number {
 }
 
 async function call<T>(
-  method: 'GET' | 'POST',
+  method: 'GET' | 'POST' | 'PATCH',
   path: string,
   body?: unknown,
+  cfg: PaiConfig = config(),
 ): Promise<PaiResult<T>> {
-  const { apiKey, orgId, base } = config();
-  const ready = paymentsAiReady();
+  const { apiKey, orgId, base } = cfg;
+  const ready = readiness(cfg);
   if (!ready.ready) {
     return { ok: false, status: 0, error: ready.reason };
   }
@@ -147,17 +197,67 @@ export async function createCustomer(params: {
    * spec says maxLength 10; support (29 Sep) says up to 50 with the country code.
    */
   phoneNumber?: string;
-}): Promise<PaiResult<{ id: string }>> {
+}, cfg?: PaiConfig): Promise<PaiResult<{ id: string }>> {
   return call('POST', '/customers', {
     email: params.email,
     ...(params.firstName ? { firstName: params.firstName } : {}),
     ...(params.lastName ? { lastName: params.lastName } : {}),
     ...(params.phoneNumber ? { phoneNumber: params.phoneNumber } : {}),
-  });
+  }, cfg);
 }
 
-export async function getTransaction(id: string): Promise<PaiResult<PaiTransaction>> {
-  return call('GET', `/transactions/${id}`);
+export async function getTransaction(id: string, cfg?: PaiConfig): Promise<PaiResult<PaiTransaction>> {
+  return call('GET', `/transactions/${encodeURIComponent(id)}`, undefined, cfg);
+}
+
+/**
+ * Add keys to a transaction's metadata after the charge — what Stripe's
+ * paymentIntents.update does for the upsell shipping address.
+ *
+ * 🔴 PATCH /transactions/{id} is not in their spec but works (sandbox, 13 Oct), and it
+ * REPLACES the whole metadata object: sending only the new keys wipes product, email,
+ * originalSession… So read the current metadata and write it back merged.
+ * Keys must be registered custom fields or they are silently dropped (the 7
+ * shipping_* fields were registered on the sandbox 13 Oct).
+ */
+export async function mergeTransactionMetadata(
+  id: string,
+  extra: Record<string, string>,
+  cfg?: PaiConfig,
+): Promise<PaiResult<PaiTransaction>> {
+  const current = await getTransaction(id, cfg);
+  if (!current.ok || !current.data) {
+    return { ok: false, status: current.status, error: current.error || 'transaction not found', raw: current.raw };
+  }
+  return call<PaiTransaction>(
+    'PATCH',
+    `/transactions/${encodeURIComponent(id)}`,
+    { metadata: { ...(current.data.metadata ?? {}), ...extra } },
+    cfg,
+  );
+}
+
+/**
+ * The customer's address — shown on the dashboard's customer page. A built-in field,
+ * so unlike transaction metadata it needs nothing registered (sandbox, 13 Oct: PATCH
+ * kept name/email). One address per customer: a later upsell's address replaces it.
+ * Lengths are cut to their spec's limits so a long line can't 400 the whole update.
+ */
+export async function updateCustomerAddress(
+  customerId: string,
+  a: { line1: string; line2?: string; city: string; state: string; postal: string; country: string },
+  cfg?: PaiConfig,
+): Promise<PaiResult<{ id: string }>> {
+  return call('PATCH', `/customers/${encodeURIComponent(customerId)}`, {
+    address: {
+      address1: a.line1.slice(0, 60),
+      address2: (a.line2 || '').slice(0, 60),
+      city: a.city.slice(0, 45),
+      region: a.state.slice(0, 45),
+      zip: a.postal.slice(0, 10),
+      country: a.country,
+    },
+  }, cfg);
 }
 
 /**
@@ -169,11 +269,12 @@ export async function settleTransaction(
   id: string,
   attempts = 6,
   delayMs = 1500,
+  cfg?: PaiConfig,
 ): Promise<PaiTransaction | null> {
   let final: PaiTransaction | null = null;
   for (let i = 0; i < attempts; i++) {
     await new Promise((r) => setTimeout(r, delayMs));
-    const back = await getTransaction(id);
+    const back = await getTransaction(id, cfg);
     if (back.data) final = back.data;
     const r = String(final?.result ?? '').toLowerCase();
     if (r && r !== 'pending') break;
@@ -200,7 +301,7 @@ export interface ChargeParams {
   redirectUrl?: string;
 }
 
-export async function charge(params: ChargeParams): Promise<PaiResult<PaiTransaction>> {
+export async function charge(params: ChargeParams, cfg?: PaiConfig): Promise<PaiResult<PaiTransaction>> {
   if (!params.token && !params.paymentInstrumentId) {
     return { ok: false, status: 0, error: 'charge needs a token or a paymentInstrumentId' };
   }
@@ -216,7 +317,7 @@ export async function charge(params: ChargeParams): Promise<PaiResult<PaiTransac
       : { paymentInstrumentId: params.paymentInstrumentId },
     metadata: params.metadata,
     ...(params.redirectUrl ? { redirectUrl: params.redirectUrl } : {}),
-  });
+  }, cfg);
 }
 
 /**
@@ -242,8 +343,9 @@ export function pendingChallengeLink(tx: PaiTransaction | null | undefined): str
  */
 export async function assertCitApproved(
   citTransactionId: string,
+  cfg?: PaiConfig,
 ): Promise<{ approved: boolean; reason?: string; tx?: PaiTransaction }> {
-  const res = await getTransaction(citTransactionId);
+  const res = await getTransaction(citTransactionId, cfg);
   if (!res.ok || !res.data) {
     return { approved: false, reason: res.error || 'could not read the originating transaction' };
   }

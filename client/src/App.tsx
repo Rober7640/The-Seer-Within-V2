@@ -19,6 +19,10 @@ import TarotBridge from "@/pages/TarotBridge";
 // DEV-ONLY Payments.AI dummy funnel. Its server routes 404 unless
 // PAI_DEV_FUNNEL=1 on a non-production env, so this page is inert in prod.
 import PaiFunnelPage from "@/pages/PaiFunnelPage";
+// Live gateway split: the upsell card page for a declined 1-click on a Payments.AI order.
+import PaiPayPage from "@/pages/PaiPayPage";
+// Live gateway split: the Payments.AI checkout page (Stripe-arm buyers go to Stripe's).
+import PaiCheckoutPage from "@/pages/PaiCheckoutPage";
 import ReadBridge from "@/pages/ReadBridge";
 import ChatPage from "@/pages/ChatPage";
 import SuccessPage from "@/pages/SuccessPage";
@@ -78,6 +82,9 @@ const TwinFlameThankYouPage = lazyWithRetry(() => import("@/pages/TwinFlameThank
 const JudgementBookingPage = lazyWithRetry(() => import("@/pages/JudgementBookingPage"));
 const JudgementBookingChat = lazyWithRetry(() => import("@/pages/JudgementBookingChat"));
 const JudgementThankYouPage = lazyWithRetry(() => import("@/pages/JudgementThankYouPage"));
+const TeaReadingBookingPage = lazyWithRetry(() => import("@/pages/offers/tea-reading/BookingPage"));
+const TeaReadingBookingChat = lazyWithRetry(() => import("@/pages/offers/tea-reading/BookingChat"));
+const TeaReadingThankYouPage = lazyWithRetry(() => import("@/pages/offers/tea-reading/ThankYouPage"));
 const PixiuBookingPage = lazyWithRetry(() => import("@/pages/offers/pixiu-bracelet/BookingPage"));
 const PixiuThankYouPage = lazyWithRetry(() => import("@/pages/offers/pixiu-bracelet/ThankYouPage"));
 const HeartCleanserBookingPage = lazyWithRetry(() => import("@/pages/offers/heart-cleanser/BookingPage"));
@@ -184,7 +191,12 @@ function Router() {
       location === '/home' ||
       location.startsWith('/products/') ||
       location === '/order/success';
-    if (isTrackedFunnel) {
+    // The Payments.AI checkout page (live gateway split) stays quiet for the FB
+    // PageView: its Stripe counterpart is Stripe's hosted page, which fires none, so
+    // firing here would give one arm an extra PageView per checkout. PostHog still
+    // records it above.
+    const isPaiCheckout = location === '/fb/checkout' || location === '/fb-tarot/checkout';
+    if (isTrackedFunnel && !isPaiCheckout) {
       trackPageView();
     }
 
@@ -254,6 +266,7 @@ function Router() {
             Stripe products carry the "- FB" suffix. */}
         <Route path="/fb" component={LandingPage} />
         <Route path="/fb/chat" component={ChatPage} />
+        <Route path="/fb/checkout" component={PaiCheckoutPage} />
         <Route path="/fb/welcome1" component={UpsellPage} />
         <Route path="/fb/welcome2" component={Upsell2Page} />
         <Route path="/fb/success" component={SuccessPage} />
@@ -299,7 +312,9 @@ function Router() {
         {/* DEV-ONLY Payments.AI mirror of /fb-tarot/c. Deliberately a separate
             path: the live lander above is untouched. */}
         <Route path="/fb-tarot/pai" component={PaiFunnelPage} />
+        <Route path="/pai/pay" component={PaiPayPage} />
         <Route path="/fb-tarot/chat" component={ChatPage} />
+        <Route path="/fb-tarot/checkout" component={PaiCheckoutPage} />
         <Route path="/fb-tarot/welcome1" component={UpsellPage} />
         <Route path="/fb-tarot/welcome2" component={Upsell2Page} />
         <Route path="/fb-tarot/success" component={SuccessPage} />
@@ -392,6 +407,20 @@ function Router() {
         {/* Offer root — the default treatment. Serves the chat (see note above);
             last so the /chat, /page and /success paths match first. */}
         <Route path="/offers/wiccan/judgement-day" component={JudgementBookingChat} />
+
+        {/* Backend deck, offer 04 — The Turn, a tea-leaf READING by Evelyn Cross, at one
+            fixed price under a $35 / $45 split test (the server decides her arm; the page
+            prints its price). Review only: `readyForMoney: false`, and the booking buttons log
+            and stop while BACKEND_CHECKOUT_LIVE is off. The PAGE (09's v2 one-tick shape)
+            owns the offer root, where the letters' {{BOOKING_URL}} points; the chat is the
+            second treatment at /chat. Both send a Stripe cancel back to themselves with
+            ?cancelled=1. The receipt (04-T1) is reached via successPath + `?s=` from the
+            shared upsell chain. The bump (the Double Turning) is intangible: no page of its
+            own. Route order: specific paths before the root.
+            Specs: improve-v1/v1-one-time-BEs/copy/04/04-C1-booking-page-v2.md, 04-C2, 04-T1 */}
+        <Route path="/offers/wiccan/tea-reading/chat" component={TeaReadingBookingChat} />
+        <Route path="/offers/wiccan/tea-reading/success" component={TeaReadingThankYouPage} />
+        <Route path="/offers/wiccan/tea-reading" component={TeaReadingBookingPage} />
 
         {/* Backend deck, offer 06 — the Wishing Bracelet (Pixiu). Reading-shaped
             funnel, Object-shaped product: fixed $49, a real physical item that

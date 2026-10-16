@@ -111,6 +111,23 @@ vi.mock('./aweber', () => ({
   addBackendCustomer: (...args: unknown[]) => addBackendCustomer(...(args as [])),
 }));
 
+// 04 reads her cup back from Stripe at purchase to pick her reading link. The retrieve is a spy
+// so a test can set which cup she drew; getStripe() is only reached for a tea-reading order.
+const stripeRetrieve = vi.fn(async (_id: string) => ({ metadata: { cup: 'divided-rim' } }) as unknown);
+vi.mock('./stripeAccount', () => ({
+  getStripe: () => ({
+    checkout: { sessions: { retrieve: (...a: unknown[]) => stripeRetrieve(...(a as [string])) } },
+  }),
+}));
+
+// The A/B conversion write has its own tests (experiments.be04Price.test.ts); here it is a spy so
+// the DECISION — which order logs which conversion, under which key — can be pinned.
+const logBeBookingConversion = vi.fn(async (..._args: unknown[]) => undefined);
+vi.mock('./experiments', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('./experiments')>();
+  return { ...actual, logBeBookingConversion: (...args: unknown[]) => logBeBookingConversion(...args) };
+});
+
 const { recordBackendOrder, writeToCustomerList, saveOrderIntake } = await import('./beOrders');
 
 /** A Stripe checkout.session.completed session, as the webhook sees it. */
@@ -147,6 +164,9 @@ beforeEach(() => {
   };
   addBackendCustomer.mockReset();
   addBackendCustomer.mockResolvedValue({ success: true });
+  logBeBookingConversion.mockClear();
+  stripeRetrieve.mockReset();
+  stripeRetrieve.mockResolvedValue({ metadata: { cup: 'divided-rim' } });
 });
 
 describe('what counts as a backend order', () => {
@@ -373,6 +393,47 @@ const HOUR = 3_600_000;
 
 /** The intake as POST /checkout writes it since 2026-09-14: edition, bump AND the three. */
 const INTAKE_PERSON = { displayFirstName: 'Sarah', fullBirthName: 'Sarah Jane Smith', dateOfBirth: '1971-03-25' };
+
+describe('04 · the reading link is written at purchase (AWeber owns the delivery timing)', () => {
+  it('writes 04_tea_reading_url for her drawn cup as a content field', async () => {
+    process.env.BE04_READING_URL_DIVIDED_RIM = 'https://cdn.example.com/04/divided-rim.pdf';
+    stripeRetrieve.mockResolvedValue({ metadata: { cup: 'divided-rim' } });
+    const teaRow = { ...state.row, offer: 'tea-reading' } as never;
+
+    await writeToCustomerList(teaRow);
+
+    expect(addBackendCustomer).toHaveBeenCalledTimes(1);
+    expect(addBackendCustomer.mock.calls[0][0]).toMatchObject({
+      offer: 'tea-reading',
+      contentFields: { '04_tea_reading_url': 'https://cdn.example.com/04/divided-rim.pdf' },
+    });
+    delete process.env.BE04_READING_URL_DIVIDED_RIM;
+  });
+
+  it('picks the link for the cup SHE drew, not a default', async () => {
+    process.env.BE04_READING_URL_SUNKEN_LEAF = 'https://cdn.example.com/04/sunken-leaf.pdf';
+    stripeRetrieve.mockResolvedValue({ metadata: { cup: 'sunken-leaf' } });
+    const teaRow = { ...state.row, offer: 'tea-reading' } as never;
+
+    await writeToCustomerList(teaRow);
+
+    expect(addBackendCustomer.mock.calls[0][0].contentFields).toEqual({
+      '04_tea_reading_url': 'https://cdn.example.com/04/sunken-leaf.pdf',
+    });
+    delete process.env.BE04_READING_URL_SUNKEN_LEAF;
+  });
+
+  it('still sends the thank-you (no content field) when her cup has no https link set', async () => {
+    delete process.env.BE04_READING_URL_DIVIDED_RIM;
+    stripeRetrieve.mockResolvedValue({ metadata: { cup: 'divided-rim' } });
+    const teaRow = { ...state.row, offer: 'tea-reading' } as never;
+
+    await writeToCustomerList(teaRow);
+
+    expect(addBackendCustomer).toHaveBeenCalledTimes(1);
+    expect(addBackendCustomer.mock.calls[0][0].contentFields).toBeUndefined();
+  });
+});
 
 describe('08 · the three personal fields land on the order and the intake', () => {
   beforeEach(() => {
@@ -697,5 +758,83 @@ describe('09 · the Reiki charging bump', () => {
       bumpProductKey: 'closed_purse',
       readingCents: 4900,
     });
+  });
+});
+
+// ─── 04 · The Turn ─────────────────────────────────────────────────────────────
+// Her price-test arm's price lands in `reading_cents` (from metadata.readingCents — what the
+// SERVER charged), the Double Turning bump under its own key, and NOTHING 07/08-shaped: no intake
+// columns, no due_at. Her cup stays on Stripe metadata, where the delivery job reads it.
+describe('04 · a tea-reading order', () => {
+  it('records the price she was charged, the Double Turning, and no 07/08 columns', async () => {
+    state.row = { ...state.row, offer: 'tea-reading', bumpPurchased: true };
+    await recordBackendOrder(
+      session(
+        { amount_total: 5777 },
+        {
+          product: 'be_tea_reading',
+          offer: 'tea-reading',
+          readingCents: '4500',
+          priceArm: 'B',
+          bump: '1',
+          bumpProduct: 'double_turning',
+          cup: 'sunken-leaf',
+          cupDrawn: '1',
+        },
+      ),
+    );
+    expect(state.inserted).toMatchObject({
+      offer: 'tea-reading',
+      offerNumber: '04',
+      readingCents: 4500,
+      bumpPurchased: true,
+      bumpCents: 1277,
+      bumpProductKey: 'double_turning',
+      amountCents: 5777,
+      status: 'paid',
+    });
+    for (const column of ['dueAt', 'editionId', 'tier', 'spreadKey', 'question']) {
+      expect(state.inserted, column).not.toHaveProperty(column);
+    }
+    expect(addBackendCustomer).toHaveBeenCalledWith(
+      expect.objectContaining({ offer: 'tea-reading', stripeOrderId: 'cs_test_backend_1', bumpPurchased: true }),
+    );
+  });
+
+  it('logs the 04 price-test conversion: amount_total (bump included), her subject, 04\'s key and event', async () => {
+    state.row = { ...state.row, offer: 'tea-reading', bumpPurchased: true };
+    await recordBackendOrder(
+      session(
+        { amount_total: 5777 },
+        {
+          product: 'be_tea_reading',
+          offer: 'tea-reading',
+          readingCents: '4500',
+          bump: '1',
+          bumpProduct: 'double_turning',
+          expSubject: 'visitor-04',
+          priceExp: 'be_04_price_2026',
+          priceArm: 'B',
+        },
+      ),
+    );
+    expect(state.inserted).toMatchObject({ readingCents: 4500, amountCents: 5777, bumpCents: 1277 });
+    expect(logBeBookingConversion).toHaveBeenCalledTimes(1);
+    expect(logBeBookingConversion).toHaveBeenCalledWith('visitor-04', 5777, 'be_04_price_2026', 'be_04_booking_purchased');
+  });
+
+  it('logs no 04 conversion without the price experiment or a subject on the session', async () => {
+    state.row = { ...state.row, offer: 'tea-reading' };
+    const base = { product: 'be_tea_reading', offer: 'tea-reading', readingCents: '3500' };
+    await recordBackendOrder(session({}, { ...base, expSubject: 'visitor-04' }));
+    await recordBackendOrder(session({}, { ...base, priceExp: 'be_04_price_2026' }));
+    await recordBackendOrder(session({}, { ...base, expSubject: 'visitor-04', priceExp: 'be_02_booking_treatment_2026' }));
+    expect(logBeBookingConversion).not.toHaveBeenCalled();
+  });
+
+  it('02 still logs its own booking conversion exactly as before — and never 04\'s', async () => {
+    await recordBackendOrder(session({ amount_total: 4777 }, { expSubject: 'visitor-02', priceExp: 'be_04_price_2026' }));
+    expect(logBeBookingConversion).toHaveBeenCalledTimes(1);
+    expect(logBeBookingConversion).toHaveBeenCalledWith('visitor-02', 4777);
   });
 });

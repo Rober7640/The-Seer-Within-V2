@@ -37,6 +37,7 @@ import {
 } from '@/lib/intent'
 import { trackLead, trackInitiateCheckout, getTrackdeskClickId } from '@/lib/facebook'
 import { currentFunnel, funnelPath, getPostHogFunnel, linkParams, skipEmail } from '@/lib/funnel'
+import { goToPaiCheckout } from '@/lib/paiCheckout'
 import { track as trackPH, identifyUser as identifyPH, getDistinctId } from '@/lib/posthog'
 import {
   tarotEventProps,
@@ -2293,8 +2294,18 @@ export function useConversation() {
       const mainPrice = chat.userData.priceDollars ?? 35
       const downsellPrice = chat.userData.downsellDollars ?? 25
       const price = type === 'downsell' ? downsellPrice : mainPrice
-      trackInitiateCheckout(price, 'USD')
-      trackGAdsCheckout(price)
+      // The order bump, when she said yes to it — at the price the server charges for
+      // that tier ($12.77 main / the downsell arm's price), so InitiateCheckout reports
+      // the same total the Purchase event later does (main + bump). Before 2026-10-12
+      // it reported the main price alone even on a bump order.
+      const bumpCents = bump?.accepted
+        ? (type === 'downsell'
+            ? resolveBumpCents(chat.userData.bumpCentsDownsell, 'downsell')
+            : V1_BUMP_CENTS)
+        : 0
+      const checkoutValue = Math.round(price * 100 + bumpCents) / 100
+      trackInitiateCheckout(checkoutValue, 'USD')
+      trackGAdsCheckout(checkoutValue)
 
       // PostHog Phase 2: V1/fb checkout initiated
       {
@@ -2308,6 +2319,10 @@ export function useConversation() {
           step: 'sales',
           product: type === 'downsell' ? 'energy_clearing_ritual_downsell' : 'energy_clearing_ritual',
           price_cents: price * 100,
+          // Added 2026-10-12 — price_cents above stays the offer price (insights key
+          // on it); these say whether the bump rode along and the true total.
+          bump_accepted: bump?.accepted === true,
+          value_cents: Math.round(checkoutValue * 100),
           sign: palmSign ?? tarot?.deck,
           ...(tarot ?? {}),
           email_gate: skipEmail() ? 'off' : 'on',
@@ -2322,61 +2337,100 @@ export function useConversation() {
       const tarotHookForCheckout =
         getPostHogFunnel() === 'tarot' ? tarotEventProps()?.hook : undefined
 
+      const checkoutBody = {
+        email: chat.userData.email,
+        firstName: chat.userData.firstName,
+        bucket: chat.userData.bucket,
+        type,
+        trackdeskClickId: getTrackdeskClickId(),
+        gclid: getGclid(),
+        funnel: currentFunnel(),
+        // Undefined on every funnel but /fb-tarot. The server reads it for one
+        // thing: the soulmate landers' bumpProduct key.
+        tarotHook: tarotHookForCheckout,
+        // No-optin variant: tells the server to mark this purchase as a
+        // no-email-lander order (AWeber tag, internal Stripe description,
+        // and V2 account creation on the webhook). Absent/false for every
+        // normal funnel → no behavior change.
+        noemail: skipEmail(),
+        // Emailed-recovery marker (`&src=recovery`). Sent raw; the server accepts
+        // only the exact string 'recovery' before it reaches Stripe metadata.
+        src: srcParam.current,
+        // Browser PostHog id → Stripe metadata so the server-side
+        // purchase_completed event ties back to this visitor (connected funnel).
+        posthogDistinctId: getDistinctId(),
+        // fb-palm sign, so the server can re-resolve the bump arm exactly as it
+        // was resolved at lead capture even under a future sign-scoped test.
+        ...(getPostHogFunnel() === 'palm'
+          ? { sign: parsePalmParams(window.location.search)?.sign ?? 'thumb' }
+          : {}),
+        // /fb-read INSTRUMENT (tea | coffee | …), so Stripe bills " - TEA" / " - COFFEE"
+        // rather than one umbrella label for a funnel that serves several devices
+        // (Joel, 2026-09-02). Gated on the funnel exactly as `tarotHook` and `sign`
+        // above are, so no other funnel sends it and none can be affected.
+        //
+        // Read from the URL rather than from chat state: the chat page is reached as
+        // /fb-read/chat?hook=…&card=…&device=…, so the param is present for the whole
+        // session. The server re-validates against the device registry and falls back
+        // to " - TEA" if this is absent or unrecognized.
+        ...(getPostHogFunnel() === 'read'
+          ? { readDevice: parseReadParams(window.location.search)?.device }
+          : {}),
+        // Order bump. `bumpOffered` is sent even on a decline — it's the
+        // take-rate denominator. The server treats both as a REQUEST only.
+        ...(bump
+          ? {
+              bumpOffered: bump.offered,
+              bumpAccepted: bump.accepted,
+              bumpBucket: bump.bucket,
+            }
+          : {}),
+        // /fb-tarot deck, beside the hook — recorded on the gateway-split exposure
+        // so its report can be read per ad URL. Undefined on every other funnel.
+        tarotDeck: getPostHogFunnel() === 'tarot' ? tarotEventProps()?.deck : undefined,
+      }
       const response = await fetch('/api/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          email: chat.userData.email,
-          firstName: chat.userData.firstName,
-          bucket: chat.userData.bucket,
-          type,
-          trackdeskClickId: getTrackdeskClickId(),
-          gclid: getGclid(),
-          funnel: currentFunnel(),
-          // Undefined on every funnel but /fb-tarot. The server reads it for one
-          // thing: the soulmate landers' bumpProduct key.
-          tarotHook: tarotHookForCheckout,
-          // No-optin variant: tells the server to mark this purchase as a
-          // no-email-lander order (AWeber tag, internal Stripe description,
-          // and V2 account creation on the webhook). Absent/false for every
-          // normal funnel → no behavior change.
-          noemail: skipEmail(),
-          // Emailed-recovery marker (`&src=recovery`). Sent raw; the server accepts
-          // only the exact string 'recovery' before it reaches Stripe metadata.
-          src: srcParam.current,
-          // Browser PostHog id → Stripe metadata so the server-side
-          // purchase_completed event ties back to this visitor (connected funnel).
-          posthogDistinctId: getDistinctId(),
-          // fb-palm sign, so the server can re-resolve the bump arm exactly as it
-          // was resolved at lead capture even under a future sign-scoped test.
-          ...(getPostHogFunnel() === 'palm'
-            ? { sign: parsePalmParams(window.location.search)?.sign ?? 'thumb' }
-            : {}),
-          // /fb-read INSTRUMENT (tea | coffee | …), so Stripe bills " - TEA" / " - COFFEE"
-          // rather than one umbrella label for a funnel that serves several devices
-          // (Joel, 2026-09-02). Gated on the funnel exactly as `tarotHook` and `sign`
-          // above are, so no other funnel sends it and none can be affected.
-          //
-          // Read from the URL rather than from chat state: the chat page is reached as
-          // /fb-read/chat?hook=…&card=…&device=…, so the param is present for the whole
-          // session. The server re-validates against the device registry and falls back
-          // to " - TEA" if this is absent or unrecognized.
-          ...(getPostHogFunnel() === 'read'
-            ? { readDevice: parseReadParams(window.location.search)?.device }
-            : {}),
-          // Order bump. `bumpOffered` is sent even on a decline — it's the
-          // take-rate denominator. The server treats both as a REQUEST only.
-          ...(bump
-            ? {
-                bumpOffered: bump.offered,
-                bumpAccepted: bump.accepted,
-                bumpBucket: bump.bucket,
-              }
-            : {}),
-        }),
+        body: JSON.stringify(checkoutBody),
       })
-      const { url } = await response.json()
-      if (url) window.location.href = url
+      const data = await response.json()
+      // The live gateway split: a Payments.AI buyer gets a signed order instead of a
+      // Stripe URL and is sent to OUR checkout page, <funnel>/checkout
+      // (pages/PaiCheckoutPage), as a Stripe buyer is sent to Stripe's. Every Stripe
+      // buyer gets `{ url }` exactly as before.
+      if (data?.gateway === 'paymentsai' && typeof data.orderToken === 'string') {
+        const went = goToPaiCheckout(
+          {
+            orderToken: data.orderToken,
+            totalCents: data.totalCents,
+            mainCents: data.mainCents,
+            bumpCents: data.bumpCents ?? 0,
+            productName: data.productName ?? 'Energy Clearing Ritual',
+            productDescription: data.productDescription,
+            bumpName: data.bumpName,
+            bumpDescription: data.bumpDescription,
+            email: chat.userData.email ?? undefined,
+            firstName: chat.userData.firstName ?? undefined,
+            funnel: currentFunnel() ?? undefined,
+            backUrl: `${funnelPath('/chat')}?cancelled=true`,
+            stripeFallbackBody: checkoutBody,
+          },
+          funnelPath('/checkout'),
+        )
+        if (went) return
+        // This browser will not hold the order (storage blocked) — take her to Stripe
+        // instead, so she can still pay.
+        const retry = await fetch('/api/checkout', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ...checkoutBody, forceStripe: true }),
+        })
+        const again = await retry.json()
+        if (again?.url) window.location.href = again.url
+        return
+      }
+      if (data?.url) window.location.href = data.url
     } catch (error) {
       console.error('Checkout error:', error)
     }

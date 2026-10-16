@@ -35,6 +35,23 @@ import quizRouter from "./routes/quiz";
 // unless NODE_ENV!=production AND PAI_DEV_FUNNEL=1 AND the base is staging.
 // Never reached by the live Stripe funnel below.
 import paiFunnelRouter from "./routes/paiFunnel";
+// LIVE Stripe-vs-Payments.AI split (shared/paymentGateway.ts). Reached only by a buyer
+// /api/checkout put on Payments.AI, or by an order whose id is a Payments.AI `txn_…`
+// (isPaiOrderId). A Stripe order never enters it.
+import { createPaiLiveRouter } from "./routes/paiLive";
+import {
+  resolveGateway,
+  signOrder,
+  chargeUpsell1Pai,
+  chargeUpsell2Pai,
+  recordPaymentAttempt,
+  funnelForPaiPayment,
+  attachShippingToPaiPayment,
+  PAI_TAG,
+  type PaiLiveDeps,
+  type PaiOrder,
+} from "./lib/paiLive";
+import { GATEWAY_EXPERIMENT_KEY, isPaiOrderId } from "@shared/paymentGateway";
 import evelynLanderRouter from "./routes/evelynLander";
 import productsRouter from "./routes/products";
 import backendOffersRouter from "./routes/backendOffers";
@@ -93,6 +110,7 @@ import {
   hashEmail,
   PALM_GATE_EXPERIMENT_KEY,
   V1_BUMP_EXPERIMENT_KEY,
+  v1BumpKeyFor,
   V1_DOWNSELL_BUMP_PRICE_KEY,
   V1_TAROT_VERSION_EXPERIMENT_KEY,
   V1_TAROT_SHADOW_EXPERIMENT_KEY,
@@ -141,6 +159,7 @@ import { collectsPhoneAtCheckout } from "./lib/checkoutPhone";
 import { smsConsentSessionParams, smsConsentSessionMetadata } from "./lib/smsConsent";
 import { addLeadToKit } from "./lib/kit";
 import { resolveLunaTyHandoff } from "./lib/lunaThankyouGift";
+import { isEvelynTyConversation, resolveEvelynTyHandoff } from "./lib/evelynThankyouGift";
 import { addContactToResendAudience } from "./lib/resendAudience";
 import { createSoulmateLanderV2Account } from "./lib/soulmateLanderSignup";
 import { extractClientIp, extractUserAgent } from "./lib/fraudDetection";
@@ -392,6 +411,16 @@ function fbifyAweberTags(tags: string[], funnel: FunnelId): string[] {
   );
 }
 
+// The routes.ts-private funnel helpers the Payments.AI half of the split needs, so it
+// tags, names and redirects exactly as the Stripe path does without moving them.
+const paiLiveDeps: PaiLiveDeps = {
+  fbifyAweberTags,
+  funnelPath,
+  fbPosthogName,
+  fbTagSuffix,
+  isFbFunnel,
+};
+
 // Kit funnel tag for a lead: each ad funnel's PostHog value doubles as its Kit
 // tag name ("fb"/"fb2"/"gdn"/"palm"); base V1 (undefined) maps to "v1". These
 // tags must exist in the Kit dashboard for tagging to take effect.
@@ -585,6 +614,8 @@ export async function registerRoutes(
   app.use("/api/astrology", astrologyRouter);
   app.use("/api/quiz", quizRouter);
   app.use("/api/pai", paiFunnelRouter);
+  // The live split's card form. 404s unless PAI_LIVE_ENABLED=1 + PAI_LIVE_* are set.
+  app.use("/api/pai-live", createPaiLiveRouter(paiLiveDeps));
   app.use("/api/evelyn-lander", evelynLanderRouter);
   // Generalized lander for the additional personas (Marcus, Luna, Nova, Maren).
   app.use("/api/persona-lander/:persona", personaLanderRouter);
@@ -997,10 +1028,10 @@ export async function registerRoutes(
             email,
             funnel: funnel ?? null,
             tier: type === "downsell" ? "downsell" : "main",
-            experimentKey: V1_BUMP_EXPERIMENT_KEY,
+            experimentKey: v1BumpKeyFor(funnel),
             armVariant: bumpArm.variant,
             enrolled: bumpArm.enrolled,
-            hint: "is v1_bump_copy_2026 running, and does its scope.funnel include this funnel?",
+            hint: "is this experimentKey running, and does its scope.funnel include this funnel?",
           },
         );
       }
@@ -1145,6 +1176,118 @@ export async function registerRoutes(
       const downsellCents = variantInfo?.downsellCents ?? 2500;
       const priceAmount = type === "downsell" ? downsellCents : mainCents;
       const variantId = variantInfo?.variant ?? "35";
+      // What she is actually about to be charged: the offer plus the bump when it is
+      // on. Only the Google Ads begin-checkout value below reads it — the Stripe line
+      // items and every stored amount are unchanged.
+      const checkoutTotalCents = priceAmount + (bumpApplied ? bumpCentsResolved : 0);
+
+      // ── LIVE GATEWAY SPLIT: Stripe vs Payments.AI (shared/paymentGateway.ts) ──
+      // Decided HERE, once, after the price and bump are settled, so both processors
+      // charge exactly the same order. resolveGateway answers "stripe" — touching no
+      // database or network — for every funnel and lander not on the hard allow-list,
+      // for a deploy without PAI_LIVE_* config, and on any error. While the
+      // experiment is draft or paused it answers "stripe" for everyone, so this whole
+      // block is inert until it is started from /admin/experiments.
+      //
+      // `forceStripe`: the Payments.AI card form could not load in her browser, so the
+      // page asks for Stripe instead. Only ever moves her TO Stripe — the default.
+      if (req.body?.forceStripe !== true) {
+        const tarotDeck =
+          typeof req.body?.tarotDeck === "string"
+            ? req.body.tarotDeck.trim().slice(0, 40) || undefined
+            : undefined;
+        const gateway = await resolveGateway({
+          email,
+          funnel,
+          hook: tarotHook,
+          deck: tarotDeck,
+          noemail,
+        });
+        const gatewayEmail =
+          typeof email === "string" && email.trim() ? email.trim().toLowerCase() : null;
+        // The exposure — BOTH arms, so the report has a denominator. Logged at the
+        // checkout click: that is where the two arms first differ. One row per buyer
+        // (onConflictDoNothing), so a second click never double-counts.
+        if (gateway.enrolled && gateway.variant && gatewayEmail) {
+          try {
+            const convo = await getConversationByEmail(email);
+            await logExposure(
+              GATEWAY_EXPERIMENT_KEY,
+              hashEmail(gatewayEmail),
+              gateway.variant,
+              "checkout",
+              {
+                conversationId: convo?.id ?? null,
+                funnel: funnel ?? null,
+                hook: tarotHook ?? null,
+                deck: tarotDeck ?? null,
+                type,
+              },
+            );
+          } catch (err) {
+            logger.error("gateway split exposure logging failed", { err });
+          }
+        }
+        if (gateway.gateway === "paymentsai" && gatewayEmail) {
+          const order: PaiOrder = {
+            v: 1,
+            email: gatewayEmail,
+            firstName: firstName || "Friend",
+            bucket: bucket ?? null,
+            funnel: funnel ?? null,
+            hook: tarotHook ?? null,
+            deck: tarotDeck ?? null,
+            type: type === "downsell" ? "downsell" : "main",
+            mainCents: priceAmount,
+            bumpOffered: bumpWasOffered,
+            bumpApplied,
+            bumpCents: bumpApplied ? bumpCentsResolved : 0,
+            bumpBucket: bumpApplied ? (bumpBucket as string) : null,
+            bumpProduct: bumpApplied
+              ? (bumpMetadata as { bumpProduct?: string }).bumpProduct ?? null
+              : null,
+            priceVariant: variantId,
+            productName,
+            gclid: gclid ?? null,
+            trackdeskClickId: trackdeskClickId ?? null,
+            posthogDistinctId: posthogDistinctId ?? null,
+            src: isRecovery ? "recovery" : null,
+            readDevice: readDevice ?? null,
+            iat: Date.now(),
+          };
+          fireGoogleAdsConversion({
+            step: "initiate_checkout",
+            gclid,
+            valueCents: checkoutTotalCents,
+            email,
+          }).catch(() => {
+            /* logged inside */
+          });
+          logger.info(`Gateway split: ${gatewayEmail} → Payments.AI (${funnel ?? "root"}${tarotHook ? ` ${tarotHook}` : ""})`);
+          return res.json({
+            gateway: "paymentsai",
+            orderToken: signOrder(order),
+            totalCents: checkoutTotalCents,
+            mainCents: priceAmount,
+            bumpCents: order.bumpCents,
+            productName,
+            // The line items exactly as the Stripe checkout itemises them, so the
+            // Payments.AI checkout page shows her the same order.
+            productDescription: `Personalized reading for ${firstName}`,
+            ...(bumpApplied
+              ? {
+                  bumpName: bumpProductName(fbSuffix(funnel, readDevice), bumpArm.copy),
+                  bumpDescription: bumpCopy(
+                    bumpArm.copy,
+                    bumpBucket as BumpBucket,
+                    undefined,
+                    bumpCentsResolved,
+                  ).lineDescription,
+                }
+              : {}),
+          });
+        }
+      }
 
       // Create or get existing customer.
       // No-email variant (`?noemail=1`): `email` arrives null. We deliberately
@@ -1375,7 +1518,7 @@ export async function registerRoutes(
       fireGoogleAdsConversion({
         step: "initiate_checkout",
         gclid,
-        valueCents: priceAmount,
+        valueCents: checkoutTotalCents,
         email,
       }).catch(() => {
         /* logged inside */
@@ -1982,7 +2125,9 @@ export async function registerRoutes(
 
       // FALLBACK: If not found in database, fetch directly from Stripe and create the record
       // This handles race conditions where the redirect is faster than the database write
-      if (!conversation && stripe) {
+      // (Payments.AI orders — `txn_…` — are written BEFORE the redirect, and are not
+      // Stripe objects, so this never applies to them.)
+      if (!conversation && stripe && !isPaiOrderId(sessionId)) {
         logger.info(`Session ${sessionId} not in DB, fetching from Stripe...`);
 
         try {
@@ -2054,7 +2199,9 @@ export async function registerRoutes(
       await markUpsellOffered(sessionId);
 
       // Add to AWeber paid list with Stripe order ID (non-blocking)
-      if (stripe && conversation.email) {
+      // A Payments.AI order was put on the paid list when its charge was approved
+      // (server/lib/paiLive.ts) — there is no Stripe session to read here.
+      if (stripe && conversation.email && !isPaiOrderId(sessionId)) {
         stripe.checkout.sessions
           .retrieve(sessionId, { expand: ["payment_intent"] })
           .then((session) => {
@@ -2199,6 +2346,17 @@ export async function registerRoutes(
       const conversation = await getConversationByStripeSession(sessionId);
       if (!conversation || !conversation.email) {
         return res.status(404).json({ error: "Order not found" });
+      }
+      // /fb buyers are handed to Evelyn (15-min gift + reading brief, Joel 2026-10-14);
+      // every other funnel keeps Luna exactly as before. Decided from the server-side
+      // order, never from the client. A response without `persona` means Luna, so an
+      // older cached client keeps working.
+      if (isEvelynTyConversation(conversation.priceVariant)) {
+        const handoff = await resolveEvelynTyHandoff(
+          conversation.email,
+          conversation.firstName ?? null,
+        );
+        return res.json({ ...handoff, persona: "evelyn" });
       }
       const handoff = await resolveLunaTyHandoff(
         conversation.email,
@@ -2393,6 +2551,12 @@ export async function registerRoutes(
 
   // Upsell 1-Click Charge
   app.post("/api/upsell/charge", async (req: Request, res: Response) => {
+    // For payment_attempts only: what was being charged when an exception came back.
+    let upsell1ChargeAttempted = false;
+    let upsell1AttemptCents = 0;
+    let upsell1AttemptOrder: string | null = null;
+    let upsell1AttemptEmail: string | null = null;
+    let upsell1AttemptFunnel: string | null = null;
     try {
       // Validate request body with Zod
       const parseResult = upsellChargeSchema.safeParse(req.body);
@@ -2422,6 +2586,23 @@ export async function registerRoutes(
       const upsell1Cents = email
         ? (await getVariantForEmail(email)).upsell1Cents
         : 4700;
+
+      // A Payments.AI order (`txn_…`) is charged on ITS saved card — same price, same
+      // reply shape. Stripe orders (`cs_…`) never take this branch.
+      if (isPaiOrderId(checkoutSessionId)) {
+        const r = await chargeUpsell1Pai(
+          {
+            checkoutSessionId,
+            email: email ?? undefined,
+            firstName: firstName ?? undefined,
+            funnel: parseFunnel(funnel),
+            trackdeskClickId: trackdeskClickId ?? undefined,
+          },
+          upsell1Cents,
+          paiLiveDeps,
+        );
+        return res.status(r.status).json(r.body);
+      }
 
       if (!stripe) {
         logger.warn("Stripe not configured - returning fallback");
@@ -2497,6 +2678,12 @@ export async function registerRoutes(
         return res.json({ success: false, fallback: true });
       }
 
+      // payment_attempts: from here on, an exception IS the charge being refused.
+      upsell1ChargeAttempted = true;
+      upsell1AttemptCents = upsell1Cents;
+      upsell1AttemptOrder = checkoutSessionId;
+      upsell1AttemptEmail = email ?? null;
+      upsell1AttemptFunnel = funnel ?? null;
       const upsellPayment = await stripe.paymentIntents.create({
         amount: upsell1Cents,
         currency: "usd",
@@ -2530,6 +2717,25 @@ export async function registerRoutes(
         },
       });
 
+      recordPaymentAttempt({
+        gateway: "stripe",
+        step: "upsell1",
+        initiator: "mit",
+        result:
+          upsellPayment.status === "succeeded"
+            ? "approved"
+            : upsellPayment.status === "requires_action" ||
+                upsellPayment.status === "requires_confirmation"
+              ? "needs_action"
+              : "declined",
+        amountCents: upsell1Cents,
+        processorRef: upsellPayment.id,
+        orderRef: checkoutSessionId,
+        declineReason: upsellPayment.status === "succeeded" ? null : upsellPayment.status,
+        email: email ?? null,
+        funnel: funnel ?? null,
+      });
+
       if (upsellPayment.status === "succeeded") {
         // Mark upsell purchased in database
         await markUpsellPurchased(checkoutSessionId, upsellPayment.id, upsell1Cents);
@@ -2558,6 +2764,8 @@ export async function registerRoutes(
             step: "upsell1",
             product: "protection_ritual",
             payment_method: "stripe_1click",
+            // Additive (2026-10-12): names the processor, as the Payments.AI arm does.
+            payment_gateway: "stripe",
             amount_cents: upsell1Cents,
             payment_intent_id: upsellPayment.id,
             email,
@@ -2606,6 +2814,20 @@ export async function registerRoutes(
       }
     } catch (error: any) {
       logger.error("Upsell charge error:", error?.message || error);
+      if (upsell1ChargeAttempted) {
+        recordPaymentAttempt({
+          gateway: "stripe",
+          step: "upsell1",
+          initiator: "mit",
+          result: error?.code === "authentication_required" ? "needs_action" : "declined",
+          amountCents: upsell1AttemptCents,
+          processorRef: error?.payment_intent?.id ?? null,
+          orderRef: upsell1AttemptOrder,
+          declineReason: [error?.code, error?.decline_code].filter(Boolean).join(" · ") || String(error?.message ?? "error"),
+          email: upsell1AttemptEmail,
+          funnel: upsell1AttemptFunnel,
+        });
+      }
 
       // Handle Stripe-specific errors that require fallback
       const fallbackCodes = [
@@ -2641,6 +2863,14 @@ export async function registerRoutes(
         const { email, firstName, bucket, originalSessionId, funnel } =
           parseResult.data;
         const trackdeskClickId = req.body?.trackdeskClickId as string | undefined;
+
+        // A Payments.AI order: her card lives at Payments.AI, so the second chance is
+        // OUR card page, not a hosted Stripe checkout. Stripe orders never take this.
+        if (isPaiOrderId(originalSessionId)) {
+          return res.json({
+            url: `/pai/pay?${new URLSearchParams({ order: originalSessionId, step: "upsell1" }).toString()}`,
+          });
+        }
         // LAZY, for the same reason as the 1-click path: the /fb-read instrument is
         // inherited from the original session, retrieved below.
         const upsell1NameFor = (device?: unknown) =>
@@ -2820,8 +3050,13 @@ export async function registerRoutes(
             ) {
               // Read funnel from the upsell PaymentIntent metadata so ad-funnel
               // shipping confirmations get the per-funnel AWeber tag suffix.
+              // A Payments.AI upsell is not a Stripe object: its funnel is on its
+              // payment_attempts row instead.
+              const paiUpsell = isPaiOrderId(conversation.upsellPaymentId);
               let shippingFunnel: FunnelId = undefined;
-              if (stripe) {
+              if (paiUpsell) {
+                shippingFunnel = await funnelForPaiPayment(conversation.upsellPaymentId);
+              } else if (stripe) {
                 try {
                   const pi = await stripe.paymentIntents.retrieve(
                     conversation.upsellPaymentId,
@@ -2839,10 +3074,13 @@ export async function registerRoutes(
                 email: conversation.email,
                 name: conversation.firstName || undefined,
                 stripeOrderId: conversation.upsellPaymentId,
-                tags: fbifyAweberTags(
-                  ["seer-within-upsell", "shipping-confirmed"],
-                  shippingFunnel,
-                ),
+                tags: [
+                  ...fbifyAweberTags(
+                    ["seer-within-upsell", "shipping-confirmed"],
+                    shippingFunnel,
+                  ),
+                  ...(paiUpsell ? [PAI_TAG] : []),
+                ],
                 shipping: shippingData,
               })
                 .then(() => {
@@ -2855,8 +3093,11 @@ export async function registerRoutes(
                 );
             }
 
-            // Update Stripe payment intent metadata with shipping
-            if (stripe && conversation.upsellPaymentId) {
+            // Update the upsell payment with shipping — on Payments.AI for a `txn_…`
+            // upsell (same seven keys), on the Stripe PaymentIntent otherwise.
+            if (conversation.upsellPaymentId && isPaiOrderId(conversation.upsellPaymentId)) {
+              await attachShippingToPaiPayment(conversation.upsellPaymentId, shippingData);
+            } else if (stripe && conversation.upsellPaymentId) {
               try {
                 await stripe.paymentIntents.update(
                   conversation.upsellPaymentId,
@@ -3011,6 +3252,12 @@ export async function registerRoutes(
   });
 
   app.post("/api/upsell2/charge", async (req: Request, res: Response) => {
+    // For payment_attempts only: what was being charged when an exception came back.
+    let upsell2ChargeAttempted = false;
+    let upsell2AttemptCents = 0;
+    let upsell2AttemptOrder: string | null = null;
+    let upsell2AttemptEmail: string | null = null;
+    let upsell2AttemptFunnel: string | null = null;
     try {
       const parseResult = upsell2ChargeSchema.safeParse(req.body);
       if (!parseResult.success) {
@@ -3025,6 +3272,23 @@ export async function registerRoutes(
       const { checkoutSessionId, email, firstName, type, funnel, trackdeskClickId } =
         parseResult.data;
       const amount = type === "full" ? 4700 : 3000;
+
+      // A Payments.AI order (`txn_…`) is charged on ITS saved card — same price, same
+      // reply shape. Stripe orders (`cs_…`) never take this branch.
+      if (isPaiOrderId(checkoutSessionId)) {
+        const r = await chargeUpsell2Pai(
+          {
+            checkoutSessionId,
+            email: email ?? undefined,
+            firstName: firstName ?? undefined,
+            funnel: parseFunnel(funnel),
+            trackdeskClickId: trackdeskClickId ?? undefined,
+            type,
+          },
+          paiLiveDeps,
+        );
+        return res.status(r.status).json(r.body);
+      }
 
       if (!stripe) {
         logger.warn("Stripe not configured - returning fallback");
@@ -3114,6 +3378,12 @@ export async function registerRoutes(
       // straight off it. Non-read funnels ignore the argument.
       const productName = `${baseProductName}${fbSuffix(funnel, readDeviceFromSession(session))}`;
 
+      // payment_attempts: from here on, an exception IS the charge being refused.
+      upsell2ChargeAttempted = true;
+      upsell2AttemptCents = amount;
+      upsell2AttemptOrder = checkoutSessionId;
+      upsell2AttemptEmail = email ?? null;
+      upsell2AttemptFunnel = funnel ?? null;
       const upsell2Payment = await stripe.paymentIntents.create({
         amount,
         currency: "usd",
@@ -3137,6 +3407,25 @@ export async function registerRoutes(
           // the customer's receipt, so no marker goes there.
           ...(session.metadata?.src === "recovery" && { src: "recovery" }),
         },
+      });
+
+      recordPaymentAttempt({
+        gateway: "stripe",
+        step: "upsell2",
+        initiator: "mit",
+        result:
+          upsell2Payment.status === "succeeded"
+            ? "approved"
+            : upsell2Payment.status === "requires_action" ||
+                upsell2Payment.status === "requires_confirmation"
+              ? "needs_action"
+              : "declined",
+        amountCents: amount,
+        processorRef: upsell2Payment.id,
+        orderRef: checkoutSessionId,
+        declineReason: upsell2Payment.status === "succeeded" ? null : upsell2Payment.status,
+        email: email ?? null,
+        funnel: funnel ?? null,
       });
 
       if (upsell2Payment.status === "succeeded") {
@@ -3170,6 +3459,8 @@ export async function registerRoutes(
             step: "upsell2",
             product: "manifestation_bracelet",
             payment_method: "stripe_1click",
+            // Additive (2026-10-12): names the processor, as the Payments.AI arm does.
+            payment_gateway: "stripe",
             amount_cents: amount,
             amount_variant: type,
             payment_intent_id: upsell2Payment.id,
@@ -3327,6 +3618,20 @@ export async function registerRoutes(
       }
     } catch (error: any) {
       logger.error("Upsell2 charge error:", error?.message || error);
+      if (upsell2ChargeAttempted) {
+        recordPaymentAttempt({
+          gateway: "stripe",
+          step: "upsell2",
+          initiator: "mit",
+          result: error?.code === "authentication_required" ? "needs_action" : "declined",
+          amountCents: upsell2AttemptCents,
+          processorRef: error?.payment_intent?.id ?? null,
+          orderRef: upsell2AttemptOrder,
+          declineReason: [error?.code, error?.decline_code].filter(Boolean).join(" · ") || String(error?.message ?? "error"),
+          email: upsell2AttemptEmail,
+          funnel: upsell2AttemptFunnel,
+        });
+      }
 
       const fallbackCodes = [
         "card_declined",
@@ -3360,6 +3665,13 @@ export async function registerRoutes(
           parseResult.data;
         const trackdeskClickId = req.body?.trackdeskClickId as string | undefined;
         const amount = type === "full" ? 4700 : 3000;
+
+        // A Payments.AI order: the second chance is OUR card page (see upsell 1).
+        if (isPaiOrderId(originalSessionId)) {
+          return res.json({
+            url: `/pai/pay?${new URLSearchParams({ order: originalSessionId, step: "upsell2", type }).toString()}`,
+          });
+        }
 
         if (!stripe) {
           logger.warn("Stripe not configured - returning mock URL");
@@ -3494,7 +3806,11 @@ export async function registerRoutes(
             // Carry the no-optin flag from the upsell-2 charge so a fallback
             // buyer (whose first AWeber add happens here) still gets tagged.
             let shipping2Noemail = false;
-            if (stripe) {
+            // A Payments.AI upsell: funnel from its payment_attempts row.
+            const paiUpsell2 = isPaiOrderId(conversation.upsell2PaymentId);
+            if (paiUpsell2) {
+              shipping2Funnel = await funnelForPaiPayment(conversation.upsell2PaymentId);
+            } else if (stripe) {
               try {
                 const pi = await stripe.paymentIntents.retrieve(
                   conversation.upsell2PaymentId,
@@ -3521,7 +3837,7 @@ export async function registerRoutes(
                   ...(shipping2Noemail ? ["noemail"] : []),
                 ],
                 shipping2Funnel,
-              ),
+              ).concat(paiUpsell2 ? [PAI_TAG] : []),
               shipping: {
                 name: address.name,
                 line1: address.line1,
@@ -3545,8 +3861,11 @@ export async function registerRoutes(
               );
           }
 
-          // Update Stripe payment intent metadata with shipping
-          if (stripe && conversation.upsell2PaymentId) {
+          // Update the upsell payment with shipping — on Payments.AI for a `txn_…`
+          // upsell (same seven keys), on the Stripe PaymentIntent otherwise.
+          if (conversation.upsell2PaymentId && isPaiOrderId(conversation.upsell2PaymentId)) {
+            await attachShippingToPaiPayment(conversation.upsell2PaymentId, address);
+          } else if (stripe && conversation.upsell2PaymentId) {
             try {
               await stripe.paymentIntents.update(
                 conversation.upsell2PaymentId,
