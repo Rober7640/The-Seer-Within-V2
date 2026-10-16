@@ -99,6 +99,7 @@ const BACKEND_FUNNEL: Record<string, string> = {
   'pixiu-bracelet': 'pixiu',
   'marcus-reading': 'marcusreading',
   'heart-cleanser': 'heartcleanser',
+  'soulmate-initials': 'evelynvsl',
 };
 
 export function buildBackendPurchaseEvent(input: BackendPurchaseInput): BackendPurchaseEvent {
