@@ -129,10 +129,18 @@ import {
   bumpCopy,
   paymentIntentDescription,
   isBumpBucket,
-  isRecoverySrc,
+  normaliseSrc,
+  srcMetadata,
+  type CheckoutSrc,
   pairedBumpBucket,
   type BumpBucket,
 } from "@shared/orderBump";
+import {
+  checkoutLineDescription,
+  resolveCheckoutVariant,
+  retargetLanderPath,
+  retargetOfferMetadata,
+} from "@shared/retargetCheckout";
 import { fireGoogleAdsConversion } from "./lib/googleAds";
 import { funnelDefForParam, FUNNELS, type FunnelParam } from "@shared/funnelConfig";
 // /fb-read validates against the SAME registry the lander renders from, so the
@@ -927,7 +935,20 @@ export async function registerRoutes(
       // CLOSED CHECK, never a pass-through. This is an untrusted client string that
       // ends up in Stripe metadata and therefore in Mike's n8n flow — the same reason
       // `bumpBucket` below is validated against its enum rather than forwarded.
-      const isRecovery = isRecoverySrc(req.body?.src);
+      //
+      // 2026-10-16: a SECOND marker, `retarget` — the /fb-tarot retargeting page
+      // (`/fb-tarot/b?src=retarget`). Same closed check (normaliseSrc accepts exactly
+      // these two strings), its own description marker, and `metadata.src = 'retarget'`.
+      // Recovery is unchanged.
+      const src: CheckoutSrc | null = normaliseSrc(req.body?.src);
+      const isRecovery = src === "recovery";
+      const isRetarget = src === "retarget";
+      // The OFFER-PAGE marker (`retargetPage: 'offer'`, sent ONLY by the retargeting
+      // offer page). Closed check, retarget orders only: `{ rtfmt: 'offer' }` on an
+      // offer-page order, EMPTY on every other order, so their metadata is unchanged.
+      // It is also what unlocks the $30 offer price below — a chat URL that merely
+      // carries `src=retarget` never sends it.
+      const retargetOfferMeta = retargetOfferMetadata(src, req.body?.retargetPage);
       const funnel: FunnelId =
         parseFunnel(req.body?.funnel);
       // Google Ads click id (from the _gcl_aw cookie). Stored in Stripe
@@ -1174,7 +1195,27 @@ export async function registerRoutes(
       // lander — is ignored in favour of the funnel's own price. See
       // getVariantForEmail. Normal traffic is unaffected: lead capture already
       // stamps a matching variant, so this never fires.
-      const variantInfo = email ? await getVariantForEmail(email, funnel) : null;
+      //
+      // RETARGET, NO EMAIL: the retargeting page checks out with no email on purpose
+      // (see retargetFixedVariant), so there is no row to read. Charge the funnel's
+      // FIXED price entry — the same table the page prints its button from — instead
+      // of the root "35" fallback, so the order is attributed to its funnel. Scoped to
+      // `retarget`: the no-optin arm's no-email orders keep the old fallback exactly.
+      //
+      // RETARGET OFFER PAGE (2026-10-16): the offer page charges the returning-reader
+      // price ($30, '30_tarot_rt') from RETARGET_OFFER_PRICES — the same table it prints
+      // "$35 → $30 · 14%" from. Keyed on the closed-set offer-page marker (the same value
+      // written to metadata.rtfmt), never a client price, and only with `src=retarget`
+      // on v1-tarot. A retarget order without the marker and every other order take
+      // exactly the branches above. Precedence lives in resolveCheckoutVariant
+      // (shared/retargetCheckout.ts) and is unit tested there.
+      const variantInfo = await resolveCheckoutVariant({
+        src,
+        funnel,
+        offerMarker: retargetOfferMeta.rtfmt,
+        email,
+        lookupByEmail: getVariantForEmail,
+      });
       const mainCents = variantInfo?.priceCents ?? 3500;
       const downsellCents = variantInfo?.downsellCents ?? 2500;
       const priceAmount = type === "downsell" ? downsellCents : mainCents;
@@ -1254,7 +1295,7 @@ export async function registerRoutes(
             gclid: gclid ?? null,
             trackdeskClickId: trackdeskClickId ?? null,
             posthogDistinctId: posthogDistinctId ?? null,
-            src: isRecovery ? "recovery" : null,
+            src,
             readDevice: readDevice ?? null,
             iat: Date.now(),
           };
@@ -1276,7 +1317,7 @@ export async function registerRoutes(
             productName,
             // The line items exactly as the Stripe checkout itemises them, so the
             // Payments.AI checkout page shows her the same order.
-            productDescription: `Personalized reading for ${firstName}`,
+            productDescription: checkoutLineDescription(firstName, src),
             ...(bumpApplied
               ? {
                   bumpName: bumpProductName(fbSuffix(funnel, readDevice), bumpArm.copy),
@@ -1339,7 +1380,9 @@ export async function registerRoutes(
               currency: "usd",
               product_data: {
                 name: productName,
-                description: `Personalized reading for ${firstName}`,
+                // Unchanged for every order except a retarget order with no name,
+                // which would otherwise read "Personalized reading for undefined".
+                description: checkoutLineDescription(firstName, src),
               },
               unit_amount: priceAmount,
             },
@@ -1407,6 +1450,7 @@ export async function registerRoutes(
           description: paymentIntentDescription(productName, {
             bump: bumpApplied,
             recovery: isRecovery,
+            retarget: isRetarget,
             noemail,
           }),
           setup_future_usage: "off_session",
@@ -1426,12 +1470,23 @@ export async function registerRoutes(
             ...(readDevice && { readDevice }),
             ...(gclid && { gclid }),
             ...(noemail && { noemail: "1" }),
-            ...(isRecovery && { src: "recovery" }),
+            // `src` is 'recovery' | 'retarget' | null — closed set, see normaliseSrc.
+            ...(src && { src }),
+            // Offer-page orders only: `rtfmt: 'offer'` — see retargetOfferMeta.
+            ...retargetOfferMeta,
             ...bumpMetadata,
           },
         },
         success_url: `${getBaseUrl(req)}${funnelPath("/welcome1", funnel)}?session_id={CHECKOUT_SESSION_ID}`,
-        cancel_url: `${getBaseUrl(req)}${funnelPath("/chat", funnel)}?cancelled=true`,
+        // The retargeting PAGE (not the chat) asks to come back to itself: she backed
+        // out of Stripe, so she lands on her three cards face up with the offer again.
+        // Needs both the marker and the page's own flag, so a chat checkout that
+        // merely carries `src=retarget` still returns to its chat as before.
+        cancel_url: `${getBaseUrl(req)}${
+          (isRetarget && req.body?.returnTo === "lander"
+            ? retargetLanderPath(funnel, tarotHook, { cancelled: true })
+            : null) ?? `${funnelPath("/chat", funnel)}?cancelled=true`
+        }`,
         metadata: {
           firstName,
           ...(hasEmail && { email }),
@@ -1462,7 +1517,12 @@ export async function registerRoutes(
           //
           // ABSENT (not empty-string) on a normal order, so "does src exist" stays
           // a clean test — same contract as the bump keys below.
-          ...(isRecovery && { src: "recovery" }),
+          // 'retarget' rides the same key (normaliseSrc's closed set).
+          ...(src && { src }),
+          // Offer-page orders only (EMPTY on every other order): `rtfmt: 'offer'`, so
+          // offer-page sales are identifiable. Upsells inherit it from here exactly as
+          // they inherit `src`.
+          ...retargetOfferMeta,
           // 🔴 THE LOAD-BEARING COPY. Mike's n8n filter reads
           // `body.data.object.metadata.*`, where data.object is the checkout
           // SESSION — so the bump keys must be in THIS block or he never sees
@@ -2716,7 +2776,9 @@ export async function registerRoutes(
           // off-session PaymentIntent, whose `description` DOES surface on the
           // customer's Stripe receipt. The main checkout can carry the marker
           // because there the customer reads `product_data.name` instead.
-          ...(session.metadata?.src === "recovery" && { src: "recovery" }),
+          ...srcMetadata(session.metadata?.src),
+          // …and the offer-page marker, same inheritance (empty unless an offer-page order).
+          ...retargetOfferMetadata(session.metadata?.src, session.metadata?.rtfmt),
         },
       });
 
@@ -2900,7 +2962,10 @@ export async function registerRoutes(
         // recovered buyer's upsell books as ordinary revenue. That under-counts
         // the campaign, which is the right direction to be wrong in.
         let inheritNoemail = false;
-        let inheritSrc = false;
+        let inheritSrc: CheckoutSrc | null = null;
+        // The offer-page marker (`rtfmt`) rides the same retrieve; EMPTY on every
+        // other order and on a lookup error.
+        let inheritRtfmt: { rtfmt?: string } = {};
         // The /fb-read instrument rides the SAME retrieve, and fails the same way: on a
         // lookup error it stays undefined and fbSuffix() falls back to " - TEA", i.e.
         // today's behaviour. Never fatal — a failed label lookup must not block a charge.
@@ -2908,7 +2973,8 @@ export async function registerRoutes(
         try {
           const orig = await stripe.checkout.sessions.retrieve(originalSessionId);
           inheritNoemail = orig.metadata?.noemail === "1";
-          inheritSrc = orig.metadata?.src === "recovery";
+          inheritSrc = normaliseSrc(orig.metadata?.src);
+          inheritRtfmt = retargetOfferMetadata(orig.metadata?.src, orig.metadata?.rtfmt);
           inheritReadDevice = readDeviceFromSession(orig);
         } catch (e) {
           logger.warn("Upsell fallback: noemail/src/device lookup failed (non-fatal)", e);
@@ -2940,7 +3006,8 @@ export async function registerRoutes(
               email,
               ...(funnel && { funnel }),
               ...(inheritNoemail && { noemail: "1" }),
-              ...(inheritSrc && { src: "recovery" }),
+              ...(inheritSrc && { src: inheritSrc }),
+              ...inheritRtfmt,
             },
           },
           shipping_address_collection: {
@@ -2958,7 +3025,8 @@ export async function registerRoutes(
             ...(funnel && { funnel }),
             ...(trackdeskClickId && { trackdeskClickId }),
             ...(inheritNoemail && { noemail: "1" }),
-            ...(inheritSrc && { src: "recovery" }),
+            ...(inheritSrc && { src: inheritSrc }),
+            ...inheritRtfmt,
           },
         });
 
@@ -3186,12 +3254,27 @@ export async function registerRoutes(
 
       await markUpsell2Offered(sessionId);
 
+      // /fb-tarot RETARGETING buyers (2026-10-16) never chatted before buying, so the
+      // page shows them FIXED reveal copy (first name + love/money only) instead of
+      // asking Claude to write one from a concern they never gave. Decided from the
+      // order's Stripe session (server/lib/retargetOrder.ts); usually a cache hit,
+      // because /welcome1 already read the same session. Only rows that could be a
+      // retarget order are checked; for every other order `retarget` is null and the
+      // response below is exactly what it was — no new keys.
+      const retarget =
+        stripe && !isPaiOrderId(sessionId) && couldBeRetargetOrder(conversation.priceVariant)
+          ? await lookupRetargetOrder(sessionId, stripe)
+          : null;
+
       return res.json({
         firstName: conversation.firstName,
         email: conversation.email,
         bucket: conversation.bucket || "love",
-        concern: conversation.concern || "",
-        personName: conversation.personName || "",
+        // A retarget buyer has no concern / person of her own on this order; an older
+        // lead row of hers may still hold one from a different visit, so it is blanked.
+        concern: retarget ? "" : conversation.concern || "",
+        personName: retarget ? "" : conversation.personName || "",
+        ...(retarget ? { retarget: true, retargetBucket: retarget.bucket } : {}),
         upsellPurchased: conversation.upsellPurchased || false,
         // Actual amount charged for Upsell 1 (cents), varies by price-test
         // variant. Null for pre-test conversations → client defaults to $47.
@@ -3693,14 +3776,18 @@ export async function registerRoutes(
         // the same retrieve, and defaults to off on a lookup error — under-counting
         // the recovery campaign rather than over-claiming for it.
         let inheritNoemail = false;
-        let inheritSrc = false;
+        let inheritSrc: CheckoutSrc | null = null;
+        // The offer-page marker (`rtfmt`) rides the same retrieve; EMPTY on every
+        // other order and on a lookup error.
+        let inheritRtfmt: { rtfmt?: string } = {};
         // The /fb-read instrument rides the SAME retrieve and fails the same way: on a
         // lookup error it stays undefined and fbSuffix() falls back to " - TEA".
         let inheritReadDevice: string | undefined;
         try {
           const orig = await stripe.checkout.sessions.retrieve(originalSessionId);
           inheritNoemail = orig.metadata?.noemail === "1";
-          inheritSrc = orig.metadata?.src === "recovery";
+          inheritSrc = normaliseSrc(orig.metadata?.src);
+          inheritRtfmt = retargetOfferMetadata(orig.metadata?.src, orig.metadata?.rtfmt);
           inheritReadDevice = readDeviceFromSession(orig);
         } catch (e) {
           logger.warn("Upsell2 fallback: noemail/src/device lookup failed (non-fatal)", e);
@@ -3736,7 +3823,8 @@ export async function registerRoutes(
               email,
               ...(funnel && { funnel }),
               ...(inheritNoemail && { noemail: "1" }),
-              ...(inheritSrc && { src: "recovery" }),
+              ...(inheritSrc && { src: inheritSrc }),
+              ...inheritRtfmt,
             },
           },
           shipping_address_collection: {
@@ -3755,7 +3843,8 @@ export async function registerRoutes(
             ...(funnel && { funnel }),
             ...(trackdeskClickId && { trackdeskClickId }),
             ...(inheritNoemail && { noemail: "1" }),
-            ...(inheritSrc && { src: "recovery" }),
+            ...(inheritSrc && { src: inheritSrc }),
+            ...inheritRtfmt,
           },
         });
 

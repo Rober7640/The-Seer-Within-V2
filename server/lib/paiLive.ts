@@ -75,6 +75,7 @@ import {
   smsConsentRecordText,
 } from './smsConsent';
 import { bumpPaidListWanted } from '@shared/landerBumpRouting';
+import { srcMetadata, type CheckoutSrc } from '@shared/orderBump';
 import {
   GATEWAY_ARM_PAI,
   GATEWAY_EXPERIMENT_KEY,
@@ -214,7 +215,8 @@ export interface PaiOrder {
   gclid: string | null;
   trackdeskClickId: string | null;
   posthogDistinctId: string | null;
-  src: 'recovery' | null;
+  /** 'recovery' | 'retarget' — the closed set from normaliseSrc (shared/orderBump). */
+  src: CheckoutSrc | null;
   readDevice: string | null;
   /** Issued-at, ms. */
   iat: number;
@@ -1015,7 +1017,7 @@ function upsellMetadata(
     email,
     app: 'the-seer-within',
     ...(mainMd.gclid ? { gclid: mainMd.gclid } : {}),
-    ...(mainMd.src === 'recovery' ? { src: 'recovery' } : {}),
+    ...srcMetadata(mainMd.src),
     ...(mainMd.noemail === '1' ? { noemail: '1' } : {}),
   };
 }

@@ -27,6 +27,7 @@ import { conversations, systemConfig } from '@shared/schema';
 import { eq, desc } from 'drizzle-orm';
 import logger from './logger';
 import type { BumpCopyVariant } from '@shared/orderBump';
+import { FIXED_FUNNEL_PRICES } from '@shared/fixedFunnelPrices';
 import {
   resolveUpsell1Cents,
   resolveV1Price,
@@ -154,31 +155,9 @@ export function getVariantsSource(): VariantsSource {
   return lastSource;
 }
 
-// Funnels that run a single FIXED price (no A/B). assignVariantIfMissing stamps
-// these directly instead of drawing from the weighted system_config pool — so
-// the funnel ships with correct pricing without a config row, and never pulls
-// another funnel's variant via the scopeVariantsToFunnel full-pool fallback.
-//
-// NOTE: empty by design. /fb2 used to be fixed-price here, but now runs the
-// same weighted price split test as /fb via funnel-scoped variants
-// ('v1-fb2': 35_fb2 / 45_fb2) in the system_config 'v1_price_variants' pool.
-// Add an entry here only for a NEW funnel that should ship single-price; if you
-// do, make sure NOT to also add matching weighted variants (the fixed entry
-// takes precedence and would silently shadow them).
-const FIXED_FUNNEL_PRICES: Record<string, { id: string; priceCents: number; downsellCents: number; upsell1Cents: number }> = {
-  // Tarot "decode-him card" funnel launches at a flat single price (no A/B split,
-  // like thumb-angle at launch). The '35_tarot' id carries the '-tarot' token so
-  // funnelParamFromPriceVariant attributes it back to v1-tarot. To start a price
-  // test later, add funnel-scoped weighted variants to the system_config pool and
-  // REMOVE this entry (a fixed entry shadows any matching weighted variants).
-  'v1-tarot': { id: '35_tarot', priceCents: 3500, downsellCents: 2500, upsell1Cents: 4700 },
-  // The /fb-read bridge launches at the same flat single price as tarot. Priced at
-  // the FUNNEL level, so every device on it is priced correctly automatically and
-  // there is no per-device money-safety roster to keep in sync (unlike palm's
-  // OTHER_SIGNS). The '_read' token lets funnelParamFromPriceVariant attribute a
-  // stored variant back to v1-read.
-  'v1-read': { id: '35_read', priceCents: 3500, downsellCents: 2500, upsell1Cents: 4700 },
-};
+// Funnels that run a single FIXED price (no A/B). The table lives in
+// shared/fixedFunnelPrices.ts so the client can print the exact price this server
+// charges (the /fb-tarot retarget page's buy button) — see that file for the rules.
 
 interface CachedVariants {
   variants: PriceVariant[];

@@ -316,6 +316,14 @@ export const V1_BUMP_DESCRIPTION_MARKER = ' + Double Reading';
 export const V1_RECOVERY_DESCRIPTION_MARKER = ' - Recovery';
 
 /**
+ * INTERNAL marker for an order placed from the /fb-tarot RETARGETING page
+ * (`/fb-tarot/b?src=retarget`, or any checkout carrying that marker). Same job and same
+ * rules as the recovery marker above: Stripe Dashboard eyeballing only, never on
+ * the receipt. The machine-readable half is `metadata.src = 'retarget'`.
+ */
+export const V1_RETARGET_DESCRIPTION_MARKER = ' - Retarget';
+
+/**
  * The internal PaymentIntent description — what the Stripe Dashboard shows in its
  * Description column. Built here rather than inline so the "a normal order is
  * unchanged" guarantee is actually covered by a test: with every flag false this
@@ -328,12 +336,14 @@ export const V1_RECOVERY_DESCRIPTION_MARKER = ' - Recovery';
  */
 export function paymentIntentDescription(
   productName: string,
-  opts: { bump?: boolean; recovery?: boolean; noemail?: boolean } = {},
+  opts: { bump?: boolean; recovery?: boolean; retarget?: boolean; noemail?: boolean } = {},
 ): string {
   return (
     productName +
     (opts.bump ? V1_BUMP_DESCRIPTION_MARKER : '') +
     (opts.recovery ? V1_RECOVERY_DESCRIPTION_MARKER : '') +
+    // `src` is ONE value, so recovery and retarget can never both be set.
+    (opts.retarget ? V1_RETARGET_DESCRIPTION_MARKER : '') +
     (opts.noemail ? ' - No email' : '')
   );
 }
@@ -345,7 +355,32 @@ export function paymentIntentDescription(
  * same rule the bump bucket follows in /api/checkout.
  */
 export function isRecoverySrc(value: unknown): boolean {
-  return value === 'recovery';
+  return normaliseSrc(value) === 'recovery';
+}
+
+/**
+ * The closed set of `?src=` markers that may reach Stripe metadata. `'recovery'` is
+ * the emailed abandoned-reading link; `'retarget'` (added 2026-10-16) is the
+ * /fb-tarot retargeting page. Anything else — absent, junk, a different case, an
+ * object — is null, so a client string can never flow through to Mike's n8n flow.
+ */
+export type CheckoutSrc = 'recovery' | 'retarget';
+
+export function normaliseSrc(value: unknown): CheckoutSrc | null {
+  if (value === 'recovery') return 'recovery';
+  if (value === 'retarget') return 'retarget';
+  return null;
+}
+
+/**
+ * `{ src }` to spread into a Stripe / Payments.AI metadata block, or `{}` when the
+ * value is not a recognised marker. Used where an upsell INHERITS the marker from
+ * the main order. For `'recovery'` this yields exactly the `{ src: 'recovery' }` the
+ * inline checks used to write, so recovered orders are byte-identical.
+ */
+export function srcMetadata(value: unknown): { src?: CheckoutSrc } {
+  const src = normaliseSrc(value);
+  return src ? { src } : {};
 }
 
 /**
