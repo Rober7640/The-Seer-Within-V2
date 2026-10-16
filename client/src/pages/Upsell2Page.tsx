@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useSearch, useLocation } from 'wouter';
 import { CosmicBackground } from '../components/CosmicBackground';
 import { BackgroundMusic } from '../components/BackgroundMusic';
@@ -11,6 +11,7 @@ import { Volume2, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import type { Bucket } from '@shared/types';
+import { upsell2CopyOverrideFor } from '../lib/upsellCopy/retargetUpsell2';
 
 interface UserData {
   firstName: string;
@@ -29,6 +30,10 @@ interface UserData {
     postal: string;
     country: string;
   } | null;
+  // /fb-tarot RETARGETING buyers only (2026-10-16): set by /api/upsell2/user-data from
+  // the order's Stripe session. ABSENT for every other buyer.
+  retarget?: boolean;
+  retargetBucket?: 'love' | 'money' | null;
 }
 
 export default function Upsell2Page() {
@@ -181,6 +186,15 @@ export default function Upsell2Page() {
     fetchUserData();
   }, [searchString]);
 
+  // Retarget buyers never chatted, so the two AI-written beats (manifest reveal + stone
+  // personalisation) are FIXED copy for them (lib/upsellCopy/retargetUpsell2.ts).
+  // `undefined` for every other buyer ⇒ the hook resolves its copy exactly as before.
+  const copyOverride = useMemo(
+    () => upsell2CopyOverrideFor(userData),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [userData?.retarget, userData?.retargetBucket, userData?.bucket],
+  );
+
   const {
     messages,
     isTyping,
@@ -209,6 +223,7 @@ export default function Upsell2Page() {
     sessionId,
     enabled: !!userData && !error,
     braceletImage: '/manifestation_bracelet.png',
+    copyOverride,
   });
 
   // Auto-scroll to bottom. The footer flags are deps on purpose: when the quick
