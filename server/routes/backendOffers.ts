@@ -1007,10 +1007,14 @@ router.post('/checkout', async (req: Request, res: Response) => {
             })),
           }
         : {}),
+      // Prefill the email the booking page already collected, so she doesn't retype
+      // it on Stripe's page. Only funnels that collect email before checkout (e.g. the
+      // Evelyn VSL pop-up) send it; offers that don't pass nothing here and are
+      // unchanged. Compatible with customer_creation (unlike `customer`).
+      ...(email ? { customer_email: email } : {}),
       // Create a Customer and save the card for OFF-SESSION reuse, exactly as V1's
       // main checkout does — this is what lets the post-purchase upsells charge in
-      // one click. No email is known before Stripe (she enters it here), so we let
-      // Checkout mint the customer rather than looking one up.
+      // one click.
       customer_creation: 'always',
       line_items: charge.lines.map((line) => ({
         price_data: {
