@@ -146,7 +146,12 @@ import { collectsPhoneAtCheckout } from "./lib/checkoutPhone";
 import { smsConsentSessionParams, smsConsentSessionMetadata } from "./lib/smsConsent";
 import { addLeadToKit } from "./lib/kit";
 import { resolveLunaTyHandoff } from "./lib/lunaThankyouGift";
-import { isEvelynTyConversation, resolveEvelynTyHandoff } from "./lib/evelynThankyouGift";
+import { evelynTyPersonaFor, isEvelynTyConversation, resolveEvelynTyHandoff } from "./lib/evelynThankyouGift";
+import {
+  couldBeRetargetOrder,
+  lookupRetargetOrder,
+  rememberRetargetSession,
+} from "./lib/retargetOrder";
 import { addContactToResendAudience } from "./lib/resendAudience";
 import { createSoulmateLanderV2Account } from "./lib/soulmateLanderSignup";
 import { extractClientIp, extractUserAgent } from "./lib/fraudDetection";
@@ -2048,6 +2053,11 @@ export async function registerRoutes(
             },
           );
 
+          // Retarget orders (2026-10-16): remember this session's src so /welcome2 and
+          // the thank-you page need no Stripe call of their own. A cache write only —
+          // never throws, changes nothing on this page.
+          rememberRetargetSession(stripeSession);
+
           // Only proceed if payment was successful
           if (stripeSession.payment_status === "paid") {
             // customer_details.email is the address Stripe Checkout collects on
@@ -2111,6 +2121,9 @@ export async function registerRoutes(
         stripe.checkout.sessions
           .retrieve(sessionId, { expand: ["payment_intent"] })
           .then((session) => {
+            // Same cache warm as the fallback above (retarget orders, 2026-10-16).
+            // Never throws, so the AWeber write below runs exactly as before.
+            rememberRetargetSession(session);
             if (
               session.payment_status === "paid" &&
               session.payment_intent
@@ -2257,12 +2270,27 @@ export async function registerRoutes(
       // every other funnel keeps Luna exactly as before. Decided from the server-side
       // order, never from the client. A response without `persona` means Luna, so an
       // older cached client keeps working.
-      if (isEvelynTyConversation(conversation.priceVariant)) {
+      //
+      // 2026-10-16: /fb-tarot RETARGETING buyers go to Evelyn too (same 15-min gift,
+      // a reading brief built for them). Decided from the order's own Stripe session
+      // (`src: 'retarget'` on v1-tarot — server/lib/retargetOrder.ts). The lookup only
+      // runs for a row that could be a retarget order (no price variant, or a tarot
+      // one); every other non-/fb order skips it and gets Luna exactly as before. A
+      // failed lookup answers null ⇒ Luna, i.e. today's behaviour.
+      const retargetOrder =
+        !isEvelynTyConversation(conversation.priceVariant) &&
+        couldBeRetargetOrder(conversation.priceVariant) &&
+        !isPaiOrderId(sessionId)
+          ? await lookupRetargetOrder(sessionId, stripe)
+          : null;
+      if (evelynTyPersonaFor(conversation.priceVariant, retargetOrder) === "evelyn") {
         const handoff = await resolveEvelynTyHandoff(
           conversation.email,
           conversation.firstName ?? null,
         );
-        return res.json({ ...handoff, persona: "evelyn" });
+        // `retarget` lets the card drop "she already knows your reading": a retarget
+        // buyer never chatted, and her brief tells Evelyn she does NOT know what was said.
+        return res.json({ ...handoff, persona: "evelyn", ...(retargetOrder ? { retarget: true } : {}) });
       }
       const handoff = await resolveLunaTyHandoff(
         conversation.email,
@@ -3222,7 +3250,9 @@ export async function registerRoutes(
           // Emailed-recovery marker, inherited the same way. Metadata only — see
           // the protection_ritual note: an off-session PI's description reaches
           // the customer's receipt, so no marker goes there.
-          ...(session.metadata?.src === "recovery" && { src: "recovery" }),
+          ...srcMetadata(session.metadata?.src),
+          // …and the offer-page marker, same inheritance (empty unless an offer-page order).
+          ...retargetOfferMetadata(session.metadata?.src, session.metadata?.rtfmt),
         },
       });
 
