@@ -46,6 +46,13 @@ async function buildAll() {
   ];
   const externals = allDeps.filter((dep) => !allowlist.includes(dep));
 
+  // Transitive, dev/CLI-only deps that must never be bundled into the server.
+  // `playwright` is pulled in only by soulmateReading/pdf.ts's renderPdf() (the local
+  // sample CLI); the server reaches that module for buildReading() but never calls
+  // renderPdf(), so its lazy import('playwright') stays an unresolved external. Without
+  // this, esbuild follows it and dies on playwright-core's chromium-bidi/fsevents.
+  const extraExternals = ["playwright", "playwright-core", "chromium-bidi"];
+
   await esbuild({
     entryPoints: ["server/index.ts"],
     platform: "node",
@@ -56,7 +63,7 @@ async function buildAll() {
       "process.env.NODE_ENV": '"production"',
     },
     minify: true,
-    external: externals,
+    external: [...externals, ...extraExternals],
     logLevel: "info",
   });
 }
