@@ -4,7 +4,6 @@
 // hosted renderer (e.g. PDFShift) would consume, so the operator can swap in
 // theirs on the n8n side without touching the document.
 
-import { chromium } from 'playwright';
 import type { DrawnCard } from './draw';
 
 /**
@@ -35,8 +34,16 @@ export async function resolveCardImages(
   return out;
 }
 
-/** Render a full HTML document to a print-A4 PDF buffer. */
+/**
+ * Render a full HTML document to a print-A4 PDF buffer.
+ *
+ * Playwright is imported lazily so this module can be pulled into the server
+ * bundle (for `buildReading`, which never renders) without requiring the
+ * `playwright` package at boot — it ships only as a dev dependency and is not
+ * installed on the deployed app. Local CLI/tests still render as before.
+ */
 export async function renderPdf(html: string): Promise<Buffer> {
+  const { chromium } = await import('playwright');
   const browser = await chromium.launch();
   try {
     const page = await browser.newPage();

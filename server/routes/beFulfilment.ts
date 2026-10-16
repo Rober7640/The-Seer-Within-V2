@@ -13,6 +13,7 @@ import {
 } from '@shared/schema';
 import { BACKEND_OFFER_CATALOG, isBackendOfferKey, type BackendOffer } from '@shared/backendOffers';
 import { getBeOrderBySession, recordBackendOrder } from '../lib/beOrders';
+import { buildReading } from '../lib/soulmateReading';
 import { getBe08Edition } from '../lib/be08Editions';
 import { getStripe } from '../lib/stripeAccount';
 import { generateMarcus08Audio, isMarcusReport, type MarcusReport } from '../lib/marcus08Audio';
@@ -304,6 +305,109 @@ router.get('/:offer/fulfilment/:sessionId', async (req: Request, res: Response) 
       session: sessionId, offer: offer.key, err: errMessage(err),
     });
     return res.status(500).json({ error: 'Could not load the order.' });
+  }
+});
+
+// ─── GET /:offer/reading-html/:sessionId ───────────────────────────────────────
+
+/**
+ * The finished Soulmate Initials reading as self-contained HTML, for the n8n
+ * delivery flow to render (PDFShift) → store → email.
+ *
+ * Only `soulmate-initials` (10) has an app-side reading engine; every other offer
+ * writes its reading inside n8n, so they 404 here. Like the fulfilment GET, this
+ * records the order from Stripe if n8n's call wins the race against our own webhook.
+ *
+ * ⚡ Runs the engine (deterministic facts + Claude prose) on each call — several
+ * seconds. n8n must allow a generous timeout. The card art is embedded as data-URIs,
+ * so the returned HTML needs no external fetch at render time.
+ *
+ * ⛔ PII (firstName, dateOfBirth, the reading prose) rides the response body only —
+ * never a log line.
+ */
+router.get('/:offer/reading-html/:sessionId', async (req: Request, res: Response) => {
+  const offer = offerOf(res);
+  const sessionId = String(req.params.sessionId || '');
+  if (!isSessionId(sessionId)) {
+    return res.status(400).json({ error: 'Invalid session.' });
+  }
+  if (offer.key !== 'soulmate-initials') {
+    return res.status(404).json({ error: 'No app-side reading for this offer.' });
+  }
+
+  try {
+    // Same race backstop as the fulfilment GET: n8n and our own webhook fire on the
+    // same Stripe event, so record the order here if it is not present yet.
+    let order = await getBeOrderBySession(sessionId);
+    if (!order) {
+      const stripe = getStripe();
+      if (!stripe) return res.status(503).json({ error: 'Unavailable.' });
+      const session = await stripe.checkout.sessions.retrieve(sessionId);
+      if (session.payment_status !== 'paid') {
+        return res.status(402).json({ error: 'This order has not been paid.' });
+      }
+      if (session.metadata?.product !== offer.stripeProduct) {
+        return res.status(404).json({ error: 'Order not found.' });
+      }
+      order = await recordBackendOrder(session);
+    }
+    if (!order || order.offer !== offer.key) {
+      return res.status(404).json({ error: 'Order not found.' });
+    }
+    if (order.status !== 'paid') {
+      return res.status(409).json({ error: 'Order is not paid', status: order.status });
+    }
+
+    const [intake] = await db
+      .select()
+      .from(beOrderIntake)
+      .where(eq(beOrderIntake.stripeSessionId, sessionId))
+      .limit(1);
+
+    // Refuse rather than guess — name every missing field so the n8n log shows the gap.
+    const firstName = intake?.firstName ?? order.firstName ?? null;
+    const dateOfBirth = dateOnly(intake?.dateOfBirth);
+    const stone = intake?.stone ?? null;
+    if (!firstName || !dateOfBirth || !stone) {
+      const missing: string[] = [];
+      if (!firstName) missing.push('first_name');
+      if (!dateOfBirth) missing.push('date_of_birth');
+      if (!stone) missing.push('stone');
+      logger.error('be-fulfilment: reading-html order is not ready', {
+        session: sessionId, offer: offer.key, order: order.id, missing,
+      });
+      return res.status(409).json({ error: 'Order is not ready to fulfil', missing });
+    }
+
+    const { html, meta } = await buildReading({
+      sessionId: order.stripeSessionId,
+      firstName,
+      dateOfBirth,
+      stone,
+      bump: order.bumpPurchased,
+    });
+
+    logger.info('be-fulfilment: reading-html built', {
+      session: sessionId, offer: offer.key, order: order.id,
+      initials: `${meta.initials.first}·${meta.initials.last}`,
+    });
+
+    // email + name travel in the body so the n8n flow has what AWeber + the filename need
+    // without a second round trip to the fulfilment GET.
+    return res.json({
+      sessionId: order.stripeSessionId,
+      email: order.email ?? intake?.email ?? null,
+      firstName,
+      stone,
+      bump: order.bumpPurchased,
+      initials: { first: meta.initials.first, last: meta.initials.last },
+      html,
+    });
+  } catch (err) {
+    logger.error('be-fulfilment: reading-html failed', {
+      session: sessionId, offer: offer.key, err: errMessage(err),
+    });
+    return res.status(500).json({ error: 'Could not build the reading.' });
   }
 });
 

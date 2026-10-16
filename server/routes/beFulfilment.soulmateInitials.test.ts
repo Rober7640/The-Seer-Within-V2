@@ -72,6 +72,15 @@ const retrieve = vi.fn();
 const getStripe = vi.fn(() => ({ checkout: { sessions: { retrieve } } }));
 vi.mock('../lib/stripeAccount', () => ({ getStripe: () => getStripe() }));
 
+// The reading engine is mocked so the endpoint test never calls Claude / Playwright —
+// its determinism is covered by tests/soulmate-initials-engine.test.ts.
+const buildReading = vi.fn(async (_order: unknown) => ({
+  html: '<html><body>the reading</body></html>',
+  meta: { initials: { first: 'J', last: 'M' } },
+  cardImages: {},
+}));
+vi.mock('../lib/soulmateReading', () => ({ buildReading: (o: unknown) => buildReading(o) }));
+
 const { default: router } = await import('./beFulfilment');
 
 const app = express();
@@ -128,6 +137,7 @@ beforeEach(() => {
   recordBackendOrder.mockClear();
   retrieve.mockReset();
   getStripe.mockClear();
+  buildReading.mockClear();
 });
 
 describe('GET /soulmate-initials/fulfilment/:sessionId', () => {
@@ -193,5 +203,59 @@ describe('GET /soulmate-initials/fulfilment/:sessionId', () => {
     // 08 still refuses without a full birth name / dob / draw — untouched by this change.
     expect(res.status).toBe(409);
     expect(res.body.missing).toContain('full_birth_name');
+  });
+});
+
+describe('GET /soulmate-initials/reading-html/:sessionId', () => {
+  it('returns the built HTML + the fields the n8n flow needs', async () => {
+    state.order = paidOrder({ bumpPurchased: true });
+    state.intake = fullIntake();
+    const res = await request(app).get(`/api/be/soulmate-initials/reading-html/${SESSION}`).set(auth());
+    expect(res.status).toBe(200);
+    expect(res.body).toMatchObject({
+      sessionId: SESSION,
+      email: 'her@example.com',
+      firstName: 'Priya',
+      stone: 'rose quartz',
+      bump: true,
+      initials: { first: 'J', last: 'M' },
+    });
+    expect(res.body.html).toContain('the reading');
+    expect(buildReading).toHaveBeenCalledWith(
+      expect.objectContaining({
+        sessionId: SESSION,
+        firstName: 'Priya',
+        dateOfBirth: '1992-03-18',
+        stone: 'rose quartz',
+        bump: true,
+      }),
+    );
+  });
+
+  it('404s for an offer that has no app-side engine (e.g. 08 Marcus) — never builds', async () => {
+    const res = await request(app).get(`/api/be/marcus-reading/reading-html/${SESSION}`).set(auth());
+    expect(res.status).toBe(404);
+    expect(buildReading).not.toHaveBeenCalled();
+  });
+
+  it('is 400 when the session id does not start with cs_', async () => {
+    const res = await request(app).get('/api/be/soulmate-initials/reading-html/pi_123').set(auth());
+    expect(res.status).toBe(400);
+  });
+
+  it('409s and names the missing field when intake lacks the stone', async () => {
+    state.order = paidOrder();
+    state.intake = fullIntake({ stone: null });
+    const res = await request(app).get(`/api/be/soulmate-initials/reading-html/${SESSION}`).set(auth());
+    expect(res.status).toBe(409);
+    expect(res.body.missing).toContain('stone');
+    expect(buildReading).not.toHaveBeenCalled();
+  });
+
+  it('refuses without the Bearer token', async () => {
+    state.order = paidOrder();
+    state.intake = fullIntake();
+    const res = await request(app).get(`/api/be/soulmate-initials/reading-html/${SESSION}`);
+    expect(res.status).toBe(401);
   });
 });
