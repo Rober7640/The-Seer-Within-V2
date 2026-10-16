@@ -407,7 +407,10 @@ router.get('/:offer/reading-html/:sessionId', async (req: Request, res: Response
     logger.error('be-fulfilment: reading-html failed', {
       session: sessionId, offer: offer.key, err: errMessage(err),
     });
-    return res.status(500).json({ error: 'Could not build the reading.' });
+    // The reason rides the response too: this is a Bearer-gated machine endpoint
+    // (only n8n calls it), so surfacing the cause in the n8n execution log beats
+    // digging through Railway logs for the line above.
+    return res.status(500).json({ error: 'Could not build the reading.', detail: errMessage(err) });
   }
 });
 
