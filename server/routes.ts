@@ -39,6 +39,7 @@ import paiFunnelRouter from "./routes/paiFunnel";
 // /api/checkout put on Payments.AI, or by an order whose id is a Payments.AI `txn_…`
 // (isPaiOrderId). A Stripe order never enters it.
 import { createPaiLiveRouter } from "./routes/paiLive";
+import { createPaiProdTestRouter } from "./routes/paiProdTest";
 import {
   resolveGateway,
   signOrder,
@@ -616,6 +617,8 @@ export async function registerRoutes(
   app.use("/api/pai", paiFunnelRouter);
   // The live split's card form. 404s unless PAI_LIVE_ENABLED=1 + PAI_LIVE_* are set.
   app.use("/api/pai-live", createPaiLiveRouter(paiLiveDeps));
+  // TEMPORARY live-card test page (16 Oct 2026). 404s unless PAI_PROD_TEST_* are set. Remove after the test.
+  app.use("/pai-prod-test", createPaiProdTestRouter());
   app.use("/api/evelyn-lander", evelynLanderRouter);
   // Generalized lander for the additional personas (Marcus, Luna, Nova, Maren).
   app.use("/api/persona-lander/:persona", personaLanderRouter);
