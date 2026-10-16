@@ -4,11 +4,16 @@ import { stoneLabel, DELIVERY_PROMISE, type StoneKey } from '@shared/evelynVsl';
 import { SOULMATE_INITIALS_PRICE_CENTS, SOULMATE_INITIALS_BUMP_CENTS } from '@shared/backendOffers';
 import { beginBackendCheckout } from '@/lib/backendCheckout';
 import { trackInitiateCheckout } from '@/lib/facebook';
-import { track as trackPH } from '@/lib/posthog';
+import { track as trackBase } from '@/lib/posthog';
 import { resolveStone, validateIntake } from './checkoutIntake';
 
 const STORAGE_KEY = 'evelyn_vsl_v1';
 const SUPPORT_EMAIL = 'hi@theseerwithin.com';
+
+// Tag every checkout event funnel=evelynvsl so it groups with the VSL + purchase
+// events in PostHog (see backendPurchaseAnalytics for the server-side value).
+const trackPH = (event: string, props: Record<string, unknown> = {}) =>
+  trackBase(event, { ...props, funnel: 'evelynvsl' });
 
 // Reviews are hidden until real ones exist (spec §4 item 6) — an empty array
 // means the block below renders nothing, not a placeholder.
