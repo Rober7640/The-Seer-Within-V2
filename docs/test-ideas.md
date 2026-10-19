@@ -2389,3 +2389,12 @@ Copy review: `improve-v1/retargeting-test/page/05-post-purchase-copy.md`.
 - [ ] Evelyn's first message for a retarget buyer: names love/money + the ritual, under 35 words, never claims to remember what she said, no price
 - [ ] A retarget buyer who also has an older /fb purchase: the /fb brief wins (by design) — confirm acceptable
 
+## Payments.AI card form — labels + readable card box (2026-10-19)
+
+- [ ] Every box on the card form has a visible label (Name on card, Card number, Expiry date, CVV, Phone number, and each shipping box) that stays visible while typing
+- [ ] Card number, expiry date and security code are three separate labelled boxes stacked one after another, each ~50px tall (not the old ~176px combined box); the code box is visible before the number is typed
+- [ ] Helper line under each card box (front number / MM YY / 3 digits on the back, Amex 4 on the front)
+- [ ] Leaving the CVV empty shows "Please check your card details" and does not submit
+- [ ] Card box text is 17px dark (not small grey); an invalid card turns the text and the box border red
+- [ ] A sandbox test card still returns a card token in all three uses: main checkout (phone + SMS), /pai/pay re-enter card, upsell shipping step
+- [ ] FramePay boot failure still falls back to Stripe (the `style` option must not break `initialize`)

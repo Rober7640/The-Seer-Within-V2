@@ -67,6 +67,9 @@ function bootFramepay(cfg: PaiFormConfig, amountCents: number): Promise<void> {
         organizationId: cfg.organizationId,
         ...(cfg.websiteId ? { websiteId: cfg.websiteId } : {}),
         transactionData: { currency: 'USD', amount: amountCents / 100 },
+        // Text inside FramePay's iframe. FramePay drops any key outside its style
+        // schema (base/focus/valid/invalid), so a typo here fails quietly.
+        style: CARD_TEXT_STYLE,
       });
     })().catch((err) => {
       booted = null; // let a later attempt retry
@@ -106,6 +109,27 @@ const COUNTRIES: Array<[string, string]> = [
   ['SG', 'Singapore'],
 ];
 
+// Bigger, darker text in the card box — older buyers couldn't read the default
+// small grey text (16 Oct).
+const CARD_TEXT_STYLE = {
+  base: {
+    fontSize: '17px',
+    color: '#111827',
+    '::placeholder': { color: '#6b7280' },
+  },
+  invalid: { color: '#b91c1c' },
+};
+
+const labelCls = 'mb-1 block text-sm font-medium text-white/85';
+
+// The three FramePay card boxes. Fixed height: FramePay mounts
+// <div.rebilly-framepay><iframe height:100%> inside each, and with no height on
+// that wrapper the iframe falls back to the browser's 150px default (the old,
+// mostly-empty tall box). FramePay puts its focus/invalid classes on that
+// wrapper, hence has-[…].
+const cardBoxCls =
+  'h-[50px] overflow-hidden rounded-lg border-2 border-gray-400 bg-white px-3 has-[.rebilly-framepay-focus]:border-purple-500 has-[.rebilly-framepay-invalid]:border-red-500 [&>.rebilly-framepay]:h-full';
+
 const inputCls =
   'w-full rounded-lg border border-white/15 bg-black/30 px-3 py-2.5 text-white placeholder-white/35 focus:border-purple-400 focus:outline-none';
 
@@ -124,7 +148,7 @@ export function PaiCardForm(props: {
 }) {
   const { config, amountCents, askPhone = false, askShipping = false } = props;
   const formRef = useRef<HTMLFormElement>(null);
-  const fieldRef = useRef<any>(null);
+  const fieldRef = useRef<any[] | null>(null);
   const [ready, setReady] = useState(false);
   const [name, setName] = useState(props.defaultName ?? '');
   const [phone, setPhone] = useState('');
@@ -150,7 +174,13 @@ export function PaiCardForm(props: {
       try {
         await bootFramepay(config, amountCents);
         if (cancelled) return;
-        fieldRef.current = window.Framepay.card.mount(`#${mountId}`);
+        // Three separate boxes (number / expiry / code) instead of FramePay's
+        // one-line combined field, which hid the code box until the number was typed.
+        fieldRef.current = [
+          window.Framepay.card.mount(`#${mountId}`, 'cardNumber'),
+          window.Framepay.card.mount(`#${mountId}-exp`, 'cardExpiry'),
+          window.Framepay.card.mount(`#${mountId}-cvv`, 'cardCvv'),
+        ];
         setReady(true);
       } catch (err) {
         if (!cancelled) props.onBootFailed?.(err);
@@ -159,10 +189,12 @@ export function PaiCardForm(props: {
     return () => {
       cancelled = true;
       clearTimeout(timer);
-      try {
-        fieldRef.current?.destroy?.();
-      } catch {
-        /* already gone */
+      for (const field of fieldRef.current ?? []) {
+        try {
+          field?.destroy?.();
+        } catch {
+          /* already gone */
+        }
       }
       fieldRef.current = null;
     };
@@ -214,19 +246,51 @@ export function PaiCardForm(props: {
 
   return (
     <form ref={formRef} onSubmit={submit} className="space-y-3" data-testid="pai-card-form">
-      <input
-        className={inputCls}
-        placeholder="Name on card"
-        autoComplete="cc-name"
-        value={name}
-        onChange={(e) => setName(e.target.value)}
-        data-testid="pai-card-name"
-      />
-      <div
-        id={mountId}
-        className="min-h-[46px] rounded-lg border border-white/15 bg-white px-3 py-3"
-        data-testid="pai-card-field"
-      />
+      <div>
+        <label htmlFor={`${mountId}-name`} className={labelCls}>Name on card</label>
+        <input
+          id={`${mountId}-name`}
+          className={inputCls}
+          placeholder="Name on card"
+          autoComplete="cc-name"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          data-testid="pai-card-name"
+        />
+      </div>
+      <div>
+        <div id={`${mountId}-label`} className={labelCls}>Card number</div>
+        <div
+          id={mountId}
+          role="group"
+          aria-labelledby={`${mountId}-label`}
+          className={cardBoxCls}
+          data-testid="pai-card-field"
+        />
+        <p className="mt-1 text-xs leading-snug text-white/60">The long number on the front of your card.</p>
+      </div>
+      <div>
+        <div id={`${mountId}-exp-label`} className={labelCls}>Expiry date</div>
+        <div
+          id={`${mountId}-exp`}
+          role="group"
+          aria-labelledby={`${mountId}-exp-label`}
+          className={cardBoxCls}
+          data-testid="pai-card-exp"
+        />
+        <p className="mt-1 text-xs leading-snug text-white/60">Month and year, as shown on your card (MM / YY).</p>
+      </div>
+      <div>
+        <div id={`${mountId}-cvv-label`} className={labelCls}>CVV</div>
+        <div
+          id={`${mountId}-cvv`}
+          role="group"
+          aria-labelledby={`${mountId}-cvv-label`}
+          className={cardBoxCls}
+          data-testid="pai-card-cvv"
+        />
+        <p className="mt-1 text-xs leading-snug text-white/60">The 3 digits on the back of your card (Amex: 4 digits on the front).</p>
+      </div>
       {!ready && (
         <div className="flex items-center gap-2 text-xs text-white/50">
           <Loader2 className="h-3 w-3 animate-spin" /> Loading secure card form…
@@ -234,15 +298,19 @@ export function PaiCardForm(props: {
       )}
 
       {askPhone && (
-        <input
-          className={inputCls}
-          placeholder="Phone (with country code, e.g. +1 555 555 0123)"
-          type="tel"
-          autoComplete="tel"
-          value={phone}
-          onChange={(e) => setPhone(e.target.value)}
-          data-testid="pai-phone"
-        />
+        <div>
+          <label htmlFor={`${mountId}-phone`} className={labelCls}>Phone number (with country code)</label>
+          <input
+            id={`${mountId}-phone`}
+            className={inputCls}
+            placeholder="e.g. +1 555 555 0123"
+            type="tel"
+            autoComplete="tel"
+            value={phone}
+            onChange={(e) => setPhone(e.target.value)}
+            data-testid="pai-phone"
+          />
+        </div>
       )}
 
       {askPhone && config.sms && (
@@ -266,28 +334,49 @@ export function PaiCardForm(props: {
 
       {askShipping && (
         <div className="space-y-2 pt-1">
-          <div className="text-sm font-medium text-white/80">Shipping address</div>
-          <input className={inputCls} placeholder="Full name" value={ship.name}
-            onChange={(e) => setShip({ ...ship, name: e.target.value })} data-testid="pai-ship-name" />
-          <input className={inputCls} placeholder="Address line 1" value={ship.line1}
-            onChange={(e) => setShip({ ...ship, line1: e.target.value })} data-testid="pai-ship-line1" />
-          <input className={inputCls} placeholder="Address line 2 (optional)" value={ship.line2}
-            onChange={(e) => setShip({ ...ship, line2: e.target.value })} />
-          <div className="grid grid-cols-2 gap-2">
-            <input className={inputCls} placeholder="City" value={ship.city}
-              onChange={(e) => setShip({ ...ship, city: e.target.value })} data-testid="pai-ship-city" />
-            <input className={inputCls} placeholder="State / County" value={ship.state}
-              onChange={(e) => setShip({ ...ship, state: e.target.value })} />
+          <div className="text-base font-semibold text-white">Shipping address</div>
+          <div>
+            <label htmlFor={`${mountId}-ship-name`} className={labelCls}>Full name</label>
+            <input id={`${mountId}-ship-name`} className={inputCls} placeholder="Full name" value={ship.name}
+              onChange={(e) => setShip({ ...ship, name: e.target.value })} data-testid="pai-ship-name" />
+          </div>
+          <div>
+            <label htmlFor={`${mountId}-ship-line1`} className={labelCls}>Address line 1</label>
+            <input id={`${mountId}-ship-line1`} className={inputCls} placeholder="Street address" value={ship.line1}
+              onChange={(e) => setShip({ ...ship, line1: e.target.value })} data-testid="pai-ship-line1" />
+          </div>
+          <div>
+            <label htmlFor={`${mountId}-ship-line2`} className={labelCls}>Address line 2 (optional)</label>
+            <input id={`${mountId}-ship-line2`} className={inputCls} placeholder="Apartment, suite, etc." value={ship.line2}
+              onChange={(e) => setShip({ ...ship, line2: e.target.value })} />
           </div>
           <div className="grid grid-cols-2 gap-2">
-            <input className={inputCls} placeholder="ZIP / Postcode" value={ship.postal}
-              onChange={(e) => setShip({ ...ship, postal: e.target.value })} data-testid="pai-ship-postal" />
-            <select className={inputCls} value={ship.country}
-              onChange={(e) => setShip({ ...ship, country: e.target.value })}>
-              {COUNTRIES.map(([code, label]) => (
-                <option key={code} value={code}>{label}</option>
-              ))}
-            </select>
+            <div>
+              <label htmlFor={`${mountId}-ship-city`} className={labelCls}>City</label>
+              <input id={`${mountId}-ship-city`} className={inputCls} placeholder="City" value={ship.city}
+                onChange={(e) => setShip({ ...ship, city: e.target.value })} data-testid="pai-ship-city" />
+            </div>
+            <div>
+              <label htmlFor={`${mountId}-ship-state`} className={labelCls}>State / County</label>
+              <input id={`${mountId}-ship-state`} className={inputCls} placeholder="State / County" value={ship.state}
+                onChange={(e) => setShip({ ...ship, state: e.target.value })} />
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <label htmlFor={`${mountId}-ship-postal`} className={labelCls}>ZIP / Postcode</label>
+              <input id={`${mountId}-ship-postal`} className={inputCls} placeholder="ZIP / Postcode" value={ship.postal}
+                onChange={(e) => setShip({ ...ship, postal: e.target.value })} data-testid="pai-ship-postal" />
+            </div>
+            <div>
+              <label htmlFor={`${mountId}-ship-country`} className={labelCls}>Country</label>
+              <select id={`${mountId}-ship-country`} className={inputCls} value={ship.country}
+                onChange={(e) => setShip({ ...ship, country: e.target.value })}>
+                {COUNTRIES.map(([code, label]) => (
+                  <option key={code} value={code}>{label}</option>
+                ))}
+              </select>
+            </div>
           </div>
         </div>
       )}
