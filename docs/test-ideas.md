@@ -2392,10 +2392,10 @@ Not covered — needs a live walk or a future Playwright pass:
 
 ## Payments.AI card form — labels + readable card box (2026-10-19)
 
-- [ ] Every box on the card form has a visible label (Name on card, Card number, Expiry date, Security code, Phone number, and each shipping box) that stays visible while typing
+- [ ] Every box on the card form has a visible label (Name on card, Card number, Expiry date, CVV, Phone number, and each shipping box) that stays visible while typing
 - [ ] Card number, expiry date and security code are three separate labelled boxes stacked one after another, each ~50px tall (not the old ~176px combined box); the code box is visible before the number is typed
 - [ ] Helper line under each card box (front number / MM YY / 3 digits on the back, Amex 4 on the front)
-- [ ] Leaving the security code empty shows "Please check your card details" and does not submit
+- [ ] Leaving the CVV empty shows "Please check your card details" and does not submit
 - [ ] Card box text is 17px dark (not small grey); an invalid card turns the text and the box border red
 - [ ] A sandbox test card still returns a card token in all three uses: main checkout (phone + SMS), /pai/pay re-enter card, upsell shipping step
 - [ ] FramePay boot failure still falls back to Stripe (the `style` option must not break `initialize`)

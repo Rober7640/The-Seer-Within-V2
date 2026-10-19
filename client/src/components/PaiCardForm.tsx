@@ -281,7 +281,7 @@ export function PaiCardForm(props: {
         <p className="mt-1 text-xs leading-snug text-white/60">Month and year, as shown on your card (MM / YY).</p>
       </div>
       <div>
-        <div id={`${mountId}-cvv-label`} className={labelCls}>Security code</div>
+        <div id={`${mountId}-cvv-label`} className={labelCls}>CVV</div>
         <div
           id={`${mountId}-cvv`}
           role="group"
