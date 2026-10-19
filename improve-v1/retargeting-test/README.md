@@ -1,5 +1,7 @@
 # retargeting-test — V1 non-buyer retargeting
 
+> **Developer picking this up? Start with [HANDOFF.md](HANDOFF.md)** — flow, gates, file map, how to run it, the Stripe test walk still owed, and go-live.
+
 ## Current state (2026-10-16)
 
 **One page: the offer page.** Women who turned a tarot card on `/fb-tarot` and left without
@@ -42,9 +44,9 @@ from. Offer-page sales carry `metadata.src = 'retarget'` and `metadata.rtfmt = '
 | `server/lib/retargetCheckout.test.ts` | unit tests (`npx tsx --test server/lib/retargetCheckout.test.ts`) |
 | `tests/fb-tarot-retarget.spec.ts` | Playwright, sandbox only (`playwright.fb-tarot-retarget.config.ts`) |
 | `page/04-offer-copy.md` | copy review doc |
-| `page/screens.mjs` → `page/screens/offer-*.png` | screenshots (not committed) |
+| `page/screens.mjs` → `page/screens/offer-*.png` | screenshots (committed; re-run after copy changes) |
 | `01-copy-rules.md` | the binding brief for written ads |
-| `video/` | the Evelyn video board, build log and cuts |
+| `video/` | the Evelyn video board and build log (the mp4 cuts are not in this branch) |
 
 ### After she buys (post-purchase, 2026-10-16)
 
