@@ -9,7 +9,7 @@ import { trackViewContent } from '@/lib/facebook';
 const STORAGE_KEY = 'evelyn_vsl_v1';
 
 // Tag every funnel event with funnel=<backendOfferFunnel('soulmate-initials')> — the
-// same shared helper every other BE offer uses — so the PostHog funnel + revenue
+// same shared helper every other funnel uses — so the PostHog funnel + revenue
 // insights group on one name across client and server.
 const EVELYN_FUNNEL = backendOfferFunnel('soulmate-initials');
 const trackPH = (event: string, props: Record<string, unknown> = {}) =>

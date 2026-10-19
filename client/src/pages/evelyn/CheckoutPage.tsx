@@ -11,7 +11,7 @@ import { resolveStone, validateIntake } from './checkoutIntake';
 const STORAGE_KEY = 'evelyn_vsl_v1';
 const SUPPORT_EMAIL = 'hi@theseerwithin.com';
 
-// Same shared helper the other BE offers use, so these events group under one funnel
+// Same shared helper the other funnels use, so these events group under one funnel
 // name across client + server (backendPurchaseAnalytics).
 const EVELYN_FUNNEL = backendOfferFunnel('soulmate-initials');
 const trackPH = (event: string, props: Record<string, unknown> = {}) =>
