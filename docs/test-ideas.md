@@ -2265,3 +2265,55 @@ $35 alone (A) vs $35 + $12.77 "+ Double-Strength Clearing" (B), 50/50, /fb only.
 - [ ] Browser walk on /fb arm B: offer card shows the /fb-tarot wording word for word, both buttons work
 - [ ] Downsell ($25) checkout on arm B — confirm the agreed behaviour (bump or no bump)
 - [ ] Admin /admin/experiments shows the /fb test with the bump take-rate block (control row "never offered")
+
+## /fb-tarot retargeting page — the offer page, `?src=retarget` (2026-10-16)
+
+One page since 2026-10-16 (the chat and letter formats and the format A/B test were removed):
+every `/fb-tarot/b?src=retarget&hook=…` (or `/fb-tarot?src=retarget`) visit sees the offer page,
+`client/src/pages/TarotRetargetOffer.tsx`, at the returning-reader price ($30, 14% off $35).
+Spec: `tests/fb-tarot-retarget.spec.ts` (`playwright.fb-tarot-retarget.config.ts`, sandbox only).
+Unit: `server/lib/retargetCheckout.test.ts`. Screens: `improve-v1/retargeting-test/page/screens.mjs` → `screens/offer-*.png`.
+
+- [x] Renders: Evelyn photo + eyebrow, h1 headline, every intro paragraph, NO card images (one img = Evelyn), no bubbles, no ask/chat door, no horizontal scroll; the quiz bridge is not rendered
+- [x] Offer box: badge contains "14%", h2 offer title, summary, `<s>$35</s>`, "$30", sr-only "Was $35, now $30.", price label; price within 1.5 screens at 390×844
+- [x] Includes list, 3 numbered steps, "why" section, 2 doubts with the question as h3, second buy block, signature, P.S. (no doubled "P.S.")
+- [x] `/fb-tarot?src=retarget` (no `/b`) renders the same page
+- [x] One first-name value across both buy blocks; empty/whitespace name → error under the clicked block, focus + aria-invalid, nothing sent
+- [x] Both buy blocks POST /api/checkout with `src:'retarget'`, `retargetPage:'offer'`, `returnTo:'lander'`, `funnel:'v1-tarot'`, `type:'main'`, `tarotDeck:'return-mhf'`, no email and NO price/amount/format key
+- [x] Retarget mode does NOT wipe `seer_conversation`; a stored first name → `introNamed` + both boxes pre-filled
+- [x] `cancelled=1` → cancelled note at top, scrolled to the offer box, money copy on a money hook
+- [x] `deck=` is ignored in retarget mode (always return-mhf, attribution too)
+- [x] PostHog (capture spied in-page): `tarot_bridge_view {mode:'retarget'}`, `retarget_cancelled_view`, `retarget_offer_cta_click {position: 1|2}`, `retarget_offer_click.price_cents:3000`, `checkout_initiated {src:'retarget', price_cents:3000}`; no `*format*` props
+- [x] A normal `/fb-tarot/b?hook=…` visit is unchanged (quiz, wipes the chat session, hands to chat with `card=` and `v=b`)
+- [x] Unit: `normaliseSrc` accepts exactly 'recovery' | 'retarget'; recovery's description marker / metadata unchanged; " - Retarget" marker
+- [x] Unit: retarget + `retargetPage:'offer'` on v1-tarot → 3000 / `30_tarot_rt`; retarget WITHOUT the marker (a chat URL carrying `src=retarget`) → the email lookup or the fixed `35_tarot`, never $30; non-retarget orders unchanged even when claiming the marker; junk markers are not offer; other funnels never get it; 14% = round((35−30)/35×100)
+- [x] Unit: `rtfmt:'offer'` only on a retarget order with the marker; cancel URL `/fb-tarot/b?src=retarget&hook=…&cancelled=1` (no `fmt`); no-name line reads "Personalized reading for you"; `funnelParamFromPriceVariant('30_tarot_rt')` = v1-tarot, not a sliding-close id
+- [ ] Real Stripe TEST session from the page: total $30.00, line "Energy Clearing Ritual - TAROT", PI description "… - Retarget", session + PI `metadata.src=retarget`, `rtfmt=offer`, `priceVariant=30_tarot_rt`, `funnel=v1-tarot`, `product=energy_clearing_ritual`; cancel returns to `/fb-tarot/b?src=retarget&hook=…&cancelled=1`
+- [ ] Webhook: a no-email retarget buyer gets the V2 account migration (customer_details.email); no `noemail` AWeber tag
+- [ ] /welcome1 after an offer purchase: user-data fallback creates the row from customer_details.email; upsell 1 is still $47 and upsells (1-click and fallback) inherit `metadata.src=retarget` + `rtfmt=offer`
+- [ ] PostHog `purchase_completed.price_variant = '30_tarot_rt'` on a real offer purchase
+
+### Retarget buyers after the purchase — U1, U2, thank-you (2026-10-16)
+
+Gate: the order's Stripe session has `src:'retarget'` on `v1-tarot` (`server/lib/retargetOrder.ts`).
+Spec: `tests/fb-tarot-retarget-post-purchase.spec.ts` (same config, sandbox only; seeds two local rows).
+Unit: `server/lib/retargetOrder.test.ts`, `server/lib/evelynThankyouGift.test.ts`,
+`server/lib/retargetUpsellInheritance.test.ts`, `client/src/lib/upsellCopy/retargetUpsell2.test.ts`.
+Copy review: `improve-v1/retargeting-test/page/05-post-purchase-copy.md`.
+
+- [x] Unit: gate = paid + `src:'retarget'` + `funnel:'v1-tarot'`; unpaid / recovery / other funnel / no src → not retarget; junk topic → null bucket
+- [x] Unit: only rows with no price variant or a tarot one are ever looked up; palm/fb/fb2/gdn/read/root never trigger a Stripe call
+- [x] Unit: lookup caches per paid session, never caches errors or unpaid sessions, never throws, never calls Stripe for `txn_…` / demo ids; U1's own Stripe reads warm the cache
+- [x] Unit: thank-you persona — /fb → Evelyn (unchanged), retarget tarot → Evelyn, non-retarget tarot → Luna, every other funnel → Luna
+- [x] Unit: the /fb brief + greeting are byte-identical to before (golden fixture captured pre-change)
+- [x] Unit: retarget brief = first name, love/money, "came back through your returning-reader offer", the real ritual facts, the upsells she took, and "What you do NOT know"; no concern, no quotes, no prices
+- [x] Unit: U2 copy override — retarget → fixed love/money reveal + stone beat; everyone else → none (AI path); all other U2 copy is V1's by reference
+- [x] Unit: upsells inherit `src:'retarget'` + `rtfmt:'offer'` (1-click and fallback, U1 and U2); tripwire on all four sites in routes.ts
+- [x] PW: retarget buyer on a seeded no-concern row — U1 live copy with her name, no "Friend"/"undefined"/placeholders, $47
+- [x] PW: U2 shows the fixed reveal + stone lines and `/api/upsell2/reading` is never requested; offer $47; downsell $30
+- [x] PW: thank-you with an `evelyn` handoff shows the Evelyn card (15 min) and the `campaign=v1-ty-evelyn` link
+- [x] PW: CONTROL — normal tarot buyer: real U2 user-data has no retarget keys, the AI reveal is requested with her concern, the REAL handoff keeps her on Luna
+- [ ] Real Stripe test-mode walk: offer purchase → /welcome1 (fallback creates the row) → U1 1-click → /welcome2 fixed copy (server flag from the real session) → /success shows Evelyn → /evelyn arrival grants 15 min once and greets with the retarget brief
+- [ ] Evelyn's first message for a retarget buyer: names love/money + the ritual, under 35 words, never claims to remember what she said, no price
+- [ ] A retarget buyer who also has an older /fb purchase: the /fb brief wins (by design) — confirm acceptable
+
