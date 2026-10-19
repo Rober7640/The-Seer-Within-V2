@@ -199,15 +199,16 @@ export const BACKEND_OFFERS: Record<BackendOfferKey, BackendOfferListing> = {
   'soulmate-initials': {
     number: '10',
     name: 'Soulmate Initials Reading',
-    tag: 'be-10-soulmate-initials',
-    bumpTag: 'be-10-bump',
-    deliveredTag: 'be-10-delivered',
-    // REUSES the shared BE customer list (6972552), told apart only by the be-10-* tags —
-    // exactly as 03/04/06/09 do. Hardcoded (not via AWEBER_BE_CUSTOMER_LIST_ID, which isn't
-    // set anywhere) so the purchase-time write + the n8n delivery flow both land on 6972552.
+    tag: 'evelyn-soulmate',
+    bumpTag: 'evelyn-soulmate-bump',
+    deliveredTag: 'evelyn-soulmate-delivered',
+    // Standalone Evelyn front-end funnel: its OWN paid list (theseerwithin_soulmate_initials_paid,
+    // 6980769) + Evelyn-branded tags, separate from the shared customer list the other offers use.
     // No bumpListId: the "charge my stone" bump has no separate deliverable, so its tag folds
-    // onto the reading-list write (same subscriber, be-10-bump added) rather than a second list.
-    initialListId: '6972552',
+    // onto the reading-list write (same subscriber, evelyn-soulmate-bump added) rather than a
+    // second list. Campaign triggers (operator): evelyn-soulmate (thank-you), evelyn-soulmate-delivered
+    // (reading ready, merges soulmate_reading_url).
+    initialListId: '6980769',
   },
 };
 
