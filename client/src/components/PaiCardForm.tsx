@@ -122,6 +122,14 @@ const CARD_TEXT_STYLE = {
 
 const labelCls = 'mb-1 block text-sm font-medium text-white/85';
 
+// The three FramePay card boxes. Fixed height: FramePay mounts
+// <div.rebilly-framepay><iframe height:100%> inside each, and with no height on
+// that wrapper the iframe falls back to the browser's 150px default (the old,
+// mostly-empty tall box). FramePay puts its focus/invalid classes on that
+// wrapper, hence has-[…].
+const cardBoxCls =
+  'h-[50px] overflow-hidden rounded-lg border-2 border-gray-400 bg-white px-3 has-[.rebilly-framepay-focus]:border-purple-500 has-[.rebilly-framepay-invalid]:border-red-500 [&>.rebilly-framepay]:h-full';
+
 const inputCls =
   'w-full rounded-lg border border-white/15 bg-black/30 px-3 py-2.5 text-white placeholder-white/35 focus:border-purple-400 focus:outline-none';
 
@@ -140,7 +148,7 @@ export function PaiCardForm(props: {
 }) {
   const { config, amountCents, askPhone = false, askShipping = false } = props;
   const formRef = useRef<HTMLFormElement>(null);
-  const fieldRef = useRef<any>(null);
+  const fieldRef = useRef<any[] | null>(null);
   const [ready, setReady] = useState(false);
   const [name, setName] = useState(props.defaultName ?? '');
   const [phone, setPhone] = useState('');
@@ -166,7 +174,13 @@ export function PaiCardForm(props: {
       try {
         await bootFramepay(config, amountCents);
         if (cancelled) return;
-        fieldRef.current = window.Framepay.card.mount(`#${mountId}`);
+        // Three separate boxes (number / expiry / code) instead of FramePay's
+        // one-line combined field, which hid the code box until the number was typed.
+        fieldRef.current = [
+          window.Framepay.card.mount(`#${mountId}`, 'cardNumber'),
+          window.Framepay.card.mount(`#${mountId}-exp`, 'cardExpiry'),
+          window.Framepay.card.mount(`#${mountId}-cvv`, 'cardCvv'),
+        ];
         setReady(true);
       } catch (err) {
         if (!cancelled) props.onBootFailed?.(err);
@@ -175,10 +189,12 @@ export function PaiCardForm(props: {
     return () => {
       cancelled = true;
       clearTimeout(timer);
-      try {
-        fieldRef.current?.destroy?.();
-      } catch {
-        /* already gone */
+      for (const field of fieldRef.current ?? []) {
+        try {
+          field?.destroy?.();
+        } catch {
+          /* already gone */
+        }
       }
       fieldRef.current = null;
     };
@@ -243,21 +259,37 @@ export function PaiCardForm(props: {
         />
       </div>
       <div>
-        <div id={`${mountId}-label`} className={labelCls}>Card details</div>
-        {/* Fixed height: FramePay mounts <div.rebilly-framepay><iframe height:100%>
-            inside this div, and with no height on that wrapper the iframe falls back
-            to the browser's 150px default (the old, mostly-empty tall box). FramePay
-            puts its focus/invalid classes on that wrapper, hence has-[…]. */}
+        <div id={`${mountId}-label`} className={labelCls}>Card number</div>
         <div
           id={mountId}
           role="group"
           aria-labelledby={`${mountId}-label`}
-          className="h-[50px] overflow-hidden rounded-lg border-2 border-gray-400 bg-white px-3 has-[.rebilly-framepay-focus]:border-purple-500 has-[.rebilly-framepay-invalid]:border-red-500 [&>.rebilly-framepay]:h-full"
+          className={cardBoxCls}
           data-testid="pai-card-field"
         />
-        <p className="mt-1 text-xs leading-snug text-white/60">
-          Your 16-digit card number, expiry date (MM/YY), and the 3-digit code on the back.
-        </p>
+        <p className="mt-1 text-xs leading-snug text-white/60">The long number on the front of your card.</p>
+      </div>
+      <div>
+        <div id={`${mountId}-exp-label`} className={labelCls}>Expiry date</div>
+        <div
+          id={`${mountId}-exp`}
+          role="group"
+          aria-labelledby={`${mountId}-exp-label`}
+          className={cardBoxCls}
+          data-testid="pai-card-exp"
+        />
+        <p className="mt-1 text-xs leading-snug text-white/60">Month and year, as shown on your card (MM / YY).</p>
+      </div>
+      <div>
+        <div id={`${mountId}-cvv-label`} className={labelCls}>Security code</div>
+        <div
+          id={`${mountId}-cvv`}
+          role="group"
+          aria-labelledby={`${mountId}-cvv-label`}
+          className={cardBoxCls}
+          data-testid="pai-card-cvv"
+        />
+        <p className="mt-1 text-xs leading-snug text-white/60">The 3 digits on the back of your card (Amex: 4 digits on the front).</p>
       </div>
       {!ready && (
         <div className="flex items-center gap-2 text-xs text-white/50">
