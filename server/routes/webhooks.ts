@@ -1202,7 +1202,17 @@ router.post('/stripe', async (req: Request, res: Response) => {
     // same idempotent migration the normal landers use (account + free coins +
     // Evelyn drip with a magic-link login). Gated on the no-optin flag AND the
     // front-end product, so it never fires for normal funnels or for upsells.
-    if (metadata.noemail === '1' && product === 'energy_clearing_ritual') {
+    //
+    // 2026-10-16: the /fb-tarot RETARGETING page checks out with no email too
+    // (metadata.src === 'retarget', no metadata.email), so the same migration runs for
+    // it. Gated on the MISSING email rather than the marker alone: a retarget buyer who
+    // came through the chat gave her email there and was migrated at that point. The
+    // migration is idempotent anyway (it skips an existing account). Deliberately NOT
+    // done by setting noemail on those orders — that flag also adds the `noemail`
+    // AWeber tag, the " - No email" Stripe marker and email_gate:'off' analytics, which
+    // would mislabel them as the no-optin test's buyers.
+    const isRetargetNoEmail = metadata.src === 'retarget' && !metadata.email;
+    if ((metadata.noemail === '1' || isRetargetNoEmail) && product === 'energy_clearing_ritual') {
       const noOptinEmail =
         session.customer_details?.email || session.customer_email || undefined;
       if (noOptinEmail) {

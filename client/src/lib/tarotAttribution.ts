@@ -175,7 +175,11 @@ export function syncTarotAttribution(path: string, search: string): TarotEventPr
   // A clean ad URL carries no `&deck=`, so an absent param means the DEFAULT deck —
   // it does NOT mean "keep whatever the last visit used". Only fall back to the stored
   // deck off-bridge, where the param is legitimately missing from every URL.
-  const deckParam = p.get('deck')
+  //
+  // The RETARGETING page (`?src=retarget` on the bridge) ignores `deck=` and always
+  // shows the default deck, so its attribution must say the same.
+  const retargetBridge = bridge && p.get('src') === 'retarget'
+  const deckParam = retargetBridge ? null : p.get('deck')
   const deck: TarotDeck = isTarotDeck(deckParam)
     ? deckParam
     : bridge

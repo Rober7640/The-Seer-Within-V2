@@ -40,6 +40,9 @@ export default function SuccessPage() {
   // Which reader the chat offer shows. The SERVER decides (handoff `persona`, from the
   // paid order); the /fb URL is only the first-paint guess so /fb buyers don't see the
   // Luna card flash first. Anything but an /fb order stays on Luna, as today.
+  // /fb-tarot retarget buyer: Evelyn's brief has no chat to recall, so the card must
+  // not say "she already knows your reading".
+  const [tyRetarget, setTyRetarget] = useState(false);
   const [tyPersona, setTyPersona] = useState<"luna" | "evelyn">(
     currentFunnel() === "v1-fb" ? "evelyn" : "luna",
   );
@@ -210,6 +213,7 @@ export default function SuccessPage() {
           const h = await hres.json();
           if (h.persona === "evelyn") {
             setTyPersona("evelyn");
+            if (h.retarget === true) setTyRetarget(true);
             if (h.mode === "login" && h.token) {
               setLunaHref(`/evelyn?token=${encodeURIComponent(h.token)}&${EVELYN_UTM}`);
             } else {
@@ -366,7 +370,9 @@ export default function SuccessPage() {
             </div>
             <p className="text-purple-200/70 text-sm mb-4">
               {tyPersona === "evelyn"
-                ? "She already knows your reading, so you can pick up right where you left off."
+                ? tyRetarget
+                  ? "She knows what you came back for, so you won't have to start from the beginning."
+                  : "She already knows your reading, so you can pick up right where you left off."
                 : "Bring her your real question. The one you didn't put into a form."}
             </p>
 
