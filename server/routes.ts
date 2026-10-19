@@ -2279,8 +2279,7 @@ export async function registerRoutes(
       // failed lookup answers null ⇒ Luna, i.e. today's behaviour.
       const retargetOrder =
         !isEvelynTyConversation(conversation.priceVariant) &&
-        couldBeRetargetOrder(conversation.priceVariant) &&
-        !isPaiOrderId(sessionId)
+        couldBeRetargetOrder(conversation.priceVariant)
           ? await lookupRetargetOrder(sessionId, stripe)
           : null;
       if (evelynTyPersonaFor(conversation.priceVariant, retargetOrder) === "evelyn") {

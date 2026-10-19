@@ -8,8 +8,6 @@
 // Tracking (pixel / GAds / PostHog) stays with the caller; this helper only moves her
 // to payment.
 
-import { goToPaiCheckout } from './paiCheckout'
-
 export interface V1CheckoutOptions {
   /** Shown pre-filled on our Payments.AI checkout page. Absent ⇒ she types it there. */
   email?: string
@@ -37,40 +35,7 @@ export async function submitV1Checkout(
     body: JSON.stringify(checkoutBody),
   })
   const data = await response.json()
-  // The live gateway split: a Payments.AI buyer gets a signed order instead of a
-  // Stripe URL and is sent to OUR checkout page, <funnel>/checkout
-  // (pages/PaiCheckoutPage), as a Stripe buyer is sent to Stripe's. Every Stripe
-  // buyer gets `{ url }` exactly as before.
-  if (data?.gateway === 'paymentsai' && typeof data.orderToken === 'string') {
-    const went = goToPaiCheckout(
-      {
-        orderToken: data.orderToken,
-        totalCents: data.totalCents,
-        mainCents: data.mainCents,
-        bumpCents: data.bumpCents ?? 0,
-        productName: data.productName ?? 'Energy Clearing Ritual',
-        productDescription: data.productDescription,
-        bumpName: data.bumpName,
-        bumpDescription: data.bumpDescription,
-        email: opts.email,
-        firstName: opts.firstName,
-        funnel: opts.funnel,
-        backUrl: opts.backUrl,
-        stripeFallbackBody: checkoutBody,
-      },
-      opts.checkoutPath,
-    )
-    if (went) return
-    // This browser will not hold the order (storage blocked) — take her to Stripe
-    // instead, so she can still pay.
-    const retry = await fetch('/api/checkout', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ...checkoutBody, forceStripe: true }),
-    })
-    const again = await retry.json()
-    if (again?.url) window.location.href = again.url
-    return
-  }
+  // Production has no Payments.AI checkout: the server always answers `{ url }`
+  // (Stripe). The development copy of this file also handles a Payments.AI order.
   if (data?.url) window.location.href = data.url
 }

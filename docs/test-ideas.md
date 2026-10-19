@@ -2265,6 +2265,7 @@ $35 alone (A) vs $35 + $12.77 "+ Double-Strength Clearing" (B), 50/50, /fb only.
 - [ ] Browser walk on /fb arm B: offer card shows the /fb-tarot wording word for word, both buttons work
 - [ ] Downsell ($25) checkout on arm B — confirm the agreed behaviour (bump or no bump)
 - [ ] Admin /admin/experiments shows the /fb test with the bump take-rate block (control row "never offered")
+
 ## /fb-tarot retargeting page — the offer page, `?src=retarget` (2026-10-16)
 
 One page since 2026-10-16 (the chat and letter formats and the format A/B test were removed):
