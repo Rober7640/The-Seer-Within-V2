@@ -2389,3 +2389,12 @@ Not covered — needs a live walk or a future Playwright pass:
 - [ ] Stripe upsell 1-click approved AND declined both write a payment_attempts row (gateway=stripe, initiator=mit)
 - [ ] `<funnel>/checkout` opened directly (no order in this tab) says "expired" with a link back to the reading; "Back" returns to the chat
 - [ ] `/fb/checkout` and `/fb-tarot/checkout` fire NO Facebook PageView (Stripe's hosted page fires none); PostHog $pageview still fires
+
+## Payments.AI card form — labels + readable card box (2026-10-19)
+
+- [ ] Every box on the card form has a visible label (Name on card, Card details, Phone number, and each shipping box) that stays visible while typing
+- [ ] The card box is ~50px tall (not the old ~176px empty box) and shows "Card number" + "MM / YY" hints on load, on phone and desktop widths
+- [ ] Helper line under the card box: "Your 16-digit card number, expiry date (MM/YY), and the 3-digit code on the back."
+- [ ] Card box text is 17px dark (not small grey); an invalid card turns the text and the box border red
+- [ ] A sandbox test card still returns a card token in all three uses: main checkout (phone + SMS), /pai/pay re-enter card, upsell shipping step
+- [ ] FramePay boot failure still falls back to Stripe (the `style` option must not break `initialize`)
