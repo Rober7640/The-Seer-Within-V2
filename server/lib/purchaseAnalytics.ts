@@ -131,6 +131,13 @@ export function buildPurchaseEvent(input: PurchaseEventInput): PurchaseEvent | n
       //                the two $3500 purchases above distinguishable.
       price_variant: md.priceVariant ?? null,
       purchase_type: md.type ?? null,
+
+      // src: the checkout-source marker ('retarget' | 'recovery' | null). Written
+      // normalised to metadata.src at checkout and INHERITED onto upsell orders, so
+      // retargeting (and recovery) revenue can include the upsells too — not just the
+      // main offer. Additive and schemaless: absent on normal orders → null, so every
+      // existing insight keyed on the properties above keeps working untouched.
+      src: md.src ?? null,
     },
   };
 }
