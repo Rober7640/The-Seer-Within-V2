@@ -217,17 +217,20 @@ export default function CheckoutPage() {
       )}
 
       <div className="max-w-md mx-auto px-4 py-10">
-        {/* 1. Headline + product image placeholder (operator open item #5). */}
+        {/* 1. Headline + product image (Evelyn with the cards). */}
         <header className="text-center mb-6">
           <h1 className="text-2xl font-semibold text-white mb-3" data-testid="text-checkout-headline">
             Your Soulmate Initials Reading is almost ready.
           </h1>
-          <div
-            className="mx-auto w-full aspect-[4/5] max-w-xs rounded-xl border border-dashed border-purple-400/40 bg-purple-950/60 flex items-center justify-center text-purple-300/70 text-sm"
-            data-testid="placeholder-product-image"
-          >
-            [ product image — Evelyn with the cards ]
-          </div>
+          <img
+            src="https://luna-assets-tsw.s3.ap-southeast-2.amazonaws.com/evelyn/vsl/v1/checkout-evelyn-cards.jpg"
+            alt="Evelyn holding your reading cards"
+            width={1000}
+            height={500}
+            loading="eager"
+            className="mx-auto w-full max-w-sm rounded-xl shadow-xl ring-1 ring-purple-400/25"
+            data-testid="product-image"
+          />
         </header>
 
         {/* 2. Offer box. */}
