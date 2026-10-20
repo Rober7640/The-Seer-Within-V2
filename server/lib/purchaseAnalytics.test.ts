@@ -35,6 +35,11 @@ const NEW_KEYS = ['price_variant', 'purchase_type'] as const;
 // added to the event, and the assertion below still fails if anything else creeps in.
 const GATEWAY_KEYS = ['payment_gateway'] as const;
 
+// Added 2026-10-20 so retargeting/recovery revenue can include the upsells, not just
+// the main offer. Kept as its own set (like GATEWAY_KEYS) so this line is the entire
+// record of what the src-attribution change added to the event.
+const SRC_KEYS = ['src'] as const;
+
 const legacyOf = (props: Record<string, unknown>) =>
   Object.fromEntries(LEGACY_KEYS.map((k) => [k, props[k]]));
 
@@ -154,13 +159,26 @@ describe('REGRESSION — existing funnels emit exactly what they emitted before'
     assert.equal(Object.keys(TRACKED_PRODUCTS).length, 6, 'a product was added/removed from TRACKED_PRODUCTS');
   });
 
-  it('every tracked product emits ALL legacy keys plus exactly the two new ones — no key was dropped', () => {
+  it('every tracked product emits ALL legacy keys plus exactly the additive ones — no key was dropped', () => {
     for (const product of Object.keys(TRACKED_PRODUCTS)) {
       const ev = buildPurchaseEvent({
         product, metadata: {}, amountCents: 100, stripeSessionId: 'cs', paymentGateway: 'stripe', email: 'e@e.com',
       })!;
       const keys = Object.keys(ev.properties).sort();
-      assert.deepEqual(keys, [...LEGACY_KEYS, ...NEW_KEYS, ...GATEWAY_KEYS].sort(), `property set changed for ${product}`);
+      assert.deepEqual(keys, [...LEGACY_KEYS, ...NEW_KEYS, ...GATEWAY_KEYS, ...SRC_KEYS].sort(), `property set changed for ${product}`);
+      // src is null when no marker is present (normal buyer) — always present, safe to filter.
+      assert.equal(ev.properties.src, null, `src should default null for ${product}`);
+    }
+  });
+
+  it('src is carried through from metadata so retargeting/recovery upsells are attributable', () => {
+    for (const src of ['retarget', 'recovery'] as const) {
+      const ev = buildPurchaseEvent({
+        product: 'manifestation_bracelet', metadata: { src }, amountCents: 4700,
+        stripeSessionId: 'cs_u2', paymentGateway: 'stripe', email: 'e@e.com',
+      })!;
+      assert.equal(ev.properties.src, src, `upsell2 should carry src=${src}`);
+      assert.equal(ev.properties.step, 'upsell2');
     }
   });
 });
