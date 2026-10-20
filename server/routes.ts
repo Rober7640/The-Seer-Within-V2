@@ -649,6 +649,10 @@ export async function registerRoutes(
   // grade log, delivered stamp, send log). Machine-only; a browser never calls it.
   // Offer-generic: /api/be/:offer/… — see server/routes/beFulfilment.ts.
   app.use("/api/be", beFulfilmentRouter);
+  // Evelyn VSL alias — the SAME offer-generic router behind a clean, Evelyn-branded
+  // path, so the funnel's n8n delivery flow (and any future reference to it) reads
+  // `/api/evelyn/soulmate-initials/…` rather than `/api/be/…`. No behaviour change.
+  app.use("/api/evelyn", beFulfilmentRouter);
 
   // Public unsubscribe endpoint for partner emails (CAN-SPAM compliance).
   // Mounted at root so the URL is a clean https://www.theseerwithin.com/unsubscribe?email=...&src=...
