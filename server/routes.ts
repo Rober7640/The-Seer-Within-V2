@@ -2657,6 +2657,9 @@ export async function registerRoutes(
             // No-optin arm marker so palm no-optin upsells are separable from the
             // email arm in PostHog (mirrors the FE purchase + client funnel events).
             email_gate: session.metadata?.noemail === "1" ? "off" : "on",
+            // Checkout-source marker inherited from the main session, so retargeting
+            // (and recovery) revenue can include this upsell, not just the main offer.
+            src: session.metadata?.src ?? null,
           },
         });
 
@@ -3293,6 +3296,9 @@ export async function registerRoutes(
             // No-optin arm marker so palm no-optin upsells are separable from the
             // email arm in PostHog (mirrors the FE purchase + client funnel events).
             email_gate: session.metadata?.noemail === "1" ? "off" : "on",
+            // Checkout-source marker inherited from the main session, so retargeting
+            // (and recovery) revenue can include this upsell, not just the main offer.
+            src: session.metadata?.src ?? null,
           },
         });
 
