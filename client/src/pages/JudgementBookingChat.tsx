@@ -4,6 +4,7 @@ import { useFloorSpoken } from '@/hooks/useFloorSpoken'
 import { typingPace, BETWEEN_LINES_MS, BEFORE_CARD_MS } from '@/lib/chatPace'
 import { bookingFirstName } from '@/lib/funnel'
 import { beginBackendCheckout } from '@/lib/backendCheckout'
+import { parseAmountCents } from '@/lib/judgementAmount'
 import { track as trackPH } from '@/lib/posthog'
 import {
   CHAT_SCRIPT,
@@ -80,15 +81,6 @@ function resolveEntry(search: string): EntryMode {
 
 function centsToDollars(cents: number): string {
   return `$${(cents / 100).toFixed(2)}`
-}
-
-// "40", "40.00", "$40" and " 40 " are all a woman typing forty dollars.
-// Anything else is not a number and stays invalid rather than being guessed at.
-function parseAmountCents(input: string): number | null {
-  const cleaned = input.trim().replace(/^\$/, '').replace(/,/g, '')
-  if (!/^\d+(\.\d{0,2})?$/.test(cleaned)) return null
-  const cents = Math.round(Number(cleaned) * 100)
-  return Number.isFinite(cents) ? cents : null
 }
 
 export default function JudgementBookingChat() {
