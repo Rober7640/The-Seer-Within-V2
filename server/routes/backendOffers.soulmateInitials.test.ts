@@ -1,5 +1,10 @@
 import { describe, it, expect } from 'vitest';
-import { BACKEND_OFFER_CATALOG, resolveBackendCharge } from '../../shared/backendOffers';
+import {
+  BACKEND_OFFER_CATALOG,
+  backendOrderDescriptor,
+  backendUpsellDescriptor,
+  resolveBackendCharge,
+} from '../../shared/backendOffers';
 
 describe('soulmate-initials catalog row', () => {
   const offer = BACKEND_OFFER_CATALOG['soulmate-initials'];
@@ -27,5 +32,21 @@ describe('soulmate-initials catalog row', () => {
       expect(charge.bumpCents).toBe(1111);
       expect(charge.totalCents).toBe(3011);
     }
+  });
+
+  it('has a clean Stripe-dashboard label — NO "BE 10" prefix (front-end funnel)', () => {
+    expect(backendOrderDescriptor('soulmate-initials', false)).toBe('Soulmate Initials Reading');
+    expect(backendOrderDescriptor('soulmate-initials', true)).toBe(
+      "Soulmate Initials Reading + Charge my stone under tonight's moon",
+    );
+    // Its upsell charges drop the prefix too.
+    expect(backendUpsellDescriptor('soulmate-initials', 'Protection Ritual', false)).toBe(
+      'Protection Ritual',
+    );
+    // ⛔ Every OTHER offer still carries BE <nn> — the change is Evelyn-only.
+    expect(backendOrderDescriptor('twin-flame', false)).toMatch(/^BE 02 · /);
+    expect(backendUpsellDescriptor('judgement-day', 'Protection Ritual', false)).toBe(
+      'BE 03 · Protection Ritual',
+    );
   });
 });

@@ -733,7 +733,13 @@ export function backendOrderDescriptor(
   bumpPurchased: boolean,
 ): string {
   const offer = BACKEND_OFFER_CATALOG[key];
-  const base = `BE ${offer.number} · ${offer.stripeName}`;
+  // The Evelyn VSL funnel (soulmate-initials) is a FRONT-END funnel — its Stripe
+  // Dashboard label must NOT carry the operator-only `BE 10` prefix the backend
+  // offers use (Joel's call). Clean product name only. Every other offer keeps `BE <nn>`.
+  const base =
+    key === 'soulmate-initials'
+      ? offer.stripeName
+      : `BE ${offer.number} · ${offer.stripeName}`;
   if (!bumpPurchased || !offer.bump) return base;
   return `${base} + ${offer.bump.stripeName.replace(/^\+\s*/, '')}`;
 }
@@ -758,7 +764,10 @@ export function backendUpsellDescriptor(
   isDownsell: boolean,
 ): string {
   const offer = BACKEND_OFFER_CATALOG[key];
-  return `BE ${offer.number} · ${upsellName}${isDownsell ? ' (downsell)' : ''}`;
+  // Evelyn VSL (front-end): no `BE 10` prefix on its upsell charges either. See
+  // backendOrderDescriptor above. Every other offer keeps `BE <nn>`.
+  const prefix = key === 'soulmate-initials' ? '' : `BE ${offer.number} · `;
+  return `${prefix}${upsellName}${isDownsell ? ' (downsell)' : ''}`;
 }
 
 /**
