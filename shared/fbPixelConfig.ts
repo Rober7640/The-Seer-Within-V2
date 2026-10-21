@@ -47,6 +47,19 @@ export const FB_PIXEL_CONFIG: Record<string, FbPixelEntry> = {
   // /fb-read is deliberately absent for the same reason and follows the same
   // path — DEFAULT pixel, falls through to 'default' on both client and CAPI.
   // Adding a route here would silently move it onto another pixel.
+
+  // /evelyn — the Evelyn VSL funnel (soulmate-initials, 10). Its own entry so
+  // Meta reporting can be isolated per spec §7, instead of falling through to
+  // 'default' and mixing with every other unmapped funnel.
+  // TODO(operator): Evelyn ad-account pixel id. Pointed at the DEFAULT pixel
+  // until the operator supplies the Evelyn ad account's own pixel — so events
+  // still fire (and dedupe correctly) in test. Swap `pixelId` only; routes stay.
+  evelyn: {
+    pixelId: '446814716830295',
+    routes: [
+      '/evelyn',
+    ],
+  },
 };
 
 export function resolveFunnelFromUrl(urlOrPath: string): string {

@@ -68,6 +68,32 @@ export default function RefundPage() {
           </section>
 
           <section>
+            <h2 className="text-xl font-semibold text-white mb-3">2A. Soulmate Initials Reading — 60-Day Money-Back Guarantee</h2>
+            <div className="bg-purple-900/60 border border-purple-500 rounded-lg p-4 mb-4">
+              <p className="font-semibold text-white mb-1">Summary: 60-day money-back guarantee on the Soulmate Initials Reading.</p>
+            </div>
+            <p className="mb-3">
+              The Soulmate Initials Reading is a one-time digital reading (not reading minutes), and it
+              carries its own, separate guarantee: if it does not resonate with you, email us within{' '}
+              <strong>60 calendar days</strong> of your purchase date for a full refund.
+            </p>
+            <p className="mb-3">This 60-day guarantee applies only to the Soulmate Initials Reading itself. It does not
+              extend to:</p>
+            <ul className="list-disc list-inside space-y-2 ml-4">
+              <li>Any add-on purchased alongside it (e.g. the stone-charging add-on), which follows the
+                add-on's own terms disclosed at checkout;</li>
+              <li>Any subsequent upsell purchase (e.g. the Protection Ritual or Manifestation Bracelet),
+                which is covered under Section 4 (Physical Products) below;</li>
+              <li>Reading minutes purchased elsewhere on the platform, which remain covered by the 30-day
+                goodwill refund in Section 2 above.</li>
+            </ul>
+            <p className="mt-4 text-purple-200 text-sm">
+              This guarantee is provided at our discretion and does not affect, and is in addition to, any
+              statutory rights you may have under Singapore law.
+            </p>
+          </section>
+
+          <section>
             <h2 className="text-xl font-semibold text-white mb-3">3. Minutes Expiry — No Refund After Expiry</h2>
             <p className="mb-3">
               As set out in our Terms of Service, purchased minutes expire <strong>6 months from the

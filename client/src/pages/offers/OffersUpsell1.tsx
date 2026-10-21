@@ -9,6 +9,7 @@ import { upsell1CopyForOffer } from "../../lib/backendOffers";
 import { isBackendOfferKey, type BackendOfferKey } from "@shared/backendOffers";
 import { track as trackPH } from "../../lib/posthog";
 import { backendOfferFunnel } from "../../lib/funnel";
+import { trackPurchase } from "../../lib/facebook";
 import { Volume2, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -32,6 +33,13 @@ interface UserData {
   stripeCustomerId?: string | null;
   upsell1PriceCents?: number;
   bumpAmountCents?: number;
+  // ⭐ Task 11 (spec §7): the ONLY booking session that sets this is Evelyn VSL
+  // (soulmate-initials) — every other be_ offer's session has no `funnel` key, so
+  // `/api/backend/upsell/user-data` reports it as null. The main-$19 Purchase fire
+  // below is gated on this being exactly 'evelyn_vsl' — never broaden that check.
+  funnel?: string | null;
+  // Evelyn VSL's main reading price, for that same gated Purchase fire.
+  mainPriceCents?: number;
   // The booking checkout's own address on a physical offer (09, 06) — what lets the
   // chat skip the shipping form. /api/backend/upsell/user-data already returns it.
   shipping?: {
@@ -105,6 +113,51 @@ export default function OffersUpsell1() {
 
     fetchUserData();
   }, [searchString]);
+
+  // ⭐ Main $19 Purchase (Task 11, spec §7) — fired HERE, not at /evelyn/checkout,
+  // because the booking checkout's success_url for an offer with an upsell chain
+  // redirects straight to THIS page (offer.upsellEntryPath) without a Purchase fire
+  // of its own; this is the first client render after the money moved.
+  //
+  // ⛔ GATED to `userData.funnel === 'evelyn_vsl'` — the ONLY booking session that
+  // sets that metadata key (server/routes/backendOffers.ts, the `piiOutOfStripe`
+  // branch). Every other be_ offer's session reports `funnel: null` from
+  // /api/backend/upsell/user-data, so this effect is a no-op for them — per the
+  // controller ruling, broadening this check would fire a Purchase for every other
+  // backend offer and must never happen.
+  //
+  // skipServerRelay: true (spec §7's literal instruction, SoulmateUpsellPage.tsx's
+  // idiom) — safe now because server/lib/facebook.ts's resolveStripeEventName was
+  // extended (this task) to resolve `be_soulmate_initials` → Purchase ONLY when
+  // `metadata.funnel === 'evelyn_vsl'` (every other be_ offer still resolves to
+  // null and stays walled off). The webhook's checkout.session.completed handler
+  // fires that CAPI Purchase with the same deterministic `purchase_<sessionId>`
+  // event id this browser fire uses, so the two dedup cleanly.
+  //
+  // pixelFunnel: 'evelyn' because this page is shared across every be_ offer at
+  // ONE url (/offers/upsell/welcome1) — the default path-based pixel lookup
+  // would resolve to 'default', not the Evelyn pixel entry, once the operator
+  // supplies a pixel id distinct from default's (see fbPixelConfig.ts's TODO).
+  // Passing the funnel explicitly keeps this fire on the right pixel regardless.
+  useEffect(() => {
+    if (!userData || !sessionId) return;
+    if (userData.funnel !== "evelyn_vsl") return;
+
+    const dedupKey = `evelyn_vsl_purchase_fired_${sessionId}`;
+    if (sessionStorage.getItem(dedupKey)) return;
+    sessionStorage.setItem(dedupKey, "1");
+
+    const mainCents = userData.mainPriceCents ?? 1900;
+    const bumpCents = userData.bumpAmountCents ?? 0;
+    trackPurchase(
+      (mainCents + bumpCents) / 100,
+      "USD",
+      userData.email,
+      "Soulmate Initials Reading",
+      sessionId,
+      { skipServerRelay: true, pixelFunnel: "evelyn" },
+    );
+  }, [userData, sessionId]);
 
   const copy = offer ? upsell1CopyForOffer(offer) : null;
 

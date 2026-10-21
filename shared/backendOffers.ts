@@ -40,7 +40,8 @@ export type BackendOfferKey =
   | 'pixiu-bracelet'
   | 'heart-cleanser'
   | 'marcus-daily'
-  | 'marcus-reading';
+  | 'marcus-reading'
+  | 'soulmate-initials';
 
 /** Which of the two booking treatments sold it — decides where a cancel returns to. */
 export type BookingTreatment = 'page' | 'chat';
@@ -218,6 +219,17 @@ export const MARCUS_READING_PRICE_CENTS = 3500;
 export const MARCUS_READING_BUMP_PRODUCT_KEY = 'marcus_speed';
 export const MARCUS_READING_BUMP_CENTS = 1277;
 
+// 10 — the Soulmate Initials Reading (Evelyn VSL funnel). A DIGITAL offer, no shipping:
+// her soulmate's initials, written for her and sent by email within 24 hours.
+export const SOULMATE_INITIALS_PRICE_CENTS = 1900;
+
+// 10's bump — "Charge my stone under tonight's moon", $11.11. Same repeating-1s numerology
+// touch as 06/09's bumps.
+export const SOULMATE_INITIALS_BUMP_CENTS = 1111;
+
+// ⛔ 10's bump key — see the note on 02's above. n8n exact-matches this string.
+export const SOULMATE_INITIALS_BUMP_PRODUCT_KEY = 'be_soulmate_initials_charge';
+
 // ─── The catalog ───────────────────────────────────────────────────────────────
 
 /** 07's rungs. ⛔ The key is what the browser may send; the price is looked up here. */
@@ -294,7 +306,7 @@ export interface BackendOfferBump {
 export interface BackendOffer {
   key: BackendOfferKey;
   /** The deck's number, as every doc cites it. */
-  number: '02' | '03' | '04' | '06' | '07' | '08' | '09';
+  number: '02' | '03' | '04' | '06' | '07' | '08' | '09' | '10';
   /** What Stripe shows her at checkout. */
   stripeName: string;
   stripeDescription: string;
@@ -370,6 +382,8 @@ export interface BackendOffer {
    * rename one. `label` ≤ 50 characters (Stripe's hard limit). Stripe allows at most three.
    */
   checkoutCustomFields?: readonly BackendCheckoutCustomField[];
+  /** When true, firstName/DOB are persisted to intake only and kept OUT of Stripe metadata (spec §5). */
+  piiOutOfStripe?: boolean;
 }
 
 export interface BackendCheckoutCustomField {
@@ -656,6 +670,31 @@ export const BACKEND_OFFER_CATALOG: Record<BackendOfferKey, BackendOffer> = {
     //      driven by LIVE Stripe webhooks.
     //   3. THE EMAILS ARE PROVEN — AWeber delivery + confirmation campaigns are built and
     //      the four 08 letters were validated end-to-end on dev.
+    readyForMoney: true,
+  },
+
+  // ⭐ 10 — the Soulmate Initials Reading (Evelyn VSL funnel). A DIGITAL offer, no shipping:
+  // her soulmate's initials, written for her and sent by email within 24 hours.
+  'soulmate-initials': {
+    key: 'soulmate-initials',
+    number: '10',
+    stripeName: 'Soulmate Initials Reading',
+    stripeDescription: "Your soulmate's initials, written for you and sent by email within 24 hours.",
+    stripeProduct: 'be_soulmate_initials',
+    pricing: { model: 'fixed', priceCents: SOULMATE_INITIALS_PRICE_CENTS },
+    bump: {
+      productKey: SOULMATE_INITIALS_BUMP_PRODUCT_KEY,
+      cents: SOULMATE_INITIALS_BUMP_CENTS,
+      stripeName: "+ Charge my stone under tonight's moon",
+    },
+    bookingPath: { page: '/evelyn/checkout', chat: '/evelyn/checkout' },
+    successPath: '/evelyn/thank-you',
+    // V1's two upsells through the shared backend upsell engine, exactly as 03/06/09.
+    upsellEntryPath: '/offers/upsell/welcome1',
+    // Spec §5 — firstName/DOB stay out of Stripe metadata; they live in intake only.
+    piiOutOfStripe: true,
+    // ✅ LIVE on Production (2026-10-21). Booking + success pages render, intake writes,
+    //    reading-html + n8n delivery exist end to end — flipped on the Production cherry-pick.
     readyForMoney: true,
   },
 };

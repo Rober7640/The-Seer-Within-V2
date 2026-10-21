@@ -110,6 +110,10 @@ export async function saveOrderIntake(intake: InsertBeOrderIntake): Promise<bool
           displayFirstName: intake.displayFirstName ?? null,
           fullBirthName: intake.fullBirthName ?? null,
           dateOfBirth: intake.dateOfBirth ?? null,
+          // Evelyn VSL (soulmate-initials): same rule — the last thing she typed wins.
+          stone: intake.stone ?? null,
+          firstName: intake.firstName ?? null,
+          email: intake.email ?? null,
         },
       });
     return true;

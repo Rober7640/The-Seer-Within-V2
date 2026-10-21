@@ -50,6 +50,10 @@ export interface BackendCheckoutRequest {
    *  price. The server re-resolves her arm and charges that; a mismatch is a 409 price_changed. */
   quotedArm?: string | null;
   // ⛔ No `cup`: 04's reading is drawn at random by the server (operator 2026-10-11).
+  /** Evelyn VSL: stored in intake, kept OUT of Stripe metadata (spec §5). */
+  dateOfBirth?: string | null;
+  stone?: string | null;
+  email?: string | null;
 }
 
 export type BackendCheckoutResult =
@@ -100,6 +104,11 @@ export async function beginBackendCheckout(
         firstName: req.firstName ?? undefined,
         letterCode: req.letterCode ?? undefined,
         quotedArm: req.quotedArm ?? undefined,
+        // Evelyn VSL intake — sent to OUR server only. Task 5 gates these out of
+        // Stripe metadata (birth date / name must never reach Stripe).
+        ...(req.dateOfBirth ? { dateOfBirth: req.dateOfBirth } : {}),
+        ...(req.stone ? { stone: req.stone } : {}),
+        ...(req.email ? { email: req.email } : {}),
         // The A/B visitor subject (02's booking treatment, 04's price test), so the purchase
         // attributes back to the arm she saw — and, on 04, so the server re-resolves the SAME
         // price arm the page printed. Harmless when a test is off (no exposure → not counted).
