@@ -14,6 +14,8 @@ import {
   priceLabel,
   resolveBackendCharge,
   upsellChargeFields,
+  SOULMATE_INITIALS_PRICE_CENTS,
+  SOULMATE_INITIALS_BUMP_CENTS,
   type BackendOffer,
   type BookingTreatment,
 } from '@shared/backendOffers';
@@ -32,6 +34,7 @@ import { drawTeaCup } from '../lib/be04Draw';
 import { resolveBe04Price, resolveBeBookingTreatment } from '../lib/experiments';
 import { BACKEND_UPSELLS } from '../lib/backendCustomerList';
 import { paidUpsellAmountCents } from '../lib/beUpsellOrders';
+import { isStone } from '@shared/evelynVsl';
 import logger from '../lib/logger';
 
 // Stripe Checkout for the one-time backend offers (02 Twin Flame, 03 Judgement Day, …).
@@ -181,6 +184,26 @@ function priceTestMetaFromStripe(meta: Record<string, string | undefined> | null
   return out;
 }
 
+/**
+ * Strict `YYYY-MM-DD` date-of-birth check for the Evelyn VSL (soulmate-initials) intake —
+ * distinct from `parseDateOfBirth` (be08Birth.ts), which accepts many free-text shapes and
+ * a 13+ floor for the 08 booking form. This offer's intake is a single `<input type=date>`
+ * box, so the shape is fixed, and the floor here is 18, not 13.
+ */
+function isAdultISODate(dob: unknown): boolean {
+  if (typeof dob !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(dob)) return false;
+  const [y, m, d] = dob.split('-').map(Number);
+  const date = new Date(Date.UTC(y, m - 1, d));
+  if (Number.isNaN(date.getTime())) return false;
+  if (date.getUTCFullYear() !== y || date.getUTCMonth() !== m - 1 || date.getUTCDate() !== d) return false;
+  const now = new Date();
+  if (date.getTime() > now.getTime()) return false;
+  let age = now.getUTCFullYear() - y;
+  const birthdayNotYet = now.getUTCMonth() + 1 < m || (now.getUTCMonth() + 1 === m && now.getUTCDate() < d);
+  if (birthdayNotYet) age--;
+  return age >= 18;
+}
+
 function baseUrl(req: Request): string {
   const proto = (req.headers['x-forwarded-proto'] as string) || req.protocol || 'https';
   const host = req.get('host');
@@ -291,6 +314,17 @@ router.get('/upsell/user-data', async (req: Request, res: Response) => {
         session.metadata?.email ||
         null,
       offer: session.metadata?.offer ?? null,
+      // ⭐ Evelyn VSL (Task 11, spec §7): the ONLY `funnel` value any booking session
+      // metadata carries today (set at checkout — see the `piiOutOfStripe` branch
+      // above). Surfaced here, additively, so the shared upsell page can gate its
+      // Meta Purchase fire to this one funnel without broadening to every be_
+      // offer. `null` for every other offer, which never set this key.
+      funnel: session.metadata?.funnel ?? null,
+      // Evelyn VSL's main-reading price + optional stone bump, for that same gated
+      // Purchase fire. Both are fixed catalog constants, not session-derived, so
+      // they are safe to return even when `funnel` is null (unused by the caller).
+      mainPriceCents: SOULMATE_INITIALS_PRICE_CENTS,
+      bumpAmountCents: session.metadata?.bump === '1' ? SOULMATE_INITIALS_BUMP_CENTS : 0,
       // 02 collects no bucket / person — the twin-flame upsell copy needs neither.
       bucket: null,
       personName: null,
@@ -437,6 +471,13 @@ router.post('/upsell/charge', async (req: Request, res: Response) => {
         // 04: the price arm she booked under (+ its visitor subject), so this upsell's
         // revenue lands on that arm. Absent for every other offer.
         ...priceTestMetaFromStripe(session.metadata),
+        // ⭐ Evelyn VSL (Task 11, spec §7) ONLY: `funnel` is undefined on every other
+        // be_ offer's booking session, so this is a no-op for them. Carried here so
+        // the webhook's payment_intent.succeeded can gate fireStripePurchaseEvent's
+        // resolveStripeEventName on `metadata.funnel === 'evelyn_vsl'` for the U1/U2
+        // charge — without it, this 1-click PI would report `funnel: undefined` and
+        // the Purchase/Upsell/Upsell2 fire would wrongly fall through to null (skipped).
+        ...(session.metadata?.funnel ? { funnel: session.metadata.funnel } : {}),
       },
     });
 
@@ -544,6 +585,9 @@ router.post('/upsell/fallback-checkout', async (req: Request, res: Response) => 
       ...(isDownsell ? { type: 'downsell' } : {}),
       ...(email ? { email } : {}),
       ...(firstName ? { firstName } : {}),
+      // ⭐ Evelyn VSL (Task 11, spec §7) ONLY — see the matching comment in
+      // /upsell/charge above. Undefined on every other be_ offer's booking.
+      ...(booking.metadata?.funnel ? { funnel: booking.metadata.funnel } : {}),
     };
 
     const session = await stripe.checkout.sessions.create({
@@ -881,6 +925,27 @@ router.post('/checkout', async (req: Request, res: Response) => {
       : typeof req.body?.firstName === 'string' ? req.body.firstName : '';
     const firstName = rawName.trim().slice(0, MAX_FIRST_NAME);
 
+    // ── Evelyn VSL's intake (soulmate-initials, 10) ─────────────────────────────────
+    // Spec §5: her date of birth and first name are PII and NEVER ride Stripe metadata —
+    // they are parked on be_order_intake only (below). dateOfBirth is REQUIRED here (a
+    // real YYYY-MM-DD, 18+) because the reading is read from it; stone is OPTIONAL — the
+    // funnel tolerates a stone-less checkout ("your stone") so a present-but-invalid stone
+    // is refused, but an absent one is not. Refused before Stripe is touched.
+    const dateOfBirth = typeof req.body?.dateOfBirth === 'string' ? req.body.dateOfBirth.trim() : undefined;
+    const rawStone = req.body?.stone;
+    const stone = typeof rawStone === 'string' && rawStone ? rawStone : undefined;
+    const email = typeof req.body?.email === 'string' && req.body.email.trim() ? req.body.email.trim().slice(0, 200) : undefined;
+    if (offer.piiOutOfStripe) {
+      if (!isAdultISODate(dateOfBirth)) {
+        logger.info('backend/checkout: refused', { offer: offerKey, code: 'invalid_intake' });
+        return res.status(400).json({ error: 'invalid_intake' });
+      }
+      if (stone !== undefined && !isStone(stone)) {
+        logger.info('backend/checkout: refused', { offer: offerKey, code: 'invalid_intake' });
+        return res.status(400).json({ error: 'invalid_intake' });
+      }
+    }
+
     // The sales letter's ?c=, as the booking screen read it. Each backend letter's CTAs use
     // their own range (02-E2/v1: 1..6, 02-E3/v2: 21..26), so fulfilment can tell WHICH letter
     // she bought from and pay that letter's promises. ⛔ Digits only, and absent stays absent —
@@ -940,10 +1005,14 @@ router.post('/checkout', async (req: Request, res: Response) => {
             })),
           }
         : {}),
+      // Prefill the email the booking page already collected, so she doesn't retype
+      // it on Stripe's page. Only funnels that collect email before checkout (e.g. the
+      // Evelyn VSL pop-up) send it; offers that don't pass nothing here and are
+      // unchanged. Compatible with customer_creation (unlike `customer`).
+      ...(email ? { customer_email: email } : {}),
       // Create a Customer and save the card for OFF-SESSION reuse, exactly as V1's
       // main checkout does — this is what lets the post-purchase upsells charge in
-      // one click. No email is known before Stripe (she enters it here), so we let
-      // Checkout mint the customer rather than looking one up.
+      // one click.
       customer_creation: 'always',
       line_items: charge.lines.map((line) => ({
         price_data: {
@@ -984,7 +1053,14 @@ router.post('/checkout', async (req: Request, res: Response) => {
         // ⛔ The bump's own code. n8n exact-matches this to decide what to fulfil, so a
         // reused code sends her the wrong thing. Absent entirely when she declined.
         ...(charge.bumpPurchased && offer.bump ? { bumpProduct: offer.bump.productKey } : {}),
-        ...(firstName ? { firstName } : {}),
+        // ⛔ PII OUT OF STRIPE (Evelyn VSL / soulmate-initials): firstName and dateOfBirth
+        // NEVER ride this metadata for a `piiOutOfStripe` offer — they live on
+        // be_order_intake only. funnel + stone are short, fixed-shape and safe here.
+        ...(offer.piiOutOfStripe
+          ? { funnel: 'evelyn_vsl', ...(stone ? { stone } : {}) }
+          : firstName
+            ? { firstName }
+            : {}),
         // Which sales letter she bought from — read by the fulfilment workflow's draw node.
         ...(letterCode ? { c: letterCode } : {}),
         // The booking-treatment A/B visitor subject, echoed back on the webhook so the
@@ -1042,7 +1118,7 @@ router.post('/checkout', async (req: Request, res: Response) => {
     // ⛔ AFTER the session, because the session id is the key. Non-fatal: a failure here
     //    must not deny a checkout to a woman who is ready to pay — it costs a 409 at
     //    fulfilment, which a human can fix, instead of a lost sale, which nobody can.
-    if (question || spreadKey || charge.tier || edition) {
+    if (question || spreadKey || charge.tier || edition || offer.piiOutOfStripe) {
       await saveOrderIntake({
         stripeSessionId: session.id,
         offer: offer.key,
@@ -1060,6 +1136,11 @@ router.post('/checkout', async (req: Request, res: Response) => {
           ? { editionId: edition.id, editionVersion: edition.version, speedBump: charge.bumpPurchased }
           : {}),
         ...(be08Person ? be08Person : {}),
+        // Evelyn VSL (soulmate-initials, 10): her stone, DOB, first name and email —
+        // never on Stripe metadata (PII). Spec §5.
+        ...(offer.piiOutOfStripe
+          ? { stone: stone ?? null, dateOfBirth: dateOfBirth ?? null, firstName: firstName ?? null, email: email ?? null }
+          : {}),
       });
     }
 

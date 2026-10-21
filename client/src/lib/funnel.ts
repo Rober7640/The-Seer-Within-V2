@@ -305,6 +305,7 @@ export function backendOfferFunnel(offer: string): string {
     case "tea-reading": return "teareading";
     case "pixiu-bracelet": return "pixiu";
     case "heart-cleanser": return "heartcleanser";
+    case "soulmate-initials": return "evelynvsl";
     default: return offer;
   }
 }
@@ -398,7 +399,11 @@ export function getPostHogStep(pathname?: string): string {
       return "booking"; // "" or "/<editionId>"
     }
     case "evelyn":
-      return "landing";
+      if (p === "/evelyn/reading") return "reading";
+      if (p === "/evelyn/checkout") return "checkout";
+      if (p === "/evelyn/thank-you") return "thank_you";
+      if (p === "/evelyn") return "landing";
+      return "unknown";
     case "aiden":
       return "landing";
     case "marcus":

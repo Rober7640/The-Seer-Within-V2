@@ -97,3 +97,4 @@ docs/aweber/*/sends/*/_build/
 # was picked FROM, and are reproducible from the prompts in prompts/. No other
 # funnel tracks its candidates either.
 improve-v1/fb-read/images/candidates/
+samples/

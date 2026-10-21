@@ -86,6 +86,7 @@ const BACKEND_STEP: Record<string, string> = {
   be_pixiu_bracelet: 'sales',
   be_heart_cleanser: 'sales',
   be_marcus_reading: 'sales',
+  be_soulmate_initials: 'sales',
   be_protection_ritual: 'upsell1',
   be_bracelet: 'upsell2',
   be_08_marcus_audio: 'upsell1',
@@ -99,6 +100,7 @@ const BACKEND_FUNNEL: Record<string, string> = {
   'pixiu-bracelet': 'pixiu',
   'heart-cleanser': 'heartcleanser',
   'marcus-reading': 'marcusreading',
+  'soulmate-initials': 'evelynvsl',
 };
 
 export function buildBackendPurchaseEvent(input: BackendPurchaseInput): BackendPurchaseEvent {

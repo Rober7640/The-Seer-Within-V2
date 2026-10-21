@@ -196,6 +196,20 @@ export const BACKEND_OFFERS: Record<BackendOfferKey, BackendOfferListing> = {
     orderIdField: 'order_id',
     bumpTagOnInitial: true,
   },
+  'soulmate-initials': {
+    number: '10',
+    name: 'Soulmate Initials Reading',
+    tag: 'evelyn-soulmate',
+    bumpTag: 'evelyn-soulmate-bump',
+    deliveredTag: 'evelyn-soulmate-delivered',
+    // Standalone Evelyn front-end funnel: its OWN paid list (theseerwithin_soulmate_initials_paid,
+    // 6980769) + Evelyn-branded tags, separate from the shared customer list the other offers use.
+    // No bumpListId: the "charge my stone" bump has no separate deliverable, so its tag folds
+    // onto the reading-list write (same subscriber, evelyn-soulmate-bump added) rather than a
+    // second list. Campaign triggers (operator): evelyn-soulmate (thank-you), evelyn-soulmate-delivered
+    // (reading ready, merges soulmate_reading_url).
+    initialListId: '6980769',
+  },
 };
 
 /** Tags to apply at the moment she pays. */

@@ -1,4 +1,4 @@
-import { getPixelIdForUrl } from "@shared/fbPixelConfig";
+import { getPixelIdForUrl, getPixelIdForFunnel } from "@shared/fbPixelConfig";
 
 declare global {
   interface Window {
@@ -24,9 +24,17 @@ function ensurePixelInited(pixelId: string): void {
 
 // Pick the FB Pixel ID that owns the current page's funnel, init'ing it
 // on first use. Used to scope every fbq call to the right pixel.
-function currentPixelId(): string {
-  const path = typeof window !== "undefined" ? window.location.pathname : "/";
-  const pixelId = getPixelIdForUrl(path);
+//
+// `pixelFunnelOverride` escapes the URL-based lookup for a page that is SHARED
+// across funnels by URL but knows its real funnel from session/server data —
+// e.g. /offers/upsell/welcome1 (one route for every backend offer, incl. the
+// Evelyn VSL upsell) resolves to 'default' by path alone, same as every other
+// be_ offer parked there. Passing the funnel key explicitly (fbPixelConfig's
+// own key, e.g. 'evelyn') routes to THAT funnel's pixel instead.
+function currentPixelId(pixelFunnelOverride?: string): string {
+  const pixelId = pixelFunnelOverride
+    ? getPixelIdForFunnel(pixelFunnelOverride)
+    : getPixelIdForUrl(typeof window !== "undefined" ? window.location.pathname : "/");
   ensurePixelInited(pixelId);
   return pixelId;
 }
@@ -178,6 +186,32 @@ export function trackInitiateCheckout(
   });
 }
 
+// `contentName` defaults to 'Soulmate Initials Reading' (Evelyn VSL, spec §7) —
+// the only funnel that fires this today. Mirrors trackInitiateCheckout's shape:
+// fire pixel + server event, both carrying a deterministic `viewcontent_<sessionId>`
+// event id so repeated calls for the same session dedupe in Meta. `sessionId` here
+// is a stable per-visit id (not a Stripe session — ViewContent fires pre-checkout),
+// so callers should pass something durable for the visit (e.g. a PostHog distinct id
+// or a locally-generated id) to get real dedup; omitting it falls back to a random id.
+export function trackViewContent(
+  contentName: string = 'Soulmate Initials Reading',
+  email?: string,
+  sessionId?: string,
+): void {
+  const eventId = sessionId ? `viewcontent_${sessionId}` : generateEventId();
+
+  if (typeof window !== 'undefined' && window.fbq) {
+    window.fbq('trackSingle', currentPixelId(), 'ViewContent', {
+      content_name: contentName,
+    }, { eventID: eventId });
+  }
+
+  sendServerEvent('ViewContent', eventId, {
+    email,
+    content_name: contentName,
+  });
+}
+
 export function trackPurchase(
   value: number = 35,
   currency: string = 'USD',
@@ -187,14 +221,18 @@ export function trackPurchase(
   // V1/V1-FB callers pass skipServerRelay=true because the Stripe webhook's
   // fireStripePurchaseEvent already fires server-side with the same
   // deterministic event_id — avoids duplicate "Server / Deduplicated" rows.
-  options?: { skipServerRelay?: boolean },
+  // `pixelFunnel`: see currentPixelId's doc comment — set this for a page that
+  // is shared across funnels by URL (e.g. /offers/upsell/welcome1) but knows
+  // its real funnel from session data, so the fire routes to THAT funnel's
+  // pixel instead of whatever 'default'/path-based lookup the URL resolves to.
+  options?: { skipServerRelay?: boolean; pixelFunnel?: string },
 ): void {
   const eventId = mainSessionId
     ? `purchase_${mainSessionId}`
     : generateEventId();
 
   if (typeof window !== 'undefined' && window.fbq) {
-    window.fbq('trackSingle', currentPixelId(), 'Purchase', {
+    window.fbq('trackSingle', currentPixelId(options?.pixelFunnel), 'Purchase', {
       value,
       currency,
       content_name: contentName,
