@@ -14,7 +14,7 @@ let token = "";
 let evelynId = "";
 
 test.beforeAll(async ({ playwright }) => {
-  const api = await playwright.request.newContext({ baseURL: "http://localhost:5000" });
+  const api = await playwright.request.newContext({ baseURL: `http://localhost:${process.env.PORT || 5000}` });
   const personasRes = await api.get("/api/personas?pricing=true");
   const personas = await personasRes.json();
   const list = Array.isArray(personas) ? personas : personas.personas;
@@ -38,7 +38,7 @@ test.beforeEach(async ({ context }) => {
 test("experiment OFF ⇒ generic assign() reports variant A from /api/credits/pricing", async ({ playwright }) => {
   // No override → the real assign() path decides. paywall_copy_2026 is draft, so
   // every authed user resolves to control 'A' (live behaviour unchanged).
-  const api = await playwright.request.newContext({ baseURL: "http://localhost:5000" });
+  const api = await playwright.request.newContext({ baseURL: `http://localhost:${process.env.PORT || 5000}` });
   const res = await api.get(`/api/credits/pricing?personaId=${evelynId}`, {
     headers: { Authorization: `Bearer ${token}` },
   });

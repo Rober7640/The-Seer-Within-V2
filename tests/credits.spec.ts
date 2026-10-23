@@ -219,17 +219,14 @@ test.describe('Dollar-wallet credits store', () => {
   test('serves each guide its own per-minute rate, and packs priced in plain dollars', async ({ page }) => {
     await registerFreshUser(page, 'per-persona');
 
-    // REWRITTEN: this test used to assert "the same flat pricing for every persona"
-    // and passed a SLUG where the API expects an id — so it silently fell back to
-    // defaults and asserted nothing. Per-guide pricing is now a shipped feature
-    // (Luna $3.50, Marcus $4.25), so the real contract is: each guide reports its
-    // own rate, while pack DOLLARS stay identical because the wallet is shared.
+    // Pricing is the standard $10/$20/$30/$50 for every guide (per Joel — no per-guide
+    // custom packs). The contract we assert holds regardless of whether a guide ever
+    // gets custom packs: each guide reports its own per-minute rate, has at least one
+    // pack, every pack is a canonical dollar-wallet tier, and each pack implies that rate.
     const guides = await guideRates(page);
     const idRes = await page.request.get('/api/personas');
     const idBody = await idRes.json();
     const idList = Array.isArray(idBody) ? idBody : (idBody.personas ?? []);
-
-    let packDollars: string | null = null;
 
     for (const p of idList) {
       const res = await page.request.get(`/api/credits/pricing?personaId=${p.id}`);
@@ -240,10 +237,13 @@ test.describe('Dollar-wallet credits store', () => {
       const expectedRate = guides.find(g => g.slug === p.slug)?.coinsPerMinute ?? COINS_PER_MINUTE;
       expect(cpm, `${p.slug} should serve its own rate`).toBe(expectedRate);
 
-      // A pack costs the same dollars for everyone — only the time it buys differs.
-      const dollars = tiers.map((t: { priceUsd: number }) => t.priceUsd).join(',');
-      if (packDollars === null) packDollars = dollars;
-      expect(dollars, 'pack dollar prices must not vary by guide').toBe(packDollars);
+      // Each guide must offer at least one pack, each a canonical dollar-wallet tier
+      // (a coin is a cent, so totalCoins === priceUsd, no bonus unless configured).
+      expect(tiers.length, `${p.slug} must have at least one pack`).toBeGreaterThan(0);
+      for (const t of tiers as Array<{ totalCoins: number; priceUsd: number }>) {
+        expect(t.priceUsd, `${p.slug} pack price must be positive`).toBeGreaterThan(0);
+        expect(t.totalCoins, `${p.slug} dollar-wallet: totalCoins === priceUsd`).toBe(t.priceUsd);
+      }
 
       // Effective $/min implied by each pack must equal that guide's own rate.
       for (const t of tiers as Array<{ totalCoins: number; priceUsd: number }>) {

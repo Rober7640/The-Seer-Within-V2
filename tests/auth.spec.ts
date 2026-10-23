@@ -77,8 +77,11 @@ test.describe.serial('User Authentication', () => {
     await page.click('button[type="submit"]');
     await page.waitForURL(/.*reading|personas/, { timeout: 10000 });
 
-    // Find and click logout button
-    await page.getByRole('button', { name: 'Logout' }).click();
+    // Logout lives in the avatar dropdown on pages that show the nav (the reading
+    // page hides it), so open the directory, then the avatar menu, then "Sign Out".
+    await page.goto('/personas');
+    await page.locator('button[aria-haspopup="menu"]').first().click();
+    await page.getByRole('menuitem', { name: /sign out/i }).click();
 
     // Should redirect to login or home page
     await page.waitForURL(/.*login|^\/$/, { timeout: 5000 });
