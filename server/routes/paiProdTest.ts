@@ -124,18 +124,26 @@ export function createPaiProdTestRouter(): Router {
 
   async function sale(req: Request, run: Run, o: { cents: number; token?: string; instrumentId?: string; mit: boolean; metadata: Record<string, string>; label: string }) {
     if (o.cents > MAX_CENTS) throw new Error(`refusing ${o.cents}c > cap ${MAX_CENTS}c`);
+    // UTC time of the attempt + the raw API reply: what Payments.AI support asks for to trace a failure.
+    const at = new Date().toISOString();
     const r = await pai("POST", `${api()}/transactions`, {
       type: "sale", customerId: run.customerId, currency: "USD", amount: o.cents / 100,
       idempotencyKey: `${run.tag}-${o.label}`, isMerchantInitiated: o.mit,
       paymentInstruction: o.token ? { token: o.token } : { paymentInstrumentId: o.instrumentId },
       metadata: o.metadata, redirectUrl: returnUrl(req, run, o.label),
     });
-    console.log(`[pai-prod-test] run=${run.id} ${o.label} $${(o.cents / 100).toFixed(2)} -> HTTP ${r.status}`);
-    if (!r.ok || !r.d?.id) return { http: r.status, error: r.msg ?? r.text.slice(0, 300) };
+    console.log(`[pai-prod-test] run=${run.id} ${o.label} $${(o.cents / 100).toFixed(2)} at=${at} instrument=${o.instrumentId ?? "(new card)"} -> HTTP ${r.status}`);
+    console.log(`[pai-prod-test] run=${run.id} ${o.label} raw=${r.text}`);
+    if (!r.ok || !r.d?.id) {
+      return { at, http: r.status, error: r.msg ?? r.text.slice(0, 300), instrumentId: o.instrumentId ?? null, raw: r.text.slice(0, 2000) };
+    }
     const tx = (await settle(r.d.id)) ?? r.d;
     const s = summary(tx, o.metadata);
-    console.log(`[pai-prod-test] run=${run.id} ${o.label} result=${s.result} id=${s.id}`);
-    return { ...s, sent: o.metadata, instrumentId: tx.paymentInstrument?.id ?? tx.paymentInstrumentId ?? null };
+    const instrumentId = tx.paymentInstrument?.id ?? tx.paymentInstrumentId ?? o.instrumentId ?? null;
+    console.log(`[pai-prod-test] run=${run.id} ${o.label} result=${s.result} id=${s.id} instrument=${instrumentId}`);
+    // A decline is a normal HTTP 201, so keep the raw reply for anything not approved too.
+    const approved = String(s.result ?? "").toLowerCase() === "approved";
+    return { at, ...s, sent: o.metadata, instrumentId, ...(approved ? {} : { raw: r.text.slice(0, 2000) }) };
   }
 
   async function refreshMain(run: Run) {
@@ -146,7 +154,7 @@ export function createPaiProdTestRouter(): Router {
     });
   }
 
-  const strip = (x: Tx | null) => (x ? (({ sent, instrumentId, ...rest }) => rest)(x) : x);
+  const strip = (x: Tx | null) => (x ? (({ sent, ...rest }) => rest)(x) : x);
   const view = (run: Run) => ({ run: run.id, main: strip(run.main), u1: strip(run.u1), u2: strip(run.u2), refunds: run.refunds });
   const getRun = (req: Request) => runs.get(String(req.body?.run ?? req.query.run ?? ""));
 
