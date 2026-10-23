@@ -11,7 +11,7 @@ import { COINS_PER_MINUTE, type PricingTier } from "@shared/types";
 import {
   paywallCopy,
   toTierView,
-  lowestPerMinuteLabel,
+  ladderLine,
   type PaywallVariant,
 } from "./paywallCopy";
 
@@ -142,9 +142,9 @@ export default function PaywallCard({
           })}
         </div>
 
-        {/* Value ladder — one line */}
+        {/* Value ladder — one line (honest under flat per-minute pricing) */}
         <p className="mb-2.5 text-center text-[12px] leading-snug text-white/50">
-          {copy.modal.ladder(lowestPerMinuteLabel(tiers, coinsPerMinute))}
+          {ladderLine(tiers, coinsPerMinute, variant)}
         </p>
 
         {/* Selection summary */}
