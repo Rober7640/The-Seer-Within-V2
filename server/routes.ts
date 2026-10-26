@@ -16,6 +16,7 @@ function getBaseUrl(req: Request): string {
   return process.env.BASE_URL || "http://localhost:5000";
 }
 import { checkUniversalSafety, checkAndLogSafety } from "./lib/universalSafety";
+import { isRefundRequest, REFUND_TEMPLATE } from "./lib/refundDeflection";
 import { getCountryFromIP } from "./lib/crisisHotlines";
 import { storage } from "./storage";
 import crudRouter from "./api/crud";
@@ -735,6 +736,18 @@ export async function registerRoutes(
             messages: [safetyResult.response],
           });
         }
+      }
+
+      // Refund / billing deflection — same guard the V2 chat service uses.
+      // A refund/chargeback/cancel request is NOT routed to the persona (which
+      // would improvise or keep pitching — the Traci McKennon incident). We
+      // hand off to the support inbox with a fixed template. Placed AFTER the
+      // safety check so a crisis message that also mentions "refund" still gets
+      // the crisis response first.
+      if (input && typeof input === "string" && isRefundRequest(input)) {
+        return res.json({
+          messages: [REFUND_TEMPLATE],
+        });
       }
 
       let result: {
