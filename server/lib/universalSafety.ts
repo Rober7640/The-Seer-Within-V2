@@ -288,6 +288,18 @@ const PROMPT_INJECTION_PATTERNS: RegExp[] = [
   /\b(?:are|r)\s+(?:you|u)\s+(?:built|based|running|powered)\s+(?:on|by|with)\b/i,
   /\b(?:you'?re|you\s+are)\s+(?:an?\s+)?(?:ai|bot|machine|chatbot|language\s+model)\b/i,
   /\busing\s+(?:claude|gpt|openai|anthropic|gemini|llama|chatgpt)\b/i,
+  // AI/model identity ASSERTIONS (declarative, not questions). Added after the
+  // Traci McKennon incident (2026-10-22): a furious user ASSERTED "this is all
+  // AI", "a bot", "being an AI" instead of ASKING "are you a bot?", so the
+  // question-only patterns above missed it and the message reached the LLM.
+  // Anchored to the persona/system as the subject (this / it / the reading /
+  // you) and to AI-technology nouns, which do not occur in legitimate readings —
+  // so "my ex is a fraud" or "I feel like a robot" stay clean.
+  /\b(?:this|that|it|the\s+(?:whole\s+)?thing|the\s+reading)(?:'s|\s+(?:is|are))\s+(?:all\s+|just\s+|really\s+|totally\s+|clearly\s+|literally\s+)*(?:a\s+|an\s+)?(?:bot|a\.?i\.?|computer[\s-]?generated|chat\s?bot|robot|language\s+model)\b/i,
+  /\btalking\s+to\s+(?:you\s+|a\s+|an\s+|some\s+|just\s+)*(?:bot|a\.?i\.?|robot|chat\s?bot|machine|computer)\b/i,
+  /\bbeing\s+(?:an?\s+)?(?:ai|a\.?i\.?|bot|robot|chat\s?bot|language\s+model)\b/i,
+  /\byou(?:'?re|\s+are)\s+(?:just\s+|only\s+|nothing\s+but\s+)(?:a\s+|an\s+)?(?:bot|ai|a\.?i\.?|robot|chat\s?bot|machine|language\s+model)\b/i,
+  /\byou(?:'?re|\s+are)\s+not\s+(?:a\s+)?(?:real|human|a\s+real\s+person|a\s+real\s+human)\b/i,
 ];
 
 // Minor/underage detection — service is 18+ only
