@@ -11,7 +11,7 @@ import {
   userMemory,
   systemConfig,
 } from '@shared/schema';
-import { eq, ne, and, desc, sql } from 'drizzle-orm';
+import { eq, ne, and, desc, sql, isNull } from 'drizzle-orm';
 import { loadUserContext, summarizeSession } from './memoryManager';
 import { loadQuizIntake, buildQuizPromptSection } from './quizMemory';
 import { loadArrivalReading, buildArrivalReadingSection, buildArrivalGreetingInstruction, ARRIVAL_READING_FRESH_MSG_LIMIT } from './arrivalReading';
@@ -72,12 +72,13 @@ interface ChatResponse {
 // time, and city conversationally in-chat before calculating the natal chart.
 // Stored in memory keyed by sessionId; cleared once the chart is saved.
 interface BirthDataCollectionState {
-  step: 'date' | 'time' | 'city';
+  step: 'date' | 'time' | 'time_confirm' | 'city';
   dateAttempts: number;
   timeAttempts: number;
   cityAttempts: number;
   collectedDate?: string; // YYYY-MM-DD (converted from user input)
   collectedTime?: string; // HH:MM 24hr (converted from user input)
+  pendingTime?: string;   // HH:MM recovered from a typo, awaiting yes/no confirmation
 }
 
 const birthDataStates = new Map<string, BirthDataCollectionState>();
@@ -111,35 +112,80 @@ function parseBirthDate(input: string): string | null {
 }
 
 /**
- * Validate a birth time in HH:MM or H:MM AM/PM format.
- * Also accepts "unknown", "don't know", etc. and maps those to noon.
- * Returns HH:MM (24hr) on success, null on failure.
+ * Parse a CLEARLY-formatted birth time and return HH:MM (24hr), or null.
+ * Accepts "unknown"/"don't know" (→ noon) and a properly colon-separated or
+ * hour-only am/pm time ANYWHERE in the message (so a sentence like "I was born
+ * at 3:15pm in Chicago" works). A bare 24h HH:MM is accepted only when it is
+ * unambiguous (hour 0 or 13-23); a 1-12 time with no am/pm is left to the
+ * confirm path. Typos (wrong separator, missing colon) deliberately return null
+ * so recoverBirthTime can offer them for confirmation rather than guessing.
  */
-function parseBirthTime(input: string): string | null {
-  const trimmed = input.trim().toLowerCase();
-  if (/unknown|don.?t know|not sure|unsure|no idea|can.?t remember|noon/i.test(trimmed)) {
+export function parseBirthTime(input: string): string | null {
+  const t = input.trim().toLowerCase();
+  if (/unknown|don.?t\s*know|not\s*sure|unsure|no\s*idea|can.?t\s*remember|\bnoon\b/.test(t)) {
     return '12:00';
   }
-  // H:MM AM/PM or HH:MM AM/PM
-  const ampm = trimmed.match(/^(\d{1,2}):(\d{2})\s*(am|pm)$/i);
-  if (ampm) {
-    let hr  = parseInt(ampm[1], 10);
-    const min = parseInt(ampm[2], 10);
-    if (min > 59) return null;
-    if (ampm[3].toLowerCase() === 'pm' && hr < 12) hr += 12;
-    if (ampm[3].toLowerCase() === 'am' && hr === 12) hr = 0;
-    if (hr > 23) return null;
-    return `${String(hr).padStart(2, '0')}:${String(min).padStart(2, '0')}`;
+  // HH:MM am/pm (colon required), embedded anywhere — the confident case
+  let m = t.match(/\b(\d{1,2}):(\d{2})\s*(a\.?m\.?|p\.?m\.?)/);
+  if (m) {
+    let hr = parseInt(m[1], 10); const mn = parseInt(m[2], 10);
+    if (mn > 59 || hr < 1 || hr > 12) return null;
+    const pm = m[3].startsWith('p');
+    if (pm && hr < 12) hr += 12;
+    if (!pm && hr === 12) hr = 0;
+    return `${String(hr).padStart(2, '0')}:${String(mn).padStart(2, '0')}`;
   }
-  // HH:MM (24hr)
-  const hhmm = trimmed.match(/^(\d{1,2}):(\d{2})$/);
-  if (hhmm) {
-    const hr  = parseInt(hhmm[1], 10);
-    const min = parseInt(hhmm[2], 10);
-    if (hr > 23 || min > 59) return null;
-    return `${String(hr).padStart(2, '0')}:${String(min).padStart(2, '0')}`;
+  // hour-only am/pm: "9am", "12 pm"
+  m = t.match(/\b(\d{1,2})\s*(a\.?m\.?|p\.?m\.?)/);
+  if (m) {
+    let hr = parseInt(m[1], 10);
+    if (hr < 1 || hr > 12) return null;
+    const pm = m[2].startsWith('p');
+    if (pm && hr < 12) hr += 12;
+    if (!pm && hr === 12) hr = 0;
+    return `${String(hr).padStart(2, '0')}:00`;
+  }
+  // 24h HH:MM — accept only when unambiguous (hour 0 or 13-23)
+  m = t.match(/\b(\d{1,2}):(\d{2})\b/);
+  if (m) {
+    const hr = parseInt(m[1], 10); const mn = parseInt(m[2], 10);
+    if (mn > 59 || hr > 23) return null;
+    if (hr === 0 || hr >= 13) return `${String(hr).padStart(2, '0')}:${String(mn).padStart(2, '0')}`;
+    return null; // 1-12 with no am/pm is ambiguous → confirm/re-ask
   }
   return null;
+}
+
+/** Format an "HH:MM" 24h value as a friendly "H:MM AM/PM" display. */
+function to12h(hhmm: string): string {
+  const [h, m] = hhmm.split(':').map(Number);
+  const pm = h >= 12;
+  const hr12 = h % 12 === 0 ? 12 : h % 12;
+  return `${hr12}:${String(m).padStart(2, '0')} ${pm ? 'PM' : 'AM'}`;
+}
+
+/**
+ * Salvage a birth time from a near-miss the strict parser rejected — a typo
+ * separator (";", ".", stray space) or a missing colon ("230pm") — so the
+ * persona can CONFIRM it ("did you mean 2:30 PM?") instead of silently
+ * defaulting to noon. Requires an explicit am/pm so the guess is unambiguous.
+ * Returns the 24h value + a friendly display, or null if nothing time-like.
+ */
+export function recoverBirthTime(input: string): { value: string; display: string } | null {
+  const t = input.trim().toLowerCase();
+  const m = t.match(/\b(\d{1,2})[\s;.,:]+(\d{2})\s*(a\.?m\.?|p\.?m\.?)/)
+         || t.match(/\b(\d{1,2})(\d{2})\s*(a\.?m\.?|p\.?m\.?)/);
+  if (!m) return null;
+  const hr = parseInt(m[1], 10); const mn = parseInt(m[2], 10);
+  if (mn > 59 || hr < 1 || hr > 12) return null;
+  const pm = m[3].startsWith('p');
+  let h24 = hr;
+  if (pm && hr < 12) h24 += 12;
+  if (!pm && hr === 12) h24 = 0;
+  return {
+    value: `${String(h24).padStart(2, '0')}:${String(mn).padStart(2, '0')}`,
+    display: `${hr}:${String(mn).padStart(2, '0')} ${pm ? 'PM' : 'AM'}`,
+  };
 }
 
 /**
@@ -181,10 +227,16 @@ async function calculateAndStoreBirthChart(
 
   const fullContext = JSON.stringify({ text: chartText, raw: chartData });
 
+  // The natal chart is CANONICAL per USER, not per persona. A person has one birth
+  // moment, so every advisor must read the same underlying chart (Vedic personas
+  // convert it to the sidereal zodiac deterministically — see the load path). We
+  // therefore store it with personaId = NULL (shared) and upsert that single row.
+  // Legacy per-persona rows from before this change are left in place; the load
+  // path prefers the canonical row, so they are harmless and fade out.
   const existing = await db.select().from(userMemory)
     .where(and(
       eq(userMemory.userId, userId),
-      eq(userMemory.personaId, personaId),
+      isNull(userMemory.personaId),
       eq(userMemory.memoryType, 'birth_chart'),
     ))
     .limit(1);
@@ -196,7 +248,7 @@ async function calculateAndStoreBirthChart(
       .where(eq(userMemory.id, existing[0].id));
   } else {
     await db.insert(userMemory).values({
-      userId, personaId, memoryType: 'birth_chart',
+      userId, personaId: null, memoryType: 'birth_chart',
       summary: `Natal chart for ${birthDate} in ${geo.displayName}`,
       fullContext, importance: 10, category: 'astrology',
       createdAt: now, updatedAt: now, lastAccessedAt: now,
@@ -360,47 +412,69 @@ interface MessageContext {
   messages: Array<{ role: 'user' | 'assistant'; content: string }>;
 }
 
-/**
- * Load stored natal chart for a user+persona pair (birth_chart memory type).
- * Returns the formatted chart text, or null if none stored.
- */
-async function loadBirthChart(userId: string, personaId: string): Promise<string | null> {
-  const rows = await db.select().from(userMemory)
-    .where(and(
-      eq(userMemory.userId, userId),
-      eq(userMemory.personaId, personaId),
-      eq(userMemory.memoryType, 'birth_chart'),
-    ))
-    .limit(1);
-  const raw = rows[0]?.fullContext ?? null;
-  if (!raw) return null;
-  // fullContext may be a JSON envelope { text, raw } or legacy plain text
-  try {
-    const parsed = JSON.parse(raw);
-    if (parsed?.text) return parsed.text;
-  } catch { /* legacy plain text */ }
-  return raw;
-}
-
-/**
- * Load stored natal chart returning both the text (for Claude) and the raw
- * NatalChartData object (for the frontend SVG wheel). Returns null if none stored.
- */
-async function loadBirthChartRaw(userId: string, personaId: string): Promise<{ text: string; raw: any } | null> {
-  const rows = await db.select().from(userMemory)
-    .where(and(
-      eq(userMemory.userId, userId),
-      eq(userMemory.personaId, personaId),
-      eq(userMemory.memoryType, 'birth_chart'),
-    ))
-    .limit(1);
-  const fc = rows[0]?.fullContext ?? null;
+/** Parse a stored birth_chart fullContext envelope into { text, raw }. */
+function parseBirthChartContext(fc: string | null): { text: string; raw: any } | null {
   if (!fc) return null;
   try {
     const parsed = JSON.parse(fc);
     if (parsed?.text) return { text: parsed.text, raw: parsed.raw ?? null };
   } catch { /* legacy plain text — no raw data */ }
   return { text: fc, raw: null };
+}
+
+/**
+ * Pick the single canonical birth-chart row for a user from all stored rows.
+ * The chart is per-USER, so the `personaId` argument on the load helpers is
+ * intentionally ignored — every advisor resolves to the same chart. Selection is
+ * deterministic so two personas always agree, even before the canonical row is
+ * written: prefer the canonical (personaId = NULL) row; then a row whose birth
+ * time is a REAL time rather than a noon default (the pre-fix capture bug);
+ * then the most recently updated; with id as a stable final tiebreak.
+ */
+export function selectCanonicalBirthChartRow(rows: Array<typeof userMemory.$inferSelect>): typeof userMemory.$inferSelect | null {
+  if (rows.length === 0) return null;
+  const score = (r: typeof userMemory.$inferSelect): number => {
+    let s = 0;
+    if (r.personaId == null) s += 100; // canonical wins outright
+    const raw = parseBirthChartContext(r.fullContext)?.raw;
+    const time = raw?.birthData?.time;
+    if (time && time !== '12:00') s += 10; // real captured time beats noon default
+    return s;
+  };
+  return [...rows].sort((a, b) => {
+    const d = score(b) - score(a);
+    if (d !== 0) return d;
+    const at = (a.updatedAt ?? a.createdAt)?.getTime() ?? 0;
+    const bt = (b.updatedAt ?? b.createdAt)?.getTime() ?? 0;
+    if (bt !== at) return bt - at;
+    return a.id < b.id ? -1 : a.id > b.id ? 1 : 0;
+  })[0];
+}
+
+/**
+ * Load the user's canonical natal chart (birth_chart memory type), returning both
+ * the text (for Claude) and the raw NatalChartData object (for the SVG wheel).
+ * The chart is per-USER — `_personaId` is accepted for call-site compatibility but
+ * NOT used to scope the lookup, so every persona reads the same chart. Returns null
+ * if none stored.
+ */
+async function loadBirthChartRaw(userId: string, _personaId?: string): Promise<{ text: string; raw: any } | null> {
+  const rows = await db.select().from(userMemory)
+    .where(and(
+      eq(userMemory.userId, userId),
+      eq(userMemory.memoryType, 'birth_chart'),
+    ));
+  const chosen = selectCanonicalBirthChartRow(rows);
+  return parseBirthChartContext(chosen?.fullContext ?? null);
+}
+
+/**
+ * Load the user's canonical natal chart as formatted text, or null if none stored.
+ * Delegates to loadBirthChartRaw so all personas resolve to the same chart.
+ */
+async function loadBirthChart(userId: string, _personaId?: string): Promise<string | null> {
+  const result = await loadBirthChartRaw(userId);
+  return result?.text ?? null;
 }
 
 /**
@@ -691,6 +765,18 @@ RULES:
 - After the token, write 1-2 short sentences inviting them to ask about what they see`
     : '';
 
+  // Name the tradition. Every persona reads the SAME underlying birth chart, but
+  // Western and Vedic advisors describe it through different zodiacs. Saying which
+  // school you read in makes that difference read as intentional ("two traditions")
+  // instead of a glitch if the client compares advisors.
+  const traditionNote = isAstrologyPersona && birthChartSection
+    ? (isVedicPersona
+        ? `## YOUR ASTROLOGICAL TRADITION
+You read charts in the VEDIC (Jyotish) tradition, which uses the sidereal zodiac. The first time you discuss this client's chart, name your tradition once, naturally (e.g. "In the Vedic tradition, I read..."). It is EXPECTED and CORRECT that your placements differ from Western/tropical astrology — the two schools use different zodiacs. If the client says another reader (or another guide here) gave them different signs, do NOT treat it as a mistake or get defensive: warmly explain these are two valid traditions reading the same birth moment, never that one is fake.`
+        : `## YOUR ASTROLOGICAL TRADITION
+You read charts in the WESTERN (tropical) tradition. The first time you discuss this client's chart, name your tradition once, naturally (e.g. "In the Western tradition, I read..."). If the client says another reader (or another guide here) gave them different signs, do NOT treat it as a mistake or get defensive: warmly explain that Western and Vedic astrology use different zodiacs — two valid traditions reading the same birth moment, never that one is fake.`)
+    : '';
+
   // Inject numerology profile for Aiden Powers (and any future numerology persona)
   const isNumerologyPersona = authoredPrompt.includes('[NUMEROLOGY_PERSONA]');
   let numerologySection: string | null = null;
@@ -796,6 +882,7 @@ NEVER engage with the technical premise of the question. NEVER say "I can't shar
     intentContext ?? '',
     tarotInstruction,
     chartInstruction,
+    traditionNote,
   ].filter(Boolean).join('\n\n');
 
   const messages: Array<{ role: 'user' | 'assistant'; content: string }> = [];
@@ -1652,19 +1739,62 @@ export async function sendMessage(
             firstName, attempts: 0,
           });
         } else {
-          collState.timeAttempts++;
-          if (collState.timeAttempts >= 3) {
-            // Default to noon and move on
-            collState.collectedTime = '12:00';
-            collState.step = 'city';
+          // Not a clean time. Before counting a miss, try to salvage a likely
+          // TYPO (e.g. "2;30PM", "230pm") and CONFIRM it rather than silently
+          // defaulting to noon — the birth time sets the ascendant, so a wrong
+          // guess corrupts the whole chart (the Traci McKennon incident).
+          const recovered = recoverBirthTime(userMessage);
+          if (recovered) {
+            collState.pendingTime = recovered.value;
+            collState.step = 'time_confirm';
             birthDataStates.set(sessionId, collState);
-            responseMessage = `No problem — I'll use noon as your birth time. Last thing I need: what city and country were you born in?`;
+            responseMessage = `Just to be sure, ${firstName} — did you mean ${recovered.display}? Reply "yes", or send me the exact time.`;
+          } else {
+            collState.timeAttempts++;
+            birthDataStates.set(sessionId, collState);
+            if (collState.timeAttempts >= 3) {
+              // Never silently guess. Offer the explicit opt-in to noon instead.
+              collState.timeAttempts = 0;
+              birthDataStates.set(sessionId, collState);
+              responseMessage = `No rush — if you're not sure of the exact time, just reply "unknown" and I'll use noon. Otherwise, what time were you born? (for example, 2:30 PM)`;
+            } else {
+              responseMessage = await generateBirthDataMessage({
+                step: 'time', personaName: personaConfig.displayName,
+                firstName, attempts: collState.timeAttempts, badInput: userMessage.trim(),
+              });
+            }
+          }
+        }
+      } else if (collState.step === 'time_confirm') {
+        // Awaiting yes/no on a recovered time. Affirm → accept; a fresh time →
+        // use it; another typo → re-confirm; "unknown" → noon; else re-ask.
+        const affirm = /^\s*(y|ye|yes|yeah|yep|yup|correct|right|that'?s? right|exactly|sure|mhm|uh\s*huh|perfect|👍)\b/i.test(userMessage.trim());
+        const freshParsed = parseBirthTime(userMessage);
+        if (affirm && collState.pendingTime) {
+          collState.collectedTime = collState.pendingTime;
+          collState.pendingTime = undefined;
+          collState.step = 'city';
+          birthDataStates.set(sessionId, collState);
+          responseMessage = await generateBirthDataMessage({
+            step: 'city', personaName: personaConfig.displayName, firstName, attempts: 0,
+          });
+        } else if (freshParsed) {
+          collState.collectedTime = freshParsed;
+          collState.pendingTime = undefined;
+          collState.step = 'city';
+          birthDataStates.set(sessionId, collState);
+          responseMessage = await generateBirthDataMessage({
+            step: 'city', personaName: personaConfig.displayName, firstName, attempts: 0,
+          });
+        } else {
+          const reRecovered = recoverBirthTime(userMessage);
+          if (reRecovered) {
+            collState.pendingTime = reRecovered.value;
+            birthDataStates.set(sessionId, collState);
+            responseMessage = `Got it — so ${reRecovered.display}? Reply "yes", or send the exact time.`;
           } else {
             birthDataStates.set(sessionId, collState);
-            responseMessage = await generateBirthDataMessage({
-              step: 'time', personaName: personaConfig.displayName,
-              firstName, attempts: collState.timeAttempts, badInput: userMessage.trim(),
-            });
+            responseMessage = `Sorry, ${firstName} — was that ${collState.pendingTime ? to12h(collState.pendingTime) : 'the time'}? Reply "yes", send the exact time (e.g. 2:30 PM), or say "unknown" for noon.`;
           }
         }
       } else {
