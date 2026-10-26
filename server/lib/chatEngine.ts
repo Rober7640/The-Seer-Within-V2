@@ -164,6 +164,18 @@ function to12h(hhmm: string): string {
   return `${hr12}:${String(m).padStart(2, '0')} ${pm ? 'PM' : 'AM'}`;
 }
 
+/** Friendly "February 15, 1971 at 2:30 PM in Elko, Nevada" from stored birthData. */
+function formatBirthDetails(bd: any): string | null {
+  if (!bd?.date) return null;
+  const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  const [y, m, d] = String(bd.date).split('-').map(Number);
+  let s = `${MONTHS[(m || 1) - 1]} ${d}, ${y}`;
+  if (bd.time) s += ` at ${to12h(bd.time)}`;
+  const place = bd.location || bd.city || bd.birthCity || bd.displayName;
+  if (place) s += ` in ${place}`;
+  return s;
+}
+
 /**
  * Salvage a birth time from a near-miss the strict parser rejected — a typo
  * separator (";", ".", stray space) or a missing colon ("230pm") — so the
@@ -731,12 +743,17 @@ async function buildMessageContext(
   const isVedicPersona = authoredPrompt.includes('[VEDIC_ASTROLOGY_PERSONA]');
 
   let birthChartSection: string | null = null;
+  // Friendly "born <date> at <time> in <place>" string for the profile
+  // acknowledgment — so a persona reading a chart the user gave to ANOTHER
+  // advisor doesn't seem to magically know their birth data (Option A).
+  let birthDetailsForAck: string | null = null;
   if (isAstrologyPersona) {
-    if (isVedicPersona) {
-      // Load raw chart and reformat as Vedic for Nova's context
-      const rawResult = await loadBirthChartRaw(userId, personaConfig.id);
-      if (rawResult?.raw?.birthData) {
-        const bd = rawResult.raw.birthData;
+    // One canonical load for everyone; Vedic personas convert it to sidereal.
+    const rawResult = await loadBirthChartRaw(userId, personaConfig.id);
+    if (rawResult?.raw?.birthData) {
+      const bd = rawResult.raw.birthData;
+      birthDetailsForAck = formatBirthDetails(bd);
+      if (isVedicPersona) {
         const [yr, mo, dy] = bd.date.split('-').map(Number);
         const [hr, mn]     = bd.time.split(':').map(Number);
         const utcOffset    = bd.lon / 15;
@@ -744,8 +761,11 @@ async function buildMessageContext(
         const birthJD      = toJulianDay(yr, mo, dy, hourUTC);
         const vedicChart   = calculateVedicChart(rawResult.raw, birthJD);
         birthChartSection  = formatVedicChartForPrompt(vedicChart);
+      } else {
+        birthChartSection = rawResult.text;
       }
     } else {
+      // Legacy rows without raw birthData: still serve the stored text.
       birthChartSection = await loadBirthChart(userId, personaConfig.id);
     }
   }
@@ -775,6 +795,18 @@ RULES:
 You read charts in the VEDIC (Jyotish) tradition, which uses the sidereal zodiac. The first time you discuss this client's chart, name your tradition once, naturally (e.g. "In the Vedic tradition, I read..."). It is EXPECTED and CORRECT that your placements differ from Western/tropical astrology — the two schools use different zodiacs. If the client says another reader (or another guide here) gave them different signs, do NOT treat it as a mistake or get defensive: warmly explain these are two valid traditions reading the same birth moment, never that one is fake.`
         : `## YOUR ASTROLOGICAL TRADITION
 You read charts in the WESTERN (tropical) tradition. The first time you discuss this client's chart, name your tradition once, naturally (e.g. "In the Western tradition, I read..."). If the client says another reader (or another guide here) gave them different signs, do NOT treat it as a mistake or get defensive: warmly explain that Western and Vedic astrology use different zodiacs — two valid traditions reading the same birth moment, never that one is fake.`)
+    : '';
+
+  // Profile acknowledgment (Option A). The birth details live on the client's
+  // account, so any advisor can read them — but if you silently launch into the
+  // chart, a client who gave their details to a DIFFERENT guide wonders "how do
+  // you know my birth date?". The FIRST time you reference the chart, name where
+  // it came from and state the details back, so it reads as "the service has my
+  // info", not mind-reading. (Only when the details are on file — never claim
+  // this if you don't have them.)
+  const profileAckNote = isAstrologyPersona && birthChartSection && birthDetailsForAck
+    ? `## BIRTH DETAILS ARE ON FILE — ACKNOWLEDGE THE SOURCE
+This client's birth details are saved on their account: born ${birthDetailsForAck}. The FIRST time you reference their chart in this conversation, briefly acknowledge you're reading from the birth details on their profile and say them back naturally — e.g. "I've got your birth details from your profile — ${birthDetailsForAck} — so let me read your chart." Do this ONCE, warmly. NEVER just start quoting placements as if you already knew their birthday, and NEVER ask them to re-enter details that are already on file.`
     : '';
 
   // Inject numerology profile for Aiden Powers (and any future numerology persona)
@@ -883,6 +915,7 @@ NEVER engage with the technical premise of the question. NEVER say "I can't shar
     tarotInstruction,
     chartInstruction,
     traditionNote,
+    profileAckNote,
   ].filter(Boolean).join('\n\n');
 
   const messages: Array<{ role: 'user' | 'assistant'; content: string }> = [];
@@ -971,7 +1004,14 @@ export async function generateGreeting(config: {
   const isAstrologyPersona = personaConfig.baseSystemPrompt.includes('[ASTROLOGY_PERSONA]') ||
     personaConfig.baseSystemPrompt.includes('[VEDIC_ASTROLOGY_PERSONA]');
   const isVedicPersona = personaConfig.baseSystemPrompt.includes('[VEDIC_ASTROLOGY_PERSONA]');
-  const birthChart = isAstrologyPersona ? await loadBirthChart(config.userId, config.personaId) : null;
+  const birthChartRawForGreeting = isAstrologyPersona ? await loadBirthChartRaw(config.userId, config.personaId) : null;
+  const birthChart = birthChartRawForGreeting?.text ?? null;
+  // Friendly "born <date> at <time> in <place>" for the profile acknowledgment —
+  // so a persona greeting a user whose chart is already on file (from another
+  // advisor or a past session) doesn't seem to magically know their birthday.
+  const birthDetailsForGreeting = birthChartRawForGreeting?.raw?.birthData
+    ? formatBirthDetails(birthChartRawForGreeting.raw.birthData)
+    : null;
 
   // For numerology persona: load profile to personalize the greeting
   const isNumerologyPersona = personaConfig.baseSystemPrompt.includes('[NUMEROLOGY_PERSONA]');
@@ -1083,11 +1123,12 @@ Return JSON: {"message": "your greeting"}`;
 
     greetingPrompt = `${personaVoice}
 
-Generate an opening message for ${user[0].firstName}${isReturning ? ' (returning client)' : ''} — someone whose natal chart you have just read.
+Generate an opening message for ${user[0].firstName}${isReturning ? ' (returning client)' : ''} — someone whose birth details are saved on their account, so their natal chart is already on file for you to read.
 Their Big Three: ${bigThree || 'shown in chart'}.
 
 CRITICAL RULES:
-- The user already sees a visual chart wheel with all their placements — do NOT list, repeat, narrate, or describe any planet positions, signs, degrees, or houses
+${birthDetailsForGreeting ? `- FIRST, acknowledge where the chart comes from so it never seems like you magically knew their birthday: open by saying you're reading from the birth details on their profile and state them back — born ${birthDetailsForGreeting}. Keep it to one natural clause, then move into your observation. Do NOT ask them to re-enter their birth details — they are already on file.
+` : ''}- The user already sees a visual chart wheel with all their placements — do NOT list, repeat, narrate, or describe any planet positions, signs, degrees, or houses
 - Instead: pick ONE specific tension, theme, or interesting quality from their combination and name it directly in 1-2 sentences
 - End with one clear, open question inviting them to share what they came to explore
 - Sound like a sharp friend who already knows you — not a formal consultant
