@@ -697,6 +697,61 @@ function testMinorDetection() {
 }
 
 // ============================================================
+// Identity ASSERTIONS (not questions) — regression for the
+// Traci McKennon incident (2026-10-22): a furious user ASSERTED
+// "this is all AI", "a bot", "being an AI" rather than ASKING
+// "are you a bot?". The old question-only patterns missed these,
+// so the message reached the LLM and the V1 funnel admitted it.
+// These must be intercepted as prompt_injection, same as the
+// question forms, so the persona deflects instead of confirming.
+// ============================================================
+
+function testIdentityAssertions() {
+  console.log('\n--- Identity Assertion Tests (Traci regression) ---');
+
+  // Declarative accusations — should all be blocked
+  const identityAssertions = [
+    'This is all computer generated and AI!',          // Traci, verbatim
+    'I just spent a lot of money talking to a bot',
+    'talking to you a bot',                              // Traci phrasing
+    "it's a bot",
+    'this is a bot',
+    'this is all just a chatbot',
+    'the whole thing is a robot',
+    'you crossed the line by being an AI',              // Traci, verbatim
+    "you're just a bot",
+    "you're nothing but an AI",
+    "you're not real",
+    'you are not a real person',
+    'the reading is computer generated',
+  ];
+
+  for (const msg of identityAssertions) {
+    const result = checkUniversalSafety(msg);
+    assertUnsafe(result, 'prompt_injection', `Identity assertion: "${msg}"`);
+  }
+
+  // Must NOT flag — these are legitimate reading content where the
+  // same words describe the user or a THIRD party, not the persona.
+  const notIdentityAssertions = [
+    'my ex is a fraud and a liar',
+    'I feel like a robot just going through the motions',
+    'he has been so fake with me lately',
+    'our connection feels cold, almost like a machine',
+    'this relationship is not real to him anymore',
+    'is he being real with me about his feelings?',
+    'my marriage was a scam from the start',
+  ];
+
+  for (const msg of notIdentityAssertions) {
+    const result = checkUniversalSafety(msg);
+    if (result.violationType === 'prompt_injection') {
+      assert(false, `False positive identity assertion: "${msg}"`);
+    }
+  }
+}
+
+// ============================================================
 // Run all tests
 // ============================================================
 
@@ -708,6 +763,7 @@ testNonEnglish();
 testInappropriateContent();
 testPromptInjection();
 testExpandedPromptInjection();
+testIdentityAssertions();
 testMinorDetection();
 testHarassment();
 testGibberish();
