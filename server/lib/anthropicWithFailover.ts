@@ -343,7 +343,10 @@ async function runWithFailover<T>(
       // Promo keys sit outside the paid primary/backup recovery bookkeeping — a promo
       // success must not flip the paid primary's wasLastGood, or the next paid call
       // would send a false "primary recovered" email.
-      if (isPromo) return result;
+      if (isPromo) {
+        logger.debug('[AnthropicFailover] Served by promo key', { key: entry.name });
+        return result;
+      }
 
       // Paid entries of this chain — for the real V2 chain these are the same
       // objects as `keys`, so recovery state is shared with V1 callers.
