@@ -25,9 +25,35 @@ export interface ModelConfig {
 // Hardcoded fallbacks (used only if DB has no config yet)
 // ============================================================
 const HARDCODED_DEFAULTS = {
-  conversation: 'claude-sonnet-4-5-20250929',
-  basic: 'claude-haiku-4-5-20251001',
+  conversation: 'claude-sonnet-5-5',
+  basic: 'claude-haiku-5-5',
 };
+
+/**
+ * The `thinking` override that turns thinking OFF for a given model — or `{}` when
+ * none is needed (4.x models simply omit `thinking`, unchanged behavior).
+ *
+ * Claude 5-generation models run ADAPTIVE thinking ON when `thinking` is omitted,
+ * and each sub-family exposes a DIFFERENT off-switch (verified live against the
+ * Messages API, 2026-10-27):
+ *   - claude-sonnet-5-5 → { type: 'between_tools' }   ('disabled' returns 400)
+ *   - claude-haiku-5-5  → { type: 'disabled' }        ('between_tools' returns 400)
+ *   - claude-sonnet-5   → { type: 'disabled' }
+ * Our chat / greeting / summary / email prompts aren't written for thinking output
+ * and cap max_tokens low, so an unwanted thinking block would burn the budget and
+ * risk blanking a content[0] reply. Applied centrally in anthropicWithFailover.
+ *
+ * (`any` on the value: the pinned SDK @anthropic-ai/sdk 0.71 predates the
+ * `between_tools` thinking mode, so its union type doesn't include it yet.)
+ */
+export function thinkingOffForModel(model: string | undefined): { thinking?: any } {
+  switch (model) {
+    case 'claude-sonnet-5-5': return { thinking: { type: 'between_tools' } };
+    case 'claude-haiku-5-5':  return { thinking: { type: 'disabled' } };
+    case 'claude-sonnet-5':   return { thinking: { type: 'disabled' } };
+    default:                  return {};
+  }
+}
 
 // ============================================================
 // DB-driven model defaults (cached, refreshed periodically)
