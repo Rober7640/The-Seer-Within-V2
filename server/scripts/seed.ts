@@ -294,6 +294,8 @@ async function seedDatabase() {
       {
         configKey: 'available_models',
         configValue: JSON.stringify([
+          { id: 'claude-sonnet-5-5', label: 'Sonnet 5.5', tier: 'premium' },
+          { id: 'claude-haiku-5-5', label: 'Haiku 5.5', tier: 'basic' },
           { id: 'claude-sonnet-4-5-20250929', label: 'Sonnet 4.5', tier: 'premium' },
           { id: 'claude-haiku-4-5-20251001', label: 'Haiku 4.5', tier: 'basic' },
         ]),
@@ -302,13 +304,13 @@ async function seedDatabase() {
       },
       {
         configKey: 'default_conversation_model',
-        configValue: 'claude-sonnet-4-5-20250929',
+        configValue: 'claude-sonnet-5-5',
         configType: 'text',
         description: 'Default model for main conversation responses',
       },
       {
         configKey: 'default_basic_model',
-        configValue: 'claude-haiku-4-5-20251001',
+        configValue: 'claude-haiku-5-5',
         configType: 'text',
         description: 'Default model for greetings and summaries',
       },

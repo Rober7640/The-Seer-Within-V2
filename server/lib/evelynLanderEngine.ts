@@ -12,7 +12,7 @@
 import { anthropicFailover as anthropic } from './anthropicWithFailover';
 import logger from './logger';
 
-const HAIKU_MODEL = 'claude-haiku-4-5-20251001';
+const HAIKU_MODEL = 'claude-haiku-5-5';
 const MAX_TOKENS = 250;
 
 export type Bucket = 'love' | 'money' | 'purpose' | 'specific';

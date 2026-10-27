@@ -44,8 +44,8 @@ router.get('/models', async (_req: Request, res: Response) => {
 
     return res.json({
       availableModels,
-      defaultConversationModel: convRow[0]?.configValue || 'claude-sonnet-4-5-20250929',
-      defaultBasicModel: basicRow[0]?.configValue || 'claude-haiku-4-5-20251001',
+      defaultConversationModel: convRow[0]?.configValue || 'claude-sonnet-5-5',
+      defaultBasicModel: basicRow[0]?.configValue || 'claude-haiku-5-5',
     });
   } catch (error: any) {
     logger.error('Get model settings error:', error);
