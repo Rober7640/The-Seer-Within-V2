@@ -1,4 +1,4 @@
-import { anthropicFailover as anthropic } from './anthropicWithFailover';
+import { anthropicV2 as anthropic } from './anthropicWithFailover';
 import { db } from './db';
 import { chatMessages, chatSessions, userMemory, users } from '@shared/schema';
 import { eq, and, or, isNull, lt, desc, ne, inArray } from 'drizzle-orm';

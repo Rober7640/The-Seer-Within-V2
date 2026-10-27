@@ -46,7 +46,7 @@ import { calculateNumerologyProfile, formatNumerologyProfileForPrompt } from './
 import { sanitizePredictions } from './predictionSanitizer';
 import logger from './logger';
 import { fireWithBreaker, anthropicBreaker, isCircuitOpenError } from './circuitBreaker';
-import { anthropicFailover as anthropic } from './anthropicWithFailover';
+import { anthropicV2 as anthropic } from './anthropicWithFailover';
 import { resolvePersonaPrompt, logExposure } from './experiments';
 import { buildMinutesMeterLine } from './minutesMeter';
 
