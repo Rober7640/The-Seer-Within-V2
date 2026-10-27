@@ -6,7 +6,7 @@
 import { db } from './db';
 import { userMemory, personas, chatSessions } from '@shared/schema';
 import { eq, and, desc } from 'drizzle-orm';
-import { anthropicFailover as anthropic } from './anthropicWithFailover';
+import { anthropicV2 as anthropic } from './anthropicWithFailover';
 import logger from './logger';
 import { getModelForOperation } from './modelConfig';
 import { fireWithBreaker, anthropicBreaker } from './circuitBreaker';

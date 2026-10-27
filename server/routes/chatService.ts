@@ -22,7 +22,7 @@ import logger from '../lib/logger';
 import { posthog } from '../lib/posthog';
 import { sendSessionTimeoutEmail } from '../lib/sessionTimeoutEmail';
 import { getCountryFromIP } from '../lib/crisisHotlines';
-import { anthropicFailover as anthropic } from '../lib/anthropicWithFailover';
+import { anthropicV2 as anthropic } from '../lib/anthropicWithFailover';
 
 const router = Router();
 

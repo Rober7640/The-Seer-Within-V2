@@ -9,6 +9,14 @@
 // next configured key. The primary is always tried first (after cooldown).
 // Email alerts fire on failover and recovery so the team knows which key
 // is live without touching the code.
+//
+// V2 PROMO KEY: `anthropicV2` (used only by the V2 chat paths) puts the
+// ANTHROPIC_API_KEY_PROMO_1 key — an account whose only balance is the free
+// monthly promo credit — IN FRONT of the normal paid chain. When that promo
+// credit runs out Anthropic answers HTTP 400 "credit balance is too low", which
+// is treated as a failover trigger, so V2 chat drops to the paid keys instead of
+// breaking. Promo-key failures are logged only (no alert email) because running
+// out of promo credit every month is expected.
 
 import Anthropic from '@anthropic-ai/sdk';
 import { Resend } from 'resend';
@@ -18,7 +26,7 @@ import { thinkingOffForModel } from './modelConfig';
 // ---------- Configuration ----------
 
 interface KeyEntry {
-  name: 'primary' | 'backup_1' | 'backup_2';
+  name: 'primary' | 'backup_1' | 'backup_2' | 'promo_1';
   apiKey: string;
   client: Anthropic;
   // Cooldown: if set to a future timestamp, this key is skipped until then.
@@ -29,6 +37,9 @@ interface KeyEntry {
 }
 
 const COOLDOWN_MS = 60_000; // skip a failing key for 60s before re-probing
+// An out-of-credit key won't come back within a minute — re-probe far less often
+// so every V2 chat doesn't pay a wasted round-trip once the promo is spent.
+const CREDIT_COOLDOWN_MS = 15 * 60 * 1000;
 const ALERT_DEBOUNCE_MS = 30 * 60 * 1000; // one alert per event type per 30 min
 
 const DEFAULT_ALERT_RECIPIENTS = [
@@ -59,6 +70,22 @@ function buildKeyList(): KeyEntry[] {
 
 const keys: KeyEntry[] = buildKeyList();
 
+function buildPromoKeyList(): KeyEntry[] {
+  const apiKey = process.env.ANTHROPIC_API_KEY_PROMO_1 || '';
+  if (!apiKey) return [];
+  return [{
+    name: 'promo_1',
+    apiKey,
+    client: new Anthropic({ apiKey }),
+    cooldownUntil: 0,
+    wasLastGood: false,
+  }];
+}
+
+// The V2 chain shares the SAME paid KeyEntry objects as `keys`, so cooldowns and
+// recovery state stay consistent between V1 and V2 callers.
+const v2Keys: KeyEntry[] = [...buildPromoKeyList(), ...keys];
+
 // Mark primary as the initially-good key so the first recovery email logic
 // has a sensible baseline.
 if (keys.length > 0 && keys[0].name === 'primary') {
@@ -67,9 +94,23 @@ if (keys.length > 0 && keys[0].name === 'primary') {
 
 // ---------- Retryable error detection ----------
 
-function isRetryableError(err: unknown): boolean {
+// Anthropic reports an empty account balance as HTTP 400 invalid_request_error
+// "Your credit balance is too low to access the Anthropic API...". A plain 400 is
+// a bad request (never retried), so this one is matched by its message.
+export function isCreditExhaustedError(err: unknown): boolean {
+  if (!err || typeof err !== 'object') return false;
+  const anyErr = err as { status?: number; message?: string; error?: unknown };
+  if (anyErr.status !== 400) return false;
+  let text = String(anyErr.message || '');
+  try { text += ' ' + JSON.stringify(anyErr.error ?? ''); } catch { /* ignore */ }
+  return /credit balance is too low/i.test(text);
+}
+
+export function isRetryableError(err: unknown): boolean {
   if (!err || typeof err !== 'object') return false;
   const anyErr = err as { status?: number; code?: string; name?: string };
+
+  if (isCreditExhaustedError(err)) return true;
 
   // Anthropic SDK connection failures (DNS, conn reset, socket timeout) surface as
   // APIConnectionError / APIConnectionTimeoutError. These carry NO `.status` and their
@@ -131,6 +172,14 @@ function describeError(err: unknown): ErrorGuidance {
     };
   }
 
+  if (isCreditExhaustedError(err)) {
+    return {
+      codeLabel: '400 credit balance too low',
+      explanation:
+        'Anthropic returned 400 "credit balance is too low" — this key\'s account has run out of credit.',
+      action: "Top up the account's credit balance in the Anthropic console (Billing).",
+    };
+  }
   if (status === 429) {
     return {
       codeLabel: '429 rate/spend limit',
@@ -249,20 +298,22 @@ async function sendAlertEmail(subject: string, body: string, dedupeKey: string) 
 
 async function runWithFailover<T>(
   operation: (client: Anthropic) => Promise<T>,
+  chain: KeyEntry[] = keys,
 ): Promise<T> {
-  if (keys.length === 0) {
+  if (chain.length === 0) {
     throw new Error('Anthropic failover: no API keys configured. Set ANTHROPIC_API_KEY.');
   }
 
   const now = Date.now();
   let lastErr: unknown;
 
-  for (let i = 0; i < keys.length; i++) {
-    const entry = keys[i];
+  for (let i = 0; i < chain.length; i++) {
+    const entry = chain[i];
+    const isPromo = entry.name.startsWith('promo');
 
     // Skip keys still in cooldown, unless this is the last available key
     // (we try anyway as a best-effort rather than failing outright).
-    if (entry.cooldownUntil > now && i < keys.length - 1) {
+    if (entry.cooldownUntil > now && i < chain.length - 1) {
       continue;
     }
 
@@ -289,7 +340,15 @@ async function runWithFailover<T>(
         );
       }
 
-      const wasUsingFallback = keys[0].cooldownUntil > 0 || !keys[0].wasLastGood;
+      // Promo keys sit outside the paid primary/backup recovery bookkeeping — a promo
+      // success must not flip the paid primary's wasLastGood, or the next paid call
+      // would send a false "primary recovered" email.
+      if (isPromo) return result;
+
+      // Paid entries of this chain — for the real V2 chain these are the same
+      // objects as `keys`, so recovery state is shared with V1 callers.
+      const paid = chain.filter(k => !k.name.startsWith('promo'));
+      const wasUsingFallback = paid[0].cooldownUntil > 0 || !paid[0].wasLastGood;
       if (entry.name === 'primary' && wasUsingFallback) {
         // Primary just came back after a failover window.
         logger.info('[AnthropicFailover] Primary key recovered', { key: entry.name });
@@ -302,7 +361,7 @@ async function runWithFailover<T>(
       }
 
       // Reset wasLastGood flags so recovery detection works on the next failover.
-      keys.forEach(k => { k.wasLastGood = (k === entry); });
+      paid.forEach(k => { k.wasLastGood = (k === entry); });
 
       return result;
     } catch (err) {
@@ -314,17 +373,23 @@ async function runWithFailover<T>(
       }
 
       // Retryable: park this key in cooldown, try the next one.
-      entry.cooldownUntil = Date.now() + COOLDOWN_MS;
+      const creditOut = isCreditExhaustedError(err);
+      entry.cooldownUntil = Date.now() + (creditOut ? CREDIT_COOLDOWN_MS : COOLDOWN_MS);
       const status = (err as { status?: number }).status;
       logger.warn('[AnthropicFailover] Key failed — rotating', {
         key: entry.name,
         status,
-        nextKey: keys[i + 1]?.name || 'none',
+        creditOut,
+        nextKey: chain[i + 1]?.name || 'none',
       });
 
+      // Promo key failing (normally: monthly promo credit used up) is expected —
+      // log only, no alert email; the paid chain behind it takes over.
+      if (isPromo) continue;
+
       // If we're rotating AWAY from primary (i.e. primary just failed), alert.
-      if (entry.name === 'primary' && keys.length > 1) {
-        const nextKey = keys[i + 1]?.name || 'none';
+      if (entry.name === 'primary' && chain.length > 1) {
+        const nextKey = chain[i + 1]?.name || 'none';
         const g = describeError(err);
         void sendAlertEmail(
           `[Seer] Anthropic primary key failed (${g.codeLabel}) — now using ${nextKey}`,
@@ -404,7 +469,31 @@ export const anthropicFailover = {
   },
 };
 
+// V2 chat only: same surface, but tries the promo key (if configured) first.
+// With no ANTHROPIC_API_KEY_PROMO_1 set it behaves exactly like anthropicFailover.
+export const anthropicV2 = {
+  messages: {
+    create: ((params: any, options?: any) =>
+      runWithFailover(client => client.messages.create(params, options), v2Keys)) as Anthropic['messages']['create'],
+  },
+};
+
 // Exposed for tests / health checks.
 export function getConfiguredKeyNames(): string[] {
   return keys.map(k => k.name);
+}
+
+export function getV2KeyNames(): string[] {
+  return v2Keys.map(k => k.name);
+}
+
+// Test-only: run an operation over a fake chain of named clients.
+export function __runChainForTest<T>(
+  fakes: { name: KeyEntry['name']; client: unknown }[],
+  operation: (client: any) => Promise<T>,
+): Promise<T> {
+  const chain: KeyEntry[] = fakes.map(f => ({
+    name: f.name, apiKey: 'test', client: f.client as Anthropic, cooldownUntil: 0, wasLastGood: false,
+  }));
+  return runWithFailover(operation, chain);
 }
