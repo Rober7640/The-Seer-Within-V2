@@ -10,13 +10,15 @@
 // Email alerts fire on failover and recovery so the team knows which key
 // is live without touching the code.
 //
-// V2 PROMO KEY: `anthropicV2` (used only by the V2 chat paths) puts the
-// ANTHROPIC_API_KEY_PROMO_1 key — an account whose only balance is the free
-// monthly promo credit — IN FRONT of the normal paid chain. When that promo
-// credit runs out Anthropic answers HTTP 400 "credit balance is too low", which
-// is treated as a failover trigger, so V2 chat drops to the paid keys instead of
-// breaking. Promo-key failures are logged only (no alert email) because running
-// out of promo credit every month is expected.
+// V2 PROMO KEYS: `anthropicV2` (used only by the V2 chat paths) puts the
+// ANTHROPIC_API_KEY_PROMO_1..3 keys — accounts whose only balance is the free
+// monthly promo credit — IN FRONT of the normal paid chain, tried in that order.
+// When a promo credit runs out Anthropic answers HTTP 400 "credit balance is too
+// low", which is treated as a failover trigger, so V2 chat moves to the next
+// promo key and finally the paid keys instead of breaking. A promo account that
+// doesn't offer the requested model (404 "model: …") is skipped for that request
+// only. Promo-key failures are logged only (no alert email) because running out
+// of promo credit every month is expected.
 
 import Anthropic from '@anthropic-ai/sdk';
 import { Resend } from 'resend';
@@ -26,7 +28,7 @@ import { thinkingOffForModel } from './modelConfig';
 // ---------- Configuration ----------
 
 interface KeyEntry {
-  name: 'primary' | 'backup_1' | 'backup_2' | 'promo_1';
+  name: 'primary' | 'backup_1' | 'backup_2' | 'promo_1' | 'promo_2' | 'promo_3';
   apiKey: string;
   client: Anthropic;
   // Cooldown: if set to a future timestamp, this key is skipped until then.
@@ -70,16 +72,24 @@ function buildKeyList(): KeyEntry[] {
 
 const keys: KeyEntry[] = buildKeyList();
 
+// Order matters — promo_1 is tried first.
 function buildPromoKeyList(): KeyEntry[] {
-  const apiKey = process.env.ANTHROPIC_API_KEY_PROMO_1 || '';
-  if (!apiKey) return [];
-  return [{
-    name: 'promo_1',
-    apiKey,
-    client: new Anthropic({ apiKey }),
-    cooldownUntil: 0,
-    wasLastGood: false,
-  }];
+  const specs: { name: KeyEntry['name']; env: string }[] = [
+    { name: 'promo_1', env: 'ANTHROPIC_API_KEY_PROMO_1' },
+    { name: 'promo_2', env: 'ANTHROPIC_API_KEY_PROMO_2' },
+    { name: 'promo_3', env: 'ANTHROPIC_API_KEY_PROMO_3' },
+  ];
+
+  return specs
+    .map(spec => ({ ...spec, apiKey: process.env[spec.env] || '' }))
+    .filter(spec => spec.apiKey.length > 0)
+    .map(spec => ({
+      name: spec.name,
+      apiKey: spec.apiKey,
+      client: new Anthropic({ apiKey: spec.apiKey }),
+      cooldownUntil: 0,
+      wasLastGood: false,
+    }));
 }
 
 // The V2 chain shares the SAME paid KeyEntry objects as `keys`, so cooldowns and
@@ -104,6 +114,17 @@ export function isCreditExhaustedError(err: unknown): boolean {
   let text = String(anyErr.message || '');
   try { text += ' ' + JSON.stringify(anyErr.error ?? ''); } catch { /* ignore */ }
   return /credit balance is too low/i.test(text);
+}
+
+// 404 not_found_error "model: <id>" — this account can't use the requested model
+// (e.g. a newer org that was never offered an older model).
+export function isModelUnavailableError(err: unknown): boolean {
+  if (!err || typeof err !== 'object') return false;
+  const anyErr = err as { status?: number; message?: string; error?: unknown };
+  if (anyErr.status !== 404) return false;
+  let text = String(anyErr.message || '');
+  try { text += ' ' + JSON.stringify(anyErr.error ?? ''); } catch { /* ignore */ }
+  return /not_found_error/.test(text) && /model:/.test(text);
 }
 
 export function isRetryableError(err: unknown): boolean {
@@ -370,6 +391,17 @@ async function runWithFailover<T>(
     } catch (err) {
       lastErr = err;
 
+      // A promo account that doesn't offer this model: skip it for THIS request
+      // only (no cooldown — the key still serves other models). Paid keys keep the
+      // old behaviour: a missing model is a real config error and surfaces.
+      if (isPromo && isModelUnavailableError(err)) {
+        logger.warn('[AnthropicFailover] Promo key lacks model — skipping', {
+          key: entry.name,
+          nextKey: chain[i + 1]?.name || 'none',
+        });
+        continue;
+      }
+
       if (!isRetryableError(err)) {
         // Non-retryable (bad input, content-filtered, etc.) — surface immediately.
         throw err;
@@ -454,30 +486,38 @@ async function runWithFailover<T>(
 // `Message`, streaming returns `Stream<RawMessageStreamEvent>`). Without the
 // cast, TS widens the return type and call sites that read `.content` fail
 // to compile. Runtime behaviour is identical.
+// Claude 5-generation models (e.g. Sonnet 5.5 / Haiku 5.5) run adaptive
+// thinking ON when `thinking` is omitted — which wastes our low max_tokens
+// budget and can blank a content[0] reply. Inject the correct per-model
+// off-switch here, once, for every caller — but only when the caller hasn't
+// set `thinking` itself. No-op for 4.x models (returns {}). See
+// thinkingOffForModel for the per-family mapping.
+export function withThinkingOff(params: any): any {
+  if (params && params.thinking === undefined) {
+    const off = thinkingOffForModel(params.model);
+    if (off.thinking !== undefined) return { ...params, thinking: off.thinking };
+  }
+  return params;
+}
+
 export const anthropicFailover = {
   messages: {
     create: ((params: any, options?: any) => {
-      // Claude 5-generation models (e.g. Sonnet 5.5 / Haiku 5.5) run adaptive
-      // thinking ON when `thinking` is omitted — which wastes our low max_tokens
-      // budget and can blank a content[0] reply. Inject the correct per-model
-      // off-switch here, once, for every caller — but only when the caller hasn't
-      // set `thinking` itself. No-op for 4.x models (returns {}). See
-      // thinkingOffForModel for the per-family mapping.
-      if (params && params.thinking === undefined) {
-        const off = thinkingOffForModel(params.model);
-        if (off.thinking !== undefined) params = { ...params, thinking: off.thinking };
-      }
-      return runWithFailover(client => client.messages.create(params, options));
+      const p = withThinkingOff(params);
+      return runWithFailover(client => client.messages.create(p, options));
     }) as Anthropic['messages']['create'],
   },
 };
 
-// V2 chat only: same surface, but tries the promo key (if configured) first.
-// With no ANTHROPIC_API_KEY_PROMO_1 set it behaves exactly like anthropicFailover.
+// V2 chat only: same surface (and same thinking-off handling), but tries the
+// promo keys (if configured) first, in order. With no ANTHROPIC_API_KEY_PROMO_*
+// set it behaves exactly like anthropicFailover.
 export const anthropicV2 = {
   messages: {
-    create: ((params: any, options?: any) =>
-      runWithFailover(client => client.messages.create(params, options), v2Keys)) as Anthropic['messages']['create'],
+    create: ((params: any, options?: any) => {
+      const p = withThinkingOff(params);
+      return runWithFailover(client => client.messages.create(p, options), v2Keys);
+    }) as Anthropic['messages']['create'],
   },
 };
 
