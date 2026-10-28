@@ -174,6 +174,62 @@ describe('resolveGateway — Stripe and NOT enrolled unless everything holds', (
     assert.equal(d.gateway, 'stripe');
     assert.equal(d.enrolled, false);
   });
+
+  it('a PAI_TEST_BUYERS email ⇒ Payments.AI with no experiment at all, NOT enrolled', async () => {
+    process.env.PAI_TEST_BUYERS = ' Tester@Example.com , other@x.co ';
+    const d = await live.resolveGateway({ email: 'tester@example.com', funnel: 'v1-tarot', hook: 'cards-come-back' });
+    assert.equal(d.gateway, 'paymentsai');
+    assert.equal(d.enrolled, false);
+    assert.equal(d.variant, null);
+    // Everyone else is untouched: still Stripe (the DB is down here, as above).
+    const other = await live.resolveGateway({ email: 'a@b.co', funnel: 'v1-tarot', hook: 'cards-come-back' });
+    assert.equal(other.gateway, 'stripe');
+    delete process.env.PAI_TEST_BUYERS;
+  });
+
+  it('a test buyer still needs an eligible lander, an email, and a configured deploy', async () => {
+    process.env.PAI_TEST_BUYERS = 'tester@example.com';
+    for (const args of [
+      { email: 'tester@example.com', funnel: 'v1-palm' as const },
+      { email: 'tester@example.com', funnel: 'v1-tarot' as const, hook: 'cards-meant-alone', noemail: true },
+    ]) {
+      assert.equal((await live.resolveGateway(args)).gateway, 'stripe', JSON.stringify(args));
+    }
+    delete process.env.PAI_LIVE_ENABLED;
+    assert.equal(
+      (await live.resolveGateway({ email: 'tester@example.com', funnel: 'v1-tarot', hook: 'cards-meant-alone' })).gateway,
+      'stripe',
+    );
+    process.env.PAI_LIVE_ENABLED = '1';
+    delete process.env.PAI_TEST_BUYERS;
+  });
+});
+
+describe('test buyers — 10 cents a step, nobody else', () => {
+  const saved = process.env.PAI_TEST_BUYERS;
+  after(() => {
+    if (saved === undefined) delete process.env.PAI_TEST_BUYERS;
+    else process.env.PAI_TEST_BUYERS = saved;
+  });
+
+  it('unset or empty ⇒ nobody is a test buyer and every price is unchanged', () => {
+    for (const v of [undefined, '', ' , ']) {
+      if (v === undefined) delete process.env.PAI_TEST_BUYERS;
+      else process.env.PAI_TEST_BUYERS = v;
+      assert.equal(live.isPaiTestBuyer('a@b.co'), false);
+      assert.equal(live.isPaiTestBuyer(''), false);
+      assert.equal(live.testBuyerCents('a@b.co', 4700), 4700);
+    }
+  });
+
+  it('a listed email (any case, any spacing) pays TEST_BUYER_CENTS; others pay the price', () => {
+    process.env.PAI_TEST_BUYERS = 'ph.tester@example.com, b@c.co';
+    assert.equal(live.TEST_BUYER_CENTS, 10);
+    assert.equal(live.testBuyerCents('  PH.Tester@Example.com ', 3500), 10);
+    assert.equal(live.testBuyerCents('b@c.co', 1277), 10);
+    assert.equal(live.testBuyerCents('ph.tester@example.co', 3500), 3500);
+    assert.equal(live.testBuyerCents(null, 3500), 3500);
+  });
 });
 
 describe('chargeMain against a stubbed Payments.AI', () => {

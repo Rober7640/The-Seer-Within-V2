@@ -43,6 +43,7 @@ import { createPaiLiveRouter } from "./routes/paiLive";
 import { createPaiProdTestRouter } from "./routes/paiProdTest";
 import {
   resolveGateway,
+  testBuyerCents,
   signOrder,
   chargeUpsell1Pai,
   chargeUpsell2Pai,
@@ -1304,10 +1305,11 @@ export async function registerRoutes(
             hook: tarotHook ?? null,
             deck: tarotDeck ?? null,
             type: type === "downsell" ? "downsell" : "main",
-            mainCents: priceAmount,
+            // A PAI_TEST_BUYERS email pays 10 cents a step (paiLive.ts); everyone else, the price.
+            mainCents: testBuyerCents(gatewayEmail, priceAmount),
             bumpOffered: bumpWasOffered,
             bumpApplied,
-            bumpCents: bumpApplied ? bumpCentsResolved : 0,
+            bumpCents: bumpApplied ? testBuyerCents(gatewayEmail, bumpCentsResolved) : 0,
             bumpBucket: bumpApplied ? (bumpBucket as string) : null,
             bumpProduct: bumpApplied
               ? (bumpMetadata as { bumpProduct?: string }).bumpProduct ?? null
@@ -1333,8 +1335,8 @@ export async function registerRoutes(
           return res.json({
             gateway: "paymentsai",
             orderToken: signOrder(order),
-            totalCents: checkoutTotalCents,
-            mainCents: priceAmount,
+            totalCents: order.mainCents + order.bumpCents,
+            mainCents: order.mainCents,
             bumpCents: order.bumpCents,
             productName,
             // The line items exactly as the Stripe checkout itemises them, so the

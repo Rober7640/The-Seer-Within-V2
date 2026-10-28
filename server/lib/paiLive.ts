@@ -131,6 +131,29 @@ export interface GatewayDecision {
   reason?: string;
 }
 
+/**
+ * TEST BUYERS (28 Oct) — `PAI_TEST_BUYERS`, comma-separated emails. A listed email is
+ * sent to Payments.AI whatever the split says (draft or paused too) and pays
+ * TEST_BUYER_CENTS for the main, the bump and each upsell. For a real-card check on
+ * Production BEFORE the split starts. Unset or empty ⇒ nobody, and nothing changes.
+ * Never enrolled: a test buyer writes no exposure, so the split report stays clean.
+ */
+export const TEST_BUYER_CENTS = 10;
+
+export function isPaiTestBuyer(email: unknown): boolean {
+  if (typeof email !== 'string' || !email.trim()) return false;
+  const list = (process.env.PAI_TEST_BUYERS ?? '')
+    .split(',')
+    .map((e) => e.trim().toLowerCase())
+    .filter(Boolean);
+  return list.includes(email.trim().toLowerCase());
+}
+
+/** `cents`, or TEST_BUYER_CENTS for a listed test buyer. */
+export function testBuyerCents(email: unknown, cents: number): number {
+  return isPaiTestBuyer(email) ? TEST_BUYER_CENTS : cents;
+}
+
 const STRIPE = (reason: string): GatewayDecision => ({
   gateway: 'stripe',
   variant: null,
@@ -163,6 +186,9 @@ export async function resolveGateway(args: {
     const email = typeof args.email === 'string' ? args.email.trim().toLowerCase() : '';
     if (!email) return STRIPE('no email');
     if (!paiEligibleLander(args.funnel, args.hook)) return STRIPE('lander not eligible');
+    if (isPaiTestBuyer(email)) {
+      return { gateway: 'paymentsai', variant: null, enrolled: false, reason: 'test buyer' };
+    }
 
     // Subject = hashEmail, the SAME id the exposure row is keyed on, so the opt-in
     // assignment freeze (scope.freezeAssignment) finds her first exposure.
@@ -1040,6 +1066,7 @@ async function chargeUpsellMit(body: UpsellBody, spec: UpsellSpec, deps: PaiLive
     const loaded = await loadOrder(orderId, body.email);
     if ('reply' in loaded) return loaded.reply;
     const { convo } = loaded;
+    spec = { ...spec, cents: testBuyerCents(convo.email, spec.cents) };
     // Once per order — a refresh, back button or double tap must never charge twice.
     const bought = boughtRef(convo, spec.step);
     if (bought) {
@@ -1181,6 +1208,7 @@ export async function payUpsellWithCard(
       return { kind: 'error', message: 'We could not find your order.' };
     }
     const { convo } = loaded;
+    spec.cents = testBuyerCents(convo.email, spec.cents);
     const cfg = liveConfig();
     const guard = await assertCitApproved(args.orderId, cfg);
     if (!guard.approved) return { kind: 'error', message: 'We could not find your order.' };
