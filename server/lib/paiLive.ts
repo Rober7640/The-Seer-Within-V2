@@ -702,27 +702,38 @@ async function fulfilMain(order: PaiOrder, settled: PaiTransaction, x: BuyerExtr
   const paidTags = [order.bucket || 'seer-within', 'paid', purchaseTypeTag];
   if (deps.isFbFunnel(funnel)) paidTags.push(`${purchaseTypeTag}${deps.fbTagSuffix(funnel)}`);
   const paidListTags = [...deps.fbifyAweberTags(paidTags, funnel), PAI_TAG];
-  logger.info(`[pai-live] AWeber paid list ← ${txn} tags=${paidListTags.join(',')}`);
-  addPaidSubscriber({
-    email: order.email,
-    name: order.firstName || undefined,
-    stripeOrderId: txn,
-    tags: paidListTags,
-    phone: x.phone,
-  }).catch((err) => logger.warn('[pai-live] AWeber paid list error (non-blocking)', { err: String(err) }));
 
   // AWeber order-bump list — the webhook's rule: only when the stamped key wants it.
-  if (order.bumpApplied && bumpPaidListWanted(order.bumpProduct)) {
-    const suffix = funnelDefForParam(funnel)?.aweberSuffix ?? '';
-    const bumpTags = ['order-bump', 'paid', order.bucket || 'seer-within', `initial-purchase${suffix}`, PAI_TAG];
-    logger.info(`[pai-live] AWeber order-bump list ← ${txn} tags=${bumpTags.join(',')}`);
-    addBumpPaidSubscriber({
+  const wantsBumpList = order.bumpApplied && bumpPaidListWanted(order.bumpProduct);
+  const suffix = funnelDefForParam(funnel)?.aweberSuffix ?? '';
+  const bumpTags = ['order-bump', 'paid', order.bucket || 'seer-within', `initial-purchase${suffix}`, PAI_TAG];
+
+  // ONE AFTER THE OTHER, never together (28 Oct). Fired at the same instant on an
+  // expired AWeber token, both writes refresh it at once and the second refresh
+  // voids the first token — one list then 401s at random (seen live on dev: paid
+  // list for one buyer, bump list for the next). On Stripe the two writes come from
+  // different places seconds apart, so it never bites there. Still fire-and-forget:
+  // /welcome1 does not wait for AWeber.
+  void (async () => {
+    logger.info(`[pai-live] AWeber paid list ← ${txn} tags=${paidListTags.join(',')}`);
+    await addPaidSubscriber({
       email: order.email,
       name: order.firstName || undefined,
       stripeOrderId: txn,
-      tags: bumpTags,
-    }).catch((err) => logger.error('[pai-live] AWeber bump list error (non-blocking)', { err: String(err) }));
-  }
+      tags: paidListTags,
+      phone: x.phone,
+    }).catch((err) => logger.warn('[pai-live] AWeber paid list error (non-blocking)', { err: String(err) }));
+
+    if (wantsBumpList) {
+      logger.info(`[pai-live] AWeber order-bump list ← ${txn} tags=${bumpTags.join(',')}`);
+      await addBumpPaidSubscriber({
+        email: order.email,
+        name: order.firstName || undefined,
+        stripeOrderId: txn,
+        tags: bumpTags,
+      }).catch((err) => logger.error('[pai-live] AWeber bump list error (non-blocking)', { err: String(err) }));
+    }
+  })();
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
