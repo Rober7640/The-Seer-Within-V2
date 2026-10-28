@@ -13,6 +13,7 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { Resend } from 'resend';
 import logger from './logger';
+import { thinkingOffForModel } from './modelConfig';
 
 // ---------- Configuration ----------
 
@@ -387,8 +388,19 @@ async function runWithFailover<T>(
 // to compile. Runtime behaviour is identical.
 export const anthropicFailover = {
   messages: {
-    create: ((params: any, options?: any) =>
-      runWithFailover(client => client.messages.create(params, options))) as Anthropic['messages']['create'],
+    create: ((params: any, options?: any) => {
+      // Claude 5-generation models (e.g. Sonnet 5.5 / Haiku 5.5) run adaptive
+      // thinking ON when `thinking` is omitted — which wastes our low max_tokens
+      // budget and can blank a content[0] reply. Inject the correct per-model
+      // off-switch here, once, for every caller — but only when the caller hasn't
+      // set `thinking` itself. No-op for 4.x models (returns {}). See
+      // thinkingOffForModel for the per-family mapping.
+      if (params && params.thinking === undefined) {
+        const off = thinkingOffForModel(params.model);
+        if (off.thinking !== undefined) params = { ...params, thinking: off.thinking };
+      }
+      return runWithFailover(client => client.messages.create(params, options));
+    }) as Anthropic['messages']['create'],
   },
 };
 

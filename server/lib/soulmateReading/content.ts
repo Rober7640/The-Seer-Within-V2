@@ -7,11 +7,16 @@
 // so the caller never ships a blank section.
 
 import Anthropic from '@anthropic-ai/sdk';
+import { anthropicFailover } from '../anthropicWithFailover';
 import type { ReadingNumbers } from './numbers';
 import type { ResolvedInitials } from './initials';
 import type { DrawnCard } from './draw';
 
-const MODEL = 'claude-sonnet-5';
+// Routes through anthropicFailover (same as chat/greetings/emails): multi-key
+// failover + the central per-model "thinking off" injection, so Sonnet 5.5 runs
+// without burning its 4096-token budget on a thinking block. Pinned to a known
+// model for this paid deliverable rather than tracking the admin config.
+const MODEL = 'claude-sonnet-5-5';
 const MAX_TOKENS = 4096;
 
 // Evelyn's voice + the compliance fences, shared by every call (spec §2 step 9).
@@ -25,16 +30,9 @@ Hard rules you never break:
 - Do not describe the mechanics of the cards or quote textbook meanings; weave the feeling of each card into her life.
 - This is for entertainment and reflection. Never claim certainty about a real, identifiable person.`;
 
-function anthropic(): Anthropic {
-  const apiKey = process.env.ANTHROPIC_API_KEY;
-  if (!apiKey) throw new Error('ANTHROPIC_API_KEY is not set — cannot write the reading.');
-  return new Anthropic({ apiKey });
-}
-
 async function write(system: string, user: string): Promise<string> {
-  const client = anthropic();
   for (let attempt = 1; attempt <= 2; attempt++) {
-    const res = await client.messages.create({
+    const res = await anthropicFailover.messages.create({
       model: MODEL,
       max_tokens: MAX_TOKENS,
       system,
