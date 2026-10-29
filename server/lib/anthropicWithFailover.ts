@@ -10,12 +10,13 @@
 // Email alerts fire on failover and recovery so the team knows which key
 // is live without touching the code.
 //
-// V2 PROMO KEYS: `anthropicV2` (used only by the V2 chat paths) puts the
-// ANTHROPIC_API_KEY_PROMO_1..3 keys — accounts whose only balance is the free
-// monthly promo credit — IN FRONT of the normal paid chain, tried in that order.
-// When a promo credit runs out Anthropic answers HTTP 400 "credit balance is too
-// low", which is treated as a failover trigger, so V2 chat moves to the next
-// promo key and finally the paid keys instead of breaking. A promo account that
+// PROMO KEYS: every caller (V1, V2, emails — `anthropicFailover` and its alias
+// `anthropicV2`) puts the ANTHROPIC_API_KEY_PROMO_1..3 keys — accounts whose
+// main balance is the free monthly promo credit — IN FRONT of the normal paid
+// chain, tried in that order. When a promo credit runs out Anthropic answers
+// HTTP 400 "credit balance is too low", which is treated as a failover trigger,
+// so the request moves to the next promo key and finally the paid keys instead
+// of breaking. A promo account that
 // doesn't offer the requested model (404 "model: …") is skipped for that request
 // only. Promo-key failures are logged only (no alert email) because running out
 // of promo credit every month is expected.
@@ -92,9 +93,9 @@ function buildPromoKeyList(): KeyEntry[] {
     }));
 }
 
-// The V2 chain shares the SAME paid KeyEntry objects as `keys`, so cooldowns and
-// recovery state stay consistent between V1 and V2 callers.
-const v2Keys: KeyEntry[] = [...buildPromoKeyList(), ...keys];
+// The promo-first chain every caller uses. It shares the SAME paid KeyEntry
+// objects as `keys`, so cooldowns and recovery state stay consistent.
+const promoFirstKeys: KeyEntry[] = [...buildPromoKeyList(), ...keys];
 
 // Mark primary as the initially-good key so the first recovery email logic
 // has a sensible baseline.
@@ -504,22 +505,15 @@ export const anthropicFailover = {
   messages: {
     create: ((params: any, options?: any) => {
       const p = withThinkingOff(params);
-      return runWithFailover(client => client.messages.create(p, options));
+      return runWithFailover(client => client.messages.create(p, options), promoFirstKeys);
     }) as Anthropic['messages']['create'],
   },
 };
 
-// V2 chat only: same surface (and same thinking-off handling), but tries the
-// promo keys (if configured) first, in order. With no ANTHROPIC_API_KEY_PROMO_*
-// set it behaves exactly like anthropicFailover.
-export const anthropicV2 = {
-  messages: {
-    create: ((params: any, options?: any) => {
-      const p = withThinkingOff(params);
-      return runWithFailover(client => client.messages.create(p, options), v2Keys);
-    }) as Anthropic['messages']['create'],
-  },
-};
+// Kept as a name for the V2 chat paths — now the same promo-first client as
+// anthropicFailover. With no ANTHROPIC_API_KEY_PROMO_* set both use the paid
+// keys only.
+export const anthropicV2 = anthropicFailover;
 
 // Exposed for tests / health checks.
 export function getConfiguredKeyNames(): string[] {
@@ -527,7 +521,7 @@ export function getConfiguredKeyNames(): string[] {
 }
 
 export function getV2KeyNames(): string[] {
-  return v2Keys.map(k => k.name);
+  return promoFirstKeys.map(k => k.name);
 }
 
 // Test-only: run an operation over a fake chain of named clients.
