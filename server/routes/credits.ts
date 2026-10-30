@@ -551,6 +551,11 @@ router.post('/create-payment-intent', requireAuth, async (req: Request, res: Res
       stripe!.paymentIntents.create({
         amount: tier!.priceUsd,
         currency: 'usd',
+        // Let Stripe surface whatever's enabled in the dashboard (card + Apple Pay
+        // + Google Pay). The inline PaymentElement renders the wallet buttons
+        // automatically once this is on. allow_redirects:'never' keeps the flow
+        // inline (matches our confirmPayment redirect:'if_required').
+        automatic_payment_methods: { enabled: true, allow_redirects: 'never' },
         ...(userEmail ? { receipt_email: userEmail } : {}),
         metadata: {
           app: 'the-seer-within-chat',
