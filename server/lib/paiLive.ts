@@ -657,7 +657,7 @@ async function fulfilMain(order: PaiOrder, settled: PaiTransaction, x: BuyerExtr
   await markMainPaid(txn);
   await savePhoneForSession(txn, x.phone);
 
-  if (showsSmsConsent(funnel)) {
+  if (showsSmsConsent(funnel, undefined)) {
     recordSmsConsent({
       stripeSessionId: txn,
       email: order.email,
@@ -1375,7 +1375,7 @@ export async function publishableKey(): Promise<string | null> {
 
 /** The SMS question exactly as the Stripe checkout words it, or null when not shown. */
 export function smsQuestion(funnel: FunnelParam | undefined, policyBase: string) {
-  if (!showsSmsConsent(funnel)) return null;
+  if (!showsSmsConsent(funnel, undefined)) return null;
   return {
     label: SMS_CONSENT_LABEL,
     yesLabel: SMS_CONSENT_YES_LABEL,
