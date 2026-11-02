@@ -26,6 +26,13 @@ export interface GatewayArmDetail {
   revPerCheckoutUsd: number;
 }
 
+export interface GatewayLanderRow {
+  funnel: string | null;
+  hook: string | null;
+  checkouts: number;
+  arms: GatewayArmDetail[];
+}
+
 export interface GatewayAttemptRow {
   variant: string;
   gateway: string;
@@ -52,11 +59,18 @@ const INITIATOR_LABEL: Record<string, string> = {
   cit: 'card entered',
 };
 
+const landerLabel = (l: GatewayLanderRow) => {
+  const funnel = l.funnel ?? 'root (/)';
+  return l.hook ? `${funnel} · ${l.hook}` : funnel;
+};
+
 export function GatewaySplitPanel({
   detail,
+  byLander,
   attempts,
 }: {
   detail?: GatewayArmDetail[];
+  byLander?: GatewayLanderRow[];
   attempts?: GatewayAttemptRow[];
 }) {
   if (!detail?.length && !attempts?.length) return null;
@@ -110,6 +124,77 @@ export function GatewaySplitPanel({
               ))}
             </tbody>
           </table>
+        </div>
+      )}
+
+      {byLander && byLander.length > 0 && (
+        <div className="space-y-2" data-testid="gateway-split-by-lander">
+          <div className="flex items-baseline gap-2">
+            <span className="text-sm font-semibold text-gray-200">By lander</span>
+            <span className="text-xs text-gray-500">
+              the table above, split by the lander each checkout came from
+            </span>
+          </div>
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-gray-700 text-left text-gray-400">
+                <th className="py-2 pr-4">Lander</th>
+                <th className="py-2 pr-4">Arm</th>
+                <th className="py-2 pr-4">Checkouts</th>
+                <th className="py-2 pr-4">Buyers</th>
+                <th className="py-2 pr-4">Conv %</th>
+                <th className="py-2 pr-4">Main</th>
+                <th className="py-2 pr-4">Bump</th>
+                <th className="py-2 pr-4">Upsell 1</th>
+                <th className="py-2 pr-4">Upsell 2</th>
+                <th className="py-2 pr-4">Total</th>
+                <th className="py-2 pr-4">$ / checkout</th>
+                <th className="py-2 pr-4">Paid on</th>
+              </tr>
+            </thead>
+            <tbody>
+              {byLander.map((l) =>
+                l.arms.map((d, i) => (
+                  <tr
+                    key={`gwl-${l.funnel}-${l.hook}-${d.variant}`}
+                    className={i === l.arms.length - 1 ? 'border-b border-gray-700' : 'border-b border-gray-800/50'}
+                  >
+                    {i === 0 && (
+                      <td className="py-2 pr-4 align-top font-semibold" rowSpan={l.arms.length}>
+                        {landerLabel(l)}
+                      </td>
+                    )}
+                    <td className="py-2 pr-4">{d.variant}</td>
+                    <td className="py-2 pr-4">{d.checkouts}</td>
+                    <td className="py-2 pr-4">{d.buyers}</td>
+                    <td className="py-2 pr-4 text-gray-400">
+                      {d.checkouts ? `${((100 * d.buyers) / d.checkouts).toFixed(1)}%` : '—'}
+                    </td>
+                    <td className="py-2 pr-4">{money(d.mainRevenueUsd)}</td>
+                    <td className="py-2 pr-4">{money(d.bumpRevenueUsd)}</td>
+                    <td className="py-2 pr-4">
+                      {money(d.upsell1RevenueUsd)}
+                      <span className="ml-1 text-xs text-gray-500">({d.upsell1Buyers})</span>
+                    </td>
+                    <td className="py-2 pr-4">
+                      {money(d.upsell2RevenueUsd)}
+                      <span className="ml-1 text-xs text-gray-500">({d.upsell2Buyers})</span>
+                    </td>
+                    <td className="py-2 pr-4 font-semibold">{money(d.totalRevenueUsd)}</td>
+                    <td className="py-2 pr-4 font-semibold text-emerald-300">{money(d.revPerCheckoutUsd)}</td>
+                    <td className="py-2 pr-4 text-xs text-gray-400">
+                      Stripe {d.paidOnStripe} · Payments.AI {d.paidOnPaymentsai}
+                    </td>
+                  </tr>
+                )),
+              )}
+            </tbody>
+          </table>
+          <p className="text-xs text-gray-500">
+            Same buyers and dollars as the table above, so each column adds up to its total. Each
+            lander only has a slice of the test, so read this for a lander behaving very differently,
+            not for a per-lander winner.
+          </p>
         </div>
       )}
 
