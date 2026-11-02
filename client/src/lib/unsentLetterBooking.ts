@@ -37,8 +37,8 @@ export const TAB_TITLE = 'The Unsent Letter — your reading | The Seer Within';
 
 export const PAGE_HEADER = {
   eyebrow: 'Evelyn Cross',
-  title: "They've had it long enough",
-  subline: 'Evelyn lays your twelve cards and writes out the letter they never sent.',
+  title: "The letter they never sent",
+  subline: 'Evelyn lays your twelve cards and names what they took from you.',
 } as const;
 
 /** Top of the white sheet, signed. ⛔ The only reason this page gives for asking. */

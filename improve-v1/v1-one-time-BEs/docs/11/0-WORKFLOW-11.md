@@ -9,7 +9,7 @@ decision answers live here; rules and craft live in the master. Structure model:
 
 **Operator, 2026-11-01:** the reading takes 24 hours to prepare. No database pull: real quotes come only from docs already in the repo, and the send list cannot be checked against chats.
 
-**Status 2026-11-02:** A1 done, every decision in [11-DELIVERABLES.md](11-DELIVERABLES.md), which wins over any older wording on this page. A2–A8 built and walked on branch `10-unsent-letter`, uncommitted and dark: nothing has met a real server, a real database or Stripe. Next: the operator's review of the screens in `booking-page/screens/`, then Phase B.
+**Status 2026-11-02:** A1 done, every decision in [11-DELIVERABLES.md](11-DELIVERABLES.md), which wins over any older wording on this page. A2–A8 built and walked on branch `11-unsent-letter`, uncommitted and dark: nothing has met a real server, a real database or Stripe. Next: the operator's review of the screens in `booking-page/screens/`, then Phase B.
 
 
 **Say this to pick 11 up again:**
@@ -289,7 +289,7 @@ offer, they cost once.
 | **03** Judgement Day | **Act** | pay-what-you-want | **yes** | written, 2,429 words | ◐ booking built, upsells not — tick sheet in [`00l`](../00l-DELIVERABLES-03.md), upsells planned in [`00k`](../00k-PLAN-03-UPSELLS.md) |
 | **04** The Turn | Reading | fixed $35 — split test $35 vs $45, decided server-side (`be_04_price_2026`; the day ladder is retired, 2026-10-11) | no | written ×3 — one reading per cup, ~3,800–3,950 words each + a one-page calendar *(2026-10-11)* | ◐ building — record in [`04/04-DELIVERABLES.md`](../04/04-DELIVERABLES.md) |
 | **05** Hex Her | — | — | — | — | ⚠ no copy at all yet |
-| **11** The Unsent Letter | Reading | $35 fixed + $12.77 bump *(proposed)* | no | not written — 12 cards + the letter | ◐ funnel built on branch `10-unsent-letter`, uncommitted, dark (A2–A8, 2026-11-02). Page only. No Stripe, real server or fulfilment yet — tick sheet in [`11/0-WORKFLOW-11.md`](../11/0-WORKFLOW-11.md) |
+| **11** The Unsent Letter | Reading | $35 fixed + $12.77 bump *(proposed)* | no | not written — 12 cards + the letter | ◐ funnel built on branch `11-unsent-letter`, uncommitted, dark (A2–A8, 2026-11-02). Page only. No Stripe, real server or fulfilment yet — tick sheet in [`11/0-WORKFLOW-11.md`](../11/0-WORKFLOW-11.md) |
 
 ⚠ **"Written" means the words exist in a markdown file.** No product has been
 formatted, had its cards inserted, or been made deliverable. Phase B has never

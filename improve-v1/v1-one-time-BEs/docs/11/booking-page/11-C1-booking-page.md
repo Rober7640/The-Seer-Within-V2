@@ -32,9 +32,9 @@
 
 **Eyebrow:** Evelyn Cross
 
-**Title:** They've had it long enough
+**Title:** The letter they never sent
 
-**Sub-line:** Evelyn lays your twelve cards and writes out the letter they never sent.
+**Sub-line:** Evelyn lays your twelve cards and names what they took from you.
 
 **Reason line, top of the white sheet, signed:** *"Your birth name and date set how I lay your twelve cards."* — Evelyn
 
