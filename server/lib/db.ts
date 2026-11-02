@@ -428,6 +428,62 @@ export async function recordSmsConsent(
   }
 }
 
+// Standalone post-purchase SMS opt-in (server/lib/smsConsent.ts, Twilio 30446 fix).
+// Written ONLY when she ticks the box and presses "Text me". Pressing it again (e.g.
+// to fix a typo in her number) updates the same row. 🔴 Never overwrites a row the
+// OLD checkout question wrote for the same session (source "stripe_checkout") — that
+// audit record stays as it was; the result is then "conflict". Throws on DB error
+// (the caller turns it into a 500 so she sees it didn't save).
+export async function upsertSmsOptIn(
+  record: Omit<InsertSmsConsent, "conversationId" | "consented" | "optedOutAt">,
+): Promise<"saved" | "conflict"> {
+  const [convo] = await db
+    .select({ id: conversations.id })
+    .from(conversations)
+    .where(eq(conversations.stripeSessionId, record.stripeSessionId))
+    .limit(1);
+  const values = {
+    ...record,
+    phone: record.phone.slice(0, 40),
+    consented: true,
+    optedOutAt: null,
+    conversationId: convo?.id ?? null,
+  };
+  const rows = await db
+    .insert(smsConsents)
+    .values(values)
+    .onConflictDoUpdate({
+      target: smsConsents.stripeSessionId,
+      set: {
+        phone: values.phone,
+        consented: true,
+        consentText: values.consentText,
+        consentVersion: values.consentVersion,
+        ip: values.ip ?? null,
+        email: values.email ?? null,
+        funnel: values.funnel ?? null,
+        consentedAt: values.consentedAt,
+        optedOutAt: null,
+        conversationId: values.conversationId,
+      },
+      setWhere: sql`${smsConsents.source} = ${record.source}`,
+    })
+    .returning({ id: smsConsents.id });
+  return rows.length > 0 ? "saved" : "conflict";
+}
+
+/** The opt-in row for this checkout session, if any (for the thank-you page). */
+export async function getSmsConsentForSession(
+  stripeSessionId: string,
+): Promise<{ consented: boolean; source: string; optedOutAt: Date | null } | null> {
+  const [row] = await db
+    .select({ consented: smsConsents.consented, source: smsConsents.source, optedOutAt: smsConsents.optedOutAt })
+    .from(smsConsents)
+    .where(eq(smsConsents.stripeSessionId, stripeSessionId))
+    .limit(1);
+  return row ?? null;
+}
+
 export async function markUpsellPurchased(
   sessionId: string,
   upsellPaymentId: string,

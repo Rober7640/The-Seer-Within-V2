@@ -1,4 +1,5 @@
-// The optional "Can we text you?" question on the main Stripe Checkout.
+// The (now retired) "Can we text you?" question on the main Stripe Checkout, and the
+// switch it shares with the standalone opt-in.
 //
 // Run:
 //   npx vitest run server/lib/smsConsent.test.ts
@@ -60,39 +61,24 @@ describe('SMS consent — off by default', () => {
   });
 });
 
-describe('SMS consent — the question meets the opt-in rules', () => {
-  const params = smsConsentSessionParams('v1-read', 'tea', BASE, READ_ONLY);
-  const field = params.custom_fields![0];
-
-  it('is OPTIONAL and nothing is pre-selected (a pre-filled yes is not consent)', () => {
-    expect(field.optional).toBe(true);
-    expect(field.type).toBe('dropdown');
-    expect(field.dropdown!.default_value).toBeUndefined();
-    expect(field.dropdown!.options.map((o) => o.value)).toEqual(['yes', 'no']);
+// 2 Nov 2026: Twilio rejected the toll-free verification (30446 — consent bundled
+// with checkout). The checkout question is RETIRED in favour of the standalone
+// opt-in on the thank-you page (smsOptIn.test.ts). Even switched on, no checkout
+// carries the question or its metadata any more ⇒ the webhook records nothing.
+describe('SMS consent — checkout question retired (Twilio 30446)', () => {
+  it('tea + coffee, switched on: no custom field, no consent metadata', () => {
+    for (const device of ['tea', 'coffee'] as const) {
+      expect(smsConsentSessionParams('v1-read', device, BASE, READ_ONLY)).toEqual({});
+      expect(smsConsentSessionMetadata('v1-read', device, BASE, '1.2.3.4', READ_ONLY)).toEqual({});
+    }
+    expect(smsConsentSessionParams(undefined, undefined, BASE, parseSmsConsentFunnels('root'))).toEqual({});
   });
 
-  it('fits Stripe limits: alphanumeric key + values, label ≤ 50 chars, text ≤ 1200', () => {
-    expect(field.key).toMatch(/^[a-z0-9]+$/i);
-    for (const o of field.dropdown!.options) expect(o.value).toMatch(/^[a-z0-9]+$/i);
-    expect(SMS_CONSENT_LABEL.length).toBeLessThanOrEqual(50);
-    expect(params.custom_text!.submit!.message.length).toBeLessThanOrEqual(1200);
-  });
-
-  it('the disclosure carries every element Twilio / CTIA expect', () => {
-    const text = smsConsentDisclosure(BASE);
-    expect(text).toContain('The Seer Within'); // brand, matches the website
-    expect(text).toContain('recurring automated marketing text messages');
+  it('old-wording disclosure is kept for records already written', () => {
+    const text = smsConsentDisclosure(`${BASE}/`);
     expect(text).toContain('Consent is not a condition of purchase');
-    expect(text).toContain('Up to 3 msgs/week');
-    expect(text).toContain('Msg & data rates may apply');
-    expect(text).toContain('Reply STOP to opt out, HELP for help');
-    expect(text).toContain('HELP');
-    expect(text).toContain(`[Terms](${BASE}/terms)`);
-    expect(text).toContain(`[Privacy Policy](${BASE}/privacy)`);
-  });
-
-  it('a trailing slash on the base URL does not double up in the links', () => {
-    expect(smsConsentDisclosure(`${BASE}/`)).toContain(`(${BASE}/terms)`);
+    expect(text).toContain(`(${BASE}/terms)`);
+    expect(SMS_CONSENT_LABEL.length).toBeLessThanOrEqual(50);
   });
 });
 
@@ -117,11 +103,4 @@ describe('SMS consent — reading the answer back', () => {
     expect(readSmsConsent({ metadata: null, custom_fields: [] })).toBeNull();
   });
 
-  it('metadata records the wording version, the policy base and the IP', () => {
-    expect(smsConsentSessionMetadata('v1-read', 'coffee', BASE, '1.2.3.4', READ_ONLY)).toEqual({
-      smsConsentVersion: SMS_CONSENT_VERSION,
-      smsConsentBase: BASE,
-      smsConsentIp: '1.2.3.4',
-    });
-  });
 });

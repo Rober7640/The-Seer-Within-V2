@@ -2431,3 +2431,18 @@ Arm A only — arm B has never been mailed. Covered at source level in `luckyNum
 - [ ] Playwright: click any CTA → lands on `/numerology/lucky-numbers?fn=sarah&c=3&utm_source=aweber` (fn/c/utm preserved), booking page works unchanged
 - [ ] Playwright: visit with no `?fn=` → letter reads to "dear", no broken name tokens
 - [ ] If arm B is ever mailed: branch the page on `?c=` (1–5 → A, 11–15 → B) and add the A/B render tests here
+### Standalone SMS opt-in after payment (2026-11-02, DEV only — Twilio 30446 fix)
+
+Replaces the checkout dropdown on /fb-read tea + coffee (same `SMS_CONSENT_FUNNELS` switch).
+Box on `/fb-read/welcome1`; `GET /api/sms-optin/status`, `POST /api/sms-optin`; row source
+`post_purchase_optin`. Covered by `server/routes/smsOptIn.test.ts`, `server/lib/smsOptIn.db.test.ts`.
+
+- [ ] /fb-read tea and coffee Stripe checkout shows NO "Get texts" question
+- [ ] After paying (tea, coffee) the thank-you page shows the box: phone empty, checkbox UNTICKED, "Text me" disabled
+- [ ] "Text me" stays disabled until BOTH a valid number is typed and the box is ticked
+- [ ] Pressing "Text me" shows the thanks message and writes one `sms_consents` row (consented = true, source `post_purchase_optin`, E.164 phone, conversation linked)
+- [ ] Reloading the thank-you page after opting in shows the thanks message, not the form
+- [ ] Ignoring the box: upsell chat runs exactly as before and no `sms_consents` row is written
+- [ ] /fb-read dream, /fb-tarot, /fb, root thank-you pages show no box
+- [ ] `?demo=true` thank-you page shows no box
+- [ ] Terms + Privacy links in the box open in a new tab

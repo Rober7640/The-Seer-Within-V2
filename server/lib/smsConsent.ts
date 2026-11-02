@@ -104,6 +104,7 @@ export function smsConsentSessionParams(
   baseUrl: string,
   enabled?: Set<string>,
 ): Pick<Stripe.Checkout.SessionCreateParams, "custom_fields" | "custom_text"> {
+  if (!smsConsentCheckoutEnabled()) return {};
   if (!showsSmsConsent(funnel, readDevice, enabled)) return {};
   return {
     custom_fields: [
@@ -138,6 +139,7 @@ export function smsConsentSessionMetadata(
   ip: string | undefined,
   enabled?: Set<string>,
 ): Record<string, string> {
+  if (!smsConsentCheckoutEnabled()) return {};
   if (!showsSmsConsent(funnel, readDevice, enabled)) return {};
   return {
     smsConsentVersion: SMS_CONSENT_VERSION,
@@ -151,4 +153,74 @@ export function readSmsConsent(session: Pick<Stripe.Checkout.Session, "custom_fi
   if (!session.metadata?.smsConsentVersion) return null;
   const field = (session.custom_fields ?? []).find((f) => f.key === SMS_CONSENT_FIELD_KEY);
   return field?.dropdown?.value === "yes";
+}
+
+// ── STANDALONE POST-PURCHASE OPT-IN (2026-11-02) ─────────────────────────────
+//
+// WHY. Twilio rejected the toll-free verification on 28 Oct (30446): a consent
+// question inside the checkout counts as BUNDLED with the purchase. Twilio
+// compliance (Judy, 29 Oct) approved this replacement: a SEPARATE step after
+// payment, with its own phone box, an UNTICKED checkbox, the full disclosure and
+// its own "Text me" button that has nothing to do with the purchase.
+//
+// So on the funnels/landers where the checkout question used to show, it no longer
+// does: smsConsentCheckoutEnabled() is false, the Stripe session carries no consent
+// field, and the webhook (readSmsConsent ⇒ null) writes nothing. The opt-in lives on
+// the thank-you page instead and writes its own record (source below) ONLY when she
+// ticks the box and presses the button — no record is a "no".
+//
+// SAME SWITCH as before: SMS_CONSENT_FUNNELS + the tea/coffee lock above. Unset = off.
+
+/** Checkout dropdown retired in favour of the standalone opt-in (Twilio 30446). */
+export function smsConsentCheckoutEnabled(): boolean {
+  return false;
+}
+
+export const SMS_OPTIN_VERSION = "2026-11-02-standalone-v1";
+export const SMS_OPTIN_SOURCE = "post_purchase_optin";
+export const SMS_OPTIN_HEADING = `Would you like text messages from ${SMS_BRAND}?`;
+export const SMS_OPTIN_CHECKBOX_LABEL = `Yes, send me marketing and promotional text messages from ${SMS_BRAND}`;
+export const SMS_OPTIN_BUTTON_LABEL = "Text me";
+
+/** The disclosure as shown beside the box (the page adds the Terms + Privacy links). */
+export const SMS_OPTIN_DISCLOSURE_BODY =
+  `By ticking the box and pressing "${SMS_OPTIN_BUTTON_LABEL}", you agree to receive recurring automated ` +
+  `marketing and promotional text messages from ${SMS_BRAND} at the number above. ` +
+  `This is optional and separate from your purchase — consent is not a condition of any purchase. ` +
+  `Up to 3 msgs/week. Msg & data rates may apply. Reply STOP to opt out, HELP for help.`;
+
+export function smsOptInDisclosure(baseUrl: string): string {
+  const base = baseUrl.replace(/\/+$/, "");
+  return `${SMS_OPTIN_DISCLOSURE_BODY} Terms: ${base}/terms · Privacy Policy: ${base}/privacy`;
+}
+
+/** The exact wording stored on her record. */
+export function smsOptInRecordText(baseUrl: string): string {
+  return `${SMS_OPTIN_HEADING} [checkbox, unticked by default] ${SMS_OPTIN_CHECKBOX_LABEL} [button] ${SMS_OPTIN_BUTTON_LABEL} — ${smsOptInDisclosure(baseUrl)}`;
+}
+
+/** Same funnels + landers the checkout question covered. */
+export function showsPostPurchaseSmsOptIn(
+  funnel: FunnelParam | undefined,
+  readDevice: ReadDevice | undefined,
+  enabled?: Set<string>,
+): boolean {
+  return showsSmsConsent(funnel, readDevice, enabled);
+}
+
+/**
+ * The number she typed ⇒ E.164, or null. US/Canada 10 digits (optionally with a
+ * leading 1) become +1…; anything typed with a leading + keeps its country code
+ * (8–15 digits). Everything else is refused rather than guessed.
+ */
+export function normalizeOptInPhone(raw: unknown): string | null {
+  if (typeof raw !== "string") return null;
+  const s = raw.trim();
+  if (!s || s.length > 30) return null;
+  if (/[^\d\s()+.\-]/.test(s)) return null;
+  const digits = s.replace(/\D/g, "");
+  if (s.startsWith("+")) return digits.length >= 8 && digits.length <= 15 ? `+${digits}` : null;
+  if (digits.length === 10) return `+1${digits}`;
+  if (digits.length === 11 && digits.startsWith("1")) return `+${digits}`;
+  return null;
 }

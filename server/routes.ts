@@ -155,6 +155,8 @@ import { soulmateLanderListId } from "@shared/soulmateLander";
 import { bumpProductKeyFor } from "@shared/landerBumpRouting";
 import Stripe from "stripe";
 import { getStripe, getStripeForRow } from "./lib/stripeAccount";
+import { createSmsOptInRouter } from "./routes/smsOptIn";
+import { upsertSmsOptIn, getSmsConsentForSession } from "./lib/db";
 import type { ChatRequest, CheckoutRequest } from "../shared/types";
 import {
   addSubscriberToList,
@@ -635,6 +637,20 @@ export async function registerRoutes(
   // Apple Pay domain file for the Payments.AI checkout (server/routes/appleDomainFile.ts).
   registerAppleDomainFile(app);
   app.use("/api/evelyn-lander", evelynLanderRouter);
+  // Standalone post-purchase SMS opt-in on the thank-you page (Twilio 30446 fix).
+  // Inert unless the funnel is in SMS_CONSENT_FUNNELS — see server/lib/smsConsent.ts.
+  app.use(
+    "/api/sms-optin",
+    createSmsOptInRouter({
+      retrieveSession: (id) => {
+        if (!stripe) throw new Error("Stripe not configured");
+        return stripe.checkout.sessions.retrieve(id);
+      },
+      upsertOptIn: upsertSmsOptIn,
+      getConsent: getSmsConsentForSession,
+      policyBase: (req) => process.env.BASE_URL || getBaseUrl(req),
+    }),
+  );
   // Generalized lander for the additional personas (Marcus, Luna, Nova, Maren).
   app.use("/api/persona-lander/:persona", personaLanderRouter);
   // Stripe Checkout for the Facebook-compliance product pages (/products/:slug).
