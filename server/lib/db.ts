@@ -249,12 +249,27 @@ export async function updateStripeData(
   }
 ): Promise<void> {
   try {
-    const existing = await db
+    let existing = await db
       .select({ id: conversations.id })
       .from(conversations)
       .where(eq(conversations.email, email))
       .orderBy(desc(conversations.createdAt))
       .limit(1);
+
+    // Same buyer, different capitals: the Payments.AI order carries her email
+    // lower-cased while her chat row keeps what she typed ("Cai@…"), so the exact
+    // match above misses and the INSERT below would file the sale on a new orphan
+    // row with no price_variant — invisible to the gateway split and price test.
+    // Only runs when the exact match finds nothing, so every row that matched
+    // before still takes exactly the same path.
+    if (existing.length === 0) {
+      existing = await db
+        .select({ id: conversations.id })
+        .from(conversations)
+        .where(sql`lower(${conversations.email}) = lower(${email})`)
+        .orderBy(desc(conversations.createdAt))
+        .limit(1);
+    }
 
     if (existing.length > 0) {
       await db
