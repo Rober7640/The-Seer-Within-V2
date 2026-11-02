@@ -11,7 +11,7 @@
 // is live without touching the code.
 //
 // PROMO KEYS: every caller (V1, V2, emails — `anthropicFailover` and its alias
-// `anthropicV2`) puts the ANTHROPIC_API_KEY_PROMO_1..3 keys — accounts whose
+// `anthropicV2`) puts the ANTHROPIC_API_KEY_PROMO_1..4 keys — accounts whose
 // main balance is the free monthly promo credit — IN FRONT of the normal paid
 // chain, tried in that order. When a promo credit runs out Anthropic answers
 // HTTP 400 "credit balance is too low", which is treated as a failover trigger,
@@ -29,7 +29,7 @@ import { thinkingOffForModel } from './modelConfig';
 // ---------- Configuration ----------
 
 interface KeyEntry {
-  name: 'primary' | 'backup_1' | 'backup_2' | 'promo_1' | 'promo_2' | 'promo_3';
+  name: 'primary' | 'backup_1' | 'backup_2' | 'promo_1' | 'promo_2' | 'promo_3' | 'promo_4';
   apiKey: string;
   client: Anthropic;
   // Cooldown: if set to a future timestamp, this key is skipped until then.
@@ -79,6 +79,7 @@ function buildPromoKeyList(): KeyEntry[] {
     { name: 'promo_1', env: 'ANTHROPIC_API_KEY_PROMO_1' },
     { name: 'promo_2', env: 'ANTHROPIC_API_KEY_PROMO_2' },
     { name: 'promo_3', env: 'ANTHROPIC_API_KEY_PROMO_3' },
+    { name: 'promo_4', env: 'ANTHROPIC_API_KEY_PROMO_4' },
   ];
 
   return specs
