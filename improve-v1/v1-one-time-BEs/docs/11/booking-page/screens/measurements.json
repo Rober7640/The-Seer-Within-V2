@@ -1,0 +1,66 @@
+[
+  {
+    "viewport": "390x844",
+    "mockButtonBottom": 653,
+    "realButtonBottom": 711,
+    "bumpBottom": 611,
+    "totalBottom": 644,
+    "hintBottom": 736,
+    "priceBottom": 449,
+    "titleLines": 1,
+    "afterBump": {
+      "buttonPageBottom": 711,
+      "scrolledBy": 0,
+      "onScreenBottom": 711
+    },
+    "cancelledPriceBottom": 477
+  },
+  {
+    "viewport": "390x664",
+    "mockButtonBottom": 653,
+    "realButtonBottom": 711,
+    "bumpBottom": 611,
+    "totalBottom": 644,
+    "hintBottom": 736,
+    "priceBottom": 449,
+    "titleLines": 1,
+    "afterBump": {
+      "buttonPageBottom": 711,
+      "scrolledBy": 63,
+      "onScreenBottom": 648
+    },
+    "cancelledPriceBottom": 477
+  },
+  {
+    "viewport": "375x667",
+    "mockButtonBottom": 653,
+    "realButtonBottom": 730,
+    "bumpBottom": 630,
+    "totalBottom": 663,
+    "hintBottom": 755,
+    "priceBottom": 468,
+    "titleLines": 1,
+    "afterBump": {
+      "buttonPageBottom": 730,
+      "scrolledBy": 79,
+      "onScreenBottom": 651
+    },
+    "cancelledPriceBottom": 514
+  },
+  {
+    "viewport": "360x740",
+    "mockButtonBottom": 696,
+    "realButtonBottom": 730,
+    "bumpBottom": 630,
+    "totalBottom": 663,
+    "hintBottom": 755,
+    "priceBottom": 468,
+    "titleLines": 1,
+    "afterBump": {
+      "buttonPageBottom": 730,
+      "scrolledBy": 0,
+      "onScreenBottom": 730
+    },
+    "cancelledPriceBottom": 514
+  }
+]

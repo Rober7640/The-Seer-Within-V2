@@ -52,6 +52,9 @@ const OFFERS = {
   // 2–4 weeks (everywhere else), both counted from dispatch. $59, one charm. Order bump
   // $11.11 — Reiki charging by Evelyn before packing (09-C3, Joel 2026-09-15).
   '09': { name: 'Heart Cleanser Love Charm', sla: /\b(2 business days|7[-–]14 days|2[-–]4 weeks)\b/i, prices: ['59', '59.00', '11.11'] },
+  // 11 is $35 fixed + the $12.77 bump, plus the shared upsell chain's prices its U specs quote
+  // (Protection Ritual / Manifestation Bracelet $47, bracelet downsell $30).
+  '11': { name: 'The Unsent Letter', sla: /\b24 hours?\b/i, prices: ['35', '35.00', '12.77', '47', '30'] },
 };
 const ALL_PRICES = ['35.00', '35', '45', '47', '57', '67', '87', '12.77', '300', '250', '11.11', '59', '59.00', '30'];
 

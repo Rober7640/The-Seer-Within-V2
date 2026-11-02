@@ -7,14 +7,18 @@ interface Upsell2DownsellCTAProps {
   isProcessing?: boolean
   // See UpsellCTA — offer 02 has no clearing to fall back to, only her twelve.
   declineLabel?: string
+  // 11 can't carry "energy". Defaults to V1's exact line for every other funnel.
+  reassurance?: string
 }
 
-export function Upsell2DownsellCTA({ onAccept, onDecline, isProcessing = false, declineLabel = 'No thanks, just the clearing' }: Upsell2DownsellCTAProps) {
+export function Upsell2DownsellCTA({ onAccept, onDecline, isProcessing = false, declineLabel = 'No thanks, just the clearing', reassurance = 'Same eight stones. Same manifestation energy.' }: Upsell2DownsellCTAProps) {
   return (
     <div className="p-4 space-y-4" data-testid="container-upsell2-downsell-cta">
-      <p className="text-center text-sm text-muted-foreground italic">
-        Same eight stones. Same manifestation energy.
-      </p>
+      {reassurance && (
+        <p className="text-center text-sm text-muted-foreground italic">
+          {reassurance}
+        </p>
+      )}
       
       <Button
         onClick={onAccept}

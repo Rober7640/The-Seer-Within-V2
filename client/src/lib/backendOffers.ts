@@ -24,6 +24,7 @@ import { PIXIU_UPSELL1, PIXIU_UPSELL2 } from "./upsellCopy/pixiu";
 import { HEART_CLEANSER_UPSELL1, HEART_CLEANSER_UPSELL2 } from "./upsellCopy/heartCleanser";
 import { SOULMATE_INITIALS_UPSELL1, SOULMATE_INITIALS_UPSELL2 } from "./upsellCopy/soulmateInitials";
 import { TEA_READING_UPSELL1, TEA_READING_UPSELL2 } from "./upsellCopy/teaReading";
+import { UNSENT_LETTER_UPSELL1, UNSENT_LETTER_UPSELL2 } from "./upsellCopy/unsentLetter";
 
 interface BackendOfferCopy {
   upsell1: Upsell1Copy;
@@ -66,6 +67,7 @@ export const BACKEND_UPSELL_PITCH: Partial<Record<BackendOfferKey, BackendOfferC
   'pixiu-bracelet': { upsell1: PIXIU_UPSELL1, upsell2: PIXIU_UPSELL2 },
   'heart-cleanser': { upsell1: HEART_CLEANSER_UPSELL1, upsell2: HEART_CLEANSER_UPSELL2 },
   'soulmate-initials': { upsell1: SOULMATE_INITIALS_UPSELL1, upsell2: SOULMATE_INITIALS_UPSELL2 },
+  'unsent-letter': { upsell1: UNSENT_LETTER_UPSELL1, upsell2: UNSENT_LETTER_UPSELL2 },
 };
 
 export function upsell1CopyForOffer(offer: BackendOfferKey): Upsell1Copy {

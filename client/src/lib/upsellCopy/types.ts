@@ -69,6 +69,8 @@ export interface Upsell1Copy {
   pauses: Partial<Record<UpsellStage, string>>;
   // Label on the accept button AND the bubble it posts as her reply.
   acceptLabel: string;
+  // The italic line above that button. Unset: V1's own line, for every offer but 11.
+  ctaReassurance?: string;
   // First names that are placeholders rather than names. /api/upsell/user-data's
   // Stripe fallback stamps "Friend" when checkout carried no firstName metadata,
   // which 02's does not — and "It's done, Friend" is worse copy than Evelyn's own
@@ -108,6 +110,8 @@ export interface Upsell2Copy {
   // See Upsell1Copy.pauses.
   pauses: Partial<Record<Upsell2Stage, string>>;
   downsellDeclineLabel: string;
+  // The italic line above the downsell's button. Unset: V1's own line, for every offer but 11.
+  downsellReassurance?: string;
   placeholderNames: readonly string[];
 }
 

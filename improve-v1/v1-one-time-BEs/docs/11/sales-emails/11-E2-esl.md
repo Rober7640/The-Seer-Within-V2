@@ -1,0 +1,289 @@
+# 11-E2 — ESL v1 *(The Unsent Letter · the first letter)*
+
+| | |
+|---|---|
+| **Offer** | 11 The Unsent Letter — READING · $35 fixed + $12.77 bump · 24h wait |
+| **Sends to** | prior V1 buyers, women-only gate. List cannot be filtered (11-A, 11-B). ⛔ A lawyer reads this before any send (11-C) |
+| **Free read** | the Hermit · Judgement · the Devil *(none of these appear in the paid twelve)* |
+| **Merge token** | `%FIRSTNAME%` — swap for the ESP's tag at build. On AWeber that is `{{ subscriber.first_name \| capitalize }}` |
+| **Links** | all six point to the booking page, `{{BOOKING_URL}}?c=1…6` |
+| **Price** | never appears in this letter |
+| **Brief** | [11-DELIVERABLES](../11-DELIVERABLES.md) · **Beats** [00e §1](../../00e-FRAMEWORK-BEs.md) |
+
+**Subject options**
+
+1. %FIRSTNAME%, someone from your past tried to reach me. They have something of yours.
+2. %FIRSTNAME%, someone from your past tried to reach me. It wasn't me they wanted.
+3. %FIRSTNAME%, they left with something of yours, and last night they tried to give it back
+4. %FIRSTNAME%, here's why nobody new gets through. Someone came to me last night about it.
+5. %FIRSTNAME%, someone came to me last night holding something of yours
+
+**Images** — briefs still to write.
+
+`IMG-1` hero: **three cards lying FACE-DOWN on dark cloth, with one sealed, blank envelope beside them.** Shot from above, a real table. ⚠ Never face-up: that spoils the three cards. ⚠ Nothing written on the envelope: it's the letter she hasn't got yet. The envelope also keeps this hero from being 02's hero again.
+
+`IMG-2` the Hermit · `IMG-3` Judgement · `IMG-4` the Devil, each only at its own card. Judgement is the full card (operator, 2026-11-02). Its coffins go to a list we can't filter for widows: operator's call, on the lawyer's list (11-A).
+
+---
+
+<!-- BEAT 1 · hero = IMG-1, placed under the deck as in 02 -->
+<!-- BEAT 2 · headline -->
+# %FIRSTNAME%, someone from your past tried to reach me last night, and they're holding something of yours
+
+<!-- BEAT 3 · deck: payoff + window -->
+*They left with it. The message is them trying to give it back, and until it's back, nobody new can reach you. I drew three cards nobody asked for, and the pull of this shows itself inside five to seven days.*
+
+`[IMG-1]`
+
+<!-- BEAT 4 · salutation -->
+%FIRSTNAME% —
+
+Evelyn here.
+
+<!-- BOLD CLAIM, line 1 after the greeting. Big idea follows at once -->
+**Someone from your past came to me last night, and they were trying to reach you.**
+
+They couldn't get to you, so they came to me.
+
+You already know who I mean. You thought of them before you got to the end of that line. There's a list, and there's the one who came up first.
+
+I'll give you the hard part now, so it doesn't get lost under a story.
+
+They left with something of yours. The message is them trying to give it back. And until it's back, nobody new can reach you.
+
+That's why nobody gets through. Someone decent comes along and reaches for you, and the part they're reaching for isn't there. It left with someone else.
+
+This is someone living, dear. I want that clear before you read another line. If you've buried someone, this is not them.
+
+<!-- BEAT 5 · urgency opener -->
+I'm writing now because I don't want this on my table another night.
+
+<!-- BEAT 6 · origin story. Uninvited twice over. Not 02's "cards came away", not 03's ledger -->
+I wasn't looking for them. I don't go looking. I've got enough past of my own.
+
+I'd finished for the night. Deck wrapped, cloth folded, tea gone cold. And I got what I get two or three times a year: someone at my shoulder who wants something and won't leave. No face and no voice. You know how you can tell someone's walked into the kitchen behind you before you turn round? That.
+
+They weren't there for me. Your name came with them. You've sat with me for a reading, so I was the way in they found.
+
+They've been at this for months, %FIRSTNAME%. It was heavy. All regret, and things left unsaid.
+
+Don't go asking them about it. They couldn't tell you. People do this without knowing they're doing it, the way you talk in your sleep.
+
+Nobody asked me to do what I did next. Not you, and certainly not them. I unwrapped the deck and drew three cards for you. Everything from here on is what those three cards showed me, told straight, and I'll stand by it.
+
+<!-- BEAT 7 · stakes preview: two goods, one threat -->
+The first two are good news and you can have them. The third I didn't want to turn over. Read that one twice.
+
+<!-- BEAT 8 · precedent: ONE name, distant, her change. Added on the operator's instruction, 2026-11-02 -->
+The last time this came to me was years ago, in the back room I used to read out of. A woman named Marian. Twenty years past a man who'd left without a word, and she'd turned down every decent person since. She told me she was fussy. I told her she wasn't.
+
+I laid the twelve. I wrote out what he never sent. She read it at my table with her coat still on, and she didn't say anything for a long while.
+
+She never wrote to him. She never saw him again. Eleven months later a photograph came in the post, from her wedding, with a note on the back: *You were right about the fussy.*
+
+I've seen this shape enough to know it doesn't sort itself out.
+
+<!-- BIG IDEA: why the obvious advice fails -->
+### Why moving on hasn't got it back
+
+You've tried. You blocked them. You deleted the photos. People told you to move on and you told them you had.
+
+None of that touches this.
+
+Blocking them stops them getting to you. It doesn't get you back what they took. Deleting the photos gets rid of the photos. And moving on just means walking further away from something that's yours.
+
+It doesn't come back through contact, and time won't bring it. It comes back through the message. That's the only way back it has.
+
+### Why nobody new gets through
+
+So here's what you've been doing instead.
+
+You say you're over it. Then how do you still know the last message word for word?
+
+You go back and reread the old ones, late, when the house is quiet.
+
+Someone gets close and you go quiet too. You say you're tired. You say you're busy.
+
+Someone decent asks you out and by Thursday you've found the fault. Too keen, or the wrong shoes. You call that standards. I've sat across from a thousand women saying that word, dear. It was never about the shoes.
+
+And if someone's beside you already, don't think this skips you. They get what's left.
+
+I'm not blaming you for what they did. That's on them. I'm talking about what you've done since, because that part is yours, and it's costing you.
+
+<!-- BEAT 9 · withhold + condition -->
+Here's where you stand, %FIRSTNAME%. Your three cards will show you it was taken. They won't show you what, and they can't give you the message.
+
+The message is in twelve parts. Twelve cards, one part on each, and it only comes back whole. Three parts do nothing.
+
+I'll tell you how we do the twelve at the end. First, your three.
+
+---
+
+<!-- BEAT 10 · UNIT 1 — BLESSING. Picture first, then meaning. Leaves open: what it is -->
+### Your first card: the Hermit
+
+`[IMG-2]`
+
+An old man in a grey cloak, alone on top of a snowy peak. A staff in one hand. In the other he's holding up a lantern with a star of light inside it. Nothing else on the card. One figure, high up, in the dark, with a light he hasn't put down.
+
+That's them.
+
+I don't mean single. I can't see their house and I won't tell you who's in it. I mean alone with this. Nobody around them knows about it.
+
+And the lantern is what they took from you.
+
+Here's why I call this good news. **They've still got it.** They didn't lose it. They didn't throw it away. It didn't go to anybody else. It's in their hand. And if they've still got it, they can still give it back.
+
+You've spent a long time thinking it was gone for good. It isn't.
+
+Now what the Hermit won't tell me. It shows me something was taken. It doesn't show me what.
+
+It isn't a ring or a sum of money, I can tell you that. You wouldn't still feel a ring. It's something you had before them and haven't had since. You'll have a guess. Most women guess wrong.
+
+Three cards can't name it. Your birth name and the full spread can.
+
+<!-- BEAT 10 · UNIT 2 — BLESSING + THE FORK. Full card shown; the words leave the coffins out (11-A) -->
+### Your second card: Judgement
+
+`[IMG-3]`
+
+An angel in the clouds, blowing a long trumpet. Below, people rising with their arms up, every face turned to the sound. They've heard it and they're answering.
+
+This is the card of a call. Coming after the Hermit, it says one plain thing.
+
+**They're calling you.**
+
+Not on your phone. Don't go and check it, and don't sit waiting on it. This is what came to me last night, and it doesn't come through a phone.
+
+Here's the good of it. You thought you were easy to walk away from. You weren't. They've been at this for months. Feeling bad for months doesn't make up for anything, dear, and I'm not asking you to think well of them. But you had that part wrong.
+
+Now the fork, and it's the reason I'm writing.
+
+A call like this means one of two things. They're giving it back. Or they're using it to get you back.
+
+Those are opposites, and they sound the same. Both come with regret. Both say they've been thinking of you. One hands you what's yours and asks for nothing. The other holds it out and wants you to come and get it.
+
+**Three cards can't tell me which one this is.** Judgement shows me the call. It doesn't show me what they want from it.
+
+You need to know, because you'd treat one as a gift and the other as a trap. The twelve answer it flat.
+
+<!-- BEAT 10 · UNIT 3 — THREAT. Names a person: them. Window is what SHE feels, never what they do -->
+### Your third card: the Devil
+
+`[IMG-4]`
+
+I didn't want to turn this one.
+
+A horned thing squatting on a black block. Below it a man and a woman stand with chains around their necks. Now look at the chains. They're loose. Either one of them could lift it over their head and walk off. Neither one does.
+
+This card is about one person, and it's them.
+
+**The pull between you is real, and it's strongest right when the message gets close.**
+
+That's the threat. The nearer it comes, the harder you'll feel it. And the pull of this shows itself inside five to seven days. That window is about you. It says nothing about them turning up.
+
+You'll have their name in your search bar. You'll go hunting for a photo you swore you deleted. You'll start a message and tell yourself it's only to clear the air.
+
+It'll feel like a sign. It'll feel like love. It's the chain.
+
+The chains lift off, and that's the part most readers skip. Nobody on that card is locked in. But a woman who takes the pull for the message puts the chain back on with her own hands, and she thinks she's answering a call.
+
+Read this one again. I said to.
+
+What I can't give you from three cards is how to get through it. What you have to stop, and the one thing you have to do, are in the last of your twelve.
+
+<!-- BEAT 11 · FIRST CTA — ~60% in, nothing asked until the free read is complete -->
+So [give me permission to lay your twelve cards]({{BOOKING_URL}}?c=1), %FIRSTNAME%, and I'll tell you what they took and write out what they never sent.
+
+<!-- BEAT 13 · concrete ask. Carries the "owe no reply" line (11-B) -->
+### In plain terms, what do you do now?
+
+One thing.
+
+You [give me your say-so on this page]({{BOOKING_URL}}?c=2). You'll put in your birth name, the one on the certificate and not the one you go by now, and your date of birth. Your birth name and date set how I lay your twelve cards. Without them I'd be laying cards for anybody.
+
+Then you're done. You don't write to them. You don't look them up to check.
+
+**You never have to contact them.** Nothing here asks you to contact anyone. If this person hurt you, you owe them no reply. Not one word, not now, not ever. It comes back when you read it.
+
+<!-- BEAT 12 · re-read, deepen — Judgement. Opens: regret, the unsaid, why months -->
+### Back to Judgement, and the answer you never got
+
+You never got an answer. That's the sore spot, and I won't step round it. It ended, and whatever needed saying didn't get said.
+
+So you've been writing their half yourself. You've given them lines. Some nights they're sorry. Some nights they're a monster. Either way it's you doing the writing, and you've been at it for longer than you'd tell anyone.
+
+The twelve take that job off you. What they regret. What was left unsaid. Why it's taken this long. Whether they'll ever do a thing about it. You'll get one flat answer to each, and no "only you can know".
+
+And the fork gets its answer. Giving it back, or trying to get you back. I told you those sound the same, so here's why it can't stay open. If they're giving it back, you read the letter and you're finished with them. If they're trying to get you back, you need to know that before the pull arrives, because you'll hear every kind word in that message as a reason to go. Same words. You'd do the opposite thing.
+
+The last thing in your reading is the letter they never sent, written out start to finish.
+
+[Let me write it out for you]({{BOOKING_URL}}?c=3), and you can stop doing their half.
+
+<!-- BEAT 12 · re-read, deepen — the Devil. Her behaviours reframed through the big idea -->
+### And back to the Devil, because you've been going back for what's yours
+
+Here's the hardest thing in this letter. You think you miss them.
+
+You don't. You miss what they left with.
+
+That's what the rereading is. That's why you look them up. You've been going back, again and again, to the only place you know it is, and calling that missing them. Every time you do it, you get the pull and you don't get the thing.
+
+Now say the pull wins. Say that message goes. You'd think that's how you get it back, and that's the mistake. I told you it doesn't come back through contact. You could sit across a table from them for a year and it would still be in their hand. You'd have them, and you still wouldn't have what's yours. You'd be back on the chain and still missing it.
+
+And don't tell me it was too long ago. I've heard that one. Ten years, thirty years, it makes no difference to this. They've still got it. You still haven't. That's the whole sum.
+
+Leave it where it is and I can tell you how the next few years go, because you've just done them. Someone else gets a fault found by Thursday. Someone else gets what's left.
+
+[Allow me to lay the twelve]({{BOOKING_URL}}?c=4) before the pull gets there, and you'll know it for what it is when it comes.
+
+<!-- BEAT 14 · authority flourish: craft + scarcity of access. Justifies twelve, NEW cards, the wait -->
+### Why it takes twelve cards to give it back
+
+Every deck holds seventy-eight cards. Twenty-two are the Major Arcana, the ones you know by name. Your three all came out of those twenty-two.
+
+That leaves nineteen. I lay twelve of them for you. Twelve **new** cards, not these three again. These three have said what they came to say.
+
+Each one carries a part of the message. Three on what they took. Three on why they kept it. Three on what it's cost you. Three on how it comes back. Take any of those away and the rest is no use to you. It only comes back whole.
+
+I call this reading The Unsent Letter, because that's where the twelve end up. When the last card is down I write it out myself, every word. I don't hand that part to anyone, which is why it takes me 24 hours.
+
+I don't offer this to everybody who asks. I do it when someone has come to me first.
+
+Yours did.
+
+<!-- BEAT 15 · final CTA -->
+### [Let me lay them]({{BOOKING_URL}}?c=5), and it comes back to you
+
+<!-- BEAT 16 · transformation promise = the brief's PROMISE -->
+Here's how it goes.
+
+A day from now your reading is in your inbox. You read what they took, named plain. You read the twelve. You get to the letter, and you read that.
+
+And it's back.
+
+You don't reply. You don't see them. You don't forgive anybody. Nobody has to say a word to anybody. It comes back when you read it, and that's the end of them holding it.
+
+The rereading stops, because there's nothing left in there you're looking for. Your phone stays down at eleven at night. You don't have to make yourself do that. You just stop needing to go.
+
+Then the next time someone reaches for you, there's someone there.
+
+They've had it long enough, %FIRSTNAME%. [Give me leave to hand it back to you]({{BOOKING_URL}}?c=6).
+
+<!-- BEAT 17 · sign-off: relationship, not role -->
+Your friend, even when you'd rather I wasn't,
+
+— Evelyn
+
+---
+
+## Build notes
+
+- **Beat 8: Marian** is an invented past client, added on the operator's instruction (2026-11-02). ⛔ On the lawyer's list (11-C). "Laugh" and the other reveal words stay out of her story.
+- **Six links, no P.S.** Every CTA is a sentence with a permission verb. `c=1–6` is the same range as 02. That is safe: the code travels inside each offer's own checkout. Read it per offer.
+- **The wait is in the letter**, unlike 02, because 24 hours is the mechanism. Beat 14 and beat 16 carry it. Price stays out.
+- **Hard limits, where they sit:** someone living, after the big idea. What the cards showed, end of beat 6. No reply owed, beat 13. Blame line, end of "Why nobody new gets through".
+- **Paid loops opened:** what they took · what the message is · what they regret · what was left unsaid · giving it back or getting her back · why it's taken this long · whether they'll act · how she stops the pull.
+- ⛔ **The word for what was taken never appears.** "Not a ring or a sum of money" is the only hint, and it rules out objects without touching the nine answers. Words to keep out in edits: nerve, trust, laugh, safe, freedom, looked after, judgement *(of hers)*, worth, softness.
+- ⛔ **No numerology words** anywhere. The stated reason is 11-DELIVERABLES' sentence word for word: "Your birth name and date set how I lay your twelve cards."

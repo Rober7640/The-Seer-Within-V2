@@ -10,6 +10,7 @@ import { verifyMagicLinkToken, generateMagicLinkToken } from '../lib/magicLink';
 // that check now, and reports it back as the 'luna-thankyou' tier.
 import { claimLunaTyGift } from '../lib/lunaThankyouGift';
 import { claimEvelynTyGift } from '../lib/evelynThankyouGift';
+import { claimUnsentLetterTyGift } from '../lib/unsentLetterTyGift';
 import { authLimiter, passwordResetLimiter } from '../lib/rateLimiter';
 import {
   sendVerificationEmail,
@@ -149,6 +150,8 @@ async function coinsForWelcomeTier(
     case 'luna-thankyou': return 0;
     // Same for the /fb thank-you Evelyn gift — claimEvelynTyGift() grants it.
     case 'evelyn-thankyou': return 0;
+    // Same for offer 11's receipt gift — claimUnsentLetterTyGift() grants it.
+    case 'unsent-letter-thankyou': return 0;
     case 'soulmate-lander': return SOULMATE_LANDER_FREE_COINS;
     case 'live-thread': return LIVE_THREAD_FREE_COINS;
     case 'evelyn-lander': return EVELYN_LANDER_FREE_COINS;
@@ -799,6 +802,10 @@ router.get('/verify-email/:token', async (req: Request, res: Response) => {
     // /fb thank-you → Evelyn 15-min gift: same pattern, once, non-fatal.
     if (welcomeTier === 'evelyn-thankyou') {
       await claimEvelynTyGift(user.id);
+    }
+    // Offer 11's receipt → Evelyn 15-min gift: same pattern, once, non-fatal.
+    if (welcomeTier === 'unsent-letter-thankyou') {
+      await claimUnsentLetterTyGift(user.id);
     }
 
     // Halt the Aiden follow-up drip (non-blocking — failure must not break verification).
@@ -1547,6 +1554,11 @@ router.post('/magic-verify', authLimiter, async (req: Request, res: Response) =>
             const fresh = await db.select({ coinBalance: users.coinBalance }).from(users).where(eq(users.id, user.id)).limit(1);
             if (fresh[0]) freshCoinBalance = fresh[0].coinBalance;
           }
+        }
+        // Offer 11's receipt → Evelyn 15-min gift. Added to the balance, like Luna's.
+        if (welcomeTier === 'unsent-letter-thankyou') {
+          const granted = await claimUnsentLetterTyGift(user.id);
+          if (granted > 0) freshCoinBalance += granted;
         }
 
         // Halt the Aiden follow-up drip (non-blocking — must not fail the login).

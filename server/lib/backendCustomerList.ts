@@ -210,6 +210,21 @@ export const BACKEND_OFFERS: Record<BackendOfferKey, BackendOfferListing> = {
     // (reading ready, merges soulmate_reading_url).
     initialListId: '6980769',
   },
+  // ⭐ 11 — The Unsent Letter. REUSES 02's lists — initial 6972552, bump 6972554 — told apart
+  // only by the be-11 tags, exactly as 03/04 do. Campaign triggers: the purchase tag (T3) and
+  // the delivered tag (T4). ⭐ The bump is the last page of her PDF, so it has no Campaign of
+  // its own: `be-11-bump` + the bump list are a segment only.
+  // ⛔ A Campaign on 6972554 must never trigger on `be-11-unsent-letter`: the purchase tag rides
+  //    the bump-list write too, so it would send the thank-you twice.
+  'unsent-letter': {
+    number: '11',
+    name: 'The Unsent Letter',
+    tag: 'be-11-unsent-letter',
+    bumpTag: 'be-11-bump',
+    deliveredTag: 'be-11-delivered',
+    initialListId: '6972552',
+    bumpListId: '6972554',
+  },
 };
 
 /** Tags to apply at the moment she pays. */

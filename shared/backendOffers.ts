@@ -41,7 +41,8 @@ export type BackendOfferKey =
   | 'marcus-daily'
   | 'marcus-reading'
   | 'heart-cleanser'
-  | 'soulmate-initials';
+  | 'soulmate-initials'
+  | 'unsent-letter';
 
 /** Which of the two booking treatments sold it — decides where a cancel returns to. */
 export type BookingTreatment = 'page' | 'chat';
@@ -230,6 +231,22 @@ export const SOULMATE_INITIALS_BUMP_CENTS = 1111;
 // ⛔ 10's bump key — see the note on 02's above. n8n exact-matches this string.
 export const SOULMATE_INITIALS_BUMP_PRODUCT_KEY = 'be_soulmate_initials_charge';
 
+// 11 — The Unsent Letter, a twelve-card reading by Evelyn Cross. Same money as 02: $35 fixed.
+// Her full birth name and date of birth are collected on OUR booking page and parked on
+// be_order_intake, never on Stripe (11-DELIVERABLES, the operator's rule from 08).
+export const UNSENT_LETTER_PRICE_CENTS = 3500;
+
+// 11's bump — "Closing the Door", a one-page ritual she does herself after reading the letter.
+// ⭐ It is the last page of her PDF (11-DELIVERABLES), so it has no email of its own.
+// ⛔ NOT a speed bump: delivery is 24 hours with or without it (unlike 08's).
+export const UNSENT_LETTER_BUMP_CENTS = 1277;
+
+// ⛔ 11's bump key — see the note on 02's above. n8n exact-matches this string.
+export const UNSENT_LETTER_BUMP_PRODUCT_KEY = 'closing_the_door';
+
+/** Every 11 reading arrives within this many hours, bump or no bump. */
+export const UNSENT_LETTER_DELIVERY_HOURS = 24;
+
 // ─── The catalog ───────────────────────────────────────────────────────────────
 
 /** 07's rungs. ⛔ The key is what the browser may send; the price is looked up here. */
@@ -306,7 +323,7 @@ export interface BackendOfferBump {
 export interface BackendOffer {
   key: BackendOfferKey;
   /** The deck's number, as every doc cites it. */
-  number: '02' | '03' | '04' | '06' | '07' | '08' | '09' | '10';
+  number: '02' | '03' | '04' | '06' | '07' | '08' | '09' | '10' | '11';
   /** What Stripe shows her at checkout. */
   stripeName: string;
   stripeDescription: string;
@@ -382,7 +399,10 @@ export interface BackendOffer {
    * rename one. `label` ≤ 50 characters (Stripe's hard limit). Stripe allows at most three.
    */
   checkoutCustomFields?: readonly BackendCheckoutCustomField[];
-  /** When true, firstName/DOB are persisted to intake only and kept OUT of Stripe metadata (spec §5). */
+  /**
+   * When true, firstName/DOB are persisted to intake only and kept OUT of Stripe metadata
+   * (spec §5). 10 and 11. ⚠ `funnel: 'evelyn_vsl'` and `stone` are 10's alone, not part of this.
+   */
   piiOutOfStripe?: boolean;
 }
 
@@ -698,6 +718,45 @@ export const BACKEND_OFFER_CATALOG: Record<BackendOfferKey, BackendOffer> = {
     // 🔴 FALSE in committed code. The operator flips this once the booking + success
     //    pages render and fulfilment exists end to end — see the note on every other
     //    offer's gate above.
+    readyForMoney: false,
+  },
+
+  // ⭐ 11 — The Unsent Letter. A READING by Evelyn Cross, sold by email to past buyers: twelve
+  // cards and the letter "they" never sent. Page treatment only (one-tick lock, and the two
+  // fields need a form). Docs: improve-v1/v1-one-time-BEs/docs/11/11-DELIVERABLES.md.
+  'unsent-letter': {
+    key: 'unsent-letter',
+    number: '11',
+    // ⚠ Both lines print on her card receipt, so they are plain and true. Deck-wide rule:
+    // the verb is never "buy". ⛔ Nothing here says what her name and date are used for.
+    stripeName: 'The Unsent Letter — tarot reading by Evelyn Cross',
+    stripeDescription: 'A twelve-card reading, written for you and sent within 24 hours.',
+    stripeProduct: 'be_unsent_letter',
+    pricing: { model: 'fixed', priceCents: UNSENT_LETTER_PRICE_CENTS },
+    bump: {
+      productKey: UNSENT_LETTER_BUMP_PRODUCT_KEY,
+      cents: UNSENT_LETTER_BUMP_CENTS,
+      // 11-C3's Stripe line item. Prints on her card receipt — plain.
+      stripeName: 'Closing the Door',
+    },
+    // Page treatment only. Both keys point at the one booking page so a Stripe cancel
+    // always returns somewhere real — the same pattern as 06, 09 and 10.
+    bookingPath: {
+      page: '/tarot/unsent-letter',
+      chat: '/tarot/unsent-letter',
+    },
+    successPath: '/tarot/unsent-letter/success',
+    // V1's two upsells through the shared backend upsell engine, exactly as 03/04/06/09.
+    upsellEntryPath: '/offers/upsell/welcome1',
+    // A digital reading: email only, no mailing address.
+    collectsShipping: false,
+    // Her birth details and first name live on be_order_intake only. Stripe metadata carries
+    // `c`, never them. ⛔ Her first name then has no Stripe backstop: the upsells and the
+    // receipt read it back from the intake, and with no ?fn= she is "dear" everywhere.
+    piiOutOfStripe: true,
+    // 🔴 FALSE. Flip only when the reading exists, the fulfilment flow and delivery exist,
+    //    the AWeber Campaigns on the be-11 tags exist, the lawyer has read it (11-C), and a
+    //    Stripe TEST-mode order has been walked end to end — delivery email included.
     readyForMoney: false,
   },
 };

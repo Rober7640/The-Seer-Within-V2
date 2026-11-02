@@ -175,6 +175,7 @@ export default function OffersUpsell1() {
     isComplete,
     upsellPriceLabel,
     acceptLabel,
+    ctaReassurance,
     showContinue,
     continueLabel,
     handleContinue,
@@ -393,6 +394,7 @@ export default function OffersUpsell1() {
               isProcessing={isProcessing}
               priceLabel={upsellPriceLabel}
               acceptLabel={acceptLabel}
+              reassurance={ctaReassurance}
             />
           </div>
         )}

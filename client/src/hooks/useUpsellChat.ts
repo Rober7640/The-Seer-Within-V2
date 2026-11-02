@@ -610,6 +610,7 @@ export function useUpsellChat({
   return {
     messages,
     acceptLabel: copy.acceptLabel,
+    ctaReassurance: copy.ctaReassurance,
     showContinue,
     continueLabel,
     handleContinue,

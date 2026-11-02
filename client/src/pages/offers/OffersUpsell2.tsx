@@ -122,6 +122,7 @@ export default function OffersUpsell2() {
     isComplete,
     upsell2Bought,
     downsellDeclineLabel,
+    downsellReassurance,
     showContinue,
     continueLabel,
     handleContinue,
@@ -330,6 +331,7 @@ export default function OffersUpsell2() {
               onDecline={handleDownsellDecline}
               isProcessing={isProcessing}
               declineLabel={downsellDeclineLabel}
+              reassurance={downsellReassurance}
             />
           </div>
         )}

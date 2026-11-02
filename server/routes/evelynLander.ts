@@ -34,6 +34,7 @@ import { generateMagicLinkToken, verifyMagicLinkToken } from '../lib/magicLink';
 import { escapeHtml, reissueVerificationEmail } from '../lib/verificationEmail';
 import { resolveWelcomeGrantTier } from '../lib/welcomeGrantTier';
 import { claimEvelynTyGift, EVELYN_TY_CAMPAIGN } from '../lib/evelynThankyouGift';
+import { claimUnsentLetterTyGift, UNSENT_LETTER_TY_CAMPAIGN } from '../lib/unsentLetterTyGift';
 import { generateToken, verifyToken } from '../lib/auth';
 import {
   accountDetectionLimiter,
@@ -424,6 +425,14 @@ async function resolveAndInsert(
     (resolved.segment === 'token_magic' || resolved.segment === 'v2_active')
   ) {
     await claimEvelynTyGift(resolved.resolvedUserId);
+  }
+  // Offer 11's receipt → Evelyn 15-min gift, on exactly the same terms.
+  if (
+    data.campaign === UNSENT_LETTER_TY_CAMPAIGN &&
+    resolved.resolvedUserId &&
+    (resolved.segment === 'token_magic' || resolved.segment === 'v2_active')
+  ) {
+    await claimUnsentLetterTyGift(resolved.resolvedUserId);
   }
 
   // The opener. Two sources, in order:

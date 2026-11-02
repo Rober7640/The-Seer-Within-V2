@@ -49,7 +49,8 @@ const READING_DEST = `/reading?persona=${EVELYN_PERSONA_SLUG}`;
 // /fb thank-you arrivals (server/lib/evelynThankyouGift.ts). These readers have just
 // had their reading and paid, so they skip the lander mechanic entirely and are handed
 // straight into the chat, where Evelyn already knows their reading.
-const THANKYOU_CAMPAIGN = "v1-ty-evelyn";
+// Offer 11's receipt page arrives the same way, under its own tag (unsentLetterTyGift.ts).
+const THANKYOU_CAMPAIGNS: Array<string | null> = ["v1-ty-evelyn", "be11-ty-evelyn"];
 const SESSION_KEY = "evelyn_lander_token";
 const HISTORY_KEY = "evelyn_lander_history";
 // Which campaign the cached history belongs to. Without it the cache is replayed
@@ -305,7 +306,7 @@ export default function EvelynLanderPage() {
   // Thank-you arrivals never see a mechanic, so they must not be enrolled in the
   // mechanic experiment either: they ask for an experiment-free page id instead
   // (hooks can't be skipped conditionally), which resolves to the default.
-  const isThankYou = params.campaign === THANKYOU_CAMPAIGN;
+  const isThankYou = THANKYOU_CAMPAIGNS.includes(params.campaign);
   const assignment = useABVariant(isThankYou ? "evelyn_ty" : "evelyn_lander", "mechanic", "quiz");
   const mechanic = overrideMechanic ?? assignment.variant;
   // Hold first paint until the assignment resolves so we never flash the default

@@ -9,13 +9,15 @@ interface UpsellCTAProps {
   // Offer 02's buyer bought a tarot spread, not a clearing — "what we clear" is
   // not a thing she did. Defaults to V1's exact label for every other funnel.
   acceptLabel?: string
+  // 11 can't carry "journey". Defaults to V1's exact line for every other funnel.
+  reassurance?: string
 }
 
-export function UpsellCTA({ onAccept, onDecline, isProcessing = false, priceLabel = '$47', acceptLabel = 'Yes, protect what we clear' }: UpsellCTAProps) {
+export function UpsellCTA({ onAccept, onDecline, isProcessing = false, priceLabel = '$47', acceptLabel = 'Yes, protect what we clear', reassurance = 'Take your time. This is your journey.' }: UpsellCTAProps) {
   return (
     <div className="p-4 space-y-4" data-testid="container-upsell-cta">
       <p className="text-center text-sm text-muted-foreground italic">
-        Take your time. This is your journey.
+        {reassurance}
       </p>
       
       <Button
