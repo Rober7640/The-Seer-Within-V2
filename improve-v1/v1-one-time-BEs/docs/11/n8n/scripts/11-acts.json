@@ -1,0 +1,798 @@
+{
+  "_note": "Source of truth for 11's n8n reading, alongside build-11-n8n.py. Every number and table comes from docs/11/product/11-P1-plan.md and docs/11/11-DELIVERABLES.md. Everything here is a fact or a mechanism for the writer. No sentence of the test reading is in this file, because quoted examples get copied verbatim.",
+  "offer": {
+    "number": "11",
+    "key": "unsent-letter",
+    "stripe_product": "be_unsent_letter",
+    "delivered_tag": "be-11-delivered"
+  },
+  "target_words": 5000,
+  "floor_words": 4500,
+  "ceiling_words": 5400,
+  "letter_words": {
+    "min": 400,
+    "max": 600
+  },
+  "excluded": [
+    "the-hermit",
+    "judgement",
+    "the-devil"
+  ],
+  "death_crop": true,
+  "pools": {
+    "act3": [
+      "the-moon",
+      "the-tower",
+      "the-lovers",
+      "the-hanged-man",
+      "wheel-of-fortune",
+      "death"
+    ],
+    "act4": [
+      "death",
+      "the-star",
+      "strength",
+      "the-sun",
+      "the-world",
+      "the-magician",
+      "temperance"
+    ],
+    "act2": [
+      "justice",
+      "the-hanged-man",
+      "temperance",
+      "the-hierophant",
+      "the-high-priestess",
+      "the-emperor",
+      "wheel-of-fortune"
+    ],
+    "act1": [
+      "the-fool",
+      "the-magician",
+      "the-high-priestess",
+      "the-empress",
+      "the-emperor",
+      "the-chariot",
+      "the-hierophant",
+      "the-sun"
+    ]
+  },
+  "deal_rules": {
+    "order": [
+      "act3",
+      "act4",
+      "act2",
+      "act1"
+    ],
+    "must": {
+      "8": [
+        "the-tower",
+        "death",
+        "the-moon"
+      ],
+      "10": [
+        "death",
+        "the-star",
+        "the-sun"
+      ],
+      "12": [
+        "strength",
+        "the-world"
+      ]
+    },
+    "death_only_at": [
+      8,
+      10
+    ]
+  },
+  "acts": [
+    {
+      "key": "act1",
+      "name": "What they took",
+      "houses": [
+        1,
+        2,
+        3
+      ],
+      "truth": "Named flat, with the proof of how she lives without it."
+    },
+    {
+      "key": "act2",
+      "name": "Why they kept it",
+      "houses": [
+        4,
+        5,
+        6
+      ],
+      "truth": "Giving it back means admitting what they did."
+    },
+    {
+      "key": "act3",
+      "name": "What it has cost you",
+      "houses": [
+        7,
+        8,
+        9
+      ],
+      "truth": "The low point. Giving it back or trying to get her back is answered here."
+    },
+    {
+      "key": "act4",
+      "name": "How it comes back",
+      "houses": [
+        10,
+        11,
+        12
+      ],
+      "truth": "Whether they will act, what she must stop, the one thing to do."
+    }
+  ],
+  "segments": [
+    {
+      "id": "A",
+      "label": "the opening and act 1",
+      "sections": [
+        "opening",
+        1,
+        2,
+        3
+      ]
+    },
+    {
+      "id": "B",
+      "label": "act 2",
+      "sections": [
+        4,
+        5,
+        6
+      ]
+    },
+    {
+      "id": "C",
+      "label": "act 3",
+      "sections": [
+        7,
+        8,
+        9
+      ]
+    },
+    {
+      "id": "D",
+      "label": "act 4",
+      "sections": [
+        10,
+        11,
+        12
+      ]
+    },
+    {
+      "id": "E",
+      "label": "the letter and the close",
+      "sections": [
+        "letter",
+        "close"
+      ]
+    }
+  ],
+  "sections": {
+    "opening": {
+      "name": "Opening",
+      "words": 250,
+      "job": "Begin with her first name alone on its own line. Tell her to sit down somewhere private and to read every card in order, without jumping ahead to the letter, because it only comes back whole. Warn her that some cards will look as if they argue with each other. Say that this is someone living. Say that nothing here asks her to contact them, wait for them or forgive them, and that if this person hurt her, she owes them no reply. Then tell the start of your night.",
+      "night": "You clear the table. The Hermit, Judgement and the Devil come out of the deck and go on the windowsill, which leaves nineteen. You write her full birth name and her date of birth at the top of a clean sheet. You make tea and sit. The one who came to you before arrives at your shoulder, with no face and no voice, the same as before.",
+      "exact": [
+        "Your birth name and date set how I lay your twelve cards"
+      ],
+      "applies": "These warnings belong here. Don't repeat them in other sections unless a section's brief asks."
+    },
+    "1": {
+      "name": "The thing",
+      "words": 300,
+      "opens_flat": true,
+      "bold": true,
+      "job": "The first sentence names what they took, flat, in bold, with her first name inside it. Tell her she's felt the gap and called it other things, and that this is where most women guess wrong, as you warned her. Then the picture. Then show what she used to do without thinking, before them: plain actions, stated flat.",
+      "answer": "They took {took}.",
+      "closes": "What did they take? · her guess",
+      "night": "They come in closer from your shoulder. You pick up your pen, look at her name, and put it down. The sheet has nothing on it but her name and date."
+    },
+    "2": {
+      "name": "The proof",
+      "words": 300,
+      "job": "Name her cover word in the first lines: what she calls the gap now. Then prove how she lives without what they took, in common behaviors any woman in this spot would know as hers. Each one is something she does, never something she is. Finish on why people's praise for this is no use to her.",
+      "closes": "Something she had before them and hasn't had since",
+      "night": "No beat is required here."
+    },
+    "3": {
+      "name": "What they saw",
+      "words": 320,
+      "job": "Clear her of the question of how she could have been so stupid: that question has it backwards. Say what they saw in her. They knew what they were taking, and they went for it because of what they saw. Whatever she gave, she gave honestly, and everything done with it after that is on them. Ask nothing of her except to stop asking what's wrong with her.",
+      "closes": "Sets up act 2",
+      "night": "Three cards down, the one at your shoulder has gone still. You do something you don't normally do: you ask out loud, in the empty kitchen, why they still have it. Then you lay the fourth."
+    },
+    "4": {
+      "name": "Why they kept it",
+      "words": 280,
+      "opens_flat": true,
+      "job": "The first sentence says they've kept it because giving it back means saying what they did. While they hold on to it they're still the person she thought they were, and nobody's said otherwise. Give it back and that's gone. That's why it wasn't lost or thrown away, as you told her.",
+      "answer": "They've kept it because giving it back means saying what they did.",
+      "closes": "They've still got it: why",
+      "night": "Your question gets answered and they don't like it. They move for the first time, away from your shoulder, back across the kitchen to the door, and they stop there."
+    },
+    "5": {
+      "name": "Why so long",
+      "words": 300,
+      "opens_flat": true,
+      "job": "The first sentence answers why it has taken this long: they had a line that let them off, and you say the line. Knock the line down. Say how she has backed that line up by looking fine, and say it was never her fault that they used it. Then say what the months you told her about really are: that excuse running out. Say they don't know they're doing any of this, as you told her.",
+      "answer": "It's taken this long because of the line that let them off: \"{excuse}\"",
+      "closes": "Why has it taken this long?",
+      "night": "It's getting on for midnight and they're still at the door."
+    },
+    "6": {
+      "name": "The regret",
+      "words": 300,
+      "opens_flat": true,
+      "job": "The first sentence says what they regret, flat. Then say what that regret is not: it isn't love, it pays for nothing and it reaches nobody. Warn her what she'll want to do with this news.",
+      "job_giving": "Say plainly that they don't regret losing her. She's been writing them a different regret.",
+      "job_get_back": "Don't say they have no regret about losing her. They regret losing what they had from her, which is not the same as her, and you say so.",
+      "answer": "What they regret: {regret}.",
+      "closes": "What do they regret?",
+      "night": "Past midnight. Six cards down and the sheet still has nothing on it but her name. Say so."
+    },
+    "7": {
+      "name": "Your half",
+      "words": 330,
+      "job": "Turn to her half. Her pattern when hurt is given below. Show her doing it to the one who hurt her, late and alone, and then show her doing the same thing to every decent person since. Someone gets a fault found by Thursday, as you told her. If someone's beside her now, they get what's left, as you told her. None of those people did anything to her.",
+      "closes": "Someone else gets a fault found by Thursday · they get what's left",
+      "night": "No beat is required here.",
+      "paper": "She gets a piece of paper here and keeps it: the last decent person she found a fault with, and the fault beside their name. She contacts nobody."
+    },
+    "8": {
+      "name": "The bill",
+      "words": 380,
+      "job": "Attack her cover word: it worked, and here is what it did. What she built after it ended has cost her more than what they took. Be exact about the deal: she gets the thing back, and she never gets the time back. The word 'years' is allowed here and only here. You told her ten years or thirty make no difference to whether they've still got it; here you say what that time cost. Their part stays on them.",
+      "closes": "Ten years, thirty years",
+      "night": "You get up from the table, which you don't do, and go to the place given below, because you can see what this card is doing and need a minute. You come back in.",
+      "paper": "She adds to the same piece of paper: how long it's been. She does this sum once, in daylight, and doesn't do it at night again."
+    },
+    "9": {
+      "name": "The fork",
+      "words": 430,
+      "opens_flat": true,
+      "bold": true,
+      "job": "The first sentence answers the fork, flat and in bold, with her first name inside it. This is the low point of the whole reading. It stings. There's no comfort in this section.",
+      "job_giving": "They're giving it back and they aren't trying to get her back. They want it out of their hands, for their own sake, not out of love. They aren't coming back, and she will never get the day she's kept free for an explanation. Name the small place she kept just in case, under the anger.",
+      "job_get_back": "They're trying to get her back. The low point is that part of her is glad to read this, and you make her look at that gladness. They still won't turn up: wanting her back is a wish they hold, with their hand out, waiting for her to come to them. Say what that wish is really for: what they had from her. Say you told her she'd treat this as a trap if that's what it was.",
+      "answer_giving": "They're giving it back. They aren't trying to get you back.",
+      "answer_get_back": "They're trying to get you back.",
+      "closes": "Giving it back, or trying to get you back?",
+      "night_giving": "You sit back down, turn the card, and swear at the thing given below. When you look up, the door is empty. They've gone. Three in the morning. Nine cards down, the sheet is blank under her name, and you don't know if you'll get the letter at all.",
+      "night_get_back": "You sit back down, turn the card, and swear at the thing given below. They don't leave. They come right up to the table and stay there, and it's the closest they've been all night. Three in the morning. Nine cards down, the sheet is blank under her name, and you don't know if you'll get the letter at all."
+    },
+    "10": {
+      "name": "Will they act",
+      "words": 500,
+      "opens_flat": true,
+      "bold": true,
+      "job": "The first sentence says no, flat and in bold, with her first name inside it: they won't call, write or do a thing about it. This is the turn of the whole reading. Give the reason below, and say don't go asking them, because they couldn't tell her: they do this without knowing, as you told her. Then say how it comes back with no contact: they were never the ones who had to move. All that was ever required was for someone to give up the wait.",
+      "job_get_back": "They hold it out and want her to come to them, which is what you told her this answer would mean. They won't lift a finger. Your turn is that you stop answering that pull.",
+      "answer": "No. They won't act.",
+      "closes": "Will they act? · how it comes back with no contact",
+      "night": "The window goes from black to grey. You see you've been pulling at them all night and then waiting for them, the same thing she has been doing, and you stop. You say so out loud. Then they're across the table from you, where she would sit, with the weight gone out of them, and your pen moves. The first line of her letter is on the sheet."
+    },
+    "11": {
+      "name": "The unsaid",
+      "words": 320,
+      "opens_flat": true,
+      "job": "The first sentence gives the one sentence they never said, word for word as given below. Then: she doesn't answer it, in writing or in her head. She doesn't need to: by the time she's read it, it's already back. This answers what she's been searching for in section 7. She's off the job of writing their half, as you told her. Say that if this person hurt her, she owes them no reply, because she's about to read their words.",
+      "answer": "The sentence left unsaid: \"{unsaid}\"",
+      "closes": "What was left unsaid? · Should she answer? · you've been writing their half",
+      "night": "The rest of the letter starts to come, and it comes fast."
+    },
+    "12": {
+      "name": "Stop and do",
+      "words": 620,
+      "bold": true,
+      "job": "The first sentence gives the one thing to stop and the one thing to do. She'll get through what's coming on those two. Then the card. Say the pull will be strongest now, inside five to seven days, and that this is about her and says nothing about them turning up.",
+      "stop": "Print the label **Stop going back.** in bold. Rereading, looking them up and starting a message are one act with three names. When the pull comes: phone in another room, oven timer for twenty minutes, hands busy, no arguing with it. Give the reason in kitchen words: an urge rises and falls by itself if nobody feeds it, and going to look at the top of it is what teaches it to come back, while letting one pass makes the next one smaller. Square her promise: the need goes when she reads the letter, and the habit takes a week.",
+      "do": "Print the label **The one thing to do.** in bold. Seven days, one a day, the practice below. Give two or three plain ways to do it. Only with people who've never given her cause, and nobody from her past. Give the reason: she can't think her way back to it, her head has one huge example it has gone over thousands of times, and small acts that turn out fine give it something new to go on, while one that goes wrong shows her she survives it.",
+      "warnings": "Tell her it won't feel like much at first, and how she'll know it's working: by what stops. Tell her how soon is down to what she does with the twenty minutes and the seven days, and not down to you or them.",
+      "cover_retired": "Retire her cover word, in your own way.",
+      "promise": "End this section's advice on the next time someone reaches for her, and there's someone there.",
+      "job_get_back": "Warn her that the letter ends with an ask, and tell her exactly what to do with it: nothing.",
+      "closes": "How does she stop the pull? · the last of your twelve · the five to seven days",
+      "night": "Full light. You put the Hermit, Judgement and the Devil back in the deck. You write the letter out by hand at the same table, with them sitting across from you. You change nothing in it. Hand over to the letter: tell her to read it once, slowly, to the end."
+    },
+    "letter": {
+      "name": "The letter",
+      "words": 500,
+      "job": "This is the letter they never sent, in their voice, first person, to her. Begin with her first name alone on its own line. Say first that they're never going to send this. Then say what they did, in the words of the regret below, without inventing one event, place, date, gift or name: only what the row gives you. Say what they saw in her. Say the excuse, and that it stopped working. Say why they kept it. Say the sentence left unsaid, word for word. Then the hand-over: they name the thing and give it back, plainly, in the last lines before the sign-off of the letter. They sign no name.",
+      "job_giving": "They ask her for nothing: no forgiveness, no meeting, no reply. They tell her not to write and not to look for them.",
+      "job_get_back": "They hand it back in full first. Only after that does the letter turn and ask: they want her to come back, or at least to answer. One short, plain ask, and it comes last. The thing was already back at the hand-over, and the ask is a bill nobody owes.",
+      "voice": "They don't sound like Evelyn. They're plain, tired, a bit stiff, and they're not good at this. The rules about no contact and they/them still hold."
+    },
+    "close": {
+      "name": "Close",
+      "words": 30,
+      "job": "Evelyn again. Very short. You look up, the chair across from you is only furniture again, and nobody's in it. The very last line of the reading is this, word for word, and nothing comes after it: It's back. What you do with it is on you. Don't write a sign-off: the page adds it.",
+      "job_get_back": "Before that last line, say in a line or two that you left the ask in so she'd see it, and that it's a bill nobody owes. You may go up to 80 words here.",
+      "exact": [
+        "It's back. What you do with it is on you."
+      ]
+    }
+  },
+  "soul_urge": {
+    "1": {
+      "took": "your nerve",
+      "word": "nerve",
+      "cover": "sensible",
+      "regret": "they got her to back down, and liked it",
+      "unsaid": "You could have stood up to me, and I made sure you didn't.",
+      "do": "One thing a day she'd normally talk herself out of, or ask leave for."
+    },
+    "2": {
+      "took": "your trust",
+      "word": "trust",
+      "cover": "careful",
+      "regret": "letting her go on believing them",
+      "unsaid": "You were right to believe me, and I was the one who wasn't true.",
+      "do": "Let one person do one small thing a day, and don't check it."
+    },
+    "3": {
+      "took": "your laugh",
+      "word": "laugh",
+      "cover": "grown up",
+      "regret": "making her feel silly for it",
+      "unsaid": "You were never too much. I liked you smaller.",
+      "do": "Once a day, say the daft thing out loud to someone before she edits it."
+    },
+    "4": {
+      "took": "your sense of being safe",
+      "word": "safe",
+      "cover": "alert",
+      "regret": "making her days something to get through",
+      "unsaid": "You were right to feel what you felt. It was never in your head.",
+      "do": "Ten minutes a day off duty, somewhere she's safe, phone away.",
+      "safety": "Some women who get this row are not safe now. In this section, once, in your plain voice, say that if she isn't safe where she is, that comes first, and she should tell someone who can help."
+    },
+    "5": {
+      "took": "your freedom",
+      "word": "freedom",
+      "cover": "settled",
+      "regret": "making a small life look like her own idea",
+      "unsaid": "You were always allowed to go, and I made you think you weren't.",
+      "do": "One thing a day she doesn't clear or explain to anyone."
+    },
+    "6": {
+      "took": "your belief that you'd be looked after",
+      "word": "looked after",
+      "cover": "fine on my own",
+      "regret": "taking her care and giving none back",
+      "unsaid": "Someone should have looked after you, and I knew it.",
+      "do": "Ask for one small help a day and take it with only a thank you."
+    },
+    "7": {
+      "took": "your faith in your own judgement",
+      "word": "judgement",
+      "cover": "a second opinion",
+      "regret": "telling her she was wrong when she was right",
+      "unsaid": "You saw it, you were right, and I told you that you weren't.",
+      "do": "One small decision a day she asks nobody about and doesn't go back on."
+    },
+    "8": {
+      "took": "your sense of your own worth",
+      "word": "worth",
+      "cover": "easy to please",
+      "regret": "letting her think it was all she deserved",
+      "unsaid": "You were worth more than I gave, and I knew what I was paying.",
+      "do": "Once a day, ask for the thing that's hers, with no apology in front of it."
+    },
+    "9": {
+      "took": "your softness",
+      "word": "softness",
+      "cover": "strong",
+      "regret": "teaching her that going soft costs her",
+      "unsaid": "You weren't weak. I made it expensive.",
+      "do": "Once a day, let one thing show to someone safe."
+    },
+    "11": {
+      "took": "your voice",
+      "word": "voice",
+      "cover": "easy-going",
+      "regret": "talking over her until she stopped",
+      "unsaid": "You were right to say it, and I stopped listening on purpose.",
+      "do": "Once a day, say what she thinks before she tidies it: an opinion, a preference."
+    },
+    "22": {
+      "took": "your plans",
+      "word": "plans",
+      "cover": "one day at a time",
+      "regret": "letting her plan on them when they knew better",
+      "unsaid": "I let you build on me, and I knew it wouldn't hold.",
+      "do": "Each day, put one thing in the diary further off than she'd normally dare."
+    },
+    "33": {
+      "took": "your wanting",
+      "word": "wanting",
+      "cover": "I don't mind",
+      "regret": "teaching her that what she wanted didn't count",
+      "unsaid": "You were allowed to want things, and I made that too much to ask.",
+      "do": "Each day, before anyone else speaks, say what she wants, however small."
+    }
+  },
+  "expression": {
+    "1": "someone who'd go first without being told",
+    "2": "someone who'd listen and make room for them",
+    "3": "someone who lit up a room and made them feel interesting",
+    "4": "someone who stays and keeps her word",
+    "5": "someone alive, up for anything",
+    "6": "someone who'd look after everybody and never send a bill",
+    "7": "someone who noticed things and saw them properly",
+    "8": "someone who could run things and make them happen",
+    "9": "someone who'd give to anyone and see the best in them",
+    "11": "someone who could read them without being told",
+    "22": "someone who could build a real life from nothing"
+  },
+  "life_path": {
+    "1": "does it all alone and won't ask anyone for anything",
+    "2": "agrees too fast, resents it later, keeps checking she's still liked",
+    "3": "jokes it off, stays busy, never says the real thing",
+    "4": "makes rules, works too hard, checks everything twice",
+    "5": "changes the setting: new place, new person, same story",
+    "6": "looks after everyone so nobody can get near her, then resents it",
+    "7": "goes quiet, goes into it, wants proof before she takes a step",
+    "8": "stays in charge, never lets anyone see her need anything",
+    "9": "gives to everyone at a distance, stays let down by real people",
+    "11": "reads signs into everything, makes small things mean too much",
+    "22": "plans the whole future, won't start till it's all safe"
+  },
+  "flat": {
+    "excuse": {
+      "0": "It was nobody's fault.",
+      "1": "She'll be fine.",
+      "2": "She was too much."
+    },
+    "reason": {
+      "0": "pride",
+      "1": "shame: they can't stand to be looked at by the one person who knows",
+      "2": "doing nothing costs them nothing"
+    }
+  },
+  "devices": {
+    "openings": {
+      "flat": "put it as a flat statement",
+      "correct": "put it as a correction of what she believes",
+      "names": "put it by naming what she does",
+      "warning": "put it as a warning"
+    },
+    "moments": {
+      "before": "Your moment at the table comes before the picture.",
+      "after": "Your moment at the table comes after you've said what the card means.",
+      "end": "Your moment at the table comes at the end of this section. The thing she has to do or stop goes just before it.",
+      "none": "You're not at the table in this section. No tea, no pen, no kitchen, no presence. Just the card and her."
+    },
+    "ends": {
+      "stop": "The last thing in this section is one thing to stop.",
+      "do": "The last thing in this section is one small thing to do.",
+      "paper": "The last thing in this section is the pen-and-paper job given above.",
+      "phrase": "The last thing in this section is a short phrase she can say, and when to say it.",
+      "catch": "The last thing in this section is one thing to catch herself doing."
+    },
+    "card8_place": [
+      "the back door",
+      "the front step",
+      "an upstairs window"
+    ],
+    "drink": [
+      "black tea",
+      "mint tea",
+      "nettle tea"
+    ],
+    "swears_at": [
+      "the deck",
+      "the kettle",
+      "your own hands"
+    ],
+    "prop": [
+      "a clock that ticks too loud",
+      "a lamp that needs trimming",
+      "a cat that won't come in"
+    ],
+    "callback_houses": [
+      1,
+      2,
+      7,
+      8,
+      11,
+      12
+    ],
+    "name_uses_total": 20,
+    "dear_uses": 3,
+    "stop_cap": 5,
+    "list_houses": [
+      2,
+      7
+    ],
+    "none_eligible": [
+      2,
+      5,
+      7,
+      11
+    ],
+    "none_min": 2
+  },
+  "art_links": [
+    {
+      "a": "the-moon",
+      "b": "death",
+      "note": "The same two towers are on both cards. The empty path between them on the Moon comes out where the sun rises on Death."
+    },
+    {
+      "a": "temperance",
+      "b": "the-star",
+      "note": "The same water: kept going from cup to cup on Temperance, then poured out on the Star."
+    },
+    {
+      "a": "the-fool",
+      "b": "the-moon",
+      "note": "There's a dog on both cards: a small white one at the Fool's heels, and an orange one howling on the Moon. Never say it's the same dog or the same color. Say there's a dog again."
+    },
+    {
+      "a": "the-chariot",
+      "b": "strength",
+      "note": "The Chariot has no reins. Strength has no iron chain, only a chain of flowers looped over the lion's neck."
+    },
+    {
+      "a": "the-tower",
+      "b": null,
+      "note": "The Tower has three windows and no door anywhere on it."
+    },
+    {
+      "a": "the-empress",
+      "b": "the-tower",
+      "note": "A crown of stars worn on the Empress, and a crown knocked off the top of the Tower."
+    }
+  ],
+  "cards": {
+    "the-fool": {
+      "name": "the Fool",
+      "plain": "a step taken before you can see where it lands",
+      "drawn": [
+        "a young man stopped at the very brink of a cliff, still in the middle of a step",
+        "his eyes on the sky in front of him, not on the drop below",
+        "a white rose held loose in his lowered hand, stem down",
+        "a wand over his right shoulder with an embroidered wallet hanging off the end of it",
+        "dim marks worked into the wallet, none of them making a word",
+        "a small white dog up on its back legs at his heel, mouth open",
+        "a pale sun behind him, low and wide, and snow on the peaks behind that"
+      ]
+    },
+    "the-magician": {
+      "name": "the Magician",
+      "plain": "you already have what the job needs",
+      "drawn": [
+        "a man standing at a table, a white wand held straight up in his right hand",
+        "his other hand pointing down at the ground, so the two arms make one line through him",
+        "four things laid out on the table in front of him — a cup, a coin marked with a star, a sword, a wand",
+        "a snake for a belt at his waist, with its own tail in its mouth",
+        "a sideways figure of eight floating above his head, touching nothing",
+        "red roses hanging above his head and white lilies growing in the bed beneath him"
+      ]
+    },
+    "the-high-priestess": {
+      "name": "the High Priestess",
+      "plain": "something known and not yet said out loud",
+      "drawn": [
+        "a woman seated between two pillars, one black and one white, a single letter cut into each — B and J",
+        "a veil hung between the pillars behind her, palms and pomegranates worked into it",
+        "a scroll held in her hands with writing on it, half of it covered by her mantle",
+        "a cross with four arms of the same length on her breast",
+        "a crescent moon lying at her feet, under the hem of her robe",
+        "a crown of two horns with a round moon held between them",
+        "her robe running down into water at the bottom edge, the join not visible"
+      ]
+    },
+    "the-empress": {
+      "name": "the Empress",
+      "plain": "something growing that needs feeding, not starting",
+      "drawn": [
+        "a woman seated back among cushions in an open field",
+        "a crown of twelve stars gathered in a cluster on her head",
+        "a shield shaped like a heart resting beside her, the sign of Venus cut into its face",
+        "a sceptre held up in one hand with a globe on the end of it",
+        "a field of wheat ripening in front of her, none of it cut yet",
+        "a wood behind her with water falling down through it"
+      ]
+    },
+    "the-emperor": {
+      "name": "the Emperor",
+      "plain": "a rule laid down and held by whoever has the chair",
+      "drawn": [
+        "a bearded old man in a gold crown seated square on a big stone throne, facing straight out",
+        "a ram's head carved into the top of each corner and at each arm of the throne",
+        "a gold staff in his right hand with a loop at the top",
+        "a gold ball in his left hand",
+        "a red robe over a suit of armor, the armor showing at his legs and arms",
+        "bare gold mountains on both sides behind the throne, and an orange sky"
+      ]
+    },
+    "the-hierophant": {
+      "name": "the Hierophant",
+      "plain": "the proper way of doing it, and what it costs to belong",
+      "drawn": [
+        "a robed figure seated high between two stone pillars, facing straight out",
+        "two ministers in white robes kneeling below him, their backs to us",
+        "two keys crossed on the floor at his feet, one gold and one silver",
+        "a staff in his left hand with three crossbars on it, the top one shortest",
+        "his right hand up, two fingers raised and two folded down",
+        "a crown of three tiers, stacked, on his head"
+      ]
+    },
+    "the-lovers": {
+      "name": "the Lovers",
+      "plain": "a choice made in the open, with a price on it",
+      "drawn": [
+        "a naked man and a naked woman standing apart, close but not touching",
+        "a winged figure above them in red and purple, arms open over both, hair like flame",
+        "a tree behind the woman with a snake wound down the trunk, fruit in the branches",
+        "a tree behind the man bearing twelve fruits, each one drawn as a small flame",
+        "one grey mountain standing up between them in the distance",
+        "a wide sun directly above the winged figure, higher than everything else on the card",
+        "their eyes: she does not look at him — she looks up, past him, at the winged figure — and he looks at her"
+      ]
+    },
+    "the-chariot": {
+      "name": "the Chariot",
+      "plain": "already moving, and it goes where you point it",
+      "drawn": [
+        "a man standing upright in a stone chariot, armor across his chest",
+        "two sphinxes lying down in front of it, harnessed to it, one black and one white",
+        "no reins in his hands — nothing runs from him to them at all",
+        "a canopy of blue over him with white stars printed on it",
+        "a crescent moon on each shoulder, a face in each one",
+        "a walled town behind him, already at a distance"
+      ]
+    },
+    "strength": {
+      "name": "Strength",
+      "plain": "holding something strong by hand, gently, every day",
+      "drawn": [
+        "a woman in a white dress with both hands on a lion's mouth, closing its jaws",
+        "the lion's head bowed, tongue out, tail hanging down behind",
+        "a chain of flowers round her waist that runs on and loops over the lion's neck",
+        "a whole wreath of flowers in her hair, not one or two",
+        "a sideways figure of eight floating above her head",
+        "one grey hill a long way behind, nothing drawn between her and it"
+      ]
+    },
+    "wheel-of-fortune": {
+      "name": "the Wheel of Fortune",
+      "plain": "a change that comes from outside and does not ask",
+      "drawn": [
+        "a wheel hanging in the sky with nothing holding it up",
+        "eight letters spaced around the rim of the wheel, two alphabets alternating, running the whole way round",
+        "a sphinx lying on top of the wheel with a sword held across it",
+        "a snake going down the left side of the wheel, head first",
+        "a dog-headed figure coming up the right side",
+        "four figures in the four wheaters, each in cloud with an open book — a man, an eagle, a bull, a lion"
+      ]
+    },
+    "justice": {
+      "name": "Justice",
+      "plain": "what was actually done, weighed and answered for",
+      "drawn": [
+        "a figure seated between two pillars with a plain purple cloth hung behind, nothing worked into it",
+        "a sword held straight up in the right hand, the point higher than the crown",
+        "a pair of scales in the left hand, hanging level, neither pan down",
+        "one foot showing under the hem of the red robe, the rest of her hidden",
+        "a small square set into the front of the crown",
+        "her eyes open and looking straight out, not down at the scales"
+      ]
+    },
+    "the-hanged-man": {
+      "name": "the Hanged Man",
+      "plain": "a wait you agreed to, paid for in time",
+      "drawn": [
+        "a man hanging head-down from a gallows shaped like a T, tied by one ankle",
+        "the gallows is living wood, small green leaves coming out of it",
+        "his free leg crossed behind the tied one, making the shape of a figure four",
+        "his hands out of sight behind his back, elbows out to the sides",
+        "a ring of yellow light around his head, as wide as his shoulders",
+        "his face wide awake and somewhere else, no strain in it anywhere"
+      ]
+    },
+    "death": {
+      "name": "Death",
+      "plain": "something over, and carried off at a walk",
+      "drawn_full": [
+        "a skeleton in black armor riding a white horse at a walk",
+        "no scythe or weapon in its hands",
+        "a black flag in its hand with one white rose on it",
+        "a king flat on the ground under the horse, his crown off",
+        "a bishop in a gold robe and tall hat standing in the road, hands together, begging",
+        "a child kneeling, looking up, and a young woman beside the child with her face turned away",
+        "two towers far off, with the sun coming up in the gap between them"
+      ],
+      "drawn_cropped": [
+        "a skeleton in black armor riding a white horse at a walk",
+        "no scythe or weapon in its hands",
+        "a black flag in its hand with one white rose on it",
+        "a bishop in a gold robe and tall hat standing in the road, hands together, begging",
+        "two towers far off, with the sun coming up in the gap between them",
+        "the bottom of this card is not shown in your PDF, so describe only what's listed here"
+      ]
+    },
+    "temperance": {
+      "name": "Temperance",
+      "plain": "two things becoming one, at the speed of a season",
+      "drawn": [
+        "a winged figure in a white robe pouring water between two cups, one held higher than the other",
+        "the water crossing the gap in a stream that does not fall straight down",
+        "one bare foot standing in the pool, the other flat on the bank",
+        "the sign of the sun on the forehead, and a square with a triangle inside it on the chest",
+        "a narrow path going away from the water to two low hills, with light between them",
+        "a crown showing faintly inside that light, above the hills",
+        "yellow flowers growing at the water's edge, close by the standing foot"
+      ]
+    },
+    "the-tower": {
+      "name": "the Tower",
+      "plain": "something built on an untruth, already coming down",
+      "drawn": [
+        "a grey tower standing on bare rock, no door drawn anywhere on it",
+        "a gold crown knocked clear off the top, tipping, still in the air",
+        "one bolt of lightning coming down out of dark cloud into where the crown was",
+        "fire coming out of three windows, pushing outward, not upward",
+        "two figures falling head-first, arms out, neither one landed",
+        "flame shapes loose in the air on both sides of the fall, falling with them"
+      ]
+    },
+    "the-star": {
+      "name": "the Star",
+      "plain": "something poured out freely, with nothing kept back",
+      "drawn": [
+        "a woman with nothing on, one knee on the grass and one foot on the water of a pool",
+        "a jug in each hand, both being emptied",
+        "one jug pouring into the pool, one pouring onto the land, where it runs off in little streams",
+        "one huge yellow star above her and seven small white stars around it",
+        "a small red bird in a tree on a rise behind her",
+        "low hills far off behind the pool"
+      ]
+    },
+    "the-moon": {
+      "name": "the Moon",
+      "plain": "what fear paints in the dark, and what's really there",
+      "drawn": [
+        "a big yellow moon with a face in it, eyes closed, looking down, rays all the way round",
+        "small yellow drops falling from it",
+        "a grey tower standing on each side, each with one small window",
+        "an orange dog and a pale wolf, heads up, howling at it",
+        "a crayfish crawling out of a pool at the bottom of the card",
+        "a path going up from the water between the animals and away between the towers, with nobody on it"
+      ]
+    },
+    "the-sun": {
+      "name": "the Sun",
+      "plain": "seen plainly, in daylight, nothing to work out",
+      "drawn": [
+        "a large sun with a face in it, straight rays and wavy rays alternating all the way round",
+        "a naked child on a white horse, bareback, both arms open",
+        "a wide red flag on a pole in the child's hand, streaming out sideways",
+        "four sunflowers growing above a grey wall, heads up over the top of it",
+        "a low grey wall running right across the card, the horse already out in front of it",
+        "a wreath on the child's head with one red feather standing up in it"
+      ]
+    },
+    "the-world": {
+      "name": "the World",
+      "plain": "a full circle closed, and luck starting",
+      "drawn": [
+        "a naked woman dancing inside an elliptic green wreath, a violet scarf blown loose around her loins",
+        "a wand held in each hand, one and one, and nothing else carried",
+        "the wreath tied top and bottom with a red ribbon, the same knot both ends",
+        "four heads in the four wheaters of the card, each in cloud — a man, an eagle, a bull, a lion",
+        "one leg crossed behind the other at the knee, caught mid-step",
+        "nothing inside the wreath but her and the sky, no ground drawn under her feet"
+      ]
+    }
+  }
+}
