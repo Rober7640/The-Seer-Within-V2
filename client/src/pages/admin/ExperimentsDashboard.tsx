@@ -3,6 +3,7 @@ import {
   GatewaySplitPanel,
   type GatewayArmDetail,
   type GatewayAttemptRow,
+  type GatewayLanderRow,
 } from "@/components/admin/GatewaySplitPanel";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { adminFetch } from "@/hooks/useAdmin";
@@ -122,6 +123,7 @@ interface ResultsResponse {
   }>;
   // Stripe vs Payments.AI (conversion type gateway_split) — see GatewaySplitPanel.
   gatewayDetail?: GatewayArmDetail[];
+  gatewayByLander?: GatewayLanderRow[];
   attempts?: GatewayAttemptRow[];
   // What the superseded buyer definition would have counted, and why each row was
   // dropped. Present on v1_main_funnel tallies only.
@@ -1226,6 +1228,7 @@ export default function ExperimentsDashboard() {
 
                       <GatewaySplitPanel
                         detail={results.gatewayDetail}
+                        byLander={results.gatewayByLander}
                         attempts={results.attempts}
                       />
 
