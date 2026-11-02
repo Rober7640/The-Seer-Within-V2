@@ -28,6 +28,12 @@ import {
   type Upsell1Copy,
 } from "@/lib/backendOffers";
 import { reusableUpsellShipping } from "@/lib/upsellShipping";
+import {
+  formatDownsellPrice,
+  upsell1BackendBody,
+  upsell1DownsellOn,
+  upsell1PhProduct,
+} from "@/lib/upsell1Downsell";
 import { backendOfferFunnel, currentFunnel, getPostHogFunnel, isTwinFlameOffer } from "@/lib/funnel";
 import type { BackendOfferKey } from "@shared/backendOffers";
 import { track as trackPH } from "@/lib/posthog";
@@ -52,6 +58,11 @@ interface UserData {
   // Upsell 1 price (cents) for this user's price-test variant. Drives the
   // displayed price so it matches what /api/upsell/charge bills.
   upsell1PriceCents?: number;
+  // An offer with its OWN U1 product (12's Wish Ritual): the `be_` key the charge must name,
+  // and its downsell price. Both absent on V1 and every offer before 12, which keeps the
+  // charge body lean (the server defaults to the Protection Ritual) and the downsell off.
+  upsell1Product?: string;
+  upsell1DownsellCents?: number | null;
   // The address the BOOKING checkout already collected, on a physical backend offer
   // (09, 06). Its presence is what lets this chat skip the shipping form. Absent on
   // V1 and on every offer whose checkout collected no address.
@@ -107,6 +118,7 @@ export function useUpsellChat({
   const [isProcessing, setIsProcessing] = useState(false);
   const [isComplete, setIsComplete] = useState(false);
   const [upsellPaymentId, setUpsellPaymentId] = useState<string | null>(null);
+  const [showDownsellCTA, setShowDownsellCTA] = useState(false);
 
   const [showContinue, setShowContinue] = useState(false);
   const [continueLabel, setContinueLabel] = useState("");
@@ -124,6 +136,17 @@ export function useUpsellChat({
   );
 
   const upsellPriceLabel = formatUpsellPrice(userData?.upsell1PriceCents);
+  // `{downsellPrice}`, from the server like the full price. Only an offer with a U1 downsell
+  // (12) reports it; the $30 fallback is never shown, because without it the downsell is off.
+  const downsellPriceLabel = formatDownsellPrice(userData?.upsell1DownsellCents);
+
+  // ⛔ The U1 downsell is OPT-IN (lib/upsell1Downsell.ts): the copy writes DOWNSELL, the server
+  // names an own U1 product, and that product has a downsell price. V1 and every offer before
+  // 12 have none of them, so a decline goes straight to SOFT_DECLINE exactly as before.
+  const downsellOn = upsell1DownsellOn(copy, userData);
+
+  // The PostHog `product` name. V1's literal for every offer without its own U1 product.
+  const phProduct = upsell1PhProduct(userData);
 
   // "Friend" is what /api/upsell/user-data stamps when checkout carried no name,
   // which is every offer-02 order. Evelyn's own fallback ("dear") reads better.
@@ -137,8 +160,9 @@ export function useUpsellChat({
         firstName,
         userData?.personName || undefined,
         upsellPriceLabel,
+        downsellPriceLabel,
       ),
-    [firstName, userData, upsellPriceLabel],
+    [firstName, userData, upsellPriceLabel, downsellPriceLabel],
   );
 
   const pMsg = useCallback(
@@ -148,8 +172,9 @@ export function useUpsellChat({
         firstName,
         userData?.personName || undefined,
         upsellPriceLabel,
+        downsellPriceLabel,
       ),
-    [firstName, userData, upsellPriceLabel],
+    [firstName, userData, upsellPriceLabel, downsellPriceLabel],
   );
 
   // Add bot message with typing
@@ -202,6 +227,7 @@ export function useUpsellChat({
     setInputEnabled(false);
     setShowCTA(false);
     setShowShippingForm(false);
+    setShowDownsellCTA(false);
   }, []);
 
   // Process stage
@@ -267,8 +293,12 @@ export function useUpsellChat({
 
         case "LAVA_INTRO":
           await sendBotMessages(p(copy.LAVA_INTRO));
-          if (lavaStoneImage) {
-            await sendImageMessage(lavaStoneImage);
+          {
+            // Unset on the copy ⇒ the lava stone, as always. null ⇒ no picture (12).
+            const stone = copy.stoneImage === undefined ? lavaStoneImage : copy.stoneImage;
+            if (stone) {
+              await sendImageMessage(stone);
+            }
           }
           advance("LAVA_INTRO");
           break;
@@ -335,6 +365,14 @@ export function useUpsellChat({
           setStage("CTA");
           break;
 
+        // The optional downsell (12). Only reached from handleDecline when downsellOn.
+        case "DOWNSELL":
+          await sendBotMessages(p(copy.DOWNSELL ?? []));
+          await sleep(800);
+          setShowDownsellCTA(true);
+          setStage("DOWNSELL_CTA");
+          break;
+
         case "DECLINED":
           await sendBotMessages(p(copy.SOFT_DECLINE));
           setIsComplete(true);
@@ -398,13 +436,17 @@ export function useUpsellChat({
     [handleUserInput],
   );
 
-  // Handle CTA Accept
-  const handleAccept = useCallback(async () => {
+  // Handle CTA Accept — the full price, or (from the downsell button) the downsell tier.
+  const charge = useCallback(async (tier: "full" | "downsell") => {
     if (!sessionId || !userData) return;
+    const isDownsell = tier === "downsell";
 
     setShowCTA(false);
+    setShowDownsellCTA(false);
     setIsProcessing(true);
-    addUserMessage(copy.acceptLabel);
+    addUserMessage(
+      isDownsell ? pMsg(copy.downsellAcceptLabel ?? copy.acceptLabel) : copy.acceptLabel,
+    );
 
     // Tab-scoped tarot attribution, gated on the funnel so a palm/fb upsell in the
     // same tab can never pick up tarot properties. No-op for every other funnel.
@@ -413,10 +455,15 @@ export function useUpsellChat({
     trackPH("upsell_accepted", {
       funnel: offer ? backendOfferFunnel(offer) : (getPostHogFunnel() ?? "unknown"),
       step: "upsell1",
-      product: "protection_ritual",
+      product: phProduct,
+      ...(isDownsell ? { tier: "downsell" } : {}),
       sign: tarot?.deck,
       ...(tarot ?? {}),
     });
+
+    // An offer with its own U1 product (12) names it, and the downsell tier when taken.
+    // Absent ⇒ the lean body, byte-identical to before 12 (the server's Protection Ritual).
+    const beBody = upsell1BackendBody(sessionId, userData.email, userData, tier);
 
     // The backend funnel charges its OWN endpoint (the `be_` product → BE list, no
     // Facebook/Google/Trackdesk) and sends NO trackdeskClickId (⛔ never on a backend
@@ -431,7 +478,7 @@ export function useUpsellChat({
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(
             beFunnel
-              ? { checkoutSessionId: sessionId, email: userData.email }
+              ? beBody
               : {
                   checkoutSessionId: sessionId,
                   email: userData.email,
@@ -473,13 +520,13 @@ export function useUpsellChat({
         trackPH("upsell_fallback_redirect", {
           funnel: offer ? backendOfferFunnel(offer) : (getPostHogFunnel() ?? "unknown"),
           step: "upsell1",
-          product: "be_protection_ritual",
+          product: userData.upsell1Product ?? "be_protection_ritual",
         });
         await sendBotMessage("Let me set up a secure payment page for you...");
         const fallbackResponse = await fetch("/api/backend/upsell/fallback-checkout", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ checkoutSessionId: sessionId, email: userData.email }),
+          body: JSON.stringify(beBody),
         });
         const { url } = await fallbackResponse.json().catch(() => ({}) as { url?: string });
         if (url) {
@@ -490,7 +537,8 @@ export function useUpsellChat({
             "That didn't go through, dear. Give it another moment and try once more.",
           );
           setIsProcessing(false);
-          setShowCTA(true);
+          if (isDownsell) setShowDownsellCTA(true);
+          else setShowCTA(true);
         }
       } else if (result.fallback) {
         // The 1-click OFF-SESSION charge on the saved card was declined (Indian cards
@@ -530,7 +578,8 @@ export function useUpsellChat({
       console.error("Upsell error:", error);
       await sendBotMessage("Something went wrong. Let me try another way...");
       setIsProcessing(false);
-      setShowCTA(true);
+      if (isDownsell) setShowDownsellCTA(true);
+      else setShowCTA(true);
     }
   }, [
     sessionId,
@@ -540,10 +589,15 @@ export function useUpsellChat({
     sendBotMessage,
     sendBotMessages,
     p,
+    pMsg,
+    phProduct,
     backendOverride,
     offer,
     processStage,
   ]);
+
+  const handleAccept = useCallback(() => charge("full"), [charge]);
+  const handleDownsellAccept = useCallback(() => charge("downsell"), [charge]);
 
   // Handle CTA Decline
   const handleDecline = useCallback(async () => {
@@ -553,12 +607,26 @@ export function useUpsellChat({
     trackPH("upsell_declined", {
       funnel: offer ? backendOfferFunnel(offer) : (getPostHogFunnel() ?? "unknown"),
       step: "upsell1",
-      product: "protection_ritual",
+      product: phProduct,
       sign: tarot?.deck,
       ...(tarot ?? {}),
     });
+    // ⛔ Off unless downsellOn (12): V1 goes straight to the soft decline, as always.
+    await processStage(downsellOn ? "DOWNSELL" : "DECLINED");
+  }, [addUserMessage, processStage, downsellOn, phProduct]);
+
+  // The downsell's own decline (12). Her reply bubble is the button's label.
+  const handleDownsellDecline = useCallback(async () => {
+    setShowDownsellCTA(false);
+    addUserMessage(copy.downsellDeclineLabel ?? "Not right now");
+    trackPH("upsell_declined", {
+      funnel: offer ? backendOfferFunnel(offer) : (getPostHogFunnel() ?? "unknown"),
+      step: "upsell1",
+      product: phProduct,
+      tier: "downsell",
+    });
     await processStage("DECLINED");
-  }, [addUserMessage, processStage]);
+  }, [addUserMessage, processStage, copy, offer, phProduct]);
 
   // Handle Shipping Submit
   const handleShippingSubmit = useCallback(
@@ -611,6 +679,14 @@ export function useUpsellChat({
     messages,
     acceptLabel: copy.acceptLabel,
     ctaReassurance: copy.ctaReassurance,
+    // The optional downsell (12). showDownsellCTA never turns on when downsellOn is false.
+    showDownsellCTA,
+    downsellPriceLabel,
+    downsellAcceptLabel: copy.downsellAcceptLabel ? pMsg(copy.downsellAcceptLabel) : undefined,
+    downsellDeclineLabel: copy.downsellDeclineLabel,
+    downsellReassurance: copy.downsellReassurance,
+    handleDownsellAccept,
+    handleDownsellDecline,
     showContinue,
     continueLabel,
     handleContinue,

@@ -225,6 +225,21 @@ export const BACKEND_OFFERS: Record<BackendOfferKey, BackendOfferListing> = {
     initialListId: '6972552',
     bumpListId: '6972554',
   },
+  // ⭐ 12 — Lucky Numbers. REUSES 02's lists — initial 6972552, bump 6972554 — told apart only
+  // by the be-12 tags, exactly as 03/04/11 do. Campaign triggers (none built yet, code only): the
+  // purchase tag (T3) and the delivered tag (T4). ⭐ The bump (The Full Year) is the last page of
+  // her PDF, so `be-12-bump` + the bump list are a segment only.
+  // ⛔ A Campaign on 6972554 must never trigger on `be-12-lucky-numbers`: the purchase tag rides
+  //    the bump-list write too, so it would send the thank-you twice.
+  'lucky-numbers': {
+    number: '12',
+    name: 'Lucky Numbers',
+    tag: 'be-12-lucky-numbers',
+    bumpTag: 'be-12-bump',
+    deliveredTag: 'be-12-delivered',
+    initialListId: '6972552',
+    bumpListId: '6972554',
+  },
 };
 
 /** Tags to apply at the moment she pays. */
@@ -311,6 +326,22 @@ export const BACKEND_UPSELLS: Record<string, BackendUpsellListing> = {
     listId: '6972556',
     tag: 'be-02-upsell2-bracelet',
     tagSuffix: 'upsell2-bracelet',
+    priceCents: 4700,
+    downsellCents: 3000,
+  },
+  // ⭐ 12 — Evelyn's Wish Ritual + charged citrine bracelet (12-U1a). 12's U1 in place of the
+  // Protection Ritual, named by the catalog's `upsell1Product`. $47, downsell $30 (operator,
+  // 2026-11-02). Physical: the citrine bracelet is in stock and ships manually from the saved
+  // address with the lava stone's instruction card, exactly as be_protection_ritual does.
+  // ⚠ listId reuses the Protection Ritual list (6972555) as a PLACEHOLDER: no AWeber list was
+  // made for it. The per-offer tag `be-12-upsell1-wish-ritual` tells the two apart. Settle the
+  // list (and its confirmation email) before 12 takes money.
+  be_citrine_wish_ritual: {
+    productKey: 'be_citrine_wish_ritual',
+    name: "Evelyn's Wish Ritual + Citrine Bracelet",
+    listId: '6972555',
+    tag: 'be-12-upsell1-wish-ritual',
+    tagSuffix: 'upsell1-wish-ritual',
     priceCents: 4700,
     downsellCents: 3000,
   },

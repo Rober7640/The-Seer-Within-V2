@@ -6,6 +6,8 @@ import {
   TEA_READING_DELIVERY_HOURS,
   TEA_READING_PRICE_ARMS,
   UNSENT_LETTER_DELIVERY_HOURS,
+  LUCKY_NUMBERS_DELIVERY_HOURS,
+  takesBirthIntake,
   backendOfferForStripeProduct,
   backendOrderDescriptor,
   isBackendOfferKey,
@@ -257,6 +259,14 @@ router.get('/upsell/user-data', async (req: Request, res: Response) => {
     // Did she already buy Upsell 1 (Protection Ritual), and did she give a shipping
     // address there? If so, Upsell 2 reuses it and does NOT ask again — V1's Path A.
     // The address lives on the Upsell 1 PaymentIntent (see /upsell/shipping).
+    // U1's product for the offer she booked: the catalog's `upsell1Product` (12's Wish Ritual),
+    // else the Protection Ritual, as every offer before 12. ⛔ An unknown key falls back too.
+    const bookedOffer = backendOfferForStripeProduct(product);
+    const u1Key =
+      bookedOffer?.upsell1Product && BACKEND_UPSELLS[bookedOffer.upsell1Product]
+        ? bookedOffer.upsell1Product
+        : 'be_protection_ritual';
+    const u1Listing = BACKEND_UPSELLS[u1Key];
     let upsellPurchased = false;
     let shipping:
       | { name: string; line1: string; line2?: string; city: string; state: string; postal: string; country: string }
@@ -264,7 +274,7 @@ router.get('/upsell/user-data', async (req: Request, res: Response) => {
     if (customerId) {
       const pis = await stripe.paymentIntents.list({ customer: customerId, limit: 10 });
       const u1 = pis.data.find(
-        (p) => p.metadata?.product === 'be_protection_ritual' && p.status === 'succeeded',
+        (p) => p.metadata?.product === u1Key && p.status === 'succeeded',
       );
       if (u1) {
         upsellPurchased = true;
@@ -308,10 +318,10 @@ router.get('/upsell/user-data', async (req: Request, res: Response) => {
       }
     }
 
-    // 11 keeps her first name off Stripe (`piiOutOfStripe`), so it is read back from the
+    // 11 and 12 keep her first name off Stripe (`piiOutOfStripe`), so it is read back from the
     // intake. ⛔ Never the name on the card: 11-U1a's rule is her ?fn= name, or "dear".
     const firstName =
-      product === BACKEND_OFFER_CATALOG['unsent-letter'].stripeProduct
+      takesBirthIntake(backendOfferForStripeProduct(product)?.key)
         ? (await intakeFirstName(sessionId)) || 'Friend'
         : session.metadata?.firstName || session.customer_details?.name || 'Friend';
 
@@ -337,7 +347,12 @@ router.get('/upsell/user-data', async (req: Request, res: Response) => {
       // 02 collects no bucket / person — the twin-flame upsell copy needs neither.
       bucket: null,
       personName: null,
-      upsell1PriceCents: BACKEND_UPSELLS.be_protection_ritual.priceCents,
+      upsell1PriceCents: u1Listing.priceCents,
+      // Only for an offer with its own U1 product (12). Absent ⇒ the U1 chat posts its lean
+      // body (the Protection Ritual) and offers no downsell, byte-identical to before 12.
+      ...(u1Key !== 'be_protection_ritual'
+        ? { upsell1Product: u1Key, upsell1DownsellCents: u1Listing.downsellCents ?? null }
+        : {}),
       upsell2PriceCents: BACKEND_UPSELLS.be_bracelet.priceCents,
       upsell2DownsellCents: BACKEND_UPSELLS.be_bracelet.downsellCents,
       // Upsell 2 (Path A): she bought U1 and has an address → reuse it, don't re-ask.
@@ -849,13 +864,14 @@ router.post('/checkout', async (req: Request, res: Response) => {
       be08Person = { displayFirstName, fullBirthName, dateOfBirth: dob.iso };
     }
 
-    // ── 11's two personal fields ──────────────────────────────────────────────────────
+    // ── 11's (and 12's) two personal fields ──────────────────────────────────────────────────────
     // Her full birth name and date of birth, from the booking page. Same rules and same words
     // as 08's above, plus two: the name must have two parts (11-C1's first error), and she
     // must be 18, as the terms say and as 10 refuses. Parked on be_order_intake below, NEVER on
     // Stripe metadata. Her first name is not here: it is the letter's ?fn=, with no field.
+    // 12 Lucky Numbers takes the same two fields under the same rules (takesBirthIntake).
     let be11Person: { fullBirthName: string; dateOfBirth: string } | null = null;
-    if (offerKey === 'unsent-letter') {
+    if (takesBirthIntake(offerKey)) {
       const trimmed = (v: unknown) => (typeof v === 'string' ? v.replace(/\s+/g, ' ').trim() : '');
       const fullBirthName = trimmed(req.body?.fullBirthName).slice(0, 200);
       const dobRaw = trimmed(req.body?.dateOfBirth);
@@ -1361,14 +1377,17 @@ async function publicOrder(
 
   // 12h with 08's '+ 12-hour delivery' bump, 24h without — the same rule that stamps
   // `due_at` (server/lib/beOrders.ts, prepareBe08). ⛔ 04's Double Turning is NOT a speed bump,
-  // so 04 is always TEA_READING_DELIVERY_HOURS. 11's Closing the Door is not one either. Every
+  // so 04 is always TEA_READING_DELIVERY_HOURS. 11's Closing the Door and 12's The Full Year are
+  // not one either. Every
   // other offer keeps the rule it had.
   const deliveryHours =
     row.offer === 'tea-reading'
       ? TEA_READING_DELIVERY_HOURS
       : row.offer === 'unsent-letter'
         ? UNSENT_LETTER_DELIVERY_HOURS
-        : row.bumpPurchased
+        : row.offer === 'lucky-numbers'
+          ? LUCKY_NUMBERS_DELIVERY_HOURS
+          : row.bumpPurchased
           ? 12
           : 24;
 

@@ -243,9 +243,10 @@ describe('the shared CTAs keep V1’s words for everyone else', () => {
     expect(down).toContain("reassurance = 'Same eight stones. Same manifestation energy.'");
   });
 
-  it('only 11 overrides them', () => {
+  it('only 11 and 12 override them', () => {
     for (const [offer, pitch] of Object.entries(BACKEND_UPSELL_PITCH)) {
-      if (offer === 'unsent-letter') continue;
+      // 12 copied 11's pattern (12-U1a, 12-U2a): "Take your time." and an empty downsell line.
+      if (offer === 'unsent-letter' || offer === 'lucky-numbers') continue;
       expect(pitch?.upsell1.ctaReassurance, offer).toBeUndefined();
       expect(pitch?.upsell2.downsellReassurance, offer).toBeUndefined();
     }

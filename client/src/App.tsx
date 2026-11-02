@@ -87,6 +87,8 @@ const TeaReadingBookingChat = lazyWithRetry(() => import("@/pages/offers/tea-rea
 const TeaReadingThankYouPage = lazyWithRetry(() => import("@/pages/offers/tea-reading/ThankYouPage"));
 const UnsentLetterBookingPage = lazyWithRetry(() => import("@/pages/offers/unsent-letter/BookingPage"));
 const UnsentLetterThankYouPage = lazyWithRetry(() => import("@/pages/offers/unsent-letter/ThankYouPage"));
+const LuckyNumbersBookingPage = lazyWithRetry(() => import("@/pages/offers/lucky-numbers/BookingPage"));
+const LuckyNumbersThankYouPage = lazyWithRetry(() => import("@/pages/offers/lucky-numbers/ThankYouPage"));
 const PixiuBookingPage = lazyWithRetry(() => import("@/pages/offers/pixiu-bracelet/BookingPage"));
 const PixiuThankYouPage = lazyWithRetry(() => import("@/pages/offers/pixiu-bracelet/ThankYouPage"));
 const HeartCleanserBookingPage = lazyWithRetry(() => import("@/pages/offers/heart-cleanser/BookingPage"));
@@ -432,6 +434,9 @@ function Router() {
             Spec: improve-v1/v1-one-time-BEs/docs/11/booking-page/11-C1-booking-page.md */}
         <Route path="/tarot/unsent-letter/success" component={UnsentLetterThankYouPage} />
         <Route path="/tarot/unsent-letter" component={UnsentLetterBookingPage} />
+        {/* 12 Lucky Numbers — page-only booking + receipt; upsells are the shared /offers/upsell/*. */}
+        <Route path="/numerology/lucky-numbers/success" component={LuckyNumbersThankYouPage} />
+        <Route path="/numerology/lucky-numbers" component={LuckyNumbersBookingPage} />
 
         {/* Backend deck, offer 06 — the Wishing Bracelet (Pixiu). Reading-shaped
             funnel, Object-shaped product: fixed $49, a real physical item that

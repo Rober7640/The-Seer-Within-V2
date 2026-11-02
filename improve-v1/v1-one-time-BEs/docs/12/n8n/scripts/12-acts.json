@@ -1,0 +1,584 @@
+{
+  "_note": "12 Lucky Numbers. The writing spec the generator reads. ⛔ Edit this and build-12-n8n.py, never build/*.n8n.json. Plan: docs/12/product/12-P1-plan.md. Rows here are FACTS for the writer (keywords, jobs), never sentences to copy: a quoted example comes back verbatim (memory: prompt-examples-become-templates). The one exception is `n1.letter_line`: those are the letter's own 1-9 lines, which she has already read and the reading must agree with.",
+  "offer": {
+    "number": "12",
+    "key": "lucky-numbers",
+    "title": "Lucky Numbers",
+    "stripe_product": "be_lucky_numbers",
+    "bump_product": "full_year",
+    "delivered_tag": "be-12-delivered",
+    "arm_a_codes": [
+      "1",
+      "2",
+      "3",
+      "4",
+      "5"
+    ],
+    "arm_b_codes": [
+      "11",
+      "12",
+      "13",
+      "14",
+      "15"
+    ]
+  },
+  "floor_words": 3500,
+  "target_words": 4150,
+  "ceiling_words": 4700,
+  "segments": [
+    {
+      "id": "A",
+      "label": "the opening and her three numbers",
+      "sections": [
+        "opening",
+        "n1",
+        "n2",
+        "n3"
+      ]
+    },
+    {
+      "id": "B",
+      "label": "her six, her PIN and the number to stop using",
+      "sections": [
+        "six",
+        "pin",
+        "stop"
+      ]
+    },
+    {
+      "id": "C",
+      "label": "her twelve open days",
+      "sections": [
+        "days_intro",
+        "day01",
+        "day02",
+        "day03",
+        "day04",
+        "day05",
+        "day06",
+        "day07",
+        "day08",
+        "day09",
+        "day10",
+        "day11",
+        "day12"
+      ]
+    },
+    {
+      "id": "D",
+      "label": "her lucky hours, the uses and the close",
+      "sections": [
+        "hours",
+        "use_lottery",
+        "use_pin",
+        "use_days",
+        "use_home",
+        "use_phone",
+        "use_wedding",
+        "use_interview",
+        "use_business",
+        "use_travel",
+        "close"
+      ]
+    }
+  ],
+  "sections": {
+    "opening": {
+      "words": 280,
+      "closes": [
+        "L3 (sets up)"
+      ],
+      "job": "Say who you are and that you sat with her birth name and date one evening, as your letter said you would. Say what's inside, in the order she'll meet it: her three numbers first, because everything else is built from them; then her six to play, her PIN and the number to stop using; then her twelve open days, one a month; then her hours and the uses filled in. Tell her how to use it: read it all the way through once before she uses any of it, with a pen. Inoculate: a few of her days will look odd (a Sunday, a day in the middle of a busy month, a month where the day comes late), and she's to read it all before she decides any of it is wrong, because each day was picked against the whole month. One line: if the name or birth date printed at the top is wrong, every number after it is wrong too, so reply and you'll work them out again."
+    },
+    "n1": {
+      "words": 330,
+      "closes": [
+        "L3"
+      ],
+      "job": "Her first number, the one she worked out herself from her birth date. Open by saying she's already met this one. What it means must agree with the line from your letter that you're handed: it's the same number, so it's the same luck, and you go further with it here. Give what her luck looks like when it comes (things she could point at), when it comes (a moment, never a date), and what it brings. Then one thing to do with this number this week."
+    },
+    "n2": {
+      "words": 320,
+      "closes": [
+        "L2",
+        "L3"
+      ],
+      "job": "Her second number. It comes from every letter of her full birth name, the name on her certificate, which is why the letter couldn't give it to her. It's the luck that comes through other people and the world outside her door. Give what that luck looks like, when it comes (a moment, never a date) and what it brings. Then one thing to do with this number."
+    },
+    "n3": {
+      "words": 320,
+      "closes": [
+        "L2",
+        "L3"
+      ],
+      "job": "Her third number. It comes from the vowels of her full birth name. It's the luck that answers what she wants for herself, the private wish she doesn't say out loud. Give what that luck looks like, when it comes (a moment, never a date) and what it brings. Close the three numbers off by saying how the three work together: everything after this page is built from them."
+    },
+    "six": {
+      "words": 260,
+      "closes": [
+        "L4",
+        "L9 (lottery)"
+      ],
+      "job": "Her six numbers to play. The page prints them above your words, with where each one comes from. Say how they're built (each one adds down to one of her numbers, the families from your letter, now all of them). Tell her how to play them: the same six every time, on any ticket where she picks her own numbers, and on raffles where she can ask for a number. Then repeat her promise to you, plainly: she won't chase it, she won't spend money she needs, one ticket where she'd have bought one."
+    },
+    "pin": {
+      "words": 200,
+      "closes": [
+        "L5"
+      ],
+      "job": "Her four digits for a PIN. The page prints them with where each digit comes from. Say where each comes from in plain words. Say where to use it: the bank card, the phone, the alarm. Tell her to learn it by heart and never keep it written down with her card. Tell her never to use her birth date, or any part of it, as a PIN: it's the first thing anyone tries, and it isn't a lucky number anyway."
+    },
+    "stop": {
+      "words": 300,
+      "closes": [
+        "L6",
+        "L7"
+      ],
+      "job": "The number to stop using. Name it flat in the first lines. Say how it was found, in the plain words you're handed. Say what it does: it clashes with her three, and it gets in the way on her open days. Then where to look: her house or flat number, her phone number, her PIN. The page prints how to check each one; you say why those three places. ⛔ You can't see her house, phone or PIN. Never say it's there, never say you found it there or saw it. Say where to look and what to do if she finds it. The PIN is the easy one: she changes it to the four digits she's just been given. For a house number, she isn't moving house over it: give her one small thing to do at her own front door instead. End on what to do this week."
+    },
+    "days_intro": {
+      "words": 110,
+      "closes": [
+        "L1"
+      ],
+      "job": "Introduce her twelve open days, one in every month of her window. Say what an open day is (the day the calendar's numbers and hers line up best that month) and that each one below says what it's for. Every one of them is a day to buy her ticket, so the months don't need to keep saying so. If her personal year number is handed to you, say in one sentence what kind of year it is for her."
+    },
+    "day": {
+      "closes": [
+        "L1",
+        "L9 (open days)"
+      ],
+      "job": "One open day. The page prints the month, the date, the weekday and the number the day carries above your words. Say what this day is for, keyed to that number and the action you're handed, and what she does on it. Write about this day only."
+    },
+    "hours": {
+      "words": 150,
+      "closes": [
+        "L8"
+      ],
+      "job": "Her lucky hours, which the page prints above your words. Say what they are for (the call, the interview, the ticket, the signature) and give her the rule in plain words: an hour carries a number the way a date does, and the ones on her clock that carry hers are the ones printed. Ten o'clock counts as a 1, eleven as a 2, twelve as a 3. Put one of her hours on one of her open days as an example of using both at once."
+    },
+    "use_lottery": {
+      "words": 70,
+      "closes": [
+        "L9",
+        "L4"
+      ],
+      "label": "Raffles, lottery and sweepstakes"
+    },
+    "use_pin": {
+      "words": 30,
+      "closes": [
+        "L9",
+        "L5"
+      ],
+      "label": "Your PIN"
+    },
+    "use_days": {
+      "words": 40,
+      "closes": [
+        "L9",
+        "L1"
+      ],
+      "label": "Your twelve open days"
+    },
+    "use_home": {
+      "words": 60,
+      "closes": [
+        "L9"
+      ],
+      "label": "Your home"
+    },
+    "use_phone": {
+      "words": 50,
+      "closes": [
+        "L9"
+      ],
+      "label": "Your phone"
+    },
+    "use_wedding": {
+      "words": 45,
+      "closes": [
+        "L9"
+      ],
+      "label": "A wedding date"
+    },
+    "use_interview": {
+      "words": 70,
+      "closes": [
+        "L9",
+        "L8"
+      ],
+      "label": "A job interview, and saying yes to an offer"
+    },
+    "use_business": {
+      "words": 45,
+      "closes": [
+        "L9"
+      ],
+      "label": "A business"
+    },
+    "use_travel": {
+      "words": 60,
+      "closes": [
+        "L9"
+      ],
+      "label": "Travel"
+    },
+    "close": {
+      "words": 140,
+      "closes": [
+        "L10 (arm A)"
+      ],
+      "job": "Close the reading. Tell her the order to do things in, starting this week: the PIN, the six on the slip in her purse, the dates in her diary, a look for the number to stop using. Then send her into her window. No new promise. No summary of what each section said."
+    }
+  },
+  "uses_jobs": {
+    "use_lottery": "Play her six, and buy on her open days. Then the arm's line about winning (you're handed it). Then her promise again, in a few words.",
+    "use_pin": "One or two sentences pointing back to her PIN. Don't repeat its digits' reasons.",
+    "use_days": "One or two sentences: what she does on them, pointing back to the months.",
+    "use_home": "Choosing a house or flat whose number adds down to one of hers, the examples printed, and signing or moving on an open day if she's moving this year.",
+    "use_phone": "When she next changes her number: pick one that adds down to her first number, and keep the stop number out of it. The rule is printed; say it plainly.",
+    "use_wedding": "Her own or one she has a say in: pick one of her open days. If it's not her wedding, she can still suggest the date.",
+    "use_interview": "Ask for the interview on an open day, at the hour printed. And if an offer comes, say yes on an open day too.",
+    "use_business": "Open the doors, sign the lease, or launch on an open day. Not on whatever day suits the sign man.",
+    "use_travel": "Book trips around her open days. Where she gets a choice, a flight number, seat or room number that adds down to one of hers."
+  },
+  "arms": {
+    "A": {
+      "name": "small miracles",
+      "what_it_brings": "the kind of small miracle it brings",
+      "brings_rule": "In each of her three numbers, name the kind of small miracle that number brings, using the words small miracle, from the facts you're handed. Small ones, never the big prize.",
+      "lottery_line": "Say this is where small miracles turn up most for most women: a raffle, a draw that goes her way. Small ones, not the big prize.",
+      "close_rule": "In the close, say that when one of her small miracles comes she'll know which number brought it, and it'll be no accident."
+    },
+    "B": {
+      "name": "the hand-over list",
+      "what_it_brings": "what it brings her",
+      "brings_rule": "In each of her three numbers, say plainly what that number's luck brings her, from the facts you're handed. Never the word miracle: your letter to her didn't use it.",
+      "lottery_line": "Say plainly you're not promising her a win, and nobody honest can. You're telling her which numbers to play and which days to buy on.",
+      "close_rule": "In the close, say she isn't guessing any more: her own numbers, on her own days."
+    }
+  },
+  "email_said": {
+    "common": "WHAT YOUR LETTER TOLD HER (facts for you, so you can pay them off. Don't retell them.)\nYou read numbers as well as cards, and the numbers are the most exact thing you do. You asked for one evening with her birth name and birth date. She worked out her first number herself, from her birth date, adding every digit until one was left, and read your line for it. You showed her the ticket family: every number that adds back down to hers. You said she has three lucky numbers, and the second and third come from her full birth name, the one on her certificate, counted a certain way. You said the calendar has numbers too, every month and every day, and on a few days the calendar's numbers and hers line up: you call those her open days, twelve, one in every month. You said there's one number working against her, not one of her three, in her house number, her phone number or her PIN, or close to it, and that you'd name it and tell her where to look. You said a new PIN takes two minutes at the bank and the reading gives her the four digits. You listed the uses: tickets, PIN, open days, home, phone, wedding date, job interview and saying yes to an offer, a business, travel. You said to ask for the interview at an hour that carries one of her numbers. She promised you she won't chase it: no money she needs, no ten tickets where she'd have bought one. Short phrases from that letter can come back where a brief says so. Don't repeat its sentences.",
+    "A": "Your letter promised her small miracles: a raffle that goes her way, a cheque she wasn't expecting, a yes she'd stopped waiting for. Small ones, never the big prize. It said on an open day small miracles find her easily, and that when one comes she'll know it was no accident.",
+    "B": "Your letter promised her the things themselves: six numbers to play, four digits for her PIN, twelve days to use them, and her three numbers under all of it. It said on an open day she's easy for luck to find. It said plainly you weren't promising her a win, and nobody honest can."
+  },
+  "n1": {
+    "role": "how luck reaches her",
+    "letter_line": {
+      "1": "Your luck comes when you go first. A new job, a first visit, the first to put a hand up. It comes on the days you start something, and never while you wait for someone else to move.",
+      "2": "Your luck comes through another person. An introduction, a phone call, a second chance. It comes on the second try, so don't stop after the first.",
+      "3": "Your luck comes through talk. A chance remark, a word from a neighbour, a chat you nearly skipped. It finds you out among people, not at home with the door shut.",
+      "4": "Your luck comes slowly, and on paper. Forms, contracts, a deed, a letter about a pension or a house. It comes after the work's done, never in a rush.",
+      "5": "Your luck comes with change. A trip, a move, a stranger, a plan that falls through and makes room for a better one. It comes fast and it doesn't wait for you.",
+      "6": "Your luck comes through home and family. A house, a gift, a quarrel that finally mends. It comes at your own table, or through the people who sit at it.",
+      "7": "Your luck comes when you're on your own. A hunch, something you find, an answer that turns up in the quiet. It comes after you've stopped looking.",
+      "8": "Your luck comes through work and business. An offer, a deal, a better role. It comes after you've asked for it out loud, and not before.",
+      "9": "Your luck comes at endings. You let something go, and something good comes back to you. It comes as one thing closes, like a job, a lease or a long wait."
+    },
+    "brings": {
+      "1": "being picked first; her name drawn; the place she went for first",
+      "2": "the second chance that works; the call back",
+      "3": "the chat she nearly skipped paying off; a tip passed on",
+      "4": "post that goes her way: a pension letter, a form stamped yes, a deed",
+      "5": "the better thing that turns up after a plan falls through",
+      "6": "something good at her own table: a gift, a quarrel mended",
+      "7": "the thing she finds; the hunch that's right; an answer in the quiet",
+      "8": "the offer; the yes after she asks out loud",
+      "9": "something coming back to her as something else closes"
+    }
+  },
+  "n2": {
+    "role": "luck that comes through other people and the world outside her door",
+    "looks_like": {
+      "1": "someone picks her first; she's asked to lead; a door opens because she knocked",
+      "2": "someone vouches for her; a kind word passed on to the right person",
+      "3": "news through a friend; an invitation; a word in the right ear",
+      "4": "an official letter going her way; a clerk or tradesman who sorts it",
+      "5": "a chance meeting away from home; a stranger's tip; a change of plan that lands better",
+      "6": "help from family or a neighbour; something for the house turning up",
+      "7": "a clue someone drops; the right shop, the right page",
+      "8": "a boss or customer who notices; an offer; someone with means backing her",
+      "9": "old friends coming back round; a kindness she did once, returned"
+    },
+    "when": {
+      "1": "the first time she walks in somewhere new",
+      "2": "one to one, never in a crowd",
+      "3": "at a gathering, on the phone, after a chat",
+      "4": "once the paperwork's in properly",
+      "5": "when she's out of her routine",
+      "6": "when she's helping someone",
+      "7": "when she goes on her own and listens",
+      "8": "after she's asked plainly",
+      "9": "as something ends"
+    },
+    "brings": {
+      "1": "a place, a spot, a name drawn first",
+      "2": "a favour returned she'd forgotten",
+      "3": "an invitation that turns into something",
+      "4": "a refund, a rebate, a form back with a yes",
+      "5": "an upgrade, a better seat, a plan B that beats plan A",
+      "6": "a gift for the house; a family quarrel ended",
+      "7": "something lost turns up; an answer comes in the post",
+      "8": "a better offer; money owed paid",
+      "9": "something she'd given up on coming back"
+    }
+  },
+  "n3": {
+    "role": "luck that answers what she wants for herself",
+    "wants": {
+      "1": "to do a thing her own way",
+      "2": "closeness and peace",
+      "3": "to be heard and enjoyed",
+      "4": "a solid floor under her",
+      "5": "room to move and something new",
+      "6": "her people well and her home settled",
+      "7": "a straight answer and peace of mind",
+      "8": "to be paid what she's worth",
+      "9": "to finish well and set something down"
+    },
+    "looks_like": {
+      "1": "the go-ahead she's waited for; a chance to do it her way",
+      "2": "someone meets her halfway; a quarrel ends",
+      "3": "a laugh that turns the week; something she made gets noticed",
+      "4": "a bill sorted; a repair cheaper than feared; a plan that holds",
+      "5": "the trip comes off; the door she wanted opens",
+      "6": "good news from family; the house settles",
+      "7": "the truth comes out plainly; a straight answer",
+      "8": "credit given; being paid what she's owed",
+      "9": "a weight lifted; a long wait ends"
+    },
+    "when": {
+      "1": "the day she stops asking permission",
+      "2": "when she asks gently, a second time",
+      "3": "when she says what she wants out loud",
+      "4": "when the paperwork's in order",
+      "5": "the moment she says yes to a change",
+      "6": "when she's looking after someone",
+      "7": "in the quiet, after she's stopped looking",
+      "8": "after she's asked out loud",
+      "9": "as one thing closes"
+    },
+    "brings": {
+      "1": "a yes to the thing she'd do alone",
+      "2": "the call she'd hoped for",
+      "3": "a small prize for something she made or said",
+      "4": "a bill smaller than she feared",
+      "5": "a last-minute place; a way out",
+      "6": "good news from family",
+      "7": "an answer she'd stopped expecting",
+      "8": "money owed paid back",
+      "9": "a long wait ending in a yes"
+    }
+  },
+  "day_number": {
+    "_": "What a day carrying each number is for. Keywords for the writer, never lines. Also used for her personal year.",
+    "1": {
+      "for": "starting something",
+      "actions": [
+        "start the thing she's put off",
+        "send the application",
+        "make the first visit",
+        "sign up",
+        "put her name down for something new",
+        "make the first move on the thing she wants"
+      ]
+    },
+    "2": {
+      "for": "asking someone",
+      "actions": [
+        "ask someone for help",
+        "try again where she was turned down",
+        "mend a quarrel",
+        "ask for an introduction",
+        "ask a friend to go with her",
+        "say yes to the second invitation"
+      ]
+    },
+    "3": {
+      "for": "talk",
+      "actions": [
+        "make the phone call",
+        "say yes to an invitation",
+        "talk to a neighbour",
+        "write the letter she's owed someone",
+        "ring someone she's lost touch with",
+        "go to the thing she'd usually skip"
+      ]
+    },
+    "4": {
+      "for": "paper",
+      "actions": [
+        "send the form",
+        "sort the papers",
+        "go to the bank",
+        "sign the contract",
+        "fill in the claim she's put off",
+        "check the bills and the statements"
+      ]
+    },
+    "5": {
+      "for": "change",
+      "actions": [
+        "book the trip",
+        "go somewhere new",
+        "move things round at home",
+        "say yes to the change",
+        "take the day trip",
+        "change one thing in her week"
+      ]
+    },
+    "6": {
+      "for": "home and family",
+      "actions": [
+        "do the thing for the house",
+        "have family round",
+        "give the gift",
+        "settle a family matter",
+        "fix the thing in the house that's bothered her",
+        "cook for someone"
+      ]
+    },
+    "7": {
+      "for": "being on her own",
+      "actions": [
+        "go somewhere quiet alone",
+        "look for the thing she lost",
+        "follow a hunch",
+        "read the small print",
+        "take a long walk with no phone",
+        "write down the hunch she keeps having"
+      ]
+    },
+    "8": {
+      "for": "money and work",
+      "actions": [
+        "ask for money she's owed",
+        "ask for the raise",
+        "make the deal",
+        "put in the offer",
+        "ask for the better price",
+        "ask someone with the means to back her plan"
+      ]
+    },
+    "9": {
+      "for": "finishing",
+      "actions": [
+        "finish the job she's left half done",
+        "clear out a drawer or a cupboard",
+        "close the account",
+        "give something away",
+        "let go of the thing she's been keeping for no reason",
+        "return the thing she borrowed"
+      ]
+    }
+  },
+  "devices": {
+    "day_openers": {
+      "date": "open on the day itself, the weekday and the date, then what it's for",
+      "do": "open on what she does that day",
+      "number": "open on the number the day carries and what it wants from her",
+      "warn": "open on what to leave alone that day, then what to do instead",
+      "month": "open on where that month finds most women (the weather, the bills, the holidays), then the day"
+    },
+    "day_ends": {
+      "hour": "end on the hour to do it, one of her lucky hours",
+      "do": "end on one small thing to do that day",
+      "watch": "end on one thing to watch for that day",
+      "ready": "end on what to get ready the day before"
+    },
+    "number_orders": [
+      [
+        "looks",
+        "when",
+        "brings"
+      ],
+      [
+        "when",
+        "looks",
+        "brings"
+      ],
+      [
+        "brings",
+        "looks",
+        "when"
+      ],
+      [
+        "looks",
+        "brings",
+        "when"
+      ]
+    ],
+    "day_words_base": 115,
+    "day_jitter": [
+      -25,
+      -15,
+      -15,
+      -5,
+      -5,
+      0,
+      0,
+      5,
+      5,
+      15,
+      15,
+      25
+    ],
+    "ticket_months": 3,
+    "name_months": 3,
+    "name_uses_total": 8,
+    "dear_uses": 4,
+    "letter_callbacks_max": 3
+  },
+  "banned": {
+    "hedges": [
+      "perhaps",
+      "may",
+      "might",
+      "tends to",
+      "tend to",
+      "energy",
+      "energies",
+      "journey",
+      "the universe",
+      "i feel",
+      "i sense",
+      "it seems",
+      "vibration",
+      "vibrations"
+    ],
+    "jargon": [
+      "life path",
+      "expression number",
+      "soul urge",
+      "heart's desire number",
+      "karmic",
+      "master number",
+      "pythagorean",
+      "numerology chart"
+    ],
+    "win": [
+      "jackpot",
+      "guaranteed",
+      "guarantee",
+      "winning numbers",
+      "sure to win",
+      "can't lose",
+      "you will win",
+      "you'll win",
+      "bound to win",
+      "certain to win"
+    ],
+    "found": [
+      "i found it",
+      "i've found it",
+      "i saw it in",
+      "i can see it in",
+      "i can see your",
+      "it's in your house number",
+      "it's in your phone number",
+      "it's in your pin"
+    ]
+  }
+}

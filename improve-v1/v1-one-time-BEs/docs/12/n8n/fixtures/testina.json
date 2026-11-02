@@ -1,0 +1,1373 @@
+{
+  "_note": "Written by check-12-numbers.mjs --write-fixtures. The check fails if the engine drifts from this.",
+  "input": {
+    "birthName": "Testina Rose Testerly",
+    "birthDate": "1968-07-21",
+    "orderDate": "2026-11-10"
+  },
+  "output": {
+    "engine": "lucky-12",
+    "version": 1,
+    "input": {
+      "birthName": "Testina Rose Testerly",
+      "birthDate": "1968-07-21",
+      "orderDate": "2026-11-10",
+      "game": {
+        "min": 1,
+        "max": 49,
+        "pick": 6
+      }
+    },
+    "name": {
+      "letters": "TESTINAROSETESTERLY",
+      "letterCount": 19,
+      "yCountedAsVowel": false,
+      "words": [
+        {
+          "word": "testina",
+          "all": 25,
+          "vowels": 15
+        },
+        {
+          "word": "rose",
+          "all": 21,
+          "vowels": 11
+        },
+        {
+          "word": "testerly",
+          "all": 34,
+          "vowels": 10
+        }
+      ]
+    },
+    "numbers": {
+      "n1": {
+        "value": 7,
+        "raw": 34,
+        "from": "birth date",
+        "working": "7 + 2 + 1 + 1 + 9 + 6 + 8 = 34, then 3 + 4 = 7"
+      },
+      "n2": {
+        "value": 8,
+        "raw": 80,
+        "from": "every letter of her birth name",
+        "working": "80, then 8 + 0 = 8"
+      },
+      "n3": {
+        "value": 9,
+        "raw": 36,
+        "from": "the vowels of her birth name",
+        "working": "36, then 3 + 6 = 9"
+      },
+      "three": [
+        7,
+        8,
+        9
+      ],
+      "distinct": [
+        7,
+        8,
+        9
+      ],
+      "repeats": [],
+      "birthdayRoot": {
+        "value": 3,
+        "raw": 21
+      },
+      "sumRoot": 6
+    },
+    "tickets": {
+      "game": {
+        "min": 1,
+        "max": 49,
+        "pick": 6
+      },
+      "numbers": [
+        {
+          "n": 7,
+          "root": 7,
+          "source": "lucky",
+          "of": [
+            "n1"
+          ]
+        },
+        {
+          "n": 8,
+          "root": 8,
+          "source": "lucky",
+          "of": [
+            "n2"
+          ]
+        },
+        {
+          "n": 9,
+          "root": 9,
+          "source": "lucky",
+          "of": [
+            "n3"
+          ]
+        },
+        {
+          "n": 16,
+          "root": 7,
+          "source": "lucky",
+          "of": [
+            "n1"
+          ]
+        },
+        {
+          "n": 17,
+          "root": 8,
+          "source": "lucky",
+          "of": [
+            "n2"
+          ]
+        },
+        {
+          "n": 18,
+          "root": 9,
+          "source": "lucky",
+          "of": [
+            "n3"
+          ]
+        }
+      ],
+      "list": [
+        7,
+        8,
+        9,
+        16,
+        17,
+        18
+      ],
+      "families": {
+        "7": [
+          7,
+          16,
+          25,
+          34,
+          43
+        ],
+        "8": [
+          8,
+          17,
+          26,
+          35,
+          44
+        ],
+        "9": [
+          9,
+          18,
+          27,
+          36,
+          45
+        ]
+      },
+      "shortfall": false,
+      "luckyCount": 6,
+      "note": "All 6 reduce to one of her three numbers."
+    },
+    "stopNumber": {
+      "value": 4,
+      "rule": "karmic-lesson",
+      "missingDigits": [
+        4,
+        8
+      ],
+      "why": "No letter of her birth name carries a 4, and it is not one of her three."
+    },
+    "pin": {
+      "value": "7893",
+      "digits": [
+        {
+          "d": 7,
+          "from": "n1"
+        },
+        {
+          "d": 8,
+          "from": "n2"
+        },
+        {
+          "d": 9,
+          "from": "n3"
+        },
+        {
+          "d": 3,
+          "from": "birthday"
+        }
+      ],
+      "stage": "in-order",
+      "why": "Her first, second and third numbers and her birthday root, in that order.",
+      "tries": 1,
+      "rejected": []
+    },
+    "windowLabel": "2027",
+    "calendar": {
+      "window": {
+        "start": "2027-01-01",
+        "end": "2027-12-31",
+        "label": "2027",
+        "rolled": false
+      },
+      "earliestAllowed": "2026-11-24",
+      "personalYears": {
+        "2027": 3
+      }
+    },
+    "openDays": [
+      {
+        "date": "2027-01-12",
+        "weekday": "Tuesday",
+        "monthName": "January",
+        "day": 12,
+        "forNumber": 7,
+        "score": 2,
+        "parts": {
+          "weekday": 2,
+          "ud": 0
+        },
+        "py": 3,
+        "pm": 4,
+        "pd": 7,
+        "ud": 6
+      },
+      {
+        "date": "2027-02-03",
+        "weekday": "Wednesday",
+        "monthName": "February",
+        "day": 3,
+        "forNumber": 8,
+        "score": 3,
+        "parts": {
+          "weekday": 2,
+          "ud": 1
+        },
+        "py": 3,
+        "pm": 5,
+        "pd": 8,
+        "ud": 7
+      },
+      {
+        "date": "2027-03-03",
+        "weekday": "Wednesday",
+        "monthName": "March",
+        "day": 3,
+        "forNumber": 9,
+        "score": 3,
+        "parts": {
+          "weekday": 2,
+          "ud": 1
+        },
+        "py": 3,
+        "pm": 6,
+        "pd": 9,
+        "ud": 8
+      },
+      {
+        "date": "2027-04-09",
+        "weekday": "Friday",
+        "monthName": "April",
+        "day": 9,
+        "forNumber": 7,
+        "score": 2,
+        "parts": {
+          "weekday": 2,
+          "ud": 0
+        },
+        "py": 3,
+        "pm": 7,
+        "pd": 7,
+        "ud": 6
+      },
+      {
+        "date": "2027-05-18",
+        "weekday": "Tuesday",
+        "monthName": "May",
+        "day": 18,
+        "forNumber": 8,
+        "score": 3,
+        "parts": {
+          "weekday": 2,
+          "ud": 1
+        },
+        "py": 3,
+        "pm": 8,
+        "pd": 8,
+        "ud": 7
+      },
+      {
+        "date": "2027-06-09",
+        "weekday": "Wednesday",
+        "monthName": "June",
+        "day": 9,
+        "forNumber": 9,
+        "score": 3,
+        "parts": {
+          "weekday": 2,
+          "ud": 1
+        },
+        "py": 3,
+        "pm": 9,
+        "pd": 9,
+        "ud": 8
+      },
+      {
+        "date": "2027-07-06",
+        "weekday": "Tuesday",
+        "monthName": "July",
+        "day": 6,
+        "forNumber": 7,
+        "score": 2,
+        "parts": {
+          "weekday": 2,
+          "ud": 0
+        },
+        "py": 3,
+        "pm": 1,
+        "pd": 7,
+        "ud": 6
+      },
+      {
+        "date": "2027-08-06",
+        "weekday": "Friday",
+        "monthName": "August",
+        "day": 6,
+        "forNumber": 8,
+        "score": 3,
+        "parts": {
+          "weekday": 2,
+          "ud": 1
+        },
+        "py": 3,
+        "pm": 2,
+        "pd": 8,
+        "ud": 7
+      },
+      {
+        "date": "2027-09-06",
+        "weekday": "Monday",
+        "monthName": "September",
+        "day": 6,
+        "forNumber": 9,
+        "score": 3,
+        "parts": {
+          "weekday": 2,
+          "ud": 1
+        },
+        "py": 3,
+        "pm": 3,
+        "pd": 9,
+        "ud": 8
+      },
+      {
+        "date": "2027-10-12",
+        "weekday": "Tuesday",
+        "monthName": "October",
+        "day": 12,
+        "forNumber": 7,
+        "score": 2,
+        "parts": {
+          "weekday": 2,
+          "ud": 0
+        },
+        "py": 3,
+        "pm": 4,
+        "pd": 7,
+        "ud": 6
+      },
+      {
+        "date": "2027-11-03",
+        "weekday": "Wednesday",
+        "monthName": "November",
+        "day": 3,
+        "forNumber": 8,
+        "score": 3,
+        "parts": {
+          "weekday": 2,
+          "ud": 1
+        },
+        "py": 3,
+        "pm": 5,
+        "pd": 8,
+        "ud": 7
+      },
+      {
+        "date": "2027-12-03",
+        "weekday": "Friday",
+        "monthName": "December",
+        "day": 3,
+        "forNumber": 9,
+        "score": 3,
+        "parts": {
+          "weekday": 2,
+          "ud": 1
+        },
+        "py": 3,
+        "pm": 6,
+        "pd": 9,
+        "ud": 8
+      }
+    ],
+    "fullYear": {
+      "count": 86,
+      "matchCount": 82,
+      "openDaysNotMatching": 4,
+      "months": [
+        {
+          "month": "2027-01",
+          "label": "January 2027",
+          "days": [
+            {
+              "date": "2027-01-04",
+              "weekday": "Monday",
+              "pd": 8,
+              "ud": 7,
+              "open": false,
+              "match": true
+            },
+            {
+              "date": "2027-01-05",
+              "weekday": "Tuesday",
+              "pd": 9,
+              "ud": 8,
+              "open": false,
+              "match": true
+            },
+            {
+              "date": "2027-01-12",
+              "weekday": "Tuesday",
+              "pd": 7,
+              "ud": 6,
+              "open": true,
+              "match": false
+            },
+            {
+              "date": "2027-01-13",
+              "weekday": "Wednesday",
+              "pd": 8,
+              "ud": 7,
+              "open": false,
+              "match": true
+            },
+            {
+              "date": "2027-01-14",
+              "weekday": "Thursday",
+              "pd": 9,
+              "ud": 8,
+              "open": false,
+              "match": true
+            },
+            {
+              "date": "2027-01-22",
+              "weekday": "Friday",
+              "pd": 8,
+              "ud": 7,
+              "open": false,
+              "match": true
+            },
+            {
+              "date": "2027-01-23",
+              "weekday": "Saturday",
+              "pd": 9,
+              "ud": 8,
+              "open": false,
+              "match": true
+            },
+            {
+              "date": "2027-01-31",
+              "weekday": "Sunday",
+              "pd": 8,
+              "ud": 7,
+              "open": false,
+              "match": true
+            }
+          ]
+        },
+        {
+          "month": "2027-02",
+          "label": "February 2027",
+          "days": [
+            {
+              "date": "2027-02-03",
+              "weekday": "Wednesday",
+              "pd": 8,
+              "ud": 7,
+              "open": true,
+              "match": true
+            },
+            {
+              "date": "2027-02-04",
+              "weekday": "Thursday",
+              "pd": 9,
+              "ud": 8,
+              "open": false,
+              "match": true
+            },
+            {
+              "date": "2027-02-12",
+              "weekday": "Friday",
+              "pd": 8,
+              "ud": 7,
+              "open": false,
+              "match": true
+            },
+            {
+              "date": "2027-02-13",
+              "weekday": "Saturday",
+              "pd": 9,
+              "ud": 8,
+              "open": false,
+              "match": true
+            },
+            {
+              "date": "2027-02-21",
+              "weekday": "Sunday",
+              "pd": 8,
+              "ud": 7,
+              "open": false,
+              "match": true
+            },
+            {
+              "date": "2027-02-22",
+              "weekday": "Monday",
+              "pd": 9,
+              "ud": 8,
+              "open": false,
+              "match": true
+            }
+          ]
+        },
+        {
+          "month": "2027-03",
+          "label": "March 2027",
+          "days": [
+            {
+              "date": "2027-03-02",
+              "weekday": "Tuesday",
+              "pd": 8,
+              "ud": 7,
+              "open": false,
+              "match": true
+            },
+            {
+              "date": "2027-03-03",
+              "weekday": "Wednesday",
+              "pd": 9,
+              "ud": 8,
+              "open": true,
+              "match": true
+            },
+            {
+              "date": "2027-03-11",
+              "weekday": "Thursday",
+              "pd": 8,
+              "ud": 7,
+              "open": false,
+              "match": true
+            },
+            {
+              "date": "2027-03-12",
+              "weekday": "Friday",
+              "pd": 9,
+              "ud": 8,
+              "open": false,
+              "match": true
+            },
+            {
+              "date": "2027-03-20",
+              "weekday": "Saturday",
+              "pd": 8,
+              "ud": 7,
+              "open": false,
+              "match": true
+            },
+            {
+              "date": "2027-03-21",
+              "weekday": "Sunday",
+              "pd": 9,
+              "ud": 8,
+              "open": false,
+              "match": true
+            },
+            {
+              "date": "2027-03-29",
+              "weekday": "Monday",
+              "pd": 8,
+              "ud": 7,
+              "open": false,
+              "match": true
+            },
+            {
+              "date": "2027-03-30",
+              "weekday": "Tuesday",
+              "pd": 9,
+              "ud": 8,
+              "open": false,
+              "match": true
+            }
+          ]
+        },
+        {
+          "month": "2027-04",
+          "label": "April 2027",
+          "days": [
+            {
+              "date": "2027-04-01",
+              "weekday": "Thursday",
+              "pd": 8,
+              "ud": 7,
+              "open": false,
+              "match": true
+            },
+            {
+              "date": "2027-04-02",
+              "weekday": "Friday",
+              "pd": 9,
+              "ud": 8,
+              "open": false,
+              "match": true
+            },
+            {
+              "date": "2027-04-09",
+              "weekday": "Friday",
+              "pd": 7,
+              "ud": 6,
+              "open": true,
+              "match": false
+            },
+            {
+              "date": "2027-04-10",
+              "weekday": "Saturday",
+              "pd": 8,
+              "ud": 7,
+              "open": false,
+              "match": true
+            },
+            {
+              "date": "2027-04-11",
+              "weekday": "Sunday",
+              "pd": 9,
+              "ud": 8,
+              "open": false,
+              "match": true
+            },
+            {
+              "date": "2027-04-19",
+              "weekday": "Monday",
+              "pd": 8,
+              "ud": 7,
+              "open": false,
+              "match": true
+            },
+            {
+              "date": "2027-04-20",
+              "weekday": "Tuesday",
+              "pd": 9,
+              "ud": 8,
+              "open": false,
+              "match": true
+            },
+            {
+              "date": "2027-04-28",
+              "weekday": "Wednesday",
+              "pd": 8,
+              "ud": 7,
+              "open": false,
+              "match": true
+            },
+            {
+              "date": "2027-04-29",
+              "weekday": "Thursday",
+              "pd": 9,
+              "ud": 8,
+              "open": false,
+              "match": true
+            }
+          ]
+        },
+        {
+          "month": "2027-05",
+          "label": "May 2027",
+          "days": [
+            {
+              "date": "2027-05-01",
+              "weekday": "Saturday",
+              "pd": 9,
+              "ud": 8,
+              "open": false,
+              "match": true
+            },
+            {
+              "date": "2027-05-09",
+              "weekday": "Sunday",
+              "pd": 8,
+              "ud": 7,
+              "open": false,
+              "match": true
+            },
+            {
+              "date": "2027-05-10",
+              "weekday": "Monday",
+              "pd": 9,
+              "ud": 8,
+              "open": false,
+              "match": true
+            },
+            {
+              "date": "2027-05-18",
+              "weekday": "Tuesday",
+              "pd": 8,
+              "ud": 7,
+              "open": true,
+              "match": true
+            },
+            {
+              "date": "2027-05-19",
+              "weekday": "Wednesday",
+              "pd": 9,
+              "ud": 8,
+              "open": false,
+              "match": true
+            },
+            {
+              "date": "2027-05-27",
+              "weekday": "Thursday",
+              "pd": 8,
+              "ud": 7,
+              "open": false,
+              "match": true
+            },
+            {
+              "date": "2027-05-28",
+              "weekday": "Friday",
+              "pd": 9,
+              "ud": 8,
+              "open": false,
+              "match": true
+            }
+          ]
+        },
+        {
+          "month": "2027-06",
+          "label": "June 2027",
+          "days": [
+            {
+              "date": "2027-06-08",
+              "weekday": "Tuesday",
+              "pd": 8,
+              "ud": 7,
+              "open": false,
+              "match": true
+            },
+            {
+              "date": "2027-06-09",
+              "weekday": "Wednesday",
+              "pd": 9,
+              "ud": 8,
+              "open": true,
+              "match": true
+            },
+            {
+              "date": "2027-06-17",
+              "weekday": "Thursday",
+              "pd": 8,
+              "ud": 7,
+              "open": false,
+              "match": true
+            },
+            {
+              "date": "2027-06-18",
+              "weekday": "Friday",
+              "pd": 9,
+              "ud": 8,
+              "open": false,
+              "match": true
+            },
+            {
+              "date": "2027-06-26",
+              "weekday": "Saturday",
+              "pd": 8,
+              "ud": 7,
+              "open": false,
+              "match": true
+            },
+            {
+              "date": "2027-06-27",
+              "weekday": "Sunday",
+              "pd": 9,
+              "ud": 8,
+              "open": false,
+              "match": true
+            }
+          ]
+        },
+        {
+          "month": "2027-07",
+          "label": "July 2027",
+          "days": [
+            {
+              "date": "2027-07-06",
+              "weekday": "Tuesday",
+              "pd": 7,
+              "ud": 6,
+              "open": true,
+              "match": false
+            },
+            {
+              "date": "2027-07-07",
+              "weekday": "Wednesday",
+              "pd": 8,
+              "ud": 7,
+              "open": false,
+              "match": true
+            },
+            {
+              "date": "2027-07-08",
+              "weekday": "Thursday",
+              "pd": 9,
+              "ud": 8,
+              "open": false,
+              "match": true
+            },
+            {
+              "date": "2027-07-16",
+              "weekday": "Friday",
+              "pd": 8,
+              "ud": 7,
+              "open": false,
+              "match": true
+            },
+            {
+              "date": "2027-07-17",
+              "weekday": "Saturday",
+              "pd": 9,
+              "ud": 8,
+              "open": false,
+              "match": true
+            },
+            {
+              "date": "2027-07-25",
+              "weekday": "Sunday",
+              "pd": 8,
+              "ud": 7,
+              "open": false,
+              "match": true
+            },
+            {
+              "date": "2027-07-26",
+              "weekday": "Monday",
+              "pd": 9,
+              "ud": 8,
+              "open": false,
+              "match": true
+            }
+          ]
+        },
+        {
+          "month": "2027-08",
+          "label": "August 2027",
+          "days": [
+            {
+              "date": "2027-08-06",
+              "weekday": "Friday",
+              "pd": 8,
+              "ud": 7,
+              "open": true,
+              "match": true
+            },
+            {
+              "date": "2027-08-07",
+              "weekday": "Saturday",
+              "pd": 9,
+              "ud": 8,
+              "open": false,
+              "match": true
+            },
+            {
+              "date": "2027-08-15",
+              "weekday": "Sunday",
+              "pd": 8,
+              "ud": 7,
+              "open": false,
+              "match": true
+            },
+            {
+              "date": "2027-08-16",
+              "weekday": "Monday",
+              "pd": 9,
+              "ud": 8,
+              "open": false,
+              "match": true
+            },
+            {
+              "date": "2027-08-24",
+              "weekday": "Tuesday",
+              "pd": 8,
+              "ud": 7,
+              "open": false,
+              "match": true
+            },
+            {
+              "date": "2027-08-25",
+              "weekday": "Wednesday",
+              "pd": 9,
+              "ud": 8,
+              "open": false,
+              "match": true
+            }
+          ]
+        },
+        {
+          "month": "2027-09",
+          "label": "September 2027",
+          "days": [
+            {
+              "date": "2027-09-05",
+              "weekday": "Sunday",
+              "pd": 8,
+              "ud": 7,
+              "open": false,
+              "match": true
+            },
+            {
+              "date": "2027-09-06",
+              "weekday": "Monday",
+              "pd": 9,
+              "ud": 8,
+              "open": true,
+              "match": true
+            },
+            {
+              "date": "2027-09-14",
+              "weekday": "Tuesday",
+              "pd": 8,
+              "ud": 7,
+              "open": false,
+              "match": true
+            },
+            {
+              "date": "2027-09-15",
+              "weekday": "Wednesday",
+              "pd": 9,
+              "ud": 8,
+              "open": false,
+              "match": true
+            },
+            {
+              "date": "2027-09-23",
+              "weekday": "Thursday",
+              "pd": 8,
+              "ud": 7,
+              "open": false,
+              "match": true
+            },
+            {
+              "date": "2027-09-24",
+              "weekday": "Friday",
+              "pd": 9,
+              "ud": 8,
+              "open": false,
+              "match": true
+            }
+          ]
+        },
+        {
+          "month": "2027-10",
+          "label": "October 2027",
+          "days": [
+            {
+              "date": "2027-10-04",
+              "weekday": "Monday",
+              "pd": 8,
+              "ud": 7,
+              "open": false,
+              "match": true
+            },
+            {
+              "date": "2027-10-05",
+              "weekday": "Tuesday",
+              "pd": 9,
+              "ud": 8,
+              "open": false,
+              "match": true
+            },
+            {
+              "date": "2027-10-12",
+              "weekday": "Tuesday",
+              "pd": 7,
+              "ud": 6,
+              "open": true,
+              "match": false
+            },
+            {
+              "date": "2027-10-13",
+              "weekday": "Wednesday",
+              "pd": 8,
+              "ud": 7,
+              "open": false,
+              "match": true
+            },
+            {
+              "date": "2027-10-14",
+              "weekday": "Thursday",
+              "pd": 9,
+              "ud": 8,
+              "open": false,
+              "match": true
+            },
+            {
+              "date": "2027-10-22",
+              "weekday": "Friday",
+              "pd": 8,
+              "ud": 7,
+              "open": false,
+              "match": true
+            },
+            {
+              "date": "2027-10-23",
+              "weekday": "Saturday",
+              "pd": 9,
+              "ud": 8,
+              "open": false,
+              "match": true
+            },
+            {
+              "date": "2027-10-31",
+              "weekday": "Sunday",
+              "pd": 8,
+              "ud": 7,
+              "open": false,
+              "match": true
+            }
+          ]
+        },
+        {
+          "month": "2027-11",
+          "label": "November 2027",
+          "days": [
+            {
+              "date": "2027-11-03",
+              "weekday": "Wednesday",
+              "pd": 8,
+              "ud": 7,
+              "open": true,
+              "match": true
+            },
+            {
+              "date": "2027-11-04",
+              "weekday": "Thursday",
+              "pd": 9,
+              "ud": 8,
+              "open": false,
+              "match": true
+            },
+            {
+              "date": "2027-11-12",
+              "weekday": "Friday",
+              "pd": 8,
+              "ud": 7,
+              "open": false,
+              "match": true
+            },
+            {
+              "date": "2027-11-13",
+              "weekday": "Saturday",
+              "pd": 9,
+              "ud": 8,
+              "open": false,
+              "match": true
+            },
+            {
+              "date": "2027-11-21",
+              "weekday": "Sunday",
+              "pd": 8,
+              "ud": 7,
+              "open": false,
+              "match": true
+            },
+            {
+              "date": "2027-11-22",
+              "weekday": "Monday",
+              "pd": 9,
+              "ud": 8,
+              "open": false,
+              "match": true
+            },
+            {
+              "date": "2027-11-30",
+              "weekday": "Tuesday",
+              "pd": 8,
+              "ud": 7,
+              "open": false,
+              "match": true
+            }
+          ]
+        },
+        {
+          "month": "2027-12",
+          "label": "December 2027",
+          "days": [
+            {
+              "date": "2027-12-02",
+              "weekday": "Thursday",
+              "pd": 8,
+              "ud": 7,
+              "open": false,
+              "match": true
+            },
+            {
+              "date": "2027-12-03",
+              "weekday": "Friday",
+              "pd": 9,
+              "ud": 8,
+              "open": true,
+              "match": true
+            },
+            {
+              "date": "2027-12-11",
+              "weekday": "Saturday",
+              "pd": 8,
+              "ud": 7,
+              "open": false,
+              "match": true
+            },
+            {
+              "date": "2027-12-12",
+              "weekday": "Sunday",
+              "pd": 9,
+              "ud": 8,
+              "open": false,
+              "match": true
+            },
+            {
+              "date": "2027-12-20",
+              "weekday": "Monday",
+              "pd": 8,
+              "ud": 7,
+              "open": false,
+              "match": true
+            },
+            {
+              "date": "2027-12-21",
+              "weekday": "Tuesday",
+              "pd": 9,
+              "ud": 8,
+              "open": false,
+              "match": true
+            },
+            {
+              "date": "2027-12-29",
+              "weekday": "Wednesday",
+              "pd": 8,
+              "ud": 7,
+              "open": false,
+              "match": true
+            },
+            {
+              "date": "2027-12-30",
+              "weekday": "Thursday",
+              "pd": 9,
+              "ud": 8,
+              "open": false,
+              "match": true
+            }
+          ]
+        }
+      ]
+    },
+    "luckyHours": {
+      "hours": [
+        {
+          "hour": 7,
+          "root": 7,
+          "label": "7 o'clock"
+        },
+        {
+          "hour": 8,
+          "root": 8,
+          "label": "8 o'clock"
+        },
+        {
+          "hour": 9,
+          "root": 9,
+          "label": "9 o'clock"
+        }
+      ],
+      "slots": [
+        {
+          "time": "09:00",
+          "label": "9am",
+          "root": 9
+        },
+        {
+          "time": "19:00",
+          "label": "7pm",
+          "root": 7
+        },
+        {
+          "time": "20:00",
+          "label": "8pm",
+          "root": 8
+        },
+        {
+          "time": "21:00",
+          "label": "9pm",
+          "root": 9
+        }
+      ]
+    },
+    "uses": {
+      "lottery": {
+        "numbers": [
+          7,
+          8,
+          9,
+          16,
+          17,
+          18
+        ],
+        "buyOn": [
+          "2027-01-12",
+          "2027-02-03",
+          "2027-03-03",
+          "2027-04-09",
+          "2027-05-18",
+          "2027-06-09",
+          "2027-07-06",
+          "2027-08-06",
+          "2027-09-06",
+          "2027-10-12",
+          "2027-11-03",
+          "2027-12-03"
+        ],
+        "promise": "none: no win is promised"
+      },
+      "pin": "7893",
+      "house": {
+        "aimFor": [
+          7,
+          8,
+          9
+        ],
+        "examples": [
+          {
+            "n": 34,
+            "root": 7
+          },
+          {
+            "n": 107,
+            "root": 8
+          },
+          {
+            "n": 153,
+            "root": 9
+          }
+        ],
+        "rule": "add the digits of the house number until one digit is left"
+      },
+      "phone": {
+        "aimFor": 7,
+        "alsoGood": [
+          8,
+          9
+        ],
+        "avoid": 4,
+        "rule": "add every digit of the number until one digit is left"
+      },
+      "wedding": [
+        "2027-01-12",
+        "2027-02-03",
+        "2027-03-03",
+        "2027-04-09",
+        "2027-05-18",
+        "2027-06-09",
+        "2027-07-06",
+        "2027-08-06",
+        "2027-09-06",
+        "2027-10-12",
+        "2027-11-03",
+        "2027-12-03"
+      ],
+      "interview": {
+        "days": [
+          "2027-01-12",
+          "2027-02-03",
+          "2027-03-03",
+          "2027-04-09",
+          "2027-05-18",
+          "2027-06-09",
+          "2027-07-06",
+          "2027-08-06",
+          "2027-09-06",
+          "2027-10-12",
+          "2027-11-03",
+          "2027-12-03"
+        ],
+        "hours": [
+          {
+            "time": "09:00",
+            "label": "9am",
+            "root": 9
+          },
+          {
+            "time": "19:00",
+            "label": "7pm",
+            "root": 7
+          },
+          {
+            "time": "20:00",
+            "label": "8pm",
+            "root": 8
+          },
+          {
+            "time": "21:00",
+            "label": "9pm",
+            "root": 9
+          }
+        ]
+      },
+      "businessOpening": [
+        "2027-01-12",
+        "2027-02-03",
+        "2027-03-03",
+        "2027-04-09",
+        "2027-05-18",
+        "2027-06-09",
+        "2027-07-06",
+        "2027-08-06",
+        "2027-09-06",
+        "2027-10-12",
+        "2027-11-03",
+        "2027-12-03"
+      ],
+      "signing": [
+        "2027-01-12",
+        "2027-02-03",
+        "2027-03-03",
+        "2027-04-09",
+        "2027-05-18",
+        "2027-06-09",
+        "2027-07-06",
+        "2027-08-06",
+        "2027-09-06",
+        "2027-10-12",
+        "2027-11-03",
+        "2027-12-03"
+      ],
+      "travel": [
+        "2027-01-12",
+        "2027-02-03",
+        "2027-03-03",
+        "2027-04-09",
+        "2027-05-18",
+        "2027-06-09",
+        "2027-07-06",
+        "2027-08-06",
+        "2027-09-06",
+        "2027-10-12",
+        "2027-11-03",
+        "2027-12-03"
+      ]
+    }
+  }
+}
