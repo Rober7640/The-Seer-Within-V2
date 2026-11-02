@@ -13,6 +13,7 @@ import type { Bucket } from "@shared/types";
 import lavaStoneImage from "../assets/images/lava-stone.jpg";
 import { funnelPath, isTwinFlameOffer } from "../lib/funnel";
 import { trackABConversion } from "../hooks/useABTest";
+import { SmsOptInCard } from "../components/SmsOptInCard";
 
 interface UserData {
   firstName: string;
@@ -290,6 +291,10 @@ export default function UpsellPage() {
         data-testid="container-chat"
       >
         <div className="max-w-lg mx-auto space-y-4">
+          {/* Standalone SMS opt-in — separate from the purchase and the upsell below.
+              Renders nothing unless the server switches it on for this order. */}
+          <SmsOptInCard sessionId={sessionId} />
+
           {/* Date */}
           <div className="text-center text-xs text-gray-400 my-4">
             {new Date().toLocaleDateString(undefined, {

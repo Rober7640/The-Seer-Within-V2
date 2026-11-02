@@ -71,6 +71,7 @@ import {
   SMS_CONSENT_VERSION,
   SMS_CONSENT_YES_LABEL,
   showsSmsConsent,
+  smsConsentCheckoutEnabled,
   smsConsentDisclosure,
   smsConsentRecordText,
 } from './smsConsent';
@@ -681,7 +682,8 @@ async function fulfilMain(order: PaiOrder, settled: PaiTransaction, x: BuyerExtr
   await markMainPaid(txn);
   await savePhoneForSession(txn, x.phone);
 
-  if (showsSmsConsent(funnel)) {
+  // Checkout-time consent retired (Twilio 30446) — see smsConsentCheckoutEnabled.
+  if (smsConsentCheckoutEnabled() && showsSmsConsent(funnel, undefined)) {
     recordSmsConsent({
       stripeSessionId: txn,
       email: order.email,
@@ -1399,7 +1401,7 @@ export async function publishableKey(): Promise<string | null> {
 
 /** The SMS question exactly as the Stripe checkout words it, or null when not shown. */
 export function smsQuestion(funnel: FunnelParam | undefined, policyBase: string) {
-  if (!showsSmsConsent(funnel)) return null;
+  if (!smsConsentCheckoutEnabled() || !showsSmsConsent(funnel, undefined)) return null;
   return {
     label: SMS_CONSENT_LABEL,
     yesLabel: SMS_CONSENT_YES_LABEL,

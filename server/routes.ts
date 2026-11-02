@@ -156,6 +156,8 @@ import { soulmateLanderListId } from "@shared/soulmateLander";
 import { bumpProductKeyFor } from "@shared/landerBumpRouting";
 import Stripe from "stripe";
 import { getStripe, getStripeForRow } from "./lib/stripeAccount";
+import { createSmsOptInRouter } from "./routes/smsOptIn";
+import { upsertSmsOptIn, getSmsConsentForSession } from "./lib/db";
 import type { ChatRequest, CheckoutRequest } from "../shared/types";
 import {
   addSubscriberToList,
@@ -638,6 +640,20 @@ export async function registerRoutes(
   // Apple Pay domain file for the Payments.AI checkout (server/routes/appleDomainFile.ts).
   registerAppleDomainFile(app);
   app.use("/api/evelyn-lander", evelynLanderRouter);
+  // Standalone post-purchase SMS opt-in on the thank-you page (Twilio 30446 fix).
+  // Inert unless the funnel is in SMS_CONSENT_FUNNELS — see server/lib/smsConsent.ts.
+  app.use(
+    "/api/sms-optin",
+    createSmsOptInRouter({
+      retrieveSession: (id) => {
+        if (!stripe) throw new Error("Stripe not configured");
+        return stripe.checkout.sessions.retrieve(id);
+      },
+      upsertOptIn: upsertSmsOptIn,
+      getConsent: getSmsConsentForSession,
+      policyBase: (req) => process.env.BASE_URL || getBaseUrl(req),
+    }),
+  );
   // Generalized lander for the additional personas (Marcus, Luna, Nova, Maren).
   app.use("/api/persona-lander/:persona", personaLanderRouter);
   // Stripe Checkout for the Facebook-compliance product pages (/products/:slug).
@@ -1391,7 +1407,7 @@ export async function registerRoutes(
           ? { customer: customer.id }
           : { customer_creation: "always" }),
         // Empty on every funnel not switched on, so those sessions are unchanged.
-        ...smsConsentSessionParams(funnel, smsPolicyBase),
+        ...smsConsentSessionParams(funnel, readDevice, smsPolicyBase),
         // Compulsory phone field on every V1 reading funnel: root (no `funnel`),
         // /fb, /fb2, /gdn, /fb-palm, /fb-read and /fb-tarot — the allow-list is
         // server/lib/checkoutPhone.ts. Stripe won't let her pay without it. The number is read
@@ -1528,7 +1544,7 @@ export async function registerRoutes(
           ...(trackdeskClickId && { trackdeskClickId }),
           // Which consent wording was shown + her IP — read by the purchase webhook
           // to write the sms_consents record. Absent when the question wasn't shown.
-          ...smsConsentSessionMetadata(funnel, smsPolicyBase, smsClientIp),
+          ...smsConsentSessionMetadata(funnel, readDevice, smsPolicyBase, smsClientIp),
           // Browser PostHog id so the server-side purchase_completed event is
           // attributed to the SAME visitor as the funnel events (email_gate_*),
           // enabling a connected conversion funnel incl. the no-optin arm.
