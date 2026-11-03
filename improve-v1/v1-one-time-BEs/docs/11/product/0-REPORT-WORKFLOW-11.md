@@ -137,3 +137,8 @@ Send it as written, with the three file paths from step 4. Use the same persona 
 | Report | Read | vs | Kept reading | Written for me | Worth $35 | Trust | Tell a friend |
 |---|---|---|---|---|---|---|---|
 | SU 9 v1 | blind read 1 | n8n 51764 | **8** vs 4 | **7** vs 4 | **8** vs 3 | **7** vs 4 | **6** vs 3 |
+| SU 9 v2 | blind read 2 | SU 9 v1 | **8** vs 7 | 6 vs 6 | **7** vs 6 | **6** vs 4 | **5** vs 4 |
+
+⚠ Each read uses a fresh reader, and readers score differently (v1 got 8 for "worth $35" from reader 1, 6 from reader 2). Compare only within one read.
+
+**Still open after read 2:** the letter reuses Evelyn's phrases and is too self-aware to sound like them · Evelyn's night after nearly every card felt staged · card 12's advice reads like a pamphlet (both readers) · "take charge" told reader 2 what kind of woman she is and got it wrong · no he/she anywhere was noticed (kept on purpose: rule) · "One word doesn't make a letter" and "a room made of paper" lost her.

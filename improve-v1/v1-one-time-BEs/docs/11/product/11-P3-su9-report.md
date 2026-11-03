@@ -1,4 +1,4 @@
-11-P3 — The Unsent Letter: the fixed hand-written report for every Soul Urge 9 buyer (softness · cover word "strong"). Draft for operator edit, 2026-11-03.
+11-P3 — The Unsent Letter: the fixed hand-written report for every Soul Urge 9 buyer (softness · cover word "strong"). v2, after blind read 1, 2026-11-03.
 Buyer: Testina Rose Testerly, born November 5, 1962 (test buyer). Path: trying to get her back. Swap-ins: [[EX]] what they saw · [[LP]] her pattern · [[EXCUSE]] · [[REASON]] · [[FORK]] get-back only.
 Cards: 1 the Empress · 2 the Emperor · 3 the Fool · 4 the High Priestess · 5 the Hanged Man · 6 the Hierophant · 7 the Lovers · 8 the Tower · 9 the Moon · 10 the Sun · 11 Temperance · 12 Strength.
 
@@ -24,7 +24,7 @@ You've felt the gap for a long time, and you've called it other things. Getting 
 
 Here's what used to be in it. Your softness is the part of you that lets things reach you and lets you show. It runs both ways. Care comes in, and you let it land. Warmth goes out, and need goes with it, and you don't stop to check where it falls. When I told you about the old man on my windowsill holding his light up in the dark, and said the light was what they'd walked off with, I meant this.
 
-The woman on this card sits right back among cushions in an open field. She isn't perched on the edge, ready to get up. Her whole weight's given over, and she's letting the cushions hold her.
+The Empress sits right back among cushions in an open field. She isn't perched on the edge, ready to get up. Her whole weight's given over, and she's letting the cushions hold her.
 
 You used to be like her with people, before them. Someone asked how you were and you told them the real answer, not the short one. You cried at the sad part of a movie with other people in the room and didn't care who saw. When a friend put an arm around you, you leaned into it instead of patting her back twice and moving off. If you missed someone, you picked up the phone and said so. When something stung, it showed on your face before you'd decided whether it ought to. You took a compliment and kept it. You let people do things for you, said thank you, and that was the end of it. None of it took any thought. It went in and out of you the way breath does.
 
@@ -40,7 +40,7 @@ The next time somebody asks how you are, notice what your face does before you a
 
 You don't call it a gap. You call it being strong.
 
-The man on this card sits square on a stone throne in a red robe, and at his arms and his legs you can see armor under the robe. He's dressed for a court and he's armed for a fight, and he never takes the second thing off.
+Next came the Emperor, sitting square on a stone throne in a red robe, and at his arms and his legs you can see armor under the robe. He's dressed for a court and he's armed for a fight, and he never takes the second thing off.
 
 Strong looks like this. Someone offers to help and you wave them away. Someone thanks you and you make a joke of it so it can't land. When you cry, you do it in the car or the shower, or you skip it. Nothing gets in and nothing gets out, and you've got a good word for that.
 
@@ -50,9 +50,9 @@ People tell you they admire it. They have no idea what they're praising. They're
 
 You've asked yourself how you could have been so stupid. Put that question down, because it has the whole thing backwards.
 
-They saw something in you: [[EX]]someone who could run things and make them happen[[/EX]]. And they saw it came with your softness out in the open right beside it. Whatever you were good at, you did it warm. You let them see when you were pleased and when you were worried, and when you needed them. You didn't keep a guard on any of it, because you'd never had a reason to, and that's what made it easy to take. They knew what they were looking at. They went for it on purpose.
+They saw something in you: [[EX]]a woman who could take charge and get things done[[/EX]]. And they saw it came with your softness out in the open right beside it. Whatever you were good at, you did it warm. You let them see when you were pleased and when you were worried, and when you needed them. You didn't keep a guard on any of it, because you'd never had a reason to, and that's what made it easy to take. They knew what they were looking at. They went for it on purpose.
 
-The young man on this card stands at the edge of a cliff with a white rose held loose in his lowered hand, stem down. He isn't gripping it or hiding it. Anybody who walked up could lift it out of his fingers.
+The Fool is a young man standing at the edge of a cliff with a white rose held loose in his lowered hand, stem down. He isn't gripping it or hiding it. Anybody who walked up could lift it out of his fingers.
 
 You held yours like that. And they didn't take all of you. They kept the use of you, the part that got things done, and they took the warmth that came with it. You went on being useful to them after you'd stopped being soft with them, and that suited them fine. Whatever you gave, you gave honestly. Everything done with it after that is on them.
 
@@ -64,7 +64,7 @@ You'll get their answer next. For now I want one thing from you, and only one: s
 
 They've kept it because giving it back means saying what they did.
 
-The woman on this card holds a scroll with writing on it, and half of it is tucked under her mantle. She knows what the whole thing says. You only get to see part.
+The High Priestess holds a scroll with writing on it, and half of it is tucked under her mantle. She knows what the whole thing says. You only get to see part.
 
 Handing your softness back would mean admitting it was never a weakness. And if it was never a weakness, then you were right, all along, and they were the one who made it look like a fault. While they hold on to it, they still get to be the person you thought they were. Give it back and that's gone. They didn't lose it and they didn't throw it away. They kept it covered.
 
@@ -76,29 +76,29 @@ The line held because your softness had been made to look like the problem. When
 
 And you backed the line up without meaning to. Once you'd shut everything down and started calling yourself strong, you looked fine. Nobody had to ask what had been done to you, because there was nothing left to see. That was never your fault. You did what anyone does after being made to pay for something. Hiding behind it was their choice.
 
-The man on this card hangs head-down from a beam of living wood, tied by one ankle, and his face has no strain in it at all. He's settled in. They've been hanging off their line the same way, by one foot, calm, not looking at it.
+On the Hanged Man, a man hangs head-down from a beam of living wood, tied by one ankle, and his face has no strain in it at all. He's settled in. They've been hanging off their line the same way, by one foot, calm, not looking at it.
 
 The months I told you about, when they kept coming back to this, are that line wearing through. They have no idea it's happening.
 
-When I'd asked my question out loud, the fourth card answered it, and they didn't like the answer. They moved for the first time all night. They went away from my shoulder, back across the kitchen to the door, and stopped there. The lamp needed trimming and I let it smoke. It was getting on for midnight, and they were still at the door.
+Getting on for midnight. When I turned this card, they were standing over by the door, as far from my shoulder as my kitchen goes. They wanted to be nowhere near that answer, and they didn't come any nearer. The lamp needed trimming and I let it smoke.
 
 [CARD 6]
 
 Here's their regret, plain: teaching you that going soft costs you.
 
-Two ministers in white kneel on this card with their backs to us, being taught. You can't see their faces. You can only see that they're taking the lesson in.
+Two ministers in white kneel on the Hierophant card with their backs to us, being taught. You can't see their faces. You can only see that they're taking the lesson in.
 
 You took it in better than anyone meant you to. [[FORK]]And their regret isn't about losing you. It's about losing what they had from you, the warmth that used to come their way without being asked for. That isn't the same thing as you.[[/FORK]] A regret like theirs pays nothing back and reaches nobody. You'll want to read it as love. It isn't.
 
 [CARD 7]
 
-Now your half, and you won't like it.
+Some of what's happened since is yours. I'm telling you because that's the part you can change.
 
-When it went wrong with them, you [[LP]]went quiet, went into it, and wanted proof before you'd take a step[[/LP]]. Late at night, on your own, you went over it and over it, hunting for the one thing that would settle it. That was fair. You'd been hurt.
+When it went wrong with them, you [[LP]]clammed up, chewed on it, and wouldn't move till you were sure[[/LP]]. Late at night, on your own, you went over it and over it, hunting for the one thing that would settle it. That was fair. You'd been hurt.
 
-But you kept on after they were gone, and you've been doing it to people who never laid a finger on you. Someone decent turns up and [[LP]]you go quiet on them and wait for proof[[/LP]], and by the end of the week you've found what's wrong with them. If somebody's beside you now, they're living on the bits of you that slip through. The price on your softness was set by one person. You've been charging it to everybody since.
+But you kept on after they were gone, and you've been doing it to people who never laid a finger on you. Someone decent turns up and [[LP]]you clam up and wait till you're sure of them[[/LP]], and by the end of the week you've found what's wrong with them. If somebody's beside you now, they're living on the bits of you that slip through. The price on your softness was set by one person. You've been charging it to everybody since.
 
-The man and the woman on this card stand close, but they aren't touching. He's looking at her. She's looking up and past him, at something over his head.
+The Lovers are a man and a woman who stand close, but they aren't touching. He's looking at her. She's looking up and past him, at something over his head.
 
 That's what the decent ones get from you. They're standing right there, close enough to touch, and you look anywhere else. They offer you something warm and they get the shut door, the one that was built for somebody else. None of them did a thing to you. They're paying a debt they never ran up, and most of them have no idea why the price is so high.
 
@@ -112,7 +112,7 @@ Strong worked, Testina. I'll give it that much. Nobody's seen you fall apart. No
 
 Now here's what it did.
 
-The tower on this card stands on bare rock with no door drawn anywhere on it. Whoever built it made sure nobody could get in, and didn't think about how anyone inside was ever going to get out.
+The Tower stands on bare rock with no door drawn anywhere on it. Whoever built it made sure nobody could get in, and didn't think about how anyone inside was ever going to get out.
 
 You built that after it ended. I can count what it's cost you, and it's more than they ever took. Every time someone put a hand on your arm and you shifted so it slid off. Every time you said you were fine to somebody who'd have sat up with you half the night. Every cry you saved until the house was empty, then did with the faucet running so even the walls wouldn't hear. Every piece of bad news you sat on until it was over, so nobody could fuss, and then told it later like a funny story. And the people who kept offering for a while and then quit, because you'd told them no so many times that they believed you. They didn't stop caring. You taught them to stop asking.
 
@@ -122,19 +122,19 @@ Here's the deal, and I want you to have it exactly. Your softness comes back. Th
 
 I told you it makes no difference to whether they've still got it, ten years or thirty. That's still true. But it makes all the difference to the bill. Years of birthdays where you smiled for the photo and went home and sat in the car. Years of being the one other people lean on, and leaning on nobody. Years of good people who got a polite version of you and never found out there was another one. Some of them would have stayed for the real one.
 
-They made going soft expensive. That part is theirs, every bit of it, and I'm not taking it off them. But the door you left off the tower, that was you. Each year you kept it that way, you paid. They ran the bill up. You've been the one paying it.
+They made going soft expensive. That part is theirs, every bit of it, and I'm not taking it off them. I'm on your side, so here's the rest, straight. Leaving the door off the tower made sense with them. Keeping it off since, with everybody, is what's cost you. Each year it stayed that way, you paid. They ran the bill up. You've been the one paying it.
 
 [CARD 9]
 
 **[[FORK]]They're trying to get you back, Testina.[[/FORK]]**
 
-[[FORK]]And part of you is glad. Don't skip past that. Go back up and read that line again, and catch the small lift it gave you, the warm drop low in your stomach. I'm going to make you look at it, because it's the lowest point in this whole reading and I won't pretend otherwise.[[/FORK]]
+[[FORK]]And part of you is glad to hear it. Don't skip past that, and don't be ashamed of it either. I'm going to stay on it a minute, because of everything in these twelve cards, this is the part to watch closest.[[/FORK]]
 
 After everything, the first place your softness wants to run back to is them. Some part of you still wants to be soft toward the one person who made it cost.
 
-I won't dress that up for you. Give that part an inch and it starts making allowances. They must have changed, to be at this for months. They must be hurting too. You'd find yourself being gentle about them in your head before you'd been gentle with one living soul in your own life. That's how low this goes. The warmth you've refused everybody decent is still ready to go to them.
+I won't dress that up for you. Give that part an inch and it starts making allowances. They must have changed, to be at this for months. They must be hurting too. You'd remember the good times first, and the rest a long way after. You'd find yourself being gentle about them in your head before you'd been gentle with one living soul in your own life. That's the danger, right there. The warmth you've refused everybody decent is still ready to go to them.
 
-The path on this card comes up out of the water, runs between two grey towers and goes off into the distance, and there's nobody on it. A dog and a wolf sit at the bottom with their heads up, howling at the moon, and nothing answers them. Nobody's coming down that path toward you, and nobody was ever going to.
+On the Moon, a path comes up out of the water, runs between two grey towers and goes off into the distance, and there's nobody on it. A dog and a wolf sit at the bottom with their heads up, howling at the moon, and nothing answers them. Nobody's coming down that path toward you, and nobody was ever going to.
 
 [[FORK]]Here's what their wish is really for. They don't want you. They want what used to come their way from you, pointed back at them again: the warmth, the way you let them land. They're holding your softness out with their hand open, waiting for you to walk all the way over and take it, so you'll be standing close enough to give it to them again.
 
@@ -142,7 +142,7 @@ They won't come down that path. A wish like theirs stays where it is and waits. 
 
 I told you you'd need to know which way this went, because one way it's a gift and the other way it's a snare, and the words sound the same either way. It's the snare. Every kind thing in their letter is going to read like a reason to go to them. It isn't one.[[/FORK]]
 
-I sat back down at the table, turned this card, and swore at my own hands for turning it. [[FORK]]They didn't leave. They came right up to the table and stayed there, closer than they'd been all night. I'd have given a good deal to have them back over by the door.[[/FORK]] Three in the morning. Nine cards down, and the sheet was still blank under your name. My tea had gone cold in the pot long before. I didn't know if I was going to get your letter at all.
+I sat back down at the table, turned this card, and swore at my own hands for turning it. [[FORK]]They didn't leave. They came right up to the table and stayed there, closer than they'd been all night. I'd have given a good deal to have them back over by the door.[[/FORK]] I kept my eyes on the card and off them. Three in the morning. Nine cards down, and the sheet was still blank under your name. I didn't know if I was going to get your letter at all.
 
 [CARD 10]
 
@@ -154,7 +154,7 @@ I sat back down at the table, turned this card, and swore at my own hands for tu
 
 Now the turn, and the whole reading hangs on it. They were never the ones who had to move. Your softness was never theirs to bring over to you in person, on a doorstep or down a phone line. It doesn't come back by contact, and it doesn't come back on their say-so. All it ever needed was for somebody to give up the wait.
 
-A child rides bareback on a white horse on this card, both arms wide open. Behind them, a low grey wall runs right across the card, and the horse is already out in front of it. Nobody opened a gate. Nobody came to let them out. They're past it, in full daylight.
+The Sun shows a child riding bareback on a white horse, both arms wide open. Behind them, a low grey wall runs right across the card, and the horse is already out in front of it. Nobody opened a gate. Nobody came to let them out. They're past it, in full daylight.
 
 You've been standing behind that wall waiting for them to come and open it. You've been waiting for them to say it, as if your softness needed their signature before you were allowed to have it back. It never needed that. The day you stop waiting on their admission, it's already yours, the same way that horse is already past the wall without anyone's leave. Look at the card again. Nothing in it is waiting for anybody.
 
@@ -174,7 +174,7 @@ And you can stop writing their half. You've had them say sorry in your head, and
 
 You're about to read their words. If this person hurt you, you owe them no reply. Reading it is the whole of what you have to do.
 
-On this card a winged figure pours water from one cup into another, and the stream crosses the gap between the cups on a slant instead of dropping straight down. It gets from one to the other without going to waste. Their sentence does the same. It gets across the gap to you, all of it, and it doesn't need you to hold anything out to catch it. Softness was never the weak thing. You have it in their words now, and nobody can take that sentence back.
+On Temperance, a winged figure pours water from one cup into another, and the stream crosses the gap on a slant instead of dropping straight down. Their sentence got across to you like that, all of it, and nobody can take it back now.
 
 The rest of the letter started to come then, and it came fast. I could hardly get it down quick enough.
 
@@ -182,17 +182,17 @@ The rest of the letter started to come then, and it came fast. I could hardly ge
 
 Stop going back to them, and once a day, let one thing show to someone safe. You'll get through what's coming on those two.
 
-The woman on this card has both hands on a lion's mouth, closing its jaws gently. The lion's head is bowed. She has no whip and no iron, nothing but her two hands.
+Your last card is Strength. A woman has both hands on a lion's mouth, closing its jaws gently. The lion's head is bowed. She has no whip and no iron, nothing but her two hands.
 
 That's what strong was supposed to mean. Soft hands on something fierce, every day, and the fierce thing letting her. You've been using the word for a door with no gap in it. You can put that word down now. You don't need it.
 
 The pull will be at its strongest now, inside the next five to seven days. That's about you, and what's moving in you. It says nothing about them turning up.
 
-**Stop going back.** Rereading the old messages, looking them up, starting a message you tell yourself you won't send. Those are one thing with three names. When the pull comes, put your phone in another room, set the oven timer for twenty minutes, and give your hands something to do. Fold laundry. Wash a pan. Don't argue with the pull, because arguing is just another way of feeding it.
+**Stop going back.** Rereading the old messages, looking them up, starting a message you swear you won't send: it's all the same thing. When the pull comes, put the phone in another room, set the oven timer for twenty minutes and keep your hands busy. Don't argue with it.
 
-Here's why the timer works. An urge climbs, tops out and falls away by itself if nobody feeds it. Going to look when it's at the top is what teaches it to come back. Let one go by, and the next one comes up a little smaller.
+Left alone, an urge climbs, peaks and dies down. Looking when it's at its worst teaches it to come back. Let one go by and the next one's smaller.
 
-I told you the rereading stops, and it does. The need for it goes when you read the letter. The habit takes about a week to wear off, so your hand will still reach for the phone a few times. Let it reach, and leave the phone where it is.
+I told you the rereading stops. The need goes when you read the letter. The habit takes about a week, so your hand will still reach for the phone a few times. Let it.
 
 **The one thing to do.** For seven days, once a day, let one thing show to someone safe. Tell a friend you missed her, in those words. When someone does something kind, let your face say so before you tidy it. When you're worn out and someone asks, say you're worn out. Only with people who've never given you cause. Nobody from your past.
 
@@ -216,11 +216,11 @@ I'm not ever going to send this. [[REASON]]I couldn't stand to have you look at 
 
 I taught you that going soft costs you. I never said it in those words. I didn't need to. Every time you let something show, I made you pay for it somehow, and after a while you stopped letting anything show at all. I watched that happen. I didn't stop it. Some of the time I was glad of it, because you were easier to be around when you weren't asking me for anything.
 
-When I first knew you, I saw [[EX]]someone who could run things and make them happen[[/EX]]. That was true, and I liked having it near me. What I don't think I ever said is that you did all of it warm. You let me see when you were happy and when you were scared and when you needed me. I kept the part of you that got things done. The rest I made expensive.
+When I first knew you, I saw [[EX]]a woman who could take charge and get things done[[/EX]]. That was true, and I liked having it near me. What I don't think I ever said is that you did all of it warm. You let me see when you were happy and when you were scared and when you needed me. I kept the part of you that got things done. The rest I made expensive.
 
 I told myself [[EXCUSE]]you were too much[[/EXCUSE]]. I said it to other people too. It was easier than saying what I was doing. It stopped working a while back. I still hear myself say it sometimes, and I can hear that it doesn't hold.
 
-[[LP]]I know what you do when you're hurt. You go quiet, you go into it, and you want proof before you'll take a step.[[/LP]] I gave you plenty to go over. I'm sorry for how long you've spent going over it.
+[[LP]]I know what you do when you're hurt. You clam up, you chew on it, and you won't move till you're sure.[[/LP]] I gave you plenty to go over. I'm sorry for how long you've spent going over it.
 
 I've kept this because giving it back means saying what I did. As long as I had it, I could still be who you thought I was. I've known that the whole time. I'm not good at this and I'm not going to get better at it, so I'll just say the thing I should have said.
 
