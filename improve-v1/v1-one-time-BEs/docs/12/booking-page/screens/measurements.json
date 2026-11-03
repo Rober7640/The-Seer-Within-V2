@@ -1,70 +1,70 @@
 [
   {
     "viewport": "390x844",
-    "buttonTop": 688,
-    "buttonBottom": 741,
+    "buttonTop": 693,
+    "buttonBottom": 747,
     "buttonOnFirstScreen": true,
-    "bumpBottom": 642,
-    "totalBottom": 675,
-    "hintBottom": 767,
-    "priceBottom": 497,
+    "bumpBottom": 647,
+    "totalBottom": 680,
+    "hintBottom": 772,
+    "priceBottom": 503,
     "titleLines": 2,
     "afterBump": {
-      "buttonPageBottom": 741,
+      "buttonPageBottom": 747,
       "scrolledBy": 0,
-      "onScreenBottom": 741
+      "onScreenBottom": 747
     },
-    "cancelledPriceBottom": 525
+    "cancelledPriceBottom": 531
   },
   {
     "viewport": "390x664",
-    "buttonTop": 688,
-    "buttonBottom": 741,
+    "buttonTop": 693,
+    "buttonBottom": 747,
     "buttonOnFirstScreen": false,
-    "bumpBottom": 642,
-    "totalBottom": 675,
-    "hintBottom": 767,
-    "priceBottom": 497,
+    "bumpBottom": 647,
+    "totalBottom": 680,
+    "hintBottom": 772,
+    "priceBottom": 503,
     "titleLines": 2,
     "afterBump": {
-      "buttonPageBottom": 741,
-      "scrolledBy": 93,
+      "buttonPageBottom": 747,
+      "scrolledBy": 99,
       "onScreenBottom": 648
     },
-    "cancelledPriceBottom": 525
+    "cancelledPriceBottom": 531
   },
   {
     "viewport": "375x667",
-    "buttonTop": 688,
-    "buttonBottom": 741,
+    "buttonTop": 707,
+    "buttonBottom": 761,
     "buttonOnFirstScreen": false,
-    "bumpBottom": 642,
-    "totalBottom": 675,
-    "hintBottom": 767,
-    "priceBottom": 497,
+    "bumpBottom": 661,
+    "totalBottom": 694,
+    "hintBottom": 786,
+    "priceBottom": 516,
     "titleLines": 2,
     "afterBump": {
-      "buttonPageBottom": 741,
-      "scrolledBy": 90,
+      "buttonPageBottom": 761,
+      "scrolledBy": 110,
       "onScreenBottom": 651
     },
-    "cancelledPriceBottom": 543
+    "cancelledPriceBottom": 562
   },
   {
     "viewport": "360x740",
-    "buttonTop": 717,
-    "buttonBottom": 770,
+    "buttonTop": 736,
+    "buttonBottom": 789,
     "buttonOnFirstScreen": false,
-    "bumpBottom": 671,
-    "totalBottom": 704,
-    "hintBottom": 796,
-    "priceBottom": 526,
+    "bumpBottom": 690,
+    "totalBottom": 723,
+    "hintBottom": 815,
+    "priceBottom": 545,
     "titleLines": 3,
     "afterBump": {
-      "buttonPageBottom": 770,
-      "scrolledBy": 46,
+      "buttonPageBottom": 789,
+      "scrolledBy": 65,
       "onScreenBottom": 724
     },
-    "cancelledPriceBottom": 572
+    "cancelledPriceBottom": 591
   }
 ]

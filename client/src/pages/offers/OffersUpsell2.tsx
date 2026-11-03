@@ -2,14 +2,22 @@ import { useEffect, useRef, useState } from "react";
 import { useSearch, useLocation } from "wouter";
 import { CosmicBackground } from "../../components/CosmicBackground";
 import { BackgroundMusic } from "../../components/BackgroundMusic";
-import { Upsell2CTA, Upsell2DownsellCTA, ShippingForm, QuickReplies } from "../../components/upsell";
+import {
+  Upsell2CTA,
+  Upsell2DownsellCTA,
+  ShippingForm,
+  QuickReplies,
+  EvelynChatHeader,
+  EvelynAvatarSlot,
+  endsEvelynRun,
+} from "../../components/upsell";
 import { STRIPE_CHECKOUT_SHIPPING_COUNTRIES } from "@shared/shippingCountries";
 import { useUpsell2Chat } from "../../hooks/useUpsell2Chat";
 import { upsell2CopyForOffer } from "../../lib/backendOffers";
 import { isBackendOfferKey, BACKEND_OFFER_CATALOG, type BackendOfferKey } from "@shared/backendOffers";
 import { track as trackPH } from "../../lib/posthog";
 import { backendOfferFunnel } from "../../lib/funnel";
-import { Volume2, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import type { Bucket } from "@shared/types";
@@ -215,12 +223,8 @@ export default function OffersUpsell2() {
           prefix-agnostic route — the pinned shell is unconditional here. */}
       <BackgroundMusic positionClass="absolute top-2 right-3" />
 
-      <div className="relative z-10 p-4 text-center border-b border-white/10 bg-black/20 backdrop-blur-sm">
-        <div className="flex items-center justify-center gap-2 text-sm text-white/60">
-          <Volume2 className="w-4 h-4" data-testid="icon-volume-upsell2" />
-          <span>Sound on for best experience</span>
-        </div>
-      </div>
+      {/* Header — Evelyn's face, so the buyer sees who's talking. */}
+      <EvelynChatHeader volumeTestId="icon-volume-upsell2" />
 
       <div
         ref={scrollRef}
@@ -232,12 +236,13 @@ export default function OffersUpsell2() {
             {new Date().toLocaleDateString(undefined, { weekday: "long", hour: "numeric", minute: "numeric" })}
           </div>
 
-          {messages.map((msg) => (
+          {messages.map((msg, i) => (
             <div
               key={msg.id}
               className={`flex w-full ${msg.role === "user" ? "justify-end" : "justify-start"}`}
               data-testid={`message-${msg.role}-${msg.id}`}
             >
+              {msg.role !== "user" && <EvelynAvatarSlot show={endsEvelynRun(messages, i, isTyping)} />}
               {msg.role === "image" ? (
                 <div className="max-w-[70%] rounded-2xl overflow-hidden shadow-lg border border-purple-200/30">
                   <img
@@ -262,6 +267,7 @@ export default function OffersUpsell2() {
 
           {isTyping && (
             <div className="flex justify-start w-full animate-fade-in" data-testid="indicator-typing-upsell2">
+              <EvelynAvatarSlot show />
               <div className="bg-white border border-gray-100 rounded-2xl rounded-bl-none px-4 py-3 shadow-sm flex items-center gap-1">
                 <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce [animation-delay:-0.3s]"></span>
                 <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce [animation-delay:-0.15s]"></span>

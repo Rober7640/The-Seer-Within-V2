@@ -195,10 +195,20 @@ export default function LuckyNumbersBookingPage() {
                 </p>
               )}
 
-              {/* The one reason this page gives for asking. Evelyn's own sentence, signed. */}
-              <p className="text-center text-[14px] italic leading-snug text-gray-700" data-testid="text-reason-line">
-                “{REASON_LINE.quote}” <span className="whitespace-nowrap not-italic">— {REASON_LINE.signature}</span>
-              </p>
+              {/* The one reason this page gives for asking. Evelyn's own sentence, signed, with her
+                  face beside it so the buyer sees who's asking. The photo is no taller than the
+                  two-line quote, so the button stays where it was on the first screen. */}
+              <div className="flex items-center gap-3">
+                <img
+                  src="/evelyn-avatar.png"
+                  alt="Evelyn Cross"
+                  className="h-11 w-11 shrink-0 rounded-full border-2 border-amber-300/70 object-cover"
+                  data-testid="img-booking-evelyn"
+                />
+                <p className="text-left text-[14px] italic leading-snug text-gray-700" data-testid="text-reason-line">
+                  “{REASON_LINE.quote}” <span className="whitespace-nowrap not-italic">— {REASON_LINE.signature}</span>
+                </p>
+              </div>
 
               <div className="mt-2.5" id="field-birth-name">
                 <label htmlFor="birth-name" className="block text-[14px] font-semibold leading-snug text-gray-900">

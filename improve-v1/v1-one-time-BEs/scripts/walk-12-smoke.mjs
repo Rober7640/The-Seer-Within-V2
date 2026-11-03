@@ -68,6 +68,22 @@ const check = (name, ok, detail = '') => {
 const flat = (s) => (s || '').replace(/\s+/g, ' ').trim();
 const round = (n) => Math.round(n);
 
+// Evelyn's real photo (400×400 /evelyn-avatar.png), loaded — never the broken -new.png screenshot.
+const evelynPhotoOk = (page, testId) =>
+  page.getByTestId(testId).first().evaluate((img) =>
+    img.complete && img.naturalWidth === 400 && img.naturalHeight === 400 && img.getAttribute('src') === '/evelyn-avatar.png')
+    .catch(() => false);
+// On the upsell chats: exactly one small photo per run of hers, beside her LATEST row of that run.
+const chatAvatarOk = (page) =>
+  page.evaluate(() => {
+    const rows = [...document.querySelectorAll('[data-testid^="message-"]')];
+    const photos = document.querySelectorAll('[data-testid="img-bubble-evelyn"]');
+    const last = rows[rows.length - 1];
+    return photos.length >= 1 && !!last && !last.dataset.testid.startsWith('message-user-') &&
+      !!last.querySelector('[data-testid="img-bubble-evelyn"]') &&
+      photos[0].getAttribute('src') === '/evelyn-avatar.png';
+  });
+
 // ── What no rendered page may say ──
 const BANNED = [
   ['tarot', /\btarot\b/i],
@@ -222,6 +238,7 @@ async function walkBooking(browser, phone, measurements) {
   const fonts = await fontsReady(page);
   await page.waitForTimeout(300);
   await page.screenshot({ path: path.join(OUT, `booking-${tag}-1-first-screen.png`) });
+  check(`Booking ${tag}: Evelyn's photo beside her quote`, await evelynPhotoOk(page, 'img-booking-evelyn'));
 
   const first = {
     price: await measure(page, 'text-price-line'),
@@ -454,6 +471,9 @@ async function walkConversations(browser, transcripts) {
     check('U1: the reassurance line is "Take your time."', body.includes('Take your time.') && !body.includes('This is your journey'));
     check('U1: accept label is 12’s', flat(await page.getByTestId('text-accept-button').innerText()) === 'Yes, do my Wish Ritual');
     check('U1: no sideways scroll', await noSideScroll(page));
+    check('U1: header shows Evelyn — photo and name', await evelynPhotoOk(page, 'img-header-evelyn') &&
+      flat(await page.getByTestId('text-header-name').innerText()) === 'Evelyn Cross');
+    check('U1: her photo sits beside her latest bubble', await chatAvatarOk(page));
     const u1Cta = await measure(page, 'container-upsell-cta');
     check('U1: CTA on screen', onScreen(u1Cta, CHAT_VIEWPORT.height), JSON.stringify(u1Cta));
     await page.screenshot({ path: path.join(OUT, 'u1-2-cta.png') });
@@ -548,6 +568,9 @@ async function walkConversations(browser, transcripts) {
     check('U2·A: names the second bracelet head-on', a.some((t) => t.includes("I'm about to offer you a second bracelet")));
     check('U2·A: says what each bracelet does', a.some((t) => t.includes('your citrine on your left holds your one wish, and this one on your right gets you out to meet it')));
     check('U2·A: no lava line', !a.some((t) => /lava|complete circuit/i.test(t)));
+    check('U2·A: header shows Evelyn — photo and name', await evelynPhotoOk(page, 'img-header-evelyn') &&
+      flat(await page.getByTestId('text-header-name').innerText()) === 'Evelyn Cross');
+    check('U2·A: her photo sits beside her latest bubble', await chatAvatarOk(page));
     await page.screenshot({ path: path.join(OUT, 'u2a-1-cta.png') });
     scan('U2·A at the CTA', await page.locator('body').innerText());
     await page.getByTestId('button-upsell2-accept').click();
