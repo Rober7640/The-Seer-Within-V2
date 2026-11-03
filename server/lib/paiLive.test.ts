@@ -63,7 +63,10 @@ function order(over: Partial<import('./paiLive').PaiOrder> = {}): import('./paiL
 after(() => setTimeout(() => process.exit(process.exitCode ?? 0), 200).unref());
 
 describe('the allow-list', () => {
-  it('admits exactly the two tarot landers — /fb is OUT (Lewis 13 Oct)', () => {
+  it('admits exactly /fb and the two tarot landers — /fb back IN (Lewis 3 Nov)', () => {
+    assert.equal(paiEligibleLander('v1-fb', undefined), true);
+    assert.equal(paiEligibleLander('v1-fb', null), true);
+    assert.equal(paiEligibleLander('v1-fb', '  '), true); // blank hook = no hook
     assert.equal(paiEligibleLander('v1-tarot', 'cards-meant-alone'), true);
     assert.equal(paiEligibleLander('v1-tarot', 'cards-come-back'), true);
   });
@@ -72,8 +75,7 @@ describe('the allow-list', () => {
     assert.equal(paiEligibleLander('v1-tarot', 'cards-meant-alone-still-time'), false);
     assert.equal(paiEligibleLander('v1-tarot', 'cards-return'), false);
     assert.equal(paiEligibleLander('v1-tarot', undefined), false);
-    // /fb is out of the split while its own $35 vs $35+bump test runs (Lewis 13 Oct).
-    assert.equal(paiEligibleLander('v1-fb', undefined), false);
+    // /fb is admitted with NO hook only — a hook on /fb is not a lander we walked.
     assert.equal(paiEligibleLander('v1-fb', 'cards-meant-alone'), false);
     assert.equal(paiEligibleLander('v1-fb2', undefined), false);
     assert.equal(paiEligibleLander('v1-palm', undefined), false);
@@ -159,8 +161,10 @@ describe('resolveGateway — Stripe and NOT enrolled unless everything holds', (
     for (const args of [
       { email: 'a@b.co', funnel: 'v1-palm' as const },
       { email: 'a@b.co', funnel: 'v1-tarot' as const, hook: 'cards-return' },
-      { email: 'a@b.co', funnel: 'v1-fb' as const },
+      { email: 'a@b.co', funnel: 'v1-fb2' as const },
       { email: '', funnel: 'v1-tarot' as const, hook: 'cards-meant-alone' },
+      { email: '', funnel: 'v1-fb' as const },
+      { email: 'a@b.co', funnel: 'v1-fb' as const, noemail: true },
       { email: 'a@b.co', funnel: 'v1-tarot' as const, hook: 'cards-meant-alone', noemail: true },
     ]) {
       const d = await live.resolveGateway(args);
