@@ -419,6 +419,45 @@
       "do": "Each day, before anyone else speaks, say what she wants, however small."
     }
   },
+  "karmic_debt": {
+    "_note": "The one thing she is owed back this lifetime — a numerology Karmic Debt (13/14/16/19), hidden in a raw sum before it reduces. Read first off the birth DATE (Life Path), then the name's numbers; see build-11-n8n.py node 3. When she carries one it names what they took, in place of the Soul Urge. Standard debt meanings in the offer's voice. ⛔ Never say 'karmic', 'debt', 'numerology' or any number to the buyer.",
+    "13": {
+      "took": "your ease",
+      "word": "ease",
+      "cover": "capable",
+      "regret": "they let her carry all of it and still called her the strong one",
+      "unsaid": "I let you hold the whole weight because it cost me nothing.",
+      "do": "Once a day, leave one thing undone on purpose, and go to bed anyway.",
+      "safety": "If holding everything up was the price of being kept, that was theirs to answer for, not a debt you owe."
+    },
+    "14": {
+      "took": "your freedom",
+      "word": "freedom",
+      "cover": "easy-going",
+      "regret": "they made her world small and called it love",
+      "unsaid": "I kept you close by making everywhere else feel unsafe.",
+      "do": "Once a day, do one thing without telling anyone first.",
+      "safety": "Being made smaller was never your fault. You owe no one a reason for wanting room."
+    },
+    "16": {
+      "took": "your trust that love holds",
+      "word": "trust",
+      "cover": "independent",
+      "regret": "they let her build her whole weight on them, knowing they wouldn't hold",
+      "unsaid": "I let you lean everything on me when I already knew I'd go.",
+      "do": "Once a day, let one small thing matter out loud before you know how it ends.",
+      "safety": "The fall was theirs to own. Trusting someone who swore they were solid never made you a fool."
+    },
+    "19": {
+      "took": "your right to lean on anyone",
+      "word": "leaning",
+      "cover": "strong",
+      "regret": "they left her to manage alone and let her believe that was strength",
+      "unsaid": "I taught you to need no one, so you'd never ask anything of me.",
+      "do": "Once a day, let one person help with one thing, and don't take it back.",
+      "safety": "Needing people was never the weakness. Being left to prove you didn't is the harm."
+    }
+  },
   "expression": {
     "1": "someone who'd go first without being told",
     "2": "someone who'd listen and make room for them",

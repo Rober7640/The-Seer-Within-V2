@@ -223,6 +223,7 @@ _CARDS_FOR_RUN = {k: {"name": v["name"], "plain": v["plain"],
                                 (v["drawn_cropped"] if SPEC["death_crop"] else v["drawn_full"]))}
                   for k, v in SPEC["cards"].items()}
 _RUNTIME = {k: SPEC[k] for k in ("pools", "deal_rules", "acts", "segments", "sections", "soul_urge",
+                                 "karmic_debt",
                                  "expression", "life_path", "flat", "devices", "art_links",
                                  "target_words", "floor_words", "ceiling_words", "letter_words",
                                  "death_crop")}
@@ -281,10 +282,26 @@ if (!su) su = 1 + (seedOf(birthName + '|su') % 9);
 if (!ex) { ex = 1 + (seedOf(birthName + '|ex') % 9); number_fallback = true; }
 const one = (n) => ({ 11: 2, 22: 4, 33: 6 }[n] || n);    // §5: brought to one digit for the sums only
 const row = S.soul_urge[String(su)];
+// ── the karmic debt: the one thing she is owed back this lifetime, hidden in the raw
+//    sums before they reduce. A core number carries a debt (13/14/16/19) when its
+//    reduction passes through one of those. Mirrors server/lib/numerologyEngine.ts
+//    detectKarmicDebt. Birth DATE (Life Path) is read first, then the name's numbers.
+//    When she carries one, the debt — not the Soul Urge — names what they took; when
+//    she does not, it falls back to the Soul Urge exactly as before.
+const detectKarmicDebt = (rawSum) => { let n = Math.abs(rawSum);
+  while (n > 9 && n !== 11 && n !== 22 && n !== 33) {
+    if (n === 13 || n === 14 || n === 16 || n === 19) return n; n = sumDigits(n); }
+  return 0; };
+const kdLp = detectKarmicDebt(reduce(mm) + reduce(dd) + reduce(sumDigits(yy)));
+const kdEx = detectKarmicDebt(allSum);
+const kdSu = detectKarmicDebt(vowelSum);
+const karmic = kdLp || kdEx || kdSu || 0;
+const karmic_source = kdLp ? 'life_path' : kdEx ? 'expression' : kdSu ? 'soul_urge' : null;
+const debt = (karmic && S.karmic_debt[String(karmic)]) || row;
 const fork = (one(su) + one(ex) + one(lp)) % 3 === 0 ? 'get_back' : 'giving';
 const answers = {
-  took: row.took, took_word: row.word, cover: row.cover, regret: row.regret, unsaid: row.unsaid,
-  do: row.do, safety: row.safety || null,
+  took: debt.took, took_word: debt.word, cover: debt.cover, regret: debt.regret, unsaid: debt.unsaid,
+  do: debt.do, safety: debt.safety || row.safety || null,
   saw: S.expression[String(ex === 33 ? 6 : ex)],
   pattern: S.life_path[String(lp === 33 ? 6 : lp)],
   fork, excuse: S.flat.excuse[String(one(ex) % 3)], reason: S.flat.reason[String(one(lp) % 3)],
@@ -373,8 +390,8 @@ const devices = {
   prop: devShuffle(D.prop, 'prop')[0],
 };
 
-return [{ json: { ...order, numbers: { su, ex, lp, number_fallback }, answers, deal, links, devices,
-  dob_iso: dob, attempt: 1, target_words: S.target_words } }];
+return [{ json: { ...order, numbers: { su, ex, lp, karmic, karmic_source, number_fallback },
+  answers, deal, links, devices, dob_iso: dob, attempt: 1, target_words: S.target_words } }];
 """.replace("__SPEC__", SPEC_JSON)
 
 # ─── shared fact block for the plan and the writer ─────────────────────────────
@@ -454,7 +471,14 @@ PLAN_SCHEMA = {
         "through_line": {"type": "string"},
         "sections": {"type": "array", "items": {
             "type": "object", "additionalProperties": False,
-            "properties": {"section": {"type": "string"}, "picture_detail": {"type": "string"},
+            # ⛔ enum, not a free string: gpt-6.1-sol returned "1 — the Magician" etc. and node 3c,
+            # which exact-matches the bare keys, threw "missing sections 1..12". Strict json_schema
+            # (proven on this model) makes the contract unbreakable. Card identity is set by code
+            # (node 3), never by the model, so it never needs the card name here.
+            "properties": {"section": {"type": "string", "enum": [
+                               "opening", "1", "2", "3", "4", "5", "6",
+                               "7", "8", "9", "10", "11", "12", "letter"]},
+                           "picture_detail": {"type": "string"},
                            "what_happens": {"type": "string"}, "leans_on": {"type": "string"},
                            "hands_on": {"type": "string"}},
             "required": ["section", "picture_detail", "what_happens", "leans_on", "hands_on"]}},
