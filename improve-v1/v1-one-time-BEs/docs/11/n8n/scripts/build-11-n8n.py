@@ -297,11 +297,14 @@ const kdEx = detectKarmicDebt(allSum);
 const kdSu = detectKarmicDebt(vowelSum);
 const karmic = kdLp || kdEx || kdSu || 0;
 const karmic_source = kdLp ? 'life_path' : kdEx ? 'expression' : kdSu ? 'soul_urge' : null;
-const debt = (karmic && S.karmic_debt[String(karmic)]) || row;
+// ⛔ Operator 2026-11-03: the Soul Urge names what they took for EVERY buyer. Karmic debt is a
+//    lesson she owes, which reads as blaming her, and only ~44% carry one. It is still computed
+//    and passed on (numbers.karmic) for a possible card-7 use later, but it decides nothing.
+const debt = row;
 const fork = (one(su) + one(ex) + one(lp)) % 3 === 0 ? 'get_back' : 'giving';
 const answers = {
   took: debt.took, took_word: debt.word, cover: debt.cover, regret: debt.regret, unsaid: debt.unsaid,
-  do: debt.do, safety: debt.safety || row.safety || null,
+  do: debt.do, safety: debt.safety || null,
   saw: S.expression[String(ex === 33 ? 6 : ex)],
   pattern: S.life_path[String(lp === 33 ? 6 : lp)],
   fork, excuse: S.flat.excuse[String(one(ex) % 3)], reason: S.flat.reason[String(one(lp) % 3)],
@@ -1254,7 +1257,7 @@ def make_testdrive(wf):
     drop = {"1 · Stripe webhook", "Not 11 — ignore", "2a · Load the intake", "2b · Join session + intake",
             "8b · Log the first failure", "9 · Log the verdict", "13 · Hold to the 24h mark",
             "14 · Find her on AWeber", "14a · Tag + reading_url (the send)", "15 · Mark delivered"}
-    wf["name"] = wf_name(f"11 · Unsent Letter — TEST DRIVE ({FIXTURE} fixture, never delivers)")
+    wf["name"] = wf_name(f"11 · Unsent Letter — {'MANUAL ' if '--manual-only' in sys.argv else ''}TEST DRIVE ({FIXTURE} fixture, never delivers)")
     wf["nodes"] = [n for n in wf["nodes"] if n["name"] not in drop]
     wf["connections"] = {s: o for s, o in wf["connections"].items() if s not in drop}
     for outs in wf["connections"].values():
