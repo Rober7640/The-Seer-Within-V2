@@ -138,7 +138,10 @@ Send it as written, with the three file paths from step 4. Use the same persona 
 |---|---|---|---|---|---|---|---|
 | SU 9 v1 | blind read 1 | n8n 51764 | **8** vs 4 | **7** vs 4 | **8** vs 3 | **7** vs 4 | **6** vs 3 |
 | SU 9 v2 | blind read 2 | SU 9 v1 | **8** vs 7 | 6 vs 6 | **7** vs 6 | **6** vs 4 | **5** vs 4 |
+| SU 9 v3 | blind read 3 | SU 9 v2 | **8** vs 7 | **8** vs 7 | **8** vs 7 | 6 vs 6 | **6** vs 5 |
 
 ⚠ Each read uses a fresh reader, and readers score differently (v1 got 8 for "worth $35" from reader 1, 6 from reader 2). Compare only within one read.
 
-**Still open after read 2:** the letter reuses Evelyn's phrases and is too self-aware to sound like them · Evelyn's night after nearly every card felt staged · card 12's advice reads like a pamphlet (both readers) · "take charge" told reader 2 what kind of woman she is and got it wrong · no he/she anywhere was noticed (kept on purpose: rule) · "One word doesn't make a letter" and "a room made of paper" lost her.
+**Fixed in v3 (read 2 notes):** the letter reuses Evelyn's phrases and is too self-aware to sound like them · Evelyn's night after nearly every card felt staged · card 12's advice reads like a pamphlet (both readers) · "take charge" told reader 2 what kind of woman she is and got it wrong · no he/she anywhere was noticed (kept on purpose: rule) · "One word doesn't make a letter" and "a room made of paper" lost her.
+
+**Still open after read 3:** cards 7 and 8 read like a telling-off ("Some of what's happened since is yours", "charging it to everybody since"): where reader 3 nearly closed it · the [[LP]] line ("clam up, chew on it") sits in both card 7 and the letter, so the letter still reads as built from the reading · the Tower is described without its lightning · "If somebody's beside you now" shows Evelyn doesn't know if she's with anyone · trust stuck at 6 across reads 2 and 3 · the swap-in banks need two wordings of each line (reading and letter), since v3's letter says what they saw in its own words.
