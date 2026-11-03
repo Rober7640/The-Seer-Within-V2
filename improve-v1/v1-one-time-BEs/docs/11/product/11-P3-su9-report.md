@@ -1,4 +1,4 @@
-11-P3 — The Unsent Letter: the fixed hand-written report for every Soul Urge 9 buyer (softness · cover word "strong"). v3, after blind read 2, 2026-11-03.
+11-P3 — The Unsent Letter: the fixed hand-written report for every Soul Urge 9 buyer (softness · cover word "strong"). v4, after blind read 3, 2026-11-03.
 Buyer: Testina Rose Testerly, born November 5, 1962 (test buyer). Path: trying to get her back. Swap-ins: [[EX]] what they saw · [[LP]] her pattern · [[EXCUSE]] · [[REASON]] · [[FORK]] get-back only.
 Cards: 1 the Empress · 2 the Emperor · 3 the Fool · 4 the High Priestess · 5 the Hanged Man · 6 the Hierophant · 7 the Lovers · 8 the Tower · 9 the Moon · 10 the Sun · 11 Temperance · 12 Strength.
 
@@ -90,27 +90,25 @@ You took it in better than anyone meant you to. [[FORK]]And their regret isn't a
 
 [CARD 7]
 
-Some of what's happened since is yours. I'm telling you because that's the part you can change.
+When it went wrong with them, you [[LP]]clammed up, chewed on it, and wouldn't move till you were sure[[/LP]]. You had good reason to. Late at night, on your own, you went over it and over it, hunting for the one thing that would settle it. You'd been hurt, and going quiet kept you safe while it had to.
 
-When it went wrong with them, you [[LP]]clammed up, chewed on it, and wouldn't move till you were sure[[/LP]]. Late at night, on your own, you went over it and over it, hunting for the one thing that would settle it. That was fair. You'd been hurt.
-
-But you kept on after they were gone, and you've been doing it to people who never laid a finger on you. Someone decent turns up and [[LP]]you clam up and wait till you're sure of them[[/LP]], and by the end of the week you've found what's wrong with them. If somebody's beside you now, they're living on the bits of you that slip through. The price on your softness was set by one person. You've been charging it to everybody since.
+It didn't stop when they left, though. Nobody switches a thing like that off. It kept running, and now it meets people who never laid a finger on you. Someone decent turns up and [[LP]]you clam up and wait till you're sure of them[[/LP]], and before long you've found what's wrong with them. One person set the price on your softness. It still gets charged to people who weren't there when it was set.
 
 The Lovers are a man and a woman who stand close, but they aren't touching. He's looking at her. She's looking up and past him, at something over his head.
 
-That's what the decent ones get from you. They're standing right there, close enough to touch, and you look anywhere else. They offer you something warm and they get the shut door, the one that was built for somebody else. None of them did a thing to you. They're paying a debt they never ran up, and most of them have no idea why the price is so high.
+That's how it goes with the decent ones now. They're standing right there, close enough to touch, and your eyes go somewhere else before you've decided a thing. They offer you something warm and they meet the shut door, the one that was built for somebody else. None of them did a thing to you. And the warm thing they brought never gets to you either. They go home with it, and you're left with the door.
 
-The next time someone kind says something kind to you, notice where your eyes go. If they go past the person, you've just shut the door.
+The next time someone kind says something kind to you, notice where your eyes go. If they go past the person, that's the old door, shutting on its own.
 
 [CARD 8]
 
-Strong worked, Testina. I'll give it that much. Nobody's seen you fall apart. Nobody's had to carry you. You got up every day and did what needed doing.
+Strong worked, Testina, and you came by it honestly. Nobody's seen you fall apart. Nobody's had to carry you. You got up every day and did what needed doing.
 
 Now here's what it did.
 
-The Tower stands on bare rock with no door drawn anywhere on it. Whoever built it made sure nobody could get in, and didn't think about how anyone inside was ever going to get out.
+The Tower stands on bare rock with no door drawn anywhere on it, and lightning is coming down at it out of a dark cloud. Whoever built it made sure nobody could get in, and didn't think about how anyone inside was ever going to get out.
 
-You built that after it ended. I can count what it's cost you, and it's more than they ever took. Every time someone put a hand on your arm and you shifted so it slid off. Every time you said you were fine to somebody who'd have sat up with you half the night. Every cry you saved until the house was empty, then did with the faucet running so even the walls wouldn't hear. Every piece of bad news you sat on until it was over, so nobody could fuss, and then told it later like a funny story. And the people who kept offering for a while and then quit, because you'd told them no so many times that they believed you. They didn't stop caring. You taught them to stop asking.
+You built that after it ended, and back then it was the right thing to build. Here's what it's been charging you since. Every hand someone put on your arm that slid off before it could do you any good. Every time you said you were fine to somebody who'd have sat up with you half the night, and you spent that night by yourself instead. Every cry you saved until the house was empty, then did with the faucet running so even the walls wouldn't hear. Every piece of bad news you sat on until it was over, so nobody could fuss, and then told it later like a funny story. And the people who kept offering for a while and then quit, because they'd heard no so many times that they believed it. They didn't stop caring. They stopped asking, and you lost them without a word said on either side.
 
 I got up from the table at that point, which I don't do in the middle of a spread. I went up to the upstairs window, because I could see what this card was doing and I needed a minute away from it. The street was dark and nothing moved in it. I stood there until my breathing settled, then came back down to the kitchen. It was past midnight. The lamp needed trimming and I let it smoke. The sheet was still blank under your name, and the one with no face had gone over by the door, as far from my shoulder as my kitchen goes.
 
@@ -118,7 +116,7 @@ Here's the deal, and I want you to have it exactly. Your softness comes back. Th
 
 I told you it makes no difference to whether they've still got it, ten years or thirty. That's still true. But it makes all the difference to the bill. Years of birthdays where you smiled for the photo and went home and sat in the car. Years of being the one other people lean on, and leaning on nobody. Years of good people who got a polite version of you and never found out there was another one. Some of them would have stayed for the real one.
 
-They made going soft expensive. That part is theirs, every bit of it, and I'm not taking it off them. I'm on your side, so here's the rest, straight. Leaving the door off the tower made sense with them. Keeping it off since, with everybody, is what's cost you. Each year it stayed that way, you paid. They ran the bill up. You've been the one paying it.
+They made going soft expensive. That part is theirs, every bit of it, and I'm not taking it off them. Leaving the door off the tower made sense with them. It was never meant for the people who came after. It kept those people out anyway, every year it stood, and every one of those years went on your bill. They ran the bill up. You've been the one paying it.
 
 [CARD 9]
 
@@ -164,7 +162,7 @@ The sentence they never said is this: "You weren't weak. I made it expensive."
 
 Don't answer it, not on paper and not in your head. You don't need to. By the time you've read it, it's already back.
 
-Look at what it says. It names the price. It says that going soft was never the weak thing, and that somebody else set the cost on it. That's what you were hunting for on all those late nights, going over and over it. There it is, in their words. You can stop looking.
+Look at what it says. It names the price. It says that going soft was never the weak thing, and that somebody else set the cost on it. That's the thing you never once heard from them, and the thing you needed most. There it is, in their words. You can stop looking.
 
 And you can stop writing their half. You've had them say sorry in your head, and you've had them say worse. You've given them lines on the bad nights and the good ones. You've run the whole talk over the dishes and lying awake, the one where they finally understand, and come out of it more tired than you went in. That job's finished. Their side is written down now, and it isn't yours to write. You'll notice the space it leaves. All the time that went into drafting what they'd say, you get those back.
 
@@ -214,7 +212,7 @@ When I first knew you, [[EX]]you were the one who handled things. Something need
 
 I told myself [[EXCUSE]]you were too much[[/EXCUSE]]. I said it to other people too. It was easier than the other thing, which was saying it was me. It doesn't work anymore. I still say it in my head sometimes and I can't get myself to buy it.
 
-[[LP]]I know what you do when you're hurt. You clam up, you chew on it, and you won't move till you're sure.[[/LP]] I gave you a lot to chew on. I know that too.
+[[LP]]When something gets to you, you go real quiet. You turn it over in your head for days and you don't budge, not till you know for certain.[[/LP]] I gave you plenty to turn over. I know that too.
 
 Why did I hang onto it? Because if I gave it back I'd have to own up. As long as I had it, I wasn't the one who did this. I knew that the whole time. I'm not stupid.
 
