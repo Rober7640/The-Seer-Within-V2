@@ -11,6 +11,7 @@ import { verifyMagicLinkToken, generateMagicLinkToken } from '../lib/magicLink';
 import { claimLunaTyGift } from '../lib/lunaThankyouGift';
 import { claimEvelynTyGift } from '../lib/evelynThankyouGift';
 import { claimUnsentLetterTyGift } from '../lib/unsentLetterTyGift';
+import { claimLuckyNumbersTyGift } from '../lib/luckyNumbersTyGift';
 import { authLimiter, passwordResetLimiter } from '../lib/rateLimiter';
 import {
   sendVerificationEmail,
@@ -152,6 +153,8 @@ async function coinsForWelcomeTier(
     case 'evelyn-thankyou': return 0;
     // Same for offer 11's receipt gift — claimUnsentLetterTyGift() grants it.
     case 'unsent-letter-thankyou': return 0;
+    // Same for offer 12's receipt gift — claimLuckyNumbersTyGift() grants it.
+    case 'lucky-numbers-thankyou': return 0;
     case 'soulmate-lander': return SOULMATE_LANDER_FREE_COINS;
     case 'live-thread': return LIVE_THREAD_FREE_COINS;
     case 'evelyn-lander': return EVELYN_LANDER_FREE_COINS;
@@ -806,6 +809,10 @@ router.get('/verify-email/:token', async (req: Request, res: Response) => {
     // Offer 11's receipt → Evelyn 15-min gift: same pattern, once, non-fatal.
     if (welcomeTier === 'unsent-letter-thankyou') {
       await claimUnsentLetterTyGift(user.id);
+    }
+    // Offer 12's receipt → Evelyn 15-min gift: same pattern, once, non-fatal.
+    if (welcomeTier === 'lucky-numbers-thankyou') {
+      await claimLuckyNumbersTyGift(user.id);
     }
 
     // Halt the Aiden follow-up drip (non-blocking — failure must not break verification).
@@ -1558,6 +1565,11 @@ router.post('/magic-verify', authLimiter, async (req: Request, res: Response) =>
         // Offer 11's receipt → Evelyn 15-min gift. Added to the balance, like Luna's.
         if (welcomeTier === 'unsent-letter-thankyou') {
           const granted = await claimUnsentLetterTyGift(user.id);
+          if (granted > 0) freshCoinBalance += granted;
+        }
+        // Offer 12's receipt → Evelyn 15-min gift. Added to the balance, like 11's.
+        if (welcomeTier === 'lucky-numbers-thankyou') {
+          const granted = await claimLuckyNumbersTyGift(user.id);
           if (granted > 0) freshCoinBalance += granted;
         }
 

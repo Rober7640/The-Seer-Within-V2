@@ -78,6 +78,39 @@ function refCalendar(birthDate, orderDate, three) {
   }
   return { months, open, both, earliest };
 }
+/** Rule 5, written fresh: for slice k, sort every allowed number by (lucky first, fewest-so-far
+ *  root, both looks kept, nearest the slice middle, smaller) and take the first. Top-ups rank by
+ *  birthday → sum → 1..9. Returns the list, smallest first, with each number's source. */
+function refTickets(three, birthdayRoot, sumRoot, { min, max, pick }) {
+  const own = [...new Set(three)];
+  const order = ['birthday', 'sum', 'fill'];
+  const topRank = (n) => {
+    const r = refReduce(n);
+    if (r === birthdayRoot) return 0;
+    if (r === sumRoot) return 1;
+    return 2 + r; // fill 1..9
+  };
+  const out = [];
+  for (let k = 0; k < pick; k++) {
+    const mid2 = 2 * min * pick + (2 * k + 1) * (max - min + 1); // the middle, times 2·pick
+    const taken = new Set(out.map((o) => o.n));
+    const luckyHad = (r) => out.filter((o) => o.lucky && o.r === r).length;
+    const ok = (n) => !out.some((o) => Math.abs(o.n - n) === 1) && out.filter((o) => o.n % 10 === n % 10).length < 2;
+    const rows = [];
+    for (let n = min; n <= max; n++) {
+      if (taken.has(n)) continue;
+      const r = refReduce(n), lucky = own.includes(r);
+      // lucky: fewest-so-far root · looks kept · nearest the slice middle · smaller
+      // top-up (only once no lucky number is left): looks kept · source rank · nearest · smaller
+      const look = ok(n) ? 0 : 1, near = Math.abs(2 * pick * n - mid2);
+      rows.push({ n, r, lucky, key: lucky ? [0, luckyHad(r), look, near, n] : [1, look, topRank(n), near, n] });
+    }
+    rows.sort((a, b) => { for (let i = 0; i < a.key.length; i++) if (a.key[i] !== b.key[i]) return a.key[i] - b.key[i]; return 0; });
+    const best = rows[0];
+    out.push({ n: best.n, r: best.r, lucky: best.lucky, source: best.lucky ? 'lucky' : order[Math.min(2, topRank(best.n))] });
+  }
+  return out.sort((a, b) => a.n - b.n);
+}
 const WEEKDAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
 // ─── seeded random buyers ────────────────────────────────────────────────────────
@@ -221,9 +254,9 @@ const bad = report('12 · the lucky-numbers engine', [
       assert.deepEqual(T.numbers.repeats, []);
       assert.equal(T.numbers.birthdayRoot.value, 3); assert.equal(T.numbers.sumRoot, 6);
     }],
-    ['tickets: 7 8 9 16 17 18, all lucky, roots 7 8 9 7 8 9', () => {
-      assert.deepEqual(T.tickets.list, [7, 8, 9, 16, 17, 18]);
-      assert.deepEqual(T.tickets.numbers.map((t) => t.root), [7, 8, 9, 7, 8, 9]);
+    ['tickets spread: slice middles 5.1 13.3 21.4 29.6 37.8 45.9 → 7 · 17 (8 sits by 7) · 9 (18 sits by 17, 27 = third ending in 7) · 26 · 36 · 43', () => {
+      assert.deepEqual(T.tickets.list, [7, 9, 17, 26, 36, 43]);
+      assert.deepEqual(T.tickets.numbers.map((t) => t.root), [7, 9, 8, 8, 9, 7]);
       assert.ok(T.tickets.numbers.every((t) => t.source === 'lucky'));
       assert.equal(T.tickets.shortfall, false);
     }],
@@ -274,8 +307,8 @@ const bad = report('12 · the lucky-numbers engine', [
       assert.deepEqual(F.numbers.three, [7, 1, 9]);
       assert.equal(F.numbers.n2.raw, 64); assert.equal(F.numbers.n3.raw, 18);
     }],
-    ['tickets 1 7 9 10 16 18; stop 4; PIN 7199', () => {
-      assert.deepEqual(F.tickets.list, [1, 7, 9, 10, 16, 18]);
+    ['tickets 7 10 18 28 36 43; stop 4; PIN 7199', () => {
+      assert.deepEqual(F.tickets.list, [7, 10, 18, 28, 36, 43]);
       assert.equal(F.stopNumber.value, 4); assert.equal(F.pin.value, '7199');
     }],
     ['rolled window "April 2027 to March 2028"; April is for 7: PD 7 on 7 Wed, 16 Fri, 25 Sun (UD 4) → Wed 7 Apr', () => {
@@ -293,17 +326,17 @@ const bad = report('12 · the lucky-numbers engine', [
       assert.deepEqual(r.numbers.three, [7, 7, 7]);
       assert.deepEqual(r.numbers.repeats, [{ number: 7, count: 3, which: ['n1', 'n2', 'n3'] }]);
     }],
-    ['…six tickets: 7 16 25 34 43 + 5 from her birthday root, tagged', () => {
+    ['…six tickets: 7 16 25 34 43 + 41 from her birthday root (5), tagged', () => {
       const r = L({ birthName: 'Ann Kay Bell', birthDate: '1961-03-14', orderDate: '2026-11-10' });
-      assert.deepEqual(r.tickets.list, [5, 7, 16, 25, 34, 43]);
-      assert.deepEqual(r.tickets.numbers.map((t) => t.source), ['birthday', 'lucky', 'lucky', 'lucky', 'lucky', 'lucky']);
+      assert.deepEqual(r.tickets.list, [7, 16, 25, 34, 41, 43]);
+      assert.deepEqual(r.tickets.numbers.map((t) => t.source), ['lucky', 'lucky', 'lucky', 'lucky', 'birthday', 'lucky']);
       assert.equal(r.tickets.shortfall, true); assert.equal(r.tickets.luckyCount, 5);
       assert.equal(r.pin.value, '7775');
     }],
     ['born 1950-03-07 (birthday root 7 too): top-up from 7+7+7 = 21 → 3; PIN 7773', () => {
       const r = L({ birthName: 'Ann Kay Bell', birthDate: '1950-03-07', orderDate: '2026-11-10' });
-      assert.deepEqual(r.tickets.list, [3, 7, 16, 25, 34, 43]);
-      assert.equal(r.tickets.numbers[0].source, 'sum');
+      assert.deepEqual(r.tickets.list, [7, 16, 25, 34, 43, 48]);
+      assert.equal(r.tickets.numbers[5].source, 'sum');
       assert.equal(r.pin.value, '7773'); assert.equal(r.pin.stage, 'ticket-swap');
       assert.ok(/a 3 for her birthday root \(7\)/.test(r.pin.why), r.pin.why);
     }],
@@ -485,17 +518,38 @@ const bad = report('12 · the lucky-numbers engine', [
       }
       return { ok: true, note: `${short} of ${ok.length} needed a top-up` };
     }],
-    ['each family gives its smallest numbers first (the turn-taking rule)', () => {
-      for (const { r } of ok) for (const root of r.numbers.distinct) {
-        const mine = r.tickets.numbers.filter((t) => t.source === 'lucky' && t.root === root).map((t) => t.n);
-        assert.deepEqual(mine, I.familyOf(root, 1, 49).slice(0, mine.length));
+    ['the spread rule matches a fresh, brute-force copy (numbers and sources)', () => {
+      for (const { r } of ok) {
+        const want = refTickets(r.numbers.three, r.numbers.birthdayRoot.value, r.numbers.sumRoot, { min: 1, max: 49, pick: 6 });
+        assert.deepEqual(r.tickets.list, want.map((t) => t.n), r.input.birthName);
+        assert.deepEqual(r.tickets.numbers.map((t) => t.source), want.map((t) => t.source), r.input.birthName);
       }
     }],
-    ['other games: 1–59 ×6, 1–69 ×5, 1–26 ×1, 1–10 ×10', () => {
+    ['spread: her numbers share the six evenly, none bunched low, no neighbours, no three alike', () => {
+      let neighbours = 0, threeAlike = 0, tops = [];
+      for (const { r } of ok) {
+        const l = r.tickets.list;
+        if (!r.tickets.shortfall) {
+          const per = r.numbers.distinct.map((x) => r.tickets.numbers.filter((t) => t.root === x).length);
+          assert.ok(Math.max(...per) - Math.min(...per) <= 1, `${r.input.birthName}: ${per}`);
+        }
+        assert.ok(l.some((n) => n > 24) && l.some((n) => n <= 24), `${r.input.birthName}: ${l}`);
+        if (l.some((n, i) => i && n - l[i - 1] === 1)) neighbours += 1;
+        const ends = {}; for (const n of l) ends[n % 10] = (ends[n % 10] || 0) + 1;
+        if (Object.values(ends).some((c) => c > 2)) threeAlike += 1;
+        tops.push(l[5]);
+      }
+      tops.sort((a, b) => a - b);
+      // A random 6-from-49 draw has a side-by-side pair about half the time; sharing beats looks, so a few stay.
+      assert.ok(neighbours / ok.length < 0.05 && threeAlike / ok.length < 0.02, `${neighbours} ${threeAlike}`);
+      return { ok: true, note: `neighbours ${neighbours}, three alike ${threeAlike}, top ticket ${tops[0]}–${tops[tops.length - 1]} (median ${tops[tops.length >> 1]})` };
+    }],
+    ['other games: 1–59 ×6, 1–69 ×5, 1–26 ×1, 1–10 ×10 (and match the fresh copy)', () => {
       for (const game of [{ min: 1, max: 59, pick: 6 }, { min: 1, max: 69, pick: 5 }, { min: 1, max: 26, pick: 1 }, { min: 1, max: 10, pick: 10 }]) {
         for (const { b } of ok.slice(0, 200)) {
-          const l = L({ ...b, game }).tickets.list;
+          const r = L({ ...b, game }), l = r.tickets.list;
           assert.equal(new Set(l).size, game.pick); assert.ok(l.every((n) => n >= game.min && n <= game.max));
+          assert.deepEqual(l, refTickets(r.numbers.three, r.numbers.birthdayRoot.value, r.numbers.sumRoot, game).map((t) => t.n), JSON.stringify(game));
         }
       }
     }],
@@ -571,10 +625,10 @@ const bad = report('12 · the lucky-numbers engine', [
       const r = I.choosePin(slots, { stop: 4, birthYear: 1950, mmdd: '1225', ddmm: '2512' }, [1]);
       assert.equal(r.value, '1252'); assert.deepEqual(r.rejected[0].problems, ['birth-mmdd']);
     }],
-    ['stop number = birthday root forces a ticket swap (Ann Lee, 1960-01-04 → 3622)', () => {
+    ['stop number = birthday root forces a ticket swap (Ann Lee, 1960-01-04 → 3626: her smallest ticket, 6, swapped in)', () => {
       const r = L({ birthName: 'Ann Lee', birthDate: '1960-01-04', orderDate: '2026-11-10' });
       assert.equal(r.stopNumber.value, 4); assert.equal(r.numbers.birthdayRoot.value, 4);
-      assert.equal(r.pin.value, '3622'); assert.equal(r.pin.stage, 'ticket-swap');
+      assert.equal(r.pin.value, '3626'); assert.equal(r.pin.stage, 'ticket-swap');
       assert.ok(!r.pin.value.includes('4'));
     }],
     ['every ticket the same root and 7777 → plain-digit swap still finds one', () => {

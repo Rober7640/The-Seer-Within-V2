@@ -6,10 +6,17 @@
 
 import { readFileSync } from 'node:fs';
 import { describe, expect, it, vi } from 'vitest';
-import * as receipt from './luckyNumbersReceipt';
 import {
   EMAIL_SUBJECTS,
+  GIFT_HANDOFF_URL,
+  LUCKY_NUMBERS_TY_CAMPAIGN,
+  NUMBERS_GIFT,
   RECEIPT_BUMP_PS,
+  loadNumbersGiftHref,
+  numbersGiftBring,
+  numbersGiftHeadline,
+  numbersGiftHref,
+  numbersGiftLine,
   loadNumbersReceipt,
   lookupNumbersReceipt,
   orderLookupUrl,
@@ -25,6 +32,7 @@ const DOCS = '../../../improve-v1/v1-one-time-BEs/docs/12';
 const T1 = flat(file(`${DOCS}/booking-page/12-T1-thank-you-page.md`));
 const T3 = flat(file(`${DOCS}/order-emails/12-T3-confirmation.md`));
 const T4 = flat(file(`${DOCS}/order-emails/12-T4-delivery.md`));
+const GIFT_DOC = flat(file(`${DOCS}/booking-page/12-T1-gift.md`));
 const PAGE_RAW = file('../pages/offers/lucky-numbers/ThankYouPage.tsx');
 const PAGE = flat(PAGE_RAW);
 
@@ -66,12 +74,112 @@ describe('the subjects match T1, T3 and T4 word for word', () => {
   });
 });
 
-describe('no gift: that was 11’s alone', () => {
-  it('the receipt lib and the page carry no voucher', () => {
-    expect(Object.keys(receipt).filter((k) => /gift/i.test(k))).toEqual([]);
-    // Comments may name 11's gift to say it isn't here; the code must not.
-    const code = PAGE_RAW.replace(/^\s*\/\/.*$/gm, '').replace(/\{\/\*[\s\S]*?\*\/\}/g, '');
-    expect(code).not.toMatch(/gift|voucher|free chat|15 minutes/i);
+// The gift: 11's, with 12's tag and words (operator, 2026-11-03).
+describe('the gift', () => {
+  it('its words are 12-T1-gift’s, word for word', () => {
+    for (const line of [NUMBERS_GIFT.writing, NUMBERS_GIFT.delivered]) expect(GIFT_DOC).toContain(line);
+    expect(GIFT_DOC).toContain(`${NUMBERS_GIFT.stubLabel} · ${NUMBERS_GIFT.stubAmount}`);
+    expect(GIFT_DOC).toContain(`${NUMBERS_GIFT.eyebrow} · ${NUMBERS_GIFT.title} · ${NUMBERS_GIFT.withName}`);
+    expect(GIFT_DOC).toContain(`${NUMBERS_GIFT.button} →`);
+    for (const line of [...NUMBERS_GIFT.bring, NUMBERS_GIFT.bringWriting, NUMBERS_GIFT.bringDelivered, NUMBERS_GIFT.note]) {
+      expect(GIFT_DOC).toContain(line);
+    }
+    expect(GIFT_DOC).toContain(numbersGiftHeadline('Sarah'));
+    expect(GIFT_DOC).toContain(numbersGiftHeadline(null));
+    expect(T1).toContain('12-T1-gift');
+  });
+
+  it('carries none of the banned words, no price and no win', () => {
+    for (const line of Object.values(NUMBERS_GIFT).flat()) {
+      expect(line).not.toMatch(/\b(energy|journey|universe|perhaps|tarot|lava|win|jackpot|lottery|money|cheque)\b/i);
+      expect(line).not.toMatch(/\$\d/);
+    }
+  });
+
+  it('never invites her to ask Evelyn for a number: the chat never works one out', () => {
+    for (const line of [...numbersGiftBring({ delivered: false }), ...numbersGiftBring({ delivered: true })]) {
+      expect(line).not.toMatch(/\b(number|numbers|pin|date|day|days)\b/i);
+    }
+  });
+
+  it('the bring list follows the reading: three lines, the last one changes once it is sent', () => {
+    expect(numbersGiftBring({ delivered: false })).toEqual([...NUMBERS_GIFT.bring, NUMBERS_GIFT.bringWriting]);
+    expect(numbersGiftBring({ delivered: true })).toEqual([...NUMBERS_GIFT.bring, NUMBERS_GIFT.bringDelivered]);
+    expect(NUMBERS_GIFT.bringDelivered).not.toMatch(/once your reading/i);
+  });
+
+  it('the headline names her, or just invites', () => {
+    expect(numbersGiftHeadline('Sarah')).toBe('Come and talk to me, Sarah.');
+    expect(numbersGiftHeadline(null)).toBe('Come and talk to me.');
+  });
+
+  it('the voucher is 11’s, the same gift', async () => {
+    const { LETTER_GIFT } = await import('./unsentLetterReceipt');
+    const pick = (g: Record<string, unknown>) => ({
+      stubLabel: g.stubLabel, stubAmount: g.stubAmount, eyebrow: g.eyebrow, title: g.title, withName: g.withName,
+    });
+    expect(pick(NUMBERS_GIFT)).toEqual(pick(LETTER_GIFT));
+  });
+
+  it('sent numbers are never still being worked out', () => {
+    expect(numbersGiftLine({ delivered: false })).toBe(NUMBERS_GIFT.writing);
+    expect(numbersGiftLine({ delivered: true })).toBe(NUMBERS_GIFT.delivered);
+    expect(NUMBERS_GIFT.delivered).not.toMatch(/\bwork(ing)? out\b/i);
+  });
+
+  it('a buyer with an account gets a login link, under 12’s tag and UTM', () => {
+    const href = numbersGiftHref({ mode: 'login', token: 'a b' });
+    expect(href).toBe('/evelyn?token=a%20b&campaign=be12-ty-evelyn&utm_source=be12_ty&utm_medium=thankyou&utm_campaign=evelyn_15');
+  });
+
+  it('a new buyer gets a prefilled signup', () => {
+    const href = numbersGiftHref({ mode: 'signup', email: 'sarah@example.com', firstName: 'Sarah' });
+    expect(href).toContain('/evelyn?campaign=be12-ty-evelyn&');
+    expect(href).toContain('email=sarah%40example.com');
+    expect(href).toContain('name=Sarah');
+  });
+
+  it('no name: no name on the link', () => {
+    expect(numbersGiftHref({ mode: 'signup', email: 's@e.com', firstName: null })).not.toContain('name=');
+  });
+
+  it.each([
+    ['nothing', null],
+    ['no mode', {}],
+    ['login with no token', { mode: 'login' }],
+    ['signup with no email', { mode: 'signup', firstName: 'Sarah' }],
+  ])('%s: no link, so no voucher', (_name, reply) => {
+    expect(numbersGiftHref(reply)).toBeNull();
+  });
+
+  it('posts the session to 12’s own handoff, and a failed call is just no voucher', async () => {
+    expect(GIFT_HANDOFF_URL).toBe('/api/backend/lucky-numbers/gift-handoff');
+    const ok = vi.fn(async () => ({ ok: true, json: async () => ({ mode: 'login', token: 't' }) }));
+    expect(await loadNumbersGiftHref('cs_1', ok)).toContain('token=t');
+    expect(ok).toHaveBeenCalledWith(GIFT_HANDOFF_URL, expect.objectContaining({ method: 'POST', body: '{"sessionId":"cs_1"}' }));
+    expect(await loadNumbersGiftHref('cs_1', async () => ({ ok: false, json: async () => ({}) }))).toBeNull();
+    expect(await loadNumbersGiftHref('cs_1', async () => { throw new Error('offline'); })).toBeNull();
+  });
+
+  it('the tag is the same on the receipt, the lander and the server', () => {
+    expect(LUCKY_NUMBERS_TY_CAMPAIGN).toBe('be12-ty-evelyn');
+    expect(file('../pages/EvelynLanderPage.tsx')).toContain(`"${LUCKY_NUMBERS_TY_CAMPAIGN}"`);
+    expect(file('../../../server/lib/luckyNumbersTyGift.ts')).toContain(`LUCKY_NUMBERS_TY_CAMPAIGN = '${LUCKY_NUMBERS_TY_CAMPAIGN}'`);
+  });
+
+  it('11’s and /fb’s tags still reach the lander exactly as before', () => {
+    const lander = file('../pages/EvelynLanderPage.tsx');
+    expect(lander).toContain('"v1-ty-evelyn"');
+    expect(lander).toContain('"be11-ty-evelyn"');
+  });
+
+  it('only a verified receipt can show it', () => {
+    expect(PAGE_RAW.slice(PAGE_RAW.indexOf('function FallbackReceipt'), PAGE_RAW.indexOf('function NumbersGift'))).not.toContain('<NumbersGift');
+    expect(PAGE_RAW.slice(PAGE_RAW.indexOf('function VerifiedReceipt'))).toContain('<NumbersGift');
+  });
+
+  it('the page says the gift is the operator’s decision of 2026-11-03', () => {
+    expect(PAGE_RAW).toMatch(/operator's decision on 2026-11-03/);
   });
 
   it('no price on the page', () => {

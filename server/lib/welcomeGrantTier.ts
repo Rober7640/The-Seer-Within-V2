@@ -27,6 +27,11 @@
 //                        evelyn-thankyou because 11 sells to prior V1 buyers: an arrival from
 //                        11's page must not be read as an old /fb arrival. Nobody has this
 //                        row before 11 goes live, so no existing reader changes tier.
+//   1d. lucky-numbers-thankyou — offer 12's receipt gift (operator 2026-11-03), granted
+//                        separately by claimLuckyNumbersTyGift(), so 0 here. After 11 (so an
+//                        11 arrival resolves exactly as before) and before evelyn-thankyou, for
+//                        11's reason: 12 also sells to prior V1 buyers. Nobody has this row
+//                        before 12 goes live, so no existing reader changes tier.
 //   2. soulmate-lander — 5 min. Checked before the Evelyn tiers so a reader linked to
 //                        both (they hit both landers with the same email pre-verify)
 //                        resolves to exactly one tier, deterministically.
@@ -49,12 +54,14 @@ import { evelynLanderSessions, personas, soulmateLanderSessions } from '@shared/
 import { isFromLunaThankyouOffer } from './lunaThankyouGift';
 import { isFromEvelynThankyouOffer } from './evelynThankyouGift';
 import { isFromUnsentLetterThankyouOffer } from './unsentLetterTyGift';
+import { isFromLuckyNumbersThankyouOffer } from './luckyNumbersTyGift';
 import { userHasLiveThreadReply } from './liveThreadEngagement';
 import logger from './logger';
 
 export type WelcomeGrantTier =
   | 'luna-thankyou'
   | 'unsent-letter-thankyou'
+  | 'lucky-numbers-thankyou'
   | 'evelyn-thankyou'
   | 'soulmate-lander'
   | 'live-thread'
@@ -120,6 +127,7 @@ export async function resolveWelcomeGrantTier(
 ): Promise<WelcomeGrantTier> {
   if (await isFromLunaThankyouOffer(userId)) return 'luna-thankyou';
   if (await isFromUnsentLetterThankyouOffer(userId)) return 'unsent-letter-thankyou';
+  if (await isFromLuckyNumbersThankyouOffer(userId)) return 'lucky-numbers-thankyou';
   if (await isFromEvelynThankyouOffer(userId)) return 'evelyn-thankyou';
 
   // Both remaining lander tiers require Evelyn as the default persona, so this one

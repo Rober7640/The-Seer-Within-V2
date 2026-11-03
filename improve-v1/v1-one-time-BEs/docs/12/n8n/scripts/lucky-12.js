@@ -38,13 +38,23 @@
  *   3. N3: add the letter values of the vowels only, then reduce.
  *      N1–N3 may repeat. `numbers.repeats` says which, so the writer can say "your 7 comes twice".
  *   4. Birthday root: the day of the month, reduced (21 → 3). Used as a fallback below.
- *   5. Ticket numbers: `pick` different numbers inside [min, max] that reduce to N1, N2 or N3.
- *      Take turns over her DISTINCT numbers in the order N1, N2, N3; each turn takes that
- *      number's next-smallest unused number. When a family runs dry it is skipped.
+ *   5. Ticket numbers: `pick` different numbers inside [min, max] that reduce to N1, N2 or N3,
+ *      SPREAD across the game, not bunched at the low end.
+ *      ⚠ CHANGED 2026-11-03 (operator): the old rule took each family's smallest in turn, so every
+ *      buyer got low, bunched numbers (Testina: 7 8 9 16 17 18). It looked counted up, not hers.
+ *      Cut [min, max] into `pick` equal slices. Ticket k takes the number nearest the middle of
+ *      slice k (a tie goes to the smaller), choosing among her DISTINCT numbers' families that
+ *      have the fewest tickets so far (so three numbers get 2 each, two get 3 each).
+ *      Two looks are kept where they can be: no ticket next to another (16 and 17), and no third
+ *      ticket with the same last digit (7, 17, 27). Sharing comes first: if the fewest-so-far
+ *      families have no number that keeps both looks, the looks are dropped for this ticket
+ *      rather than giving it to a number that already has more. A lucky number is never passed
+ *      over for a top-up.
  *      If all families run dry first (e.g. all three are 7: 1–49 holds only 7 16 25 34 43), top
  *      up, in this order, from: the birthday root's family (source "birthday"), then the family
- *      of reduce(N1+N2+N3) (source "sum"), then families 1 → 9 (source "fill"). Lucky ones carry
- *      source "lucky". Returned smallest first, each with the root it reduces to.
+ *      of reduce(N1+N2+N3) (source "sum"), then families 1 → 9 (source "fill"), the same nearest-
+ *      the-slice way. Lucky ones carry source "lucky". Returned smallest first, each with the
+ *      root it reduces to.
  *   6. Stop number (one digit 1–9, NEVER one of N1–N3), the first rule that gives one:
  *      a. "karmic-lesson": the smallest digit 1–9 that no letter of her birth name carries,
  *         leaving out her three.
@@ -207,36 +217,61 @@ const luckyNumbers12 = (function () {
     for (let n = min; n <= max; n++) if (reduce(n) === root) out.push(n);
     return out;
   }
+  /** Twice the distance, in units of 1/pick, from n to the middle of slice k (whole numbers, so no
+   *  rounding can change a tie). Slice k of `pick` equal slices of [min, max]. */
+  function distTo(n, k, game) {
+    const span = game.max - game.min + 1;
+    return Math.abs(2 * n * game.pick - (2 * game.min * game.pick + (2 * k + 1) * span));
+  }
+  /** Rule 5's two looks: no neighbour of a picked number, no third number with the same last digit. */
+  function looksOk(n, picked) {
+    if (picked.some((p) => Math.abs(p.n - n) === 1)) return false;
+    return picked.filter((p) => p.n % 10 === n % 10).length < 2;
+  }
   function pickTickets(three, birthdayRoot, sumRoot, game) {
     const roots = [...new Set(three)];
     const labels = ['n1', 'n2', 'n3'];
     const used = new Set();
     const picked = [];
     const fams = roots.map((r) => familyOf(r, game.min, game.max));
-    const next = roots.map(() => 0);
-    let moved = true;
-    while (picked.length < game.pick && moved) {
-      moved = false;
-      for (let i = 0; i < roots.length && picked.length < game.pick; i++) {
-        if (next[i] < fams[i].length) {
-          const n = fams[i][next[i]++];
-          used.add(n);
-          picked.push({ n, root: roots[i], source: 'lucky', of: labels.filter((_, k) => three[k] === roots[i]) });
-          moved = true;
-        }
-      }
-    }
-    const luckyCount = picked.length;
+    const countOf = (r) => picked.filter((p) => p.source === 'lucky' && p.root === r).length;
+    const closest = (cands, k) => cands.reduce((best, n) => {
+      if (best === null) return n;
+      const a = distTo(n, k, game), b = distTo(best, k, game);
+      return a < b || (a === b && n < best) ? n : best;
+    }, null);
     const topUps = [['birthday', birthdayRoot], ['sum', sumRoot]];
     for (let r = 1; r <= 9; r++) topUps.push(['fill', r]);
-    for (const [source, r] of topUps) {
-      for (const n of familyOf(r, game.min, game.max)) {
-        if (picked.length >= game.pick) break;
-        if (used.has(n)) continue;
-        used.add(n);
-        picked.push({ n, root: r, source, of: [] });
+    for (let k = 0; k < game.pick; k++) {
+      let got = null;
+      // Her own families first: the roots with the fewest tickets so far (sharing beats looks),
+      // looks kept if that tier allows, else dropped. A lucky number is never passed over for a top-up.
+      const tiers = [...new Set(roots.map(countOf))].sort((a, b) => a - b);
+      for (const c of tiers) {
+        for (const strict of [true, false]) {
+          const cands = [];
+          roots.forEach((r, i) => {
+            if (countOf(r) !== c) return;
+            for (const n of fams[i]) if (!used.has(n) && (!strict || looksOk(n, picked))) cands.push(n);
+          });
+          const n = closest(cands, k);
+          if (n !== null) { const r = reduce(n); got = { n, root: r, source: 'lucky', of: labels.filter((_, j) => three[j] === r) }; break; }
+        }
+        if (got) break;
       }
+      // Her families have run dry: top up, birthday → sum → 1 to 9, looks kept first.
+      for (const strict of [true, false]) {
+        if (got) break;
+        for (const [source, r] of topUps) {
+          const cands = familyOf(r, game.min, game.max).filter((n) => !used.has(n) && (!strict || looksOk(n, picked)));
+          const n = closest(cands, k);
+          if (n !== null) { got = { n, root: r, source, of: [] }; break; }
+        }
+      }
+      used.add(got.n);
+      picked.push(got);
     }
+    const luckyCount = picked.filter((p) => p.source === 'lucky').length;
     picked.sort((a, b) => a.n - b.n);
     const families = {};
     roots.forEach((r, i) => { families[r] = fams[i]; });

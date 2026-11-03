@@ -21,7 +21,9 @@ import { fileURLToPath } from 'node:url';
 //   U1 → accept (charge aborted) → decline → the $30 downsell → its accept (aborted) → its decline
 //   → U2 Path B → downsell → decline → 12's receipt; U2 Path A (has the citrine); a buyer with no
 //   ?fn=; and 11's U1 as the CONTROL: a decline there goes straight to the soft decline, no downsell.
-// Receipt: each state, stubbed. No gift.
+// Receipt: each state, stubbed, with the 15-minute Evelyn gift (operator 2026-11-03): the card on a
+//   verified order (login link, prefilled signup, delivered line), none when the handoff fails, none
+//   on the fallback, and the voucher's link on the real lander under 12's tag.
 //
 // Scans every rendered page for: tarot, lava, journey, energy, clearing, our conversation, a win or
 // a sum, blank merge tokens, "undefined", NaN. Records page errors.
@@ -111,6 +113,14 @@ const SESSIONS = {
 const order = (o = {}) => ({
   order: { offer: 'lucky-numbers', offerNumber: '12', status: 'paid', firstName: 'Sarah', bumpPurchased: false, deliveredAt: null, deliveryHours: 24, ...o },
 });
+// POST /api/backend/lucky-numbers/gift-handoff, as walk-11 stubs 11's.
+const GIFTS = {
+  cs_test_walk12_u1: [200, { mode: 'login', token: 'walk-token' }],
+  cs_receipt_plain: [200, { mode: 'login', token: 'walk-token' }],
+  cs_receipt_bump: [200, { mode: 'signup', email: 'sarah@example.com', firstName: 'Sarah' }],
+  cs_receipt_delivered: [200, { mode: 'login', token: 'walk-token' }],
+  cs_receipt_noname: [500, { error: 'Failed to build the handoff' }],
+};
 const ORDERS = {
   cs_test_walk12_u1: [200, order()],
   cs_receipt_plain: [200, order()],
@@ -158,6 +168,12 @@ async function newContext(browser, viewport, apiLog, consoleLog, bubbleLog) {
       apiLog.push({ path: url.pathname, sid });
       if (!SESSIONS[sid]) return route.fulfill({ status: 404, contentType: 'application/json', body: '{"error":"Order not found"}' });
       return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(SESSIONS[sid]) });
+    }
+    if (url.pathname === '/api/backend/lucky-numbers/gift-handoff') {
+      const sid = JSON.parse(req.postData() || '{}').sessionId;
+      const [status, body] = GIFTS[sid] ?? [404, { error: 'Order not found' }];
+      apiLog.push({ method: req.method(), path: url.pathname, sid });
+      return route.fulfill({ status, contentType: 'application/json', body: JSON.stringify(body) });
     }
     if (url.pathname.startsWith('/api/backend/order/')) {
       const sid = decodeURIComponent(url.pathname.split('/').pop());
@@ -431,7 +447,10 @@ async function walkConversations(browser, transcripts) {
     const u1Bubbles = bubblesOn('/offers/upsell/welcome1');
     check('U1: the "maybe" reply reached its own branch', u1Bubbles.includes("Most women have one. It's just gone quiet."));
     check('U1: the price comes from the server: "Your Wish Ritual is $47, Sarah."', u1Bubbles.includes('Your Wish Ritual is $47, Sarah.'));
-    check('U1: no lava picture after the citrine intro', (await page.locator('[data-testid^="message-image-"]').count()) === 0);
+    // U1's copy shows the citrine bracelet (upsellCopy/luckyNumbers.ts stoneImage, unit-tested there).
+    const u1Images = await page.locator('[data-testid^="message-image-"]').evaluateAll((els) =>
+      els.map((el) => (el.tagName === 'IMG' ? el.getAttribute('src') : el.querySelector('img')?.getAttribute('src')) || ''));
+    check('U1: the citrine bracelet picture, never lava', u1Images.length === 1 && /citrine-wish-bracelet/.test(u1Images[0]) && !/lava/i.test(u1Images[0]), u1Images.join(', '));
     check('U1: the reassurance line is "Take your time."', body.includes('Take your time.') && !body.includes('This is your journey'));
     check('U1: accept label is 12’s', flat(await page.getByTestId('text-accept-button').innerText()) === 'Yes, do my Wish Ritual');
     check('U1: no sideways scroll', await noSideScroll(page));
@@ -456,7 +475,7 @@ async function walkConversations(browser, transcripts) {
     const downBody = await page.locator('body').innerText();
     check('U1 downsell: "I\'ll do it for $30 instead." from {downsellPrice}', bubblesOn('/offers/upsell/welcome1').includes("I'll do it for $30 instead."));
     check('U1 downsell: the button says $30, from the token', flat(await page.getByTestId('text-accept-downsell').innerText()) === 'Yes, do my Wish Ritual for $30');
-    check('U1 downsell: the price note', downBody.includes('$30 includes charged stone + free shipping'));
+    check('U1 downsell: the price note names the bracelet (priceNoteItem)', downBody.includes('$30 includes charged citrine bracelet + free shipping'));
     check('U1 downsell: decline label', flat(await page.getByTestId('text-decline-downsell').innerText()) === 'No thanks, just my reading');
     check('U1 downsell: no reassurance line above it (empty on purpose)', !/manifestation energy/i.test(downBody));
     check('U1 downsell: still on welcome1', new URL(page.url()).pathname === '/offers/upsell/welcome1');
@@ -613,31 +632,80 @@ async function walkReceipt(browser) {
   check('Receipt: says within 24 hours', body.includes('within 24 hours'));
   check('Receipt: no P.S. without the bump', (await page.getByTestId('text-bump-ps').count()) === 0);
   check('Receipt: no price', !/\$\d/.test(body));
-  check('Receipt: no gift, no voucher', !/15 minutes|free chat|Talk to Evelyn/i.test(body) && !apiLog.some((e) => /gift-handoff/.test(e.path)));
   check('Receipt: asks for this offer', apiLog.some((e) => e.query === '?offer=lucky-numbers'));
   check('Receipt: no sideways scroll', await noSideScroll(page));
   scan('Receipt', body);
+  // The gift (12-T1-gift): shows for a verified order, under the receipt.
+  await page.getByTestId('card-numbers-gift').waitFor({ timeout: 10000 });
+  body = await page.locator('body').innerText();
+  check('Receipt gift: shows for a verified order', (await page.getByTestId('card-numbers-gift').count()) === 1);
+  check('Receipt gift: asks 12’s own handoff with this session',
+    apiLog.some((e) => e.method === 'POST' && e.path === '/api/backend/lucky-numbers/gift-handoff' && e.sid === 'cs_receipt_plain'));
+  check('Receipt gift: the working-out line', flat(await page.getByTestId('text-gift-line').innerText()) === 'While I work out your numbers, come and talk to me. The first 15 minutes are on me.');
+  check('Receipt gift: the voucher, with no price', flat(body).includes('15 minutes of free chat') && flat(body).includes('with Evelyn Cross') && !/\$\d/.test(body));
+  check('Receipt gift: the button', flat(await page.getByTestId('link-numbers-gift').innerText()) === 'Claim my 15 free minutes →');
+  check('Receipt gift: her headline, with her name', flat(await page.getByTestId('text-gift-headline').innerText()) === 'Come and talk to me, Sarah.');
+  check('Receipt gift: three things to bring, none asks for a number',
+    (await page.getByTestId('list-gift-bring').locator('li').count()) === 3 &&
+    !/\b(number|numbers|pin|date|days?)\b/i.test(await page.getByTestId('list-gift-bring').innerText()));
+  check('Receipt gift: the note under the button', flat(await page.getByTestId('text-gift-note').innerText()) === 'A private chat, just you and me. Your 15 minutes are already set aside.');
+  check('Receipt gift: Evelyn’s real photo loads (not the old screenshot file)',
+    await page.getByTestId('img-gift-evelyn').evaluate((img) => img.complete && img.naturalWidth === 400 && img.naturalHeight === 400 && img.getAttribute('src') === '/evelyn-avatar.png'));
+  const loginHref = await page.getByTestId('link-numbers-gift').getAttribute('href');
+  check('Receipt gift: a login link under 12’s tag and UTM',
+    loginHref === '/evelyn?token=walk-token&campaign=be12-ty-evelyn&utm_source=be12_ty&utm_medium=thankyou&utm_campaign=evelyn_15', loginHref);
+  check('Receipt gift: sits under the receipt',
+    await page.evaluate(() => {
+      const r = document.querySelector('[data-testid="card-thankyou-lucky-numbers"]');
+      const g = document.querySelector('[data-testid="card-numbers-gift"]');
+      return !!r && !!g && r.getBoundingClientRect().bottom <= g.getBoundingClientRect().top;
+    }));
+  check('Receipt gift: no sideways scroll', await noSideScroll(page));
+  scan('Receipt gift', body);
   await page.screenshot({ path: path.join(OUT, 'receipt-1-plain.png'), fullPage: true });
 
   body = await open('cs_receipt_bump');
   check('Receipt: the bump P.S.', flat(await page.getByTestId('text-bump-ps').innerText()) === "P.S. You added The Full Year. It's the last page of your reading: every lucky day you've got in 2027, on one calendar page.");
+  await page.getByTestId('card-numbers-gift').waitFor({ timeout: 10000 });
+  const signupHref = await page.getByTestId('link-numbers-gift').getAttribute('href');
+  check('Receipt gift: a new buyer gets a prefilled signup', signupHref.startsWith('/evelyn?campaign=be12-ty-evelyn&') && signupHref.includes('email=sarah%40example.com') && signupHref.includes('name=Sarah'), signupHref);
   await page.screenshot({ path: path.join(OUT, 'receipt-2-bump.png'), fullPage: true });
 
   body = await open('cs_receipt_delivered');
   check('Receipt: delivered variant', body.includes("Your numbers are worked out, and your reading's been sent.") && !body.includes('on my table'));
+  await page.getByTestId('card-numbers-gift').waitFor({ timeout: 10000 });
+  body = await page.locator('body').innerText();
+  check('Receipt gift: delivered, it still works and says nothing about working them out',
+    flat(await page.getByTestId('text-gift-line').innerText()) === "Once you've read your numbers, come and talk to me. The first 15 minutes are on me." && !body.includes('While I work out'));
   await page.screenshot({ path: path.join(OUT, 'receipt-3-delivered.png'), fullPage: true });
 
   body = await open('cs_receipt_noname');
   check('Receipt: no name is "dear"', body.includes('Thank you, dear.') && body.includes('dear — your lucky numbers are worked out'));
+  await page.waitForResponse((r) => r.url().includes('gift-handoff')).catch(() => {});
+  await page.waitForTimeout(300);
+  check('Receipt gift: a failed handoff shows no voucher', (await page.getByTestId('card-numbers-gift').count()) === 0);
 
   body = await open('cs_receipt_other');
   check('Receipt: another offer’s session gets the fallback', (await page.getByTestId('card-receipt-fallback').count()) === 1 && !body.includes('within 24 hours') && body.includes('Your Lucky Numbers reading is confirmed'));
   scan('Receipt fallback', body);
+  await page.waitForTimeout(300);
+  check('Receipt gift: never on the fallback', (await page.getByTestId('card-numbers-gift').count()) === 0 && !/15 minutes|free chat|Talk to Evelyn|Claim my|Come and talk/i.test(body));
   await page.screenshot({ path: path.join(OUT, 'receipt-4-fallback.png'), fullPage: true });
 
   await open('');
   check('Receipt: no ?s= gets the fallback', (await page.getByTestId('card-receipt-fallback').count()) === 1);
+  check('Receipt gift: the fallback never asks for a handoff for another offer’s session',
+    !apiLog.some((e) => e.path === '/api/backend/lucky-numbers/gift-handoff' && e.sid === 'cs_receipt_other'));
   check('Receipt: no page errors', pageErrors.length === 0, pageErrors.slice(0, 2).join(' | '));
+
+  // The voucher's link, on the real lander: a thank-you arrival, straight to Evelyn, no quiz.
+  await page.goto(`${BASE}/evelyn?campaign=be12-ty-evelyn&utm_source=be12_ty&email=sarah%40example.com`, { waitUntil: 'domcontentloaded', timeout: 60000 });
+  await page.waitForFunction(() => /Connecting you with Evelyn|Continue to Evelyn/.test(document.body.innerText) || document.querySelector('[data-testid="button-evelyn-ty-retry"]'), null, { timeout: 30000 }).catch(() => {});
+  const lander = await page.locator('body').innerText();
+  check('Receipt gift: the lander treats it as a thank-you arrival, no quiz',
+    /Connecting you with Evelyn|Continue to Evelyn/.test(lander) || (await page.getByTestId('button-evelyn-ty-retry').count()) === 1, flat(lander).slice(0, 100));
+  const start = apiLog.find((e) => e.path === '/api/evelyn-lander/start');
+  check('Receipt gift: /start records 12’s tag, so the gift and the brief can find her', (start?.body || '').includes('"campaign":"be12-ty-evelyn"'), (start?.body || 'no call').slice(0, 120));
   await context.close();
 }
 

@@ -153,7 +153,7 @@ Drawn in SVG by code (`calendarSvg` in node 10), never fetched:
 > ⛔ **HAND-WRITTEN STAND-IN, NOT A MODEL RUN.** The four act replies for Testina were written by hand (by Claude, following the exact briefs the model would get), saved as schema JSON in `n8n/runs/12-handwritten-testina/act-A.json … act-D.json`, and pushed through the **same** assembly, measures, grader wiring and HTML code the flow uses, with the outside calls faked. It shows the page and proves the checks work on a reading that keeps the rules. It says **nothing** about what gpt-6.1-sol will write.
 
 - Buyer: Testina Rose Testerly (fixture), born 1968-07-21, ordered 2026-11-10, bump bought, arm B (`c=11`).
-- Her numbers: 7, 8, 9 · six 7, 8, 9, 16, 17, 18 · PIN 7893 · stop 4 · window 2027 · hours 9am, 7pm, 8pm, 9pm.
+- Her numbers: 7, 8, 9 · six 7, 9, 17, 26, 36, 43 (spread across 1–49, rule 5 changed 2026-11-03) · PIN 7893 · stop 4 · window 2027 · hours 9am, 7pm, 8pm, 9pm.
 - 4,298 words. 19 pages (17 + 2 bump pages).
 - PDF: `n8n/runs/12-handwritten-testina/12-handwritten-testina-NOT-A-MODEL-RUN.pdf` (gitignored).
 - Readable copy: [12-P1-test-reading.md](12-P1-test-reading.md).

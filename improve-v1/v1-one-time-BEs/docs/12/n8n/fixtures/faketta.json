@@ -84,27 +84,11 @@
       },
       "numbers": [
         {
-          "n": 1,
-          "root": 1,
-          "source": "lucky",
-          "of": [
-            "n2"
-          ]
-        },
-        {
           "n": 7,
           "root": 7,
           "source": "lucky",
           "of": [
             "n1"
-          ]
-        },
-        {
-          "n": 9,
-          "root": 9,
-          "source": "lucky",
-          "of": [
-            "n3"
           ]
         },
         {
@@ -116,29 +100,45 @@
           ]
         },
         {
-          "n": 16,
-          "root": 7,
-          "source": "lucky",
-          "of": [
-            "n1"
-          ]
-        },
-        {
           "n": 18,
           "root": 9,
           "source": "lucky",
           "of": [
             "n3"
           ]
+        },
+        {
+          "n": 28,
+          "root": 1,
+          "source": "lucky",
+          "of": [
+            "n2"
+          ]
+        },
+        {
+          "n": 36,
+          "root": 9,
+          "source": "lucky",
+          "of": [
+            "n3"
+          ]
+        },
+        {
+          "n": 43,
+          "root": 7,
+          "source": "lucky",
+          "of": [
+            "n1"
+          ]
         }
       ],
       "list": [
-        1,
         7,
-        9,
         10,
-        16,
-        18
+        18,
+        28,
+        36,
+        43
       ],
       "families": {
         "1": [
@@ -951,12 +951,12 @@
     "uses": {
       "lottery": {
         "numbers": [
-          1,
           7,
-          9,
           10,
-          16,
-          18
+          18,
+          28,
+          36,
+          43
         ],
         "buyOn": [
           "2027-04-07",

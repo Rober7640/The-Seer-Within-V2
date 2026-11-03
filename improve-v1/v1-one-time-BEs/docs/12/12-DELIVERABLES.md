@@ -65,7 +65,7 @@ Shape model: [11](../11/11-DELIVERABLES.md), minus the cards. Nothing is committ
 | Page | A receipt. Confirm, name the email subject, stop |
 | Confirmation subject | `Your Lucky Numbers reading is confirmed` |
 | Delivery subject | `%FIRSTNAME% — your lucky numbers are worked out` ("dear — …" without a name) |
-| ⛔ Chat gift | **None.** 11's `unsentLetterTyGift` is 11's alone |
+| Chat gift | **15 free minutes with Evelyn**, as on 11 (operator, 2026-11-03). Tag `be12-ty-evelyn`, `server/lib/luckyNumbersTyGift.ts`. Spec: [`12-T1-gift`](booking-page/12-T1-gift.md) |
 | Copy | [12-T1](booking-page/12-T1-thank-you-page.md), [12-T3](order-emails/12-T3-confirmation.md), [12-T4](order-emails/12-T4-delivery.md) |
 
 ## Customer list

@@ -4,7 +4,7 @@
 |---|---|
 | **Offer** | 12 Lucky Numbers — READING · 24 hours · no reply needed |
 | **URL** | `/numerology/lucky-numbers/success?s=<session>`, reached after Upsell 2 |
-| **Archetype** | **Receipt** (P7). Confirm, name the email subject, stop. Sells nothing. ⛔ No chat gift: that was 11's alone |
+| **Archetype** | **Receipt** (P7). Confirm, name the email subject, then the free chat gift. Sells nothing else. ⚠ The gift overrides "a receipt sells nothing", by the operator's decision of 2026-11-03, as on 11 |
 | **Voice** | Evelyn's again. The buyer's voice ends at the button |
 | **Name** | her first name from `?fn=` via the intake, or *dear* |
 | **Delivery title** | `%FIRSTNAME% — your lucky numbers are worked out` — ⛔ word for word what [`12-T3`](../order-emails/12-T3-confirmation.md) and [`12-T4`](../order-emails/12-T4-delivery.md) say |
@@ -63,6 +63,12 @@ P.S. You added The Full Year. It's the last page of your reading: every lucky da
 
 ---
 
+## The gift — 15 free minutes with Evelyn *(operator, 2026-11-03)*
+
+*(Verified, paid orders only, under the receipt. ⛔ Never on the fallback. If the link can't be built, nothing shows.)* Copy, tag and Evelyn's brief: [`12-T1-gift`](12-T1-gift.md).
+
+---
+
 ## Fallback — the order can't be verified
 
 *(No `?s=`, not this offer's order, not paid, refunded, or the lookup failed. ⛔ No receipt lines, no P.S.)*
@@ -79,7 +85,7 @@ If it hasn't come, write to **hi@theseerwithin.com** and someone will find your 
 
 ## Build notes
 
-- **A receipt, then stop.** Nothing is sold, and the upsells have already run. ⛔ No free chat gift: 11's was an operator exception for 11 only.
+- **A receipt, then the gift, then stop.** Nothing is sold, and the upsells have already run. The free chat gift is the one exception (operator, 2026-11-03), see [`12-T1-gift`](12-T1-gift.md).
 - **"Leave your PIN as it is till your reading comes."** The one useful thing she can be told: the reading gives her new digits, and changing the PIN twice is a nuisance. It's also the only "to do" on the page, and it's a don't.
 - **No times of day.** Delivery can land at any hour, so it's "within 24 hours" only. The letters' "one evening" stays in the letters.
 - **The title box must match T3 and T4 exactly.** With no first name it reads *"dear — your lucky numbers are worked out"*.

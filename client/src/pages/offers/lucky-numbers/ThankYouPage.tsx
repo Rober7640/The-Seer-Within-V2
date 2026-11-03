@@ -3,8 +3,10 @@
 // Copy spec: improve-v1/v1-one-time-BEs/docs/12/booking-page/12-T1-thank-you-page.md
 // Lookup + poll + state rules: lib/luckyNumbersReceipt.ts (tested there).
 //
-// ⚠ A RECEIPT (P7): confirm, name the email title, stop. It sells nothing. ⛔ No chat gift: 11's
-// was an operator exception for 11 alone. ⛔ No price on this page.
+// ⚠ A RECEIPT (P7): confirm, name the email title, stop. It sells nothing, and the ONE exception
+// is the free chat gift under it: 15 minutes with Evelyn, as on 11's receipt. Added by the
+// operator's decision on 2026-11-03 (copy: docs/12/booking-page/12-T1-gift.md). ⛔ No price on
+// this page.
 //
 // Reached from OffersUpsell2 as `${successPath}?s=<session_id>`. The order is fetched with
 // ?offer=lucky-numbers, so another offer's session gets a 404 — and the page re-checks the offer
@@ -14,12 +16,17 @@
 
 import { useEffect, useState } from 'react'
 import { useSearch } from 'wouter'
-import { CheckCircle, Loader2 } from 'lucide-react'
+import { CheckCircle, Loader2, Sparkles } from 'lucide-react'
 import { CosmicBackground } from '@/components/CosmicBackground'
 import { CHECKOUT, forgetIntake } from '@/lib/luckyNumbersBooking'
 import {
   EMAIL_SUBJECTS,
+  NUMBERS_GIFT,
+  loadNumbersGiftHref,
   loadNumbersReceipt,
+  numbersGiftBring,
+  numbersGiftHeadline,
+  numbersGiftLine,
   receiptFirstName,
   receiptPostscript,
   receiptSessionId,
@@ -97,7 +104,7 @@ export default function LuckyNumbersThankYouPage() {
   }
 
   if (state.kind === 'unverified') return <FallbackReceipt reason={state.reason} />
-  return <VerifiedReceipt order={state.order} />
+  return <VerifiedReceipt order={state.order} sessionId={receiptSessionId(searchString)} />
 }
 
 // 12-T1 "Fallback — the order can't be verified". One calm screen for every reason.
@@ -125,7 +132,101 @@ function FallbackReceipt({ reason }: { reason: string }) {
   )
 }
 
-function VerifiedReceipt({ order }: { order: VerifiedNumbersOrder }) {
+// 12-T1-gift. Verified orders only, and only once the link is real: if the handoff fails,
+// nothing shows, and the receipt stands on its own. 11's LetterGift, with 12's words.
+function NumbersGift({ order, sessionId }: { order: VerifiedNumbersOrder; sessionId: string | null }) {
+  const [href, setHref] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (!sessionId) return
+    let cancelled = false
+    loadNumbersGiftHref(sessionId).then((next) => {
+      if (!cancelled) setHref(next)
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [sessionId])
+
+  if (!href) return null
+
+  const name = receiptFirstName(order.firstName)
+
+  return (
+    <div
+      className="w-full rounded-2xl border border-amber-300/40 bg-gradient-to-b from-slate-900/90 to-indigo-950/90 p-6 shadow-[0_0_40px_rgba(251,191,36,0.15)] backdrop-blur-sm md:p-8"
+      data-testid="card-numbers-gift"
+    >
+      {/* Her face and her invitation first: the card is from Evelyn, not from a system. */}
+      <div className="mb-4 flex items-center gap-4">
+        <div className="relative shrink-0">
+          <img
+            src="/evelyn-avatar.png"
+            alt="Evelyn Cross"
+            className="h-16 w-16 rounded-full border-2 border-amber-300/60 object-cover"
+            data-testid="img-gift-evelyn"
+          />
+          <span className="absolute bottom-0.5 right-0.5 h-3.5 w-3.5 rounded-full border-2 border-slate-900 bg-emerald-400" aria-hidden="true" />
+        </div>
+        <div className="min-w-0 text-left">
+          <h2 className="font-serif text-2xl leading-tight text-white" data-testid="text-gift-headline">
+            {numbersGiftHeadline(name === 'dear' ? null : name)}
+          </h2>
+          <p className="mt-1 text-sm text-amber-100/80">Evelyn Cross</p>
+        </div>
+      </div>
+
+      <p className="mb-4 leading-relaxed text-purple-100/90" data-testid="text-gift-line">
+        {numbersGiftLine(order)}
+      </p>
+
+      <ul className="mb-5 space-y-2 text-left" data-testid="list-gift-bring">
+        {numbersGiftBring(order).map((line) => (
+          <li key={line} className="flex items-start gap-2.5 text-purple-50/90">
+            <Sparkles className="mt-1 h-4 w-4 shrink-0 text-amber-300" aria-hidden="true" />
+            <span>{line}</span>
+          </li>
+        ))}
+      </ul>
+
+      {/* The same ticket as SuccessPage's and 11's, so the gift looks like the gift it is. */}
+      <div className="mb-5 flex items-stretch overflow-hidden rounded-xl border border-amber-300/50 bg-gradient-to-br from-amber-400/20 via-yellow-300/10 to-amber-500/20">
+        <div className="flex flex-col items-center justify-center bg-gradient-to-br from-amber-400/25 to-yellow-500/15 px-4 py-4">
+          <span className="text-[10px] uppercase tracking-[0.2em] text-amber-200/80">{NUMBERS_GIFT.stubLabel}</span>
+          <span className="whitespace-nowrap font-serif text-3xl font-bold leading-none text-amber-100">
+            {NUMBERS_GIFT.stubAmount}
+          </span>
+        </div>
+        <div className="relative flex flex-col items-center">
+          <span className="-mt-1.5 h-3 w-3 rounded-full bg-slate-900" />
+          <span className="flex-1 border-l-2 border-dashed border-amber-200/50" />
+          <span className="-mb-1.5 h-3 w-3 rounded-full bg-slate-900" />
+        </div>
+        <div className="min-w-0 flex-1 px-4 py-3 text-left">
+          <div className="mb-1 flex items-center gap-1.5">
+            <Sparkles className="h-3.5 w-3.5 text-amber-300" aria-hidden="true" />
+            <span className="text-[10px] uppercase tracking-[0.2em] text-amber-200/80">{NUMBERS_GIFT.eyebrow}</span>
+          </div>
+          <p className="text-sm font-semibold leading-tight text-white">{NUMBERS_GIFT.title}</p>
+          <p className="mt-0.5 text-xs text-amber-100/70">{NUMBERS_GIFT.withName}</p>
+        </div>
+      </div>
+
+      <a
+        href={href}
+        className="block w-full rounded-xl bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-400 px-4 py-4 text-center text-lg font-semibold text-slate-900 shadow-lg shadow-amber-500/30 transition-transform hover:scale-[1.02]"
+        data-testid="link-numbers-gift"
+      >
+        {NUMBERS_GIFT.button} &nbsp;→
+      </a>
+      <p className="mt-3 text-center text-xs text-purple-200/70" data-testid="text-gift-note">
+        {NUMBERS_GIFT.note}
+      </p>
+    </div>
+  )
+}
+
+function VerifiedReceipt({ order, sessionId }: { order: VerifiedNumbersOrder; sessionId: string | null }) {
   const name = receiptFirstName(order.firstName)
   const postscript = receiptPostscript(order)
 
@@ -185,6 +286,8 @@ function VerifiedReceipt({ order }: { order: VerifiedNumbersOrder }) {
           )}
         </div>
       </div>
+
+      <NumbersGift order={order} sessionId={sessionId} />
     </Shell>
   )
 }

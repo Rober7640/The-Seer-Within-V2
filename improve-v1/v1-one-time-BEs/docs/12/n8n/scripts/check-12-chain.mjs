@@ -5,7 +5,7 @@
  * Walks the REAL connections and runs the REAL node code (lib-12 execute()). The writer replies are
  * Testina's four acts, written BY HAND in runs/12-handwritten-testina/act-A..D.json.
  * ⛔ That is a hand-written stand-in, NOT a model run. It proves the measures, the assembly and the
- *    page work on a reading that keeps the rules. It proves nothing about what gpt-6.1-sol writes.
+ *    page work on a reading that keeps the rules. It proves nothing about what the model writes.
  *
  * Saves runs/12-handwritten-testina/12-handwritten-testina-NOT-A-MODEL-RUN.html (+ metrics.json).
  */
@@ -146,7 +146,7 @@ const bad = report('12 · the chain, faked outside calls, real nodes and wiring'
   ]],
   ['THE HTML', [
     ['cover, three numbers, six, PIN, stop, twelve months, hours, nine uses, close, keep page, colophon', () => {
-      const need = ['class="cover"', 'Testina Rose Testerly', 'data-number="n1"', 'data-number="n3"', 'data-ticket="18"', 'data-pin-digit',
+      const need = ['class="cover"', 'Testina Rose Testerly', 'data-number="n1"', 'data-number="n3"', 'data-ticket="43"', 'data-pin-digit',
         'data-stop="4"', 'data-open-date="2027-12-03"', 'data-hour="21:00"', 'class="close"', '&mdash; Evelyn', 'class="keep"', 'class="colophon"'];
       const miss = need.filter((x) => !html.includes(x)); return miss.length ? { ok: false, note: miss.join(' | ') } : true; }],
     ['nine uses', () => (html.match(/<section class="use">/g) || []).length === 9],

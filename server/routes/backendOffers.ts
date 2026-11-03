@@ -38,6 +38,7 @@ import { resolveBe04Price, resolveBeBookingTreatment } from '../lib/experiments'
 import { BACKEND_UPSELLS } from '../lib/backendCustomerList';
 import { paidUpsellAmountCents } from '../lib/beUpsellOrders';
 import { resolveUnsentLetterTyHandoff } from '../lib/unsentLetterTyGift';
+import { resolveLuckyNumbersTyHandoff } from '../lib/luckyNumbersTyGift';
 import { isStone } from '@shared/evelynVsl';
 import logger from '../lib/logger';
 
@@ -1263,6 +1264,23 @@ router.post('/unsent-letter/gift-handoff', async (req: Request, res: Response) =
     return res.json(handoff);
   } catch (err: any) {
     logger.error('Unsent Letter gift handoff error', { error: err?.message });
+    return res.status(500).json({ error: 'Failed to build the handoff' });
+  }
+});
+
+// Offer 12's receipt → Evelyn's 15 free minutes (operator 2026-11-03). 11's handoff, for a paid
+// lucky-numbers order only.
+router.post('/lucky-numbers/gift-handoff', async (req: Request, res: Response) => {
+  try {
+    const sessionId = req.body?.sessionId;
+    if (!sessionId || typeof sessionId !== 'string') {
+      return res.status(400).json({ error: 'Missing sessionId' });
+    }
+    const handoff = await resolveLuckyNumbersTyHandoff(await getBeOrderBySession(sessionId));
+    if (!handoff) return res.status(404).json({ error: 'Order not found' });
+    return res.json(handoff);
+  } catch (err: any) {
+    logger.error('Lucky Numbers gift handoff error', { error: err?.message });
     return res.status(500).json({ error: 'Failed to build the handoff' });
   }
 });

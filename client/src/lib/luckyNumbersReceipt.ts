@@ -3,8 +3,9 @@
 // Copy spec: improve-v1/v1-one-time-BEs/docs/12/booking-page/12-T1-thank-you-page.md
 // Tests: luckyNumbersReceipt.test.ts
 //
-// 11's receipt (lib/unsentLetterReceipt.ts) with 12's offer key and words, and ⛔ no chat gift:
-// 11's free 15 minutes were an operator exception for 11 alone.
+// 11's receipt (lib/unsentLetterReceipt.ts) with 12's offer key and words, and 11's free chat
+// gift: 15 minutes with Evelyn, under 12's own tag (operator's decision, 2026-11-03; gift copy in
+// docs/12/booking-page/12-T1-gift.md).
 //
 // ⛔ THE RULE: never print receipt lines or the bump's P.S. for an order that wasn't verified as
 // THIS offer's, and paid. So the page has exactly two final shapes:
@@ -153,6 +154,90 @@ export async function loadNumbersReceipt(
     if (isCancelled() || now() + intervalMs > deadline) return unverified(attempt.reason);
     await sleep(intervalMs);
     if (isCancelled()) return unverified(attempt.reason);
+  }
+}
+
+// ── The gift: 15 free minutes with Evelyn (12-T1-gift, operator 2026-11-03) ───────────────────
+// ⚠ Must match server/lib/luckyNumbersTyGift.ts and EvelynLanderPage.tsx (a test holds all three).
+export const LUCKY_NUMBERS_TY_CAMPAIGN = 'be12-ty-evelyn';
+const GIFT_UTM = `campaign=${LUCKY_NUMBERS_TY_CAMPAIGN}&utm_source=be12_ty&utm_medium=thankyou&utm_campaign=evelyn_15`;
+
+export const NUMBERS_GIFT = {
+  writing: 'While I work out your numbers, come and talk to me. The first 15 minutes are on me.',
+  delivered: "Once you've read your numbers, come and talk to me. The first 15 minutes are on me.",
+  stubLabel: 'Free',
+  stubAmount: '15 min',
+  eyebrow: 'Gift voucher',
+  title: '15 minutes of free chat',
+  withName: 'with Evelyn Cross',
+  // Operator 2026-11-03: the bare voucher "looks thin, not an appealing CTA". So the card is an
+  // invitation from her: a headline in her voice, three things to bring, a bigger claim button.
+  // ⛔ Nothing here may invite her to ask Evelyn for a number: the chat never works one out.
+  headline: 'Come and talk to me',
+  bring: [
+    "Tell me what you're hoping this year brings you",
+    "Bring the question that's been on your mind",
+  ],
+  bringWriting: "Ask me where to start, once your reading's in",
+  bringDelivered: 'Ask me where to start with your reading',
+  button: 'Claim my 15 free minutes',
+  note: 'A private chat, just you and me. Your 15 minutes are already set aside.',
+} as const;
+
+/** "Come and talk to me, Sarah." Without a usable first name, just the invitation. */
+export function numbersGiftHeadline(firstName: string | null): string {
+  return firstName ? `${NUMBERS_GIFT.headline}, ${firstName}.` : `${NUMBERS_GIFT.headline}.`;
+}
+
+/** The three things to bring. The last one follows whether her reading has gone out. */
+export function numbersGiftBring(order: Pick<VerifiedNumbersOrder, 'delivered'>): string[] {
+  return [...NUMBERS_GIFT.bring, order.delivered ? NUMBERS_GIFT.bringDelivered : NUMBERS_GIFT.bringWriting];
+}
+
+/** The line over the voucher. It must not say she's still working out numbers that have gone out. */
+export function numbersGiftLine(order: Pick<VerifiedNumbersOrder, 'delivered'>): string {
+  return order.delivered ? NUMBERS_GIFT.delivered : NUMBERS_GIFT.writing;
+}
+
+export const GIFT_HANDOFF_URL = '/api/backend/lucky-numbers/gift-handoff';
+
+/**
+ * Where the voucher's button goes, from the server's answer: a login link for a buyer with a V2
+ * account, a prefilled signup otherwise. Null for anything else, and the page then shows no
+ * voucher: without her email the gift can't find her order, so it would be a promise that fails.
+ */
+export function numbersGiftHref(handoff: unknown): string | null {
+  const h = handoff as { mode?: unknown; token?: unknown; email?: unknown; firstName?: unknown } | null;
+  if (h?.mode === 'login' && typeof h.token === 'string' && h.token) {
+    return `/evelyn?token=${encodeURIComponent(h.token)}&${GIFT_UTM}`;
+  }
+  if (h?.mode === 'signup' && typeof h.email === 'string' && h.email) {
+    const q = new URLSearchParams({ email: h.email });
+    if (typeof h.firstName === 'string' && h.firstName) q.set('name', h.firstName);
+    return `/evelyn?${GIFT_UTM}&${q.toString()}`;
+  }
+  return null;
+}
+
+export type GiftFetch = (
+  url: string,
+  init: RequestInit,
+) => Promise<{ ok: boolean; json: () => Promise<unknown> }>;
+
+/** The voucher's link for this order, or null. Never throws: a failure is just no voucher. */
+export async function loadNumbersGiftHref(
+  sessionId: string,
+  fetchImpl: GiftFetch = (url, init) => fetch(url, init),
+): Promise<string | null> {
+  try {
+    const response = await fetchImpl(GIFT_HANDOFF_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ sessionId }),
+    });
+    return response.ok ? numbersGiftHref(await response.json()) : null;
+  } catch {
+    return null;
   }
 }
 

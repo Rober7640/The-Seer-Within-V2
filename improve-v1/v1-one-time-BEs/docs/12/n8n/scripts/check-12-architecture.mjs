@@ -49,7 +49,7 @@ const bad = report('12 · architecture', [
   ]],
   ['THE MODEL REQUEST', [
     ['four act calls and one grade per pass (4b, its retry 4s, and 7)', () => models(live).map((n) => n.name.split(' ')[0]).join(' ') === '4b 4s 7'],
-    ['every model node uses gpt-6.1-sol', () => bodies(live).every(([, b]) => b.model === 'gpt-6.1-sol')],
+    ['the writer (4b, 4s) uses gpt-6.1-terra; the grader (7) stays on gpt-6.1-sol', () => bodies(live).every(([n, b]) => b.model === (/^7 ·/.test(n) ? 'gpt-6.1-sol' : 'gpt-6.1-terra'))],
     ['effort is on the allowed list', () => bodies(live).every(([, b]) => ['low', 'medium', 'high', 'xhigh', 'max'].includes(b.reasoning_effort))],
     ['temperature, top_p, logprobs, top_logprobs never sent', () => bodies(live).every(([, b]) => !['temperature', 'top_p', 'logprobs', 'top_logprobs'].some((k) => k in b))],
     ['max_completion_tokens set, max_tokens not', () => bodies(live).every(([, b]) => b.max_completion_tokens > 0 && !('max_tokens' in b))],

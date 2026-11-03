@@ -6,7 +6,7 @@
 |---|---|
 | Buyer | Testina Rose Testerly (fixture), born July 21, 1968, ordered November 10, 2026 |
 | Arm · bump | B (c=11) · The Full Year bought |
-| Numbers | 7, 8, 9 · six 7, 8, 9, 16, 17, 18 · PIN 7893 · stop 4 |
+| Numbers | 7, 8, 9 · six 7, 9, 17, 26, 36, 43 · PIN 7893 · stop 4 |
 | Open days | Sun Jan 3 · Sat Feb 13 · Sat Mar 20 · Sat Apr 10 · Sat May 1 · Sat Jun 26 · Sat Jul 17 · Sat Aug 7 · Sat Sep 4 · Sun Oct 3 · Sat Nov 13 · Sat Dec 11 |
 | Hours | 9am, 7pm, 8pm, 9pm |
 | Words | 4298 (contract 3500–4700) · reading grade 3.3 · contractions 0.98 |
@@ -79,11 +79,11 @@ Those are your three. Your 7 is the luck you find on your own. Your 8 comes thro
 
 ### Your six to play
 
-Your six to play are 7, 8, 9, 16, 17 and 18. They're printed above, with where each one comes from.
+Your six to play are 7, 9, 17, 26, 36 and 43. They're printed above, with where each one comes from.
 
-Here's how they're built. You've already seen that your first number has a family, every number that adds back down to it. Now you've got all three families, and the six are the first two out of each. Your 7 brings 16. Your 8 brings 17. Your 9 brings 18. All six bring you back to one of your three.
+Here's how they're built. You've already seen that your first number has a family, every number that adds back down to it. Now you've got all three families, and two come out of each. Your 7 gives 7 and 43. Your 8 gives 17 and 26. Your 9 gives 9 and 36. I didn't take the smallest ones. I spread them across the whole ticket, low to high, so they don't huddle at the bottom where everyone's birthdays sit. All six still bring you back to one of your three.
 
-Play the same six every time. Don't swap them round from week to week, and don't throw in a favourite of your own because it feels lucky that morning. They work as a set. Use them on any ticket where you pick your own numbers. They fit any game whose numbers run from 1 up to 18 or higher, which is most of them. On a raffle where you can ask for a number, ask for one of the six. If the book's gone past them, take the next one in the same family: 25, 26 or 27.
+Play the same six every time. Don't swap them round from week to week, and don't throw in a favourite of your own because it feels lucky that morning. They work as a set. Use them on any ticket where you pick your own numbers. They fit any game whose numbers run from 1 up to 43 or higher, which is most of them. On a raffle where you can ask for a number, ask for one of the six. If one's already gone, take another from the same family: 16 or 25 for your 7, 8 or 35 for your 8, 18 or 27 for your 9.
 
 Write them on a slip of paper and keep it in your purse, so you're not trying to remember them at the counter.
 

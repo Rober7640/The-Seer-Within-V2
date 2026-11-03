@@ -19,7 +19,9 @@ const id = process.argv[2];
 if (!id || id.startsWith('--')) throw new Error('usage: read-12-run.mjs <n8n executionId> [--build <file>]');
 const buildArg = process.argv.includes('--build') ? process.argv[process.argv.indexOf('--build') + 1] : TESTINA;
 if (!/^12-fulfilment[A-Z0-9-]*\.n8n\.json$/.test(buildArg)) throw new Error('Invalid build basename');
-const PRICE_IN = 2 / 1e6, PRICE_OUT = 10 / 1e6;
+// Standard rates per token, by model (USD per million: Sol $2/$10, Terra $1/$5).
+const PRICES = { 'gpt-6.1-sol': [2, 10], 'gpt-6.1-terra': [1, 5] };
+const priceOf = (m) => (PRICES[m] || PRICES[Object.keys(PRICES).find((k) => String(m).startsWith(k))] || [2, 10]).map((x) => x / 1e6);
 
 const r = await fetch(`${String(env('N8N_BASE_URL')).replace(/\/$/, '')}/api/v1/executions/${id}?includeData=true`,
   { headers: { 'X-N8N-API-KEY': env('N8N_API_KEY') } });
@@ -51,10 +53,10 @@ for (const [name, runs] of Object.entries(rd)) {
   } });
 }
 const sum = (k) => calls.reduce((n, c) => n + c[k], 0);
-const cost = sum('input') * PRICE_IN + sum('output') * PRICE_OUT;
+const cost = calls.reduce((n, c) => { const [i, o] = priceOf(c.model); return n + c.input * i + c.output * o; }, 0);
 console.log(`  returned models: ${[...new Set(calls.map((c) => c.model))].join(', ') || 'none'}`);
 for (const c of calls) console.log(`    ${c.node.padEnd(30)} run ${c.run}  in ${String(c.input).padStart(6)}  cached ${String(c.cached).padStart(6)}  out ${String(c.output).padStart(6)}  thinking ${String(c.reasoning).padStart(6)}  ${c.stop}`);
-console.log(`  ${calls.length} calls · ${sum('input')} in · ${sum('output')} out (${sum('reasoning')} of it thinking) · $${cost.toFixed(2)} at $2/$10, ignoring any cache discount`);
+console.log(`  ${calls.length} calls · ${sum('input')} in · ${sum('output')} out (${sum('reasoning')} of it thinking) · $${cost.toFixed(2)} by each call's model (Sol $2/$10, Terra $1/$5), ignoring any cache discount`);
 
 const read = out('7a ·');
 const provenance = { execution: id, workflow: ex.workflowId, status: ex.status, startedAt: ex.startedAt, stoppedAt: ex.stoppedAt, drift, calls, cost_usd: Number(cost.toFixed(3)) };

@@ -15,7 +15,8 @@ import { eq, ne, and, desc, sql, isNull } from 'drizzle-orm';
 import { loadUserContext, summarizeSession } from './memoryManager';
 import { loadQuizIntake, buildQuizPromptSection } from './quizMemory';
 import { loadArrivalReading, buildArrivalReadingSection, buildArrivalGreetingInstruction, ARRIVAL_READING_FRESH_MSG_LIMIT } from './arrivalReading';
-import { thankYouBriefSection, thankYouGreetingInstruction } from './unsentLetterTyGift';
+// 12's chain asks 12 first, then hands to 11's (which hands to /fb's). Unchanged for non-12 readers.
+import { thankYouBriefSection, thankYouGreetingInstruction } from './luckyNumbersTyGift';
 import { loadCrossPersonaMemories, formatTransferContext } from './memoryTransfer';
 import { startChatSession, endChatSession, checkpointSession } from './creditTracking';
 import { replayPendingReply, findEligibleParkedReply } from './liveThreadReplay';

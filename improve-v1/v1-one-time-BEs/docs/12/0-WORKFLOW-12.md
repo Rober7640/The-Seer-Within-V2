@@ -237,7 +237,7 @@ Query strings that change what you see:
 | Booking — her two fields and the optional bump (the letters' CTAs land here) | `/numerology/lucky-numbers` | page | ✅ built · preview · walked at four phone sizes (`scripts/walk-12-smoke.mjs`, 222/222, API stubbed) — screens in `12/booking-page/screens/` |
 | Booking | — | chat | ❌ not built, by decision: page only, as 11 |
 | Upsell 1 (Wish Ritual + citrine, with its $30 downsell) → Upsell 2 (Manifestation Bracelet) | `/offers/upsell/welcome1` → `/welcome2` *(shared engine, offer read from the booking session)* | chat | ✅ built · walked with stubs, charge calls aborted. ⚠ No `?demo=true`: they need a paid booking session, so locally only the walk's stubs open them. ⚠ A successful charge and the shipping form have not been walked in a browser |
-| Thank-you *(receipt, no gift)* | `/numerology/lucky-numbers/success?s=<session>` | page | ✅ built · preview · walked with stubs |
+| Thank-you *(receipt + 15-min Evelyn gift, 2026-11-03)* | `/numerology/lucky-numbers/success?s=<session>` | page | ✅ built · preview · walked with stubs |
 
 ⛔ `readyForMoney: false`, and with `VITE_BACKEND_CHECKOUT_LIVE` unset the button logs
 `[preview] would checkout {…}` and stops. The log carries no birth name or date. Locally there is
@@ -566,6 +566,7 @@ at that moment.
 ### ☑ A6. The thank-you page *(2026-11-02)*
 
 **Result:** a receipt at `/numerology/lucky-numbers/success`, 11's minus the gift. Five states walked with stubbed orders. The subjects are proven word for word against 12-T1, 12-T3 and 12-T4. No gift and no price.
+**Update 2026-11-03:** the operator added 11's gift, 15 free minutes with Evelyn under 12's own tag (`be12-ty-evelyn`). Spec: [`12-T1-gift`](booking-page/12-T1-gift.md).
 **Read:** `0X-T1`.
 
 Receipt or intake — see the archetype table. Getting this backwards is the

@@ -13,6 +13,8 @@
 //  6. U1 IS 12's OWN PRODUCT: user-data names it with $47 / $30, Path A is found by it, and the
 //     charge bills $47 or $30 on it. Every other offer still gets the Protection Ritual, unchanged.
 //  7. THE RECEIPT IS ALWAYS 24 HOURS.
+//  8. THE GIFT HANDOFF ANSWERS FOR A PAID 12 ORDER ONLY, from the order's own email. 11's handoff
+//     still answers for 11 only.
 
 import express from 'express';
 import request from 'supertest';
@@ -40,9 +42,10 @@ vi.mock('../lib/be08Editions', () => ({
   listPublishedBe08Editions: vi.fn(async () => []),
 }));
 vi.mock('../lib/be08Draw', () => ({ BE_08_DECK: [] }));
+const giftHandoff = vi.fn(async (email: string, firstName: string | null) => ({ mode: 'signup', email, firstName }));
 vi.mock('../lib/evelynThankyouGift', () => ({
   EVELYN_TY_FREE_COINS: 1495,
-  resolveEvelynTyHandoff: vi.fn(),
+  resolveEvelynTyHandoff: (email: string, firstName: string | null) => giftHandoff(email, firstName),
   loadEvelynTyBrief: vi.fn(),
   buildEvelynTyBriefSection: vi.fn(),
   buildEvelynTyGreetingInstruction: vi.fn(),
@@ -343,5 +346,48 @@ describe('7 · the receipt', () => {
     state.order = paidRow({ offer: 'unsent-letter', offerNumber: '11' });
     const res = await request(app).get(`/api/backend/order/${SESSION}?offer=lucky-numbers`);
     expect(res.status).toBe(404);
+  });
+});
+
+describe('8 · the gift handoff', () => {
+  const paidOrder = { offer: 'lucky-numbers', status: 'paid', email: 'sarah@example.com', firstName: 'Sarah' };
+  const post = (body: unknown, offer = 'lucky-numbers') =>
+    request(app).post(`/api/backend/${offer}/gift-handoff`).send(body as object);
+
+  beforeEach(() => giftHandoff.mockClear());
+
+  it('a paid 12 order gets its handoff, from the order’s own email', async () => {
+    state.order = paidOrder;
+    const res = await post({ sessionId: SESSION, email: 'someone-else@example.com' });
+    expect(res.status).toBe(200);
+    expect(res.body).toEqual({ mode: 'signup', email: 'sarah@example.com', firstName: 'Sarah' });
+  });
+
+  it('no session id: 400', async () => {
+    expect((await post({})).status).toBe(400);
+    expect((await post({ sessionId: 7 })).status).toBe(400);
+  });
+
+  it.each([
+    ['no order', null],
+    ['11’s order', { ...paidOrder, offer: 'unsent-letter' }],
+    ['refunded', { ...paidOrder, status: 'refunded' }],
+    ['no email', { ...paidOrder, email: null }],
+  ])('%s: 404, and no login token is minted', async (_name, row) => {
+    state.order = row;
+    expect((await post({ sessionId: SESSION })).status).toBe(404);
+    expect(giftHandoff).not.toHaveBeenCalled();
+  });
+
+  it('a failure is a 500, not a crash', async () => {
+    state.order = paidOrder;
+    giftHandoff.mockRejectedValueOnce(new Error('db down'));
+    expect((await post({ sessionId: SESSION })).status).toBe(500);
+  });
+
+  it('11’s handoff will not answer for a 12 order', async () => {
+    state.order = paidOrder;
+    expect((await post({ sessionId: SESSION }, 'unsent-letter')).status).toBe(404);
+    expect(giftHandoff).not.toHaveBeenCalled();
   });
 });

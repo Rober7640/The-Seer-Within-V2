@@ -37,8 +37,10 @@ WHAT 12 DOES DIFFERENTLY FROM 11
      opener, ending, action and length off the order id, so no two read alike.
 
 MODEL
-  gpt-6.1-sol, writer and grader. Still unproven: that our account can use it (first call proves
-  it), and that it takes `max_completion_tokens` + strict `json_schema` exactly as sent here.
+  Writer gpt-6.1-terra ($1/$5 per million, operator's switch 2026-11-03: built for natural writing),
+  grader gpt-6.1-sol ($2/$10, kept so grades compare with runs 51552–51680). Sol proved on our
+  account in those runs; Terra's first call proves it takes `max_completion_tokens` + strict
+  `json_schema` exactly as sent here.
   Effort must be low/medium/high/xhigh/max. Never send temperature, top_p, logprobs, top_logprobs.
 """
 import json, os, sys, subprocess
@@ -66,8 +68,8 @@ if "--manual-only" in sys.argv and "--testdrive" not in sys.argv:
     raise SystemExit("\n  ⛔ --manual-only requires --testdrive.\n")
 
 EFFORTS = ("low", "medium", "high", "xhigh", "max")
-MODEL_WRITE = flag("--model", "gpt-6.1-sol")
-MODEL_GRADE = flag("--grader", MODEL_WRITE)
+MODEL_WRITE = flag("--model", "gpt-6.1-terra")  # operator 2026-11-03: Terra is built for natural writing, half the price
+MODEL_GRADE = flag("--grader", "gpt-6.1-sol")   # grader stays on Sol so grades compare across runs
 EFFORT_WRITE = flag("--effort", "high")
 EFFORT_GRADE = "low"     # 02: a yes/no checklist at high effort spends its budget and returns blank
 if EFFORT_WRITE not in EFFORTS:
@@ -350,14 +352,20 @@ const orders = dev(D.number_orders.map((o) => o.join('>')), 'orders').slice(0, 3
 // ── the twelve months ────────────────────────────────────────────────────────
 const openerKeys = Object.keys(D.day_openers), endKeys = Object.keys(D.day_ends);
 const capOf = (n, k) => Math.ceil(n / k) + 1;
-const pickRun = (keys, tag, cap) => { const out = [], used = {};
+// `hard` caps a few keys lower than the even share (12-acts.json devices.day_*_caps): "the day
+// before" four times, or four "leave X alone" openings, read as a pattern. A hard cap is never broken.
+const pickRun = (keys, tag, cap, hard = {}) => { const out = [], used = {};
+  const room = (x) => (used[x] || 0) < (typeof hard[x] === 'number' ? hard[x] : cap);
+  const underHard = (x) => typeof hard[x] !== 'number' || (used[x] || 0) < hard[x];
   for (let i = 0; i < 12; i++) {
-    const k = dev(keys, tag + i).find((x) => x !== out[i - 1] && (used[x] || 0) < cap)
-      || dev(keys, tag + i).find((x) => x !== out[i - 1]);
+    const order = dev(keys, tag + i);
+    const k = order.find((x) => x !== out[i - 1] && room(x))
+      || order.find((x) => x !== out[i - 1] && underHard(x))
+      || order.find((x) => underHard(x));
     out.push(k); used[k] = (used[k] || 0) + 1; }
   return out; };
-const openers = pickRun(openerKeys, 'open', capOf(12, openerKeys.length));
-const endings = pickRun(endKeys, 'end', capOf(12, endKeys.length));
+const openers = pickRun(openerKeys, 'open', capOf(12, openerKeys.length), D.day_opener_caps || {});
+const endings = pickRun(endKeys, 'end', capOf(12, endKeys.length), D.day_end_caps || {});
 // No action twice in one reading while the list lasts; never the same one in two months running.
 const usedActions = [];
 const actions = L.openDays.map((o, i) => { const list = dev(S.day_number[String(o.pd)].actions, 'act' + i);
@@ -430,6 +438,7 @@ const factsOf = (j) => {
     rep,
     `Her birthday's number: ${N.birthdayRoot.value} (the ${ordinal(N.birthdayRoot.raw)}).`,
     `Her six to play, smallest first:`, tix, short,
+    `How the six were chosen: spread across the whole ticket, one from each part of ${L.tickets.game.min} to ${L.tickets.game.max}, with her numbers taking turns, so they don't bunch at the low end. They are NOT the smallest or first numbers of each family, so never say they are.`,
     `They fit any game whose numbers run from ${L.tickets.game.min} up to ${Math.max(...L.tickets.list)} or higher.`,
     `Her PIN: ${L.pin.value}. Its digits: ${pin}.${pinWhy}`,
     `The number to stop using: ${L.stopNumber.value}. How it was found: ${her(STOP_HOW(L))}`,

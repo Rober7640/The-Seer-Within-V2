@@ -88,7 +88,7 @@
       "closes": [
         "L3 (sets up)"
       ],
-      "job": "Say who you are and that you sat with her birth name and date one evening, as your letter said you would. Say what's inside, in the order she'll meet it: her three numbers first, because everything else is built from them; then her six to play, her PIN and the number to stop using; then her twelve open days, one a month; then her hours and the uses filled in. Tell her how to use it: read it all the way through once before she uses any of it, with a pen. Inoculate: a few of her days will look odd (a Sunday, a day in the middle of a busy month, a month where the day comes late), and she's to read it all before she decides any of it is wrong, because each day was picked against the whole month. One line: if the name or birth date printed at the top is wrong, every number after it is wrong too, so reply and you'll work them out again."
+      "job": "Say who you are and that you sat with her birth name and date one evening, as your letter said you would. Say what's inside, in the order she'll meet it: her three numbers first, because everything else is built from them; then her six to play, her PIN and the number to stop using; then her twelve open days, one a month; then her hours and the uses filled in. Tell her how to use it: read it all the way through once before she uses any of it, with a pen. Inoculate: a few of her days will look odd (a day in the middle of a busy month, a month where the day comes late), and she's to read it all before she decides any of it is wrong, because each day was picked against the whole month. One line: if the name or birth date printed at the top is wrong, every number after it is wrong too, so reply and you'll work them out again."
     },
     "n1": {
       "words": 330,
@@ -119,7 +119,7 @@
         "L4",
         "L9 (lottery)"
       ],
-      "job": "Her six numbers to play. The page prints them above your words, with where each one comes from. Say how they're built (each one adds down to one of her numbers, the families from your letter, now all of them). Tell her how to play them: the same six every time, on any ticket where she picks her own numbers, and on raffles where she can ask for a number. Then repeat her promise to you, plainly: she won't chase it, she won't spend money she needs, one ticket where she'd have bought one."
+      "job": "Her six numbers to play. The page prints them above your words, with where each one comes from. Say how they're built (each one adds down to one of her numbers, the families from your letter, now all of them, and they're spread across the whole ticket instead of bunched at the low end). Tell her how to play them: the same six every time, on any ticket where she picks her own numbers, and on raffles where she can ask for a number. Then repeat her promise to you, plainly: she won't chase it, she won't spend money she needs, one ticket where she'd have bought one."
     },
     "pin": {
       "words": 200,
@@ -381,7 +381,7 @@
         "send the application",
         "make the first visit",
         "sign up",
-        "put her name down for something new",
+        "go first where she'd usually hang back",
         "make the first move on the thing she wants"
       ]
     },
@@ -448,7 +448,7 @@
         "follow a hunch",
         "read the small print",
         "take a long walk with no phone",
-        "write down the hunch she keeps having"
+        "read the book she's been meaning to read"
       ]
     },
     "8": {
@@ -466,10 +466,10 @@
       "for": "finishing",
       "actions": [
         "finish the job she's left half done",
-        "clear out a drawer or a cupboard",
+        "ask for the answer she's still waiting on",
         "close the account",
         "give something away",
-        "let go of the thing she's been keeping for no reason",
+        "thank someone she never properly thanked",
         "return the thing she borrowed"
       ]
     }
@@ -529,7 +529,15 @@
     "name_months": 3,
     "name_uses_total": 8,
     "dear_uses": 4,
-    "letter_callbacks_max": 3
+    "letter_callbacks_max": 3,
+    "day_end_caps": {
+      "_": "most a reading may use each ending; the rest share out evenly",
+      "ready": 2
+    },
+    "day_opener_caps": {
+      "_": "most a reading may use each opener; 'warn' four times reads as a string of don'ts",
+      "warn": 2
+    }
   },
   "banned": {
     "hedges": [
