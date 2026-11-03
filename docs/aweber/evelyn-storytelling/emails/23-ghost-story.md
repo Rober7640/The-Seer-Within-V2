@@ -2,11 +2,13 @@
 
 📝 **DRAFT 2026-10-12 — not reviewed, not minted, not on S3, not scheduled.** Sends Mon 26 Oct (Halloween week). Format L · The Dare (`../formats/L-dare.md`), shape from the locked gold `09-fifty-words.md` (and `17-go-first.md`, kept clearly different). Substance device **The timeline**. Pitch shape **Permission**. Build HTML with `scripts/build-email.py`.
 
-**Subject:** `{{ subscriber.first_name | capitalize }}, does "what do you want?" make your mind go blank?`
+**Subject:** `{{ subscriber.first_name | capitalize }}, she had no idea what to write. Then she wrote Frankenstein.`
 
 **Preheader:** Mary Shelley's 1816 ghost-story dare, and the small one I'm giving you.
 
 **Campaign:** story-23-ghost-story
+
+_Subject re-picked by the operator 2026-10-12 ("the subject lines of the new series are terrible again"): now "{name}, she had no idea what to write. Then she wrote Frankenstein." — was "{name}, does "what do you want?" make your mind go blank?". Rule: her moment in plain words, or a real person's story with a twist; no metaphors. Changed in AWeber via `schedule-broadcast.mjs resubject` (same id, same time)._
 
 _Subject history (v1, 2026-10-12; bytes measured with `len(s.encode())`, name tag included): **pick** "{name}, does "what do you want?" make your mind go blank?" (**91 bytes** · **name first** as assigned + a pain question about one specific moment · paid off word for word in lines 1–4: "So, what do you want?" … "And your mind goes blank." · asks her, doesn't claim to know her). **Challenger** "The famous poets quit. The 18-year-old with no idea didn't." (**59 bytes** · **no name** · a one-line true story with a twist · paid off in the story ~150 words in (the poets give up; Mary has nothing) and in full by the moral · works with the same preheader, which says who the 18-year-old is). Backup 👻 "A ghost story for anyone who isn't sure what she wants" (**59 bytes** · Halloween-week nod + her pain, no name · paid off in line 4: "a true story for Halloween week. The story behind a ghost story."). Backup "{name}, every morning they asked her. Every morning, she said no." (**99 bytes** · name first + story tension · paid off only ~200 words in — too late for a pick). Rejected: "how Mary Shelley came up with Frankenstein" / "the rainy summer that made Frankenstein" (describe the object — the README's "terrible" rule); "{name}, still not sure what you want?" ("still" claims Evelyn knows her past); anything with "Frankenstein" in it (spoils the payoff). None says Evelyn knows the reader. Preheader (**71 bytes**) clarifies — names the true story and says there's a dare — is not a second puzzle, and shares no content words with the pick or the challenger._
 

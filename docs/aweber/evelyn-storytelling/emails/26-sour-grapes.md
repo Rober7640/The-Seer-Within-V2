@@ -2,11 +2,13 @@
 
 📝 **DRAFT 2026-10-12 — not reviewed, not scheduled, not sent. No short link minted, nothing on S3.** Format F · The Fable (`../formats/F-fable.md`), gold `06-north-wind-sun.md` + `16-the-reflection.md`. Batch 19–26, send slot **Thu 29 Oct**. Furey's "Why The Cat is the Tiger's Teacher" move, opened differently from 06/16/20: a line we all say → the fable told straight, in time order → the tradition named only afterwards (with the "sour grapes" fact) → **"Moral of the story:"** in one line → onto love → pitch. Build HTML with `scripts/build-email.py`.
 
-**Subject:** `🍇 {{ subscriber.first_name | capitalize }}, are you over him, or just saying it?`
+**Subject:** `{{ subscriber.first_name | capitalize }}, are you really over him?`
 
 **Preheader:** Aesop's fox, the grapes he couldn't reach, and 3 honest questions.
 
 **Campaign:** story-26-sour-grapes
+
+_Subject re-picked by the operator 2026-10-12 ("the subject lines of the new series are terrible again"): now "{name}, are you really over him?" — was "🍇 {name}, are you over him, or just saying it?". Rule: her moment in plain words, or a real person's story with a twist; no metaphors. Changed in AWeber via `schedule-broadcast.mjs resubject` (same id, same time)._
 
 _Subject history (v1, 2026-10-12; bytes measured with `len(s.encode())`, emoji + name tag included): **pick** 🍇 "{name}, are you over him, or just saying it?" (83 bytes · name first + her pain as a direct question, as the batch asks · paid off in lines 1–2: ""I'm so over him." / Most of us have said it. Usually a little too loudly." and answered by the device's three questions · asks her, doesn't claim to know her); **challenger** 🍇 "He jumped and jumped for them. Then he said they were sour." (64 bytes · **no name** · a one-line story with a twist — "he" reads as a man until line 3 shows it's a fox · paid off in lines 3–9, word for word "jumped… again and again" / "I am sure they are sour" · works with the same preheader, which names the fox · the split tests pain question + name vs story + no name); backup 💬 ""I'm so over him." (Said a little too loudly.)" (46 bytes · quote as subject, Furey p.64 · the email's own first two lines · a smile, no name); backup 🍇 "{name}, the 4 words we say when we still want him" (83 bytes · curiosity + pain with a number · "I'm so over him" is the 4 words, paid off in line 1). Rejected: "the fox who couldn't reach the grapes" / "Aesop's lesson about sour grapes" (describe the object — the README's rule); "how to finally get over him" (a promise the email doesn't keep — it never says she should or shouldn't be over him); "still not over your ex?" (the word "ex" assumes a breakup; the reader may be widowed, or have no one). None says Evelyn knows the reader: the pick asks her; the others talk about "he" (the fox) or "we". Preheader (66 bytes) says what's inside (the fable + 3 questions), is not a second puzzle, and shares no content words with the pick or the challenger._
 

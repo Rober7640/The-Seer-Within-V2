@@ -2,11 +2,13 @@
 
 📝 **DRAFT 2026-10-12 — not reviewed, not minted, nothing on S3, not scheduled.** Format D · The Old Book (`../formats/D-old-book.md`), gold `04-book-of-fate.md` (same book, different question; this email never refers to 04). Sends Wed 21 Oct (batch 19–26). Build HTML with `scripts/build-email.py`.
 
-**Subject:** `{{ subscriber.first_name | capitalize }}, when he goes quiet, where does your mind go?`
+**Subject:** `{{ subscriber.first_name | capitalize }}, is he just busy, or is something wrong?`
 
 **Preheader:** An 1822 fortune book's answer, and how to tell a fair doubt from an old one.
 
 **Campaign:** story-19-unjust-suspicions
+
+_Subject re-picked by the operator 2026-10-12 ("the subject lines of the new series are terrible again"): now "{name}, is he just busy, or is something wrong?" — was "{name}, when he goes quiet, where does your mind go?". Rule: her moment in plain words, or a real person's story with a twist; no metaphors. Changed in AWeber via `schedule-broadcast.mjs resubject` (same id, same time)._
 
 _Subject history (v1, 2026-10-12; bytes measured with `len(s.encode())`, name tag included; no emoji, like 13/16/17): **pick** "{name}, when he goes quiet, where does your mind go?" (86 bytes · **name first** as assigned + a pain question about HER · paid off in lines 3–5 ("When he goes quiet, and you can't tell why. And the mind goes straight to the worst.") and again in the unfair-doubt example ("He goes quiet one evening, and your stomach drops") · asks her, doesn't claim to know her); **challenger** ""Will he stay true?" got 4 words back. None were about him." (59 bytes · **no name** · one-line story with a twist: the book's love question, and an answer that talks to the asker, not about him · paid off in line 1 (the question) and at the quote ~220 words in · works with the same preheader · the split also tests name vs no name); backup "{name}, is it a fair doubt, or an old one?" (76 bytes · curiosity + pain, name first · paid off only at the turn ~280 words in, so not the pick); backup "Do you trust him when you're apart?" (35 bytes · direct pain question, no name · paid off in lines 1–4, but flatter and easy to answer "yes" and skip). Rejected: "the 1822 book that answered 'will he stay true?'" (describes the object — README rule); "Is he cheating?" / "How to know if he's faithful" (hint he's unfaithful + detective territory — guardrails; also promises what the email can't do); "{name}, 'will he stay true?' got 4 words back…" with the name (101 bytes, too long to read on a phone). Preheader (76 bytes) clarifies what's inside, is not a second puzzle, and shares no content words with the pick or the challenger._
 

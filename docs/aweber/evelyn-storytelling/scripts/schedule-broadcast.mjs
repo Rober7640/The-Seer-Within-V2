@@ -3,6 +3,8 @@
 //   node docs/aweber/evelyn-storytelling/scripts/schedule-broadcast.mjs create <send.html> <send.txt> "<subject>"   -> draft only, prints id + checks
 //   node docs/aweber/evelyn-storytelling/scripts/schedule-broadcast.mjs schedule <id> <ISO-UTC>
 //   node docs/aweber/evelyn-storytelling/scripts/schedule-broadcast.mjs list               -> scheduled on the home list (date, id, include count, subject)
+//   node docs/aweber/evelyn-storytelling/scripts/schedule-broadcast.mjs resubject <id> "<subject>"   -> change ONLY the subject of a scheduled
+//        broadcast: cancel -> PUT (bodies, lists, segment and flags copied from AWeber's own copy) -> verify -> reschedule at the SAME time
 // Auth + .env come from the reframe deck's aweber-lib.mjs, which reads <its repo root>/.env and persists
 // rotated tokens there. ~/tsw-preview has no .env, so point AWEBER_LIB at a checkout that has one:
 //   AWEBER_LIB="<repo with .env>/docs/aweber/evelyn-reframe-deck/scripts/aweber-lib.mjs" node … schedule-broadcast.mjs …
@@ -50,4 +52,36 @@ if (cmd === 'create') {
     const g = (await api('GET', b.self_link)).json;
     console.log(`${b.scheduled_for.slice(0, 16)}  id=${b.broadcast_id}  include=${(g.include_lists || []).length}  ${b.subject.replace('{{ subscriber.first_name | capitalize }}', '{name}')}`);
   }
-} else { console.error('usage: create <html> <txt> "<subject>" | schedule <id> <ISO> | list'); process.exit(1); }
+} else if (cmd === 'resubject') {
+  // PATCH is 405 on broadcasts; the working edit is cancel -> PUT -> schedule (IDs preserved).
+  const [id, subject] = a;
+  const url = `${base}/broadcasts/${id}`;
+  const r0 = await api('GET', url);
+  if (!r0.ok) { console.error('STOP: cannot read broadcast', id, r0.status); process.exit(1); }
+  const b = r0.json;
+  if (b.status !== 'scheduled' || !b.scheduled_for) { console.error(`STOP: ${id} is ${b.status}, not scheduled`); process.exit(1); }
+  const when = b.scheduled_for;
+  const incBefore = (b.include_lists || []).map(x => x.split('/').pop()).sort();
+  const want = INCLUDE.map(x => x.split('/').pop()).sort();
+  if (JSON.stringify(incBefore) !== JSON.stringify(want)) { console.error(`STOP: ${id} include_lists ${incBefore.length}/14 don't match — not touching it`); process.exit(1); }
+  const loud = (msg) => { console.error(`!!! ${msg} — broadcast ${id} was due ${when}. Reschedule it: schedule ${id} ${when}`); process.exit(1); };
+  const c = await api('POST', `${url}/cancel`);
+  if (!c.ok) { console.error('STOP: cancel failed', c.status, c.text.slice(0, 300)); process.exit(1); }
+  const p = await api('PUT', url, { form: {
+    subject, body_html: b.body_html, body_text: b.body_text,
+    click_tracking_enabled: String(b.click_tracking_enabled), is_archived: String(b.is_archived), notify_on_send: String(b.notify_on_send),
+    include_lists: JSON.stringify(INCLUDE), segment_link: SEGMENT,
+  }});
+  if (!p.ok) loud(`PUT failed ${p.status} ${p.text.slice(0, 300)}`);
+  const g = (await api('GET', url)).json;
+  const inc = (g.include_lists || []).map(x => x.split('/').pop()).sort();
+  const same = g.subject === subject && JSON.stringify(inc) === JSON.stringify(want) && g.segment_name === b.segment_name
+    && g.body_html === b.body_html && g.body_text === b.body_text;
+  if (!same) loud(`after PUT: subject ok=${g.subject === subject} lists ${inc.length}/14 segment=${g.segment_name} bodies same=${g.body_html === b.body_html && g.body_text === b.body_text}`);
+  const s = await api('POST', `${url}/schedule`, { form: { scheduled_for: when } });
+  if (!s.ok) loud(`reschedule failed ${s.status} ${s.text.slice(0, 300)}`);
+  const f = (await api('GET', url)).json;
+  if (f.status !== 'scheduled' || f.scheduled_for !== when) loud(`after reschedule status=${f.status} when=${f.scheduled_for}`);
+  console.log(`id=${id} status=${f.status} when=${f.scheduled_for} include=${(f.include_lists || []).length} segment=${f.segment_name} bodies unchanged`);
+  console.log(`  was: ${b.subject}\n  now: ${f.subject}`);
+} else { console.error('usage: create <html> <txt> "<subject>" | schedule <id> <ISO> | list | resubject <id> "<subject>"'); process.exit(1); }

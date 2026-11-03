@@ -2,11 +2,13 @@
 
 📝 **DRAFT 2026-10-12 — not reviewed, not minted, not on S3, not scheduled.** Format A · Story (`../formats/A-story.md`), golds `01-grandma-moses.md` + `14-the-first-letter.md`. Substance device: **3 things he taught me** (assigned). Pitch shape: **What happens when you click** (assigned). Sends Wed 28 Oct. Build HTML with `scripts/build-email.py`.
 
-**Subject:** `{{ subscriber.first_name | capitalize }}, he wrote "Marry" three times. Then he was too scared to ask.`
+**Subject:** `{{ subscriber.first_name | capitalize }}, Darwin's reason to get married: "better than a dog anyhow"`
 
 **Preheader:** The true story of Charles Darwin's love list, and 3 things he taught me.
 
 **Campaign:** story-25-marry-not-marry
+
+_Subject re-picked by the operator 2026-10-12 ("the subject lines of the new series are terrible again"): now "{name}, Darwin's reason to get married: "better than a dog anyhow"" — was "{name}, he wrote "Marry" three times. Then he was too scared to ask.". Rule: her moment in plain words, or a real person's story with a twist; no metaphors. Changed in AWeber via `schedule-broadcast.mjs resubject` (same id, same time)._
 
 _Subject history (v1, 2026-10-12; bytes measured with `len(s.encode())`, name tag included): **pick** "{name}, he wrote "Marry" three times. Then he was too scared to ask." (102 bytes · **name first** as assigned + a one-line story with a twist — the README's winning shape · a specific person doing something, no object described, doesn't claim to know her · paid off by the story: "Marry — Marry — Marry Q.E.D." then "He didn't. He was too scared." ~250 words in; the opener pays off "list" in line 1). **Challenger** "Still making lists about him in your head?" (42 bytes · **no name** · pain question about HER · paid off word for word in lines 1–2: "Have you ever made a list about a man? … Just in your head" · works with the same preheader, which names "love list"). Backups: "{name}, can a list tell you whether to stay?" (78 bytes · name + pain question · paid off by lesson 2, "A list can't choose for you" — late) · ""Marry, Marry, Marry." Then he got cold feet." (45 bytes · quote + twist, no name · leans on the story, not her). Rejected: "Darwin's marriage list" / "the 1838 pros-and-cons list" (describe the object — README rule); "Should you stay or go?" (invites a verdict the email never gives). Preheader (72 bytes) follows format A's pattern, says what's inside, is not a second puzzle and shares no words with the pick except "list"._
 

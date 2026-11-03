@@ -2,11 +2,13 @@
 
 📝 **DRAFT 2026-10-12 — not reviewed, not scheduled, not sent. No short link minted, nothing on S3.** Format B · Watermelon (`../formats/B-watermelon.md`), gold `02-apple-peel.md` + `18-nut-night.md`. Batch 19–26, send date **Sun 25 Oct 2026**. Not a Halloween email. Build HTML with `scripts/build-email.py`.
 
-**Subject:** `{{ subscriber.first_name | capitalize }}, whose voice are you waiting to hear?`
+**Subject:** `{{ subscriber.first_name | capitalize }}, the first man who speaks to you tomorrow…`
 
 **Preheader:** Tuck an ivy leaf over your heart, then notice who says hello.
 
 **Campaign:** story-22-ivy-leaf
+
+_Subject re-picked by the operator 2026-10-12 ("the subject lines of the new series are terrible again"): now "{name}, the first man who speaks to you tomorrow…" — was "{name}, whose voice are you waiting to hear?". Rule: her moment in plain words, or a real person's story with a twist; no metaphors. Changed in AWeber via `schedule-broadcast.mjs resubject` (same id, same time)._
 
 _Subject history (v1, 2026-10-12; bytes measured with `len(s.encode())`, emoji + name tag included): **pick** "{{ subscriber.first_name | capitalize }}, whose voice are you waiting to hear?" (78 bytes · name FIRST + a pain question, as the batch asks · her pain/desire, not the object · paid off in line 1, "Some days, there's only one voice you want to hear", and again by the bold moral ~330 words in · asks her, doesn't claim to know her). **Challenger** 📮 "If the first man to speak to you is the postman…" (55 bytes · no name, so the split also tests name vs no name · curiosity + the email's laugh · paid off by the rhyme's rule and the postman line ~230 words in · works with the same preheader, which explains the ritual). Backup 💬 "{{ subscriber.first_name | capitalize }}, a girl tucked ivy over her heart. Then she called it "rather risky."" (110 bytes · name first + a one-line TRUE story with a twist — the Lanarkshire schoolgirl in [OPIE] · paid off ~180 words in · ⚠ leans on the object, and "tucked" is our word for "wears… against her heart"). Backup 📱 "Checking your phone for one man?" (37 bytes · blunt pain question, no name · paid off in lines 1–4 · close in spirit to 17's "still waiting for him to text first?", so not the pick). Rejected: "the old ivy-leaf love charm" / "the First Voice Ritual" (describe the object — the README's "don't describe the object" rule); "Will he call?" (17 and 05 already own the waiting-by-the-phone question, and it invites a prediction the email never makes); "…still checking your phone for him again?" ("again" implies Evelyn knows her). Preheader (61 bytes) clarifies the ritual, isn't a second puzzle, and shares no content words with the pick or the challenger._
 
