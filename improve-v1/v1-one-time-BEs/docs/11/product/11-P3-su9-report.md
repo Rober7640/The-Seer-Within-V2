@@ -252,7 +252,7 @@ You weren't weak. I made it expensive.
 There was never anything wrong with you. It was the best thing about you, and I acted like it was costing me. It's your softness. It was yours before me and it's yours now. I'm giving it back. All of it. You don't owe me a thing for it.
 
 [[FORK get_back]]
-Come back. Or if you won't, at least write me back.
+Come back. Or if you won't, at least write to me.
 [[/FORK]]
 [[FORK giving]]
 I'm not asking you for anything. Not to forgive me, not to see me, not an answer. Don't write to me, and don't go looking for me. That's all.
