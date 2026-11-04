@@ -6,8 +6,8 @@ import { eq, and, ne, desc, sql } from 'drizzle-orm';
 import { requireAuth, verifyToken } from '../lib/auth';
 import { getPersonaPricing } from '../lib/personaPricing';
 import { DEFAULT_PRICING, CUSTOM_TOPUP_MAX_USD, CUSTOM_PACKAGE_TYPE, WELCOME_PACK_COINS, WELCOME_PACK_PRICE_CENTS, usdCentsToCoins, coinsToClock, minutesToCoins, COINS_PER_MINUTE, type PricingTier } from '../../shared/types';
-import { applyVariantPresentation, resolveCustomTierCoins } from '@shared/paywall';
-import { resolvePaywallVariant, assign, logExposure, paywallScopePersonaId, PAYWALL_EXPERIMENT_KEY } from '../lib/experiments';
+import { applyVariantPresentation, resolveCustomTierCoins, buildBonusTiers, quoteCustomAmount, FIRST_TIMER_LADDER, REPEAT_BUYER_LADDER } from '@shared/paywall';
+import { resolvePaywallVariant, assign, logExposure, paywallScopePersonaId, PAYWALL_EXPERIMENT_KEY, LONGCOPY_EXPERIMENT_KEY, LONGCOPY_TEST_ARM } from '../lib/experiments';
 import Stripe from 'stripe';
 import { getStripe, verifyStripeWebhook, activeStripeAccountTag } from '../lib/stripeAccount';
 import logger from '../lib/logger';
@@ -100,15 +100,64 @@ function resolveRequestedTier(
   packageType: string,
   customAmountUsd: number | undefined,
   pricing: { tiers: Array<{ packageType: string; coins: number; bonusCoins: number; totalCoins: number; priceUsd: number; label: string }> },
+  longCopyRate?: number | null,
 ): { tier?: any; error?: string } {
   if (packageType === CUSTOM_PACKAGE_TYPE) {
     if (typeof customAmountUsd !== 'number') return { error: 'Custom amount is required' };
+    // Long-copy test: grant the bonus the card shows (quoteCustomAmount at the
+    // guide's rate), not the flat rate — so credited minutes = shown minutes.
+    if (longCopyRate != null) {
+      const floor = pricing.tiers.length ? Math.min(...pricing.tiers.map(t => t.priceUsd)) : 1000;
+      if (customAmountUsd < floor) return { error: `Minimum top-up is $${Math.round(floor / 100)}` };
+      if (customAmountUsd > CUSTOM_TOPUP_MAX_USD * 100) return { error: `Maximum top-up is $${CUSTOM_TOPUP_MAX_USD}` };
+      const q = quoteCustomAmount(customAmountUsd, longCopyRate);
+      return {
+        tier: {
+          packageType: CUSTOM_PACKAGE_TYPE,
+          coins: q.coins,
+          bonusCoins: q.bonusCoins,
+          totalCoins: q.totalCoins,
+          priceUsd: customAmountUsd,
+          label: `$${(customAmountUsd / 100).toFixed(2)}`,
+        },
+      };
+    }
     const result = resolveCustomTier(customAmountUsd, pricing);
     if ('error' in result) return { error: result.error };
     return { tier: result };
   }
   const tier = resolveTier(packageType, pricing);
   return tier ? { tier } : { error: 'Invalid package type' };
+}
+
+/**
+ * Long-copy paywall test ("updated test 1", Evelyn-only). If the user is in the
+ * test arm, swaps in the bonus-pack ladder (first-timer 3-pack, or repeat 5-pack
+ * incl. the $100 pack) so purchases GRANT exactly what the new cards show. Returns
+ * the DEFAULT pricing + null rate when the user isn't in the test — which is
+ * everyone until the experiment is flipped to `running`, so nothing changes live
+ * until then. One lookup, reused by every purchase path and /pricing.
+ */
+async function resolveLongCopyPricing(
+  userId: string | null | undefined,
+  personaId: string | null | undefined,
+  basePricing: { tiers: PricingTier[] },
+): Promise<{ pricing: { tiers: PricingTier[] }; longCopyRate: number | null; isRepeat: boolean }> {
+  if (!userId || !personaId) return { pricing: basePricing, longCopyRate: null, isRepeat: false };
+  const a = await assign(LONGCOPY_EXPERIMENT_KEY, userId, { personaId });
+  // `applied` = the arm's payload should drive behaviour (running+enrolled, or a
+  // concluded-winner rollout). Only the test arm swaps the ladder; control = today.
+  if (!a || !a.applied || a.variant !== LONGCOPY_TEST_ARM) {
+    return { pricing: basePricing, longCopyRate: null, isRepeat: false };
+  }
+  const prior = await db.select({ id: creditPurchases.id })
+    .from(creditPurchases)
+    .where(and(eq(creditPurchases.userId, userId), eq(creditPurchases.status, 'completed')))
+    .limit(1);
+  const isRepeat = prior.length > 0;
+  const rate = COINS_PER_MINUTE; // Evelyn runs at the default rate
+  const tiers = buildBonusTiers(isRepeat ? REPEAT_BUYER_LADDER : FIRST_TIMER_LADDER, rate);
+  return { pricing: { ...basePricing, tiers }, longCopyRate: rate, isRepeat };
 }
 
 const checkoutSchema = z.object({
@@ -263,6 +312,12 @@ router.get('/pricing', async (req: Request, res: Response) => {
       persona = rows[0];
     }
 
+    // Long-copy test ("updated test 1", Evelyn-only): when the user is in the test
+    // arm, serve the bonus-pack ladder + a descriptor so the client renders the
+    // long-copy (first-timer) or repeat paywall. Inert until the experiment runs.
+    const longCopy = await resolveLongCopyPricing(userId, experimentPersonaId, pricing);
+    const inLongCopy = longCopy.longCopyRate != null;
+
     res.json({
       ...pricing,
       // The guide's $/min in wallet units (cents/min). The client derives pack
@@ -270,15 +325,44 @@ router.get('/pricing', async (req: Request, res: Response) => {
       // right time + price at the point of sale. Falls back to the default rate for
       // a bare /credits request (no persona in context).
       coinsPerMinute: persona?.coinsPerMinute ?? COINS_PER_MINUTE,
-      tiers: applyVariantPresentation(pricing.tiers, variant),
+      tiers: inLongCopy ? longCopy.pricing.tiers : applyVariantPresentation(pricing.tiers, variant),
       persona,
       variant,
       experimentKey: PAYWALL_EXPERIMENT_KEY,
+      // Non-null only for enrolled test users; drives which paywall the client renders.
+      longCopyTest: inLongCopy ? { active: true, mode: longCopy.isRepeat ? 'repeat' : 'first_timer' } : null,
     });
   } catch (error) {
     logger.error('Get pricing error:', error);
     res.status(500).json({ error: 'Failed to get pricing' });
   }
+});
+
+// POST /api/credits/exit-reason — the one-tap "What stopped you?" answer shown
+// after a long-copy test user taps "Not now". Pure research: we record the pick
+// (PostHog) so we can see whether non-buyers are held back by price, trust, or a
+// reading that ended too soon. No side effects on the user or their balance.
+const exitReasonSchema = z.object({
+  reason: z.enum(['price', 'not_sure_real', 'got_what_needed', 'just_looking']),
+  personaId: z.string().optional(),
+});
+router.post('/exit-reason', requireAuth, async (req: Request, res: Response) => {
+  const parsed = exitReasonSchema.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: 'Invalid exit reason' });
+    return;
+  }
+  const { reason, personaId } = parsed.data;
+  try {
+    posthog.capture({
+      distinctId: req.userId!,
+      event: 'paywall_exit_reason',
+      properties: { reason, persona_id: personaId ?? null, experiment: LONGCOPY_EXPERIMENT_KEY },
+    });
+  } catch (e) {
+    logger.warn('exit-reason capture failed', e);
+  }
+  res.json({ ok: true });
 });
 
 // GET /api/credits/purchases
@@ -359,7 +443,9 @@ router.post('/checkout', requireAuth, async (req: Request, res: Response) => {
   let personaRate: number = COINS_PER_MINUTE; // cents/min for the checkout time label
   try {
     pricing = personaId ? await getPersonaPricing(personaId) : DEFAULT_PRICING;
-    const resolved = resolveRequestedTier(packageType, customAmountUsd, pricing);
+    const longCopy = await resolveLongCopyPricing(req.userId!, personaId, pricing);
+    pricing = longCopy.pricing;
+    const resolved = resolveRequestedTier(packageType, customAmountUsd, pricing, longCopy.longCopyRate);
     if (resolved.error) {
       res.status(400).json({ error: resolved.error });
       return;
@@ -506,8 +592,9 @@ router.post('/create-payment-intent', requireAuth, async (req: Request, res: Res
   let tier;
   let userEmail: string | undefined;
   try {
-    const pricing = personaId ? await getPersonaPricing(personaId) : DEFAULT_PRICING;
-    const resolved = resolveRequestedTier(packageType, customAmountUsd, pricing);
+    const basePricing = personaId ? await getPersonaPricing(personaId) : DEFAULT_PRICING;
+    const { pricing, longCopyRate } = await resolveLongCopyPricing(req.userId!, personaId, basePricing);
+    const resolved = resolveRequestedTier(packageType, customAmountUsd, pricing, longCopyRate);
     if (resolved.error) {
       res.status(400).json({ error: resolved.error });
       return;
@@ -721,8 +808,9 @@ router.post('/create-order', requireAuth, async (req: Request, res: Response) =>
 
   let tier;
   try {
-    const pricing = personaId ? await getPersonaPricing(personaId) : DEFAULT_PRICING;
-    const resolved = resolveRequestedTier(packageType, customAmountUsd, pricing);
+    const basePricing = personaId ? await getPersonaPricing(personaId) : DEFAULT_PRICING;
+    const { pricing, longCopyRate } = await resolveLongCopyPricing(req.userId!, personaId, basePricing);
+    const resolved = resolveRequestedTier(packageType, customAmountUsd, pricing, longCopyRate);
     if (resolved.error) {
       res.status(400).json({ error: resolved.error });
       return;
