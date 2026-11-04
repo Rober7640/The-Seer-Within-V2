@@ -4,7 +4,7 @@
 // §3.14–3.15.
 
 import type { PricingTier } from "./types";
-import { usdCentsToCoins } from "./types";
+import { usdCentsToCoins, minutesToCoins, COINS_PER_MINUTE } from "./types";
 
 export type PaywallVariant = "A" | "B";
 
@@ -83,4 +83,226 @@ export function defaultTier(tiers: PricingTier[], variant: PaywallVariant): Pric
     );
   }
   return tiers.findLast((t) => t.badge) ?? tiers[0];
+}
+
+// ---------------------------------------------------------------------------
+// PREVIEW ONLY — bonus-minute packs for the paywall tests (improve-v2 paywall
+// "updated test 1"). Nothing live reads these: DEFAULT_PRICING and every persona's
+// tiers are untouched.
+//
+// Each pack is defined by the two numbers its tile CLAIMS ("+2 min FREE",
+// "9 min total"). The coins are derived so both claims always hold:
+//   bonusCoins = max(free min in coins, total min in coins − price, 0)
+// and the tile renders the claimed numbers, never a re-derived rounding.
+// At $2.99/min (299¢):
+//   first-timer: $10 → 3:20 ("3 min") · $20 → 9:00 ("+2 min FREE", "9 min total")
+//                · $30 → 15:02 ("+5 min FREE", "15 min total")
+//   repeat buyer adds: $50 → 30:00 ("+13", "30") · $100 → 70:00 ("+36", "70")
+// Bonus coins are priced at the guide's own rate, so a guide with a different
+// cents/min still gets at least what the tile says.
+// ---------------------------------------------------------------------------
+
+/** One pack: its price + the two numbers its tile shows. */
+export interface BonusPackSpec {
+  packageType: string;
+  priceCents: number;
+  /** "+N min FREE" on the tile; 0 = no pill. */
+  freeMinutesShown: number;
+  /** "N min total" (or "N min" when there is no bonus). */
+  totalMinutesShown: number;
+  badge?: string;
+  recommended?: boolean;
+}
+
+/** A PricingTier that also carries the claims its tile renders. */
+export interface BonusPreviewTier extends PricingTier {
+  freeMinutesShown: number;
+  totalMinutesShown: number;
+}
+
+/** First-timer card (LongCopyPaywall): the same $10/$20/$30 she knows today. */
+export const FIRST_TIMER_LADDER: BonusPackSpec[] = [
+  { packageType: "popular", priceCents: 1000, freeMinutesShown: 0, totalMinutesShown: 3 },
+  { packageType: "best_value", priceCents: 2000, freeMinutesShown: 2, totalMinutesShown: 9, badge: "MOST POPULAR", recommended: true },
+  { packageType: "premium", priceCents: 3000, freeMinutesShown: 5, totalMinutesShown: 15, badge: "BEST VALUE" },
+];
+
+/** Repeat-buyer card (RepeatBuyerPaywall): five packs + Custom. "whale_100" is a
+ *  preview-only key — the server has no such package today. */
+export const REPEAT_BUYER_LADDER: BonusPackSpec[] = [
+  { packageType: "popular", priceCents: 1000, freeMinutesShown: 0, totalMinutesShown: 3 },
+  { packageType: "best_value", priceCents: 2000, freeMinutesShown: 2, totalMinutesShown: 9, badge: "MOST POPULAR", recommended: true },
+  { packageType: "premium", priceCents: 3000, freeMinutesShown: 5, totalMinutesShown: 15 },
+  { packageType: "whale", priceCents: 5000, freeMinutesShown: 13, totalMinutesShown: 30 },
+  { packageType: "whale_100", priceCents: 10000, freeMinutesShown: 36, totalMinutesShown: 70, badge: "BEST VALUE" },
+];
+
+/** Bonus coins that make BOTH of a pack's claims true at this rate. */
+export function bonusCoinsFor(spec: BonusPackSpec, coinsPerMinute: number = COINS_PER_MINUTE): number {
+  return Math.max(
+    minutesToCoins(spec.freeMinutesShown, coinsPerMinute),
+    minutesToCoins(spec.totalMinutesShown, coinsPerMinute) - spec.priceCents,
+    0,
+  );
+}
+
+/** A ladder as tiers at a given rate (a coin is a cent). */
+export function buildBonusTiers(ladder: BonusPackSpec[], coinsPerMinute: number = COINS_PER_MINUTE): BonusPreviewTier[] {
+  return ladder.map((p) => {
+    const bonusCoins = bonusCoinsFor(p, coinsPerMinute);
+    return {
+      packageType: p.packageType,
+      coins: p.priceCents,
+      bonusCoins,
+      totalCoins: p.priceCents + bonusCoins,
+      priceUsd: p.priceCents,
+      label: `$${p.priceCents / 100}`,
+      ...(p.badge ? { badge: p.badge } : {}),
+      recommended: !!p.recommended,
+      freeMinutesShown: p.freeMinutesShown,
+      totalMinutesShown: p.totalMinutesShown,
+    };
+  });
+}
+
+/** First-timer ladder as tiers. PREVIEW ONLY. */
+export function buildBonusPreviewTiers(coinsPerMinute: number = COINS_PER_MINUTE): BonusPreviewTier[] {
+  return buildBonusTiers(FIRST_TIMER_LADDER, coinsPerMinute);
+}
+
+/** Repeat-buyer ladder as tiers. PREVIEW ONLY. */
+export function buildRepeatPreviewTiers(coinsPerMinute: number = COINS_PER_MINUTE): BonusPreviewTier[] {
+  return buildBonusTiers(REPEAT_BUYER_LADDER, coinsPerMinute);
+}
+
+/** The ladders at the default rate. PREVIEW ONLY. */
+export const PREVIEW_BONUS_TIERS: BonusPreviewTier[] = buildBonusPreviewTiers();
+export const PREVIEW_REPEAT_TIERS: BonusPreviewTier[] = buildRepeatPreviewTiers();
+
+/** What a custom amount buys on a bonus-pack card. */
+export interface CustomBonusQuote {
+  coins: number;
+  bonusCoins: number;
+  totalCoins: number;
+  /** "+N min FREE" = floor(bonusCoins / rate); 0 = no pill. */
+  freeMinutesShown: number;
+  /** "N min total" = floor(totalCoins / rate) — whole minutes, never overstated. */
+  totalMinutesShown: number;
+  /** The pack whose price per minute the amount gets, or null if it is below every pack. */
+  fromPackageType: string | null;
+}
+
+/**
+ * The ladder EVERY custom amount is priced against: the full five-pack ladder, on
+ * BOTH screens. A first-timer whose card only shows $10/$20/$30 still gets the $100
+ * pack's price per minute if she types $100 — so both screens quote the same amount
+ * identically.
+ */
+export const CUSTOM_RATE_LADDER: BonusPackSpec[] = REPEAT_BUYER_LADDER;
+
+/**
+ * A custom amount gets the SAME PRICE PER MINUTE as the biggest pack priced at or
+ * below it (on CUSTOM_RATE_LADDER, whatever screen she is on):
+ *   totalCoins = floor(amount × pack.totalCoins / pack.priceCents)
+ *   bonusCoins = totalCoins − amount
+ *   shown free = floor(bonusCoins / rate) · shown total = floor(totalCoins / rate)
+ * So the price per minute never creeps back up between two packs (the old rule
+ * copied the pack's bonus as a fixed number: $99 got 46 min against 70 for $100).
+ * At exactly a pack's price the quote IS that pack (same coins, same two claims).
+ * Below the cheapest pack: flat rate, no bonus.
+ * At 299¢/min: $25 → "+2 min FREE · 11 min total"; $60 → "+15 · 36"; $99 → "+26 · 59";
+ * $150 → "+54 · 105"; $200 → "+73 · 140".
+ * Checked by scripts/check-paywall-bonus-honesty.ts.
+ *
+ * PREVIEW ONLY. The server checkout still charges a custom amount at the FLAT rate
+ * (coins = cents, bonusCoins = 0 — see usdCentsToCoins / CUSTOM_PACKAGE_TYPE). Going
+ * live needs the server to grant the bonus with THIS function (same ladder, same
+ * rate), so the minutes she is shown are the minutes she is credited.
+ */
+export function quoteCustomAmount(
+  cents: number,
+  coinsPerMinute: number = COINS_PER_MINUTE,
+): CustomBonusQuote {
+  const rate = Math.max(1, coinsPerMinute);
+  const coins = cents > 0 ? usdCentsToCoins(cents) : 0;
+  const base = buildBonusTiers(CUSTOM_RATE_LADDER, coinsPerMinute)
+    .filter((t) => t.priceUsd <= coins)
+    .sort((a, b) => b.priceUsd - a.priceUsd)[0];
+  // Exactly a pack's price: return the pack itself, so the Custom field and the pack
+  // tile never disagree (at a non-default rate the floors could differ by a minute).
+  if (base && base.priceUsd === coins) {
+    return {
+      coins,
+      bonusCoins: base.bonusCoins,
+      totalCoins: base.totalCoins,
+      freeMinutesShown: base.freeMinutesShown,
+      totalMinutesShown: base.totalMinutesShown,
+      fromPackageType: base.packageType,
+    };
+  }
+  // Every pack has totalCoins ≥ priceCents, so totalCoins ≥ coins (bonus never < 0).
+  const totalCoins = base ? Math.floor((coins * base.totalCoins) / base.priceUsd) : coins;
+  const bonusCoins = totalCoins - coins;
+  return {
+    coins,
+    bonusCoins,
+    totalCoins,
+    freeMinutesShown: Math.floor(bonusCoins / rate),
+    totalMinutesShown: Math.floor(totalCoins / rate),
+    fromPackageType: base?.packageType ?? null,
+  };
+}
+
+// ---------------------------------------------------------------------------
+// PREVIEW ONLY — reading the custom-amount field on the bonus-pack paywalls.
+//
+// What she types is what she is charged, so nothing here may quietly turn one amount
+// into another. The old filter dropped every character but digits and ".", which made
+// "12,5" (a comma-decimal keyboard) into $125. Now:
+//   - a comma IS the decimal point ("12,5" → 12.50);
+//   - more than one separator ("1.000,00", "$1,000.00") is refused with the format
+//     hint, never guessed at;
+//   - more than two decimals ("25.555", or a pasted "12,345" that meant twelve
+//     thousand) is refused with the same hint, never cut down to an amount she did
+//     not type;
+//   - the amount is worked out in whole cents from the digits (no float rounding).
+// ---------------------------------------------------------------------------
+
+/** Shown when the field holds something that is not a plain amount. */
+export const CUSTOM_AMOUNT_FORMAT_HINT = "Enter an amount like 25 or 25.50";
+
+export type CustomAmountInput =
+  | { kind: "empty" }
+  /** Not a plain amount: no digit ("."), two separators, or three-plus decimals. */
+  | { kind: "invalid" }
+  | { kind: "amount"; cents: number };
+
+/** Keystroke/paste filter: a comma becomes the decimal point; everything that is not a
+ *  digit or a point is dropped ("$30" → "30", "USD 30" → "30", " 45 " → "45").
+ *  Separators are KEPT, so "1.000,00" stays visibly wrong instead of becoming 1000. */
+export function cleanCustomAmountInput(raw: string): string {
+  return raw.replace(/,/g, ".").replace(/[^0-9.]/g, "");
+}
+
+/** Read a cleaned field value. */
+export function parseCustomAmountInput(value: string): CustomAmountInput {
+  const v = value.trim();
+  if (v === "") return { kind: "empty" };
+  const m = /^(\d*)(?:\.(\d{0,2}))?$/.exec(v);
+  if (!m || !/\d/.test(v)) return { kind: "invalid" };
+  const whole = m[1] ? Number(m[1]) : 0;
+  const frac = Number(((m[2] ?? "") + "00").slice(0, 2));
+  return { kind: "amount", cents: whole * 100 + frac };
+}
+
+/** On blur, written the way money is: leading zeros dropped ("030" → "30"), a missing
+ *  zero added (".5" → "0.50"), one decimal padded to cents ("12,5" → "12.50"), a
+ *  dangling point dropped ("10." → "10"). Never changes the amount. Anything invalid
+ *  is left exactly as typed so its hint stays next to it. */
+export function tidyCustomAmountInput(value: string): string {
+  const v = value.trim();
+  if (parseCustomAmountInput(v).kind !== "amount") return value;
+  const [rawWhole, frac = ""] = v.split(".");
+  const whole = rawWhole.replace(/^0+(?=\d)/, "") || "0";
+  return frac ? `${whole}.${frac.padEnd(2, "0")}` : whole;
 }
