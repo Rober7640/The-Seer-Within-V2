@@ -42,7 +42,8 @@ let hardFails = 0;
 /** Operator-approved: typed dollars → [shown free, shown total] at 299¢/min. */
 const APPROVED: [number, number, number][] = [
   [15, 0, 5],
-  [25, 2, 11],
+  [25, 0, 8], // $20 flat (no bonus per operator) → $20–$29.99 custom is flat too
+
   [40, 6, 20],
   [45, 7, 22],
   [60, 15, 36],

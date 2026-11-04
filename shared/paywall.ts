@@ -95,8 +95,8 @@ export function defaultTier(tiers: PricingTier[], variant: PaywallVariant): Pric
 //   bonusCoins = max(free min in coins, total min in coins − price, 0)
 // and the tile renders the claimed numbers, never a re-derived rounding.
 // At $2.99/min (299¢):
-//   first-timer: $10 → 3:20 ("3 min") · $20 → 9:00 ("+2 min FREE", "9 min total")
-//                · $30 → 15:02 ("+5 min FREE", "15 min total")
+//   first-timer: $10 → 3:20 ("3 min") · $20 → 6:41 ("6 min", no bonus)
+//                · $30 → 15:02 ("+5 min FREE", "15 min total")  [no bonus on $10/$20 per operator]
 //   repeat buyer adds: $50 → 30:00 ("+13", "30") · $100 → 70:00 ("+36", "70")
 // Bonus coins are priced at the guide's own rate, so a guide with a different
 // cents/min still gets at least what the tile says.
@@ -123,7 +123,7 @@ export interface BonusPreviewTier extends PricingTier {
 /** First-timer card (LongCopyPaywall): the same $10/$20/$30 she knows today. */
 export const FIRST_TIMER_LADDER: BonusPackSpec[] = [
   { packageType: "popular", priceCents: 1000, freeMinutesShown: 0, totalMinutesShown: 3 },
-  { packageType: "best_value", priceCents: 2000, freeMinutesShown: 2, totalMinutesShown: 9, badge: "MOST POPULAR", recommended: true },
+  { packageType: "best_value", priceCents: 2000, freeMinutesShown: 0, totalMinutesShown: 6, badge: "MOST POPULAR", recommended: true },
   { packageType: "premium", priceCents: 3000, freeMinutesShown: 5, totalMinutesShown: 15, badge: "BEST VALUE" },
 ];
 
@@ -131,7 +131,7 @@ export const FIRST_TIMER_LADDER: BonusPackSpec[] = [
  *  preview-only key — the server has no such package today. */
 export const REPEAT_BUYER_LADDER: BonusPackSpec[] = [
   { packageType: "popular", priceCents: 1000, freeMinutesShown: 0, totalMinutesShown: 3 },
-  { packageType: "best_value", priceCents: 2000, freeMinutesShown: 2, totalMinutesShown: 9, badge: "MOST POPULAR", recommended: true },
+  { packageType: "best_value", priceCents: 2000, freeMinutesShown: 0, totalMinutesShown: 6, badge: "MOST POPULAR", recommended: true },
   { packageType: "premium", priceCents: 3000, freeMinutesShown: 5, totalMinutesShown: 15 },
   { packageType: "whale", priceCents: 5000, freeMinutesShown: 13, totalMinutesShown: 30 },
   { packageType: "whale_100", priceCents: 10000, freeMinutesShown: 36, totalMinutesShown: 70, badge: "BEST VALUE" },
@@ -210,7 +210,7 @@ export const CUSTOM_RATE_LADDER: BonusPackSpec[] = REPEAT_BUYER_LADDER;
  * copied the pack's bonus as a fixed number: $99 got 46 min against 70 for $100).
  * At exactly a pack's price the quote IS that pack (same coins, same two claims).
  * Below the cheapest pack: flat rate, no bonus.
- * At 299¢/min: $25 → "+2 min FREE · 11 min total"; $60 → "+15 · 36"; $99 → "+26 · 59";
+ * At 299¢/min: $25 → "8 min" (no bonus, $20-flat rate); $60 → "+15 · 36"; $99 → "+26 · 59";
  * $150 → "+54 · 105"; $200 → "+73 · 140".
  * Checked by scripts/check-paywall-bonus-honesty.ts.
  *
