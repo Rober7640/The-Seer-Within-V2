@@ -18,10 +18,15 @@ There are 12 reports in total: Soul Urge 1–9 plus the masters 11, 22 and 33. K
 |---|---|
 | `11-P1-plan.md` §4–§6 | The Soul Urge rows, the flat answers, and what the "trying to get you back" path changes |
 | `11-P2-su<N>-spine.md` | **Step 1.** The outline for one Soul Urge: the one idea, 12 beats, one card and one detail per card |
-| `11-P3-su<N>-report.md` | **Step 2.** The written report, with swap-in tags |
+| `11-P3-su<N>-report.md` | **Step 2.** The written report: a template with fill-in spots and versions (format below) |
 | `11-P3-su<N>-blind-read-<k>.md` | **Step 4.** Each blind read, with the key to which reading was which |
-| `scripts/check-report.py` | **Step 3.** The free text checks |
+| `scripts/check-report.py` | **Step 3.** The free text checks, run on all 242 readings the report can make |
 | `scripts/make-blind-copies.py` | **Step 4.** The clean, unlabelled files for the blind reader |
+| `../n8n/scripts/11-swapins.json` | The shared list: one set of lines per Expression and Life Path, used by all 12 reports |
+| `../n8n/scripts/lib11_assemble.py` | How a report + her numbers become her reading (one copy of the rules) |
+| `../n8n/scripts/check-11-assemble.py` | Proves the n8n fill code and the checker give the same reading for every buyer |
+| `../n8n/scripts/build-11-assemble.py` | Builds the n8n assembly flow from every written report |
+| `11-P4-pre-run-checklist.md` | What had to be locked before the other 11 reports were written |
 | `../n8n/scripts/11-acts.json` | Section jobs, Evelyn's night beats, exact lines, what's drawn on each card |
 | `../n8n/scripts/build-11-n8n.py`, lines 93–135 | Evelyn's voice and every ban |
 | `../sales-emails/11-E2-esl.md` | The free letter she read before buying. The report pays off its promises and never quotes it |
@@ -38,10 +43,7 @@ Write `11-P2-su<N>-spine.md` from the Soul Urge row:
 Show the outline to the operator before writing.
 
 ### 2. Write the report (one writer subagent, main model)
-Send the writer brief in **Appendix A**, filled in for this number. It writes `11-P3-su<N>-report.md` for the test buyer, with swap-in tags around anything that depends on a number other than the Soul Urge:
-`[[EX]]` what they saw · `[[LP]]` her pattern · `[[EXCUSE]]` · `[[REASON]]` · `[[FORK]]` path-only passages.
-
-Write the "trying to get you back" path first. The giving-it-back path comes after the report is approved.
+Send the writer brief in **Appendix A**, filled in for this number. It writes `11-P3-su<N>-report.md` as a template (see **The report format** below): the shared lines go in their fixed frames, and the report writes its own 3 excuse versions, 3 reason versions and both paths. Both paths are written in the same pass: 2 in 3 buyers get "giving it back".
 
 ### 3. Check it (main thread, free)
 ```
@@ -65,10 +67,38 @@ Turn the reader's notes into a short fix list, one line per fix, and show the op
 Nothing is final until the operator has read the whole report.
 
 ### 7. After approval
-1. Write the giving-it-back versions of the `[[FORK]]` passages.
-2. Do the next Soul Urge from step 1.
-3. Write the swap-in banks once, in everyday words: 11 "what they saw" lines and 11 "her pattern" lines (from Expression and Life Path), 3 excuses and 3 reasons. ⚠ The blind reader flagged the current wording, "someone who could run things and make them happen", as sounding like a form.
-4. n8n then **assembles**: pick the report by Soul Urge, fill in the name, date and swap-ins, build the PDF and send. No model at order time.
+1. `python3 docs/11/n8n/scripts/check-11-assemble.py` must say ALL MATCH.
+2. Rebuild the n8n test flow (`build-11-assemble.py`), import, run. n8n then **assembles**: pick the report by Soul Urge, pick her versions, fill her name, date and shared lines, build the PDF. No model at order time. Anything missing HOLDs the order.
+3. Do the next Soul Urge from step 1.
+
+## The report format
+
+`lib11_assemble.py` is the one reading of these rules. Line 3 of the report lists its 12 cards.
+
+| In the report | What it becomes |
+|---|---|
+| `{{FIRST}}` `{{BIRTH_NAME}}` `{{DOB}}` | Her first name, full birth name, date |
+| `{{EX.saw}}` etc. | A line from the shared list, by her Expression or Life Path |
+| `[[FORK get_back]]…[[/FORK]][[FORK giving]]…[[/FORK]]` | Versions. Adjacent blocks of one tag are one choice and she gets one. EXCUSE needs `0 1 2`, REASON `0 1 2`, FORK `get_back giving`. A block may be empty. Inline blocks touch with no space between; paragraph blocks sit on their own lines |
+| `⟪WRITE: …⟫` | A gap still to write. The report can't ship or build |
+
+**The shared list only fits if every report uses the same frames.** `check-report.py` fails a report that changes one. Each spot is used exactly once:
+
+| Spot | Frame, word for word | Where |
+|---|---|---|
+| `{{EX.saw}}` | They saw something in you: {{EX.saw}}. | card 3 |
+| `{{EX.use}}` | They kept {{EX.use}}, … | card 3 |
+| `{{LP.then}}` | the whole first paragraph of card 7 | card 7 |
+| `{{LP.now}}` | Someone decent turns up and {{LP.now}}. | card 7 |
+| `{{EXCUSE.quote}}` | … the line was "{{EXCUSE.quote}}" | card 5 |
+| `{{REASON.headline}}` | … because {{REASON.headline}}.** (end of card 10's bold first sentence) | card 10 |
+| `{{REASON.letter}}` | I'm never going to send this. {{REASON.letter}} So it stays here. | letter |
+| `{{EX.letter}}` | When I first knew you, {{EX.letter}} I liked that. | letter |
+| `{{EX.kept}}` | I kept {{EX.kept}}. | letter |
+| `{{EXCUSE.letter}}` | I told myself {{EXCUSE.letter}}. | letter |
+| `{{LP.letter}}` | a whole paragraph of the letter | letter |
+
+Written in each report, because they carry its own thing: card 5 after the quote (`[[EXCUSE 0|1|2]]`: why the line held, how she backed it up, how she still does their work), the sentence or two after card 10's bold line (`[[REASON 0|1|2]]`), and every path difference (`[[FORK …]]`): card 6's regret line, all of card 9, card 10's "they hold it out" paragraph, card 12's warning about the ask, the letter's last lines, and the close's line about the ask.
 
 ## Lessons that cost us a run
 - A full list of what's on a card gets written out as a list. Hand over one detail.
@@ -112,7 +142,7 @@ Fill in the `<…>` parts. Send it as written: the subagent has none of our conv
 >
 > **Don't repeat these measured failures:** card pictures as inventories · fixed last lines everywhere · paper homework · her Life Path pattern outside card 7 and the letter · the same sentence in two cards · choppy primer prose · openers that scold ("you won't like it") · telling her what her body felt · planning words on the page ("low point").
 >
-> **Swap-in markers:** `[[EX]]…[[/EX]]` · `[[LP]]…[[/LP]]` · `[[EXCUSE]]…[[/EXCUSE]]` · `[[REASON]]…[[/REASON]]` · `[[FORK]]…[[/FORK]]`. Keep them small; the rest must work for any SU <N> buyer.
+> **Fill-in spots and versions:** read "The report format" in product/0-REPORT-WORKFLOW-11.md and copy the structure of product/11-P3-su9-report.md exactly: every shared spot (`{{EX.saw}}` …) in its frame word for word, once each; `{{FIRST}}` `{{BIRTH_NAME}}` `{{DOB}}` for her name and date; and your own versions as `[[EXCUSE 0]]…[[/EXCUSE]][[EXCUSE 1]]…` (3), `[[REASON 0]]…` (3) and `[[FORK get_back]]…[[/FORK]][[FORK giving]]…[[/FORK]]` in the same places SU 9 has them. Read the shared list (n8n/scripts/11-swapins.json) so your frames read right around every line in it. Everything outside a version block must read right for every buyer.
 >
 > **Output:** improve-v1/v1-one-time-BEs/docs/11/product/11-P3-su<N>-report.md: a 3-line header (what this is, buyer, cards), then [OPENING] [CARD 1] … [CARD 12] [LETTER] [CLOSE] on their own lines, prose under each, no other headings. Run `python3 improve-v1/v1-one-time-BEs/docs/11/product/scripts/check-report.py <that file>` and fix every FAIL. Reply in under 200 words: the word-count table and anything you had to bend, and why.
 
@@ -140,6 +170,7 @@ Send it as written, with the three file paths from step 4. Use the same persona 
 | SU 9 v2 | blind read 2 | SU 9 v1 | **8** vs 7 | 6 vs 6 | **7** vs 6 | **6** vs 4 | **5** vs 4 |
 | SU 9 v3 | blind read 3 | SU 9 v2 | **8** vs 7 | **8** vs 7 | **8** vs 7 | 6 vs 6 | **6** vs 5 |
 | SU 9 v4 | blind read 4 | SU 9 v3 | **8** vs 7 | **7** vs 6 | **7** vs 6 | **7** vs 5 | **5** vs 4 |
+| SU 9 v5 giving path (Faketta: EX 1, LP 7) | blind read 5 | SU 9 v4 get-back, same name | 8 vs 8 | **8** vs 7 | **8** vs 7 | **7** vs 6 | **6** vs 5 |
 
 ⚠ Each read uses a fresh reader, and readers score differently (v1 got 8 for "worth $35" from reader 1, 6 from reader 2). Compare only within one read.
 
@@ -148,3 +179,6 @@ Send it as written, with the three file paths from step 4. Use the same persona 
 **Read 3 notes (cards 7–8 blame, [[LP]] echo, Tower lightning, "beside you now") fixed in v4.** Was open after read 3: cards 7 and 8 read like a telling-off ("Some of what's happened since is yours", "charging it to everybody since"): where reader 3 nearly closed it · the [[LP]] line ("clam up, chew on it") sits in both card 7 and the letter, so the letter still reads as built from the reading · the Tower is described without its lightning · "If somebody's beside you now" shows Evelyn doesn't know if she's with anyone · trust stuck at 6 across reads 2 and 3 · the swap-in banks need two wordings of each line (reading and letter), since v3's letter says what they saw in its own words.
 
 **Still open after read 4:** Evelyn's night still read as performance to reader 4 even on 5 cards (attention dropped at card 8's "I got up from the table"), though reader 3 praised the cut · the "take charge, get things done" line feels like a guess (swap-in bank risk) · short cards 4 and 6 felt thin · nothing specific about him (by rule: no invented facts) · the [[EX]]/[[LP]] banks need a reading wording and a letter wording.
+
+**Read 5 (2026-11-04), the first reading built by the assembler for a buyer who isn't the test buyer:** the giving path matched or beat the approved get-back path on all five. The reader preferred it because it closes ("I paid to be done with him"), and named the excuse-1 card 5 lines as her life ("it's only a cold", "but I'm okay"). Fixed after: card 6's "a regret you've been writing for them" (read as being told she invented it) and card 9's "under all that anger" (nothing set it up). **Still open, in both versions:** every card runs the same pattern (bold line, picture, "that's you") and felt mechanical by card 6; Evelyn's night still reads staged; her first name 7 times felt like a mail merge to this reader.
+

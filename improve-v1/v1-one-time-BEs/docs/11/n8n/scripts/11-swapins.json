@@ -1,44 +1,156 @@
 {
-  "9": {
-    "EX": {
-      "8": [
-        "a woman who could take charge and get things done",
-        "you were the one who handled things. Something needed doing, you did it, no fuss."
-      ]
+  "_note": "Shared fill-in lines for every 11 report (all 12 Soul Urges). Keys: EX and LP = her Expression / Life Path (1-9, 11, 22; a 33 uses 6). EXCUSE = one-digit Expression mod 3, REASON = one-digit Life Path mod 3 (11->2, 22->4, 33->6). Every line must read right in all 12 reports, so none may name or lean on one Soul Urge's subject. Frames each field drops into are in product/0-REPORT-WORKFLOW-11.md, 'The shared list'.",
+  "EX": {
+    "1": {
+      "saw": "a woman who went first while everyone else looked at their shoes",
+      "use": "the use of you, the part that stepped up so they didn't have to",
+      "letter": "you never waited to be told. You'd already started before anybody else had made up their mind.",
+      "kept": "the get-up-and-go"
     },
-    "LP": {
-      "7": [
-        "clammed up, chewed on it, and wouldn't move till you were sure",
-        "you clam up and wait till you're sure of them",
-        "When something gets to you, you go real quiet. You turn it over in your head for days and you don't budge, not till you know for certain."
-      ]
+    "2": {
+      "saw": "a woman who'd sit still and really listen, and make room for them",
+      "use": "the use of you, an ear that always had time for them",
+      "letter": "you'd stop what you were doing when I talked. You heard the whole thing, even the parts that went nowhere.",
+      "kept": "the listening"
     },
-    "EXCUSE": {
-      "2": [
-        "She was too much.",
-        "So \"too much\" sounded about right, even to you. It wasn't right. You were exactly as much as a woman who lets things reach her. They wanted less to deal with, and they called the difference your fault.",
-        "you were too much"
-      ]
+    "3": {
+      "saw": "a woman who lit up a room and made them feel like somebody",
+      "use": "the use of you, the part that made them look good",
+      "letter": "people perked up when you were around. You asked me things like my answer mattered.",
+      "kept": "the sparkle"
     },
-    "REASON": {
-      "1": [
-        "they can't stand to be looked at by the one person who knows",
-        "You're that person. You saw what was done with your softness, up close, and being in a room with that is more than they can face.",
-        "I can't face you. You know what I did, and you'd look at me like you know it."
-      ]
+    "4": {
+      "saw": "a woman who stayed put and kept her word",
+      "use": "the use of you, the part that showed up every single time",
+      "letter": "you said you'd be there and you were. You weren't going anywhere, and I knew it.",
+      "kept": "the steady part"
     },
-    "FORK": {
-      "get_back": [
-        "And their regret isn't about losing you. It's about losing what they had from you, the warmth that used to come their way without being asked for. That isn't the same thing as you.",
-        "They're trying to get you back, ⟦FIRST⟧.",
-        "And part of you is glad to hear it. Don't skip past that, and don't be ashamed of it either. I'm going to stay on it a minute, because of everything in these twelve cards, this is the part to watch closest.",
-        "Here's what their wish is really for. They don't want you. They want what used to come their way from you, pointed back at them again: the warmth, the way you let them land. They're holding your softness out with their hand open, waiting for you to walk all the way over and take it, so you'll be standing close enough to give it to them again.\n\nThey won't come down that path. A wish like theirs stays where it is and waits. It doesn't take a step.\n\nI told you you'd need to know which way this went, because one way it's a gift and the other way it's a snare, and the words sound the same either way. It's the snare. Every kind thing in their letter is going to read like a reason to go to them. It isn't one.",
-        "They didn't leave. They came right up to the table and stayed there, closer than they'd been all night. I'd have given a good deal to have them back over by the door.",
-        "So they hold it out and they want you to come to them. I told you, back in the first letter, what it means when someone holds a thing out like that, and this is it. They won't take one step toward you. They want you to take all of them.",
-        "Their letter ends with an ask. They want something from you in the last line. I've left it in. Do nothing with it.",
-        "Come back. Or if you won't, at least write me back.",
-        "I left their ask in so you'd see it for what it is. It's a bill, and nobody owes it, least of all you."
-      ]
+    "5": {
+      "saw": "a woman with some life in her, game for just about anything",
+      "use": "the use of you, the part that livened things up for them",
+      "letter": "you were up for anything. Whatever I came up with, you were in before I'd finished saying it.",
+      "kept": "the good times"
+    },
+    "6": {
+      "saw": "a woman who took care of everybody and never kept score",
+      "use": "the use of you, all the ways you made their life easier",
+      "letter": "you saw to everybody. Whoever needed something got it, and you never made anybody feel they owed you.",
+      "kept": "the help"
+    },
+    "7": {
+      "saw": "a woman who noticed things other people walked right past",
+      "use": "the use of you, the part that caught what they missed",
+      "letter": "you caught the little things nobody else did. Not much got by you.",
+      "kept": "the sharp eyes"
+    },
+    "8": {
+      "saw": "a woman who could walk into a mess and straighten it out",
+      "use": "the use of you, the part that got things done",
+      "letter": "you were the one who handled things. Something needed doing, you did it, no fuss.",
+      "kept": "the handy part"
+    },
+    "9": {
+      "saw": "a woman who'd give to anybody and look for the good in them first",
+      "use": "the use of you, the part that kept on giving",
+      "letter": "you thought the best of me. Even when I hadn't earned it, you'd find some reason to.",
+      "kept": "the second chances"
+    },
+    "11": {
+      "saw": "a woman who knew what they needed before they'd said a word",
+      "use": "the use of you, the part that kept track of their moods",
+      "letter": "you could tell what was going on with me from my face. I never had to explain myself.",
+      "kept": "the mind-reading"
+    },
+    "22": {
+      "saw": "a woman who could start with next to nothing and build something real",
+      "use": "the use of you, the part that did the heavy lifting",
+      "letter": "you could make something out of whatever you had. You didn't wait around for it to be handed to you.",
+      "kept": "what you built"
+    }
+  },
+  "LP": {
+    "1": {
+      "then": "When it went wrong with them, you put your head down and handled it by yourself. You didn't call anybody or let on. If something needed fixing, you fixed it, and if you couldn't, you went without. Asking would have meant explaining, and you'd had enough of being at somebody's mercy. Doing it alone got you through, and back then it made sense.",
+      "now": "you tell them you've got it before they've even offered, and soon enough they take you at your word and leave you be",
+      "letter": "When something goes wrong, you deal with it and I hear about it after, if I hear at all. You never once came to me with it. I'd made sure coming to me got you nowhere."
+    },
+    "2": {
+      "then": "When it went wrong with them, you said yes before you'd had a chance to think, and then lay awake sore about it. You kept checking where you stood, reading every look for a sign you were still liked. Keeping the peace kept things from getting worse, and when you didn't know what else to do, it was how you held on.",
+      "now": "you go along with all of it, then hold it against them on the quiet, till they feel something's off and drift away without ever knowing what",
+      "letter": "You'd agree to anything I said, and a day later it'd come out sideways. You kept asking if we were okay. I never gave you a straight answer, and I knew what that did to you."
+    },
+    "3": {
+      "then": "When it went wrong with them, you made a joke of it before anybody else could. You filled every day so full there wasn't a quiet minute left to think in. People asked and got the funny version, and the real thing stayed put. That got you through. If you'd stopped long enough to say it, you'd have had to feel it, and you weren't ready to.",
+      "now": "you crack a joke the minute it gets close to anything real, and after a while they quit trying",
+      "letter": "Something bothers you, you get funny and find a job that needs doing. I don't think I ever heard you say what was really wrong. I never asked. It was easier on me that way."
+    },
+    "4": {
+      "then": "When it went wrong with them, you got organized. You made rules for yourself and stuck to them. You worked till you dropped and went back over everything a second time, then checked it again. If every last thing was done right, nothing could catch you out. When nothing else would hold still, that was something you could hold on to, and it worked.",
+      "now": "you've got a way things have to be done, and you watch how they do it, till they feel checked up on and give up",
+      "letter": "When something gets to you, you start making lists. You do things over that were fine the first time, and you don't let up till it's all just so. A lot of what you were holding together was my mess. I know that."
+    },
+    "5": {
+      "then": "When it went wrong with them, you changed the scenery. Different place, different people, and every time you meant it to be the clean start. Sitting still meant sitting in it, and you couldn't. Moving on gave you air when you were short of it, and it got you out from under something heavy. Back then, that was the right instinct.",
+      "now": "you're itching to go the minute things start to feel ordinary, and they're left standing there wondering what they did",
+      "letter": "When something gets to you, you're halfway out the door before anybody knows anything's wrong. A lot of the time it was me you were getting away from. I can see that now."
+    },
+    "6": {
+      "then": "When it went wrong with them, you took care of everybody in sight. If people were busy being helped by you, nobody was close enough to see how you were doing. You ran yourself ragged, and some nights you were fed up with all of them and never said so. Being the one everybody needed gave you somewhere to stand, and it kept you going.",
+      "now": "you jump in and start taking care of them, and there's never an opening for them to do a thing for you, so they go find somebody who'll let them",
+      "letter": "Something upsets you and you go make yourself useful to somebody. Everybody gets your time but you, and you end up worn out and mad about it. I let you carry me right along with the rest of them. That's on me."
+    },
+    "7": {
+      "then": "When it went wrong with them, you clammed up, chewed on it, and wouldn't move till you were sure. You had good reason to. Late at night, on your own, you went over it and over it, hunting for the one thing that would settle it. You'd been hurt, and going quiet kept you standing while it had to.",
+      "now": "you clam up and wait till you're sure of them, and before long you've found what's wrong with them",
+      "letter": "When something gets to you, you go real quiet. You turn it over in your head for days and you don't budge, not till you know for certain. I gave you plenty to turn over. I know that too."
+    },
+    "8": {
+      "then": "When it went wrong with them, you took the wheel and kept both hands on it. You made the decisions, you kept everything running, and you didn't let one person see you need a thing. If you were in charge, nobody could pull the floor out from under you again. Staying on top of it held you together when you had every reason to fold.",
+      "now": "you take over everything and won't let them so much as carry a bag for you, till they feel like hired help and stop coming around",
+      "letter": "When something knocks you down, you grab the reins tighter. I never once saw you ask anybody for a hand. With me around, you'd have been a fool to. I'm the one who taught you that."
+    },
+    "9": {
+      "then": "When it went wrong with them, you gave. You gave to good causes and to people you'd never meet, to anybody whose story got to you, and you meant every bit of it. Up close was another matter. The people nearby always seemed to come up short. Giving from a distance let you go on caring at all, after caring up close had cost you so much.",
+      "now": "you're kind to them the way you're kind to strangers, warm but at arm's length, and the first time they let you down, you're done",
+      "letter": "When something gets to you, you go do something good for a stranger. You never expected much from the people right in front of you. I'm a big part of the reason."
+    },
+    "11": {
+      "then": "When it went wrong with them, you started reading into everything. A short answer or a door shut a little too hard, and you'd be up half the night working out what it meant. Most of the time there was something there to see. Watching that close was how you saw trouble coming before it got to you, and back then you needed that.",
+      "now": "you read a whole lot into one offhand thing they say, and they get tired of answering for things they never meant",
+      "letter": "Anything bothers you and you go hunting for what it means. A look from me could put you off for a week, and I knew it. I gave you reasons to keep watching me. I won't pretend I didn't."
+    },
+    "22": {
+      "then": "When it went wrong with them, you worked the whole thing out in your head, a long way down the road, and wouldn't start anything till every piece was in place. Other people saw you standing still. To you it was the only way not to get caught out twice, and it made sense.",
+      "now": "you need to know how it all ends before you'll take one step with them, and they get tired of waiting at the starting line",
+      "letter": "When something shakes you, you sit down and think it through from start to finish before you'll so much as move. With me you never knew where anything was headed. That part's mine."
+    }
+  },
+  "EXCUSE": {
+    "0": {
+      "quote": "It was nobody's fault.",
+      "letter": "it was nobody's fault"
+    },
+    "1": {
+      "quote": "She'll be fine.",
+      "letter": "you'd be fine"
+    },
+    "2": {
+      "quote": "She was too much.",
+      "letter": "you were too much"
+    }
+  },
+  "REASON": {
+    "0": {
+      "headline": "they're too proud to be the one in the wrong",
+      "letter": "I'm too proud. I've never once gone to anybody hat in hand, and I'm not going to start with you."
+    },
+    "1": {
+      "headline": "they can't stand to be looked at by the one person who knows",
+      "letter": "I can't face you. You know what I did, and you'd look at me like you know it."
+    },
+    "2": {
+      "headline": "doing nothing doesn't cost them a thing",
+      "letter": "Nothing happens to me if I leave it be, and I've always taken the easy way out."
     }
   }
 }
