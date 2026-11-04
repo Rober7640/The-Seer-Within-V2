@@ -418,6 +418,17 @@ router.post('/checkout-view', requireAuth, async (req: Request, res: Response) =
     } catch (e) {
       logger.error('experiment exposure failed:', e);
     }
+    // Long-copy test ("updated test 1") exposure — same pattern, separate key.
+    // Only logs when that test is running + in scope; inert while it's draft.
+    try {
+      const lcPersonaId = await resolveExperimentPersonaId(req.userId!, personaId ?? null);
+      const a = await assign(LONGCOPY_EXPERIMENT_KEY, req.userId!, { personaId: lcPersonaId });
+      if (a?.enrolled) {
+        await logExposure(LONGCOPY_EXPERIMENT_KEY, req.userId!, a.variant, source, { personaId: lcPersonaId });
+      }
+    } catch (e) {
+      logger.error('longcopy exposure failed:', e);
+    }
     posthog.capture({ distinctId: req.userId!, event: 'checkout_view_logged', properties: { package_type: packageType, persona_id: personaId ?? null, source } });
     res.json({ ok: true });
   } catch (error) {
