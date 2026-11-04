@@ -11,7 +11,6 @@ import type { PricingTier } from "@shared/types";
 import {
   CUSTOM_TOPUP_MAX_USD,
   CUSTOM_PACKAGE_TYPE,
-  usdCentsToCoins,
   coinsToClock,
   COINS_PER_MINUTE,
 } from "@shared/types";
@@ -20,6 +19,7 @@ import {
   toTierView,
   type PaywallVariant,
 } from "./paywallCopy";
+import { resolveCustomTierCoins } from "@shared/paywall";
 
 /** A guide + its per-minute rate, for the "what your balance buys" grid. */
 export interface GuideRate {
@@ -74,18 +74,26 @@ export default function CreditsStoreView({
   const [customInput, setCustomInput] = useState("");
   const customDollars = parseFloat(customInput);
   const customCents = Number.isFinite(customDollars) ? Math.round(customDollars * 100) : 0;
-  const customCoins = customCents > 0 ? usdCentsToCoins(customCents) : 0;
+  // Coins incl. any big-pack bonus — same resolver the server grants with, so
+  // the preview the buyer sees equals what lands in their wallet.
+  const customTier = customCents > 0 ? resolveCustomTierCoins(customCents, tiers) : null;
   const customTooLow = customInput.trim() !== "" && customCents > 0 && customCents < floorCents;
   const customTooHigh = customCents > CUSTOM_TOPUP_MAX_USD * 100;
   const customValid = customCents >= floorCents && !customTooHigh;
+  // Floor to one decimal, exactly like the pack tiles (toTierView), so the custom
+  // line never promises more free time than the wallet actually receives.
+  const customBonusMinutes =
+    customTier && customTier.bonusCoins > 0
+      ? Math.floor((customTier.bonusCoins / COINS_PER_MINUTE) * 10) / 10
+      : 0;
 
   const buyCustom = () => {
-    if (!customValid) return;
+    if (!customValid || !customTier) return;
     onSelectTier({
       packageType: CUSTOM_PACKAGE_TYPE,
-      coins: customCoins,
-      bonusCoins: 0,
-      totalCoins: customCoins,
+      coins: customTier.coins,
+      bonusCoins: customTier.bonusCoins,
+      totalCoins: customTier.totalCoins,
       priceUsd: customCents,
       label: money(customCents),
     });
@@ -289,6 +297,12 @@ export default function CreditsStoreView({
         {(customTooLow || customTooHigh) && (
           <p className="mt-2 text-[11px] text-rose-300/90">
             {customTooHigh ? `Maximum top-up is $${CUSTOM_TOPUP_MAX_USD}.` : `Minimum top-up is $${floorUsd}.`}
+          </p>
+        )}
+        {customValid && customBonusMinutes > 0 && (
+          <p className="mt-2 inline-flex items-center gap-1.5 text-[11px] font-semibold text-emerald-300">
+            <span className="grid h-4 w-4 place-items-center rounded-full bg-emerald-400/15 text-[10px]">✓</span>
+            Includes +{customBonusMinutes} min free at this amount
           </p>
         )}
       </div>
