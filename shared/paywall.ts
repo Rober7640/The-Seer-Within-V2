@@ -4,8 +4,35 @@
 // §3.14–3.15.
 
 import type { PricingTier } from "./types";
+import { usdCentsToCoins } from "./types";
 
 export type PaywallVariant = "A" | "B";
+
+/**
+ * Coins a custom top-up amount buys, INCLUDING any bonus — the single source of
+ * truth shared by the server grant (resolveCustomTier) and the client preview
+ * (the custom field + checkout popup), so what a buyer is shown always equals
+ * what they are granted.
+ *
+ * - `coins` = the flat-rate base (the honest minimum this amount always buys).
+ * - The richest pack priced at or below the amount sets the rate: its
+ *   total-coins-per-cent is scaled onto the custom amount (floored), so a custom
+ *   amount above a bonus pack inherits that pack's generosity. Never below base.
+ * - `bonusCoins` = whatever that scaling adds on top of the base.
+ */
+export function resolveCustomTierCoins(
+  amountCents: number,
+  tiers: Array<{ priceUsd: number; totalCoins: number }>,
+): { coins: number; bonusCoins: number; totalCoins: number } {
+  const baseCoins = usdCentsToCoins(amountCents);
+  const anchor = tiers
+    .filter((t) => t.priceUsd <= amountCents && t.priceUsd > 0)
+    .sort((a, b) => b.priceUsd - a.priceUsd)[0];
+  const totalCoins = anchor
+    ? Math.max(baseCoins, Math.floor((amountCents * anchor.totalCoins) / anchor.priceUsd))
+    : baseCoins;
+  return { coins: baseCoins, bonusCoins: Math.max(0, totalCoins - baseCoins), totalCoins };
+}
 
 /**
  * Apply the variant-B badge presentation to a persona's real pricing tiers:

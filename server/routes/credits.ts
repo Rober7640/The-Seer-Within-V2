@@ -6,7 +6,7 @@ import { eq, and, ne, desc, sql } from 'drizzle-orm';
 import { requireAuth, verifyToken } from '../lib/auth';
 import { getPersonaPricing } from '../lib/personaPricing';
 import { DEFAULT_PRICING, CUSTOM_TOPUP_MAX_USD, CUSTOM_PACKAGE_TYPE, WELCOME_PACK_COINS, WELCOME_PACK_PRICE_CENTS, usdCentsToCoins, coinsToClock, minutesToCoins, COINS_PER_MINUTE, type PricingTier } from '../../shared/types';
-import { applyVariantPresentation } from '@shared/paywall';
+import { applyVariantPresentation, resolveCustomTierCoins } from '@shared/paywall';
 import { resolvePaywallVariant, assign, logExposure, paywallScopePersonaId, PAYWALL_EXPERIMENT_KEY } from '../lib/experiments';
 import Stripe from 'stripe';
 import { getStripe, verifyStripeWebhook, activeStripeAccountTag } from '../lib/stripeAccount';
@@ -77,24 +77,13 @@ function resolveCustomTier(
   if (amountCents < floor) return { error: `Minimum top-up is $${Math.round(floor / 100)}` };
   if (amountCents > cap) return { error: `Maximum top-up is $${CUSTOM_TOPUP_MAX_USD}` };
 
-  // Base coins at the flat rate (the honest minimum this amount always buys).
-  const baseCoins = usdCentsToCoins(amountCents);
-
-  // Richest pack priced at or below the custom amount drives the rate.
-  const anchor = pricing.tiers
-    .filter(t => t.priceUsd <= amountCents && t.priceUsd > 0)
-    .sort((a, b) => b.priceUsd - a.priceUsd)[0];
-
-  // Scale that pack's total-coins-per-cent onto the custom amount; floor so the
-  // granted coins never exceed a clean rate, and never fall below the flat base.
-  const totalCoins = anchor
-    ? Math.max(baseCoins, Math.floor((amountCents * anchor.totalCoins) / anchor.priceUsd))
-    : baseCoins;
-  const bonusCoins = Math.max(0, totalCoins - baseCoins);
+  // Coins (incl. any big-pack bonus) via the shared resolver, so the server
+  // grant always matches the client preview — single source of truth.
+  const { coins, bonusCoins, totalCoins } = resolveCustomTierCoins(amountCents, pricing.tiers);
 
   return {
     packageType: CUSTOM_PACKAGE_TYPE,
-    coins: baseCoins,
+    coins,
     bonusCoins,
     totalCoins,
     priceUsd: amountCents,
