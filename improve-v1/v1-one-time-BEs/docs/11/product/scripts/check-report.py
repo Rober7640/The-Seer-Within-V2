@@ -13,6 +13,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "../
 import lib11_assemble as L
 
 path = sys.argv[1]
+SU = int(re.search(r"su(\d+)-report", os.path.basename(path)).group(1))
 BAND = {"opening": (150, 260), "letter": (400, 600), "close": (20, 90)}
 for c in (1, 8, 9, 10, 12): BAND[str(c)] = (450, 650)            # big
 for c in (3, 5, 7, 11):     BAND[str(c)] = (250, 350)            # medium
@@ -40,6 +41,9 @@ def rules(sec):
     yield "card 12: both bold labels", "**Stop going back.**" in c12 and "**The one thing to do.**" in c12
     yield "card 12: the five-to-seven-day window", "five to seven days" in c12
     yield "close: exact last line", last.rstrip().endswith("It's back. What you do with it is on you.")
+    yield "card 5: the excuse line in quotes", '"' in sec["5"]
+    yield "letter: I told myself (the excuse, echoed)", "I told myself" in sec["letter"]
+    if SU == 4: yield "card SU 4: says once that if she isn't safe, that comes first", "safe where you are" in low or "not safe" in low
     unsaid = re.search(r'"([^"]+)"', sec["11"])
     yield "unsaid sentence word for word in card 11 and the letter", bool(unsaid) and unsaid.group(1) in sec["letter"]
     for label, rx in BANNED.items():
@@ -71,6 +75,20 @@ FRAMES = {"{{EX.saw}}": "They saw something in you: {{EX.saw}}.", "{{EX.use}}": 
           "{{REASON.headline}}": "because {{REASON.headline}}.**",
           "{{REASON.letter}}": "I'm never going to send this. {{REASON.letter}} So it stays here."}
 raw = open(path, encoding="utf-8").read()
+
+# The deal: each card from its act's pool, the must-cards at 8/10/12, Death only at 8 or 10, none twice.
+import json
+acts = json.load(open(os.path.join(os.path.dirname(L.BANK_PATH), "11-acts.json"), encoding="utf-8"))
+slugs = [n.lower().replace(" ", "-") for n in tpl["cards"]]
+pool = {i: acts["pools"][f"act{(i - 1) // 3 + 1}"] for i in range(1, 13)}
+bad = [f"{i} {s}" for i, s in enumerate(slugs, 1) if s not in pool[i]]
+bad += [f"{i} {slugs[i-1]} (needs {'/'.join(m)})" for i, m in ((int(k), v) for k, v in acts["deal_rules"]["must"].items()) if slugs[i-1] not in m]
+bad += [f"{i} death" for i, s in enumerate(slugs, 1) if s == "death" and i not in acts["deal_rules"]["death_only_at"]]
+bad += [f"twice: {s}" for s in set(slugs) if slugs.count(s) > 1]
+print("CARDS")
+print(f"  {'ok  ' if not bad else 'FAIL'} " + (" · ".join(bad) if bad else "all 12 legal: " + ", ".join(tpl["cards"])))
+if bad: fails.append("cards")
+print()
 print("FRAMES")
 for spot, frame in FRAMES.items():
     n, f = raw.count(spot) - raw.split("\n", 3)[1].count(spot), raw.count(frame)
@@ -86,7 +104,7 @@ n = 0
 for ex in L.NUMBER_KEYS:
     for lp in L.NUMBER_KEYS:
         for fork in ("get_back", "giving"):
-            keys = L.keys_for(9, int(ex), int(lp)); keys["FORK"] = fork
+            keys = L.keys_for(SU, int(ex), int(lp)); keys["FORK"] = fork
             who = f"EX {ex} · LP {lp} · {fork}"
             n += 1
             try:

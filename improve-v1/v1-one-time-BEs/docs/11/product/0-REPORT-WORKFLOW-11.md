@@ -98,6 +98,16 @@ Nothing is final until the operator has read the whole report.
 
 Written in each report, because they carry its own thing: card 5's one excuse (the line in quotes, then why it held, how she backed it up, how she still does their work; the letter's "I told myself …" echoes the same line), the sentence or two after card 10's bold line (`[[REASON 0|1|2]]`), and every path difference (`[[FORK …]]`): card 6's regret line, all of card 9, card 10's "they hold it out" paragraph, card 12's warning about the ask, the letter's last lines, and the close's line about the ask.
 
+## The run for the other 11 (operator: "just proceed", 2026-11-04)
+
+- **Order:** batches 1–4, 5–8, then 11, 22, 33. Four writers at a time.
+- **Per Soul Urge:** one writer does the outline and the report (`check-report.py` until ALL PASS) → main thread reads it → one blind read against SU 9 (same buyer, both arms filled by the assembler), alternating which is A → up to 2 fix rounds → commit.
+- **Pass bar:** "worth $35" ≥ 7, and no score more than 1 below SU 9 in the same read.
+- **Stop rule:** still failing after 2 fix rounds → park it, note why, move on. A parked report doesn't ship.
+- **Hands off:** never touches live n8n, Stripe or AWeber; never sends anything.
+- **Writer extras** (from read 5): cards don't all run one pattern; `{{FIRST}}` at most 5 times; card 5 has one excuse; SU 4 says once that her safety comes first.
+- **The operator still reads every report before anything ships.** The outlines weren't shown first (operator's call).
+
 ## Lessons that cost us a run
 - A full list of what's on a card gets written out as a list. Hand over one detail.
 - A rule given to every section gets obeyed in every section. Fixed last lines on 11 cards made one formula.

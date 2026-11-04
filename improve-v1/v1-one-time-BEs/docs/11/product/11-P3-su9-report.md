@@ -86,7 +86,7 @@ Here's their regret, plain: teaching you that going soft costs you.
 
 Two ministers in white kneel on the Hierophant card with their backs to us, being taught. You can't see their faces. You can only see that they're taking the lesson in.
 
-You took it in better than anyone meant you to. [[FORK get_back]]And their regret isn't about losing you. It's about losing what they had from you, the warmth that used to come their way without being asked for. That isn't the same thing as you.[[/FORK]][[FORK giving]]They don't regret losing you, and they don't lie awake over it. If some part of you has hoped that somewhere they miss you, and would give anything to have you back, I won't let you go on hoping it. They don't.[[/FORK]] A regret like theirs pays nothing back and reaches nobody. You'll want to read it as love. It isn't.
+You took it in better than anyone meant you to. [[FORK get_back]]And their regret isn't about losing you. It's about losing what they had from you, the warmth that used to come their way without being asked for. That isn't the same thing as you.[[/FORK]][[FORK giving]]Their regret isn't about wanting you back. Walking away from you wasn't easy for them, and you cross their mind more than they'd say. But if some part of you has hoped they'd give anything to have you back, I won't let you go on hoping it. They wouldn't.[[/FORK]] A regret like theirs pays nothing back and reaches nobody. You'll want to read it as love. It isn't.
 
 [CARD 7]
 
