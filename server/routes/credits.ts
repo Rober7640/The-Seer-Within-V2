@@ -55,13 +55,19 @@ function resolveTier(packageType: string, pricing: { tiers: Array<{ packageType:
 
 /**
  * Build a synthetic tier for a CUSTOM top-up amount (in cents). Coins are
- * computed server-side from the flat per-minute rate (never trusting the
- * client), and the amount is validated against the floor (the persona's
- * cheapest pack) and the platform cap. Returns { error } if out of bounds.
+ * computed server-side (never trusting the client), and the amount is validated
+ * against the floor (the persona's cheapest pack) and the platform cap.
+ *
+ * BONUS: a custom amount inherits the SAME value-per-dollar as the richest named
+ * pack priced at or below it. So a $60 custom gets the $50-pack rate (bonus
+ * included), never a worse deal than buying that pack — and anything below the
+ * first bonused pack ($30) gets the plain flat rate (no bonus), identical to
+ * $10/$20. The bonus is derived, never a hand-set number, so it can't drift from
+ * the packs. Returns { error } if out of bounds.
  */
 function resolveCustomTier(
   amountCents: number,
-  pricing: { tiers: Array<{ priceUsd: number }> },
+  pricing: { tiers: Array<{ coins: number; bonusCoins: number; totalCoins: number; priceUsd: number }> },
 ): PricingTier | { error: string } {
   if (!Number.isFinite(amountCents) || !Number.isInteger(amountCents)) {
     return { error: 'Invalid custom amount' };
@@ -70,12 +76,27 @@ function resolveCustomTier(
   const cap = CUSTOM_TOPUP_MAX_USD * 100;
   if (amountCents < floor) return { error: `Minimum top-up is $${Math.round(floor / 100)}` };
   if (amountCents > cap) return { error: `Maximum top-up is $${CUSTOM_TOPUP_MAX_USD}` };
-  const coins = usdCentsToCoins(amountCents);
+
+  // Base coins at the flat rate (the honest minimum this amount always buys).
+  const baseCoins = usdCentsToCoins(amountCents);
+
+  // Richest pack priced at or below the custom amount drives the rate.
+  const anchor = pricing.tiers
+    .filter(t => t.priceUsd <= amountCents && t.priceUsd > 0)
+    .sort((a, b) => b.priceUsd - a.priceUsd)[0];
+
+  // Scale that pack's total-coins-per-cent onto the custom amount; floor so the
+  // granted coins never exceed a clean rate, and never fall below the flat base.
+  const totalCoins = anchor
+    ? Math.max(baseCoins, Math.floor((amountCents * anchor.totalCoins) / anchor.priceUsd))
+    : baseCoins;
+  const bonusCoins = Math.max(0, totalCoins - baseCoins);
+
   return {
     packageType: CUSTOM_PACKAGE_TYPE,
-    coins,
-    bonusCoins: 0,
-    totalCoins: coins,
+    coins: baseCoins,
+    bonusCoins,
+    totalCoins,
     priceUsd: amountCents,
     label: `$${(amountCents / 100).toFixed(2)}`,
   };
