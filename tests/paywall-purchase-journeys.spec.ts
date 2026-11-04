@@ -104,6 +104,49 @@ test.describe("paywall purchase journeys", () => {
     await expect.poll(() => getBalance(page, token), { timeout: 30000, intervals: [1000] }).toBe(before + 1700);
   });
 
+  test("buys the $30 pack — gets the BONUS (15:00 = 4485 coins, not the flat 3000)", async ({ page }) => {
+    const { token, evelynId } = await registerCustomer(page);
+    const before = await getBalance(page, token);
+
+    await page.goto(`/credits?personaId=${evelynId}`);
+    await expect(page.getByRole("heading", { name: /Add to your balance/i })).toBeVisible();
+
+    // The $30 pack is the third tile (packs: $10, $20, $30, $50).
+    await page.getByRole("button", { name: "Keep going", exact: true }).nth(2).click();
+    const dialog = page.getByRole("dialog");
+    await expect(dialog).toBeVisible();
+    await expect(dialog.getByText("$30.00").first()).toBeVisible();
+
+    await dialog.getByRole("button", { name: /Credit Card/i }).click();
+    await fillStripeCard(dialog, STRIPE_OK);
+    await dialog.getByRole("button", { name: /Pay \$30\.00/i }).click();
+
+    // 3000 base + 1485 bonus = 4485 coins (exactly 15:00 at 299 coins/min).
+    await expect.poll(() => getBalance(page, token), { timeout: 30000, intervals: [1000] }).toBe(before + 4485);
+  });
+
+  test("buys a CUSTOM $60 — inherits the $50-pack rate (36:00 = 10764 coins, bonus included)", async ({ page }) => {
+    const { token, evelynId } = await registerCustomer(page);
+    const before = await getBalance(page, token);
+
+    await page.goto(`/credits?personaId=${evelynId}`);
+    await page.getByPlaceholder(/custom amount/i).fill("60");
+    const buy = page.getByRole("button", { name: "Buy", exact: true });
+    await expect(buy).toBeEnabled();
+    await buy.click();
+
+    const dialog = page.getByRole("dialog");
+    await expect(dialog).toBeVisible();
+    await expect(dialog.getByText("$60.00").first()).toBeVisible();
+
+    await dialog.getByRole("button", { name: /Credit Card/i }).click();
+    await fillStripeCard(dialog, STRIPE_OK);
+    await dialog.getByRole("button", { name: /Pay \$60\.00/i }).click();
+
+    // 6000 base, scaled by the $50 pack's rate (8970/5000) → floor = 10764 coins (36:00).
+    await expect.poll(() => getBalance(page, token), { timeout: 30000, intervals: [1000] }).toBe(before + 10764);
+  });
+
   test("a DECLINED card shows an error and does NOT credit the balance", async ({ page }) => {
     const { token, evelynId } = await registerCustomer(page);
     const before = await getBalance(page, token);
