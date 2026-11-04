@@ -37,6 +37,27 @@ BUYERS = [
      "dob": "1958-03-03", "expect": {"su": 9, "ex": 11, "lp": 11, "FORK": "giving"}},
 ]
 
+# One test buyer per written Soul Urge and path (invented names; numbers worked out, not typed).
+# A Soul Urge whose report isn't written (or is parked) is left out, so the run never HOLDs on purpose.
+MORE = [("Rhonda Rose Testerly", "1961-04-12"), ("Judith Mae Testerly", "1961-04-12"),
+        ("Gail Lynn Testerly", "1961-04-12"), ("Marsha Sue Testerly", "1961-04-12"),
+        ("Linda Ann Testerly", "1961-04-12"), ("Patty Ann Testerly", "1963-02-17"),
+        ("Wanda Ann Testerly", "1961-04-12"), ("Sandra Ann Testerly", "1963-02-17"),
+        ("Carol Mae Testerly", "1961-04-12"), ("Donna Mae Testerly", "1963-02-17"),
+        ("Cheryl Lynn Testerly", "1962-09-14"), ("Sherry Lynn Testerly", "1961-04-12"),
+        ("Peggy Ann Testerly", "1961-04-12"), ("Norma Sue Testerly", "1961-04-12"),
+        ("Sharon Lynn Testerly", "1961-04-12"), ("Brenda Ann Testerly", "1963-02-17"),
+        ("Joyce Sue Testerly", "1961-04-12"), ("Bonnie Sue Testerly", "1959-08-23"),
+        ("Karen Mae Testerly", "1961-04-12"), ("Debra Mae Testerly", "1961-04-12"),
+        ("Diane Sue Testerly", "1961-04-12"), ("Vicki Beth Testerly", "1961-04-12")]
+_written = L.written_reports()
+for _n, _d in MORE:
+    _su, _ex, _lp, _ = L.numbers(_n, _d)
+    if str(_su) not in _written: continue
+    _f = _n.split()[0]
+    BUYERS.append({"order": f"cs_test_11_assemble_{_f.lower()}", "name": _n, "first": _f, "dob": _d,
+                   "expect": {"su": _su, "ex": _ex, "lp": _lp, "FORK": L.keys_for(_su, _ex, _lp)["FORK"]}})
+
 # Reuse the proven pieces of the writing flow without running its flag parser.
 _argv, sys.argv = sys.argv, [sys.argv[0]]
 _spec = importlib.util.spec_from_file_location("b11", os.path.join(HERE, "build-11-n8n.py"))
@@ -169,7 +190,7 @@ def build():
          "type": "n8n-nodes-base.manualTrigger", "typeVersion": 1, "position": [-620, 300]}]
     who = " · ".join(f"{f['first']} ({f['expect']['FORK']})" for f in BUYERS)
     for _ in [
-        B.code("T1 · three test orders", [-420, 300],
+        B.code(f"T1 · {len(BUYERS)} test orders", [-420, 300],
                "// ⛔ TEST ONLY. Invented buyers: what the Stripe webhook + intake would carry.\n"
                "return " + json.dumps(items, ensure_ascii=False, indent=2) + ";",
                f"Invented buyers: {who}. Each makes its own PDF."),
@@ -196,7 +217,7 @@ def build():
     order = [n["name"] for n in nodes]
     links = {a: to(b) for a, b in zip(order, order[1:])}
     sus = ", ".join(tpls)
-    return {"name": f"11 · Unsent Letter — ASSEMBLY TEST (fixed reports: SU {sus}; no model; never delivers; 3 test buyers)",
+    return {"name": f"11 · Unsent Letter — ASSEMBLY TEST (fixed reports: SU {sus}; no model; never delivers; {len(BUYERS)} test buyers)",
             "nodes": nodes, "connections": links, "active": False,
             "settings": {"executionOrder": "v1", "saveManualExecutions": True,
                          "saveDataErrorExecution": "all", "saveDataSuccessExecution": "all"},
