@@ -1,5 +1,5 @@
 {
-  "_note": "Shared fill-in lines for every 11 report (all 12 Soul Urges). Keys: EX and LP = her Expression / Life Path (1-9, 11, 22; a 33 uses 6). EXCUSE = one-digit Expression mod 3, REASON = one-digit Life Path mod 3 (11->2, 22->4, 33->6). Every line must read right in all 12 reports, so none may name or lean on one Soul Urge's subject. Frames each field drops into are in product/0-REPORT-WORKFLOW-11.md, 'The shared list'.",
+  "_note": "Shared fill-in lines for every 11 report (all 12 Soul Urges). Keys: EX and LP = her Expression / Life Path (1-9, 11, 22; a 33 uses 6). REASON = one-digit Life Path mod 3 (11->2, 22->4, 33->6). Every line must read right in all 12 reports, so none may name or lean on one Soul Urge's subject. Frames each field drops into are in product/0-REPORT-WORKFLOW-11.md, 'The shared list'.",
   "EX": {
     "1": {
       "saw": "a woman who went first while everyone else looked at their shoes",
@@ -123,20 +123,6 @@
       "then": "When it went wrong with them, you worked the whole thing out in your head, a long way down the road, and wouldn't start anything till every piece was in place. Other people saw you standing still. To you it was the only way not to get caught out twice, and it made sense.",
       "now": "you need to know how it all ends before you'll take one step with them, and they get tired of waiting at the starting line",
       "letter": "When something shakes you, you sit down and think it through from start to finish before you'll so much as move. With me you never knew where anything was headed. That part's mine."
-    }
-  },
-  "EXCUSE": {
-    "0": {
-      "quote": "It was nobody's fault.",
-      "letter": "it was nobody's fault"
-    },
-    "1": {
-      "quote": "She'll be fine.",
-      "letter": "you'd be fine"
-    },
-    "2": {
-      "quote": "She was too much.",
-      "letter": "you were too much"
     }
   },
   "REASON": {

@@ -68,5 +68,6 @@
 - **C:** `lib11_assemble.py` (one copy of the rules), `check-report.py` (all 242 readings plus the frame check), `check-11-assemble.py` (JS = Python for all 242, plus the three buyers end to end), `run-11-assemble.cjs` (local runner, moved out of the scratchpad), `make-blind-copies.py --buyer/--dob`.
 - **D1:** n8n flow QFWXGBTBzdg0wiJL updated in place. Runs 51955 and 51956 are green: Testina (get back), Faketta (giving) and Gloria (EX 11 / LP 11, giving) each gave a 1.66 MB PDF.
 - **D2:** blind read 5 (`11-P3-su9-blind-read-5.md`). The giving path matched or beat v4 on all five scores. Two fixes made.
+- **Trim (operator, same day):** card 5 cut from 3 excuses to 1 (SU 9 keeps "She was too much", the one in approved v4). Each report now writes its own excuse; it left the shared list. Saves ~400 words of writing per Soul Urge.
 - **Still the operator's:** A2 (open a PDF from run 51956 and check the layout), A3 (the 12 Soul Urge rows), A5 (the 11 outlines, once written), A6 (pass bar and stop rule).
 

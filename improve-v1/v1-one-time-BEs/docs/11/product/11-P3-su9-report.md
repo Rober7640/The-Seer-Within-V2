@@ -1,5 +1,5 @@
-11-P3 — The Unsent Letter: the fixed report for every Soul Urge 9 buyer (softness · cover word "strong"). v5 template: v4 approved by the operator 2026-11-04, fill-in spots moved to the shared list.
-Fill-ins: {{FIRST}} {{BIRTH_NAME}} {{DOB}} · shared list ../n8n/scripts/11-swapins.json: {{EX.saw|use|letter|kept}} {{LP.then|now|letter}} {{EXCUSE.quote|letter}} {{REASON.headline|letter}} · versions written here: [[EXCUSE 0|1|2]] [[REASON 0|1|2]] [[FORK get_back|giving]].
+11-P3 — The Unsent Letter: the fixed report for every Soul Urge 9 buyer (softness · cover word "strong"). v5 template: v4 approved by the operator 2026-11-04, fill-in spots moved to the shared list; one excuse (2026-11-04).
+Fill-ins: {{FIRST}} {{BIRTH_NAME}} {{DOB}} · shared list ../n8n/scripts/11-swapins.json: {{EX.saw|use|letter|kept}} {{LP.then|now|letter}} {{REASON.headline|letter}} · versions written here: [[REASON 0|1|2]] [[FORK get_back|giving]].
 Cards: 1 the Empress · 2 the Emperor · 3 the Fool · 4 the High Priestess · 5 the Hanged Man · 6 the Hierophant · 7 the Lovers · 8 the Tower · 9 the Moon · 10 the Sun · 11 Temperance · 12 Strength.
 
 [OPENING]
@@ -68,29 +68,13 @@ Handing your softness back would mean admitting it was never a weakness. And if 
 
 [CARD 5]
 
-Why has this taken so long? Because they had one line that let them off, and the line was "{{EXCUSE.quote}}"
+Why has this taken so long? Because they had one line that let them off, and the line was "She was too much."
 
-[[EXCUSE 0]]
-Nobody ever had to say a word, and that's why the line held. You'd go soft and it would cost you, and afterward there was nothing to point at: a quiet dinner, a sigh, a joke at the wrong moment. So after a while you called it nobody's fault too. It was somebody's. It happened every time you opened up, and that isn't bad luck. Somebody was doing it, and making sure it never looked like anything.
-
-You backed it up, too, without meaning to. Once you'd stopped going soft, it stopped costing you, and from outside it looked like a rough patch that blew over. You'd gotten strong. Nobody could see anything had been done, so nobody asked who did it. That was never your fault. Anybody quits a thing that keeps hurting. Calling it nobody's fault was their choice.
-
-Some of their work you still do for them. When something stings, you decide nobody meant anything by it and let it go before it shows. When someone lets you down, you've got their reason ready for them. You tell what happened with them so nobody comes out looking bad. They don't need the line anymore. You say it for them.
-[[/EXCUSE]]
-[[EXCUSE 1]]
-The line worked because they'd learned what happened when they left your need alone. You'd ask for something, or let it show you were hurting, and if nobody answered, you pulled it back in yourself. Going soft had been made to cost you. All they had to do was wait. "She'll be fine" was a bet they won every time. But going quiet isn't being fine. You'd only stopped saying so.
-
-And you made the line easy to believe, without ever meaning to. You got strong. You kept your days running, answered the phone in your ordinary voice, and anyone who checked on you found a woman managing, so nobody checked for long. That was never your fault. You'd been taught that letting it show costs you, and you learned it. Counting on that was their choice.
-
-You still do some of their job for them. When you're sick, you tell people not to come, that it's only a cold. You end bad news with "but I'm okay." You tell people not to worry about you, and they take you at your word. Nobody has to say it about you anymore. You say it first, before anyone thinks to ask.
-[[/EXCUSE]]
-[[EXCUSE 2]]
 The line held because your softness had been made to look like the problem. When you cried, it was a scene. When you needed something, you were needy. So "too much" sounded about right, even to you. It wasn't right. You were exactly as much as a woman who lets things reach her. They wanted less to deal with, and they called the difference your fault.
 
 And you backed the line up without meaning to. Once you'd shut everything down and started calling yourself strong, you looked fine. Nobody had to ask what had been done to you, because there was nothing left to see. That was never your fault. You did what anyone does after being made to pay for something. Hiding behind it was their choice.
 
 You still do their work for them, in small ways. You cut a story short at dinner in case it runs on. You say sorry before you ask for anything. You keep a bad week to one line in a text. Nobody has to shrink you now. You do it yourself, and you get there first.
-[[/EXCUSE]]
 
 On the Hanged Man, a man hangs head-down from a beam of living wood, tied by one ankle, and his face has no strain in it at all. He's settled in. They've been hanging off their line the same way, by one foot, calm, not looking at it.
 
@@ -255,7 +239,7 @@ I'm not saying I planned it. I don't think I did. But it happened, and I let it.
 
 When I first knew you, {{EX.letter}} I liked that. I liked having that around me. What I never said is you were warm with it. If you were happy, I knew. If you were worried, I knew. If you needed me, you said so, right out. I kept {{EX.kept}}. The rest I made you pay for.
 
-I told myself {{EXCUSE.letter}}. I said it to other people too. It was easier than the other thing, which was saying it was me. It doesn't work anymore. I still say it in my head sometimes and I can't get myself to buy it.
+I told myself you were too much. I said it to other people too. It was easier than the other thing, which was saying it was me. It doesn't work anymore. I still say it in my head sometimes and I can't get myself to buy it.
 
 {{LP.letter}}
 

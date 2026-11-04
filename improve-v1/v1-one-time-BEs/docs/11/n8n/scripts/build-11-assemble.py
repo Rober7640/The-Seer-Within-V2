@@ -92,9 +92,9 @@ return [{ json: {
   dob_text: `${M[mm - 1]} ${dd}, ${yy}`, paid_at: new Date((s.created || 0) * 1000).toISOString(),
   bump: (s.metadata || {}).bump === '1',
   numbers: { su, ex, lp, number_fallback },
-  // The shared-list keys. EX/LP keep 11/22 as their own rows, 33 uses 6; excuse and reason use the one-digit sums.
+  // The shared-list keys. EX/LP keep 11/22 as their own rows, 33 uses 6; the reason uses the one-digit sum.
   keys: { EX: String(ex === 33 ? 6 : ex), LP: String(lp === 33 ? 6 : lp),
-          EXCUSE: String(one(ex) % 3), REASON: String(one(lp) % 3), FORK: fork },
+          REASON: String(one(lp) % 3), FORK: fork },
 } }];
 """
 
@@ -112,7 +112,7 @@ const missing = new Set();
 const sections = {};
 for (const [k, parts] of Object.entries(t.sections)) {
   let s = parts.map((p) => (typeof p === 'string' ? p : p.opts[j.keys[p.tag]])).join('');
-  s = s.replace(/\{\{(EX|LP|EXCUSE|REASON)\.(\w+)\}\}/g, (_, tag, field) => {
+  s = s.replace(/\{\{(EX|LP|REASON)\.(\w+)\}\}/g, (_, tag, field) => {
     const got = ((BANK[tag] || {})[j.keys[tag]] || {})[field];
     if (!got) { missing.add(`${tag} ${j.keys[tag]} ${field}`); return ''; }
     return got;

@@ -67,8 +67,7 @@ if tpl["gaps"]:
 FRAMES = {"{{EX.saw}}": "They saw something in you: {{EX.saw}}.", "{{EX.use}}": "They kept {{EX.use}},",
           "{{EX.letter}}": "When I first knew you, {{EX.letter}} I liked that.", "{{EX.kept}}": "I kept {{EX.kept}}.",
           "{{LP.then}}": "[CARD 7]\n\n{{LP.then}}\n\n", "{{LP.now}}": "Someone decent turns up and {{LP.now}}.",
-          "{{LP.letter}}": "\n\n{{LP.letter}}\n\n", "{{EXCUSE.quote}}": 'the line was "{{EXCUSE.quote}}"',
-          "{{EXCUSE.letter}}": "I told myself {{EXCUSE.letter}}.",
+          "{{LP.letter}}": "\n\n{{LP.letter}}\n\n",
           "{{REASON.headline}}": "because {{REASON.headline}}.**",
           "{{REASON.letter}}": "I'm never going to send this. {{REASON.letter}} So it stays here."}
 raw = open(path, encoding="utf-8").read()

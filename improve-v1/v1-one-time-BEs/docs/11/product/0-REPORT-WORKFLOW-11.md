@@ -79,7 +79,7 @@ Nothing is final until the operator has read the whole report.
 |---|---|
 | `{{FIRST}}` `{{BIRTH_NAME}}` `{{DOB}}` | Her first name, full birth name, date |
 | `{{EX.saw}}` etc. | A line from the shared list, by her Expression or Life Path |
-| `[[FORK get_back]]…[[/FORK]][[FORK giving]]…[[/FORK]]` | Versions. Adjacent blocks of one tag are one choice and she gets one. EXCUSE needs `0 1 2`, REASON `0 1 2`, FORK `get_back giving`. A block may be empty. Inline blocks touch with no space between; paragraph blocks sit on their own lines |
+| `[[FORK get_back]]…[[/FORK]][[FORK giving]]…[[/FORK]]` | Versions. Adjacent blocks of one tag are one choice and she gets one. REASON needs `0 1 2`, FORK `get_back giving`. A block may be empty. Inline blocks touch with no space between; paragraph blocks sit on their own lines |
 | `⟪WRITE: …⟫` | A gap still to write. The report can't ship or build |
 
 **The shared list only fits if every report uses the same frames.** `check-report.py` fails a report that changes one. Each spot is used exactly once:
@@ -90,15 +90,13 @@ Nothing is final until the operator has read the whole report.
 | `{{EX.use}}` | They kept {{EX.use}}, … | card 3 |
 | `{{LP.then}}` | the whole first paragraph of card 7 | card 7 |
 | `{{LP.now}}` | Someone decent turns up and {{LP.now}}. | card 7 |
-| `{{EXCUSE.quote}}` | … the line was "{{EXCUSE.quote}}" | card 5 |
 | `{{REASON.headline}}` | … because {{REASON.headline}}.** (end of card 10's bold first sentence) | card 10 |
 | `{{REASON.letter}}` | I'm never going to send this. {{REASON.letter}} So it stays here. | letter |
 | `{{EX.letter}}` | When I first knew you, {{EX.letter}} I liked that. | letter |
 | `{{EX.kept}}` | I kept {{EX.kept}}. | letter |
-| `{{EXCUSE.letter}}` | I told myself {{EXCUSE.letter}}. | letter |
 | `{{LP.letter}}` | a whole paragraph of the letter | letter |
 
-Written in each report, because they carry its own thing: card 5 after the quote (`[[EXCUSE 0|1|2]]`: why the line held, how she backed it up, how she still does their work), the sentence or two after card 10's bold line (`[[REASON 0|1|2]]`), and every path difference (`[[FORK …]]`): card 6's regret line, all of card 9, card 10's "they hold it out" paragraph, card 12's warning about the ask, the letter's last lines, and the close's line about the ask.
+Written in each report, because they carry its own thing: card 5's one excuse (the line in quotes, then why it held, how she backed it up, how she still does their work; the letter's "I told myself …" echoes the same line), the sentence or two after card 10's bold line (`[[REASON 0|1|2]]`), and every path difference (`[[FORK …]]`): card 6's regret line, all of card 9, card 10's "they hold it out" paragraph, card 12's warning about the ask, the letter's last lines, and the close's line about the ask.
 
 ## Lessons that cost us a run
 - A full list of what's on a card gets written out as a list. Hand over one detail.
@@ -142,7 +140,7 @@ Fill in the `<…>` parts. Send it as written: the subagent has none of our conv
 >
 > **Don't repeat these measured failures:** card pictures as inventories · fixed last lines everywhere · paper homework · her Life Path pattern outside card 7 and the letter · the same sentence in two cards · choppy primer prose · openers that scold ("you won't like it") · telling her what her body felt · planning words on the page ("low point").
 >
-> **Fill-in spots and versions:** read "The report format" in product/0-REPORT-WORKFLOW-11.md and copy the structure of product/11-P3-su9-report.md exactly: every shared spot (`{{EX.saw}}` …) in its frame word for word, once each; `{{FIRST}}` `{{BIRTH_NAME}}` `{{DOB}}` for her name and date; and your own versions as `[[EXCUSE 0]]…[[/EXCUSE]][[EXCUSE 1]]…` (3), `[[REASON 0]]…` (3) and `[[FORK get_back]]…[[/FORK]][[FORK giving]]…[[/FORK]]` in the same places SU 9 has them. Read the shared list (n8n/scripts/11-swapins.json) so your frames read right around every line in it. Everything outside a version block must read right for every buyer.
+> **Fill-in spots and versions:** read "The report format" in product/0-REPORT-WORKFLOW-11.md and copy the structure of product/11-P3-su9-report.md exactly: every shared spot (`{{EX.saw}}` …) in its frame word for word, once each; `{{FIRST}}` `{{BIRTH_NAME}}` `{{DOB}}` for her name and date; one excuse written straight into card 5 and echoed in the letter's "I told myself …", and your own versions as `[[REASON 0]]…` (3) and `[[FORK get_back]]…[[/FORK]][[FORK giving]]…[[/FORK]]` in the same places SU 9 has them. Read the shared list (n8n/scripts/11-swapins.json) so your frames read right around every line in it. Everything outside a version block must read right for every buyer.
 >
 > **Output:** improve-v1/v1-one-time-BEs/docs/11/product/11-P3-su<N>-report.md: a 3-line header (what this is, buyer, cards), then [OPENING] [CARD 1] … [CARD 12] [LETTER] [CLOSE] on their own lines, prose under each, no other headings. Run `python3 improve-v1/v1-one-time-BEs/docs/11/product/scripts/check-report.py <that file>` and fix every FAIL. Reply in under 200 words: the word-count table and anything you had to bend, and why.
 

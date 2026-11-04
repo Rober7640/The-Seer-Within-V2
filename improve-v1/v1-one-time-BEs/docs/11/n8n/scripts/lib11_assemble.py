@@ -10,7 +10,7 @@ Inside the prose:
   {{EX.saw}} {{LP.then}} …                          a line from the shared list (11-swapins.json)
   [[FORK get_back]]…[[/FORK]][[FORK giving]]…[[/FORK]]   versions written in the report. A run of
       adjacent blocks of one tag (only whitespace between) is one choice; she gets exactly one block.
-      EXCUSE needs 0 1 2, REASON needs 0 1 2, FORK needs get_back giving. A block may be empty.
+      REASON needs 0 1 2, FORK needs get_back giving. A block may be empty.
   ⟪WRITE: …⟫                                         a gap still to write: the report can't ship.
 
 The order-time half (fill) is mirrored in JS in build-11-assemble.py (FILL_JS);
@@ -22,15 +22,15 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 PRODUCT = os.environ.get("ELEVEN_PRODUCT_DIR") or os.path.normpath(os.path.join(HERE, "../../product"))  # env: test copies only
 BANK_PATH = os.path.join(HERE, "11-swapins.json")
 SECTIONS = ["opening", *map(str, range(1, 13)), "letter", "close"]
-CHOICES = {"EXCUSE": ["0", "1", "2"], "REASON": ["0", "1", "2"], "FORK": ["get_back", "giving"]}
+CHOICES = {"REASON": ["0", "1", "2"], "FORK": ["get_back", "giving"]}
 BANK_FIELDS = {"EX": ["saw", "use", "letter", "kept"], "LP": ["then", "now", "letter"],
-               "EXCUSE": ["quote", "letter"], "REASON": ["headline", "letter"]}
+               "REASON": ["headline", "letter"]}
 NUMBER_KEYS = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "11", "22"]   # 33 uses 6
 
 class Hold(Exception):
     """The order must stop and wait for a person. Never guess."""
 
-BLOCK = re.compile(r"\[\[(EXCUSE|REASON|FORK) ([a-z0-9_]+)\]\](.*?)\[\[/\1\]\]", re.S)
+BLOCK = re.compile(r"\[\[(REASON|FORK) ([a-z0-9_]+)\]\](.*?)\[\[/\1\]\]", re.S)
 
 def report_path(su):
     return os.path.join(PRODUCT, f"11-P3-su{su}-report.md")
@@ -87,10 +87,10 @@ def one(n):
 
 def keys_for(su, ex, lp):
     return {"EX": str(6 if ex == 33 else ex), "LP": str(6 if lp == 33 else lp),
-            "EXCUSE": str(one(ex) % 3), "REASON": str(one(lp) % 3),
+            "REASON": str(one(lp) % 3),
             "FORK": "get_back" if (one(su) + one(ex) + one(lp)) % 3 == 0 else "giving"}
 
-FILL = re.compile(r"\{\{(EX|LP|EXCUSE|REASON)\.(\w+)\}\}")
+FILL = re.compile(r"\{\{(EX|LP|REASON)\.(\w+)\}\}")
 
 def fill(tpl, bank, keys, first, birth_name, dob_text):
     missing, out = set(), {}
