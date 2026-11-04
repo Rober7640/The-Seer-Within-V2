@@ -142,7 +142,7 @@ I'd sat back down to turn this one, and I swore at the deck when I saw it. They 
 [[FORK giving]]
 **They're giving it back, {{FIRST}}. They aren't trying to get you back.**
 
-They want your laugh out of their hands, and that's the whole of it. It reminds them of something they'd rather not look at, so they want it gone. They've held it a long time, and with the line that let them off worn out, it's gotten heavy. So they're putting it down. They're doing it for their own sake. There's no love in it, and none of it is reaching for you. Once it's back with you, they can quit thinking about it, and about you.
+They want your laugh out of their hands, and that's the whole of it. It reminds them of something they'd rather not look at, so they want it gone. They've held it a long time, and with the line that let them off worn out, it's gotten heavy. So they're putting it down. They're doing it for their own sake. Their regret is real, and so are the months they've spent on it. But none of this is them reaching for you. Once it's back with you, they can quit thinking about it, and about you.
 
 I told you one way this could go was a gift. This is that way, and it's colder than it sounds. It asks nothing because they want nothing from you: not your laugh, not an answer, not you. That isn't the same thing as kind.
 

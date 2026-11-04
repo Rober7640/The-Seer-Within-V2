@@ -142,7 +142,7 @@ I sat back down at the table, turned this card, and swore at my own hands for tu
 [[FORK giving]]
 **They're giving it back, {{FIRST}}. They aren't trying to get you back.**
 
-They want your softness out of their hands, and that's all the giving is. They've carried it a long time, and they're tired of carrying it. The line that let them off has worn through, and without it the thing has gotten heavy, so they're putting it down. They're doing it for their own sake. There's no love in it, and none of it is reaching for you. Once it's back with you, they can stop thinking about you. That's what they want out of this.
+They want your softness out of their hands, and that's all the giving is. They've carried it a long time, and they're tired of carrying it. The line that let them off has worn through, and without it the thing has gotten heavy, so they're putting it down. They're doing it for their own sake. Their regret is real, and so are the months they've spent on it. But none of this is them reaching for you. Once it's back with you, they can finally set it down. That's what they want out of this.
 
 I told you one way this could go was a gift. This is that way, and it's colder than it sounds. It asks nothing because they want nothing from you: not your warmth, not an answer, not you.
 
