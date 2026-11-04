@@ -43,6 +43,16 @@ import { TEA_READING_PRICE_CENTS, TEA_READING_TEST_CENTS } from '@shared/backend
 // ── Paywall test constants (the one experiment Phase 1 folds in) ──────────────
 export const PAYWALL_EXPERIMENT_KEY = 'paywall_copy_2026';
 
+// ── Long-copy + bonus-pack paywall test ("updated test 1") ────────────────────
+// A SEPARATE experiment from paywall_copy_2026: the control arm keeps today's
+// paywall, the test arm shows the long-copy first-timer / repeat-buyer paywalls
+// with the bonus-minute ladder (incl. the $100 pack). Evelyn-scoped (scope.personaId)
+// via the experiment row. Ships `draft` → assign() returns control for everyone
+// until it's flipped to `running`, so merging changes nothing live. Arms: 'A'
+// (control, today's paywall) / 'B' (the long-copy test).
+export const LONGCOPY_EXPERIMENT_KEY = 'improve_v2_paywall_2026';
+export const LONGCOPY_TEST_ARM = 'B';
+
 // ── Persona prompt A/B (Phase 4b) ─────────────────────────────────────────────
 // Every system-prompt experiment shares this key prefix so the chat engine can
 // resolve "the active prompt test for this persona" at request time WITHOUT a
