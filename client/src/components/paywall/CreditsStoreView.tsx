@@ -224,7 +224,14 @@ export default function CreditsStoreView({
               )}
               <div className="flex items-center justify-between gap-3">
                 <div className="min-w-0">
-                  <div className="text-2xl font-bold text-white tabular-nums">{v.priceLabel}</div>
+                  <div className="flex items-center gap-2">
+                    <div className="text-2xl font-bold text-white tabular-nums">{v.priceLabel}</div>
+                    {v.bonusMinutes > 0 && (
+                      <span className="whitespace-nowrap rounded-full bg-emerald-400 px-2 py-[3px] text-[10px] font-extrabold uppercase tracking-wide text-[#062619] shadow-[0_0_10px_rgba(52,211,153,0.35)]">
+                        +{v.bonusMinutes} min free
+                      </span>
+                    )}
+                  </div>
                   <p className="mt-0.5 text-[12px] text-white/40">
                     {isPreview ? "Previewing above ✦" : "Drops into your wallet · tap to preview"}
                   </p>
