@@ -52,6 +52,10 @@ export default function PaymentModal({
 
   const price = `$${(tier.priceUsd / 100).toFixed(2)}`;
   const clock = coinsToClock(tier.totalCoins, coinsPerMinute);
+  // Bonus free minutes on this package, floored to one decimal like the tiles
+  // (toTierView / PaymentSheetView) so the order summary never overstates it.
+  const bonusMin =
+    (tier.bonusCoins ?? 0) > 0 ? Math.floor(((tier.bonusCoins ?? 0) / coinsPerMinute) * 10) / 10 : 0;
 
   // The real payment actions — shared by both arms. Variant B slots these into
   // PaymentSheetView; variant A renders them inline (below).
@@ -152,6 +156,9 @@ export default function PaymentModal({
               <p className="text-sm text-gray-700">Package</p>
               <p className="text-xs text-gray-400 mt-0.5">
                 {clock} of reading time
+                {bonusMin > 0 && (
+                  <span className="font-medium text-emerald-600"> · incl. {bonusMin} free</span>
+                )}
               </p>
             </div>
             <p className="text-sm font-medium text-gray-900">{price}</p>

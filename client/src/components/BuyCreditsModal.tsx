@@ -185,6 +185,12 @@ export default function BuyCreditsModal({
                 {presetTiers.map((tier, i) => {
                   const isSelected = mode === "preset" && selectedPackage === tier.packageType;
                   const isPopular = i === 1; // middle pack
+                  // Bonus free minutes on this pack, floored to one decimal like the
+                  // store tiles (toTierView) so we never show more than is granted.
+                  const bonusMin =
+                    (tier.bonusCoins ?? 0) > 0
+                      ? Math.floor(((tier.bonusCoins ?? 0) / coinsPerMinute) * 10) / 10
+                      : 0;
                   return (
                     <button
                       key={tier.packageType}
@@ -217,6 +223,11 @@ export default function BuyCreditsModal({
                       <div className="mt-1.5 text-[13px] font-semibold text-white/90">
                         ${(tier.priceUsd / 100).toFixed(0)}
                       </div>
+                      {bonusMin > 0 && (
+                        <div className="mx-auto mt-1 w-fit whitespace-nowrap rounded-full bg-emerald-400/15 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-emerald-300">
+                          +{bonusMin} min free
+                        </div>
+                      )}
                     </button>
                   );
                 })}
