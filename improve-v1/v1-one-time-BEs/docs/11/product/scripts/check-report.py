@@ -40,9 +40,11 @@ QUESTIONS = ["What did they take from me?", "Did they ever really love me?", "Wa
              "Will they ever do anything about it?", "What did they never say?", "What do I do now?"]
 CLOSE_Q = "Will I be happy again?"
 if QS:
-    BAND = {"opening": (300, 460), "letter": (1300, 1800), "close": (80, 260)}   # opening carries the contents list
+    # Fix pass after the SU 5 blind read (2026-11-05): no contents list, the personal read moves into card 2.
+    BAND = {"opening": (150, 320), "letter": (1300, 1800), "close": (80, 280)}
     for c in (1, 9, 10, 12): BAND[str(c)] = (180, 340)
-    for c in (2, 3, 4, 5, 6, 7, 8, 11): BAND[str(c)] = (80, 230)   # +the "Card N, name:" label
+    for c in (3, 4, 5, 6, 7, 8, 11): BAND[str(c)] = (80, 230)   # +the "Card N, name:" label
+    BAND["2"] = (120, 310)                                      # + the personal read
     TOTAL = (2800, 4250)   # +the contents list in the opening
 BANNED = {
     "numerology words": r"numerolog|karmic|vowel|soul urge|life path|\bexpression\b|\bsum\b",
@@ -80,24 +82,38 @@ def rules(sec):
     yield "'years' only in card 8" + (f" (also in {out})" if out else ""), not out
     for card in ("hermit", "judgement", "devil"):
         yield f"the {card} never falls in this spread", not re.search(rf"(turned|laid|drew|fell)[^.]*\b{card}\b", low)
-    if V2:
+    if V2 and not QS:
         # Every card hands over one part of the letter: a paragraph that is only *"..."*, found word for word in the letter.
         for c in map(str, range(1, 13)):
             got = re.findall(r'^\*"(.+?)"\*$', sec[c], re.M)
             yield f"v2 card {c}: quotes a line of the letter as its own *\"...\"* paragraph", bool(got)
             yield f"v2 card {c}: its quoted line is in the letter word for word", bool(got) and all(g in sec["letter"] for g in got)
     if QS:
+        # Blind read 2026-11-05: cards quoting the letter made the letter "feel like reruns". No card repeats a
+        # letter sentence of 7+ words (card 11's unsaid sentence is the one allowed repeat).
+        letter_sents = {x.strip(' "*') for x in re.split(r"(?<=[.!?])\s+", sec["letter"]) if len(x.split()) >= 7}
+        unsaid_q = (re.search(r'"([^"]+)"', sec["11"]) or [None, ""])[1]
+        for c in map(str, range(1, 13)):
+            rep_ = [x for x in (y.strip(' "*') for y in re.split(r"(?<=[.!?])\s+", sec[c])) if x in letter_sents and x not in unsaid_q]
+            yield f"q card {c}: doesn't repeat a sentence of the letter" + (f": {rep_[0][:60]}" if rep_ else ""), not rep_
+            yield f"q card {c}: no quoted line of the letter (*\"...\"* paragraph)", not re.search(r'^\*".+"\*$', sec[c], re.M)
+        # She missed Evelyn's night ("made me feel I'd earned it"): a few beats, in order, across the cards.
+        cards_txt = " ".join(sec[str(c)] for c in range(1, 13)).lower()
+        beats = [b for b in ("midnight", "three in the morning", "gray") if b in cards_txt]
+        yield f"q Evelyn's night: midnight, three in the morning, the window going gray (found: {', '.join(beats) or 'none'})", len(beats) == 3
+        # The personal read as a horoscope before any card put her guard up: it lives in card 2 now.
+        yield "q the personal read is in card 2, not the opening", "told me who I was laying them for" in sec["2"] and "told me who I was laying them for" not in op
         # the reader can be a man (operator, 2026-11-05: "we have male customers who might refund because of this")
-        g = sorted(set(m.group(0) for m in re.finditer(r"\b(a woman (who|with|like)|women like you|woman like you|you're a woman|dear girl|ladies)\b", low)))
+        g = sorted(set(m.group(0) for m in re.finditer(r"\b(you were a woman|women like you|woman like you|you're a woman|a woman your age|dear girl|ladies)\b|they saw something in you: a woman", low)))
         yield "the reader's gender is never assumed" + (f": {', '.join(g)}" if g else ""), not g
         for i, q in enumerate(QUESTIONS, 1):
             paras = [x.strip() for x in sec[str(i)].split("\n\n") if x.strip()]
             want = f"**Card {i}, {CARD_NAMES[i-1]}: {q}**"
             yield f"q card {i}: first line names the card and its question ({want})", bool(paras) and paras[0] == want
-            yield f"q opening: the contents list has card {i} and its question", f"\n\nCard {i}, {CARD_NAMES[i-1]}: {q}\n\n" in op
+
             yield f"q card {i}: the flat answer, in bold, right under it", len(paras) > 1 and paras[1].startswith("**") and paras[1].rstrip().endswith("**")
         yield f"q close: **{CLOSE_Q}** then a bold answer", f"**{CLOSE_Q}**\n\n**" in last
-        yield f"q opening: the contents list ends with the question after the letter", f"\n\n{CLOSE_Q}\n\n" in op
+
     total = sum(len(v.split()) for v in sec.values())
     yield f"total words {TOTAL[0]}-{TOTAL[1]}", TOTAL[0] <= total <= TOTAL[1]
     for k, (lo, hi) in BAND.items():
@@ -121,6 +137,9 @@ FRAMES = {"{{EX.saw}}": "They saw something in you: {{EX.saw}}.", "{{EX.use}}": 
           "{{REASON.letter}}": "I'm never going to send this. {{REASON.letter}} So it stays here."}
 if QS:   # card 7 now opens on its question and answer, so {{LP.then}} is its own paragraph, not the card's first
     FRAMES["{{LP.then}}"] = "\n\n{{LP.then}}\n\n"
+    # "kept" beside "took" confused the blind reader (2026-11-05)
+    FRAMES["{{EX.use}}"] = "They leaned on {{EX.use}},"
+    FRAMES["{{EX.kept}}"] = "I took {{EX.kept}} for granted."
 if V2:   # the personal read before the first card (operator, 2026-11-05)
     FRAMES["{{EX.trait}}"] = "your name and date told me who I was laying them for. {{EX.trait}} {{LP.trait}}"
     FRAMES["{{LP.trait}}"] = "{{EX.trait}} {{LP.trait}}\n"
