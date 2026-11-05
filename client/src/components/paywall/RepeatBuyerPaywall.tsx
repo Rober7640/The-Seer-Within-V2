@@ -69,7 +69,14 @@ export function RepeatBuyerPaywallPanel({
   const firstName = (personaName || "your guide").split(" ")[0];
 
   // Five packs ascending; the sixth slot is Custom.
-  const presetTiers = useMemo(() => [...tiers].sort((a, b) => a.priceUsd - b.priceUsd).slice(0, 5), [tiers]);
+  const presetTiers = useMemo(() => {
+    const sorted = [...tiers].sort((a, b) => a.priceUsd - b.priceUsd).slice(0, 5);
+    // Cheapest first, then the recommended ("MOST POPULAR") pack in the top-row
+    // centre slot, then the rest — so $30 leads the top row ($10 · $30 · $20).
+    const i = sorted.findIndex((t) => t.recommended);
+    if (i > 1) { const [rec] = sorted.splice(i, 1); sorted.splice(1, 0, rec); }
+    return sorted;
+  }, [tiers]);
 
   // Pack + custom amount (usePackSelection), identical to the first-timer card: typing
   // switches to the custom amount; tapping the Custom tile only opens the field, and an

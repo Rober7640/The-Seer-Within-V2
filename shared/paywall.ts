@@ -123,16 +123,16 @@ export interface BonusPreviewTier extends PricingTier {
 /** First-timer card (LongCopyPaywall): the same $10/$20/$30 she knows today. */
 export const FIRST_TIMER_LADDER: BonusPackSpec[] = [
   { packageType: "popular", priceCents: 1000, freeMinutesShown: 0, totalMinutesShown: 3 },
-  { packageType: "best_value", priceCents: 2000, freeMinutesShown: 0, totalMinutesShown: 6, badge: "MOST POPULAR", recommended: true },
-  { packageType: "premium", priceCents: 3000, freeMinutesShown: 5, totalMinutesShown: 15, badge: "BEST VALUE" },
+  { packageType: "best_value", priceCents: 2000, freeMinutesShown: 0, totalMinutesShown: 6 },
+  { packageType: "premium", priceCents: 3000, freeMinutesShown: 5, totalMinutesShown: 15, badge: "MOST POPULAR", recommended: true },
 ];
 
 /** Repeat-buyer card (RepeatBuyerPaywall): five packs + Custom. "whale_100" is a
  *  preview-only key — the server has no such package today. */
 export const REPEAT_BUYER_LADDER: BonusPackSpec[] = [
   { packageType: "popular", priceCents: 1000, freeMinutesShown: 0, totalMinutesShown: 3 },
-  { packageType: "best_value", priceCents: 2000, freeMinutesShown: 0, totalMinutesShown: 6, badge: "MOST POPULAR", recommended: true },
-  { packageType: "premium", priceCents: 3000, freeMinutesShown: 5, totalMinutesShown: 15 },
+  { packageType: "best_value", priceCents: 2000, freeMinutesShown: 0, totalMinutesShown: 6 },
+  { packageType: "premium", priceCents: 3000, freeMinutesShown: 5, totalMinutesShown: 15, badge: "MOST POPULAR", recommended: true },
   { packageType: "whale", priceCents: 5000, freeMinutesShown: 13, totalMinutesShown: 30 },
   { packageType: "whale_100", priceCents: 10000, freeMinutesShown: 36, totalMinutesShown: 70, badge: "BEST VALUE" },
 ];
