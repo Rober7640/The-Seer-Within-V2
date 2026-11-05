@@ -82,7 +82,7 @@ ad headlines pointed at hook names.
 
 #### 🔴 WHAT ALREADY EXISTS — check the registry before proposing anything
 
-`fb-tarot/docs/lander-registry.md` — all 104 landers grouped by category (money, soulmate ×
+`fb-tarot/docs/lander-registry.md` — all landers (158 as of 2026-11-05) grouped by category (money, partnered, soulmate ×
 keyword / age band / after loss / where, loneliness, self-frame, decode-him), each with its ad
 headline, the decks carrying it, and **which method it runs**. It is GENERATED from the
 registry and the frame Sets — `npx tsx scripts/lander-registry.mts` — so it cannot claim a
@@ -164,6 +164,17 @@ batch, 438 concerns changed four of eight landers before a word was written (a "
 ad turned out to collect widowers; a "choosing wrong" ad turned out to collect fraud and abuse
 victims the headline blames). Read them; do not count them.
 
+⚠ **Check the tool and the database before trusting a count (found 2026-11-05).**
+- `voc-by-theme.mjs`, `voc-by-hook.mjs` and `lib/live-db.mjs` were missing from every clone and
+  from git history. They survive in `~/Documents/onedrive-rescue/…/.claude/skills/v1-funnel-live-audit/scripts/`,
+  so copy them in if they're absent.
+- A worktree's `.env` points at the **dev** DB, and a dev DB returns **"matched 0"**, which looks
+  exactly like a thin pull. The prod `DATABASE_URL` is in the OneDrive repo's `.env`. Run the pull
+  from a scratch dir that holds only that line.
+- Never print the URL. The tool's READ ONLY transaction plus canary (SQLSTATE 25006) must pass.
+- Raw output is PII, so it stays in the scratchpad. Only trimmed, de-named quotes go in the repo
+  (`_voc-<batch>.md`).
+
 🔴 **Read the pull for readers the ad will HARM, not just for intent.** Every pull so far has
 contained a group the headline quietly selects for, and it is never in the headline:
 
@@ -173,6 +184,8 @@ contained a group the headline quietly selects for, and it is never in the headl
 | "choosing wrong" | fraud and domestic abuse | cut 3 must refuse the headline's premise |
 | "too late" | transplant, cancer, stroke, fertility | Meta-prohibited; the read cannot go near it |
 | "how long before my ex comes back" | an **active romance scam** — *"he's in australia… I have to pay $3000 which will be returned to me when he arrives"* · a man **married 44 years** · readers already given a date by another psychic | never affirm the return; never predict the end of a third party's relationship |
+| "need more affection than my partner" (2026-11-05) | long marriages with no touch, **and two buyers being worked by a romance scammer who stepped into that gap** · a husband with dementia | never point her outside the relationship, never say "someone online" back to her, never speak for the partner's health or desire → needed a NEW frame (`PARTNERED_TAROT_HOOKS`) |
+| "will I marry more than once" (2026-11-05) | every buyer says **"again"**, never "more than once"; the headline also reaches women **married now** | a "yes" predicts her current marriage ending → no counts, no "twice/again", no door/road/new-beginning imagery |
 
 The scam case is the sharpest: a read that says he is coming back is not a bad line, it is a line
 she can act on with $3,000. Grep the pull for money-being-sent, a third party, and "another
@@ -229,6 +242,42 @@ field carries the family's bans and WHY each exists; it is what the next person 
 
 Pick the frame here, **before** writing — §"Choosing the frame" in `natural-tarot-cut.md`, which
 governs both methods. A family in no frame set inherits decode-him and the model invents a man.
+
+**When no frame fits, add one. Don't force a hook into the nearest frame.** On 2026-11-05 the
+**partnered** frame (`PARTNERED_TAROT_HOOKS`) was added for a woman with a real, current partner
+whose question is about HER. Decode-him would have read the partner, and the no-man frames would
+have erased him. A new frame Set touches all of these, or it silently does nothing:
+- `server/lib/prompts.ts`: the Set, a const, and a branch in **both** the `frameLine` and
+  `guardLine` ternaries, placed ahead of any looser frame (partnered sits right after money).
+- `client/src/content/tarotReads.ts`: a matching hook array, the `TarotAngle` union, and `angleForHook`.
+- `scripts/lander-registry.mts`: the `FRAMES` list, or the generated registry shows the hook as unframed.
+
+**Say-back rules hold better written as a positive instruction.** On Version C the model repeats
+her words back to her: her labels (*narcissist*, *people pleaser*), her age, illness, the man online.
+"NEVER repeat X" leaked. **"When you say back what she shared, use plain words of your own: never
+repeat her labels (…), her age, or any number; name the feeling under them"** held. Put it in every
+tendency.
+
+**Connectors are the glue (operator, 2026-11-05).** Natural Cut drafts are judged on flow. Each
+bubble picks up a noun or point from the one before through *so / and / but / that's why / still*,
+varied across the three cards and never a fixed slot. Report each card's connective path with the draft.
+
+#### 🔴 The Version C opener (`TAROT_QUESTION`) — restate her question first
+
+Version C shows only the card line plus this opener. It **skips cut 2** ("You asked why…"), and the
+headline only appears on `TarotBridge`. So without a restatement, a reader who has forgotten the
+ad has nothing tying the chat back to her question. The operator decided (2026-11-05):
+
+> **"You asked [the headline, in second person]. Before I look closer, tell me… [one concrete question]."**
+> e.g. *"You asked why your relationships always end the same way. Before I look closer, tell me… how did the last one end, and what about it felt all too familiar?"*
+
+- **The question must say what answer you expect, in everyday words.** The operator rejected
+  *"when the last one was ending, what did you recognize?"* (too vague) and *"what do you give that
+  you'd most love to feel coming back to you?"* (awkward).
+- **Accepted side effect:** when the call fails, the written fallback (`reads[card].slice(1)`) starts
+  at cut 2, so the restatement shows twice.
+- ⛔ **Do not retrofit older C landers to this shape without the operator's go.** On 2026-11-05 the
+  answer was "not yet".
 
 **If the method is inherited-shadow, run the 4-step PRE-FLIGHT before the first bubble** —
 `fb-tarot/docs/inherited-shadow-cut.md` §Pre-flight. These are not gates. A gate catches the
@@ -340,6 +389,19 @@ age" ban was ignored twice until rewritten as a positive instruction ("open on t
 guard patterns written against the draft's own vocabulary scored the model's actual self-blame
 ("a pattern your soul is ready to break") as CLEAN. Fix the patterns from what comes back.
 
+🔴 **Smoke on PROD's model, not the code default.**
+- Read `system_config.default_conversation_model` read-only. It was `claude-sonnet-5-5` from 2026-10-28.
+- Locally, set `V1_CONVERSATION_MODEL` to match. The hardcoded default (sonnet-4-5) still leaks
+  labels that 5.5 holds, so a smoke on the wrong model gives the wrong verdict.
+
+🔴 **A generic reply is a failed call, not a pass.** Replies like *"I sense something shifting in your
+energy…"*, *"Let me focus more deeply…"* or *"There's more here than meets the eye…"* come from
+`getFallbackMessages()`.
+- **Cause** (live, open as of 2026-11-05): `callClaude` disables thinking only for `claude-sonnet-5`.
+  On 5.5, adaptive thinking eats the 1,000-token budget and the parse fails.
+- **Effect:** about 1 in 5 replies. The client shows the filler as if it were a real reply.
+- **What to do:** count these separately and re-run them. Never score them as clean.
+
 ### 5b · Did the run actually happen?
 
 ```bash
@@ -376,6 +438,17 @@ whole new family. Keep the un-synced rosters in step or the chat handoff 400s:
   the opener map · `reads[hook]` on every deck carrying it · the angle array
 - `server/lib/prompts.ts` — `TAROT_HOOK_CONTEXT` · `TAROT_HOOK_TENDENCY` · **the frame Set**
 - `server/routes.ts` — the hook validator
+- **If the ads use `/fb-tarot/c`:** `server/lib/tarotRedirect.ts` `TAROT_C_EXEMPT_HOOKS`, plus its
+  count in `tarotRedirect.test.ts`. Otherwise `/c` 302s to `/b` and the C opener never serves.
+- Regenerate `fb-tarot/docs/lander-registry.md` with `npx tsx scripts/lander-registry.mts`. Never hand-edit it.
+- ⚠ **Not `shared/soulmateLanderHooks.ts` unless the operator says so.** It drives the AWeber list
+  and the Stripe bump, so it's a business decision, not a wiring step.
+
+Wire in a **worktree off `origin/development`** (e.g. `~/tsw-hooks4`), never in the OneDrive repo.
+When the operator says commit, also write `fb-tarot/docs/HANDOVER-<date>-<batch>.md` for the developer.
+Cover what changed, the tests, what's still owed, and any live bug found along the way.
+Give links as an absolute path or a GitHub URL; a repo-relative path isn't clickable from the OneDrive terminal.
+Template: `HANDOVER-2026-11-05-four-hooks.md`.
 
 **Verify:** `npx tsc --noEmit` (no new errors vs baseline) · the full tarot suite · the tripwire
 again, now loading from the registry rather than the draft.
