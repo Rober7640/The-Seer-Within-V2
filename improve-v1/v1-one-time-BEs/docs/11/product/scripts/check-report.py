@@ -51,7 +51,7 @@ if QS:
 # 30 days / 3 months), signs to watch for, and the three 30-day instructions, which move out of card 12
 # into the close. Marked by "bar shape" on the first line. Leaner cards, a shorter letter, a longer close.
 BAR = QS and "bar shape" in open(path, encoding="utf-8").readline()
-SPINE = {5: "dents"}   # per report: the spine image's key word, in the opening AND the close's last paragraph
+SPINE = {5: "dents", 6: "honey"}   # per report: the spine image's key word, in the opening AND the close's last paragraph
 if BAR:
     BAND = {"opening": (130, 230), "letter": (1000, 1250), "close": (420, 620)}   # close: dated future + signs + 3 instructions
     for c in (1, 8): BAND[str(c)] = (130, 230)

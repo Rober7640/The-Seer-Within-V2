@@ -1,243 +1,206 @@
-11-P3 — The Unsent Letter: the fixed report for every Soul Urge 6 buyer (the belief she'd be looked after · cover word "fine on my own"). v1 template, 2026-11-04.
-Fill-ins: {{FIRST}} {{BIRTH_NAME}} {{DOB}} · shared list ../n8n/scripts/11-swapins.json: {{EX.saw|use|letter|kept}} {{LP.then|now|letter}} {{REASON.headline|letter}} · versions written here: [[REASON 0|1|2]] [[FORK get_back|giving]].
-Cards: 1 the Fool · 2 the Chariot · 3 the Empress · 4 Justice · 5 the Hanged Man · 6 Temperance · 7 the Lovers · 8 the Tower · 9 the Moon · 10 the Sun · 11 the Star · 12 the World.
+11-P3 — The Unsent Letter: the fixed report for every Soul Urge 6 buyer (the part of you that loves with your whole heart · cover word "I'm done with all that"). letter-first shape, question shape, bar shape (each card answers one of her questions, in her words; one spine image, the jar of honey gone hard; the thing named once, the Bookkeeper; a habits list and the lie; a dated close, signs and three instructions), v2 to the writing bar, 2026-11-05.
+Fill-ins: {{FIRST}} {{BIRTH_NAME}} {{DOB}} · shared list ../n8n/scripts/11-swapins.json: {{EX.trait|saw|use|letter|never|moment|kept|last}} {{LP.trait|then|now|admire|letter}} {{PY.ahead}} {{NEXT_BDAY}} {{REASON.headline|letter}} · versions written here: [[REASON 0|1|2]] [[FORK get_back|giving]].
+Cards: 1 the Fool · 2 the Chariot · 3 the Empress · 4 Justice · 5 the Hanged Man · 6 Temperance · 7 the Lovers · 8 the Tower · 9 the Moon · 10 the Sun · 11 the Star · 12 the World
 
 [OPENING]
 
 {{FIRST}},
 
-Before you start, find a chair where nobody's going to need anything from you for a while.
+Before I turned a single card for you, I saw a jar of honey at the back of a cupboard. It had gone hard and cloudy, and the lid had stuck. Nothing was wrong with the honey. Honey doesn't go bad. It had sat somewhere cold too long, that's all.
 
-Go through the cards in the order I laid them, and don't jump to the letter at the end. It only comes back whole. Read the last page first and you'll have some words and nothing more. Here and there two cards will seem to argue with each other. Keep reading anyway.
+Somebody left with something of yours. Since then you've said you're done with all that, and you've meant it. Your heart never agreed. Each of your twelve cards answers one question you've been carrying, flat out. At the end is the letter that never got sent.
 
-Two things up front. This is someone living. And nothing in these pages asks you to contact them, wait for them or forgive them. If this person hurt you, you owe them no reply.
+Your birth name and date set how I lay your twelve cards. I wrote {{BIRTH_NAME}} and {{DOB}} across the top of a clean sheet at my kitchen table. The one who came to me was at my shoulder before the kettle boiled.
 
-When your order came in, I cleared the kitchen table and took three cards out of the deck: the Hermit, Judgement and the Devil. They'd done their part, so they went on the windowsill, which left nineteen. At the top of a clean sheet I wrote {{BIRTH_NAME}}, and {{DOB}} under it. Your birth name and date set how I lay your twelve cards. Nothing else goes on the table before them.
-
-I made a cup of chamomile and sat down. The one who'd come to me before was at my shoulder before it had cooled enough to drink. No face, no voice, same as the first time.
+Two things up front. This is someone living. And nothing here asks you to get in touch, to wait or to forgive.
 
 [CARD 1]
 
-**They took your belief that you'd be looked after, {{FIRST}}.**
+**Card 1, the Fool: What did they take from me?**
 
-You've felt the hole it left for a long time, and you've given it other names. Being independent. Getting older. Just how things are. I told you most women guess wrong, and this is how they do it. They name what the loss did to them and never what used to be there.
+**They took the part of you that loves with your whole heart, {{FIRST}}.**
 
-Here's what used to be there. The plain sense, never once thought about, that if you went down, somebody would come. It ran both ways. You looked after people, and you let people look after you, and you didn't keep count of either, because you took it for granted that it came back around. When I wrote to you about the old man holding up his lantern, and said the light in it was what they'd walked off with, this is the light I meant.
+The Fool walks to the edge of a cliff with his eyes on the sky, a small white dog leaping at his heel. He doesn't check the drop first. He's the part that left.
 
-The Fool is a young man stepping out at the edge of a cliff with his eyes on the sky, not on the drop. At his heel a small white dog is up on its back legs with its mouth open. He doesn't look down, because something's looking out for him.
+Somebody who's known you for ages said it once: "You used to throw your whole heart into things."
 
-Before them, none of that took any thought.
+Your heart still works, and you'd do anything for the people you've got. What went is the part that handed over all of it at once, without working out what it might cost.
 
-With them, it ran one way. You did the looking after, it suited them to let you, and they never changed a thing about it. Nobody said the lesson out loud, but you learned it anyway: nobody's coming. So you stopped expecting anyone to. Then you stopped asking. In the end you stopped taking help even when it was held right out to you, and you never noticed the day that started.
-
-Here's how it looks now. Somebody offers to carry something for you, and you've already got it up the steps. When a friend picks up the check, you've paid her back inside the week, one way or another. You can't remember the last time you asked anybody for a ride, and you count that in your favor. None of it feels like something missing. It feels like good sense. And it works, as far as it goes. It just never lets anybody find out whether they'd have come.
-
-When I turned this card, the one at my shoulder came in closer, close enough that I felt it at the back of my neck. They know what they've got, and they've known it a long time.
-
-I picked up my pen, looked at your name and put the pen back down. There was nothing on the sheet but your name and your date.
-
-This week, keep count of how many times "I've got it" comes out of your mouth before the other person has finished offering.
+Something moved into the room it left. I call it the Bookkeeper. It keeps a tally: a little warmth goes out, then it waits to see what comes back. It's kept you from being hurt like that twice. It isn't a second thing to get rid of. It's only what grows in a room that's been left empty, and it goes quiet once what belongs there comes back.
 
 [CARD 2]
 
-You carry every grocery bag in from the car in one trip, both arms loaded, so nobody has to get the door for you. You call that being fine on your own.
+**Card 2, the Chariot: Did they ever really love me?**
 
-The Chariot shows a man standing upright in a stone chariot with no reins in his hands, and the town behind him is already a long way back. Nothing runs from him to anybody. He's moving, and he's doing it alone.
+**Yes. Back then, it was real.**
 
-Here's what else it looks like. Someone says "call me if you need anything," and you never once call. You'd sooner stand on a kitchen chair at eleven at night to change the smoke alarm battery than knock on a neighbor's door.
+On the Chariot, a man stands upright under a canopy of stars. Two sphinxes sit in front of him, one black and one white, and there are no reins. Nothing keeps them there but choosing to stay.
 
-People tell you they don't know how you do it all. They mean it as praise. What it tells you is that nobody's offering, because you've made it look like nobody needs to.
+Here's how I know. Before the first card was down, your name and date told me who I was laying them for. {{EX.trait}} {{LP.trait}}
+
+They saw something in you: {{EX.saw}}. That's what they loved. They leaned on {{EX.use}}, and you let them, because a whole heart doesn't hold anything back from the one it's chosen.
+
+You didn't imagine it. It was chosen every day, the way those sphinxes stay put.
+
+[[FORK get_back]]Remember "back then." Whatever gets asked of you will come dressed in that love, and the love is in the past.[[/FORK]][[FORK giving]][[/FORK]]
 
 [CARD 3]
 
-The Empress sits back in an open field, and in front of her the wheat is ripening, none of it cut. It's all standing there in the open, and whoever comes along can take as much as they like.
+**Card 3, the Empress: Was it my fault?**
 
-You've asked yourself how you could have been so stupid. Put that question away, because it has the whole thing backwards. Giving freely isn't stupid.
+**No. Loving somebody with your whole heart is never the mistake.**
 
-They saw something in you: {{EX.saw}}. And whatever it was, it came with you looking out for them. You noticed when they were worn out, and you saw to it. You never kept a tally, because you believed it would come back around when it was your turn, and that's what made it easy to take. They knew what was standing there in the open, and they helped themselves.
+The Empress sits back in an open field, and the wheat in front of her stands ripe and uncut, there for whoever comes along.
 
-They kept {{EX.use}}, and never once turned around and did the same for you. Whatever you gave, you gave honestly. What was done with it after that is on them. None of it was a mistake on your part. You were doing what anyone does who expects care to go both ways.
+That's how you loved: out in the open, nothing fenced off. Handing somebody all of it isn't foolish. Dropping it is, and you weren't the one who dropped it. The Bookkeeper isn't your fault either. Anybody would start keeping count after a loss like that. So put down the question about what was wrong with you. Nothing was.
 
-I stopped there. The one at my shoulder had gone still, and I did something I don't do. I asked out loud, in my empty kitchen, why they've still got it. Nobody answered, so I kept going.
-
-Before any answer, I want one thing from you, and only one: stop asking what's wrong with you.
+By the third card I knew your spread ends well. Hold on to that through the middle.
 
 [CARD 4]
 
-They've kept it because giving it back means saying what they did.
+**Card 4, Justice: Why have they still got it?**
 
-Justice holds a pair of scales in her left hand, and her eyes are open, looking straight out. She isn't looking down at the scales at all.
+**Because giving it back means weighing what was dropped.**
 
-Handing it back would mean looking down. It would mean saying the scales were never level: you did the looking after, and they did the taking. And if they say that, they have to say they knew you were going without. While they hang on to it, nobody has said so, and they're still the person you took them for. Give it back and that person's gone. That's why they didn't lose it or throw it away. They kept it, and they kept their eyes off it.
+Justice sits between two pillars with a sword held straight up and a pair of scales in her other hand. Her eyes look straight out, not down at the scales.
+
+Holding on costs nothing. Handing it back would mean setting your whole heart on one side of those scales and what came back to you on the other, and looking. Nobody likes how that comes out. So the eyes stay up, like hers, and well off the scales.
 
 [CARD 5]
 
-They'd moved by then. After my question they left my shoulder for the first time all night, went back across the kitchen to the door and stopped there. It was getting on for midnight.
+**Card 5, the Hanged Man: Why has it taken this long?**
 
-Here's why it's taken so long. They had a line that let them off, and the line was "She can look after herself."
+**Because one line let them off: "You were done with all that." You said it yourself, so nobody asked the next question.**
 
-The line held because it was true. You could. You proved it every day, so nobody had to wonder. But being able to look after yourself got turned into having to, and they were the ones who did the turning. A woman who can carry her own load still shouldn't have to carry theirs too.
+On the Hanged Man, a man hangs upside down by one ankle, calm as you like, his hands out of sight behind his back. That line kept a pair of hands tucked away just like that.
 
-You backed the line up without meaning to. Once you'd settled into being fine on your own, you looked like somebody who needed nothing from anyone, and the line looked truer every day. None of that is your fault. You did what anybody does when help stops coming. Hiding behind it was their choice.
+You meant it when you said it. You were done with being hurt. Your heart was never done with loving. From the outside, it looks like peace. Here's what people see:
 
-You still do their work for them, in small ways. A friend calls from the store to ask if you need anything, and you say no with no milk in the house. Someone drops off a casserole when you're laid up, and the dish goes back the next day washed, with something baked in it, so nothing's owed. Nobody has to tell you that you can look after yourself. You tell them first.
+- When somebody asks if you're seeing anyone, you say, "Oh, I'm done with all that," and everybody laughs.
+- Somebody brings a dish over, and it goes back washed, with something baked in it, so nothing's owed.
+- At a wedding, you're back at the table before the slow songs start.
+- When a friend wants you to meet somebody, you've got a reason ready before the name's out.
+- When somebody tells you that you've got a big heart, you change the subject.
 
-On the Hanged Man, a man hangs upside down by one ankle from a T of green, living wood, and his hands are out of sight behind his back. That's where their line kept their hands the whole time, out of sight, where nobody could ask them to lift one.
+And under all of it, the one line the Bookkeeper lives by: "If I only give a little, I can only lose a little."
 
-They knew enough, back then, to let it go on. The months I told you about, the ones they've spent coming back to this, are that line wearing thin.
+It's the honey again. Nothing's gone bad. It's only gone hard.
 
 [CARD 6]
 
-What they regret is taking your care and giving none back.
+**Card 6, Temperance: What do they regret?**
 
-On Temperance, a winged figure pours water from one cup into another. One cup is held higher, and the water runs down from it into the lower one. Nothing runs back up.
+**Having all of your heart, and treating it like it would always be there.**
 
-[[FORK get_back]]What they're sorry to have lost is the care itself, the way you saw to them without being asked. That isn't the same thing as you.[[/FORK]][[FORK giving]]Their regret isn't about wanting you back. Leaving you wasn't easy for them, and you still cross their mind. But if part of you has hoped they want you back, they don't.[[/FORK]] A regret like theirs doesn't pay back one drop, and it doesn't reach you where you are. It's a feeling they have about themselves, and it stays on their side of the table. You'll be tempted to read it as love. It isn't.
+An angel stands with one foot in a pool, pouring water from a higher cup into a lower one. None of it runs back up.
+
+The sorry is real. [[FORK get_back]]But under it, what's missed is being loved like that, all the way, with nothing asked back. That isn't the same thing as missing you.[[/FORK]][[FORK giving]]It isn't about wanting you back. You come to mind over there more than you'd guess, but the door's shut from that side.[[/FORK]] It runs one way, like the water, and none of it reaches you.
+
+It was midnight when I laid Temperance down, and the Bookkeeper started pushing back. Every card came with the same dry word, like somebody closing a ledger: enough. I kept turning.
 
 [CARD 7]
 
+**Card 7, the Lovers: Why does nobody new get close?**
+
+**Because the Bookkeeper gets to them first, and it's already counting.**
+
+The Lovers stand close enough to touch, an angel's arms spread wide over them both, and neither one reaches.
+
 {{LP.then}}
 
-None of that stopped when they left. Someone decent turns up and {{LP.now}}. One person taught you that nobody comes, and everybody since has been treated as if they'd taught it too.
-
-The Lovers are a man and a woman standing close, but not touching. Above them, a winged figure holds its arms open over both of them.
-
-That's how help goes for you now. It stands right next to you, close enough to touch, and it never gets to you. Somebody offers to drive you, to carry something, to come over and sit with you, and the offer is turned down before it lands. They didn't do anything to you. And what they brought goes home with them. You tell yourself you're sparing them the trouble. You aren't sparing anybody. You're keeping the old rule going, the one that says nobody comes, and making it true one more time.
-
-Past midnight now, and still nothing on the sheet but your name.
-
-Think of the last time someone offered you a hand with something. Notice whether you let them finish the sentence.
+But the habit stayed on after the reason for it was gone. Someone decent turns up and {{LP.now}}.
 
 [CARD 8]
 
-Two people are falling head-first from the Tower, arms out, and neither one has landed. Above them, lightning has come down out of a dark cloud and knocked the crown clean off the top.
+**Card 8, the Tower: Is it too late for me?**
 
-Fine on my own got you through, and you came by it honestly. When nobody was coming, it was the right thing to learn. You kept the lights on and the bills paid, and you never once had to wait on anybody.
+**No. The careful years don't come back, but your whole heart does, and it's closer than it looks.**
 
-Now here's what it did.
+On the Tower, lightning knocks the crown off the top, and two people fall head first with their arms out. Neither one has landed.
 
-Every time you've gone down since, you've gone down like those two, arms out and nobody underneath, because you made sure nobody was standing there. If a doctor's office has ever told you that you'd need someone to drive you home afterward, you know the first thing you did was work out how to get around asking. If you've had a bad flu, you got through it alone and mentioned it two weeks later like it was a funny story.
+The years you spent careful are gone, and I won't pretend otherwise. But think of the honey. It went hard, and it never once went bad. You know what a heart is worth now, because you've seen what it costs when one gets dropped. People who've never been hurt hand a heart around like loose change. You'll know whose hands to put yours in. A whole heart and the sense to mind it: that's a rare pair, and you'll have both.
 
-And then there are the people. Some of them offered for a good while. They asked if you needed a ride and heard no. They said to call and never got a call. Then they quit asking, the way anybody does after enough noes, and you lost them without a word on either side. They didn't stop caring about you. They stopped believing you'd let them.
-
-I got up from the table at that point, which I don't do in the middle of a reading. I went out the back door and stood on the step in the cold for a minute, because I could see what this card was doing and I wanted to be away from it. Then I came back in and sat down.
-
-Here's the deal, and I want you to have it straight. The belief comes back. The years you spent on your own don't. Nobody hands those over, not them, not me, not any card.
-
-I told you ten years or thirty makes no difference to whether they've still got it. That holds. But it makes all the difference to the bill. Years of being the one who brings the food, stays to wash up and drives home by yourself. Years of sick days nobody knew about until they were over. Years of good people who'd have shown up for you and never got the chance.
-
-They took your care and gave none back. That part's theirs, every bit of it, and I'm not lifting it off them. But what you built didn't stop with them. It ran on through every year after, with people who'd have done right by you, and those years went on your bill. They ran it up. You're the one who's been paying it.
+Look again: nobody on that card has hit the ground.
 
 [CARD 9]
 
+**Card 9, the Moon: Are they giving it back, or trying to get me back?**
+
 [[FORK get_back]]
-**They're trying to get you back, {{FIRST}}.**
+**Trying to get you back, {{FIRST}}.**
 
-And part of you is glad to read it. Don't hurry past that, and don't be ashamed of it either. It's the part to keep your eye on.
+On the Moon, a dog and a wolf sit on either side of a path and howl up at the sky. Neither one takes a step. They only call.
 
-Look at what that glad part wants to do. It wants to go see to them. Before you'd let one person bring you a cup of coffee, you'd be wondering if they're eating right, if anybody's checking on them, if they're managing. The care you've turned away from everybody decent is packed and ready to go straight back to the one who took it and never gave any back.
+The letter ends with an ask: a visit, and if you won't come, a letter back.
 
-Give that part an inch and it starts making excuses for them. They must have changed, to keep at this for months. They must be struggling. You'd remember the good stretches first and the rest a long way after. You'd be giving them the very thing you won't take from anybody else, and calling it kindness. That's the danger, right there.
+If something in you stirs when you get to it, don't be ashamed of it. A heart shut this long points the old way first when it opens. Going back would feel like loving all the way again. It would be handing your heart to the one who dropped it once.
 
-The Moon has a pool at the bottom of the card, and a crayfish is crawling up out of it. Above everything hangs the moon, with a face in it, eyes closed, looking down. The crayfish is coming up out of the dark toward something that isn't watching it come.
-
-Here's what their wish is really for. They don't want you. They want what they had from you: being looked after without having to ask, and without having to give anything back. They're holding it out with an open hand and waiting for you to walk all the way over and take it, so you'll be close enough to start seeing to them again.
-
-They won't come to you. A wish like theirs stays put. It waits for you to do the walking.
-
-I told you that you'd need to know which way this went, because you'd treat one as a gift and the other as a trap. This is the trap. Every kind word in their letter is going to sound like a reason to go to them. None of them is.
-
-And look at who'd be looked after, if you went. Not you. It would be the same arrangement as before, with you doing the seeing-to and them doing the letting.
-
-I'd sat back down to turn this one, and I'd gotten so cold out on the step that I reached behind me, took my cardigan off the back of the chair and put it on myself. They didn't leave. They came right up to the table and stayed there, closer than they'd been all night. It was three in the morning, and the sheet was still blank under your name. I didn't know if I'd get your letter at all.
+Nobody's walking over with it. It's the dog and the wolf: all calling, no walking. The warmer the letter gets, the harder you watch where it's heading.
 [[/FORK]]
 [[FORK giving]]
-**They're giving it back, {{FIRST}}. They aren't trying to get you back.**
+**Giving it back, {{FIRST}}. Not trying to get you back.**
 
-They want it off their hands, and that's what the giving is. Their regret is real, and so are the months they've spent coming back to this. But none of it is them reaching for you. The line that let them off has worn through, and without it what they took has gotten heavy, so they're putting it down for their own sake. It isn't that you never cross their mind. You do. They still don't want you back.
+On the Moon, a crayfish crawls up out of a dark pool, and above it the moon hangs with its eyes closed. It isn't watching anybody.
 
-I told you one way this could go was a gift. This is that way, and it's colder than it sounds. It asks nothing, because they want nothing from you. Not your care, not an answer, not you. That's hard to hear after so long being the one who gives. It's still the better of the two ways this could go, because it leaves you nothing to answer.
+The letter ends by asking you for nothing at all. Not forgiveness, not a visit, not even an answer.
 
-On the Moon, a crayfish is crawling up out of the dark pool at the bottom of the card. Above it the moon has a face, with its eyes closed, looking down.
+The point is to be rid of it. It's a gift, and colder than it sounds. It asks nothing because nothing's wanted back.
 
-Something in you has been crawling up out of the dark like that for a long time, toward a face that doesn't open its eyes. You quit asking anybody for anything, but underneath it all you left one spot open, just in case. It was for the day they'd turn up at last and do right by you. They'd sit down across from you and explain all of it, and then, for once, they'd look after you. You'd tell anyone who asked that you gave up on that day a long time ago. Then some small thing would set it off, and you'd catch yourself waiting again.
-
-The day isn't coming. Nobody is going to sit down across from you and explain, and nobody's going to look after you to make up for it. What's in their letter is everything you'll get from them. There won't be one word after it. Whatever spot you've been keeping open for them, you can close it.
-
-I'd sat back down to turn this one, and I'd gotten so cold out on the step that I reached behind me, took my cardigan off the back of the chair and put it on myself. Then I looked up at the door, and there was nobody by it. They'd been somewhere in my kitchen all night, and now it was just me and the clock. Three in the morning. Your name at the top of the sheet and not one word under it, and whoever was carrying your letter had gone. I didn't know if I'd get it at all.
+Nobody's going to sit down across from you and explain it all. The letter at the end is everything you'll get. If you've held part of your heart back for that talk, you can spend it on somebody else.
 [[/FORK]]
+
+It was three in the morning when I turned this one, and the letter stopped coming. The one at my shoulder would give me half a line and go quiet, as if somebody were still keeping count. I put the pen down and waited.
 
 [CARD 10]
 
-**No, {{FIRST}}, they won't call or write, and they won't do one thing to make this right, because {{REASON.headline}}.**
+**Card 10, the Sun: Will they ever do anything about it?**
 
-[[REASON 0]]Making it right would mean admitting they owed you. A proud person hates owing, and they'd sooner leave a debt unpaid for good than say out loud that it's there.[[/REASON]][[REASON 1]]You're that person. You were the one doing the looking after, so you were right up close for all of it, the taking and the never giving back. Looking you in the face would mean looking at that.[[/REASON]][[REASON 2]]Taking from you never cost them a cent, and neither does leaving it. You were the one who covered the cost, every time, and you still are.[[/REASON]] Don't go asking them for the reason. They couldn't give you one. They knew enough back then to let it go on, but this reaching for you now, they're doing without knowing it, and nobody can explain what they don't know they're doing. Asking would only hand them the pull again.
+**No, {{FIRST}}, nothing else is on its way, not a visit and not a card, because {{REASON.headline}}.**
 
-[[FORK get_back]]
-So they hold it out, and they want you to come to them, the way you always did. I told you in the first letter what it means when someone holds a thing out like that, and this is it. They won't take one step. They want you to take all of them.
-[[/FORK]]
-[[FORK giving]]
-So they're giving it back, and they still won't move. They'll set it down where they are and leave it there. They won't bring it over, and they won't check that it got to you. As far as they're concerned, setting it down is the end of it.
-[[/FORK]]
+The Sun shows a child riding a white horse bareback in broad daylight, both arms flung wide.
 
-Now the turn. They were never the ones who had to move. Being looked after was never theirs to bring to your door, by hand or down a phone line. It doesn't come back through contact, and it doesn't wait on them owning up. All it ever needed was for somebody to quit waiting.
+[[REASON 0]]Doing more would mean coming to you and saying, "I dropped it," and pride won't carry anybody that far.[[/REASON]][[REASON 1]]You saw the whole of it, the loving and the dropping, and nobody wants to stand in front of the one who saw.[[/REASON]][[REASON 2]]Your heart going hard has never cost a thing on the other side. Life over there runs the same either way.[[/REASON]] [[FORK get_back]]So it's held out, and you're the one expected to come and get it.[[/FORK]][[FORK giving]]So it's being set down right where it is. Nobody's bringing it to your door.[[/FORK]]
 
-The Sun shows a child riding a white horse bareback, both arms open wide. The child isn't clinging to the horse. The horse is doing the carrying, in broad daylight.
+Here's what I can't do: make anybody come and say it to your face. No card can. What I can do is read you every word, and I have.
 
-You've been waiting a long time for the one who owed you to pay up. You've been waiting for them to come and say it, as if being looked after had to come from them first before anybody else was allowed to do it. Every time you've thought, if they'd just admit what they did, then I could let somebody help me, that was you waiting on them. It never needed them. Being carried doesn't come from the person who owes you. It comes from whoever's there, and from you letting them. The day you stop waiting on their say-so, it's already yours. Look at that child again. Nobody on that horse is waiting for an apology before they'll let themselves be carried.
+Nobody has to come and warm that jar for you. Your whole heart was never somebody else's to carry back. You've kept it shut until this was settled. You can stop counting.
 
-The window over the sink went from black to grey while I sat there, and I saw what I'd been doing all night. I'd been pulling at them for your letter, then sitting back and waiting for them to hand it over, then pulling again. The same thing you've been doing. So I quit. I said it out loud: I'm done waiting on you.
+Look at the child again: no reins, no saddle, arms wide, and not falling off.
 
-[[FORK get_back]]Then they were in the chair across the table[[/FORK]][[FORK giving]]Then they were back, in the chair across the table[[/FORK]], the one where you'd sit, and the weight had gone out of them. My pen started to move. The first line of your letter was on the sheet.
+By the time I turned the Sun, the window over my sink had gone gray and the Bookkeeper had stopped its counting. The one at my shoulder sat down across the table, and the letter started to come.
 
 [CARD 11]
 
-What they never said comes down to one sentence: "Someone should have looked after you, and I knew it."
+**Card 11, the Star: What did they never say?**
 
-Don't answer it, not on paper and not in your head. You don't need to. By the time you've read it, it's already back.
+**That they knew what you'd handed them, and didn't look after it.**
 
-Look at what it says. It says you were right to expect it. Wanting somebody to be there for you was never weak and never too much to ask. And it says they saw you going without, and they knew. That's what you went looking for every time you went back over it, and never found. Now you have it in their words. You can stop looking.
+On the Star, a woman kneels at a pool, emptying a jug in each hand. Not one drop is held back.
 
-And you can stop writing their half. You've had them say sorry in your head. You've had them turn up at the door with soup. You've had them say worse. You've run the whole talk while you did the dishes and while you lay awake, the one where they finally see what they did, and come out of it more tired than you went in. That job's done. Their side is down in writing now, and it isn't yours to write anymore. All the time that went into it comes back to you.
+Here's the one line never said out loud:
 
-You're about to read their words. If this person hurt you, you owe them no reply. Reading it is all you have to do.
+"You loved me with your whole heart, and I didn't take care of it."
 
-On the Star, a woman kneels on one knee at the edge of a pool with a jug in each hand, and both jugs are being emptied. Nothing's held back in either one. That's how their sentence came, all of it, and it can't be poured back now. Then the rest of the letter started to come, and it came fast.
+There it is. It doesn't need answering, not on paper and not in your head at night. If this person hurt you, you owe them no reply.
 
 [CARD 12]
 
-Stop going back to them, and ask for one small help a day and take it with only a thank you. You'll get through what's coming on those two.
+**Card 12, the World: What do I do now?**
 
-Your last card is the World. A woman dances inside a green wreath with a wand in each hand, one and one, and she carries nothing else. Nobody's bags. Nobody's load. Just her own two.
+**Stop going back, and let your heart out a little further every week.**
 
-Fine on my own was you carrying everybody's load and calling it a choice. It kept you standing, and you can put the words down now. You don't need them. Being fine was never supposed to mean being on your own.
+Your last card is the World: a dancer inside a green wreath, a wand held loose in each hand, caught mid-turn. Nothing in her hands is gripped tight.
 
-The pull will be at its strongest now, inside the next five to seven days. That's about you, and what's moving in you. It says nothing about them turning up.
+You don't need "I'm done with all that" anymore. It got you through. Now let your heart have its say.
 
-**Stop going back.** Rereading the old messages, looking them up, starting a message you swear you'll never send: they're one act with three names. When the pull comes, put the phone in another room, set the oven timer for twenty minutes and give your hands something to do, like wiping down the counters. Don't argue with it. An urge comes up and goes back down on its own if nobody feeds it. Going to look is what feeds it, and it's what teaches it to come back. Every one you let go by makes the next one smaller.
-
-I told you the rereading stops. The need for it goes when you read the letter. The habit takes about a week, so your hand will still go to the phone a few times. Let it, and let the timer run.
-
-**The one thing to do.** Once a day, for seven days. Ask a friend who's going to the store to pick up milk for you, and when she hands it over, say thank you and nothing else. Don't pay her back that week. Only with people who've never given you cause. Nobody from your past.
-
-The thank-you part matters as much as the asking. Just thank you, and leave it there.
-
-You can't think your way back to believing someone will come. Your head has one big example, and it's gone over that one thousands of times. Small times that turn out fine give it something new to go on. And if one goes badly, you find out you live through it.
-
-It won't feel like much at first. You'll know it's working by what stops. Your hand stops reaching for the phone late at night, and "I've got it" stops coming out before anyone's finished offering. How soon that happens is down to what you do with the twenty minutes and the seven days. It isn't down to me, and it isn't down to them.
+Read the letter first. After it come thirty days of small things to do, because small is how a careful heart opens back up.
 
 [[FORK get_back]]
-Their letter ends with an ask. In the last line, they want something from you. I've left it in. Do nothing with it.
+The letter ends with an ask. I've left it in. Do nothing with it.
 [[/FORK]]
 [[FORK giving]]
 
 [[/FORK]]
-
-And the next time someone reaches for you, there's someone there.
-
-It was full light by the time I finished. I put the Hermit, Judgement and the Devil back in the deck. Then I wrote your letter out clean, by hand, at the same table, with them sitting across from me, and I didn't change a word.
-
-Read it once, slowly, all the way to the end.
 
 [LETTER]
 
@@ -245,33 +208,90 @@ Read it once, slowly, all the way to the end.
 
 I'm never going to send this. {{REASON.letter}} So it stays here.
 
-I'll say what I did. You looked after me, and I let you, and I never looked after you back. You'd see I was worn out and you'd take care of it. You'd have things handled before I'd thought to ask. When it was your turn to need something, I wasn't there for it. I was busy, or I said you were better at that kind of thing than me. I watched you do everything for yourself, and I let you. I never asked how you were managing. I didn't want to hear the answer.
+I'm writing it anyway. I've had something of yours too long, and I'm tired of carrying it around and saying nothing.
 
-I'm not saying I sat down and planned it. I don't think I did. But it went that way, and I knew it was going that way. It suited me, so I let it stay that way.
+When I first knew you, {{EX.letter}} I liked that. I liked being around it. {{EX.never}}
 
-When I first knew you, {{EX.letter}} I liked that. Having you around made everything easier on me. I kept {{EX.kept}}. I took and took, and I never gave you anything back.
+{{EX.moment}}
 
-I told myself you could look after yourself. You always did, so it was easy to believe, and it got me off the hook every time. It doesn't hold up anymore. I try telling myself that now and I can't make it stick.
+You never loved halfway. Not once. You'd remember how I took my coffee after watching me make it one time. You'd say it first, every time, "I love you," and you never stood there waiting to hear it back. You'd leave the porch light on when I was late, and you'd still be up when I came in, and you'd be glad. Not put out. Glad. Whatever you had, you gave me the whole of it, and you never kept a list.
+
+I got used to it. That's the worst thing I can say about myself, and it's true. Something that big, and I got used to it, the way you get used to a warm house and stop wondering who keeps the heat on. You'd say it, and I'd say, "You too," with my eyes on the TV. I could see you waiting for more, and I let the moment go by. After a while you stopped saying it first. I noticed. I didn't do a thing about it.
+
+I took {{EX.kept}} for granted. Not once did I say thank you, and you never asked me to.
+
+{{LP.admire}}
 
 {{LP.letter}}
 
-Why did I hang on to it? Because giving it back meant saying I knew. As long as I kept quiet, I could still be somebody who didn't know any better. I did know better. I always did. That's the part I can't get around.
+Here's what I told myself, since I'm being honest for once. I told myself you were done with all that. You said so, people said so, and it suited me to take it at face value. I told myself you were better off careful, that a heart that size would only get hurt again, and I'd done you a favor. When somebody asked about you, I said, "Doing fine. Keeps busy." It's a lie that gets easier every time you tell it.
 
-So here it is. I should have said it back then, and I didn't.
+There was one minute, near the end, when you looked at me like you were waiting for me to say something, anything, that would make it worth staying. I knew what you needed to hear. It wouldn't have cost me a thing. I didn't say it. I picked up my keys.
 
-Someone should have looked after you, and I knew it.
+I know what it did to you, because it started before I was even out the door. You got careful. You'd say something warm and then take half of it back with a joke. You'd hold my hand and be the first to let go. I did that to the one person I knew who never held anything back, and I let myself call it you getting wiser.
 
-You weren't wrong to think somebody would be there for you. That was never asking too much. That belief, that somebody would come, was yours before me and it's yours now. I'm giving it back. All of it. You don't owe me a thing for it.
+When I left, I took the part of you that loved with your whole heart, and I knew I had it. It's never been any use to me. It only ever worked in your hands.
+
+None of this was your fault. You didn't love too much. I loved too little, and I was lazy about it.
+
+I did love you. Back then, it was real. Whatever you decide about me, don't decide that part was fake. You weren't fooled. You were loved, and then you were taken for granted, and those are two different things.
+
+I'm sorry. Not that it ended. I'm sorry I had the whole of your heart in my hands and set it down like it was nothing, somewhere I never went back to look. That didn't just happen. I did it.
+
+I don't know what your life looks like now. I haven't tried to find out. But I know how I left it. Somebody kind turns up, and you're polite, and you're careful, and you keep the best of yourself back where nobody can get at it. I taught you that.
+
+I can't give you back the time. I would if I could, every last day of it. But I knew you. The best of your life isn't behind you, not with a heart like yours.
+
+So here's what I should have said back then and didn't:
+
+You loved me with your whole heart, and I didn't take care of it.
+
+It was never mine to keep. It was for people who'd be glad of it, and for the ones you haven't met yet. I want you to have it back, all of it: the part that says it first, the part that waits up, the part that gives the whole thing without counting. Give it to somebody who'll mind it. Keep some for yourself. I don't get a say in it, and I never should have had one.
+
+I want you happy. Not careful, not fine. Happy.
+
+{{EX.last}}
+
+I won't call, and I won't turn up at your door. This is as far as I go.
 
 [[FORK get_back]]
-Come back. If you won't do that, then write to me, just once.
+I meant every word of this. I think about you more than I'd ever say to your face. I'd like to see you. If you won't, write to me. Just once.
 [[/FORK]]
 [[FORK giving]]
-I'm not asking you for anything. Not to forgive me, not to see me, not to answer this. Don't write, and don't come looking for me. That's all.
+I'm not asking you for anything. Not to forgive me, not to see me, not to write back. Don't come looking for me. You can put me down now. Go and love somebody all the way.
 [[/FORK]]
 
 [CLOSE]
 
-I looked up, and the chair across the table was only furniture again, with nobody in it.[[FORK get_back]] I left their ask in so you'd see it plain. It's a bill, and nobody owes it, you least of all.[[/FORK]][[FORK giving]][[/FORK]]
+It was full light when I set the pen down, and the chair across the table was empty.[[FORK get_back]] I left the ask in so you'd see it plainly. It's a tab run up in your name, and you don't owe it.[[/FORK]][[FORK giving]][[/FORK]]
 
-It's back. What you do with it is on you.
+**Will I be happy again?**
+
+**Yes. Not careful, and not just getting by. Happy, with your whole heart in it.**
+
+Your birthday, {{NEXT_BDAY}}, starts a new year for you. {{PY.ahead}} The change starts well before then. By your birthday, you'll know it's real.
+
+**Within 7 days.** The pull will be strongest late in the evening, once the house has gone quiet. You'll want to look up the name, or reread something old. That's the Bookkeeper going over old accounts, not a sign that anybody's coming back.
+
+**Within 30 days.** Across somebody's kitchen table, you'll hear yourself say something warm all the way to the end, without trimming it down to "take care." Don't take it back.
+
+**Within 3 months.** An ordinary weeknight, somewhere you didn't expect to be. Somebody you've only just met makes you laugh hard enough that you forget to keep count.
+
+Signs to watch for:
+
+- A song that used to make you change the station, and this time you let it play.
+- Somebody telling you, "You've got your laugh back."
+- An urge to write a real card to somebody, by hand, and sign it with love.
+- The name turning up on a stranger or in a song, and passing right on by.
+
+If three of these turn up inside a month, it's opening.
+
+Three small things, for thirty days:
+
+**Stop going back.** Rereading old messages, looking up the name, starting a message you swear you won't send: it's all one thing. When the pull comes, put the phone in another room and set the oven timer for twenty minutes. An urge goes back down if nobody feeds it.
+
+**The one thing to do.** Once a week, say the whole warm thing out loud, the one you'd usually cut short. Tell somebody you love them, or that you missed them, or what they've meant to you, and don't wait to see what comes back. Nothing involving anybody from back then.
+
+**Let one kindness go unpaid.** Once this month, when somebody does something nice for you, say thank you and leave it there. No dish sent back full, no favor to even it up. The Bookkeeper will itch. Let it.
+
+Start with the honey, if there's a jar at the back of a cupboard that's gone hard. Don't chip at it, and don't force the lid. Stand it in a bowl of warm water from the tap and leave it be. Within the hour it's gone clear and gold again, and it runs off a spoon like the day you brought it home. It never went bad. It only needed somewhere warm. It's back. Go and use it.
