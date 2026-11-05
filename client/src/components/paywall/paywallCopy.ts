@@ -32,7 +32,7 @@ export function toTierView(tier: PricingTier, coinsPerMinute: number = COINS_PER
   // $10 / 3.34-min pack reads "$2.99/m" rather than the $3.33 a whole-minute count gives.
   const exactMinutes = tier.totalCoins / coinsPerMinute;
   const minutes = Math.floor(exactMinutes * 10) / 10;
-  const bonusMinutes = Math.floor((tier.bonusCoins / coinsPerMinute) * 10) / 10;
+  const bonusMinutes = Math.floor(((tier.bonusCoins ?? 0) / coinsPerMinute) * 10) / 10;
   const dollars = tier.priceUsd / 100;
   const pricePerMinute = exactMinutes > 0 ? dollars / exactMinutes : dollars;
   return {
@@ -50,6 +50,24 @@ export function lowestPerMinuteLabel(tiers: PricingTier[], coinsPerMinute: numbe
   const rates = tiers.map((t) => toTierView(t, coinsPerMinute).pricePerMinute).filter((r) => r > 0);
   const min = rates.length ? Math.min(...rates) : 0;
   return `$${min.toFixed(2)}`;
+}
+
+/** True when tiers do NOT all share one per-minute rate (i.e. a real bulk discount exists). */
+export function perMinuteVaries(tiers: PricingTier[], coinsPerMinute: number = COINS_PER_MINUTE): boolean {
+  const rates = tiers.map((t) => toTierView(t, coinsPerMinute).pricePerMinute).filter((r) => r > 0);
+  if (rates.length < 2) return false;
+  const min = Math.min(...rates);
+  const max = Math.max(...rates);
+  return max - min > 0.005; // half a cent tolerance
+}
+
+/** Honest rate line: flat pricing says "just $X/min"; real bulk discounts say "as low as $X/min on bigger packs". */
+export function ladderLine(tiers: PricingTier[], coinsPerMinute: number, variant: PaywallVariant): string {
+  if (variant !== "B") return "";
+  const lowest = lowestPerMinuteLabel(tiers, coinsPerMinute);
+  return perMinuteVaries(tiers, coinsPerMinute)
+    ? `As low as ${lowest}/min on bigger packs.`
+    : `Just ${lowest}/min — you only pay while you're in a live reading.`;
 }
 
 export interface PaywallCopy {
