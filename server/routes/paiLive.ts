@@ -122,6 +122,7 @@ export function createPaiLiveRouter(deps: PaiLiveDeps): Router {
         {
           order,
           cardToken,
+          cardName: typeof req.body?.cardName === 'string' ? req.body.cardName : undefined,
           phone,
           smsAnswer: req.body?.smsConsent,
           ip: clientIp(req),
