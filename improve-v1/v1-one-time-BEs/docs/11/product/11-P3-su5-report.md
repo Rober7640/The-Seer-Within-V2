@@ -275,17 +275,17 @@ Your birthday, {{NEXT_BDAY}}, starts a new year for you. {{PY.ahead}} The change
 
 **Within 7 days.** The pull will be at its strongest, most likely late in the evening, when the TV's off. You'll want to look up the name, or reread something old. That's the Keeper, not a sign that anybody's coming back.
 
-**Within 30 days.** In a checkout line or on the drive home, you'll catch yourself making a plan you didn't have to talk yourself into. Go through with it.
+**Within 30 days.** One Thursday night, you won't be where anybody would have bet you'd be. You'll notice it on the drive home.
 
-**Within 3 months.** An ordinary Saturday. You're somewhere you've never been, and you didn't plan it more than a day ahead. Somebody asks what's new, and for once the answer takes some telling.
+**Within 3 months.** An ordinary Saturday. Somebody asks what's new, and "Oh, same old" doesn't come out. For once the answer takes some telling.
 
 Signs to watch for:
 
-- A sudden itch to clear out a drawer, or to change a room around.
-- An invitation from somebody you don't know well, to something you'd usually skip.
-- Somebody telling you that you look well, and not being able to say why.
-- A dream of a house you know, with the doors open and the furniture in new places.
-- The name turning up on a stranger or in a song, and passing right on by.
+- The chair starting to look wrong to you, where it's always stood.
+- Somebody who'd stopped asking you places asking again, and you not saying "We'll see."
+- The one who said "I miss the old you" giving you a long look, and not saying it.
+- The Keeper's quiet "leave it," and you doing the thing anyway.
+- The name coming up, and you not changing the subject.
 
 If three of these turn up inside a month, it's moving.
 
