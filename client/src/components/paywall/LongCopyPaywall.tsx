@@ -72,7 +72,14 @@ export function LongCopyPaywallPanel({
   const firstName = (persona.name || "your guide").split(" ")[0];
 
   // The three packs, ascending.
-  const presetTiers = useMemo(() => [...tiers].sort((a, b) => a.priceUsd - b.priceUsd).slice(0, 3), [tiers]);
+  const presetTiers = useMemo(() => {
+    const sorted = [...tiers].sort((a, b) => a.priceUsd - b.priceUsd).slice(0, 3);
+    // Cheapest first, then the recommended ("MOST POPULAR") pack in the centre slot,
+    // then the rest — so $30 sits centre-stage, not off to the right.
+    const i = sorted.findIndex((t) => t.recommended);
+    if (i > 1) { const [rec] = sorted.splice(i, 1); sorted.splice(1, 0, rec); }
+    return sorted;
+  }, [tiers]);
 
   // Pack + custom amount (usePackSelection): typing switches to the custom amount;
   // focusing or emptying the field keeps / restores the chosen pack. Same floor/cap as
