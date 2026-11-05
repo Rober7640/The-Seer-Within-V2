@@ -8,6 +8,7 @@ import {
   isBackendOfferKey,
   isBookingTreatment,
   resolveTeaCup,
+  takesBirthIntake,
   type BackendOffer,
   type TeaCup,
 } from '@shared/backendOffers';
@@ -128,6 +129,15 @@ export async function saveOrderIntake(intake: InsertBeOrderIntake): Promise<bool
   }
 }
 
+/**
+ * 11: her first name, which rides no Stripe metadata (`piiOutOfStripe`), so the upsell chain
+ * asks here. Null when she came without ?fn=, or the read failed: she is "dear" either way.
+ */
+export async function intakeFirstName(sessionId: string): Promise<string | null> {
+  const row = await intakeFor(sessionId);
+  return row?.firstName || null;
+}
+
 /** Read back what she typed. Null when there is none — every 02/03 order, and any 07
  *  order whose intake write failed. */
 async function intakeFor(sessionId: string) {
@@ -209,8 +219,14 @@ export async function recordBackendOrder(
   // letter's ?fn= (metadata.firstName); fall back to the name Stripe Checkout collected on
   // the card, so a buyer who arrived without ?fn= still gets her name on the AWeber list
   // instead of a blank "Friend".
+  //
+  // 11 and 12: only what the letter's ?fn= parked on the intake (11-C1: with no ?fn= she is
+  // "dear" everywhere). ⛔ Never the name on the card: it is a full name, and may not be hers.
+  const birthIntake = takesBirthIntake(offer.key);
   const firstName =
-    be08?.fields.displayFirstName || metadata.firstName || session.customer_details?.name || null;
+    birthIntake
+      ? intake?.firstName || null
+      : be08?.fields.displayFirstName || metadata.firstName || session.customer_details?.name || null;
 
   let row: BeOrder | undefined;
   try {
@@ -265,7 +281,9 @@ export async function recordBackendOrder(
         set: {
           stripePaymentIntentId: paymentIntentId,
           email,
-          firstName,
+          // 11/12: a retry whose intake read failed has no name to say, and must not blank the
+          // one the first insert wrote. Every other offer writes it as it always has.
+          ...(firstName || !birthIntake ? { firstName } : {}),
           amountCents,
           updatedAt: new Date(),
           // 08: deterministic from the same session, so a retry says the same thing —

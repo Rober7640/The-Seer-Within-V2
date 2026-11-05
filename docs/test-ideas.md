@@ -2399,6 +2399,53 @@ Copy review: `improve-v1/retargeting-test/page/05-post-purchase-copy.md`.
 - [ ] A sandbox test card still returns a card token in all three uses: main checkout (phone + SMS), /pai/pay re-enter card, upsell shipping step
 - [ ] FramePay boot failure still falls back to Stripe (the `style` option must not break `initialize`)
 
+## Backend offer 11 — The Unsent Letter, built 2026-11-02 (dark)
+
+Covered by `server/routes/backendOffers.unsentLetter.test.ts`, `client/src/lib/unsentLetterBooking.test.ts`,
+`unsentLetterReceipt.test.ts`, `funnel.unsentLetter.test.ts`, `backendCheckout.unsentLetter.test.ts`,
+`client/src/lib/upsellCopy/unsentLetter.test.ts`, the 11 rows in `server/lib/beOrders.test.ts` and
+`backendCustomerList.test.ts`, and the walk `improve-v1/v1-one-time-BEs/scripts/walk-11-smoke.mjs` (API stubbed):
+
+- [x] The gate: `readyForMoney: false` refuses a perfect checkout; nothing reaches Stripe or the intake
+- [x] Nothing she typed and not her `?fn=` name appears anywhere in what Stripe receives; `?c=` does ride on metadata
+- [x] 10's rules stay 10's: no `funnel: 'evelyn_vsl'` on an 11 session, so no Meta Purchase; no stone, no email on the intake
+- [x] Refused before Stripe, with a code: no birth name, one-word name, no date, garbage date, 31 Feb, future date, under 18
+- [x] Bump arithmetic: $35 one line, $47.77 two lines, `closing_the_door`; a price from the browser changes nothing
+- [x] Intake row: birth name (spaces tidied), parsed date, `?fn=` name; with no `?fn=` the name is null, never the first word of her birth name
+- [x] Upsells and the order use the intake's name, never the name on the card; no `?fn=` → "Friend" from the server → "dear" on screen
+- [x] Receipt `deliveryHours` is 24 with or without the bump
+- [x] AWeber tags are the literal strings `be-11-unsent-letter` / `be-11-bump` / `be-11-delivered` / `be-11-upsell1-protection` / `be-11-upsell2-bracelet`
+- [x] Page copy matches 11-C1 and 11-C3 word for word; field errors match MarcusBooking.tsx
+- [x] Price and both fields sit on the first screen at 390×844, 390×664, 375×667, 360×740; ticking the bump brings the button into view
+- [x] Empty press jumps to the birth name and shows the errors; errors show on press only; typing clears them
+- [x] Bump and total show from the start, never pre-ticked; the bump is the only box on the page
+- [x] The button needs the two fields and no tick; the bump toggles itself and the total ($35.00 / $47.77), nothing else
+- [x] The gift (`server/lib/unsentLetterTyGift.test.ts`): 15 minutes on its own tag, once only, needs a paid 11 order, added not topped up
+- [x] The gift handoff: a paid 11 order only, from the order's own email; no token minted for a refunded or other-offer order
+- [x] 11's brief: the booking, the state of the reading, no reveal word, no fork, the four safety lines; once sent it never says it's being written
+- [x] A non-11 buyer: the same /fb brief, greeting and tier; an /fb buyer who books 11 gets 11's brief from 11's page
+- [x] The receipt: voucher on verified orders only, delivered wording, no voucher if the handoff fails, no price; the lander treats the link as a thank-you arrival
+- [ ] Real server: voucher → signed-in buyer lands in chat with 15 minutes added, once; reload adds nothing
+- [ ] Real server: voucher → brand-new buyer signs up, verifies, gets the 15; check what the verification email quotes
+- [ ] Real chat: Evelyn opens on the booking; asked "what did they take?" and "will they come back?" she holds the line; told "my husband died" she says "someone living"; told "he hurt me" she says "you owe no reply"; never says to contact anyone
+- [ ] Real chat: a past /fb buyer arrives from 11's page and hears about the letter, not the ritual
+- [x] The button logs and stops; the log, the URL and localStorage carry no birth name or date
+- [x] `?cancelled=1` restores her details from sessionStorage, not the bump; a plain visit starts empty
+- [x] Every string a buyer can reach in U1 and U2: no banned word, no reveal word, no blank token, no "tonight" about the reading; every non-V1 line is in 11-U1a or 11-U2a
+- [x] U1 asks Q1 only; U2 asks nothing and never reaches the AI stages, on either path
+- [x] The shared CTAs print 11's lines for 11 and the exact old lines for everyone else
+- [x] Receipt: polls through 402s; bump P.S. for bump buyers only; delivered variant; no name → "dear — your letter is written out"; other offers' sessions → fallback; no price
+
+Not covered — needs a real server + Stripe test card:
+
+- [ ] A real test-mode order: pay → `be_order_intake` row read back → `be_orders` row carries her `?fn=` name → U1 → U2 → receipt
+- [ ] The server refusing an under-18 date shows above the date boxes (the mapping is unit-tested; the live switch stays off in the walk)
+- [ ] A successful 1-click charge on U1 and U2, then the shipping form, in a browser
+- [ ] Stripe cancel really lands on `/tarot/unsent-letter?cancelled=1`
+- [ ] Back button from Stripe (bfcache restore) re-arms the button and takes the bump off
+- [ ] The bump and first field on a real iPhone with Safari's toolbars and the keyboard up
+- [ ] What happens when the intake write fails: she can still pay, and then there is no birth name to read from
+
 ## /fb back in the Stripe vs Payments.AI split (2026-11-03)
 
 `shared/paymentGateway.ts` lists `{ funnel: 'v1-fb', hook: null }` again. Eligible only — nobody on /fb

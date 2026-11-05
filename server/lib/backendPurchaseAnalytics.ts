@@ -87,9 +87,12 @@ const BACKEND_STEP: Record<string, string> = {
   be_marcus_reading: 'sales',
   be_heart_cleanser: 'sales',
   be_soulmate_initials: 'sales',
+  be_unsent_letter: 'sales',
+  be_lucky_numbers: 'sales',
   be_protection_ritual: 'upsell1',
   be_bracelet: 'upsell2',
   be_08_marcus_audio: 'upsell1',
+  be_citrine_wish_ritual: 'upsell1',
 };
 
 // offer key → PostHog funnel name (matches Joel's `twinflame_...` tag family).
@@ -101,6 +104,8 @@ const BACKEND_FUNNEL: Record<string, string> = {
   'marcus-reading': 'marcusreading',
   'heart-cleanser': 'heartcleanser',
   'soulmate-initials': 'evelynvsl',
+  'unsent-letter': 'unsentletter',
+  'lucky-numbers': 'luckynumbers',
 };
 
 export function buildBackendPurchaseEvent(input: BackendPurchaseInput): BackendPurchaseEvent {

@@ -730,3 +730,86 @@ describe('04 · the tag strings and lists', () => {
     });
   });
 });
+
+// ─── 11 · The Unsent Letter ────────────────────────────────────────────────────
+// A reading offer on 02's shared lists, told apart only by the be-11 tags (like 03 and 04). Its
+// bump is the last page of her PDF, so `be-11-bump` is a segment, not a send. Literals, because
+// AWeber exact-matches them.
+describe('11 · the tag strings and lists', () => {
+  it('are the exact strings the 11 AWeber Campaigns are triggered by', () => {
+    expect(BACKEND_OFFERS['unsent-letter']).toEqual({
+      number: '11',
+      name: 'The Unsent Letter',
+      tag: 'be-11-unsent-letter',
+      bumpTag: 'be-11-bump',
+      deliveredTag: 'be-11-delivered',
+      initialListId: '6972552',
+      bumpListId: '6972554',
+    });
+    expect(deliveredTag('unsent-letter')).toBe('be-11-delivered');
+  });
+
+  it('adds be-11-bump only when she took the bump', () => {
+    expect(purchaseTags('unsent-letter', false)).toEqual(['be-customer', 'be-11-unsent-letter']);
+    expect(purchaseTags('unsent-letter', true)).toEqual(['be-customer', 'be-11-unsent-letter', 'be-11-bump']);
+  });
+
+  it('a bump buyer gets a SECOND write to the order-bump list; a non-bump buyer only the first', () => {
+    expect(purchaseListWrites('unsent-letter', false)).toEqual([
+      { listId: '6972552', tags: ['be-customer', 'be-11-unsent-letter'], role: 'initial' },
+    ]);
+    expect(purchaseListWrites('unsent-letter', true)).toEqual([
+      { listId: '6972552', tags: ['be-customer', 'be-11-unsent-letter'], role: 'initial' },
+      { listId: '6972554', tags: ['be-customer', 'be-11-unsent-letter', 'be-11-bump'], role: 'bump' },
+    ]);
+  });
+
+  it('tags an 11 upsell buyer be-11-upsell1-protection / be-11-upsell2-bracelet', () => {
+    expect(upsellPurchaseTags('unsent-letter', 'be_protection_ritual'))
+      .toEqual(['be-customer', 'be-11-unsent-letter', 'be-11-upsell1-protection']);
+    expect(upsellPurchaseTags('unsent-letter', 'be_bracelet'))
+      .toEqual(['be-customer', 'be-11-unsent-letter', 'be-11-upsell2-bracelet']);
+  });
+});
+
+// ─── 12 · Lucky Numbers ────────────────────────────────────────────────────────
+// A reading offer on 02's shared lists, told apart only by the be-12 tags (like 03/04/11). Its
+// bump (The Full Year) is the last page of her PDF, so `be-12-bump` is a segment, not a send. Its
+// Upsell 1 is NOT the shared Protection Ritual — it is the citrine Wish Ritual, with its own tag.
+// Literals, because AWeber Campaigns and n8n both exact-match them.
+describe('12 · the tag strings and lists', () => {
+  it('are the exact strings the 12 AWeber Campaigns are triggered by', () => {
+    expect(BACKEND_OFFERS['lucky-numbers']).toEqual({
+      number: '12',
+      name: 'Lucky Numbers',
+      tag: 'be-12-lucky-numbers',
+      bumpTag: 'be-12-bump',
+      deliveredTag: 'be-12-delivered',
+      initialListId: '6972552',
+      bumpListId: '6972554',
+    });
+    expect(deliveredTag('lucky-numbers')).toBe('be-12-delivered');
+  });
+
+  it('adds be-12-bump only when she took the bump', () => {
+    expect(purchaseTags('lucky-numbers', false)).toEqual(['be-customer', 'be-12-lucky-numbers']);
+    expect(purchaseTags('lucky-numbers', true)).toEqual(['be-customer', 'be-12-lucky-numbers', 'be-12-bump']);
+  });
+
+  it('a bump buyer gets a SECOND write to the order-bump list; a non-bump buyer only the first', () => {
+    expect(purchaseListWrites('lucky-numbers', false)).toEqual([
+      { listId: '6972552', tags: ['be-customer', 'be-12-lucky-numbers'], role: 'initial' },
+    ]);
+    expect(purchaseListWrites('lucky-numbers', true)).toEqual([
+      { listId: '6972552', tags: ['be-customer', 'be-12-lucky-numbers'], role: 'initial' },
+      { listId: '6972554', tags: ['be-customer', 'be-12-lucky-numbers', 'be-12-bump'], role: 'bump' },
+    ]);
+  });
+
+  it('tags a 12 upsell buyer be-12-upsell1-wish-ritual (citrine) / be-12-upsell2-bracelet', () => {
+    expect(upsellPurchaseTags('lucky-numbers', 'be_citrine_wish_ritual'))
+      .toEqual(['be-customer', 'be-12-lucky-numbers', 'be-12-upsell1-wish-ritual']);
+    expect(upsellPurchaseTags('lucky-numbers', 'be_bracelet'))
+      .toEqual(['be-customer', 'be-12-lucky-numbers', 'be-12-upsell2-bracelet']);
+  });
+});

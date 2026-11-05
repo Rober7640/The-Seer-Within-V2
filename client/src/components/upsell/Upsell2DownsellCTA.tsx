@@ -7,14 +7,22 @@ interface Upsell2DownsellCTAProps {
   isProcessing?: boolean
   // See UpsellCTA — offer 02 has no clearing to fall back to, only her twelve.
   declineLabel?: string
+  // 11 can't carry "energy". Defaults to V1's exact line for every other funnel.
+  reassurance?: string
+  // 12's U1 downsell reuses this button for a different product and price. Both default to
+  // V1's U2 text, so every caller that passes neither renders exactly as before.
+  acceptLabel?: string
+  priceNote?: string
 }
 
-export function Upsell2DownsellCTA({ onAccept, onDecline, isProcessing = false, declineLabel = 'No thanks, just the clearing' }: Upsell2DownsellCTAProps) {
+export function Upsell2DownsellCTA({ onAccept, onDecline, isProcessing = false, declineLabel = 'No thanks, just the clearing', reassurance = 'Same eight stones. Same manifestation energy.', acceptLabel = 'Yes, send it to me for $30', priceNote = '$30 includes bracelet + free shipping' }: Upsell2DownsellCTAProps) {
   return (
     <div className="p-4 space-y-4" data-testid="container-upsell2-downsell-cta">
-      <p className="text-center text-sm text-muted-foreground italic">
-        Same eight stones. Same manifestation energy.
-      </p>
+      {reassurance && (
+        <p className="text-center text-sm text-muted-foreground italic">
+          {reassurance}
+        </p>
+      )}
       
       <Button
         onClick={onAccept}
@@ -31,13 +39,13 @@ export function Upsell2DownsellCTA({ onAccept, onDecline, isProcessing = false, 
         ) : (
           <span className="flex items-center justify-center gap-2">
             <Sparkles className="w-5 h-5" data-testid="icon-sparkles-downsell" />
-            <span data-testid="text-accept-downsell">Yes, send it to me for $30</span>
+            <span data-testid="text-accept-downsell">{acceptLabel}</span>
           </span>
         )}
       </Button>
 
       <div className="text-center">
-        <span className="text-xs text-muted-foreground">$30 includes bracelet + free shipping</span>
+        <span className="text-xs text-muted-foreground">{priceNote}</span>
       </div>
 
       <Button

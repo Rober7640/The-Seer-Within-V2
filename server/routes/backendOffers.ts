@@ -5,6 +5,9 @@ import {
   BACKEND_OFFER_CATALOG,
   TEA_READING_DELIVERY_HOURS,
   TEA_READING_PRICE_ARMS,
+  UNSENT_LETTER_DELIVERY_HOURS,
+  LUCKY_NUMBERS_DELIVERY_HOURS,
+  takesBirthIntake,
   backendOfferForStripeProduct,
   backendOrderDescriptor,
   isBackendOfferKey,
@@ -24,7 +27,7 @@ import {
   type StripeCheckoutShippingCountry,
 } from '@shared/shippingCountries';
 import type { BeShipment } from '@shared/schema';
-import { getBeOrderBySession, recordBackendOrder, saveOrderIntake, writeToCustomerList } from '../lib/beOrders';
+import { getBeOrderBySession, intakeFirstName, recordBackendOrder, saveOrderIntake, writeToCustomerList } from '../lib/beOrders';
 import { ensureBackendShipment, publicShipping } from '../lib/beShipments';
 import { shippingFromSession, shippingParamFromSession } from '../lib/stripeShipping';
 import { getBe08Edition, listPublishedBe08Editions, type Be08Edition } from '../lib/be08Editions';
@@ -34,6 +37,8 @@ import { drawTeaCup } from '../lib/be04Draw';
 import { resolveBe04Price, resolveBeBookingTreatment } from '../lib/experiments';
 import { BACKEND_UPSELLS } from '../lib/backendCustomerList';
 import { paidUpsellAmountCents } from '../lib/beUpsellOrders';
+import { resolveUnsentLetterTyHandoff } from '../lib/unsentLetterTyGift';
+import { resolveLuckyNumbersTyHandoff } from '../lib/luckyNumbersTyGift';
 import { isStone } from '@shared/evelynVsl';
 import logger from '../lib/logger';
 
@@ -255,6 +260,14 @@ router.get('/upsell/user-data', async (req: Request, res: Response) => {
     // Did she already buy Upsell 1 (Protection Ritual), and did she give a shipping
     // address there? If so, Upsell 2 reuses it and does NOT ask again — V1's Path A.
     // The address lives on the Upsell 1 PaymentIntent (see /upsell/shipping).
+    // U1's product for the offer she booked: the catalog's `upsell1Product` (12's Wish Ritual),
+    // else the Protection Ritual, as every offer before 12. ⛔ An unknown key falls back too.
+    const bookedOffer = backendOfferForStripeProduct(product);
+    const u1Key =
+      bookedOffer?.upsell1Product && BACKEND_UPSELLS[bookedOffer.upsell1Product]
+        ? bookedOffer.upsell1Product
+        : 'be_protection_ritual';
+    const u1Listing = BACKEND_UPSELLS[u1Key];
     let upsellPurchased = false;
     let shipping:
       | { name: string; line1: string; line2?: string; city: string; state: string; postal: string; country: string }
@@ -262,7 +275,7 @@ router.get('/upsell/user-data', async (req: Request, res: Response) => {
     if (customerId) {
       const pis = await stripe.paymentIntents.list({ customer: customerId, limit: 10 });
       const u1 = pis.data.find(
-        (p) => p.metadata?.product === 'be_protection_ritual' && p.status === 'succeeded',
+        (p) => p.metadata?.product === u1Key && p.status === 'succeeded',
       );
       if (u1) {
         upsellPurchased = true;
@@ -306,8 +319,15 @@ router.get('/upsell/user-data', async (req: Request, res: Response) => {
       }
     }
 
+    // 11 and 12 keep her first name off Stripe (`piiOutOfStripe`), so it is read back from the
+    // intake. ⛔ Never the name on the card: 11-U1a's rule is her ?fn= name, or "dear".
+    const firstName =
+      takesBirthIntake(backendOfferForStripeProduct(product)?.key)
+        ? (await intakeFirstName(sessionId)) || 'Friend'
+        : session.metadata?.firstName || session.customer_details?.name || 'Friend';
+
     return res.json({
-      firstName: session.metadata?.firstName || session.customer_details?.name || 'Friend',
+      firstName,
       email:
         session.customer_details?.email ||
         session.customer_email ||
@@ -328,7 +348,12 @@ router.get('/upsell/user-data', async (req: Request, res: Response) => {
       // 02 collects no bucket / person — the twin-flame upsell copy needs neither.
       bucket: null,
       personName: null,
-      upsell1PriceCents: BACKEND_UPSELLS.be_protection_ritual.priceCents,
+      upsell1PriceCents: u1Listing.priceCents,
+      // Only for an offer with its own U1 product (12). Absent ⇒ the U1 chat posts its lean
+      // body (the Protection Ritual) and offers no downsell, byte-identical to before 12.
+      ...(u1Key !== 'be_protection_ritual'
+        ? { upsell1Product: u1Key, upsell1DownsellCents: u1Listing.downsellCents ?? null }
+        : {}),
       upsell2PriceCents: BACKEND_UPSELLS.be_bracelet.priceCents,
       upsell2DownsellCents: BACKEND_UPSELLS.be_bracelet.downsellCents,
       // Upsell 2 (Path A): she bought U1 and has an address → reuse it, don't re-ask.
@@ -840,6 +865,35 @@ router.post('/checkout', async (req: Request, res: Response) => {
       be08Person = { displayFirstName, fullBirthName, dateOfBirth: dob.iso };
     }
 
+    // ── 11's (and 12's) two personal fields ──────────────────────────────────────────────────────
+    // Her full birth name and date of birth, from the booking page. Same rules and same words
+    // as 08's above, plus two: the name must have two parts (11-C1's first error), and she
+    // must be 18, as the terms say and as 10 refuses. Parked on be_order_intake below, NEVER on
+    // Stripe metadata. Her first name is not here: it is the letter's ?fn=, with no field.
+    // 12 Lucky Numbers takes the same two fields under the same rules (takesBirthIntake).
+    let be11Person: { fullBirthName: string; dateOfBirth: string } | null = null;
+    if (takesBirthIntake(offerKey)) {
+      const trimmed = (v: unknown) => (typeof v === 'string' ? v.replace(/\s+/g, ' ').trim() : '');
+      const fullBirthName = trimmed(req.body?.fullBirthName).slice(0, 200);
+      const dobRaw = trimmed(req.body?.dateOfBirth);
+      const refuse = (code: string, error: string) => {
+        logger.info('backend/checkout: refused', { offer: offerKey, code });
+        return res.status(400).json({ error, code });
+      };
+      const NAME_ERROR = 'Please enter your first and last name as it is on your birth certificate.';
+      if (!fullBirthName) return refuse('birth_name_missing', NAME_ERROR);
+      if (!/\S\s+\S/.test(fullBirthName)) return refuse('birth_name_invalid', NAME_ERROR);
+      if (!dobRaw) return refuse('dob_missing', 'Please enter your date of birth.');
+      const dob = parseDateOfBirth(dobRaw);
+      const UNDER_18 = 'You need to be 18 or over to book this reading.';
+      if (!dob.ok && dob.reason === 'too_young') return refuse('dob_underage', UNDER_18);
+      if (!dob.ok) {
+        return refuse('dob_invalid', 'That is not a real date of birth, so please look at the month, day and year again.');
+      }
+      if (!isAdultISODate(dob.iso)) return refuse('dob_underage', UNDER_18);
+      be11Person = { fullBirthName, dateOfBirth: dob.iso };
+    }
+
     // The pay-what-you-want amount, in cents, as the screen computed it. Absent and
     // ignored on a fixed-price offer. ⚠ Absent must stay absent — `Number(null)` is 0,
     // which would come back as "give a little more" instead of "tell us the amount".
@@ -937,7 +991,10 @@ router.post('/checkout', async (req: Request, res: Response) => {
     const rawStone = req.body?.stone;
     const stone = typeof rawStone === 'string' && rawStone ? rawStone : undefined;
     const email = typeof req.body?.email === 'string' && req.body.email.trim() ? req.body.email.trim().slice(0, 200) : undefined;
-    if (offer.piiOutOfStripe) {
+    // ⛔ 10's own: its stone, its `funnel` key and this refusal. 11 is `piiOutOfStripe` too, but
+    //    checks its fields above, and `funnel: 'evelyn_vsl'` on a session fires a Meta Purchase.
+    const isEvelynVsl = offer.key === 'soulmate-initials';
+    if (isEvelynVsl) {
       if (!isAdultISODate(dateOfBirth)) {
         logger.info('backend/checkout: refused', { offer: offerKey, code: 'invalid_intake' });
         return res.status(400).json({ error: 'invalid_intake' });
@@ -1058,9 +1115,9 @@ router.post('/checkout', async (req: Request, res: Response) => {
         // ⛔ PII OUT OF STRIPE (Evelyn VSL / soulmate-initials): firstName and dateOfBirth
         // NEVER ride this metadata for a `piiOutOfStripe` offer — they live on
         // be_order_intake only. funnel + stone are short, fixed-shape and safe here.
-        ...(offer.piiOutOfStripe
+        ...(isEvelynVsl
           ? { funnel: 'evelyn_vsl', ...(stone ? { stone } : {}) }
-          : firstName
+          : firstName && !offer.piiOutOfStripe
             ? { firstName }
             : {}),
         // Which sales letter she bought from — read by the fulfilment workflow's draw node.
@@ -1140,9 +1197,12 @@ router.post('/checkout', async (req: Request, res: Response) => {
         ...(be08Person ? be08Person : {}),
         // Evelyn VSL (soulmate-initials, 10): her stone, DOB, first name and email —
         // never on Stripe metadata (PII). Spec §5.
-        ...(offer.piiOutOfStripe
+        ...(isEvelynVsl
           ? { stone: stone ?? null, dateOfBirth: dateOfBirth ?? null, firstName: firstName ?? null, email: email ?? null }
           : {}),
+        // 11: her birth name and date, validated above, and the letter's first name. Never on
+        // Stripe metadata (PII). ⛔ Never `req.body.dateOfBirth`: only the parsed one.
+        ...(be11Person ? { ...be11Person, firstName: firstName || null } : {}),
       });
     }
 
@@ -1190,6 +1250,41 @@ router.post('/checkout', async (req: Request, res: Response) => {
  * (be_shipments) and its operator alert went — even when the be_orders write failed — and
  * the receipt carries the shipping address. Digital receipts are unchanged.
  */
+// Offer 11's receipt → Evelyn's 15 free minutes. Same job as /api/luna-ty/handoff, for a be_orders
+// buyer: the email comes from the paid order, never the client. A POST, and not a field on the
+// order lookup below, because this mints a login token and that lookup is polled.
+router.post('/unsent-letter/gift-handoff', async (req: Request, res: Response) => {
+  try {
+    const sessionId = req.body?.sessionId;
+    if (!sessionId || typeof sessionId !== 'string') {
+      return res.status(400).json({ error: 'Missing sessionId' });
+    }
+    const handoff = await resolveUnsentLetterTyHandoff(await getBeOrderBySession(sessionId));
+    if (!handoff) return res.status(404).json({ error: 'Order not found' });
+    return res.json(handoff);
+  } catch (err: any) {
+    logger.error('Unsent Letter gift handoff error', { error: err?.message });
+    return res.status(500).json({ error: 'Failed to build the handoff' });
+  }
+});
+
+// Offer 12's receipt → Evelyn's 15 free minutes (operator 2026-11-03). 11's handoff, for a paid
+// lucky-numbers order only.
+router.post('/lucky-numbers/gift-handoff', async (req: Request, res: Response) => {
+  try {
+    const sessionId = req.body?.sessionId;
+    if (!sessionId || typeof sessionId !== 'string') {
+      return res.status(400).json({ error: 'Missing sessionId' });
+    }
+    const handoff = await resolveLuckyNumbersTyHandoff(await getBeOrderBySession(sessionId));
+    if (!handoff) return res.status(404).json({ error: 'Order not found' });
+    return res.json(handoff);
+  } catch (err: any) {
+    logger.error('Lucky Numbers gift handoff error', { error: err?.message });
+    return res.status(500).json({ error: 'Failed to build the handoff' });
+  }
+});
+
 router.get('/order/:sessionId', async (req: Request, res: Response) => {
   try {
     const sessionId = String(req.params.sessionId || '');
@@ -1300,9 +1395,19 @@ async function publicOrder(
 
   // 12h with 08's '+ 12-hour delivery' bump, 24h without — the same rule that stamps
   // `due_at` (server/lib/beOrders.ts, prepareBe08). ⛔ 04's Double Turning is NOT a speed bump,
-  // so 04 is always TEA_READING_DELIVERY_HOURS. Every other offer keeps the rule it had.
+  // so 04 is always TEA_READING_DELIVERY_HOURS. 11's Closing the Door and 12's The Full Year are
+  // not one either. Every
+  // other offer keeps the rule it had.
   const deliveryHours =
-    row.offer === 'tea-reading' ? TEA_READING_DELIVERY_HOURS : row.bumpPurchased ? 12 : 24;
+    row.offer === 'tea-reading'
+      ? TEA_READING_DELIVERY_HOURS
+      : row.offer === 'unsent-letter'
+        ? UNSENT_LETTER_DELIVERY_HOURS
+        : row.offer === 'lucky-numbers'
+          ? LUCKY_NUMBERS_DELIVERY_HOURS
+          : row.bumpPurchased
+          ? 12
+          : 24;
 
   // 08 · the edition she booked, pinned to the version on the order. A lookup failure
   // (table not migrated yet, DB hiccup, retired row) must never break the receipt.

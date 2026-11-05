@@ -49,7 +49,7 @@ without anybody deciding it should be. That is the one failure mode of working
 in copies, and it is avoided by hand, every time.
 
 **Live copies:** [`03/0-WORKFLOW-03.md`](./03/0-WORKFLOW-03.md) ·
-[`04/0-WORKFLOW-04.md`](./04/0-WORKFLOW-04.md) · [`09/0-WORKFLOW-09.md`](./09/0-WORKFLOW-09.md).
+[`04/0-WORKFLOW-04.md`](./04/0-WORKFLOW-04.md) · [`09/0-WORKFLOW-09.md`](./09/0-WORKFLOW-09.md) · [`11/0-WORKFLOW-11.md`](./11/0-WORKFLOW-11.md) · [`12/0-WORKFLOW-12.md`](./12/0-WORKFLOW-12.md).
 
 ---
 
@@ -61,6 +61,8 @@ in copies, and it is avoided by hand, every time.
 | **03** Judgement Day | **Act** | pay-what-you-want | **yes** | written, 2,429 words | ◐ booking built, upsells not — tick sheet in [`00l`](./00l-DELIVERABLES-03.md), upsells planned in [`00k`](./00k-PLAN-03-UPSELLS.md) |
 | **04** The Turn | Reading | fixed $35 — split test $35 vs $45, decided server-side (`be_04_price_2026`; the day ladder is retired, 2026-10-11) | no | written ×3 — one reading per cup, ~3,800–3,950 words each + a one-page calendar *(2026-10-11)* | ◐ building — record in [`04/04-DELIVERABLES.md`](./04/04-DELIVERABLES.md) |
 | **05** Hex Her | — | — | — | — | ⚠ no copy at all yet |
+| **11** The Unsent Letter | Reading | $35 fixed + $12.77 bump *(proposed)* | no | not written — 12 cards + the letter | ◐ funnel built on branch `11-unsent-letter`, uncommitted, dark (A2–A8, 2026-11-02). Page only. No Stripe, real server or fulfilment yet — tick sheet in [`11/0-WORKFLOW-11.md`](./11/0-WORKFLOW-11.md) |
+| **12** Lucky Numbers | Reading | $35 fixed + $12.77 bump *(operator, 2026-11-02)*. U1 Wish Ritual $47 / $30 | no | not written — 3 numbers, 6 ticket numbers, a PIN, 12 days, 1 stop-number (code computes them) | ◐ funnel built on branch `12-lucky-numbers`, uncommitted, dark (A1–A8, 2026-11-02). Page only. No Stripe, real server or fulfilment yet — tick sheet in [`12/0-WORKFLOW-12.md`](./12/0-WORKFLOW-12.md) |
 
 ⚠ **"Written" means the words exist in a markdown file.** No product has been
 formatted, had its cards inserted, or been made deliverable. Phase B has never
@@ -140,6 +142,50 @@ Query strings that change what you see:
 | `?cancelled=1` | the chat | the back-from-checkout resume copy, at the card, nothing ticked |
 | *(a refresh)* | the chat | the refresh resume copy — no greeting for coming back |
 | `?s=<session>` | the receipt | the receipt for that order (`?offer=tea-reading` is added by the page). No `?s=`, or any other offer's session → the fallback |
+
+### 11 — The Unsent Letter *(Reading · $35 fixed + $12.77 bump · no reply needed)*
+
+| Screen | Path | Treatment | State |
+|---|---|---|---|
+| Booking — her two fields and the optional bump (the letter's CTAs land here) | `/tarot/unsent-letter` | page | ✅ built · preview · walked at four phone sizes (`scripts/walk-11-smoke.mjs`, 164/164, API stubbed) — screens in `11/booking-page/screens/` |
+| Booking | — | chat | ❌ not built, by decision: page only (11-DELIVERABLES, build decisions) |
+| Upsell 1 → Upsell 2 | `/offers/upsell/welcome1` → `/welcome2` *(shared engine, offer read from the booking session)* | chat | ✅ built · walked with stubs, charge calls aborted. ⚠ No `?demo=true` here: they need a paid booking session, so locally only the walk's stubs open them. ⚠ A successful charge and the shipping form have not been walked in a browser |
+| Thank-you *(receipt)* | `/tarot/unsent-letter/success?s=<session>` | page | ✅ built · preview · walked with stubs |
+
+⛔ `readyForMoney: false`, and with `VITE_BACKEND_CHECKOUT_LIVE` unset the button logs
+`[preview] would checkout {…}` and stops. The log carries no birth name or date. Locally there is
+no `.env`: run the client alone with `npx vite dev --port 5096`. The upsells and the receipt then
+need the walk's stubs to answer.
+
+Query strings that change what you see:
+
+| Add | To | Shows |
+|---|---|---|
+| `?fn=Sarah&c=3` | the page | what the letter passes down (`c=1…6`, 11-E2). Nothing displays either. ⛔ `?c=` rides on Stripe metadata; `?fn=` goes to `be_order_intake` only |
+| `?cancelled=1` | the page | the back-from-checkout line, her details restored from `sessionStorage`, tick and bump unticked |
+| `?s=<session>` | the receipt | the receipt for that order (`?offer=unsent-letter` is added by the page). No `?s=`, or any other offer's session → the fallback |
+
+### 12 — Lucky Numbers *(Reading · $35 fixed + $12.77 bump · no reply needed)*
+
+| Screen | Path | Treatment | State |
+|---|---|---|---|
+| Booking — her two fields and the optional bump (the letters' CTAs land here) | `/numerology/lucky-numbers` | page | ✅ built · preview · walked at four phone sizes (`scripts/walk-12-smoke.mjs`, 222/222, API stubbed) — screens in `12/booking-page/screens/` |
+| Booking | — | chat | ❌ not built, by decision: page only, as 11 |
+| Upsell 1 (Wish Ritual + citrine, with its $30 downsell) → Upsell 2 (Manifestation Bracelet) | `/offers/upsell/welcome1` → `/welcome2` *(shared engine, offer read from the booking session)* | chat | ✅ built · walked with stubs, charge calls aborted. ⚠ No `?demo=true`: they need a paid booking session, so locally only the walk's stubs open them. ⚠ A successful charge and the shipping form have not been walked in a browser |
+| Thank-you *(receipt, no gift)* | `/numerology/lucky-numbers/success?s=<session>` | page | ✅ built · preview · walked with stubs |
+
+⛔ `readyForMoney: false`, and with `VITE_BACKEND_CHECKOUT_LIVE` unset the button logs
+`[preview] would checkout {…}` and stops. The log carries no birth name or date. Locally there is
+no `.env`: run the client alone with `npx vite dev --port 5098 --strictPort --host 127.0.0.1`
+(⛔ 5096/5097 belong to another preview). The upsells and the receipt then need the walk's stubs.
+
+Query strings that change what you see:
+
+| Add | To | Shows |
+|---|---|---|
+| `?fn=Sarah&c=3` | the page | what the letter passes down: arm A `c=1…5`, arm B `c=11…15` (12-E2). Nothing displays either, and the page is the same for both arms. ⛔ `?c=` rides on Stripe metadata; `?fn=` goes to `be_order_intake` only |
+| `?cancelled=1` | the page | the back-from-checkout line, her details restored from `sessionStorage`, bump unticked |
+| `?s=<session>` | the receipt | the receipt for that order (`?offer=lucky-numbers` is added by the page). No `?s=`, or any other offer's session → the fallback |
 
 ### 05 — Hex Her
 

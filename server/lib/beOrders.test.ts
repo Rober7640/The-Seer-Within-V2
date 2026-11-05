@@ -762,6 +762,45 @@ describe('09 · the Reiki charging bump', () => {
 });
 
 // ─── 04 · The Turn ─────────────────────────────────────────────────────────────
+// Her first name rides no Stripe metadata (`piiOutOfStripe`): only the intake's ?fn= name goes on
+// the order. ⛔ Never the name on the card, which is a full name and may not be hers.
+describe('11 · an unsent-letter order', () => {
+  const META = { product: 'be_unsent_letter', offer: 'unsent-letter', bump: '1', bumpProduct: 'closing_the_door', readingCents: '3500' };
+
+  it('records the $35, Closing the Door and the name from the intake', async () => {
+    state.intake = { firstName: 'Sarah', fullBirthName: 'Sarah Jane Miller' };
+    await recordBackendOrder(session({ amount_total: 4777, customer_details: { name: 'Robert Cardholder' } } as never, META));
+    expect(state.inserted).toMatchObject({
+      offer: 'unsent-letter',
+      offerNumber: '11',
+      readingCents: 3500,
+      bumpPurchased: true,
+      bumpCents: 1277,
+      bumpProductKey: 'closing_the_door',
+      amountCents: 4777,
+      firstName: 'Sarah',
+      status: 'paid',
+    });
+    for (const column of ['dueAt', 'editionId', 'tier', 'spreadKey', 'question']) {
+      expect(state.inserted?.[column] ?? null, column).toBeNull();
+    }
+  });
+
+  it('no ?fn=: no name on the order, never the card', async () => {
+    state.intake = { firstName: null };
+    await recordBackendOrder(session({ customer_details: { name: 'Robert Cardholder' } } as never, META));
+    expect(state.inserted).toMatchObject({ firstName: null });
+  });
+
+  it('a retry with no name to say leaves the first write alone; other offers refresh as before', async () => {
+    await recordBackendOrder(session({}, META));
+    expect(state.upserts.at(-1)?.set).not.toHaveProperty('firstName');
+    state.upserts = [];
+    await recordBackendOrder(session({}, { product: 'be_tea_reading', offer: 'tea-reading' }));
+    expect(state.upserts.at(-1)?.set).toHaveProperty('firstName');
+  });
+});
+
 // Her price-test arm's price lands in `reading_cents` (from metadata.readingCents — what the
 // SERVER charged), the Double Turning bump under its own key, and NOTHING 07/08-shaped: no intake
 // columns, no due_at. Her cup stays on Stripe metadata, where the delivery job reads it.

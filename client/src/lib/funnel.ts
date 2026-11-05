@@ -105,6 +105,8 @@ export const JUDGEMENT_PREFIX = "/offers/wiccan/judgement-day"; // 03 Judgement 
 export const TEA_READING_PREFIX = "/offers/wiccan/tea-reading"; // 04 The Turn (tea-leaf reading)
 export const PIXIU_PREFIX = "/offers/wiccan/pixiu-bracelet"; // 06 Pixiu (Wishing) Bracelet
 export const HEART_CLEANSER_PREFIX = "/offers/heart-cleanser"; // 09 Heart Cleanser Love Charm
+export const UNSENT_LETTER_PREFIX = "/tarot/unsent-letter"; // 11 The Unsent Letter
+export const LUCKY_NUMBERS_PREFIX = "/numerology/lucky-numbers"; // 12 Lucky Numbers
 
 export const BACKEND_OFFER_PREFIXES = [
   TWIN_FLAME_PREFIX,
@@ -238,7 +240,7 @@ export function funnelPath(v1Path: string, pathname?: string): string {
 export type PostHogFunnel =
   | "soulmate" | "fb" | "fb2" | "gdn" | "palm" | "tarot" | "read" | "v1" | "evelyn" | "aiden"
   | "marcus" | "luna" | "nova" | "maren" | "seven-seven" | "twinflame" | "judgement" | "pixiu"
-  | "heartcleanser" | "marcusreading" | "teareading";
+  | "heartcleanser" | "marcusreading" | "teareading" | "unsentletter" | "luckynumbers";
 
 // Generalized persona landers → their PostHog funnel name. One route each.
 const PERSONA_LANDER_FUNNELS: Record<string, PostHogFunnel> = {
@@ -266,6 +268,11 @@ export function getPostHogFunnel(pathname?: string): PostHogFunnel | null {
   // prefix. Its upsells are the SHARED /offers/upsell/* pages, which fire their own
   // offer-aware lander_view. Matches the server's BACKEND_FUNNEL['tea-reading'].
   if (p === TEA_READING_PREFIX || p.startsWith(`${TEA_READING_PREFIX}/`)) return "teareading";
+  // 11 The Unsent Letter — booking page + receipt. Its upsells are the SHARED /offers/upsell/*
+  // pages too. Matches the server's BACKEND_FUNNEL['unsent-letter'].
+  if (p === UNSENT_LETTER_PREFIX || p.startsWith(`${UNSENT_LETTER_PREFIX}/`)) return "unsentletter";
+  // 12 Lucky Numbers — the same shape as 11. Matches the server's BACKEND_FUNNEL['lucky-numbers'].
+  if (p === LUCKY_NUMBERS_PREFIX || p.startsWith(`${LUCKY_NUMBERS_PREFIX}/`)) return "luckynumbers";
   // 06 Pixiu Bracelet — email → booking page + /success (page-only, no chat, no
   // welcome1/2 of its own). Registering it here is all App.tsx needs to fire
   // lander_view with the letter's utm_* attached, so a mailed Pixiu link reports
@@ -308,6 +315,8 @@ export function backendOfferFunnel(offer: string): string {
     case "pixiu-bracelet": return "pixiu";
     case "heart-cleanser": return "heartcleanser";
     case "soulmate-initials": return "evelynvsl";
+    case "unsent-letter": return "unsentletter";
+    case "lucky-numbers": return "luckynumbers";
     default: return offer;
   }
 }
@@ -356,6 +365,20 @@ export function getPostHogStep(pathname?: string): string {
       // Turning) is intangible — it has no page, so no step of its own.
       const sub = p.slice(TEA_READING_PREFIX.length); // "" at the booking root (the page)
       if (sub === "" || sub === "/chat") return "booking";
+      if (sub === "/success") return "thank_you";
+      return "unknown";
+    }
+    case "unsentletter": {
+      // 11 is page-only: the booking root and /success. The bump is the last page of her PDF.
+      const sub = p.slice(UNSENT_LETTER_PREFIX.length); // "" at the booking root
+      if (sub === "") return "booking";
+      if (sub === "/success") return "thank_you";
+      return "unknown";
+    }
+    case "luckynumbers": {
+      // 12 is page-only, as 11: the booking root and /success.
+      const sub = p.slice(LUCKY_NUMBERS_PREFIX.length); // "" at the booking root
+      if (sub === "") return "booking";
       if (sub === "/success") return "thank_you";
       return "unknown";
     }
