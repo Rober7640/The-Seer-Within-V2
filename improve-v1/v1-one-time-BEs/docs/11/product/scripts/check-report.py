@@ -51,7 +51,7 @@ if QS:
 # 30 days / 3 months), signs to watch for, and the three 30-day instructions, which move out of card 12
 # into the close. Marked by "bar shape" on the first line. Leaner cards, a shorter letter, a longer close.
 BAR = QS and "bar shape" in open(path, encoding="utf-8").readline()
-SPINE = {5: "dents", 6: "honey"}   # per report: the spine image's key word, in the opening AND the close's last paragraph
+SPINE = {5: "dents", 6: "honey", 7: "alarm"}   # per report: the spine image's key word, in the opening AND the close's last paragraph
 if BAR:
     BAND = {"opening": (130, 230), "letter": (1000, 1250), "close": (420, 620)}   # close: dated future + signs + 3 instructions
     for c in (1, 8): BAND[str(c)] = (130, 230)
@@ -81,6 +81,8 @@ def rules(sec):
     yield "card 11: you owe them no reply", "you owe them no reply" in sec["11"]
     for c in ("1", "9", "10"): yield f"card {c} opens in bold", sec[c].startswith("**")
     if BAR:   # the instructions live in the close now, after the dated future and the signs
+        for i, nm in enumerate(CARD_NAMES, 1):   # P1 plan P4: Death always says nobody's died (the list can't be filtered for widows)
+            if nm.lower() == "death": yield f"card {i}: Death says nobody's died", "nobody's died" in sec[str(i)].lower()
         yield "close: both bold labels", "**Stop going back.**" in last and "**The one thing to do.**" in last
         for when in ("Within 7 days", "Within 30 days", "Within 3 months"):
             yield f"close: the dated future, **{when}.**", f"**{when}.**" in last
@@ -199,9 +201,11 @@ pool = {i: acts["pools"][f"act{(i - 1) // 3 + 1}"] for i in range(1, 13)}
 # Bar shape (operator, 2026-11-05): cards 1 and 2 are fixed per Soul Urge and replace the act-1 pool.
 # Card 1 = the major numbered for her heart's number (Soul Urge); card 2 answers "did they love me?".
 # Only master numbers share a card 2 with their base (11→2, 33→6). The free-letter cards (Hermit,
-# Judgement, Devil) stay out, and Death stays at 8/10. SU 7, 8 and 9 are pending on that conflict.
+# Judgement, Devil) stay out, and Death stays at 8/10 (operator chose option A, 2026-11-05).
 FIRST_TWO = {1: ("the-magician", "the-star"), 2: ("the-high-priestess", "the-moon"), 3: ("the-empress", "the-sun"),
              4: ("the-emperor", "the-tower"), 5: ("the-hierophant", "wheel-of-fortune"), 6: ("the-lovers", "temperance"),
+             7: ("the-chariot", "the-sun"), 8: ("strength", "the-star"),
+             9: ("the-moon", "the-world"),   # the Hermit (IX) is a free-letter card, so 9 comes through XVIII, the Moon (1 + 8)
              11: ("justice", "the-moon"), 22: ("the-fool", "the-world"), 33: ("the-hanged-man", "temperance")}
 SU_N = int(re.search(r"Soul Urge (\d+) buyer", raw.split("\n")[0]).group(1))
 fixed = BAR and SU_N in FIRST_TWO

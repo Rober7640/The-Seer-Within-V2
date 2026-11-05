@@ -161,7 +161,7 @@ It was three in the morning when I turned this one, and the letter quit on me. T
 
 **No, {{FIRST}}, nothing more is coming, not a call and not a line, because {{REASON.headline}}.**
 
-Death rides a white horse at a walk. It isn't charging, and it isn't turning back.
+Nobody's died. On this card, Death means something's over. He rides a white horse at a walk. He isn't charging, and it isn't turning back.
 
 [[REASON 0]]Doing more would mean coming back and saying out loud, "I was wrong," and pride won't carry them that far.[[/REASON]][[REASON 1]]You know about the walking on and the never once looking back, and nobody wants to stand in front of that.[[/REASON]][[REASON 2]]Your life standing still has never changed one thing on the other side. The week over there goes on the same either way.[[/REASON]] [[FORK get_back]]So it's held out, and you're the one expected to come and get it.[[/FORK]][[FORK giving]]So it's being set down right where it is. Nobody's bringing it to you.[[/FORK]]
 
@@ -269,9 +269,9 @@ It was full light when I put the pen down, and there was nobody across from me.[
 
 **Will I be happy again?**
 
-**Yes. Not just fine, and not just getting by. Happy.**
+**Yes. Happy, and moving again.**
 
-Your birthday, {{NEXT_BDAY}}, starts a new year for you. {{PY.ahead}} The change starts before then. Your birthday is when you'll know it's real.
+Your birthday, {{NEXT_BDAY}}, starts a new year for you. {{PY.ahead}} The change doesn't wait for the date.
 
 **Within 7 days.** The pull will be at its strongest, most likely late in the evening, when the TV's off. You'll want to look up the name, or reread something old. That's the Keeper, not a sign that anybody's coming back.
 

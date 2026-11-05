@@ -1,239 +1,208 @@
-11-P3 — The Unsent Letter: the fixed report for every Soul Urge 7 buyer (judgment · cover word "a second opinion"). v1 template, 2026-11-04.
-Fill-ins: {{FIRST}} {{BIRTH_NAME}} {{DOB}} · shared list ../n8n/scripts/11-swapins.json: {{EX.saw|use|letter|kept}} {{LP.then|now|letter}} {{REASON.headline|letter}} · versions written here: [[REASON 0|1|2]] [[FORK get_back|giving]].
-Cards: 1 the Chariot · 2 the Hierophant · 3 the High Priestess · 4 Justice · 5 Wheel of Fortune · 6 the Emperor · 7 the Lovers · 8 the Tower · 9 the Moon · 10 the Sun · 11 the Magician · 12 the World.
+11-P3 — The Unsent Letter: the fixed report for every Soul Urge 7 buyer (the part of you that trusts what you see · cover word "I just think things through"). letter-first shape, question shape, bar shape (each card answers one of her questions, in her words; one spine image, the smoke alarm with its battery out; the thing named once, the Lawyer; a habits list and the lie; a dated close, signs and three instructions), v2 to the writing bar, 2026-11-05.
+Fill-ins: {{FIRST}} {{BIRTH_NAME}} {{DOB}} · shared list ../n8n/scripts/11-swapins.json: {{EX.trait|saw|use|letter|never|moment|kept|last}} {{LP.trait|then|now|admire|letter}} {{PY.ahead}} {{NEXT_BDAY}} {{REASON.headline|letter}} · versions written here: [[REASON 0|1|2]] [[FORK get_back|giving]].
+Cards: 1 the Chariot · 2 the Sun · 3 the High Priestess · 4 the Emperor · 5 the Hanged Man · 6 Justice · 7 the Lovers · 8 the Tower · 9 the Moon · 10 the Star · 11 the Magician · 12 Strength
 
 [OPENING]
 
 {{FIRST}},
 
-Pour yourself something and sit where nobody's going to need you for a while.
+Before I turned a single card for you, I saw a smoke alarm on a kitchen ceiling, its little cover hanging open and the battery gone. Nothing was wrong with the alarm. Every time it went off, there'd been smoke. Somebody said it was only the toast so many times that, in the end, the battery came out.
 
-Take the cards in the order I turned them, and don't go hunting for the letter at the end first. It only comes back whole. Start at the bottom of the last page and all you'll get is words. Now and then two cards will seem to disagree with each other. Read on past it.
+Somebody left with something of yours. Since then you've told people you just think things through, and you do. It isn't love that keeps you up. Your mind just won't put it down. Each of your twelve cards answers one question you've been carrying, flat out. At the end is the letter that never got sent.
 
-Before anything else: this is someone living. Nothing in these pages asks you to contact them, wait for them or forgive them. If this person hurt you, you owe them no reply.
+Your birth name and date set how I lay your twelve cards. I wrote {{BIRTH_NAME}} and {{DOB}} across the top of a clean sheet at my kitchen table. The one who came to me was at my shoulder before the tea was ready.
 
-When your order came in, I cleared the kitchen table and took three cards out of the deck, the Hermit, Judgement and the Devil. Those three had already had their say, so they went up on the windowsill and left me nineteen. On a clean sheet I wrote {{BIRTH_NAME}}, and {{DOB}} under it. Your birth name and date set how I lay your twelve cards. Nothing goes on the table before them.
-
-I made a pot of black tea. By the time I sat down with it, the one who came to me before was at my shoulder again. No face, no voice. Same as last time.
+Two things up front. This is someone living. And nothing here asks you to get in touch, to wait or to forgive.
 
 [CARD 1]
 
-**They took your faith in your own judgment, {{FIRST}}.**
+**Card 1, the Chariot: What did they take from me?**
 
-You don't think of it as missing. You'd say you've gotten fairer as you've gotten older, that you like to be sure before you think badly of anybody. I told you most women guess wrong, and this is the usual way they do it: they name what the gap does to them now, and never what used to sit in it.
+**They took the part of you that trusts what you see, {{FIRST}}.**
 
-What used to sit in it was simple. You'd see something, a look on somebody's face or a wrong note in a story, and you'd believe what you saw. Then you'd go by it. Both halves, the seeing and the going by it, and neither one needed anybody's say-so. The light the old man holds up on my windowsill, the one I told you they'd walked off with, is this.
+Your birth name carries a 7 at its heart. The card numbered 7 is the Chariot. A man stands upright in it with no reins in his hands. Nothing runs from him to the two sphinxes in front, and he goes anyway. That's the part that left.
 
-The Chariot shows a man standing up in a stone chariot. Look at his hands. There are no reins in them. Nothing runs from him to the two sphinxes in front, or to anybody, and he isn't asking anyone which way to go.
+Somebody who's known you a long time said it once: "You used to read people in five minutes flat."
 
-Before them, you didn't think about any of this, the same way you don't think about which foot goes first on the stairs. You saw, you knew, and you went, and if you got it wrong now and then, you fixed it and went on.
+Your mind's as sharp as ever. What went is the part that saw a thing, believed it, and went by it, without checking first.
 
-You still run your own life, and you run it fine. You decide plenty, every day, and nobody has to help you do it. It's your first read on people that went.
-
-Here's where it shows. Somebody says a thing that doesn't sit right, and you catch it the second it's out of their mouth. By the time you're home, you've talked yourself out of it. They probably didn't mean it that way. You're being unfair. You'd want the benefit of the doubt yourself.
-
-And you're a little proud of that. You're the fair one. You hear both sides. You'd rather be wrong about somebody than unkind to them. It doesn't feel like anything was taken. It feels like good manners, and that's what makes it so hard to spot.
-
-That isn't how you're made. It went with them. They had no use for a woman who believed her own eyes. It suited them when you stopped, and they let it stay that way.
-
-When I turned this card, the one at my shoulder leaned in closer. I picked up my pen, looked at your name, and set the pen back down. There was nothing on the sheet yet but your name and your date.
-
-The next time something about a person doesn't sit right with you, notice how fast you start arguing yourself out of it.
+Something moved into the room it left. I call it the Lawyer. It argues every case from both sides, the other side harder than yours, and it never lets one close. It kept you from being told you were wrong one more time. You don't have to fight it. It only grew because the room stood empty, and it goes quiet once what belongs there is back.
 
 [CARD 2]
 
-The Hierophant sits up high between two stone pillars. Two men in white kneel below him with their backs to us, waiting for him to tell them.
+**Card 2, the Sun: Did they ever really love me?**
 
-You call that getting a second opinion, and you're a little proud of it. You don't go jumping to conclusions about people.
+**Yes. Back then, it was real.**
 
-So you hang up the phone with a funny feeling about something that was said, and you call a friend. "Am I crazy, or was that strange?" She tells you it was strange. You still don't quite believe it until she's said it twice.
+On the Sun, a child rides a white horse bareback in broad daylight, both arms open, nothing hidden anywhere.
 
-People like that in you. They say you're fair, that you always hear everybody out. What they're praising is a woman who won't go by her own eyes until somebody else signs off, and their liking it doesn't give you back one thing you've lost.
+Here's how I know. Before the first card was down, your name and date told me who I was laying them for. {{EX.trait}} {{LP.trait}}
+
+They saw something in you: {{EX.saw}}. That's what got loved. They leaned on {{EX.use}}, and on your eyes too.
+
+You didn't make it up. It was out in daylight, like everything on that card.
+
+[[FORK get_back]]Hold on to "back then." Whatever gets asked of you will come wrapped in that love, and the love is in the past.[[/FORK]][[FORK giving]][[/FORK]]
 
 [CARD 3]
 
-Some nights you've asked yourself how you could have been such a fool. That question has it backwards. You weren't fooled. You saw.
+**Card 3, the High Priestess: Was it my fault?**
 
-They saw something in you: {{EX.saw}}. And it came with a pair of eyes that believed what they were looking at. You didn't keep that quiet. You'd never had a reason to. When something was off, you said so, plainly, and you expected to be heard. A woman who trusts what she sees is going to see them too, sooner or later. They knew that. So that's the part they went after, and they went after it on purpose.
+**No. Seeing it was never the mistake.**
 
-The High Priestess sits between two pillars, one black and one white. She's right in the middle of them, and she's in no doubt which is which. She doesn't have to lean either way to check.
+The High Priestess sits between two pillars, one black and one white. She doesn't lean toward either one to check which is which.
 
-You sat like that once. And they didn't take all of you. They kept {{EX.use}}, and they took your sureness about what you'd seen with your own eyes. You went on giving them the rest long after you'd stopped saying what you saw, and that suited them fine. Whatever you gave, you gave honestly. Everything done with it after that is on them.
+You used to sit like that with people. You could tell. Some nights you've asked how you could've been such a fool. You weren't fooled. You saw, and somebody talked you out of it. The Lawyer isn't your fault either. Anybody told that often they'd got it wrong would grow one. So put down the question about what's wrong with you. Nothing was wrong with your eyes.
 
-So I'm asking one thing of you here, and nothing else. Stop asking what's wrong with you. Plenty of people look and miss it. You didn't. Nothing was ever wrong with what you saw.
+By the third card I knew your spread ends well. Keep hold of that through the middle.
 
 [CARD 4]
 
-They've kept it because giving it back means saying what they did.
+**Card 4, the Emperor: Why have they still got it?**
 
-Justice sits between two pillars holding a sword straight up, the point higher than her crown. It hasn't come down on anybody yet.
+**Because giving it back means saying you were right.**
 
-Handing your judgment back would mean saying you were right. And if you were right, then all those times they told you otherwise weren't mistakes. They were something done to you. While they hold on to it, nobody has to say that, and they still get to be the person you once took them for. Give it back and the sword comes down. That's why they didn't lose it and didn't throw it away. They've kept it right where it is, held up, out of your reach.
+The Emperor sits square on a big stone throne, facing straight out, armor showing under his red robe at the arms and legs.
+
+From that chair, whatever got said went. Giving it back means coming down off it and saying you had it right. And if you were right, then all the "you've got it wrong" was no mistake. Holding on costs nothing. So the throne stays put, and so does the armor.
 
 [CARD 5]
 
-It's taken this long because they had a line that let them off, and the line was "She was imagining things."
+**Card 5, the Hanged Man: Why has it taken this long?**
 
-It held because by then you half believed it yourself. You'd see something, say so, and hear that you were reading into it, and after a while you started hearing it in your own voice. Once that happened, the line didn't need anybody to back it up. It wasn't true. You weren't imagining anything. You were seeing, and they put the difference down to your nerves.
+**Because one line let them off: "You're imagining things." After a while you said it first, so nobody asked the next question.**
 
-And you backed it up without meaning to. You started putting it in front of everything you said. I'm probably wrong, but. I might be imagining it, but. Once you were saying it first, nobody had to say it to you. You looked like a woman who just likes to double-check, and nobody asked why. That was never your fault. It's what anybody does after hearing no that many times. Hiding behind it was their choice.
+On the Hanged Man, a man hangs head-down by one ankle, wide awake and calm. Hung like that, the whole world looks the wrong way up. That line did the same thing. It turned what you saw into something in your head.
 
-You still do their work for them. A friend cancels on you for the third time with the same excuse, and you knew by the second time how this would go. You hear yourself tell her it's fine, things come up. Nobody has to talk you out of what you saw anymore. You do it yourself, and you get there first.
+From the outside, it looks like being fair. Here's what people see:
 
-On the Wheel of Fortune, a wheel hangs in the sky with nothing holding it up. Their line hung there the same way, with nothing under it, and it kept on turning. Back then, they knew enough to let it go on. The months I told you about are that wheel coming around to where it started, and that part they haven't noticed yet.
+- When something doesn't sit right, you call a friend and ask, "Am I crazy, or was that strange?"
+- You start with "I'm probably wrong, but," and then say the thing you're right about.
+- When somebody remembers it differently, you give way, even when you're the one who was there.
+- A friend cancels for the third time with the same excuse, and you tell her it's fine, though you knew by the second.
+- When somebody says you think too much, you laugh and say, "I just think things through."
 
-It was getting on for midnight. They'd moved off my shoulder for the first time and gone over by the door, and they stayed there.
+And under all of it, the one line the Lawyer lives by: "If I'm never quite sure, nobody can tell me I'm wrong again."
+
+It's the alarm again. Nothing's broken. The battery's just out.
 
 [CARD 6]
 
-They regret telling you you were wrong when you were right.
+**Card 6, Justice: What do they regret?**
 
-The Emperor sits square on a stone throne, facing straight out, a gold staff in his hand. Whoever has that chair says how things are, and everybody else hears it. They sat in that chair with you, and from up there, what they said went.
+**Telling you that you had it wrong, every time you had it right.**
 
-[[FORK get_back]]Their regret isn't about losing you. It's about losing someone who'd take their word over her own eyes. That isn't the same thing as you.[[/FORK]][[FORK giving]]Their regret isn't about wanting you back. Leaving you didn't come easy to them, and you're on their mind more than they'd ever own up to. But they don't want you back, and I won't let you go on hoping they do.[[/FORK]] A regret like theirs gives you nothing back and never gets as far as you. You'll want to take it for love. It isn't.
+Justice holds a pair of scales hanging level, and her eyes look straight out, never down at them.
+
+The sorry is real. [[FORK get_back]]But under it, what's missed is somebody who'd go along with whatever got said. That isn't the same thing as missing you.[[/FORK]][[FORK giving]]It isn't about wanting you back. You cross that mind more often than you'd guess, but the door's shut from that side.[[/FORK]] Nothing got weighed back then, and none of the sorry reaches you now.
+
+It was midnight when I laid Justice down, and the Lawyer started up. Every card got the same small objection, like somebody clearing a throat in court: are you sure? I kept turning.
 
 [CARD 7]
 
+**Card 7, the Lovers: Why does nobody new get close?**
+
+**Because the Lawyer wants a second opinion on everybody first, and decent people don't wait around for the verdict.**
+
+On the Lovers, a man and a woman stand close without touching. He looks at her. She looks up past him, at the winged figure, as if the answer's coming from up there.
+
 {{LP.then}}
 
-It didn't stop when they left. A thing like that keeps going on its own, and these days it meets people who never did a thing to you. Someone decent turns up and {{LP.now}}. Your own read on them says they're all right. You don't go by it. You wait to hear what somebody else makes of them, and you take that over what you saw yourself.
+But the habit stayed on after the reason for it was gone. Someone decent turns up and {{LP.now}}.
 
-On the Lovers, a man and a woman stand close without touching. He's looking at her. She isn't looking at him. She's looking up, past him, at the winged figure over their heads, as if that's where the answer is going to come from.
-
-That's how it goes with the decent ones now. The person's right there in front of you, and your eyes go up and away, looking for somebody to rule on them. I told you someone gets a fault found by Thursday. This is how it happens: you hand the call to anybody but yourself, and somebody always has a reason. None of these people set the price on your judgment. They pay it anyway, and so do you.
-
-The next time someone kind is standing in front of you, notice where you look for the answer. If it's anywhere but at them, and anywhere but in you, that's the old habit.
+Your first read on a person is usually the right one. Go by it.
 
 [CARD 8]
 
-Lightning comes down out of a dark cloud onto the Tower, right where the crown was. The gold crown's been knocked clean off the top. It's still in the air, tipping, and it hasn't landed on anybody's head.
+**Card 8, the Tower: Is it too late for me?**
 
-A second opinion worked. I won't take that from you. If you'd already asked, nobody could tell you that you were wrong again. You came by it honestly, and it got you through when you needed getting through.
+**No. The years spent checking don't come back, but trusting what you see does, and it's closer than it looks.**
 
-Now here's what it did. What you built to get by has cost you more than what they took.
+On the Tower, lightning knocks a gold crown clean off the top. It's still in the air, tipping, and it hasn't landed on anybody's head.
 
-That crown in the air is your own word on what you've seen. It came off a long time ago, and it's been up there ever since, not on your head and not on theirs, while you waited for somebody else to agree with you.
+That crown is your own say on what you've seen, and it's been up there a long time. But think of the alarm. It went off every time there was smoke. It was never once wrong. It only got argued with.
 
-Here's what it's been charging you. You had a bad feeling about somebody once, early, and you talked yourself out of it because everyone else liked them. Months on, it turned out you'd had them right from the first five minutes. You didn't get to say I told you so. You hadn't told anybody. You'd told yourself you were being unfair, and you'd believed it.
+And here's what all that second-guessing built in you: you hear people out. You know what it is to be doubted, so you never doubt anybody for sport. When your eyes come back to you, they come back to somebody who's fair as well as right. Most people only get one of those. You'll have both.
 
-I left the table then. I don't, as a rule, but I could see where this card was going and I wanted a minute away from it. I stood at the back door in the cold. The cat was out on the step and wouldn't come in, whatever I said to it. Past midnight, and the sheet still had nothing on it but your name. When I came back, they were still over by the door, keeping to their side of the kitchen.
-
-Here's the deal, and I want you to have it exactly. Your judgment comes back. The years you spent checking with everybody else don't. Nobody hands those over, not them, not me, not any card.
-
-I told you ten years or thirty makes no difference to whether they've still got it, and that holds. It makes all the difference to the bill. Years of second and third chances handed to people your gut had already given up on. Years of knowing something at the start and saying so at the end, when it was too late to count. Some of the people around you never found out how sharp you are, because you kept what you saw to yourself until somebody else said it first.
-
-They told you that you were wrong when you were right. That's theirs, all of it, and I'm not taking it off them. Checking first made sense back then. It was never meant for everybody who came after. It got charged to all of them anyway, every year of it, and you're the one who's been paying.
+Look again: that crown hasn't come down yet.
 
 [CARD 9]
 
+**Card 9, the Moon: Are they giving it back, or trying to get me back?**
+
 [[FORK get_back]]
-**They're trying to get you back, {{FIRST}}.**
+**Trying to get you back, {{FIRST}}.**
 
-And some part of you is glad. Don't hurry past that, and don't be ashamed of it either. I want to stay here a minute, because this is the thing to watch closest.
+On the Moon, an orange dog and a pale wolf sit with their heads up, howling at the same moon. From down the road you couldn't tell the two apart.
 
-Here's what the glad part would do if you let it. It would take their word again. They'd say they've changed, and you'd want to believe it badly enough that you'd stop looking at whether they had. You'd catch yourself wondering if it was really that bad, and whether you'd read too much into it back then. You'd run your own memory past them, the way you check what you saw with somebody now, and you'd take their version. Being told how it was would feel like a relief. That's the danger, right there. You'd be checking with them again before you knew it, about the past first and then about everything else, and they're the last person on earth you should be asking.
+The letter ends with an ask: a visit, and if you won't come, a letter back.
 
-On the Moon, a dog and a wolf sit at the bottom of the card with their heads up, howling at the same moon. One's tame and one isn't, and from down the road you couldn't tell them apart by the sound. I told you that was the trouble with a call like this: giving it back and getting you back sound the same.
+If part of you is glad when you get there, don't be ashamed of it. A mind that's argued this long wants the case settled, and the quickest way to settle it is to ask the one who was there. That's the danger. You'd be checking with them again, and no one on earth is a worse person to ask.
 
-This one wants something from you.
-
-Here's what their wish is really for. They don't want you. They want the woman who'd take their word over her own, the one who checked with them first. They're holding your judgment out where you can see it, waiting for you to walk over to them, so you'll be close enough to ask them about everything again.
-
-They won't come to you. A wish like this stays where it is and waits for you to move. They'll stay right there, hand out, for as long as you let them, and not one step closer.
-
-I told you you'd treat one answer as a gift and the other as a trap. This is the trap, and it's baited with the one thing you've wanted to hear. Every kind word in their letter is going to sound like a reason to go. None of it is.
-
-I'd sat back down for this one, and I held it face-down a long while before I turned it. When I did, they came right up to the table and stayed there, closer than they'd been all night. I kept my eyes on the card and off them. It was three in the morning, your name at the top of the sheet and nothing under it, and I didn't know if I'd get your letter at all.
+It's the dog and the wolf: all howl, and neither one walks over. The warmer the letter sounds, the harder you look at where it's pointing.
 [[/FORK]]
 [[FORK giving]]
-**They're giving it back, {{FIRST}}. They aren't trying to get you back.**
+**Giving it back, {{FIRST}}. Not trying to get you back.**
 
-They want your judgment out of their hands, and that's what the giving is. Their regret is real, and so are the months they've spent at this. But none of it is them reaching for you. The line that let them off has worn thin, and what they're holding has gotten heavy, so they're putting it down, for their own sake. They've carried it a long time, and they're tired. It asks nothing of you because they want nothing from you: not an answer, not a visit, not you.
+On the Moon, a dog and a wolf howl up at the moon, and the moon's eyes are closed. It isn't looking for anybody.
 
-On the Moon, a dog and a wolf sit with their heads up, howling at the same moon. From down the road you couldn't tell the two apart by the sound. I told you the trouble with a call like this was that giving it back and getting you back sound the same. This is the tame one. And look where its head is pointed: at the moon, not at anybody. It isn't calling for anyone to come.
+The letter ends by asking you for nothing at all. Not forgiveness, not a visit, not even an answer.
 
-Now the hard part. There's a day you've kept free. You know the one. They sit down across from you and say it: you were right. They go back through every time they told you otherwise and own up to it, out loud, to your face. You'd say you gave up on that day a long while ago, and you'd mean it. Then something small would bring it back, and you'd find yourself waiting again. It wouldn't even have to be much. A few words would do it. You've pictured their face when they say them, and you've pictured what you'd say back.
+The point is to be rid of it. It's a gift, and colder than it sounds. It asks nothing because nothing's wanted back.
 
-You kept a spot for it. You stopped trusting your own eyes about nearly everything, and you kept one small place where you were still sure: sure that in the end they'd come and say so.
-
-That day isn't coming. Nobody's going to sit down across from you and say it, not soon and not ever. What's in their letter is everything you'll get from them, and nothing comes after it. If anybody's going to say out loud that you were right, it'll have to be you.
-
-I'd sat back down for this one, and I held it face-down a long while before I turned it. When I looked up afterward, the place by the door was empty. All night they'd been somewhere in my kitchen, and now there was only me. I sat a good while with my hands flat on the table. Three in the morning, your name at the top of the sheet and nothing under it, and whoever was carrying your letter had walked out. I didn't know if I'd get it at all.
+You've kept a day free: the one where somebody sits down across from you and says, "You were right." That day isn't coming. The letter at the end is everything you'll get. Once you've read it, you can stop keeping the day free.
 [[/FORK]]
+
+It was three in the morning when I turned this one, and the letter stalled. The one at my shoulder would give me half a line and then take it back, as if somebody kept asking, are you sure? I put the pen down and waited.
 
 [CARD 10]
 
-**No, {{FIRST}}, they won't call, write or lift a finger about any of this, because {{REASON.headline}}.**
+**Card 10, the Star: Will they ever do anything about it?**
 
-[[REASON 0]]To do anything at all, they'd have to say they were wrong, out loud, to the one person they spent so long telling she was wrong. Their pride won't stand for it.[[/REASON]][[REASON 1]]You're the one who saw. You were watching the whole time and you had it right, and being in a room with somebody who saw that much is more than they can face.[[/REASON]][[REASON 2]]As long as nobody says you were right, nothing changes for them. Keeping quiet hasn't cost them a dime, and nobody's ever sent them the bill.[[/REASON]] And don't go asking them why. They couldn't tell you. The pull they've been putting out these months isn't something they've noticed in themselves, and nobody can explain a thing they haven't noticed. Asking would only hand them the pull again.
+**No, {{FIRST}}, nothing more is coming, not a call and not a card, because {{REASON.headline}}.**
 
-[[FORK get_back]]
-So they hold it out and wait for you to come and get it. I told you in the first letter what it means when someone holds a thing out like that, and this is what it means. They won't come one step. They want you to cover the whole distance. Your part is to stop answering that pull.
-[[/FORK]]
-[[FORK giving]]
-So they're letting go of it right where they are, and that's as far as they'll go. Nobody's going to bring it to your door or check that it got to you. Putting it down is the whole of what they mean to do.
-[[/FORK]]
+On the Star, a woman kneels at a pool and empties a jug in each hand right where she is. Nothing on the card gets carried anywhere.
 
-Now here's what everything else rests on. They were never the ones who had to move. Your judgment doesn't come back by somebody carrying it over to you, and it doesn't come back because they finally say so. All it ever needed was for someone to quit waiting. Not a call, not a letter, not a word from them.
+[[REASON 0]]Doing more would mean coming to you and saying, "You were right," and pride won't carry anybody that far.[[/REASON]][[REASON 1]]You saw the whole of it, and nobody wants to sit across a table from the one who saw.[[/REASON]][[REASON 2]]You doubting yourself has never cost a thing on the other side. Life over there runs the same either way.[[/REASON]] [[FORK get_back]]So it's held out, and you're the one expected to come and get it.[[/FORK]][[FORK giving]]So it's being put down right where it is. Nobody's bringing it to your door.[[/FORK]]
 
-Think about what you've really been waiting for. You've been waiting for them to say you were right. That's a second opinion too, the biggest one you ever asked for. You've been holding up what you saw with your own eyes and waiting for their say-so before you'd let yourself believe it. You've known what happened for a long time. You were there. What you haven't let yourself do is go by it without their word on top.
+Here's what I can't do: I can't make that letter get sent. No card can. What I can do is read it to you, and I have.
 
-The Sun shows a child on a white horse, riding bareback, both arms wide open. Nobody's leading the horse. The child isn't waiting on anybody to say it's all right to ride.
+You've been waiting for somebody to say you were right. That's a second opinion too, the biggest one you ever asked for. You were there. You don't need anyone's word on top of your own. Nobody's coming to put the battery back.
 
-The day you stop waiting on their word, the call is back in your hands, the same way that child rides with nobody holding on. You don't need them to agree with you. You never did. Look at the card again. Nobody in it is asking permission. You don't have to ask either.
-
-The window went from black to grey while I sat there, and I saw what I'd been doing all night. I'd been pulling at them for your letter, then sitting back and waiting for them to give it up, then pulling again. You've been doing the same thing a long time. So I quit. I said it out loud to my empty kitchen: I'm done waiting on you.
-
-[[FORK get_back]]Then they were in the chair across from me[[/FORK]][[FORK giving]]Then they were back, in the chair across from me[[/FORK]], where you'd sit, and the weight had gone out of them. My pen moved, and the first line of your letter was on the sheet.
+By the time I turned the Star, the window over my sink had gone gray and the Lawyer had rested its case. The one at my shoulder sat down across the table, and the letter started to come.
 
 [CARD 11]
 
-Here's what they never said to you: "You saw it, you were right, and I told you that you weren't."
+**Card 11, the Magician: What did they never say?**
 
-Don't answer it, on paper or in your head. You don't have to. Once you've read it, it's already back.
+**That it was all there to see, and you saw it.**
 
-Look at what it says. You saw it. You weren't imagining things, and you weren't reading into anything. You were right, and somebody stood there and told you otherwise, knowing better. That's what you've been hunting for every time you went back over it late at night: proof that what you saw was real. There it is, in their own words. You can stop looking.
+On the Magician, four things lie on the table in plain view: a cup, a coin, a sword and a wand. Nothing's tucked under anything.
 
-And you can put down their half. You've had them say sorry in your head, and you've had them say worse. You've argued both sides of it in the car and at the sink, and come out more tired than you went in. That job's done. Their side is written down now, and it was never yours to write. All the time that went into it comes back to you.
+Here's the one line never said out loud:
 
-You're about to read their words. If this person hurt you, you owe them no reply. Reading it is all you have to do.
+"None of it was in your head. I let you think it was."
 
-On the Magician, four things are laid out on the table in front of him: a cup, a coin, a sword and a wand. Nothing's hidden and nothing's missing. It was all out in plain view the whole time, and you saw it.
-
-After that, the rest of the letter started coming, and it came fast.
+There it is. You can stop going over it. It doesn't need answering, not on paper and not at the sink at night. If this person hurt you, you owe them no reply.
 
 [CARD 12]
 
-Stop going back to them, and once a day, make one small decision you ask nobody about and don't go back on. Those two will carry you through what's coming.
+**Card 12, Strength: What do I do now?**
 
-Your last card is the World. A woman dances inside a big green wreath, and there's nothing in there with her but the sky. Nobody to turn to. Nobody to ask how she's doing. She's dancing anyway.
+**Stop going back, and start going by what you see, one small call at a time.**
 
-You won't need a second opinion in there, and you don't need one out here either. Keep asking people the things they'd actually know, like the way to somewhere you've never been. Just quit asking anybody whether you're allowed to believe your own eyes. That was always yours to decide.
+Your last card is Strength: a woman in a white dress with both hands on a lion's mouth, closing its jaws. She isn't fighting it. The lion's head is bowed.
 
-The pull will be at its strongest now, inside the next five to seven days. That's about you, and what's moving in you. It says nothing about them turning up.
+You don't need "I just think things through" anymore. It got you through. Now let the Lawyer rest, the way that lion does.
 
-**Stop going back.** Rereading the old messages, looking them up, starting a message you tell yourself you'll never send: that's one thing with three names. When the pull comes, put the phone in another room, set the oven timer for twenty minutes, and give your hands something to do. Don't argue with it. A pull like this climbs and then drops off by itself if nobody feeds it. Going to look when it's at its worst is what teaches it to come back. Every one you let go by makes the next one smaller.
-
-I promised you the rereading stops. The need goes when you read the letter. The habit takes about a week, so your hand will still go for the phone a few times. Let it reach, and leave the phone where it is.
-
-**The one thing to do.** For seven days, once a day, make one small decision you ask nobody about and don't go back on. Go by your first read on something small. If somebody asks you to something and your first answer is no, say no, kindly, and leave it there. Don't call anyone afterward to ask if you were right. Do this only around people who've never given you cause. Nobody from your past.
-
-You can't think your way back to trusting yourself. Your head has one huge example of being told you were wrong, and it's gone over that one a thousand times. Small calls that turn out fine give it something new to go on. And if one turns out wrong, you'll find out what being wrong about one small thing costs you: very little, and you live through it.
-
-It won't feel like much at first. You'll know it's working by what stops: your hand stops reaching for the phone late at night, and that little "Am I crazy?" stops coming out before you've finished thinking. How soon that happens is down to what you do with the twenty minutes and the seven days. It isn't down to me, and it isn't down to them.
+Read the letter first. After it come thirty days of small things to do.
 
 [[FORK get_back]]
-Their letter ends with an ask. In the last lines, they want something from you. I've left it in. Do nothing with it.
+The letter ends with an ask. I've left it in. Do nothing with it.
 [[/FORK]]
 [[FORK giving]]
 
 [[/FORK]]
-
-And the next time someone reaches for you, there's someone there.
-
-It was full light when the last of it came. I put the Hermit, Judgement and the Devil back in the deck. Then I wrote the whole thing out by hand at the same table, with them sitting across from me, and I didn't change a word of it.
-
-Read it once, slowly, to the end.
 
 [LETTER]
 
@@ -241,33 +210,93 @@ Read it once, slowly, to the end.
 
 I'm never going to send this. {{REASON.letter}} So it stays here.
 
-I'll just say what I did. When you saw something, I told you that you had it wrong. Even when you didn't. After a while you started checking with me before you said anything at all. I saw that happen. It suited me, and I let it stay that way.
+I'm writing it anyway. I've had something of yours too long, and I'm tired of holding on to it and saying nothing.
 
-I'm not saying I sat down and planned it. I don't think I did. But I did it, and I knew. I'm not proud of any of it.
+When I first knew you, {{EX.letter}} I liked that. I liked being around it. {{EX.never}}
 
-When I first knew you, {{EX.letter}} I liked that. What I didn't like was how sure you were. You'd look at a person once and know what they were about, and most of the time you were right, and that got to be a problem for me. I kept {{EX.kept}}. The part of you that was sure of itself, I had no use for.
+{{EX.moment}}
 
-I told myself you were imagining things. I said it to other people too. It was easier than the other thing. It doesn't hold up anymore. I still try it in my head now and then, and I can't make myself believe it.
+You always saw things. You'd meet somebody once and tell me on the drive home what they were about, and most of the time you had them right. You'd hear a story and catch the one part that didn't add up. You'd look at me across a room and know, before I'd opened my mouth. I liked that at first. Then it got to be a problem for me.
+
+So I started telling you that you had it wrong. Not once. Every time. You'd say something was off, and I'd say you were reading into it. You'd say I'd changed, and I'd say you were tired. You'd remember a thing one way, and I'd remember it another, and I'd say mine louder. After a while you stopped saying what you saw. You'd start with "I'm probably wrong, but," and I let you. Then you started checking with me before you said anything at all. I watched that happen. It suited me, and I left it alone.
+
+I took {{EX.kept}} for granted. I never said thank you for it, not once.
+
+{{LP.admire}}
 
 {{LP.letter}}
 
-Why did I hang on to it? Because giving it back means saying you were right all those times, and if you were right, then I'm the one who did this. As long as I kept it, I didn't have to say so. I knew that the whole time.
+And I still told you that you were wrong. Here's what I told myself, since I'm being honest for once. I told myself you were imagining things. I said it to other people too. It was easier than the other thing. I told myself you'd always thought too much, and I was only calming you down. When somebody asked about you, I said you'd always been a worrier. I said it so often I nearly believed it. I don't anymore.
 
-So here it is. I should have said it back then. I didn't.
+Why did I hang on to it? Because giving it back means saying you were right, all those times. And if you were right, then I'm the one who did this. As long as I kept it, I never had to say so. I knew that the whole time.
+
+I know what it did to you, because it started before I was out the door. You'd ask somebody else before you'd go by your own eyes. You'd lie awake going over a thing word for word, trying to work out if it really happened the way you saw it. It did. It always did. I'm the reason you go over things like that.
+
+When I left, I took the part of you that trusts what you see, and I knew I had it. It's never been any use to me. I can't see a thing with it. It only ever worked for you.
+
+None of this was your fault. You didn't think too much. I said too little, and most of what I did say wasn't true.
+
+I did love you. Back then, it was real. Whatever you decide about me, don't decide that part was in your head too. You were loved, and then you were lied to, and those are two different things.
+
+I'm sorry. Not that it ended. I'm sorry I stood in front of somebody with eyes that good and talked you out of what you saw, over and over, until you quit looking. That didn't just happen. I did it.
 
 You saw it, you were right, and I told you that you weren't.
 
-There was never anything wrong with your eyes. It was one of the best things about you, and I treated it like something I had to put up with. It's your judgment. It was yours before me and it's yours now. I'm giving it back, all of it. You don't owe me a thing for it.
+I don't know what your life looks like now. I haven't tried to find out. But I know how I left it. Somebody kind turns up, and you like them, and before you'll go by that, you check with everybody you know. I taught you that.
+
+I can't give you back the time. I would if I could, every day of it. But I knew you. The best of your life isn't behind you, not with eyes like yours.
+
+So here's what I should have said back then and didn't:
+
+None of it was in your head. I let you think it was.
+
+There was never anything wrong with your eyes. They were one of the best things about you, and I treated them like something I had to put up with. They were yours before me, and they're yours now. Go by them. On people, on places, on whatever's in front of you. When something doesn't sit right, it doesn't. You don't need a second opinion. You never did. I don't get a say in it, and I never should have had one.
+
+I want you happy. Not settled, not sure enough. Happy.
+
+{{EX.last}}
+
+I won't call, and I won't turn up at your door. This is as far as I go.
 
 [[FORK get_back]]
-I'd like you to come back. If you won't, then write to me. Just once.
+I meant every word of this. I think about you more than I'd ever say to your face. I'd like to see you. If you won't, write to me. Just once.
 [[/FORK]]
 [[FORK giving]]
-I'm not asking you for anything. Not to forgive me, not to see me, not an answer. Don't write to me and don't come looking for me. That's all.
+I'm not asking you for anything. Not to forgive me, not to see me, not to write back. Don't come looking for me. You can put me down now. Trust what you see. You were always right to.
 [[/FORK]]
 
 [CLOSE]
 
-I looked up, and the chair across the table was just a chair again, with nobody in it.[[FORK get_back]] I left their ask in so you'd see it for what it is. It's a bill, and nobody owes it, least of all you.[[/FORK]][[FORK giving]][[/FORK]]
+It was full light when I put the pen down, and the chair across the table was empty.[[FORK get_back]] I left the ask in so you'd see it for what it is: one more second opinion, and you don't need it.[[/FORK]][[FORK giving]][[/FORK]]
 
-It's back. What you do with it is on you.
+**Will I be happy again?**
+
+**Yes. Happy, and easy in your own head.**
+
+Your birthday, {{NEXT_BDAY}}, starts a new year for you. {{PY.ahead}} The change doesn't wait for the date.
+
+**Within 7 days.** The pull will be strongest late at night, with the lights off and your mind still going. You'll want to go over it one more time, or look up the name. That's the Lawyer reopening the case, not a sign that anybody's coming back.
+
+**Within 30 days.** Somebody will say something that doesn't sit right, and you'll say so, right there, with no "I'm probably wrong, but" in front of it.
+
+**Within 3 months.** An ordinary afternoon. You'll meet somebody new, know inside five minutes that they're all right, and go by it without calling anybody first.
+
+Signs to watch for:
+
+- A friend asking you, "Am I crazy?" and you answering straight.
+- Somebody saying, "You always could read people."
+- A whole night's sleep without going back over a conversation.
+- The Lawyer's "are you sure?" coming, and you going ahead anyway.
+- The name coming up, and your mind letting it go by.
+
+If three of these turn up inside a month, it's coming back.
+
+Three small things, for thirty days:
+
+**Stop going back.** Going over old messages, looking up the name, replaying what got said: it's all one habit. When the pull comes, put the phone in another room and set the oven timer for twenty minutes. A pull drops off by itself if nobody feeds it.
+
+**The one thing to do.** Once a day, make one small call you ask nobody about, and don't go back on it. Which road home, which seat, what to turn down. Nothing involving anybody from back then.
+
+**Say the first read out loud.** Once a week, when something about a person or a plan doesn't sit right, say so the first time, plainly. No "I'm probably wrong, but." Then let it stand.
+
+Start with the alarm, if there's one on your ceiling that's gone quiet. Put a fresh battery in, snap the cover shut and press the button. It'll go off loud enough to make you jump. Nothing was ever wrong with it. It was right every time there was smoke. It's back. Go and use it.

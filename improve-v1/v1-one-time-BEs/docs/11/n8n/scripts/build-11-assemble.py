@@ -2,7 +2,8 @@
 """Generate 11's ASSEMBLY test flow: no model at order time. Picks the fixed report by Soul Urge,
 fills her name, date and lines, builds the PDF. Never delivers.
 
-    python3 scripts/build-11-assemble.py        # → build/11-assemble-TEST.n8n.json
+    python3 scripts/build-11-assemble.py          # → build/11-assemble-TEST.n8n.json (test buyers, never delivers)
+    python3 scripts/build-11-assemble.py --live   # → build/11-fulfilment-ASSEMBLY.n8n.json (the live flow, inactive)
 
 ⛔ EDIT THIS FILE, THE REPORTS (product/11-P3-su<N>-report.md) AND 11-swapins.json, NEVER THE JSON.
 
@@ -22,8 +23,9 @@ import importlib.util, json, os, re, sys
 HERE = os.path.dirname(os.path.abspath(__file__))
 OUT_DIR = os.path.join(HERE, "../build")
 
-if sys.argv[1:]:
-    raise SystemExit(f"no flags: {' '.join(sys.argv[1:])}")
+LIVE = sys.argv[1:] == ["--live"]
+if sys.argv[1:] and not LIVE:
+    raise SystemExit(f"unknown flag(s): {' '.join(sys.argv[1:])} (the only flag is --live)")
 sys.path.insert(0, HERE)
 import lib11_assemble as L
 
@@ -229,7 +231,104 @@ def build():
                          "saveDataErrorExecution": "all", "saveDataSuccessExecution": "all"},
             "pinData": {}, "tags": []}
 
-if __name__ == "__main__":
+def html_and_fill():
+    tpls, bank = templates(), L.load_bank()
+    html_js = (B.HTML_JS.replace("$('7a · Read the verdict').first().json", "$input.first().json")
+               .replace("__S3__", B.S3).replace("__CROP__", "true" if SPEC["death_crop"] else "false")
+               .replace("__C4__", json.dumps(B.CLOSING_THE_DOOR_HTML))
+               .replace("__ACTS__", json.dumps(SPEC["acts"], ensure_ascii=False))
+               .replace("written with machine help in Evelyn's voice", "written in Evelyn's voice"))
+    assert "$input.first().json" in html_js
+    fill_js = (FILL_JS.replace("__TEMPLATES__", json.dumps(tpls, ensure_ascii=False))
+               .replace("__BANK__", json.dumps(bank, ensure_ascii=False))
+               .replace("__CARD_NAMES__", json.dumps({k: v["name"] for k, v in SPEC["cards"].items()})))
+    return tpls, html_js, fill_js
+
+# The live flow (2026-11-05): the writing flow's front (Stripe → is it 11 → intake) and back
+# (PDF → Supabase → 24h → signed URL → AWeber tag = the send → mark delivered), with the five model
+# calls and the grader replaced by the no-model middle. Taken from build-11-n8n.build() so the
+# proven nodes are reused as they are, never hand-copied. Still carries build-11-n8n's TODOs
+# (app base URL, be-fulfilment token), so push-11-n8n.py refuses it until those are set.
+FRONT = ["1 · Stripe webhook", "2 · Is this a paid 11 order?", "Not 11 — ignore",
+         "2a · Load the intake", "2b · Join session + intake"]
+BACK = {"11 · PDFShift → PDF": "6 · PDFShift → PDF",
+        "12 · Upload to Supabase Storage": "7 · Upload to Supabase Storage",
+        "13 · Hold to the 24h mark": "8 · Hold to the 24h mark",
+        "13a · Get signed URL": "8a · Get signed URL",
+        "14 · Find her on AWeber": "9 · Find her on AWeber",
+        "14a · Tag + reading_url (the send)": "9a · Tag + reading_url (the send)",
+        "15 · Mark delivered": "10 · Mark delivered"}
+HTML_NODE = "5 · Build the HTML"
+
+def passing_reports():
+    """Live build: only reports that pass check-report.py go in. A buyer whose report is left out HOLDs at node 4."""
+    import subprocess
+    chk = os.path.join(HERE, "../../product/scripts/check-report.py")
+    ok, held = {}, []
+    for su, path in L.written_reports().items():
+        r = subprocess.run([sys.executable, chk, path], capture_output=True, text=True)
+        (ok.__setitem__(su, path) if "ALL PASS" in r.stdout else held.append(su))
+    return ok, held
+
+def build_live():
+    ok, held = passing_reports()
+    _wr = L.written_reports
+    L.written_reports = lambda: ok
+    try: tpls, html_js, fill_js = html_and_fill()
+    finally: L.written_reports = _wr
+    build_live.held = held
+    B.NODES.clear(); B.LINKS.clear()
+    old = {n["name"]: n for n in B.build()["nodes"]}
+    rename = {"10 · Build the HTML": HTML_NODE, **BACK}
+    def moved(n, dx):
+        s = json.dumps(n, ensure_ascii=False)
+        for a, b in rename.items(): s = s.replace(a, b)
+        m = json.loads(s); m["id"] = m["name"].split(" ")[0]
+        m["position"] = [m["position"][0] + dx, 300 if m["name"] != "Not 11 — ignore" else 460]
+        return m
+    front = [moved(old[n], 0) for n in FRONT]
+    back = [moved(old[n], -1460) for n in BACK]
+    B.NODES.clear(); B.LINKS.clear()
+    B.code("3 · Her numbers", [60, 300], NUMBERS_JS,
+           "Soul Urge picks the report. Expression, Life Path and the path pick the versions and lines.")
+    B.code("4 · Pick the report + fill it", [260, 300], fill_js,
+           "No model. The finished report for her Soul Urge, with her name, date and lines. HOLDs if anything isn't written.")
+    B.code(HTML_NODE, [460, 300], html_js,
+           "Card art by deal record. Bump buyers HOLD here until 11-C4 Closing the Door is written.")
+    nodes = front + list(B.NODES) + back
+    names = [n["name"] for n in nodes]
+    LINKS = {}
+    def link(a, b, out=0):
+        LINKS.setdefault(a, {"main": []})
+        while len(LINKS[a]["main"]) <= out: LINKS[a]["main"].append([])
+        LINKS[a]["main"][out].append({"node": b, "type": "main", "index": 0})
+    link(FRONT[1], FRONT[3]); link(FRONT[1], FRONT[2], 1)
+    chain = [FRONT[0], FRONT[1]]
+    for a, b in [(FRONT[0], FRONT[1])] + list(zip(
+            [FRONT[3], FRONT[4], "3 · Her numbers", "4 · Pick the report + fill it", HTML_NODE] + list(BACK.values())[:-1],
+            [FRONT[4], "3 · Her numbers", "4 · Pick the report + fill it", HTML_NODE] + list(BACK.values()))):
+        link(a, b)
+    # Every node referenced by name must exist, and every link must land on a node.
+    refs = set(re.findall(r"\$\('([^']+)'\)", json.dumps(nodes, ensure_ascii=False)))
+    bad = sorted((refs | {d["node"] for v in LINKS.values() for o in v["main"] for d in o}) - set(names))
+    if bad: raise SystemExit(f"live build: references to missing nodes: {bad}")
+    sus = ", ".join(tpls)
+    return {"name": f"11 · The Unsent Letter — fulfilment (fixed reports SU {sus}; no model) [LIVE BUILD · inactive]",
+            "nodes": nodes, "connections": LINKS, "active": False,
+            "settings": {"executionOrder": "v1", "saveManualExecutions": True,
+                         "saveDataErrorExecution": "all", "saveDataSuccessExecution": "all"},
+            "pinData": {}, "tags": []}
+
+if __name__ == "__main__" and LIVE:
+    wf = build_live()
+    os.makedirs(OUT_DIR, exist_ok=True)
+    out = os.path.join(OUT_DIR, "11-fulfilment-ASSEMBLY.n8n.json")
+    with open(out, "w", encoding="utf-8") as f:
+        json.dump(wf, f, ensure_ascii=False, indent=2)
+    print(f"  {len(wf['nodes'])} nodes → build/{os.path.basename(out)}")
+    print("  ⚠ HELD (fail check-report, so these buyers HOLD at node 4): SU " + (", ".join(str(s) for s in build_live.held) or "none"))
+    print("  ⛔ inactive; TODOs left: " + ", ".join(sorted(set(re.findall(r"TODO[-\w]*", json.dumps(wf))))))
+elif __name__ == "__main__":
     wf = build()
     os.makedirs(OUT_DIR, exist_ok=True)
     out = os.path.join(OUT_DIR, "11-assemble-TEST.n8n.json")

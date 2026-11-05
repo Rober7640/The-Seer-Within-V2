@@ -265,9 +265,9 @@ It was full light when I set the pen down, and the chair across the table was em
 
 **Will I be happy again?**
 
-**Yes. Not careful, and not just getting by. Happy, with your whole heart in it.**
+**Yes. Happy, with your whole heart in it.**
 
-Your birthday, {{NEXT_BDAY}}, starts a new year for you. {{PY.ahead}} The change starts well before then. By your birthday, you'll know it's real.
+Your birthday, {{NEXT_BDAY}}, starts a new year for you. {{PY.ahead}} The change doesn't wait for the date.
 
 **Within 7 days.** Somebody will do you a small favor, and you'll catch yourself already working out what you owe. That's the Bookkeeper. Once you've seen it at work, its grip starts to slip.
 
