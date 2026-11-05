@@ -63,17 +63,33 @@ function order(over: Partial<import('./paiLive').PaiOrder> = {}): import('./paiL
 after(() => setTimeout(() => process.exit(process.exitCode ?? 0), 200).unref());
 
 describe('the allow-list', () => {
-  it('admits exactly the two tarot landers — /fb is OUT (Lewis 13 Oct)', () => {
+  it('admits exactly /fb and the two tarot landers — /fb back IN (Lewis 3 Nov)', () => {
+    assert.equal(paiEligibleLander('v1-fb', undefined), true);
+    assert.equal(paiEligibleLander('v1-fb', null), true);
+    assert.equal(paiEligibleLander('v1-fb', '  '), true); // blank hook = no hook
     assert.equal(paiEligibleLander('v1-tarot', 'cards-meant-alone'), true);
     assert.equal(paiEligibleLander('v1-tarot', 'cards-come-back'), true);
+  });
+  it('admits Joel’s four Version C landers (2026-11-05) — and only on /fb-tarot', () => {
+    for (const h of ['cards-end-same-way', 'cards-give-more', 'cards-marry-more-than-once', 'cards-more-affection']) {
+      assert.equal(paiEligibleLander('v1-tarot', h), true, h);
+      assert.equal(paiEligibleLander('v1-tarot', ` ${h} `), true, `${h} with spaces`);
+      assert.equal(paiEligibleLander('v1-fb', h), false, `${h} on /fb`);
+    }
+  });
+  it('none of the eligible tarot hooks is a soulmate lander (they must file to the shared lists)', async () => {
+    const { SOULMATE_LANDER_HOOKS } = await import('@shared/soulmateLanderHooks');
+    const { PAI_ELIGIBLE_LANDERS } = await import('@shared/paymentGateway');
+    for (const l of PAI_ELIGIBLE_LANDERS) {
+      if (l.hook) assert.equal(SOULMATE_LANDER_HOOKS.includes(l.hook), false, `${l.hook} is a soulmate lander`);
+    }
   });
   it('refuses near-twins, other hooks, other funnels and root', () => {
     // cards-meant-alone-still-time is a NEAR TWIN of cards-meant-alone (tarotRedirect.ts).
     assert.equal(paiEligibleLander('v1-tarot', 'cards-meant-alone-still-time'), false);
     assert.equal(paiEligibleLander('v1-tarot', 'cards-return'), false);
     assert.equal(paiEligibleLander('v1-tarot', undefined), false);
-    // /fb is out of the split while its own $35 vs $35+bump test runs (Lewis 13 Oct).
-    assert.equal(paiEligibleLander('v1-fb', undefined), false);
+    // /fb is admitted with NO hook only — a hook on /fb is not a lander we walked.
     assert.equal(paiEligibleLander('v1-fb', 'cards-meant-alone'), false);
     assert.equal(paiEligibleLander('v1-fb2', undefined), false);
     assert.equal(paiEligibleLander('v1-palm', undefined), false);
@@ -159,8 +175,10 @@ describe('resolveGateway — Stripe and NOT enrolled unless everything holds', (
     for (const args of [
       { email: 'a@b.co', funnel: 'v1-palm' as const },
       { email: 'a@b.co', funnel: 'v1-tarot' as const, hook: 'cards-return' },
-      { email: 'a@b.co', funnel: 'v1-fb' as const },
+      { email: 'a@b.co', funnel: 'v1-fb2' as const },
       { email: '', funnel: 'v1-tarot' as const, hook: 'cards-meant-alone' },
+      { email: '', funnel: 'v1-fb' as const },
+      { email: 'a@b.co', funnel: 'v1-fb' as const, noemail: true },
       { email: 'a@b.co', funnel: 'v1-tarot' as const, hook: 'cards-meant-alone', noemail: true },
     ]) {
       const d = await live.resolveGateway(args);
@@ -236,6 +254,7 @@ describe('chargeMain against a stubbed Payments.AI', () => {
   const realFetch = globalThis.fetch;
   let txnResult = 'approved';
   let calls: string[] = [];
+  let customerBodies: any[] = [];
 
   before(() => {
     process.env.PAI_LIVE_ENABLED = '1';
@@ -246,7 +265,10 @@ describe('chargeMain against a stubbed Payments.AI', () => {
       calls.push(`${init?.method ?? 'GET'} ${u.replace(/^https:\/\/[^/]+/, '')}`);
       const json = (data: unknown) =>
         new Response(JSON.stringify({ data }), { status: 200, headers: { 'content-type': 'application/json' } });
-      if (u.endsWith('/customers')) return json({ id: 'cus_TEST' });
+      if (u.endsWith('/customers')) {
+        customerBodies.push(JSON.parse(String(init?.body)));
+        return json({ id: 'cus_TEST' });
+      }
       if (u.endsWith('/transactions') && init?.method === 'POST') return json({ id: 'txn_TEST1', result: 'pending' });
       if (u.includes('/transactions/txn_TEST1')) {
         return json({
@@ -267,6 +289,22 @@ describe('chargeMain against a stubbed Payments.AI', () => {
   });
   beforeEach(() => {
     calls = [];
+    customerBodies = [];
+  });
+
+  it('creates the customer with BOTH names, flat, from the name on her card', async () => {
+    txnResult = 'declined';
+    await live.chargeMain(
+      { order: order({ firstName: 'Annie' }), cardToken: 'tok_n', cardName: 'Ann Marie Lee', phone: '+15555550123', smsAnswer: 'no', returnUrl: 'https://x/fb/chat?paiReturn=1', policyBase: 'https://x' },
+      deps,
+    );
+    assert.equal(customerBodies.length, 1);
+    assert.deepEqual(customerBodies[0], {
+      email: 'buyer+test@example.com',
+      firstName: 'Ann',
+      lastName: 'Marie Lee',
+      phoneNumber: '+15555550123',
+    });
   });
 
   it('a decline fulfils nothing and says declined', async () => {
@@ -292,6 +330,25 @@ describe('chargeMain against a stubbed Payments.AI', () => {
       assert.equal(out.redirect, '/fb/welcome1?session_id=txn_TEST1');
       assert.equal(out.totalCents, 4777);
     }
+  });
+});
+
+describe('the Payments.AI customer name (support, 5 Nov: needs firstName AND lastName)', () => {
+  it('splits the name on her card: first word, then the rest', () => {
+    assert.deepEqual(live.customerName('Mary Ann Smith', 'Mary'), { firstName: 'Mary', lastName: 'Ann Smith' });
+    assert.deepEqual(live.customerName('  May   M  Logarta ', 'May'), { firstName: 'May', lastName: 'M Logarta' });
+  });
+  it('one word ⇒ lastName "-" (never empty — an empty one is refused)', () => {
+    assert.deepEqual(live.customerName('Cher', 'Cher'), { firstName: 'Cher', lastName: '-' });
+  });
+  it('no card name (an old page still open) ⇒ her chat name + "-"', () => {
+    assert.deepEqual(live.customerName(undefined, 'Ann'), { firstName: 'Ann', lastName: '-' });
+    assert.deepEqual(live.customerName('   ', ''), { firstName: 'Friend', lastName: '-' });
+  });
+  it('strips control characters and caps each part at 50', () => {
+    const n = live.customerName('Joe ' + 'x'.repeat(80), 'Joe');
+    assert.equal(n.firstName, 'Joe');
+    assert.equal(n.lastName.length, 50);
   });
 });
 

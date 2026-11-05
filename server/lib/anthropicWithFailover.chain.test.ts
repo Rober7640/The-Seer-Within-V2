@@ -11,12 +11,13 @@ delete process.env.ANTHROPIC_API_KEY_BACKUP_2;
 process.env.ANTHROPIC_API_KEY_PROMO_1 = 'sk-test-promo-1';
 process.env.ANTHROPIC_API_KEY_PROMO_2 = 'sk-test-promo-2';
 process.env.ANTHROPIC_API_KEY_PROMO_3 = 'sk-test-promo-3';
+process.env.ANTHROPIC_API_KEY_PROMO_4 = 'sk-test-promo-4';
 
 describe('promo-first chain for every caller', async () => {
   const mod = await import('./anthropicWithFailover');
 
-  it('tries promo 1, 2, 3, then the paid keys', () => {
-    assert.deepEqual(mod.getV2KeyNames(), ['promo_1', 'promo_2', 'promo_3', 'primary', 'backup_1']);
+  it('tries promo 1, 2, 3, 4, then the paid keys', () => {
+    assert.deepEqual(mod.getV2KeyNames(), ['promo_1', 'promo_2', 'promo_3', 'promo_4', 'primary', 'backup_1']);
   });
 
   it('V1 callers use the same promo-first client as V2', () => {

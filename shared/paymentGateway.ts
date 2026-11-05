@@ -32,15 +32,26 @@ export const GATEWAY_ARM_PAI = 'paymentsai';
  * Neither hook is a soulmate or money lander, so both file to the shared V1 AWeber
  * lists with the default bump key — the path that was walked on Payments.AI.
  *
- * ⏸️ /fb is OUT for now (Lewis, 2026-10-13): /fb is running its own $35 vs
- * $35 + bump test, and splitting the same buyers by gateway too would muddy both
- * reports. Everything else for /fb (its /fb/checkout page, the upsell paths) is still
- * built and tested — putting it back is `{ funnel: 'v1-fb', hook: null }` here plus
- * "v1-fb" in the experiment's scope.
+ * /fb history: taken OUT 2026-10-13 while it ran its own $35 vs $35 + bump test;
+ * put back IN 2026-11-03 (Lewis) — the bump test is concluded (A, no bump). Being on
+ * this list only makes /fb ELIGIBLE: nobody on /fb reaches Payments.AI until "v1-fb"
+ * is also in the experiment's scope (admin), so this ships dormant.
+ * ⚠ /fb also runs a price test (system_config.v1_price_variants). Add "v1-fb" to the
+ * scope only once that test is concluded, or both reports are muddied.
  */
 export const PAI_ELIGIBLE_LANDERS: ReadonlyArray<{ funnel: string; hook: string | null }> = [
+  { funnel: 'v1-fb', hook: null },
   { funnel: 'v1-tarot', hook: 'cards-meant-alone' },
   { funnel: 'v1-tarot', hook: 'cards-come-back' },
+  // Joel's four Version C landers (2026-11-05). Same check as the two above: none is a
+  // soulmate or money lander (not in shared/soulmateLanderHooks.ts, bucket is not money),
+  // so all four file to the shared V1 AWeber lists with the default bump key — the path
+  // already walked on Payments.AI. Lewis, 2026-11-05. Each must ALSO be added to the
+  // experiment's scope in /admin/experiments before any buyer is split.
+  { funnel: 'v1-tarot', hook: 'cards-end-same-way' },
+  { funnel: 'v1-tarot', hook: 'cards-give-more' },
+  { funnel: 'v1-tarot', hook: 'cards-marry-more-than-once' },
+  { funnel: 'v1-tarot', hook: 'cards-more-affection' },
 ];
 
 export function paiEligibleLander(funnel: unknown, hook: unknown): boolean {

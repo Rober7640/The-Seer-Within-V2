@@ -266,11 +266,16 @@ export interface PersonaPricing {
 // packs — pure dollar amounts — do not change.
 export const DEFAULT_PRICING: PersonaPricing = {
   freeCoins: minutesToCoins(FREE_TRIAL_MINUTES), // 3 free minutes at the default rate = 897¢
+  // Bonus minutes on the BIGGER packs only, to nudge buyers up (Joel's spec):
+  // $10/$20 stay flat (no bonus); $30 totals 15:00, $50 totals 30:00. We anchor
+  // on the WHOLE-MINUTE TOTAL (not a loose "+N") so the granted coins land on an
+  // exact minute count — what the paywall shows is exactly what the wallet gets,
+  // never more. (Effective bonus: $30 ≈ +5 min, $50 ≈ +13 min.)
   tiers: [
-    { packageType: 'popular',    coins: 1000, bonusCoins: 0, totalCoins: 1000, priceUsd: 1000, label: '$10' },
-    { packageType: 'best_value', coins: 2000, bonusCoins: 0, totalCoins: 2000, priceUsd: 2000, label: '$20' },
-    { packageType: 'premium',    coins: 3000, bonusCoins: 0, totalCoins: 3000, priceUsd: 3000, label: '$30', badge: 'MOST POPULAR' },
-    { packageType: 'whale',      coins: 5000, bonusCoins: 0, totalCoins: 5000, priceUsd: 5000, label: '$50' },
+    { packageType: 'popular',    coins: 1000, bonusCoins: 0,                            totalCoins: 1000,              priceUsd: 1000, label: '$10' },
+    { packageType: 'best_value', coins: 2000, bonusCoins: 0,                            totalCoins: 2000,              priceUsd: 2000, label: '$20' },
+    { packageType: 'premium',    coins: 3000, bonusCoins: minutesToCoins(15) - 3000,    totalCoins: minutesToCoins(15), priceUsd: 3000, label: '$30', badge: 'MOST POPULAR' },
+    { packageType: 'whale',      coins: 5000, bonusCoins: minutesToCoins(30) - 5000,    totalCoins: minutesToCoins(30), priceUsd: 5000, label: '$50' },
   ],
 }
 

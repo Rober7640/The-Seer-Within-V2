@@ -5,11 +5,12 @@ import { Dialog, DialogContent } from "@/components/ui/dialog";
 import {
   CUSTOM_TOPUP_MAX_USD,
   CUSTOM_PACKAGE_TYPE,
-  usdCentsToCoins,
+  DEFAULT_PRICING,
   coinsToClock,
   COINS_PER_MINUTE,
   type PricingTier,
 } from "@shared/types";
+import { resolveCustomTierCoins } from "@shared/paywall";
 import PaymentModal from "@/components/PaymentModal";
 import { PAYMENT_DIALOG_MOBILE_SHEET } from "@/lib/paymentDialog";
 
@@ -29,12 +30,9 @@ interface BuyCreditsModalProps {
 // Fallback pricing if the server hasn't answered yet. The in-chat popup only
 // ever SHOWS the three cheapest packs (Keen-style); the $50 pack still exists
 // for the /credits store and is reachable here via the Custom Amount field.
-const FALLBACK_TIERS: PricingTier[] = [
-  { packageType: "popular", coins: 1000, bonusCoins: 0, totalCoins: 1000, priceUsd: 1000, label: "$10" },
-  { packageType: "best_value", coins: 2000, bonusCoins: 0, totalCoins: 2000, priceUsd: 2000, label: "$20" },
-  { packageType: "premium", coins: 3000, bonusCoins: 0, totalCoins: 3000, priceUsd: 3000, label: "$30" },
-  { packageType: "whale", coins: 5000, bonusCoins: 0, totalCoins: 5000, priceUsd: 5000, label: "$50" },
-];
+// Sourced from DEFAULT_PRICING so the bonus coins on the bigger packs can't
+// silently drift from the real tier table.
+const FALLBACK_TIERS: PricingTier[] = DEFAULT_PRICING.tiers;
 
 export default function BuyCreditsModal({
   open,
@@ -95,11 +93,18 @@ export default function BuyCreditsModal({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
 
-  // --- Custom amount math (all derived from the shared $/min rate) ---
+  // --- Custom amount math (coins incl. any big-pack bonus, via the SAME shared
+  // resolver the server grants with, so the time shown = the time granted) ---
   const customDollars = parseFloat(customInput);
   const customCents = Number.isFinite(customDollars) ? Math.round(customDollars * 100) : 0;
-  const customCoins = customCents > 0 ? usdCentsToCoins(customCents) : 0;
-  const customClock = coinsToClock(customCoins, coinsPerMinute);
+  const customTier = customCents > 0 ? resolveCustomTierCoins(customCents, tiers) : null;
+  const customClock = coinsToClock(customTier?.totalCoins ?? 0, coinsPerMinute);
+  // Floor to one decimal, exactly like the pack tiles (toTierView), so the custom
+  // line never promises more free time than the wallet actually receives.
+  const customBonusMinutes =
+    customTier && customTier.bonusCoins > 0
+      ? Math.floor((customTier.bonusCoins / coinsPerMinute) * 10) / 10
+      : 0;
   const customTooLow = customInput.trim() !== "" && customCents > 0 && customCents < floorCents;
   const customTooHigh = customCents > CUSTOM_TOPUP_MAX_USD * 100;
   const customValid = mode === "custom" && customCents >= floorCents && !customTooHigh;
@@ -108,12 +113,12 @@ export default function BuyCreditsModal({
 
   const handleContinue = () => {
     if (mode === "custom") {
-      if (!customValid) return;
+      if (!customValid || !customTier) return;
       setPayTier({
         packageType: CUSTOM_PACKAGE_TYPE,
-        coins: customCoins,
-        bonusCoins: 0,
-        totalCoins: customCoins,
+        coins: customTier.coins,
+        bonusCoins: customTier.bonusCoins,
+        totalCoins: customTier.totalCoins,
         priceUsd: customCents,
         label: `$${(customCents / 100).toFixed(2)}`,
       });
@@ -251,6 +256,12 @@ export default function BuyCreditsModal({
                     = {customInput.trim() !== "" ? customClock : "0:00"}
                   </span>
                 </div>
+                {mode === "custom" && customValid && customBonusMinutes > 0 && (
+                  <p className="mt-1.5 flex items-center gap-1 text-[11px] font-semibold text-teal-300">
+                    <Check className="h-3 w-3" />
+                    Includes +{customBonusMinutes} min free
+                  </p>
+                )}
               </div>
 
               {/* Custom validation hint */}

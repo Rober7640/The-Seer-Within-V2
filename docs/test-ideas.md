@@ -2446,3 +2446,17 @@ Not covered — needs a real server + Stripe test card:
 - [ ] The bump and first field on a real iPhone with Safari's toolbars and the keyboard up
 - [ ] What happens when the intake write fails: she can still pay, and then there is no birth name to read from
 
+## /fb back in the Stripe vs Payments.AI split (2026-11-03)
+
+`shared/paymentGateway.ts` lists `{ funnel: 'v1-fb', hook: null }` again. Eligible only — nobody on /fb
+reaches Payments.AI until "v1-fb" is also in `v1_gateway_split_2026`'s scope.
+
+- [x] Allow-list admits /fb with no hook; refuses /fb with a tarot hook, /fb2, palm, root *(paiLive.test.ts)*
+- [x] /fb with no email or on the no-optin arm ⇒ Stripe, not enrolled *(paiLive.test.ts)*
+- [x] Scope without "v1-fb" (today's prod) ⇒ /fb buyer lands on Stripe, no split exposure (local sandbox walk, 3 Nov)
+- [x] Scope with "v1-fb", PAI arm, $39 price arm ⇒ /fb/checkout shows $39.00, approved; U1 $47 + U2 $47 1-click approved; payment_attempts funnel=v1-fb; exposure context funnel=v1-fb (local sandbox walk)
+- [x] PAI arm, $35 price arm, 3 objections ⇒ "Get Your Written Reading - $25" ⇒ $25.00 charged on PAI, purchase_type downsell (local sandbox walk)
+- [x] /fb/success with a `txn_` id ⇒ order details found, handoff persona = evelyn
+- [ ] Playwright spec for the above against a muted local sandbox (today's walks were a script, not a spec)
+- [ ] Before prod: PAI_TEST_BUYERS empty on Railway PROD (a listed email bypasses the split on /fb the moment this deploys)
+- [ ] After prod scope change: by-lander table shows a v1-fb row in both arms

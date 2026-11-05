@@ -727,6 +727,7 @@ router.get('/:key/results', async (req: Request, res: Response) => {
         params,
         rows: g.rows,
         gatewayDetail: g.gatewayDetail,
+        gatewayByLander: g.byLander,
         attempts: g.attempts,
         srm: await augmentSrm(g.srm, exp.variants, exp, controlKey, treatmentKey),
         significance: g.significance,
