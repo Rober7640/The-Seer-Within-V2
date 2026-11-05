@@ -240,6 +240,7 @@ describe('chargeMain against a stubbed Payments.AI', () => {
   const realFetch = globalThis.fetch;
   let txnResult = 'approved';
   let calls: string[] = [];
+  let customerBodies: any[] = [];
 
   before(() => {
     process.env.PAI_LIVE_ENABLED = '1';
@@ -250,7 +251,10 @@ describe('chargeMain against a stubbed Payments.AI', () => {
       calls.push(`${init?.method ?? 'GET'} ${u.replace(/^https:\/\/[^/]+/, '')}`);
       const json = (data: unknown) =>
         new Response(JSON.stringify({ data }), { status: 200, headers: { 'content-type': 'application/json' } });
-      if (u.endsWith('/customers')) return json({ id: 'cus_TEST' });
+      if (u.endsWith('/customers')) {
+        customerBodies.push(JSON.parse(String(init?.body)));
+        return json({ id: 'cus_TEST' });
+      }
       if (u.endsWith('/transactions') && init?.method === 'POST') return json({ id: 'txn_TEST1', result: 'pending' });
       if (u.includes('/transactions/txn_TEST1')) {
         return json({
@@ -271,6 +275,22 @@ describe('chargeMain against a stubbed Payments.AI', () => {
   });
   beforeEach(() => {
     calls = [];
+    customerBodies = [];
+  });
+
+  it('creates the customer with BOTH names, flat, from the name on her card', async () => {
+    txnResult = 'declined';
+    await live.chargeMain(
+      { order: order({ firstName: 'Annie' }), cardToken: 'tok_n', cardName: 'Ann Marie Lee', phone: '+15555550123', smsAnswer: 'no', returnUrl: 'https://x/fb/chat?paiReturn=1', policyBase: 'https://x' },
+      deps,
+    );
+    assert.equal(customerBodies.length, 1);
+    assert.deepEqual(customerBodies[0], {
+      email: 'buyer+test@example.com',
+      firstName: 'Ann',
+      lastName: 'Marie Lee',
+      phoneNumber: '+15555550123',
+    });
   });
 
   it('a decline fulfils nothing and says declined', async () => {
@@ -296,6 +316,25 @@ describe('chargeMain against a stubbed Payments.AI', () => {
       assert.equal(out.redirect, '/fb/welcome1?session_id=txn_TEST1');
       assert.equal(out.totalCents, 4777);
     }
+  });
+});
+
+describe('the Payments.AI customer name (support, 5 Nov: needs firstName AND lastName)', () => {
+  it('splits the name on her card: first word, then the rest', () => {
+    assert.deepEqual(live.customerName('Mary Ann Smith', 'Mary'), { firstName: 'Mary', lastName: 'Ann Smith' });
+    assert.deepEqual(live.customerName('  May   M  Logarta ', 'May'), { firstName: 'May', lastName: 'M Logarta' });
+  });
+  it('one word ⇒ lastName "-" (never empty — an empty one is refused)', () => {
+    assert.deepEqual(live.customerName('Cher', 'Cher'), { firstName: 'Cher', lastName: '-' });
+  });
+  it('no card name (an old page still open) ⇒ her chat name + "-"', () => {
+    assert.deepEqual(live.customerName(undefined, 'Ann'), { firstName: 'Ann', lastName: '-' });
+    assert.deepEqual(live.customerName('   ', ''), { firstName: 'Friend', lastName: '-' });
+  });
+  it('strips control characters and caps each part at 50', () => {
+    const n = live.customerName('Joe ' + 'x'.repeat(80), 'Joe');
+    assert.equal(n.firstName, 'Joe');
+    assert.equal(n.lastName.length, 50);
   });
 });
 
