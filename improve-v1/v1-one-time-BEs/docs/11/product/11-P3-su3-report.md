@@ -1,233 +1,268 @@
-11-P3 — The Unsent Letter: the fixed report for every Soul Urge 3 buyer (laugh · cover word "grown up"). v1 template, 2026-11-04.
-Fill-ins: {{FIRST}} {{BIRTH_NAME}} {{DOB}} · shared list ../n8n/scripts/11-swapins.json: {{EX.saw|use|letter|kept}} {{LP.then|now|letter}} {{REASON.headline|letter}} · versions written here: [[REASON 0|1|2]] [[FORK get_back|giving]].
-Cards: 1 the Fool · 2 the Hierophant · 3 the Magician · 4 Justice · 5 the Emperor · 6 the Hanged Man · 7 the Lovers · 8 the Tower · 9 the Moon · 10 the Sun · 11 the Star · 12 the World.
+11-P3 — The Unsent Letter: the fixed report for every Soul Urge 3 buyer (the part of you that's happy for no reason · cover line "I'm fine"). letter-first shape, question shape with a contents list (each card answers one of her questions, in her words), v2 template, 2026-11-05.
+Fill-ins: {{FIRST}} {{BIRTH_NAME}} {{DOB}} · shared list ../n8n/scripts/11-swapins.json: {{EX.trait|saw|praise|use|letter|never|moment|kept|last}} {{LP.trait|then|praise|now|admire|letter}} {{PY.ahead}} {{NEXT_BDAY}} {{REASON.headline|letter}} · versions written here: [[REASON 0|1|2]] [[FORK get_back|giving]].
+Cards: 1 the Sun · 2 the Fool · 3 the Magician · 4 the High Priestess · 5 the Emperor · 6 the Hanged Man · 7 the Tower · 8 the Moon · 9 the Lovers · 10 Death · 11 the Star · 12 Strength
 
 [OPENING]
 
 {{FIRST}},
 
-Get yourself somewhere quiet to read this, a chair nobody's going to call you away from for a while.
+Somebody walked off with something of yours, and what was between you never got settled. This reading settles it. It names what they took, answers the questions you've been carrying with one flat answer each and no "only you can know," and ends with the letter they never sent, written out in full.
 
-Take the cards in the order I turned them, and don't jump ahead to the letter at the end. It only comes back whole. Go straight to the last page and you'll get their words with nothing behind them. Some of these cards are going to look like they disagree with each other. Read on anyway.
+Your birth name and date set how I lay your twelve cards. I wrote {{BIRTH_NAME}} and {{DOB}} at the top of a clean sheet, put a pot of mint tea on to steep. Before it was ready, the one who came to me was at my shoulder.
 
-Before anything else: this is someone living. Nothing in these pages asks you to get in touch with them, wait on them or forgive them. If this person hurt you, you owe them no reply.
+Before I turned a card, your name and date told me who I was laying them for. {{EX.trait}} {{LP.trait}}
 
-Your order came in after supper. I cleared the kitchen table and took the Hermit, Judgement and the Devil out of the deck. They'd done their part, so I stood them up on the windowsill, and that left nineteen. On a clean sheet I wrote {{BIRTH_NAME}}, and {{DOB}} under it. Your birth name and date set how I lay your twelve cards. Nothing goes on the table before them.
+Two things first. This is someone living. Nothing in these pages asks you to contact them, wait for them or forgive them. If this person hurt you, you owe them no reply.
 
-I made a pot of black tea, and before it had steeped, the one who came to me before was at my shoulder. No face and no voice, the same as the first time.
+Here are the questions your twelve cards answer, in the order I turned them. Each gives you a straight answer and hands back one piece of their letter.
+
+**What they took**
+
+Card 1, the Sun: What did they take from me?
+
+Card 2, the Fool: Did they ever really love me?
+
+Card 3, the Magician: Was it my fault?
+
+**Why they kept it**
+
+Card 4, the High Priestess: Why have they still got it?
+
+Card 5, the Emperor: Why has it taken this long?
+
+Card 6, the Hanged Man: What do they regret?
+
+**What it's cost you**
+
+Card 7, the Tower: Why does nobody new get close?
+
+Card 8, the Moon: Is it too late for me?
+
+Card 9, the Lovers: Are they giving it back, or trying to get me back?
+
+**How it comes back**
+
+Card 10, Death: Will they ever do anything about it?
+
+Card 11, the Star: What did they never say?
+
+Card 12, Strength: What do I do now?
+
+**After the letter**
+
+Will I be happy again?
+
+Take the cards in order. The letter is at the end, and it only comes back whole.
 
 [CARD 1]
 
-**They took your laugh, {{FIRST}}.**
+**Card 1, the Sun: What did they take from me?**
 
-You've noticed something missing for a long time, and you've given it other names. Getting older. Having more on your mind. Not finding as much to laugh about these days. I told you most women guess wrong, and that's how they do it. They name what changed around them and never what went missing out of them.
+**They took the part of you that's happy for no reason, {{FIRST}}.**
 
-Your laugh is the part of you that lets things tickle you, and lets it show before you've checked the room. It runs both ways. Something funny gets in, a dog doing something ridiculous, a word somebody said wrong, and it sets you off. And whatever's in you comes out: the big laugh, the silly voice, the remark nobody asked for. It isn't the same as being funny. Plenty of people are funny and hardly ever laugh. The light in the Hermit's lantern, the one I told you they walked off with, was this.
+On the Sun, a child rides a white horse bareback under a big bright sun, both arms open wide. That child is the part they left with.
 
-The Fool is a young man stopped at the very edge of a cliff, still in the middle of a step. His eyes are on the sky in front of him, not on the drop. A little white dog is up on its back legs at his heel with its mouth open.
+*"When I left, I took the part of you that's happy for no reason. I knew I had it."*
 
-That's how your laugh used to go out of you. It was out of you before you'd looked to see where it would land.
+Somebody who's known you a long time said it once: "You used to be so happy." Or, "Where'd you go?" You smiled and said, "I'm fine." You were, so they let it drop.
 
-Before them, you laughed at your own stories, sometimes before you got to the end. You did the voices. If something struck you somewhere you weren't supposed to laugh, you had to look at the floor, and you still shook. You sang along in the car and didn't care who pulled up next to you. You said the silly thing the second you thought of it, and if nobody else laughed, you laughed enough for two. None of it took any thought, and none of it was for anybody's benefit. Something got to you and out it came.
+They weren't asking if you were sad. What went is the part that lights up over next to nothing: the first warm day of the year, a dog that's thrilled to see you, the smell of somebody's cookout down the street. The part that's glad before it's checked whether there's a reason to be.
 
-Then it cost you. Somebody made sure you felt silly for it, often enough that you started checking first. You got good at it. You learned to wait and see whether anybody else laughed before you did. You learned which stories to cut short. You never sat down and decided any of it. One day you noticed you'd started laughing with a hand over your mouth, and that the car had been quiet for a long time.
+That part of you was a gift, and not only to you. People drifted toward it at parties and in waiting rooms. A dull errand turned into a good afternoon because you came along. When you were happy, everybody near you got to be happy too, and nobody had to earn it.
 
-When the Fool came up, they leaned in from my shoulder. I took up the pen, looked at your name, and set it down again. The sheet had your name and your date on it and nothing else.
+Nothing fell apart when it went. You get the day done, you're good company and you smile in the pictures. You're fine, and anybody would tell you so.
 
-Next time something strikes you funny, catch the half second before you laugh. That little check, to see who's looking, sits right where your laugh used to be.
+It was taken, so it can be handed back. That's what these cards are for.
 
 [CARD 2]
 
-Ask the people around you now and they'd tell you you're good company. You smile. You laugh in the right places. You can still be funny when you mean to be, and land a line that gets the whole table going. You call all of that being grown up.
+**Card 2, the Fool: Did they ever really love me?**
 
-The Hierophant holds up his right hand with two fingers raised and two folded down.
+**Yes. Back then, it was real.**
 
-That's how it comes out of you now. Something tickles you and it gets a smile. Something silly comes into your head and you check it first, and most of the time it stays put. Half goes out. Half gets folded down.
+The Fool stands at the edge of a cliff with his eyes on the sky. Down in one hand he holds a white rose, loose, with the stem pointing at the ground.
 
-People say you're easy to be around. They mean the half. Nobody's praising the woman who used to laugh till she cried, because nobody around you now has met her.
+*"I did love you, back at the start. That much was real."*
+
+They saw something in you: {{EX.saw}}. {{EX.praise}} That's what they loved, and they held it the way the Fool holds that rose: for real, but loosely. They kept {{EX.use}}, and had no use at all for the part of you that got happy over nothing.
+
+Nobody gets to tell you it was all an act. It wasn't. What they've got now is regret, though, and regret isn't love. You don't miss them. You miss what they left with.
+
+[[FORK get_back]]Keep those two apart, because their letter won't. Its ask comes dressed up in the love, and the love belongs to back then.[[/FORK]][[FORK giving]][[/FORK]]
 
 [CARD 3]
 
-The Magician stands at a table with everything he's got laid out in front of him, in plain view. He isn't hiding any of it. Nothing's in a drawer. Anyone who walked up could see all of it and reach any of it.
+**Card 3, the Magician: Was it my fault?**
 
-You've asked yourself how you could have been so stupid. That question has it backwards. Being out in the open isn't stupid. It's how you were made. A laugh like yours never came with a guard on it.
+**No. None of it.**
 
-They saw something in you: {{EX.saw}}. And they saw your laugh came right along with it. You let them see when something delighted you and when something struck you as ridiculous. You didn't keep any of it back, because you'd never had cause to, and that's what made it easy to take. They knew what they were looking at. They went for it on purpose.
+The Magician stands at a table with everything he has laid out in front of him, a cup, a coin, a sword and a wand, all of it in plain view.
 
-They kept {{EX.use}}, and they made the laugh that came with it cost you. You went on giving them the useful part long after you'd quit laughing around them, and that suited them fine. Whatever you gave, you gave honestly. What got done with it after that is on them. Being easy to delight was never a flaw. They're the ones who treated it like one.
+*"None of it was your fault. You being happy was never the problem. I was."*
 
-Why they've still got it comes next. Before that, one thing from you, and only one: stop asking what's wrong with you.
+You've got it from them now, in their own words. So stop asking what's wrong with you. Letting people see you happy wasn't a mistake you made. It's how you're built, out in the open like that table.
+
+Three cards in, I can already see how a spread ends, and yours finishes well. Keep that in your pocket for the cards in between.
 
 [CARD 4]
 
-They've kept it because giving it back means saying what they did.
+**Card 4, the High Priestess: Why have they still got it?**
 
-To hand your laugh back, they'd have to admit it was never silly. And if it was never silly, then every look and every sigh was about them, not you. While they hang onto it, nobody has to say that out loud, and they still get to be the person you thought they were.
+**Because giving it back means owning up to what they did.**
 
-On Justice, one foot shows under the hem of the red robe. The rest of her stays covered.
+The High Priestess sits between two pillars with a scroll in her hands. There's writing on it, and half of it is covered by her cloak.
 
-That's about how much of the truth they've let you see. They didn't lose your laugh, and they didn't throw it away. It's still under there, kept covered.
+*"Why have I still got it? Because handing it back means admitting what I did with it."*
+
+While they hold on to it, the story stays half covered, like that scroll. They're just somebody it didn't work out with, and nobody looks any further than that. Giving it back would uncover the rest. They'd have to stand there while you read it.
 
 [CARD 5]
 
-Why has this taken so long? Because they had a line that let them off, and the line was "I was only teasing."
+**Card 5, the Emperor: Why has it taken this long?**
 
-The line held because teasing is something everybody does, and nobody gets in trouble for it. If you minded, that made you the one who couldn't take a joke, and the problem landed back on you. So the look when you laughed out loud, the remark about how you sounded, being called silly in front of people: all of it got filed under fun. It happened too often to be fun.
+**Because you said "I'm fine," and it let them off. They took your word for it and never looked twice.**
 
-You backed the line up without meaning to. You laughed along. You got in first with "I know, I'm ridiculous" before anybody else could say it. From the outside you looked like a good sport, and a good sport doesn't look like anybody's been hurt. That was never your fault. You did what anyone does when something keeps costing her. Hiding behind it was their choice.
+The Emperor sits square on a stone throne in a gold crown, facing straight ahead. He doesn't turn his head for anybody.
 
-You still do their work, in small ways. You say "sorry, that's dumb" after something that wasn't. You say "ignore me." You check who's in earshot before you let a laugh go. Nobody has to tease you now. You get there first.
+*"I told myself you were fine. You said so every time anybody asked, so I took your word for it and never looked any closer."*
 
-The Emperor sits square on a stone throne and faces straight out. He doesn't turn his head for anybody. From a chair like that, you get to decide what's a joke and what isn't, and they had that chair.
-
-The months I told you about, when they kept coming back to this, are that line wearing out. They don't know it's happening.
+It held because it was true enough. You didn't come apart where anybody could see. You did what needed doing, showed up where you said you would and laughed in the right places. Ask how you were and you'd say "Fine" or "Can't complain," and change the subject before anyone could ask what fine meant. You were proud of that, and you'd earned it. But fine is the answer that stops people asking, and it stopped them. Nobody turned their head to see if you were happy, least of all them.
 
 [CARD 6]
 
-On the Hanged Man, a man hangs by one ankle with his hands out of sight behind his back.
+**Card 6, the Hanged Man: What do they regret?**
 
-That's where their regret is kept. What they regret is making you feel silly for it. It's real enough. It just never comes around to the front, where it could do you any good. [[FORK get_back]]And they do miss something. They miss your laugh going off around them and making a dull evening better. That's what they had from you. It isn't the same thing as you.[[/FORK]][[FORK giving]]Wanting you back isn't part of it. Leaving you wasn't easy for them, and you cross their mind more than they'd let on. But if you've let yourself picture them wanting you back, I'm not going to let you keep that picture. It isn't so.[[/FORK]] A regret kept behind the back pays for nothing and reaches nobody. You'll want to take it for love. It isn't.
+**They regret watching you stop lighting up, and never once saying a word to bring it back.**
+
+On the Hanged Man, a man hangs head-down from a beam of green wood, tied by one ankle, with both hands out of sight behind his back.
+
+*"If you want to know what I regret, it's this. You stopped lighting up, a little at a time, and I watched it and never said a word, because it suited me. I'm sorry."*
+
+They mean the sorry. [[FORK get_back]]But look at what sits under it. What they miss is your face lighting up when they walked in. That's what they had from you, and it isn't the same thing as you.[[/FORK]][[FORK giving]]It isn't a wish to have you back. You cross their mind more often than they'd let on, and none of this has been easy for them. But wanting you back is no part of it.[[/FORK]] A regret like theirs stays behind the back, like those hands, where it can't reach anybody. It won't make you one bit happier.
 
 [CARD 7]
 
+**Card 7, the Tower: Why does nobody new get close?**
+
+**Because an old way of keeping safe still runs, and it shuts the decent ones out.**
+
+The Tower stands on bare rock with lightning coming down on its top, and nobody drew a door on it anywhere.
+
+*"I know what I left you with. You learned to keep people out, and the decent ones who came after me paid for what I did."*
+
 {{LP.then}}
 
-Nobody switches a thing like that off when the cause is gone, though. It kept running, and now it meets people who never did a thing to you. Someone decent turns up and {{LP.now}}. And through all of it, they never hear you really laugh. They get the grown-up one, the smile and the polite chuckle. The real one gets held back, saved for a time when it's safe to let it go, and that time never seems to come.
+{{LP.praise}} It worked then, but it kept running after they'd left. Someone decent turns up and {{LP.now}}.
 
-The Lovers stand near each other on their card, close enough to touch. Far off behind them, one gray mountain stands up in the gap between the two.
-
-That's you with the decent ones. They're right there. And something big and old stands in the gap, put there by somebody else a long time ago. None of the people since had a thing to do with it. They don't even know it's there. They only know they never quite get to you.
-
-The next time someone kind makes you laugh, notice whether you let it all the way out or catch it halfway.
+Somebody decent is going to ask you along to something just for fun. Go, and let them see you enjoy it.
 
 [CARD 8]
 
-Lightning comes down out of a dark cloud on the Tower and knocks the gold crown clean off the top. The crown is still in the air, tipping, and it hasn't landed yet.
+**Card 8, the Moon: Is it too late for me?**
 
-That crown is grown up. You've worn it a long time, and I won't pretend it did you no good. It worked. Nobody's called you silly to your face since. Nobody's rolled their eyes at you across a room. You've been the sensible one, the one who knows how to act. You've never once been the one people were embarrassed by. You came by it honestly.
+**No. The time that's gone stays gone, but what they took comes back, and it's closer than it looks.**
 
-Now here's what it did.
+At the bottom of the Moon, a crayfish is crawling up out of a dark pool. It's been lying down there a long while, and it's already halfway out.
 
-It cost you every funny thing you thought of and didn't say, because you checked it first and it didn't pass. Every time something struck you somewhere quiet and you kept a straight face so well that nobody ever found out how funny it was, you included. Every party where you were the one who stayed sensible, and heard about the fun the next day. Every time somebody tried to get you going, across the table, being ridiculous on purpose, and you smiled and said that's cute. Every time you heard yourself laugh the polite way and didn't quite know the sound. The people who used to try kept at it for a while. Then they quit, because a woman who smiles and says that's cute doesn't seem to need it.
+*"The best of your life isn't behind you. I knew you when you were happy, and that doesn't just go away."*
 
-I got up from the table then, which I don't do in the middle of a spread, and stood at the back door a minute in the dark. When I came back in it was past midnight. The clock over the stove was ticking too loud, and the one with no face had moved off, over by the door.
+That one's true, and I'll put my own name to it: the best of your life is not behind you.
 
-So let me be exact about what you get. Your laugh comes back. The rest of these cards are how. The years don't. Nobody can hand those over: not them, not me, not any card on this table.
+"I'm fine" kept you on your feet, and that counts for something. But fine is where you've lived for years now. People quit asking how you really are, because they knew what you'd say. Good things have come along in that time. You were pleased about them, the polite way, and went on to the next thing.
 
-I told you it makes no difference to whether they've still got it, ten years or thirty. That holds. But it makes all the difference to what it's cost. Years of dinners where you laughed when everybody laughed and never once on your own. Years of being good company and nobody's favorite person to laugh with. Years of watching some other woman laugh like that across a restaurant and thinking, good for her. Years of decent people who met the grown-up and never found out who else was in there. Some of them would have loved the other one.
-
-They're the ones who made laughing cost you. That stays with them, every bit of it, and nothing I say here takes it off them. But the crown stayed on after they'd gone, at every table you've sat at since, and those tables are where the bill came due. They set the price. You've been the one paying it.
+What they took has been lying on the bottom all that while. It's on its way up.
 
 [CARD 9]
+
+**Card 9, the Lovers: Are they giving it back, or trying to get me back?**
 
 [[FORK get_back]]
 **They're trying to get you back, {{FIRST}}.**
 
-And part of you is glad to read that. Don't skip past it, and don't be ashamed of it either. I want to stay here a minute, because out of all twelve, this is the card to watch.
+On the Lovers, a man and a woman stand close without touching. He's looking at her. She isn't looking at him. She's looking up, past him.
 
-After everything, the first place your laugh wants to run back to is them. Some part of you would still like to be the one who makes them laugh, and to hear them laugh with you, the way it went when they first knew you.
+Their letter ends like this:
 
-Give that part an inch and it starts making allowances. They must have grown up some, to be at this for months. Surely it would be different now. You'd remember the good evenings first and the looks a long way after. You'd catch yourself laughing at something they used to say, when you haven't laughed like that once in your own life since. You'd tell yourself it was only a laugh, and what harm could that do. That's the danger, right there. The laugh you've kept from every decent person is still ready to go to them. I'm not saying that to shame you. Anybody would feel it.
+*"I'd give a lot to see you light up like that again, across a table from me. Come and see me. If you won't, write to me."*
 
-On the Moon, a crayfish is crawling up out of the pool at the bottom of the card. Whatever's been lying down there in the dark is on its way up. That's the glad part of you, coming up now that their message is close. Up above, the moon's face has its eyes shut. It isn't looking down at you, and neither are they.
+If something in you lifted when you read that, don't be ashamed of it. You haven't lit up over much in a long while, and here's the one person who used to see it, asking to see it again. The happy part stirs, and the first place it looks is back at them.
 
-Here's what their wish is really for. They don't want you. They want your laugh back, pointed at them: you lighting up when they walk in, you thinking they're the funniest one in the room. They're holding it out with their hand open, waiting for you to come all the way over and take it, so you'll be standing close enough to give it to them again.
+That's what they're counting on. They don't want you. They want somebody that glad to see them again. And they won't come for it. They want you to make the whole trip over.
 
-They won't come to you. A wish like theirs stays where it is and waits.
+In my first letter I said one of these two ways was a trap. This is the trap. Every warm line in their letter, the love and the sorry included, leads down to that ask.
 
-I told you you'd need to know which way this went, because one way it's a gift and the other way it's a trap, and the words sound alike. This is the trap. Every warm thing in their letter is going to read like a reason to go. None of them is.
-
-I'd sat back down to turn this one, and I swore at the deck when I saw it. They didn't go back to the door. They came right up to the table and stayed, the closest they'd been all night. Three in the morning, nine cards down, and still nothing under your name. I didn't know if I'd get your letter at all.
+The man on that card wants her eyes back on him. So do they.
 [[/FORK]]
 [[FORK giving]]
 **They're giving it back, {{FIRST}}. They aren't trying to get you back.**
 
-They want your laugh out of their hands, and that's the whole of it. It reminds them of something they'd rather not look at, so they want it gone. They've held it a long time, and with the line that let them off worn out, it's gotten heavy. So they're putting it down. They're doing it for their own sake. Their regret is real, and so are the months they've spent on it. But none of this is them reaching for you. Once it's back with you, they can quit thinking about it, and about you.
+On the Lovers, a man and a woman stand close but apart. Neither one reaches across the gap, and far off, one gray mountain stands up between them.
 
-I told you one way this could go was a gift. This is that way, and it's colder than it sounds. It asks nothing because they want nothing from you: not your laugh, not an answer, not you. That isn't the same thing as kind.
+Their letter says it in so many words:
 
-On the Moon, a crayfish is crawling up out of the pool at the bottom of the card, out of the dark where it's been lying. Up above, the moon's face has its eyes shut. Nobody up there is looking for you.
+*"I'm not asking you for anything. Not to forgive me, not to see me, not to write back."*
 
-That crayfish is a hope you've kept down at the bottom, where nobody could see it. The day they come to you. They sit down across from you and tell you why, all of it, in their own words: why your laugh got to them, and why they did what they did about it. You'd tell anybody you gave up on that day a long time ago, and you'd mean it while you said it. Then some small thing would stir it, and up it would come again.
+They want to be rid of it, and that's the whole of the giving. "You were fine" has worn thin, so they're putting the thing down. Their regret is real, and so are the months they've been at this. But none of it is them reaching for you.
 
-You kept a place for it. You put your laugh away with everybody, and underneath all that you kept one spot open, just in case. It was for them, and for that day. Some nights you've caught yourself going back to check on it, the way you'd check a door you already know is locked.
+I said the other way was a gift. This is the gift, but not a warm one. It asks nothing of you because they want nothing from you.
 
-The day isn't coming. Nobody's walking in to sit down and explain. They aren't saving any of it for you, and on their side there's no place kept for you at all. What's in the letter at the end of these pages is everything you'll get from them. Nothing comes after it. I won't soften that, and I won't hurry you past it either.
-
-I'd sat back down to turn this one, and I swore at the deck out loud. Then I looked over at the door, and nobody was there. All night they'd been somewhere in my kitchen, close enough that I'd quit noticing, and now it was only me. Three in the morning, nine cards down, and whoever was carrying your letter had walked out. I didn't know if I'd get it at all.
+Nobody's going to sit down with you and explain why it all went the way it did. The letter at the end is everything you'll get from them. If you've been saving a little hope for that talk, you can spend it on something that makes you happy.
 [[/FORK]]
 
 [CARD 10]
 
-**No, {{FIRST}}, they won't pick up a phone or write a word about any of this, because {{REASON.headline}}.**
+**Card 10, Death: Will they ever do anything about it?**
 
-[[REASON 0]]To do anything at all, they'd have to stand in front of you and say your laugh was never the problem, and that they were. They'd sooner keep it than say that.[[/REASON]][[REASON 1]]You heard every remark and saw every look, and you know what they were for. They can't sit across from somebody who saw all that.[[/REASON]][[REASON 2]]Leaving it alone hasn't cost them so much as a night's sleep. You're the one who's been paying, every time you kept a laugh in.[[/REASON]] And don't go to them for the reason. They haven't got one to give. This is all happening without them knowing it, the way I told you, and you can't get an answer out of somebody about a thing they don't know they're doing. Going to ask would only put you back on the chain.
+**No, {{FIRST}}, they won't lift a finger past this letter, because {{REASON.headline}}.**
 
-[[FORK get_back]]
-So they hold it out and wait for you to come to them. I told you in my first letter what it means when somebody holds a thing out like that, and this is it. They won't move one step your way. They want you to walk the whole distance, and you're not going to.
-[[/FORK]]
-[[FORK giving]]
-So they're letting go of it, and that's as far as they'll go. They'll set it down right where they are. They won't bring it over, and they won't check that it got to you. As far as they're concerned, putting it down settles it.
-[[/FORK]]
+Death rides a white horse at a walk, holding a black flag with one white rose on it. A bishop in a gold robe stands in the road with his hands together, begging, and the horse doesn't stop for him.
 
-Here's where it all turns around. They were never the ones who had to move. Your laugh was never theirs to bring back to your door, or down a phone line. It doesn't come back through contact, and it doesn't come back on their say-so. All it ever needed was for somebody to quit waiting. You've been treating it like something locked up in their house, and it was never locked up anywhere.
+*"I won't call, and I won't write again. This letter is all of it."*
 
-The Sun has four tall sunflowers growing behind a low gray wall, with their heads up over the top of it. In front, a child rides a white horse bareback with both arms open. Nobody lifted those flowers over the wall, and nobody gave them permission. They grew until they were over it, and there they are, in full daylight.
+[[REASON 0]]To do anything more, they'd have to come and say to your face that you were never the problem. Their pride won't stretch that far.[[/REASON]][[REASON 1]]They'd have to sit across from you while you looked at them, knowing they watched the light go out of you and said nothing. They can't do it.[[/REASON]][[REASON 2]]Whether you're happy or only fine has never changed a thing in their week. Their life goes on the same either way.[[/REASON]] [[FORK get_back]]So they hold it out and wait for you to come and get it. They won't take one step toward you.[[/FORK]][[FORK giving]]So they're setting it down where they stand. They won't bring it to you, and they won't check that it got there.[[/FORK]]
 
-You've been waiting at the foot of a wall like that for them to say it, as if your laugh needed their okay before you could have it back. Every time you've thought, if they'd only admit what they did I could let this go, that was you waiting at the wall. It never needed that. The day you quit waiting on their word, it's already yours. Look at those flowers again. Not one of them is waiting on anybody. Nobody's coming to lift you over it, and nobody has to.
+Here's where it turns. You never needed them to act. The part of you that's happy for no reason was never theirs to carry back to your door, and it never needed their say-so. Pleading in the road doesn't stop that horse, and waiting on their word was never going to bring this back. It comes back because you've read what they couldn't bring themselves to say.
 
-The window went from black to gray while I sat there, and I saw what I'd been doing all night. I'd pull at them for your letter, then sit back and wait for them to hand it over, then pull again, the same as you. So I quit, and I said so out loud to my kitchen: I'm done waiting on you.
-
-[[FORK get_back]]Then they were in the chair across from me[[/FORK]][[FORK giving]]Then they'd come back, into the chair across from me[[/FORK]], the one where you'd sit, and the weight had gone out of them. My pen started to move. The first line of your letter was on the sheet.
+When I turned this card, the one at my shoulder finally let go of it, and I picked up my pen.
 
 [CARD 11]
 
-The sentence they never said is this: "You were never too much. I liked you smaller."
+**Card 11, the Star: What did they never say?**
 
-Don't answer it, not on paper and not in your head. You don't need to. By the time you've read it, it's already back.
+**That you were the happiest person they ever knew, and they let you forget it.**
 
-Look at what it owns up to. It was never that you laughed too loud, or too long, or at the wrong things. You were the right size the whole time. Somebody wanted less of you around them, and called the difference silly. You never heard that from them, and it was the thing you needed to hear most. Now it's here, in their words. You can stop looking for it. You've gone over every look and every remark for what it meant. That's what it meant.
+On the Star, one huge yellow star hangs over everything, with seven small white stars around it.
 
-Up on the Star, one huge yellow star hangs over everything with seven small white ones around it. Nobody on that card is asking the big one to shrink so the little ones feel better.
+*"You were the happiest person in any room, and I let you forget it."*
 
-You can stop writing their half, too. You've had them say sorry in your head, and you've had them say worse. You've run the whole talk over the dishes and lying awake, the one where they finally get it, and come out of it more tired than you went in. That job's done. Their side is on paper now, and it was never yours to write. All the hours that went into drafting them are yours to spend on something else.
-
-You're about to read their words. If this person hurt you, you owe them no reply. Not one word.
-
-The rest of their letter was coming now, faster than I could keep up.
+That's the sentence you never got from them. That big star was you, in any room you walked into, and they watched it go dim without a word. Now you have it, and it doesn't need answering, not on paper and not in your head late at night. If this person hurt you, you owe them no reply.
 
 [CARD 12]
 
-Stop going back to them, and once a day, say the silly thing out loud to someone before you edit it. You'll get through what's coming on those two.
+**Card 12, Strength: What do I do now?**
 
-The last of your twelve is the World. A woman dances inside a green wreath with one leg crossed behind the other, caught mid-step. She carries nothing but a wand in each hand.
+**Stop going back to them, and every day do one small thing for no reason except that it makes you happy.**
 
-Look at her. Nothing left to carry, the whole circle closed around her, and she's dancing. That's what grown up was supposed to mean. You've been using the word for sitting still and keeping a straight face. You can put that word down now. You don't need it to be a grown woman.
+Your last card is Strength. A woman in a white dress closes a lion's mouth with both hands, gently, with a whole wreath of flowers in her hair.
 
-The pull will be at its strongest now, inside the next five to seven days. That's about you and what's moving in you. It says nothing about them turning up.
+*"I want you happy. Not fine, not getting by. Happy."*
 
-**Stop going back.** Rereading the old messages, looking them up, starting a message you swear you'll never send: that's one thing with three names. When the pull comes, put the phone in another room, set the oven timer for twenty minutes and give your hands something to do. Wipe the counters. Sort a drawer. Don't argue with it. An urge comes up and goes back down by itself if nobody feeds it. Going to look when it's at its worst is what teaches it to come back. Let one go by, and the next one's smaller.
+For once, they've got it right. "I'm fine" got you through, and you can retire it. You're allowed to want more than fine.
 
-I told you the rereading stops. The need goes when you read the letter. The habit takes about a week, so your hand will still go for the phone a few times. Let it.
+The pull will be at its strongest inside the next five to seven days. That's about you, and it says nothing about them turning up.
 
-**The one thing to do.** For seven days, once a day, say the silly thing out loud to someone before you edit it. The remark that pops into your head in the checkout line: say it to the cashier. When something cracks you up, laugh the whole way and don't apologize after. Call a friend and tell her the dumb thing you saw today, voices and all. Only with people who've never given you cause. Nobody from your past.
+**Stop going back.** Rereading the old messages, looking them up, starting a message you swear you won't send: it's all one thing. When the pull comes, handle it the way she handles that lion, gently and with both hands. Put the phone in another room, set a timer for twenty minutes and give your hands a job. Leave it alone and it passes.
 
-You can't think your way back to your laugh. Your head has one big example of what happens when you let it out, and it's gone over that one thousands of times. Small times that go fine give it something new to go on. And if one falls flat, you'll find out you live through that too.
+**The one thing to do.** For seven days, once a day, do one small thing only because it makes you happy, and don't explain it to anybody. Play the song too loud. Buy the good peaches. Take the long way home because it's prettier. Nothing that involves them.
 
-It won't feel like much at first. You'll know it's working by what stops: your hand stops going to the phone late at night, and you stop catching the laugh halfway. How soon is down to what you do with the twenty minutes and the seven days. It isn't down to me, and it isn't down to them.
+Here's how you'll know it's working. Your hand quits going to the phone late at night, and fine quits being the whole answer.
 
 [[FORK get_back]]
-Their letter ends by asking you for something. I've left it in so you can see it. Do nothing with it.
+Their letter ends with an ask. I've left it in where you can see it. Leave it there.
 [[/FORK]]
 [[FORK giving]]
 
 [[/FORK]]
-
-And the next time someone reaches for you, there's someone there.
-
-It was full light by the time the last of it was down. I put the Hermit, Judgement and the Devil back in the deck, and I wrote your letter out by hand at the same table, with them sitting across from me. I didn't change a word.
-
-Read it once, slowly, to the end.
 
 [LETTER]
 
@@ -235,33 +270,79 @@ Read it once, slowly, to the end.
 
 I'm never going to send this. {{REASON.letter}} So it stays here.
 
-I'm no good at writing things like this, so I'll just say it. You'd laugh, and I'd make you feel silly for it. Not every time. Enough times. A look, or a remark, or I'd say you were embarrassing me. Sometimes I did it in front of people, because I knew you wouldn't make a fuss there. You'd go quiet after. I noticed. I didn't stop. After a while you laughed less around me, and I'm not going to pretend I minded. It was quieter. That's the truth of it.
+I'm putting it on paper anyway. I've had something of yours a long time, and holding on to it while I keep my mouth shut has gotten to be too much. So here's what I did, all of it, and then you can have it back.
 
-I don't think I set out to do it. But I did it, and I kept on.
+When I first knew you, {{EX.letter}} I liked that. I liked being around it. {{EX.never}}
 
-When I first knew you, {{EX.letter}} I liked that. And you laughed, out loud, all the way, at whatever got you. People turned around to see who it was, and I was glad it was me you were with. It was one of the first things I noticed. I kept {{EX.kept}}. The laugh I made you pay for.
+{{EX.moment}}
 
-I told myself I was only teasing. I told other people that too, if it ever came up. It sounded better than what it was. It doesn't hold up anymore. I say it in my head now and I can hear how it sounds.
+And you were happy. I don't mean in a good mood. I mean happy the way some people are tall. It was just how you came. You'd get happy over the smallest things. A parking spot right out front. The first ripe tomato. A song you hadn't heard in a while, and you'd turn it up and sing the wrong words to it. You'd come back with some little thing you saw that day and tell it like it was news. Half the time I didn't see what was so great about it, and I'd end up laughing anyway because you were. People liked standing next to you. I liked being the one you told first.
+
+I don't know exactly when I started letting it fall flat. You'd come to me all lit up about something, and I'd be tired, or busy, or in a mood, and I'd say "Huh" and go back to what I was doing. Sometimes I told you it wasn't that big a deal. Sometimes I didn't say anything, and that did the job just as well. I watched you bring me less and less. Then you stopped bringing it to me at all. I noticed. I told myself it was quieter, and I liked quiet.
+
+After a while, when people asked how you were, you'd say "Fine" and smile. It was the smile you'd give a stranger in a checkout line. At the start I never once got that smile from you. By the end it was most of what I got. I knew what that meant, and I let it be.
+
+One night near the end you came in lit up about something, I don't even remember what, and I could have just been glad with you. It would have cost me nothing. I said, "That's nice," and kept my eyes on what I was doing. I saw your face drop. I've thought about that face more than anything else between us.
+
+I did love you, back at the start. That much was real. Whatever you decide about me, don't decide that part was a lie, and don't think one bit of what you gave me was wasted.
+
+I kept {{EX.kept}}. I took the happy part along with it, and I never had any use for it.
+
+{{LP.admire}}
 
 {{LP.letter}}
 
-Why did I hang onto it? Because giving it back means saying it was me. As long as I had it, the trouble was you being too loud, and not me. I could have just let you be. I didn't want to. I knew better the whole time.
+I saw all that, and I let it go on.
 
-So here it is, late.
+None of it was your fault. You being happy was never the problem. I was.
 
-You were never too much. I liked you smaller.
+When I left, I took the part of you that's happy for no reason. I knew I had it.
 
-There was never anything silly about you. It was the best thing about you, and I treated it like a nuisance. It's your laugh. You had it before me and it's yours now. I'm giving it back, all of it. You don't owe me anything for it. I don't know if you still laugh like that. I hope you do.
+I knew it the way you know you've left a light on in an empty house. It didn't come to me every day. But some nights it came out of nowhere: the last time I'd seen you really happy was a long way back, and I was the reason. When it came, I pushed it out of my mind and got on with things.
+
+I told myself you were fine. You said so every time anybody asked, so I took your word for it and never looked any closer. I had other things I told myself. That you could always cheer yourself up. That somebody like you would bounce back without any help from me. That it wasn't my place to ask anymore. When people asked after you, I said, "Doing fine, last I heard." Nobody ever asked me if you were happy, and I made sure I never asked myself.
+
+Why have I still got it? Because handing it back means admitting what I did with it. As long as I had it, I was just somebody it didn't work out with, and that happens to everybody. Giving it back means writing down that the best thing about you faded on my watch, and I didn't lift a finger.
+
+I don't know how you are now. I haven't looked, and I haven't tried to. Every {{NEXT_BDAY}} I think about picking up the phone, and every {{NEXT_BDAY}} I put it back down. But I know what I left you with. You learned to keep people out, and the decent ones who came after me paid for what I did. Somebody kind comes along wanting to make you smile, and gets "I'm fine" and a nice evening and nothing past that. I'm the one who taught you that was safer.
+
+If you want to know what I regret, it's this. You stopped lighting up, a little at a time, and I watched it and never said a word, because it suited me. I'm sorry. Things end, and nobody's to blame for that part. But I watched something good in you go out and kept quiet about it because it made my life easier. That didn't just happen. I did it.
+
+The time's gone, and I can't hand that back, however much I'd like to. I won't tell you it went by fast, or that it doesn't count. It counted. All that while, I was sitting on something you needed every morning you got up.
+
+The best of your life isn't behind you. I knew you when you were happy, and that doesn't just go away.
+
+So here's what I never said, and should have, back when it would have done you some good.
+
+You were the happiest person in any room, and I let you forget it.
+
+It was yours before I came along. It never needed a reason, and it never needed me. It was for the good song in the grocery store, the first snow, somebody's new baby, a joke that never gets old. It was never meant to sit in my hands. I want you to have all of it back: the singing along, the turning it up, the being glad before you've checked whether you're allowed. Use it on somebody new, or on nothing at all on a plain Wednesday afternoon. Where it goes is up to you now. It always should have been.
+
+I want you happy. Not fine, not getting by. Happy.
+
+{{EX.last}}
+
+I won't call, and I won't write again. This letter is all of it.
 
 [[FORK get_back]]
-I'd like to hear it again. Come back, or at least write to me.
+All of this is true, the love and the sorry both. I think about you more than I'd ever say to your face. I'd give a lot to see you light up like that again, across a table from me. Come and see me. If you won't, write to me. Just once.
 [[/FORK]]
 [[FORK giving]]
-I'm not asking you for a thing. Not to forgive me, not a visit, not an answer. Don't write back, and don't come find me. Go laugh somewhere I'm not.
+I'm not asking you for anything. Not to forgive me, not to see me, not to write back. Don't answer this, and don't come looking for me. You can put me down now. Go be happy somewhere I'm not.
 [[/FORK]]
 
 [CLOSE]
 
-I looked up at the end, and the chair across the table was only furniture again. Nobody in it.[[FORK get_back]] I left their ask in so you'd see it for what it is: a bill nobody owes, and you least of all.[[/FORK]][[FORK giving]][[/FORK]]
+That's all of it, in their own words.[[FORK get_back]] I left their ask in so you'd see it for what it is. It's a bill, and nobody owes it, you least of all.[[/FORK]][[FORK giving]][[/FORK]]
 
-It's back. What you do with it is on you.
+**Will I be happy again?**
+
+**Yes. Happy for no good reason at all, and sooner than you'd think.**
+
+Your birthday, {{NEXT_BDAY}}, starts a new year for you, and I can see what kind of year it is. {{PY.ahead}} The change gets going before then. Your birthday is when you'll notice it.
+
+Here's what I see six months or so out. An ordinary weekday with nothing planned. Something small happens, the light comes through the kitchen window a certain way, and you're happy about it before you've thought to check whether there's a reason. Somebody catches your face and says, "Well, look at you." You don't have an answer ready, and you don't need one.
+
+And the next time someone reaches for you, there's someone there.
+
+It's back. Go and use it.

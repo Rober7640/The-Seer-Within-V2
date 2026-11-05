@@ -1,233 +1,270 @@
-11-P3 — The Unsent Letter: the fixed report for every Soul Urge 2 buyer (trust · cover word "careful"). v1 template, 2026-11-04.
-Fill-ins: {{FIRST}} {{BIRTH_NAME}} {{DOB}} · shared list ../n8n/scripts/11-swapins.json: {{EX.saw|use|letter|kept}} {{LP.then|now|letter}} {{REASON.headline|letter}} · versions written here: [[REASON 0|1|2]] [[FORK get_back|giving]].
-Cards: 1 the Fool · 2 the Emperor · 3 the Magician · 4 Justice · 5 the Hierophant · 6 the High Priestess · 7 the Lovers · 8 the Moon · 9 the Tower · 10 Death · 11 the Star · 12 Strength.
+11-P3 — The Unsent Letter: the fixed report for every Soul Urge 2 buyer (the part of you that takes people at their word · cover line "I'm careful now"). letter-first shape, question shape with a contents list (each card answers one of her questions, in her words), v2 template, 2026-11-05.
+Fill-ins: {{FIRST}} {{BIRTH_NAME}} {{DOB}} · shared list ../n8n/scripts/11-swapins.json: {{EX.trait|saw|praise|use|letter|never|moment|kept|last}} {{LP.trait|then|praise|now|admire|letter}} {{PY.ahead}} {{NEXT_BDAY}} {{REASON.headline|letter}} · versions written here: [[REASON 0|1|2]] [[FORK get_back|giving]].
+Cards: 1 the Chariot · 2 the Empress · 3 the Magician · 4 the High Priestess · 5 the Emperor · 6 the Hierophant · 7 the Lovers · 8 the Moon · 9 the Tower · 10 the Sun · 11 the Star · 12 Strength
 
 [OPENING]
 
 {{FIRST}},
 
-Before you start, find a chair where nobody's going to come in and ask what you're reading.
+Somebody walked off with something of yours, and what was between you never got settled. This reading names what they took. It answers the questions you've been carrying, one flat answer each, with no "only you can know." And it ends with the letter they never sent, every word of it.
 
-Take the cards in the order I turned them. Don't skip to the letter at the end. It only comes back whole, and on its own it's just words on a page. Now and then two cards will seem to pull against each other. Read on through it.
+Your birth name and date set how I lay your twelve cards. I wrote {{BIRTH_NAME}} and {{DOB}} at the top of a sheet of paper at my kitchen table, and the one who came to me was standing at my shoulder before I'd finished shuffling.
 
-Two things you should know first. This is someone living. And nothing in these pages asks you to contact them, wait for them or forgive them. If this person hurt you, you owe them no reply.
+Before I turned a card, your name and date told me who I was laying them for. {{EX.trait}} {{LP.trait}}
 
-The night your order came in, I cleared off my kitchen table and took three cards out of the deck: the Hermit, Judgement and the Devil. They'd had their say, so they went up on the windowsill, and nineteen were left. I wrote {{BIRTH_NAME}} across the top of a clean sheet, and {{DOB}} underneath it. Your birth name and date set how I lay your twelve cards.
+Two things first. This is someone living. Nothing in these pages asks you to contact them, wait for them or forgive them. If this person hurt you, you owe them no reply.
 
-I made a pot of black tea and sat down with it. The one who came to me before was at my shoulder by the time I'd poured. No face and no voice, the same as the first night.
+Here's what your twelve cards answer, in the order I turned them. Each card gives you a flat answer and hands me back one piece of their letter, in their own words.
+
+**What they took**
+
+Card 1, the Chariot: What did they take from me?
+
+Card 2, the Empress: Did they ever really love me?
+
+Card 3, the Magician: Was it my fault?
+
+**Why they kept it**
+
+Card 4, the High Priestess: Why have they still got it?
+
+Card 5, the Emperor: Why has it taken this long?
+
+Card 6, the Hierophant: What do they regret?
+
+**What it's cost you**
+
+Card 7, the Lovers: Why does nobody new get close?
+
+Card 8, the Moon: Is it too late for me?
+
+Card 9, the Tower: Are they giving it back, or trying to get me back?
+
+**How it comes back**
+
+Card 10, the Sun: Will they ever do anything about it?
+
+Card 11, the Star: What did they never say?
+
+Card 12, Strength: What do I do now?
+
+**After the letter**
+
+Will I be happy again?
+
+Read them in order. The letter waits at the end, and it only comes back whole.
 
 [CARD 1]
 
-**They took your trust, {{FIRST}}.**
+**Card 1, the Chariot: What did they take from me?**
 
-You've known something was missing for a long time, and you've put it down to other things. Getting older. Getting smarter about people. Having seen a thing or two. I told you most women guess wrong, and this is how they do it: they name what the loss turned them into, and never what it took.
+**They took the part of you that takes people at their word, {{FIRST}}.**
 
-Here's what it took. Your trust is the part of you that takes people at their word and lets your weight rest on them. It goes both ways. Something comes in: a person tells you a thing, you believe it, and that's the end of it. Something goes out: you hand a thing over, and you don't stand there watching what they do with it. When I told you about the old man holding his light up on the mountain, and said the light was what they'd left with, this is what I meant.
+The Chariot is a man standing up in a stone chariot, with two sphinxes harnessed in front of him, one black and one white. There are no reins in his hands. Nothing runs from him to them at all.
 
-The Fool is a young man stopped at the very edge of a cliff, still in the middle of a step. His eyes are on the sky in front of him, not on the drop. He isn't being reckless. Nobody's given him a reason to look down.
+*"When I left, I took the part of you that takes people at their word, and I knew I had it."*
 
-That was you with people, before them. Somebody said they'd be there at six and you didn't watch the clock. You told a friend something private and slept fine that night. You lent money and never wrote it down. When somebody said sorry, you took the sorry and let it go. If a friend said she was fine, you believed she was fine and didn't go digging. If someone said they loved the present, you took it that they loved the present. You let other people drive, book the table, read the map and settle the check, and you looked out the window instead of over their shoulder. A kind message got read once, and believed. None of it took any nerve. It was just how you were.
+Somebody close to you put a name to it before you did. A friend, a sister or one of your kids said it after you'd checked the same plan with them twice: "Why do you always expect the worst?" Or "You never used to be like this." You told them, "I'm careful now," and they let it go, because it sounded sensible.
 
-Then it turned out they weren't what you'd taken them for. It didn't take one big lie. It took promises that kept sliding to next week. "I'll be there," and then not being there. Things told by half, so you found out the rest later and on your own. However it came, you'd believed them, and they let you go right on believing. After that, believing anybody felt like the mistake. You never sat down and decided to stop. One day you just caught yourself checking, and you've been checking since. Every promise after that came with a question mark on it.
+Careful isn't what went missing. What went missing is the part of you that could hear "I'll be there at six" and stop thinking about it.
 
-When I turned this card, the one at my shoulder leaned in closer, close enough that I shifted my chair. I picked up my pen, looked at your name, and set the pen back down. There was nothing on the sheet yet but your name and your date.
+That part of you was worth a great deal. People told you things they'd never said out loud, because they could see you'd take them at their word. Somebody who'd made a mess of things got a real second try from you, and most of them rose to it. Not everybody can hand that out. You could, and the people around you were better for it.
 
-The next time someone tells you something simple, notice what you do with it. If your first thought is what's behind it, that's the spot where your trust used to be.
+It isn't gone. They've still got it, and it's on its way back.
 
 [CARD 2]
 
-You don't call it missing. You call it being careful.
+**Card 2, the Empress: Did they ever really love me?**
 
-The Emperor sits on a stone throne with a gold staff in one hand and a gold ball in the other. Both hands are full, and he isn't passing either one to anybody.
+**Yes. Back then, it was real.**
 
-You get there early so you're never the one left waiting. The night before plans, you text to make sure they're still on. When somebody says they'll handle it, you handle it anyway, quietly, just in case. There's a spare key to your place that nobody else knows about. And you'll tell people you don't expect much from anybody, with a bit of pride in how you say it.
+The Empress sits among her cushions in an open field with a crown of twelve stars on her head. Propped at her side is a heart-shaped shield with the sign of Venus cut into it.
 
-People tell you you're nobody's fool, and they mean it kindly. It's true. Nobody gets anything past you. Nobody gets the chance to come through for you either.
+*"I did love you. Back then, every bit of it was real."*
+
+They saw something in you: {{EX.saw}}. {{EX.praise}} That's what they loved. They kept {{EX.use}}, and they let you go on trusting them the whole time they did.
+
+So no, you didn't make it up, and you weren't a fool to believe it. What they've got now is regret, and regret isn't love. You don't miss them. You miss what they left with.
+
+[[FORK get_back]]Hold on to that, because they're going to lean on it. Whatever they ask you for will come with the love wrapped around it, and the love was back then.[[/FORK]][[FORK giving]][[/FORK]]
 
 [CARD 3]
 
-The Magician stands at a table with four things laid out in front of him: a cup, a coin, a sword and a wand. Nothing's covered up and nothing's put away in a drawer. Whoever stands on the other side of that table can reach any of it.
+**Card 3, the Magician: Was it my fault?**
 
-That's how you were when you met them. You've asked yourself since how you could have been so stupid. Put that question down. It has the whole thing backwards. Believing someone isn't stupid. It's what people are meant to be able to do with each other. You weren't careless with yourself. You were open, and that's a different thing.
+**No. Trusting them was never the mistake.**
 
-They saw something in you: {{EX.saw}}. And they saw you'd laid it out in plain sight with your trust right next to it. You took what they said as true. When they said they'd do a thing, you counted it done. You didn't check up on them, because you'd never had a reason to, and you didn't hold anything back in case. That's what made it easy to take. They knew what they were looking at, and they went for it on purpose.
+The Magician stands at a table with a cup, a coin, a sword and a wand laid out in front of him. Nothing's covered up and nothing's tucked away.
 
-They kept {{EX.use}}, and they made sure you went on believing them, so it would keep coming their way. You did your part in good faith. Whatever you handed over, you handed over honestly, and everything they did with it after that is theirs to answer for.
+*"None of this was your fault. You trusted me because I asked you to."*
 
-Why they've still got it comes next. Before that, I want one thing from you, and only one: stop asking what's wrong with you.
+If you've ever asked how you could have been so stupid, put that question away. It has the whole thing backwards. Taking somebody at their word isn't stupid. It's what people are supposed to be able to do with each other. You laid it all out in plain sight, and what anybody did with it after that is on them.
+
+By the third card I can tell how a spread is going to finish, and yours finishes well. Keep hold of that through the middle.
 
 [CARD 4]
 
-They've kept it because giving it back means saying what they did.
+**Card 4, the High Priestess: Why have they still got it?**
 
-On Justice, a figure holds up a pair of scales, and the two pans hang dead level. Nothing's been weighed yet.
+**Because giving it back means owning up to what they were.**
 
-Handing your trust back would put it on the scale: what they told you on one side, what they did on the other. The minute that gets weighed, their side goes down, and they'd have to say you were right to believe them and the fault was theirs. As long as they hold on to it, the pans stay level, and they get to stay the person you believed in. That's why it wasn't lost and it wasn't thrown away. They kept it off the scale.
+The High Priestess sits between two pillars, one black and one white, with a scroll in her hands. Half the writing on it is tucked under her mantle.
+
+*"Why did I keep it? Because giving it back means admitting what I was."*
+
+As long as they hold on to your trust, half the story stays covered, and they get to stay the person you believed in. Handing it back would mean letting you read the rest of that scroll, and the rest is about them. So they've kept it folded away.
 
 [CARD 5]
 
-Around the fifth card, they moved for the first time. They left my shoulder, went over to the doorway into the hall, and stopped there. It was getting on for midnight.
+**Card 5, the Emperor: Why has it taken this long?**
 
-Why has it taken this long? They had one line that let them off, and the line was "She believed what she wanted to believe."
+**Because one line let them off: "You'd gotten careful." It sounded like you'd come through fine, so they never asked one thing more.**
 
-The line held because your believing had been made to look like the mistake. Afterward, every question pointed at you. What did you miss? Why didn't you see it? Hardly anybody asked why they'd said it, or promised what they never kept. So the line sounded close enough to right, even to you. It wasn't right. You believed what you were told. That's all believing ever is.
+The Emperor sits square on a big stone throne in a red robe. At his arms and legs you can see the armor underneath.
 
-And you backed it up without meaning to. You got guarded, and guarded looks exactly like a woman who's learned her lesson. That was never your fault. People who've been fooled once do what you did. Hiding behind it was their choice.
+*"I told myself you'd gotten careful, and careful people do fine. So I never asked one thing more."*
 
-You still do some of their work for them. You call yourself gullible as a joke before anyone else can. You ask a question you already know the answer to, just to see what they'll say. When somebody says trust me, that's when you start paying attention. And when something goes wrong, you look for what you missed before you look at who did it.
+It held because you did look fine. "I'm careful now," you'd say, and you meant it, and you were a little proud of it. You text the night before to make sure the plans are still on. You read every review before you book a table. When somebody says they'll take care of it, you take care of it too, quietly, just in case. You keep your own copy of everything. And when someone kind asks how you are, you say "fine" and hand them nothing else.
 
-On the Hierophant, a figure sits up high, and two ministers in white kneel below him with their backs to us, taking in whatever he says. Nobody in that picture is asking him a thing. That's how the line went around. It came from the one who did it, and everybody took it in, you included.
-
-The months I told you about, when they kept coming back to this, are that line wearing thin. They don't know a bit of it is happening.
+From across a room, that looks like armor, and it looked that way to them too. You call it careful. It's waiting to be let down.
 
 [CARD 6]
 
-Their regret is plain: letting you go on believing them.
+**Card 6, the Hierophant: What do they regret?**
 
-Behind the High Priestess, a veil hangs between the two pillars, so you can't see what's at the back of the room. Somebody put it up and left it there, knowing what was behind it.
+**They regret letting you go on trusting them long after they'd stopped deserving it.**
 
-[[FORK get_back]]What they regret isn't losing you. It's losing someone who took them at their word without a second look, and they haven't found that again. That isn't the same thing as you.[[/FORK]][[FORK giving]]None of it is about wanting you back. Walking away from you wasn't easy for them, and you still cross their mind. But if you've pictured them wanting you back, you can stop picturing it. They don't.[[/FORK]] A regret like theirs doesn't take the veil down, and it doesn't put one thing back. The first thing you'll want to do with this is count it in their favor. It doesn't count.
+The Hierophant sits up high with one hand raised, and two men in white robes kneel below him with their backs to us. They take whatever he says. He lets them.
+
+*"What I regret is letting you go on trusting me long after I'd stopped deserving it. I'm sorry."*
+
+The sorry is real. [[FORK get_back]]But under it, it isn't you they miss. It's having somebody who took them at their word without a second look, and they haven't found that again. That isn't the same thing as you.[[/FORK]][[FORK giving]]And it isn't about wanting you back. You cross their mind more than they'd ever say, but they don't want you back.[[/FORK]] A regret like theirs stays where it sits, up high, and it never gets down to where you are. It doesn't hand back a thing.
 
 [CARD 7]
 
+**Card 7, the Lovers: Why does nobody new get close?**
+
+**Because an old habit is still on watch, and the decent ones pay for what somebody else did.**
+
+On the Lovers, a man and a woman stand close. He's looking at her. She's looking past him at the winged figure above them.
+
+*"I know what I left behind. Somebody kind tells you something plain, and you go looking for the catch. That's my doing."*
+
 {{LP.then}}
 
-It didn't switch off when they were gone. Nothing like that does. It kept running, and now it lands on people who never let you down once. Someone decent turns up and {{LP.now}}. And under all of it, you're waiting to find out what they're keeping from you. One person taught you that whoever's in front of you might not be true. Everybody since has been paying for what that one person did.
+{{LP.praise}} It did its job. It just never got told the job was over. Someone decent turns up and {{LP.now}}.
 
-The Lovers stand close together, a man and a woman, not quite touching. Far off behind them, one grey mountain stands up in the space between. Neither of them put it there.
-
-That's what the decent ones walk into now. They come close, and there's something standing between you that was there long before they showed up. They tell you something plain, and you hold it out at arm's length to look for the catch. They say they'll call, and you've half decided they won't before they've hung up. None of them did a thing to you. They pay for it anyway, and the good ones get tired of paying and go.
-
-The next time someone decent tells you something plain, notice how long it takes you to believe it. That wait is the mountain.
+Somebody decent is going to ask you to take their word on something small. Take it.
 
 [CARD 8]
 
-On the Moon, a big yellow moon looks down with its eyes shut. Under it, an orange dog and a pale wolf sit with their heads up, howling. One is tame and one is wild, and from where you're standing they make exactly the same noise.
+**Card 8, the Moon: Is it too late for me?**
 
-You can't tell them apart anymore either, so you treat them both as the wolf. And careful worked. I won't take that away from you. Nobody's fooled you twice. Nobody's caught you out with a story or gotten anything off you that you didn't mean to give. You came by it honestly, after what was done to you.
+**No. The years you spent on guard stay gone, but what they took comes back, and it's closer than it looks.**
 
-Now here's what it did.
+On the Moon, an orange dog and a pale wolf howl up at a big yellow moon. In that light, they make exactly the same noise.
 
-Every kind thing somebody said to you that you turned over looking for the hook. Every time you took a picture of what somebody wrote you, so you'd have it if they changed their story. Every "I'll call you tonight" you made other plans around, so it wouldn't matter when the phone didn't ring. Every favor you wouldn't let anyone do, in case you'd owe them or in case they didn't come through. Every paper you read twice, fine print and all, and still didn't sign. The nights you spent going over one sentence somebody said at dinner, trying to work out what they really meant. The good people who got the guarded version of you and gave up waiting for the other one. You never told any of them no. You just never quite believed them, and they could tell.
+*"The best of your life isn't behind you. Not by a long way."*
 
-I got up from the table at that point, which I don't do in the middle of a spread, and stood at the back door for a minute with the cold coming in. Then I came back and sat down. It was past midnight. The clock over the stove was ticking too loud, and the sheet was still blank under your name.
+They got that right, and I'll say it myself: the best of your life isn't behind you.
 
-Here's the deal, and I want you to have it exactly. Your trust comes back. The rest of these cards are how. The years you've spent on guard don't come back. Nobody can hand those over, not them, not me, not any card.
+"I'm careful now" did its job. Nobody's fooled you twice. Nobody's talked you into a thing you didn't mean to do, and you were right to be a little proud of that. But careful can't tell the dog from the wolf, so it treats them both like the wolf. The years went by with good people getting the guarded version of you, and most of them never found out there was another one.
 
-I told you it makes no difference to whether they've still got it, ten years or thirty. That's still so. It makes all the difference to the bill. Years of sitting where you could see the door. Years of doing every last thing yourself so nothing could get dropped. Years of decent people who got a polite, guarded version of you and never found out there was another one.
-
-They're the one who wasn't true. That stays on them, every bit of it, and I'm not lifting an ounce of it off. What you built afterward was built to keep them out. It kept everybody else out too, all the years it stood, and you're the one who's been paying for that.
+A lot of what you've kept outside the door was only ever the dog.
 
 [CARD 9]
+
+**Card 9, the Tower: Are they giving it back, or trying to get me back?**
 
 [[FORK get_back]]
 **They're trying to get you back, {{FIRST}}.**
 
-And some part of you wants to believe it. Don't hurry past that part. Of everything in these twelve cards, it's the one most likely to cost you.
+On the Tower, two figures fall head-first from a tower with fire at its windows, their arms out. Neither one has landed.
 
-After all this time of believing nobody, the first place your trust wants to run back to is them. The one person who wasn't true. Part of you would take their word tomorrow if they said the right thing in the right voice.
+Their letter ends like this:
 
-Give that part an inch and it starts doing their talking for them. They've been at this for months, so they must mean it. People change. It can't all have been as bad as you remember. You'd start finding a reason for every last thing they did, and you'd find one, because you'd be looking hard. You'd be taking their word before you'd taken the word of one decent person in your own life. That's the danger, right there. The believing you've held back from everybody else is still sitting ready, and it's pointed at them.
+*"Give me one more chance to show you I can be trusted. Write to me. Just once."*
 
-On the Tower, two figures fall head-first with their arms out, and neither one has landed. With your arms out like that, you'd grab the first hand you saw. Theirs is the one you know best, so theirs is the one you'd grab first.
+If part of you wanted to say yes to that, you're not a fool. You haven't taken anybody all the way at their word for a long time. Then this comes, the trust you've kept put away wants out, and the first place it points is back at them, the one person who's already shown you what they do with it.
 
-Here's what their wish is really for. They don't want you. They want back what they had: someone who took them at their word and never checked. They're holding your trust out in an open hand, waiting for you to come all the way over and get it, so you'll be standing close enough to believe them again.
+Look at what they're asking for. Not forgiveness. Trust. The exact thing they walked off with, handed back to them on your say-so.
 
-Believing them again wouldn't bring your trust back to you. It would put it straight back in the hands of the one person who's already shown you what they do with it, and you'd be back to taking their word and checking it, both at once.
+With your arms out like those two on the card, you'd catch at the first hand you saw, and theirs is the one you know best. Every kind thing in their letter, the love and the sorry included, leads up to that ask.
 
-They won't come to you. A wish like theirs stays put and waits. It doesn't need to take a step, as long as you're the one doing the walking.
-
-I told you you'd need to know which way this went, because one way it's a gift and the other way it's a trap, and the words sound the same either way. This is the trap. Every kind thing in their letter is going to read like a reason to go to them. Not one of them is.
-
-I sat back down, turned the card, and swore at the deck. They didn't leave. They came right up to the edge of the table and stayed, closer than they'd been all night. Three in the morning. Nine cards down, nothing on the sheet under your name, and I didn't know if I'd get your letter at all.
+I told you one way this could go was a trap. This is the trap. The kinder it sounds, the tighter you hold on to that.
 [[/FORK]]
 [[FORK giving]]
 **They're giving it back, {{FIRST}}. They aren't trying to get you back.**
 
-They want your trust out of their hands, and that's all the giving is. They've carried it a long time, and it's gotten heavier the longer they've held it. The line that let them off has worn thin, and without it, holding your trust means knowing what they did with it. So they're setting it down, for their own sake. Their regret is real, and so are the months they've spent on it. But none of this is them reaching for you. Once it's back with you, they can finally set it down. That's what they want out of this.
+On the Tower, two figures fall head-first from a tower with fire at its windows, their arms out. Neither one has landed, and nobody on that card is reaching to catch them.
 
-I told you one way this went was a gift. This is that way, and it's colder than it sounds. It asks nothing of you because they want nothing from you: not an answer, not a word, not you.
+Their letter says it plainly:
 
-On the Tower, lightning comes down out of a dark cloud, and two figures fall head-first with their arms out. Neither one has landed. Nobody on that card saw it coming, and no amount of watching the sky would have stopped it.
+*"I'm not asking for anything back. Not an answer, not a visit, not your forgiveness."*
 
-You've been like that since. Not landed. You've been waiting on one thing to put the ground back under you, and that's the day they explain. They sit down across from you and tell you the whole of it, what was true and what wasn't and why, and at last you know. You'd tell anybody who asked that you gave up on that a long time ago, and you'd mean it while you said it. Then some small thing would set it going again.
+They want it out of their hands, and that's all the giving is. "You'd gotten careful" has worn thin, so they're putting the thing down. The regret is real, and so are the months they've spent on it. None of it is them reaching for you.
 
-You kept a place for that day. You quit believing everybody, and underneath all of it you kept one small spot that would still believe them, if they'd only come and tell you the truth. It was saved for them. Guarded with everybody else, and that one spot left open, just in case.
+I told you one way this went was a gift. This is that one, and it's colder than it sounds. It asks nothing of you because they want nothing from you.
 
-The day isn't coming. Nobody's going to sit down across from you and explain. On their side there's no place kept for you at all. What's in the letter at the end of these pages is everything you'll ever get from them, and there won't be another word after it. And that spot you kept has been costing you all along. Every time you held back from somebody decent, you were saving the believing for the one who'd earned it least.
-
-I sat back down, turned the card, and swore at the deck out loud. When I looked up, the hall doorway was empty. All night they'd been somewhere in my kitchen, and now it was only me. Three in the morning. Nine cards down, your name at the top of the sheet and nothing under it, and whoever was carrying your letter had walked out. I didn't know if I'd get it at all.
+There's one thing you've been holding out for: the day they sit down and tell you the whole of it, what was true and what wasn't. That day isn't coming. The letter at the end is everything you'll get from them. You can stop keeping a place open for it.
 [[/FORK]]
 
 [CARD 10]
 
-**No, {{FIRST}}, they won't call or write or do one single thing about this, because {{REASON.headline}}.**
+**Card 10, the Sun: Will they ever do anything about it?**
 
-[[REASON 0]]To do anything, they'd have to stand in front of the one person who believed them and say they were never what they made out. They'd sooner leave it than wear that.[[/REASON]][[REASON 1]]You're that person. You took every word they said on trust, and then you found out what the words were worth. Yours is the one face they can't stand to have looking back at them.[[/REASON]][[REASON 2]]You've paid for this every time you checked and doubted and did it all yourself. They've never paid a cent, and the bill has never once come to them.[[/REASON]] Don't go asking them why. They couldn't tell you. They're doing all of this without knowing it, and nobody can explain a thing they don't know they're doing. Asking would only start the pull up again.
+**No, {{FIRST}}, they won't call or write or lift a finger past this letter, because {{REASON.headline}}.**
 
-[[FORK get_back]]
-So they hold it out and wait for you to come and get it. I told you in that first letter what it means when somebody holds a thing out like that, and here it is. They won't take one step your way. They want you to take all of them.
-[[/FORK]]
-[[FORK giving]]
-So they'll put it down right where they stand, and that's all they'll do. They won't bring it to you, and they won't check that it got to you. As far as they're concerned, letting go of it is the end of the matter.
-[[/FORK]]
+On the Sun, a child rides a white horse bareback in broad daylight, both arms open wide. A low grey wall runs right across the card, and the horse is already out in front of it.
 
-This next part is the one the whole reading hangs on. They were never the ones who had to move. Your trust was never theirs to bring back in person. It doesn't come back by them turning up, and it doesn't come back the day they finally admit you were right to believe them. All it ever needed was for somebody to stop waiting for that.
+*"I won't call you, and I won't come by. This letter is as far as I go."*
 
-Death is a skeleton in black armor riding a white horse, and the horse is going at a walk. There's no weapon in its hands. Far off, past it, the sun is coming up in the gap between two towers.
+[[REASON 0]]To do more, they'd have to stand in front of the one person who believed them and say they were never what they made out. Their pride won't carry them that far.[[/REASON]][[REASON 1]]You took every word they said on trust. Yours is the one face they can't stand to have looking back at them.[[/REASON]][[REASON 2]]You've paid for this every time you checked twice and did it all yourself. They've never paid a cent, and the bill has never once come to them.[[/REASON]] [[FORK get_back]]So they hold it out and wait for you to walk over and take it. They won't take one step your way.[[/FORK]][[FORK giving]]So they're setting it down right where they stand. They won't bring it to you, and they won't check that it got there.[[/FORK]]
 
-Something's over on this card, and nobody had to fight to make it over. The horse is just walking on. What's over is the waiting. You've been waiting for them to say it, as if your trust needed their word on it before you could have it back. Every time you've thought, if they'd only own up, then I could believe people again, that was the wait. Look at what it was asking for. It needed the one person who wasn't true to finally tell you the truth, and then you'd have had to take their word for it. That was never going to work, not in a hundred tries. It never needed their word. The day you stop waiting on it, it's yours again. There's light coming up between those towers, and nobody on the card is waiting for it.
+Now the turn. They were never the ones who had to move. Your trust doesn't come back the day they finally own up. You've been waiting on their word before you'd take anybody else's, and theirs is the one word that was never any good. You can stop waiting.
 
-The window over my sink went grey while I sat there. I'd spent the whole night pulling at them for your letter and then waiting for them to hand it over, the same as you. So I stopped, and I said so out loud to the kitchen.
+Look at that child again. Arms open, nothing held back, and the wall already behind.
 
-[[FORK get_back]]Then they were sitting across from me[[/FORK]][[FORK giving]]Then they'd come back, and they were sitting across from me[[/FORK]], in the chair you'd have sat in, lighter than they'd been all night. My pen moved. Your letter had its first line.
+When I laid this card down, the one at my shoulder pulled out the chair across from me and sat.
 
 [CARD 11]
 
-The sentence they never said is this: "You were right to believe me, and I was the one who wasn't true."
+**Card 11, the Star: What did they never say?**
 
-Don't answer it, not on paper and not in your head. There's no need. By the time you've read it, it's already back.
+**That the fault was never in the trusting. It was in them.**
 
-Look at what it does. It puts the fault where it belongs. Believing them wasn't the mistake. You did the right thing with what you were given. The fault was in what you were given: the words, the promises, the part they left out. That's the one thing you never heard from them, and it's what you were hunting for every time you went back over it all. There it is, in their own words. You can stop looking.
+On the Star, a woman kneels with one foot on the water, pouring out two jugs at once, one into the pool and one onto the land.
 
-And you can stop writing their half. You've had them explain themselves in your head. You've had them sorry, and you've had them cruel. You've been through the whole conversation at the kitchen sink and in the car and in the dark, the one where they finally tell you what was true, and you've come out of it more tired every time. That job's over. Their side is written down now, and it was never yours to write. All the time that went into it, you get that back.
+*"You were right to trust me. I'm the one who wasn't worth it."*
 
-You're about to read their words. If this person hurt you, you owe them no reply. Reading it is the whole of what you have to do.
-
-On the Star, a woman kneels at a pool with a jug in each hand, and both jugs are being emptied. She isn't holding any of it back, and she isn't standing guard over where it goes.
+There it is, out loud at last. You can stop going back over it to find where you went wrong. You didn't. Their sentence doesn't need answering, not on paper and not in your head at night. If this person hurt you, you owe them no reply.
 
 [CARD 12]
 
-Stop going back to them, and once a day let one person do one small thing for you without checking it. Those two will carry you through what's coming.
+**Card 12, Strength: What do I do now?**
 
-Your last card is Strength. A woman in a white dress has both hands on a lion's mouth. Around her waist is a chain of flowers, and it runs on and loops over the lion's neck.
+**Stop going back to them, and once a day, take one person at their word on one small thing.**
 
-Look at what's holding that lion. Flowers. It could break them by lifting its head, and it doesn't. Nobody's standing by checking the knot. That's what trust was always supposed to look like: a hold either one of you could break, and both of you choosing not to. The hold you've kept on people since is the other kind, made of iron, and you've been calling it careful. You can put that word down.
+Strength is a woman in a white dress with both hands on a lion's mouth. A chain of flowers runs from her waist and loops over the lion's neck. The lion could break it by lifting its head, and it doesn't.
 
-The pull will be at its strongest now, inside the next five to seven days. That's about you, and what's moving in you. It says nothing about them turning up.
+*"It was yours before I ever came along, and it's yours now. Give it to people who've earned a little of it, and let them earn the rest."*
 
-**Stop going back.** Rereading the old messages, looking them up, starting one you swear you won't send: that's one thing with three names. When the pull comes, put the phone in another room, set the oven timer for twenty minutes, and give your hands a job. Wipe down the counters. Sort the mail. Don't argue with it. A pull like this climbs and then drops off on its own if nobody feeds it. Going to look is what feeds it and teaches it to come back. Every one you let go by makes the next one smaller.
+That's what trust looks like: a hold made of flowers, and nobody checking the knot. You don't need "I'm careful now" anymore. You can set it down.
 
-I told you the rereading stops. The need goes when you read the letter. The habit takes about a week, so your hand will still go for the phone a few times. That's only the habit.
+The pull will be at its strongest inside the next five to seven days. That's about you, and it says nothing about them turning up.
 
-**The one thing to do.** For seven days, once a day, let one person do one small thing for you, and don't check it. Let a friend pick the restaurant, and don't look up the menu first. Let someone carry the groceries in, and don't go behind them moving things to where they go. When someone says they'll take care of it, say thank you and leave it with them. Only with people who've never given you cause. Nobody from your past.
+**Stop going back.** Rereading the old messages, looking them up, starting one you swear you won't send: it's all one thing. When it comes, leave the phone in a different room, set a timer for twenty minutes and give your hands a job. A pull like this rises and falls on its own if nobody feeds it.
 
-You can't think your way back to trust. Your head has one huge example of being wrong to believe someone, and it's gone over that one thousands of times. Small times that turn out fine give it something new to go on. And if one goes wrong, you'll find out you live through it.
+**The one thing to do.** For seven days, once a day, take one person at their word on one small thing, and don't check it. Somebody says they'll call at six: don't text at five-thirty to make sure. A friend says the place is good: go without reading the reviews. Only people who've never given you a reason not to. Nobody from back then.
 
-It won't feel like much at first. You'll know it's working by what stops: you stop reading things twice, and your hand stops going for the phone late at night. How soon that comes is down to what you do with the twenty minutes and the seven days. It isn't down to me, and it isn't down to them.
+You'll know it's working by what stops. You stop reading things twice, and your hand stops going to the phone late at night.
 
 [[FORK get_back]]
-The last line of their letter asks you for something. I left it in, right where they put it. You don't do anything with it.
+Their letter ends with an ask. I've left it in. Leave it right where it is.
 [[/FORK]]
 [[FORK giving]]
 
 [[/FORK]]
-
-And the next time someone reaches for you, there's someone there.
-
-It was full light by then. Once that first line was down, the rest came faster than I could write it. I put the Hermit, Judgement and the Devil back in the deck and copied the whole letter out by hand at the same table, with them across from me. I didn't change a word.
-
-Read it once, slowly, all the way through.
 
 [LETTER]
 
@@ -235,35 +272,83 @@ Read it once, slowly, all the way through.
 
 I'm never going to send this. {{REASON.letter}} So it stays here.
 
-I'll just say it. I didn't always tell you the whole truth, and I didn't always do what I said I'd do. You took me at my word anyway, and I let you. I could have set it straight any time. I didn't. It was easier to let you keep believing than to be what you believed I was.
+I'm writing it anyway. I've had something of yours for a long time, and I'm tired of carrying it and acting like I'm not. So I'm going to say what I did, all of it, plainly, and then I'm giving it back.
 
-When I said I'd do something, you counted on it. When I told you how things were, you took it that that's how they were. You didn't do anything wrong there. You did what anybody does when somebody they count on tells them something.
+When I first knew you, {{EX.letter}} I liked that. I liked being around it. {{EX.never}}
 
-I didn't set out to do it, I don't think. But I saw it going on, and I let it go on.
+{{EX.moment}}
 
-When I first knew you, {{EX.letter}} I liked that. And you took my word for things. If I said it, that was good enough for you. You didn't check up on me. I kept {{EX.kept}}. And I let you count on me long after I knew better.
+And you believed me. That was the thing about you. If I said I'd be home by six, you started dinner at five-thirty. If I said I'd take care of the bill, you never looked at it again. You told me things you'd never told another soul, and you didn't once ask me to keep them to myself. You just took it that I would. You'd fall asleep in the car with me driving. You'd hand me your phone to read a message out loud and never once look to see what else I could see. I don't think anybody's trusted me like that before or since, and I didn't know what it was worth while I had it.
 
-I told myself you believed what you wanted to believe. I said it to other people too. It was easier than saying it was me. It doesn't work anymore. I still say it to myself sometimes, and I can hear that it isn't so.
+Here's what I did with it. I said I'd be there, and some of the times I wasn't, and I always had a reason ready. I told you half of things and let you fill in the rest with the good version. You never checked. I counted on that.
+
+There was a night near the end when you asked me straight out if everything was all right between us. You put down what you were doing and waited. I said yes. You believed me, and I watched you believe me, and I let you go to sleep on it. If I could take back one minute, it's that one.
+
+Do you know what it's like, being believed like that? I'd walk in with some half-true story and you'd nod along, and for a minute I'd be the person you thought I was. I liked being that person. I just never did the work of actually being them.
+
+I did love you. Back then, every bit of it was real. Whatever else you decide about me, don't decide that part was fake.
+
+None of this was your fault. You trusted me because I asked you to. That's what people are supposed to do with somebody who asks.
+
+I kept {{EX.kept}}. And when I went, I took more than that.
+
+{{LP.admire}}
 
 {{LP.letter}}
 
-Why did I hang on to your trust? Because giving it back means saying out loud who was in the wrong. As long as I had it, I could make out it was you. I knew better the whole time.
+I saw all of that, and I let it go on.
 
-So here it is. I should have said it back then. I didn't.
+When I left, I took the part of you that takes people at their word, and I knew I had it.
 
-You were right to believe me, and I was the one who wasn't true.
+Not every day, and not in so many words. But whenever somebody mentioned you'd gotten guarded, I knew whose doing that was. I didn't want it to be mine, so I found something else to think about.
 
-There was never anything wrong with you for believing. It was a good thing in you, and I was the wrong place to put it. It's your trust. It was yours before me and it's yours now. I'm giving it back. All of it. You don't owe me anything for it.
+You got past me. I never doubted you would. But getting past somebody and believing the next one are two different things, and I knew which one I'd broken.
+
+I told myself you'd gotten careful, and careful people do fine. So I never asked one thing more. I told myself other things too. That you'd have learned not to trust so easily sooner or later, and better from me than from somebody worse. That you were sharp, and sharp people land on their feet. If anybody asked about you, I said you were doing great, and that nobody would ever pull one over on you now. I said it like it was a favor I'd done you. It wasn't. It was the worst thing I left you with.
+
+Why did I keep it? Because giving it back means admitting what I was. As long as I had it, I could still be the one you believed in, somewhere at the back of your mind. Giving it back means writing down that I wasn't, and that I knew it the whole time you were counting on me.
+
+I don't know what your life looks like now. I haven't asked anybody, and nobody's offered to tell me. Every {{NEXT_BDAY}} I think about picking up the phone, and every {{NEXT_BDAY}} I put it back down. But I know what I left behind. Somebody kind tells you something plain, and you go looking for the catch. That's my doing. Somebody new says they'll be there, and you've made other plans in case they aren't. Somebody offers to carry something for you, and you say you've got it. They never did a thing to you. They're paying for what I did.
+
+What I regret is letting you go on trusting me long after I'd stopped deserving it. I'm sorry. Things end. That happens to everybody. Letting somebody lean their whole weight on you after you know you won't hold doesn't just happen. I did that.
+
+I can't give you back the time you've spent on guard. I would if I could, and nobody can. I won't tell you it didn't matter. It mattered. All those plans you checked twice. All those times you did it yourself because you couldn't be sure. That was your time, and I was holding the one thing that would have let you spend it better.
+
+But I knew you. The best of your life isn't behind you. Not by a long way.
+
+So here it is, the thing I should have said back then and didn't. I'm saying it now because I can't put this down any other way.
+
+You were right to trust me. I'm the one who wasn't worth it.
+
+It was yours before I ever came along, and it's yours now. Give it to people who've earned a little of it, and let them earn the rest. I want you to have all of it back: the part that hears "I'll be there" and believes it, the part that hands somebody else the keys, the part that tells a friend a secret and sleeps fine that night. It never did me one bit of good. It only ever worked in your hands.
+
+Don't hand all of it to the first person who asks. Give a little to somebody who's shown up, and a little more when they show up again. That's how it was meant to work, before I came along and asked for the whole thing at once.
+
+I want you happy. Not fine, not getting by. Happy.
+
+{{EX.last}}
+
+I won't call you, and I won't come by. This letter is as far as I go.
 
 [[FORK get_back]]
-Come back to me. Or if you won't do that, at least let me hear from you.
+I meant every word of this, the love and the sorry and the rest. I've thought about you more than I'd ever say to your face. Give me one more chance to show you I can be trusted. Write to me. Just once.
 [[/FORK]]
 [[FORK giving]]
-I'm not asking you for anything. Not to forgive me, not to see me, not an answer. Don't write to me, and don't come looking. That's all.
+I'm not asking for anything back. Not an answer, not a visit, not your forgiveness. Don't write to me, and don't come looking for me. You can put me down now. I hope the next one you trust is worth it.
 [[/FORK]]
 
 [CLOSE]
 
-When I looked up from the last line, the chair across the table was only furniture again. Nobody in it.[[FORK get_back]] I left their ask in so you'd see it for what it is. It's a bill, and nobody owes it, you least of all.[[/FORK]][[FORK giving]][[/FORK]]
+When I looked up, there was nobody across the table, only an empty chair.[[FORK get_back]] I left their ask in so you'd see it for what it is. It's a bill, and nobody owes it, you least of all.[[/FORK]][[FORK giving]][[/FORK]]
 
-It's back. What you do with it is on you.
+**Will I be happy again?**
+
+**Yes. Not careful, and not just fine. Happy.**
+
+Your birthday, {{NEXT_BDAY}}, starts a new year for you, and I can see what kind of year it is. {{PY.ahead}} The change starts well before then. Your birthday is when you'll know it's real.
+
+Here's what I see six months or so out. An ordinary evening. Somebody says they'll pick you up at seven, and at five to seven you're still looking for your shoes, not standing at the window. You get in the car, and you don't give it a second thought.
+
+And the next time someone reaches for you, there's someone there.
+
+It's back. Go and use it.

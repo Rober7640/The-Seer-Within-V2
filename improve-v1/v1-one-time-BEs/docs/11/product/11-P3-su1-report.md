@@ -1,239 +1,270 @@
-11-P3 — The Unsent Letter: the fixed report for every Soul Urge 1 buyer (nerve · cover word "sensible"). v1 template, 2026-11-04.
-Fill-ins: {{FIRST}} {{BIRTH_NAME}} {{DOB}} · shared list ../n8n/scripts/11-swapins.json: {{EX.saw|use|letter|kept}} {{LP.then|now|letter}} {{REASON.headline|letter}} · versions written here: [[REASON 0|1|2]] [[FORK get_back|giving]].
-Cards: 1 the Fool · 2 the Hierophant · 3 the Chariot · 4 Justice · 5 the Emperor · 6 Wheel of Fortune · 7 the Hanged Man · 8 Death · 9 the Tower · 10 the Star · 11 the Magician · 12 the World.
+11-P3 — The Unsent Letter: the fixed report for every Soul Urge 1 buyer (the part of you that knew you were good enough · cover line "I don't need anybody."). letter-first shape, question shape with a contents list (each card answers one of her questions, in her words), v4 template, 2026-11-05.
+Fill-ins: {{FIRST}} {{BIRTH_NAME}} {{DOB}} · shared list ../n8n/scripts/11-swapins.json: {{EX.trait|saw|praise|use|letter|never|moment|kept|last}} {{LP.trait|then|praise|now|admire|letter}} {{PY.ahead}} {{NEXT_BDAY}} {{REASON.headline|letter}} · versions written here: [[REASON 0|1|2]] [[FORK get_back|giving]].
+Cards: 1 the Chariot · 2 the Empress · 3 the Sun · 4 the High Priestess · 5 the Emperor · 6 Temperance · 7 the Lovers · 8 the Tower · 9 the Moon · 10 the Star · 11 the Magician · 12 Strength
 
 [OPENING]
 
 {{FIRST}},
 
-Read this sitting down, somewhere nobody's going to come in halfway through.
+You let me lay your twelve cards because somebody left with something of yours, and some things between you never got settled. This reading puts them to rest. It names what they took, gives one flat answer to each question you've carried, with no "only you can know," and ends with the letter they never sent, written out in full.
 
-Take the cards in the order I turned them, and don't skip ahead to the letter at the end. It only comes back whole. Jump to the last page and all you'll have is some words on paper. Some of these cards will look like they're arguing with each other. Read on through it.
+Your birth name and date set how I lay your twelve cards. I wrote {{BIRTH_NAME}} and {{DOB}} at the top of a clean sheet and poured a cup of peppermint tea. The one who came to me was behind my chair before it had cooled.
 
-Before I start: this is someone living. Nothing in these pages asks you to contact them, wait for them or forgive them. If this person hurt you, you owe them no reply.
+Before I turned a card, your name and date told me who I was laying them for. {{EX.trait}} {{LP.trait}}
 
-When your order came in, I cleared the kitchen table and took three cards out of the deck, the Hermit, Judgement and the Devil. Those three are finished with you, so they went up on the windowsill, out of the way. At the top of a clean sheet I wrote {{BIRTH_NAME}}, and under it {{DOB}}. Your birth name and date set how I lay your twelve cards. Nothing goes on the table before those two.
+Two things first. This is someone living. Nothing here asks you to contact them, wait for them or forgive them. If this person hurt you, you owe them no reply.
 
-I made a pot of black tea and sat down. It hadn't finished steeping before the one who came to me last time was at my shoulder again. Still no face. Still no voice.
+Here's what your twelve cards answer, in order. Each one also hands me back a piece of their letter, in their own words.
+
+**What they took**
+
+Card 1, the Chariot: What did they take from me?
+
+Card 2, the Empress: Did they ever really love me?
+
+Card 3, the Sun: Was it my fault?
+
+**Why they kept it**
+
+Card 4, the High Priestess: Why have they still got it?
+
+Card 5, the Emperor: Why has it taken this long?
+
+Card 6, Temperance: What do they regret?
+
+**What it's cost you**
+
+Card 7, the Lovers: Why does nobody new get close?
+
+Card 8, the Tower: Is it too late for me?
+
+Card 9, the Moon: Are they giving it back, or trying to get me back?
+
+**How it comes back**
+
+Card 10, the Star: Will they ever do anything about it?
+
+Card 11, the Magician: What did they never say?
+
+Card 12, Strength: What do I do now?
+
+**After the letter**
+
+Will I be happy again?
+
+Take them in order. The letter waits at the end, and it only comes back whole.
 
 [CARD 1]
 
-**They took your nerve, {{FIRST}}.**
+**Card 1, the Chariot: What did they take from me?**
 
-It's been gone a long time, and you've had other names for what's missing. Getting older. Picking your battles. Not wanting the fuss. I told you most women guess wrong. They guess at the damage, and never at what was taken.
+**They took the part of you that knew you were good enough, {{FIRST}}.**
 
-Here's what was taken. Your nerve is the part of you that says "no, that isn't right" and is still standing there after it's said it. It's also the part that goes ahead with a thing without first checking whether it's worth the trouble. Holding your ground and going first come from the same place. You had it before them. You haven't had it since. When I told you about the lantern in the Hermit's hand, the one up on my windowsill now, this is the light that was burning in it.
+On the Chariot, a man stands upright in a stone chariot, two sphinxes harnessed in front of him and no reins in his hands at all. He isn't holding on to anything. He's the part they left with.
 
-The Fool is a young man at the very edge of a cliff, caught in the middle of a step. His eyes are on the sky in front of him, not on the drop. He hasn't stopped to work out how far down it goes, or whether the step is worth it.
+*"I walked off with the part of you that knew you were good enough, and I knew it the day I went."*
 
-You don't take that step these days. You weigh it, and most of the time you decide it isn't worth it. You're the sensible one now. You can be in a room where everybody's getting worked up and be the one who stays calm, and you're a little proud of that. You should be, some. It's gotten you through a lot. Being calm when nobody else is takes something, and you've got it.
+The people who've known you longest caught it first. An old friend, a brother or sister, one of your kids said it once, lightly: "You used to walk into a room like you owned it." Or, "Since when do you say sorry for everything?" You laughed it off, and nobody pushed.
 
-But here's how it goes, too. Somebody at the table says something you know is wrong, about you or about a thing you know better than they do. You feel the words come up, and you let them sit. You change the subject, or you smile. Then on the drive home you think of exactly what you'd have said, every word of it, and you say it to the windshield. It's never anything big enough to fight about. That's the reason you give yourself every time.
+It isn't your independence that went. You handle your own life, and you'll tell anyone who asks that you don't need anybody. What went is the part that put its hand up first, said "I can do that," and took a compliment without arguing with it.
 
-That's where your nerve used to be. It didn't go in a day. It went a little each time you let something go with them, because letting it go kept things smooth. It suited them, and they let it stay that way. Nobody had to plan it. After long enough, letting it go stopped feeling like giving in. It felt like good sense.
+That part of you was a gift. It walked into a new job or a room full of strangers like it belonged there, and then it did. Plenty of people go their whole lives without it.
 
-When this card went down, the one at my shoulder leaned in. I reached for my pen and then left it lying there. Your name and your date were all the sheet had on it.
+You still get it all done, and on your own. But you read a message over three times before you send it. And when somebody says you did a good job, you tell them anybody could have done it.
 
-The next time you feel yourself let something pass to keep the peace, notice it. That smooth, quick letting go is sitting right where your nerve used to be.
+When it comes back, it won't creep in. It'll be there one morning, and other people will see it before you do.
 
 [CARD 2]
 
-You don't call it missing. You call it being sensible.
+**Card 2, the Empress: Did they ever really love me?**
 
-You're the one people call when there's a mess, because you won't make it worse. You pick your battles, and most days you pick none. You'd rather be the reasonable one in the room than the one who's right out loud. And when the evening goes smoothly, you count that as a win.
+**Yes. Back then, it was real.**
 
-On the Hierophant, two ministers in white kneel below him with their backs to us. Neither one is getting up until he says.
+The Empress sits back among cushions in an open field, a crown of twelve stars on her head. Leaning beside her is a heart-shaped shield with the sign of Venus cut into its face.
 
-People tell you they wish they had your patience. Patience isn't what it is. It's waiting to be told something's worth the trouble, with a good name on it.
+*"I did love you. Whatever else you think of me, that part was real."*
+
+They saw something in you: {{EX.saw}}. {{EX.praise}} That's who they loved. They kept {{EX.use}}, and never once told you how good you were at it.
+
+It wasn't in your head, whatever anybody says. What they've got now is regret, and regret isn't love. It isn't them you've been missing. It's what they left with.
+
+[[FORK get_back]]Keep that straight, because they'll lean on it. Whatever they ask of you will come wrapped in that love, and that love belongs to back then.[[/FORK]][[FORK giving]][[/FORK]]
 
 [CARD 3]
 
-You've asked yourself how you could have been so stupid. That question's the wrong way around. You weren't stupid. You were out in the open, because you'd never had a reason not to be.
+**Card 3, the Sun: Was it my fault?**
 
-They saw something in you: {{EX.saw}}. And they saw it came with nerve, a bit of backbone that stood behind whatever you did. They knew what they had, and they wanted it.
+**No. None of it.**
 
-There are no reins on the Chariot. A man stands up in a stone chariot with two sphinxes harnessed in front, and nothing runs from his hands to them at all. Nobody's steering. That was you, with what you were good at. It suited them better with reins on. Every time you gave way, the reins got a little shorter, and they never once offered to let them out. It wasn't a trick you fell for. It was a habit that grew up between the two of you, and it grew their way.
+On the Sun, a child rides a white horse bareback, both arms out, holding on to nothing. The horse is already out in front of the low grey wall.
 
-They kept {{EX.use}}, and they let the nerve that came with it go quiet. Everything you could do, they were glad to have, as long as it went where they said. You gave it honestly. What was done with it after is theirs to answer for.
+*"None of this was your fault. Nothing you did, and nothing you were."*
 
-The one at my shoulder had gone still by then. I did something I don't do: I asked out loud, in my empty kitchen, why they still had it. Then I reached for the next card.
+In my first letter I said none of what they did was on you. Now you have it in their words. So you can quit asking what's wrong with you. Nothing about you needed fixing first. That child on the horse didn't wait to be told it was ready.
 
-Before you go on, do one thing for me, and only one: quit asking what's wrong with you.
+Three cards in, I can tell how a spread is going to end. Yours finishes well. Remember that when we get to the middle.
 
 [CARD 4]
 
-They've kept it because giving it back means saying what they did.
+**Card 4, the High Priestess: Why have they still got it?**
 
-Justice holds a pair of scales in one hand, hanging level, neither pan down. Nothing has been weighed on them yet. Nobody's put what happened in either pan.
+**Because giving it back means owning up to what they knew about you and kept to themselves.**
 
-Handing your nerve back would mean owning up that your backing down was never how you're made. It grew up around them, and it suited them. Owning that is the one thing they've never been willing to do. While they hold on to it, nothing gets weighed, and they still get to be the person you took them for. Give it back and that's over. It isn't lost, and it wasn't thrown out. They've kept it somewhere it never has to go on the scales.
+The High Priestess sits between a black pillar and a white one, holding a scroll with writing on it. Half of the scroll is tucked under the fold of her robe.
+
+*"Why did I keep it? Because giving it back means admitting I knew how good you were the whole time, and kept quiet."*
+
+As long as they've got it, they're only somebody who was never much for compliments. Plenty of people aren't, and nobody blames them for it. Handing it back would mean showing the half they've kept covered: they saw it plainly, and they said nothing. So the robe stays over it.
 
 [CARD 5]
 
-When the next card went down, they moved for the first time, off my shoulder and back across the kitchen to the door. They stopped there. It was getting on for midnight.
+**Card 5, the Emperor: Why has it taken this long?**
 
-Why has this dragged on so long? They had a line that let them off, and the line was "Somebody had to make the decisions."
+**Because they had a line to hide behind: "You never needed anybody." You looked the part and said so yourself, so they never checked.**
 
-It held because it makes them sound like the one carrying the load. Somebody did have to decide things, about money and plans and how the days went. The somebody was always them, and they called that doing their part. Nobody watching saw you being eased out of the driver's seat. They saw one person handling things and another letting them, and the line fit.
+The Emperor sits square on a stone throne, armor showing under his red robe. Nobody looking at him would think to offer a hand.
 
-You backed it up without meaning to. Being the reasonable one, you let them decide, because it kept the peace, and from the outside that looked like you agreed. That was never your fault. Anybody who gets nowhere pushing stops pushing. They're the ones who hid behind it.
+*"I told myself you never needed anybody. You said it yourself, often enough, and you never asked me for a thing, so I left it there."*
 
-And you still do their work for them. Someone asks if you mind, and you say "it's fine, it doesn't matter," about a thing that does. Nobody has to take the wheel from you now. You hand it over before they ask.
-
-The Emperor sits square on a big stone throne with a gold staff in one hand and a gold ball in the other. Both hands are full, and there's nothing left for anybody else to hold. That's what "somebody had to" looks like from the chair.
-
-Those months I told you about, when they kept circling back to this, are the line giving out under them. It doesn't hold the weight it used to, and some part of them can feel it slipping.
+It held because it looked true. You'd sooner carry the heavy end yourself, and you're a little proud of that, with good reason. "I don't need anybody" is your line, and you mean it. But you still say sorry before you give an opinion. You still turn down the thing you'd be good at and call it being busy. When their name comes up, you say you're better off on your own and change the subject, so nobody asks the next question: if you don't need anybody, why are you still checking every single thing you do?
 
 [CARD 6]
 
-On the Wheel of Fortune, a sphinx lies along the top of the wheel with a sword held across it, in no hurry. A snake goes down the side, head first. Up top, nobody has to do a thing.
+**Card 6, Temperance: What do they regret?**
 
-Their regret is that they got you to back down. It suited them. It made life simpler for them, and they let it stay that way. [[FORK get_back]]What they're sorry to have lost is the top of the wheel: the last word on everything, with nobody pushing back. That isn't the same as losing you.[[/FORK]][[FORK giving]]What they regret isn't losing you. Walking away from you wasn't easy for them, and you still cross their mind. But if you've ever pictured them wanting you back, you can stop picturing it. They don't.[[/FORK]] That kind of regret doesn't pay you a cent and never gets as far as you. You'll be tempted to take it for love. Don't.
+**They regret every time you looked over to see if you'd done all right, and they let you wonder.**
+
+An angel stands with one foot in a pool and one on the bank, pouring water between two cups. One cup is held higher than the other.
+
+*"I regret every time you looked over at me to see if it was good enough, and I let you wonder. It would have cost me one word. I'm sorry."*
+
+They mean the sorry. [[FORK get_back]]But under it, what they miss isn't you. It's being the higher cup, the one whose say-so you waited on. That's a different thing from missing you.[[/FORK]][[FORK giving]]Wanting you back doesn't come into it. Leaving wasn't free for them, and you still come to mind now and then. That's as far as it goes.[[/FORK]] A regret like theirs stays between their own two cups. None of it spills over to you, and none of it will make you one bit surer of yourself.
 
 [CARD 7]
 
+**Card 7, the Lovers: Why does nobody new get close?**
+
+**Because an old habit keeps the decent ones too far off to decide you're not enough.**
+
+The Lovers stand apart. One looks at the other, and the other looks past, up at the winged figure.
+
+*"Anybody decent who came along after me has had to get past what I left you thinking about yourself."*
+
 {{LP.then}}
 
-Then they were gone, and it kept going. A thing like that keeps running, and now it meets people who never did a thing to you. Someone decent turns up and {{LP.now}}. And whatever else they get from you, none of them ever see you take a chance on them. They get the sensible version, the one that never sticks its neck out.
+{{LP.praise}} The habit outlasted them. Someone decent turns up and {{LP.now}}.
 
-On the Hanged Man, a man hangs head-down from a T of living wood, tied by one ankle. Only one. His other leg is free, and he's crossed it behind the tied one as if it were tied too.
+The decent ones look at you. You look past them, for a verdict from higher up.
 
-With the decent ones, it goes like this. The knot was theirs, and it's only around one ankle. The free leg is yours, and you keep it folded up out of habit, with people who'd never tie anything. Someone kind asks what you think about a thing that matters to you, and you say either way's fine. None of them are stopping you. Nobody in the room is.
-
-The next time someone kind asks what you think, notice how fast "either way's fine" comes out. If it's out before you've thought, that's the free leg folding up again.
+Somebody decent is going to ask you to show them something you're good at. Show them. Don't say it's nothing.
 
 [CARD 8]
 
-Sensible has done right by you, in its way. Nobody's seen you lose your temper in a long while. You've kept a lot of peace in a lot of rooms, and plenty of people are glad you did. When there's trouble, you're the one with a level head, and people lean on that. Back then, with them, it was the right call.
+**Card 8, the Tower: Is it too late for me?**
 
-Here's the other side of it.
+**No. The time is gone for good, but what they took comes back to you, and it's closer than it looks.**
 
-Death rides a white horse at a walk, in black armor, with no weapon in its hands. A bishop in a gold robe stands in the road with his hands together, begging. The horse doesn't stop. It doesn't hurry either. It keeps walking.
+The Tower stands on bare rock with no door drawn anywhere on it. A bolt of lightning has knocked the gold crown clear off the top, and the crown is still in the air.
 
-That's sensible, seen from the side of the road. Asking nicely and waiting for a better moment, while everything goes by at a walk.
+*"The best of your life isn't behind you. I knew you well enough to be sure of that."*
 
-What it's cost you isn't one big thing. It's the times you were right and let it go, and the times you wanted something and said it didn't matter, so it went to whoever spoke up first. Some of those were small. Some are things you'll think about for the rest of your life, and you let them go so the room would stay calm. Each one was easy to let go. Together they add up to a good piece of your life. And the people around you never knew you'd let anything go, because you made it look easy.
+They're right, and I'll say it too.
 
-It was past midnight, and still nothing on the sheet under your name. I don't leave the table once I've started. I did at this one, and went out on the front step for a minute, because I could see what this card was doing. When I came back in, the clock over the stove was ticking too loud, and they were still by the door.
+"I don't need anybody" has earned its keep. You can fix the leak, sort the paperwork and drive yourself home from the hospital, and every bit of that is worth being proud of. But look at that tower. No door. The years went by with everything walled in, the doubts included, where nobody could see them and nobody could argue with them. There's something in a drawer at your house you started once and never showed anybody.
 
-So you know exactly what you're getting: your nerve comes back, and I'll show you how. The years don't. Nobody can hand those back, not them, not me, not any card, and I won't pretend otherwise.
-
-Ten years or thirty, I said, makes no difference to whether they've still got it. I stand by that. What it changes is what you've paid. Years of being the reasonable one in the room. Years of letting other people have the last word, then having it yourself in your head at night. Years of people who liked you fine and never once heard you disagree with them, so they never really knew what you thought.
-
-Backing down suited them, and they let it stay that way. That's on them, and nothing I say here moves it off them. Picking your battles made sense while they were around. It was never meant for the rest of your life. It ran on anyway, and you've been paying for it ever since, a little at a time.
+That crown hasn't come down anywhere yet.
 
 [CARD 9]
+
+**Card 9, the Moon: Are they giving it back, or trying to get me back?**
 
 [[FORK get_back]]
 **They're trying to get you back, {{FIRST}}.**
 
-Some part of you lifted a little when you read that. Don't hurry past it, and there's no shame in it. Stay on it a minute with me, because nothing else here can do you as much harm.
+On the Moon, an orange dog and a pale wolf stand under a big yellow moon, heads up, howling at it. In that light you could take one for the other.
 
-Here's what that glad part would do. It would give way to them. Not to anyone else. After all this time keeping the peace with everybody else, the first place it wants to go is right back to backing down for them, the way you used to. You'd find yourself agreeing with them in your head before they'd said a word. You'd tell yourself they must have changed, and that it wasn't all them. You'd take back half of what you know before anybody asked you to. That isn't love talking. It's an old habit, worn deep, of giving way to that one person.
+Their letter ends like this:
 
-I'm not saying it to shame you. Wanting to be wanted by the one who did this is about as common as anything gets. But you need to see it plain, because a wish like theirs works on exactly that part of you. It doesn't push. It waits for you to give way on your own.
+*"I want to see you. If you won't, then write back. One line will do."*
 
-I sat back down, turned this card, and swore at the deck. They didn't go anywhere. They came over and stood right at the edge of the table, nearer than they'd been since I sat down. Three in the morning, and still nothing on the sheet under your name. I didn't know if your letter was coming at all.
+If something lifted in you at that, you've no call to be ashamed of it. Here's somebody saying you're wanted, and it's the one whose word used to count the most. Going back would feel like proof you were good enough after all. It's the one kind of proof that would cost you all the rest.
 
-On the Tower, a gold crown has been knocked clear off the top, and it's still in the air, tipping. A bolt of lightning has come down out of a dark cloud into the spot where it sat.
+They want you back where they left you, looking over at them after everything you do to see if it passed. And they won't come to you. They'll stay put and leave you to cover every step of the distance.
 
-That crown is what their wish is about. They don't want you. They want back what they had from you: someone who gave way. They want to be on top again. When you gave way, they got to decide everything and nobody argued. That's a hard thing to give up once you've had it. They'd take it back tomorrow if you offered. Don't offer.
-
-And look at the walls. There's no door drawn anywhere on it. They aren't coming out. They're holding it out from where they are, hand open, waiting for you to come all the way over to them, so you'll be close enough to give way again. A wish like that doesn't move. It stays where it is, the way it has for months, and it'll go on waiting as long as you let it.
-
-I told you you'd treat this as a trap if that's what it was. It is. Their letter will have kind words in it, and each one will feel like a reason to go to them. None of them is.
+My first letter warned you that if they wanted you back, this was a trap. They do, and it is. Of the two animals on that card, theirs is the wolf. Every kind word in their letter, the love and the sorry too, walks you toward the ask at the bottom. The sweeter it reads, the more firmly you stay put.
 [[/FORK]]
 [[FORK giving]]
 **They're giving it back, {{FIRST}}. They aren't trying to get you back.**
 
-The giving is about one thing: getting your nerve off their hands. They've carried it a long time and it's gotten heavy. Their line doesn't hold it up for them anymore, so they're setting it down. Their regret is real, and so are the months they've spent on it. But none of this is them reaching for you. They're giving it back so they can be done carrying it, not so they can pick you up again. If you'd hoped the giving meant they were finally coming around to you, I'm sorry. It doesn't. Coming around would mean coming to you, and they won't do that.
+On the Moon, an orange dog and a pale wolf howl up at a big yellow moon. There's a face in the moon, and its eyes are closed.
 
-I said one road was a gift. This is the gift, and it's a plain one. They want nothing from you, so they ask for nothing.
+Their letter says it outright:
 
-Back in my chair, I turned it over and swore at the deck. When I looked up, the doorway was empty. All night they'd been somewhere in my kitchen, and now there was only me. Three in the morning, your name at the top of the sheet and nothing under it. I didn't know if I'd get your letter at all.
+*"I don't want anything from you. Not forgiveness, not a visit, not a reply."*
 
-On the Tower, fire is coming out of three windows, pushing out, not up. Whatever's in there, the place wants rid of it. And look at the walls: there's no door drawn anywhere on it. Nobody's walking out of that tower to explain anything.
+All they want is to be rid of it. "You never needed anybody" stopped working for them, so they're setting it down. They're sorry, and they've spent months on this. None of that is them reaching for you.
 
-And still, you've held one day open. The day you'd finally say it all to their face, everything you swallowed back then, and they'd have to stand there and hear it, and then explain. You've had the first line of it ready for a long time. Ask you, and you'd say you let that go a long time ago, and you'd mean it. Then a song or a smell sets it off, and you're going over your side of it in the car again.
+My first letter said this could be a gift. It is, a plain one with no warmth in it. They aren't asking for anything because there's nothing of yours they still want.
 
-That was the one place you kept your nerve. You've kept the peace with everybody else, and you saved the whole of it for that one talk, just in case. It's the only place you've still been brave, and you've been brave there for nobody. They were never going to show up for it.
-
-That day won't come. There's no door for them to come out of, and on their side nothing is being saved for you. Not a speech, not an apology, not a reason. What's in their letter is the last you'll hear from them. Nothing follows it.
-
-I know that's hard to read. Read it anyway. You've spent a long time getting ready for a talk that was never going to happen. Put that talk down now. It's been heavy too.
+There's a talk you've kept ready, the one where they finally tell you to your face that you were good enough. It isn't coming. Saying it to your face would mean looking at you, and like that moon, they keep their eyes shut. Everything they'll ever say is in the letter at the end. You can stop waiting on their good opinion. It was never theirs to hand out.
 [[/FORK]]
 
 [CARD 10]
 
-**No, {{FIRST}}: they won't call, write or do a single thing about this, because {{REASON.headline}}.**
+**Card 10, the Star: Will they ever do anything about it?**
 
-[[REASON 0]]To do anything at all, they'd have to come to you and back down. Backing down was always left to you. They've never once done it themselves.[[/REASON]][[REASON 1]]You're that person. You saw how it went between you, close up, and you know who let it go on. Being in a room with that is more than they can stand.[[/REASON]][[REASON 2]]Giving way cost you plenty, every single time. They've never paid a cent for any of it, and nobody's ever pushed them on it.[[/REASON]] There's no use asking them why this has hold of them now. They couldn't tell you. It's working on them under the surface, and nobody can explain a thing they can't see in themselves.
+**No, {{FIRST}}, they won't call or write or lift a finger over this, because {{REASON.headline}}.**
 
-[[FORK get_back]]
-So they hold it out and wait for you to walk over and take it. That's the second road from my first letter, the one where it's held out and you're meant to come and get it. They won't take one step. They want you to take every step there is, and your part is to quit answering that pull.
-[[/FORK]]
-[[FORK giving]]
-So they'll put it down right where they stand and walk off. It won't be carried to you. Nobody will make sure it arrived, or wonder how you took it. As far as they're concerned, they're done the second it leaves their hands.
-[[/FORK]]
+On the Star, a woman kneels at a pool with one knee on the grass and one foot on the water.
 
-Here's how it comes back, then. It was never on them to move. Your nerve doesn't come back by contact, and it doesn't come back on their say-so. Time won't do it either. They don't have to bring it to your door, or say one word, or sign anything. It only ever needed somebody to quit waiting. That somebody is you.
+*"I won't call, and I won't show up on your step. This letter is as far as I go."*
 
-Look at what the wait is. Waiting for them to admit it, waiting for them to say you were right all along, is asking their leave, and asking leave is the very habit you got into with them. It's the last thing you're still asking them for. Every time you've thought, if they'd only say it, I could let this go, that was you asking. You've asked enough. You've been standing in the road like that bishop, hands together, waiting to be told you're allowed.
+[[REASON 0]]To do more, they'd have to come to you and admit they knew how good you were and kept it to themselves. Their pride won't stretch that far.[[/REASON]][[REASON 1]]They'd have to stand in front of you while you looked at them, and you're the one person who knows how little credit they ever gave you. They can't do it.[[/REASON]][[REASON 2]]You doubting yourself has never cost them a thing. Their days go on the same whether they say a word or not.[[/REASON]] [[FORK get_back]]So they hold it out and wait for you to come and fetch it. They won't move an inch your way.[[/FORK]][[FORK giving]]So they'll leave it where they stand and walk off. It won't be brought to your door, and nobody will ask if it reached you.[[/FORK]]
 
-On the Star, a woman kneels by a pool with one knee on the grass and one foot on the water. Not in it. On it. Nobody told her it would hold. She put her weight there anyway. Her knee is still on the grass, so she isn't being reckless. She just didn't wait to be told. That's what nerve is: not being sure, and putting your weight down before anybody says it's safe.
+Here's where it turns. It was never theirs to give back. You've been waiting on their verdict, the way you once waited on their nod, and none was ever coming. You can stop waiting.
 
-The day you stop waiting on them, your nerve is already back, because quitting the wait is the first thing you'll have done in a long time without anybody's leave. Nobody has to sign off on it. Look at her. She isn't asking anyone.
+Look at her foot on the water. Nobody told her it would hold. She put her weight on it anyway. That's what comes back to you: the part that puts its weight down first and finds out after.
 
-Sometime after that, the window over the sink turned from black to grey. And I caught myself at it: all night I'd been tugging at them for your letter, then sitting back to wait for it. So I quit. I said out loud to my kitchen that I wasn't waiting on them anymore.
-
-[[FORK get_back]]Then they were across the table from me[[/FORK]][[FORK giving]]Then they were back, across the table from me[[/FORK]], in the chair you'd sit in, and they weren't heavy anymore. My pen started to move, and the first line of your letter went down on the sheet.
+When this card went down, the one behind my chair came around and sat across from me.
 
 [CARD 11]
 
-Here's the sentence they never said: "You could have stood up to me, and I made sure you didn't."
+**Card 11, the Magician: What did they never say?**
 
-You don't answer it, not in writing and not in your head. There's no need. Once you've read it, it's back.
+**That you were always good enough, and they knew it the whole time.**
 
-Read it again, slowly. You could have. It was never that you were weak, or slow, or the kind of woman who folds. You had it in you the whole time, the way the Magician has everything laid out on the table in front of him: a cup, a coin with a star on it, a sword, a wand. Nothing's missing, and he isn't waiting on anybody to hand him a thing. Neither were you. Then it says who made sure. Not with some plan. Every time you gave way, it suited them, and they let it. That's what you never heard from them, and it's what you've been looking for every time you went back. Now you have it, in their own words, and the looking can stop.
+The Magician stands at a table with one white wand held straight up. Laid out in front of him are a cup, a coin marked with a star, a sword and a wand: everything the job takes, and nothing missing.
 
-While I sat with that line, the rest of the letter started coming, faster than I could keep up with.
+*"You were always good enough. I just never said it."*
 
-You're about to read their words. If this person hurt you, you owe them no reply. Reading it is the whole of what's asked of you.
-
-And you can put down the other job, writing their half. In your head they've apologized a hundred different ways, and they've said cruel things too. You've argued it out with them over the dishes and lying awake, and won, and come out more tired than you went in. That's finished. Their side is on paper now, and you're not the one who has to write it.
+That's the sentence you've been waiting on. Nothing on that table was missing, and nothing on yours was either. You don't have to answer it, out loud or in your head at two in the morning. If this person hurt you, you owe them no reply.
 
 [CARD 12]
 
-Stop going back to them, and once a day, do one thing you'd normally talk yourself out of or ask permission for. Those two will get you through what's coming.
+**Card 12, Strength: What do I do now?**
 
-Your last card is the World. A woman dances inside a green wreath with one leg crossed behind the other at the knee, caught mid-step, and there's no ground drawn under her feet. It's the same crossed leg the Hanged Man had folded up. On her, it's dancing.
+**Stop going back to them, and every day for a week, let one thing of yours go out the way it is, with no apology on it.**
 
-Sensible was your word for keeping that leg folded. You can put the word down now. You'll still have all the sense you were born with. It just won't be asking anybody's permission anymore.
+Your last card is Strength. A woman in a white dress has both hands on a lion's mouth, and the lion's head is bowed. She isn't fighting it.
 
-For the next five to seven days, the pull will be at its worst. That's to do with you, and what's shifting in you. It doesn't mean they'll turn up.
+*"That part of you was always yours. It never needed me to say so, and it doesn't need anybody's say-so now."*
 
-**Stop going back.** Rereading the old messages, looking them up, starting a message you tell yourself you won't send: it's one thing with three names. When the pull comes, put your phone in another room, set the oven timer for twenty minutes, and give your hands something to do. Wipe down the counters. Sort a drawer. Don't argue with it. A pull like this comes up and goes back down on its own if nobody feeds it. Going to look when it's at its worst is what teaches it to come back. Each one you let pass leaves the next one weaker.
+You can retire "I don't need anybody." The needing was never what held you back. The doubting was.
 
-I promised you the rereading stops, and it does. The need for it goes when you read the letter. The habit hangs on about a week, so you'll catch your hand going for the phone a few more times. Let it reach, and leave the phone where it is.
+For the next five to seven days, the pull toward them will be at its worst. That's about you. It doesn't mean they'll show up.
 
-**The one thing to do.** For seven days, once a day, do one thing you'd normally talk yourself out of or ask permission for. When you catch yourself about to say "it doesn't matter" about something that does, say what you'd like instead, once, plainly. Keep it to people who've never given you cause. Nobody from your past.
+**Stop going back.** Rereading old messages, checking up on them, typing a message you swear you won't send: those are one habit. When it pulls at you, leave the phone in another room, set the oven timer for twenty minutes and give your hands a job. If nobody feeds it, the urge drops back on its own.
 
-You can't think your way back to nerve. Your head has one big example of what standing up costs, and it's played it back thousands of times. Small tries that go fine give it something newer to go on. And if one goes wrong, you'll learn you come through it.
+**The one thing to do.** For seven days, once a day, let one thing of yours go out as it is. Send the message without reading it a third time. Put the dish on the table without saying it didn't turn out. Say what you think without tacking "but what do I know" on the end. Nothing involving them or anybody from back then.
 
-Don't expect much at first. The way you'll know is by what quits happening: "it doesn't matter" stops coming out before you've thought, and your hand stops going to the phone late at night. How fast that comes depends on what you do with the twenty minutes and the seven days. Not on me, and not on them.
+The sign it's working is what quits happening: your hand stops going to the phone late at night, and "sorry" stops coming out before you've done anything wrong.
 
 [[FORK get_back]]
-One more thing. The end of their letter asks you for something. I didn't take it out. Leave it lying there and do nothing about it.
+There's an ask at the end of their letter. I didn't cut it. Let it lie.
 [[/FORK]]
 [[FORK giving]]
 
 [[/FORK]]
-
-And the next time someone reaches for you, there's someone there.
-
-By full light I'd put the Hermit, Judgement and the Devil back in the deck, and I wrote your letter out by hand right there, with them across the table. I didn't change a word.
-
-Read it through once, slowly, to the last line.
 
 [LETTER]
 
@@ -241,35 +272,79 @@ Read it through once, slowly, to the last line.
 
 I'm never going to send this. {{REASON.letter}} So it stays here.
 
-I'm not good at this kind of thing, so it won't come out right. I'm going to say it anyway.
+I'm putting it down on paper all the same. Something of yours has been with me too long, and I'm done pretending I don't have it. So here's what I did, all of it, and then it's yours again.
 
-Here's how it went. You'd start to say something and then let it go. I saw that. I could have asked what you were going to say, and I never did. It suited me. Things were easier with you not arguing. I got my way more, and I didn't have to explain myself. You got quieter, and I told myself that was you settling down.
+When I first knew you, {{EX.letter}} I liked that. I liked being around it. {{EX.never}}
 
-I didn't plan any of it. But I saw it happening, and I let it go on.
+{{EX.moment}}
 
-When I first knew you, {{EX.letter}} I liked that. I liked having it around. And there was some backbone in it. You'd tell me when you thought I was wrong. I kept {{EX.kept}}. The part that would stand up to me, I was glad to see go quiet.
+You were sure of yourself back then. Not loud about it. You'd walk into a place like you had every right to be there, and people made room. You'd say "I can do that," and then you'd go and do it, and you never looked around first to see who was watching. When somebody told you you'd done well, you said thank you and left it at that, with no "oh, it was nothing." I used to watch you take a compliment and think it was the easiest thing in the world for you.
 
-I told myself somebody had to make the decisions. I said it to other people too, like I was the one carrying everything. It doesn't hold up anymore. I knew it didn't, even while I was saying it. The somebody was always me, and I never once asked if you minded.
+Then you started looking at me. After you'd done something, you'd glance over to see what I thought. At first it was now and then. After a while it was every time. I saw it. I could have said "that was good" and been done with it. Most times I didn't say anything. Sometimes I picked at it. I liked that you waited on me. It made me feel like I counted for something, and I'm ashamed of that now.
+
+There was a day near the end when you showed me something you'd worked hard on, and you asked me straight out if it was any good. It was better than good. I said, "It's fine," without looking up. That was the last thing you ever asked me to look at. I told myself it didn't matter. It did.
+
+You got good at not needing anybody after that. I watched it happen. You'd fix it yourself, pay for it yourself, drive yourself there and back. People told me how independent you were, and I nodded along like I'd had nothing to do with it. I had plenty to do with it. Doing it all yourself meant nobody got the chance to tell you it wasn't good enough, and I'd taught you what that sounded like.
+
+I did love you. Whatever else you think of me, that part was real. Don't let anybody talk you out of that, me included.
+
+I kept {{EX.kept}}. And when I left, I took more than that.
+
+{{LP.admire}}
 
 {{LP.letter}}
 
-Why keep it this long? If I handed it back, I'd have to own up. As long as I had it, I could tell myself you'd just gone quiet on your own. That was easier than the truth. I could have let you have your say any time. I didn't. I'm sorry for that. I don't say it much.
+I saw all of that too, and I didn't do one thing about it.
 
-I should have said this when it counted.
+None of this was your fault. Nothing you did, and nothing you were. I was the one who kept quiet.
 
-You could have stood up to me, and I made sure you didn't.
+I walked off with the part of you that knew you were good enough, and I knew it the day I went. I could hear it in the way you'd started ending every sentence like a question.
 
-It was never that you couldn't. You could, and I didn't want to be on the wrong end of it. It's your nerve. It belonged to you before I ever came along, and it belongs to you now. I'm handing it back, the whole of it, and you don't owe me for it.
+It wasn't on my mind all the time. It didn't have to be. Some mornings it would catch me out of nowhere, standing at the sink or waiting at a light, and I'd find something to do until it passed.
+
+I told myself you never needed anybody. You said it yourself, often enough, and you never asked me for a thing, so I left it there. There was more I told myself. That somebody so capable would come out fine whatever I did or didn't say. That my opinion was the last one you'd care about. When people asked how you were, I'd tell them you were doing fine on your own, same as always. Not one of them asked whether you knew how good you were, and I never asked it either.
+
+Why did I keep it? Because giving it back means admitting I knew how good you were the whole time, and kept quiet. While I kept it, I could be somebody who just wasn't much for compliments. Plenty of people aren't. Giving it back means writing down that I saw it plainly and held my tongue on purpose. So I held on to it.
+
+I haven't kept track of you. I made a point of not looking. Every {{NEXT_BDAY}} I think about picking up the phone, and every {{NEXT_BDAY}} I put it back down. But I know what I left you with. Anybody decent who came along after me has had to get past what I left you thinking about yourself. Somebody kind tells you you're good at something, and you wave it off before it can land. I taught you that. Nobody else did.
+
+I regret every time you looked over at me to see if it was good enough, and I let you wonder. It would have cost me one word. I'm sorry. People drift apart all the time. Holding back a kind word from somebody who's waiting on it, because you like being waited on, is something you choose. I chose it.
+
+The time is another matter. That's gone, and there's no handing it back, from me or from anybody. I won't pretend it was nothing. It was a long stretch of your life. All that while you were second-guessing things you had every reason to be sure of, and I had the one thing that would have stopped it. Every time you said sorry for nothing, every time you turned something down because you weren't sure you'd be any good, that was mine to fix.
+
+But I knew you. The best of your life isn't behind you. I knew you well enough to be sure of that.
+
+There's one thing I owed you back then, and I'm late with it. I can't set any of this down until it's said, so here it is.
+
+You were always good enough. I just never said it.
+
+That part of you was always yours. It never needed me to say so, and it doesn't need anybody's say-so now. It was for walking in and taking the seat, for saying "I can do that" and doing it, for hearing "good job" and believing it. It was never any good to me. I want you to have every bit of it back. Take it to work, take it to somebody new, take it into any room you like. Nobody gets a say in it, me least of all.
+
+I want you happy. Not fine, not getting by. Happy.
+
+{{EX.last}}
+
+I won't call, and I won't show up on your step. This letter is as far as I go.
 
 [[FORK get_back]]
-I want you back. If you won't do that, then answer me, even one line.
+Every word of this is true, the love and the sorry both. You're on my mind more than I'd ever admit to anybody. I want to see you. If you won't, then write back. One line will do.
 [[/FORK]]
 [[FORK giving]]
-I don't want anything for this. I'm not after forgiveness, and I'm not after a meeting or an answer. Don't write, and don't try to find me. That's the end of it.
+I don't want anything from you. Not forgiveness, not a visit, not a reply. Don't answer this, and don't try to find me. You can put me down now. Go on and be sure of yourself again. You always had every right to be.
 [[/FORK]]
 
 [CLOSE]
 
-When I finally looked up from the sheet, the chair across the table was only furniture again. Nobody was in it.[[FORK get_back]] Their ask stayed in so you could see it plainly: it's a bill, and nobody owes it, you least of all.[[/FORK]][[FORK giving]][[/FORK]]
+By the time I looked up, the chair across the table was empty, only furniture again.[[FORK get_back]] I left their ask in so you'd see it for what it is. It's a bill, and nobody owes it, you least of all.[[/FORK]][[FORK giving]][[/FORK]]
 
-It's back. What you do with it is on you.
+**Will I be happy again?**
+
+**Yes. Happy, the real kind, not just fine.**
+
+Your birthday, {{NEXT_BDAY}}, starts a new year for you, and I can see what kind of year it is. {{PY.ahead}} It starts before then. By your birthday you'll know it's real.
+
+Six months or so from now, I see this. Somebody tells you that you did a good job, and you say thank you, and that's all. You've put your hand up for something you'd once have talked yourself out of, and you're good at it.
+
+And when somebody decent reaches for you, you let them, because you've quit wondering whether you're enough.
+
+It's back. Go and use it.
