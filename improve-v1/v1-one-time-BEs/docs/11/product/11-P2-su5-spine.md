@@ -1,52 +1,60 @@
 # 11-P2 — Soul Urge 5 outline: the number drives, the cards support
 
-*Draft 2026-11-04, for operator review. Shape copied from `11-P2-su9-spine.md`. One card per slot (the two-option rotation was dropped).*
+*Third try, 2026-11-05. The first two SU 5 outlines ("freedom", then "spark") failed because they were built on a writer's
+word no buyer uses. This one is built from 11-P6: 3,789 paying buyers say "my life on hold", "stuck", "move on",
+"move forward", "a part of me is missing", "whole again". Same shape as `11-P2-su9-spine.md`, one card per slot.*
 
-These are notes for the writer, not sentences. ⛔ Nothing in this file is quoted into the report.
+These are notes for the writer, not sentences. ⛔ Nothing here is quoted into a prompt.
 
-## Soul Urge 5 — freedom
+## Soul Urge 5 — the part of you that moves forward
 
-**The one idea:** freedom is the part of her that goes where she likes without asking first, and doesn't
-have to account for it after. It runs both ways: the going, and not owing anyone an explanation for the
-going. They never locked anything. They made every plan more trouble than it was worth until she quit
-asking, then let her think staying put was her own idea. She now asks first and explains after, out of
-habit, and calls the small life "settled". Freedom can't come back by their permission, because then it
-isn't freedom; it comes back the day she stops waiting for their say-so. The seven days are seven small
-things nobody signs off on.
+**The big idea (one concrete claim):** You moved on from them. Your life didn't move with you.
 
-**The row (11-acts.json → soul_urge → "5", as written):** took = your freedom · cover word = settled ·
-regret = making a small life look like her own idea · unsaid = "You were always allowed to go, and I made
-you think you weren't." · do = one thing a day she doesn't clear or explain to anyone.
+**The one idea:** the part that moves forward is the part of her that keeps a life going somewhere: it gets restless
+when a week goes stale and changes something, and after something ends it turns her toward what's next. Everybody has
+one and nobody thinks about it. They walked on and it went with them; the rest of her stayed where they left it. She
+did get over them: she doesn't cry over them, doesn't call, wishes them well, and she's a little proud of it. Nobody
+argues with "I've moved on". The cost: her life has stood still around her since, the same week over and over. Nothing
+in it is broken, it just isn't moving. The hope: the part isn't broken, it's being held. Once it's back, her life starts
+moving again and she won't need to push. The seven days change one thing a day in a week that's run the same way.
 
-**Card 5's one excuse:** "She was happy where she was." Fits this story: a woman who stops asking looks
-like a woman who doesn't want to go. The letter echoes it: "I told myself you were happy where you were."
+**The row (11-acts.json → soul_urge → "5"):** took = the part of you that moves forward · cover = "I've moved on" ·
+regret = leaving her life standing where they left it · unsaid = "You were never meant to stand still, and I left you
+waiting." · do = Once a day, change one thing in a week that's run the same way since them.
 
-**Everyday details (hers, small, common at 60):** the same order at the same place · "I'd better get home"
-with nothing waiting · telling the cashier why she's buying it · saying no to an invitation before it's
-finished · the page torn out of a magazine and kept in a drawer · a no, then the evening spent wondering
-how it went. Placed at cards 2, 5 and 8.
+**Her life, now (small, common, fits a woman alone or not):** "Oh, not much, same old" when asked what's new (card 1) ·
+Sundays that go the same way: same chores, same call, same show (card 2) · the room she was going to paint "once things
+settled down" (card 2) · "Oh, that's all in the past" and a change of subject when their name comes up (card 5) · a
+chair in the same spot so long the carpet has dents (card 8) · a box in the closet from back then, not opened, not
+thrown out (card 8). Never who she used to be; never a married-only or housebound detail.
+
+**What they did, kept general:** they walked on and left her life where it stood, and it suited them not to look back.
+Never "kept you", "wouldn't let you", "controlled".
+
+**Card 5's one excuse:** "She's moved on." It held because it looked true (no calls, no tears, she wished them well)
+and she said it herself. She still does their work: "Oh, that's all in the past," and the subject changes, so nobody
+asks the next question. They knew enough to let it go on. Letter: "I told myself you'd moved on."
+
+**Keep clear of:** SU 9 (softness, "strong"), SU 22 (plans, calendar, "one day at a time"). No "someday" theme; this
+is the week standing still, not the future unplanned. Cover phrase at 2, 5 (as the excuse), 8, 12 only.
 
 ## The 12 beats
 
-| Card | Fixed job (unchanged) | SU 5 beat | Card → the one detail |
+| Card | Fixed job | SU 5 beat | Card → the one detail |
 |---|---|---|---|
-| 1 | The thing | Name freedom as going without asking and not explaining after. Before them: out the door on a friend's Saturday plan, the long way home, bought the thing and "I felt like it" was a whole answer | **the Fool** → caught mid-step at the edge, eyes on the sky in front, not on the drop |
-| 2 | The proof · cover word | "Settled" is the name for a life that stopped going anywhere: same order, same chair, home by nine for nothing. People's praise is for a woman who quit going | **the Emperor** → seated square, facing straight out, with his back to the mountains on both sides |
-| 3 | What they saw (her Expression) | Whatever they saw came with freedom beside it: done in the open, on nobody's say-so. That's what drew them. They kept the use of her and took the going | **the Chariot** → the walled town behind him, already at a distance |
-| 4 | Why they kept it | Giving it back means saying nothing was ever locked: the small life was their doing | **the Hierophant** → two keys lying crossed on the floor at his feet, nobody holding them |
-| 5 | Why so long (her excuse line) | "She was happy where she was" held because a woman who stops asking looks content. She backed it up ("I'm a homebody"). She still does their work: explains a purchase to the cashier, turns an invitation down before it's finished | **the Hanged Man** → face wide awake, no strain in it; then the ankle |
-| 6 | The regret | They regret making a small life look like her idea. Get-back: what they miss is having her where they could find her, not her. Giving: not wanting her back, though leaving her wasn't easy and she crosses their mind | **the High Priestess** → the veil hung between the pillars, palms and pomegranates worked into it: looks like a garden, is a cloth |
-| 7 | Your half (her Life Path pattern) | Whatever her pattern, it keeps her life the size they left it, and decent people run into the edge. Nobody's holding it up now: so nobody else has to let her out | **Wheel of Fortune** → hanging in the sky with nothing holding it up |
-| 8 | The bill (must be Tower / Death / Moon) | "Settled" worked: quiet, nothing to explain. What it cost went at a walk, a day at a time: the torn-out page, the no and the evening of wondering, the friend who quit asking. Years. Freedom back, the years not | **Death** (cropped) → riding at a walk, no scythe, nothing to cut with |
-| 9 | The fork | Get-back: part of her is glad, because going back means never deciding anything; they want the arrangement back, her where they could find her. Giving: they want it off their hands; the day they sit down and explain isn't coming; the small part of her that stayed findable, just in case | **the Tower** → no door drawn anywhere on it, lightning coming down (get-back: where they'd have her back · giving: nobody's coming out of it to explain) |
-| 10 | Will they act: no (must be Death / Star / Sun) | The turn. Freedom that needs their permission isn't freedom. The day she stops waiting for their say-so, it's hers | **the Star** → the small red bird in the tree on the rise: nobody let it out |
-| 11 | The unsaid | "Always allowed": nothing was locked, and it names who did the making. She stops looking, and stops writing their half | **Temperance** → the narrow path going away to two low hills, light between them: on the card the whole time |
-| 12 | Stop and do (must be Strength / World) | Retire "settled": a home is fine, feet nailed down aren't. Seven days, one thing a day nobody clears | **the World** → dancing inside the wreath, no ground drawn under her feet |
+| 1 | The thing | Name it: not her heart (that mended), the part that keeps a life moving. What it does, said for anyone. "A part of me is missing": she was right. Now: nothing's broken, nothing's moving. Ends: notice how much of the week she could have told me in advance | **the Fool** → in the middle of a step at the cliff's edge, eyes on the sky in front, not the drop |
+| 2 | The proof · cover word | "I've moved on", and she has. Big idea said here. Same Sundays; the room still unpainted. People say good for you; it moves nothing | **the Chariot** → the two sphinxes harnessed to it are lying down |
+| 3 | What they saw (her Expression) | Whatever they saw came with a life that had things coming up in it, out in the open, unguarded. They kept the use of her and left the rest standing. Ends: stop asking what's wrong with you | **the Empress** → a field of wheat ripening in front of her, none of it cut yet |
+| 4 | Why they kept it | Giving it back means saying they walked on and never looked back. While they hold it they're just someone who moved on, like anybody | **Justice** → her eyes look straight out, never down at the scales |
+| 5 | Why so long (the excuse) | "She's moved on." Why it held, how she backed it up, how she still does their work. They knew enough to let it go on. Months = the line wearing thin. Night: to the door, near midnight | **the Emperor** → seated square on a stone throne, facing straight out: what he says from that chair stands |
+| 6 | The regret | Leaving her life standing where they left it. Reaches nobody, puts nothing back. Fork line per path | **the High Priestess** → seated between two pillars, and not getting up |
+| 7 | Your half (her Life Path) | Her old way of getting through stayed in the week with everything else; now decent people meet it, and the new thing they bring goes home with them. Night: past midnight, sheet blank. Ends: notice if her answer is ready before they finish asking | **the Lovers** → close, but not touching |
+| 8 | The bill (Death) | Attack "I've moved on": it worked, and here's what it stood in front of. Chair dents, the box. The years went at a walk, nothing dramatic. Deal: the part back, never the years. Night: the front step in slippers | **Death** → riding at a walk, nothing in its hands but the flag; it doesn't stop |
+| 9 | The fork | Get back: something moved in her when she read it, the first thing in a long time, and it points back at them; they want to find her where they left her. Giving: putting it down for their own sake; the one spot she left open for the day they explain. Night: swears at the table leg, 3 a.m. | **the Hanged Man** → his hands out of sight behind his back: he isn't reaching, and he isn't holding anything out |
+| 10 | Will they act: no (Sun) | No, with the reason. It was never theirs to carry to her door. She's been holding the week still too; nothing settles it from their side. Once it's back, her life moves without pushing. Night: grey window, out loud, they're across the table, first line | **the Sun** → the red flag streaming out sideways: nobody's waving it, the horse is moving |
+| 11 | The unsaid | Their sentence owns it: standing still was never her; they left her waiting and knew it. Stop writing their half. No reply owed | **the Star** → both jugs being emptied, nothing kept back |
+| 12 | Stop and do (World) | Retire "I've moved on": she did that part; now let the life catch up. One thing a day changed in a week that's run the same way; ONE example: move the chair that's left dents in the carpet | **the World** → one leg crossed behind the other, caught mid-step |
 
-## Evelyn's night (a line or two each, in order)
-
-Nettle tea (opening, once) · leans in, pen down (1) · gone still, asks out loud, lays the fourth (3) · moved to the door, getting on for midnight (5, carries 4's beat) · past midnight, six down, sheet blank (7, carries 6's beat) · gets up, back door, a cat on the step that won't come in, comes back (8) · covers the card with her hand a second (her own small moment, no swearing); get-back: comes to the table / giving: gone; three in the morning (9) · grey window, stops waiting, across the table, first line (10) · the rest comes fast (11) · full light, three back in the deck, written by hand (12).
-
-`{{FIRST}}` five times only: opening, card 1, card 9, card 10, letter. Cover word only at 2, 8, 12.
-
-The opening, the letter and the close keep their jobs. The letter names what they did in the words of the regret, and hands back "your freedom".
+Night: ginger tea (opening) · closer at card 1 · asks out loud at 3 · to the door, near midnight at 5 · past midnight at 7 ·
+front step in slippers at 8 · table leg, three in the morning at 9 · grey window at 10 · rest comes fast at 11 · full light
+at 12. Never "cards down". Weights as the workflow: big 1, 8, 9, 10, 12 · medium 3, 5, 7, 11 · short 2, 4, 6.

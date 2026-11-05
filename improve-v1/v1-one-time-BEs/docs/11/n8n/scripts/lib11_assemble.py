@@ -23,8 +23,8 @@ PRODUCT = os.environ.get("ELEVEN_PRODUCT_DIR") or os.path.normpath(os.path.join(
 BANK_PATH = os.path.join(HERE, "11-swapins.json")
 SECTIONS = ["opening", *map(str, range(1, 13)), "letter", "close"]
 CHOICES = {"REASON": ["0", "1", "2"], "FORK": ["get_back", "giving"]}
-BANK_FIELDS = {"EX": ["saw", "use", "letter", "kept"], "LP": ["then", "now", "letter"],
-               "REASON": ["headline", "letter"]}
+BANK_FIELDS = {"EX": ["trait", "saw", "praise", "use", "letter", "never", "moment", "kept", "last"], "LP": ["trait", "then", "praise", "now", "admire", "letter"],
+               "REASON": ["headline", "letter"], "PY": ["ahead"]}
 NUMBER_KEYS = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "11", "22"]   # 33 uses 6
 
 class Hold(Exception):
@@ -90,18 +90,19 @@ def keys_for(su, ex, lp):
             "REASON": str(one(lp) % 3),
             "FORK": "get_back" if (one(su) + one(ex) + one(lp)) % 3 == 0 else "giving"}
 
-FILL = re.compile(r"\{\{(EX|LP|REASON)\.(\w+)\}\}")
+FILL = re.compile(r"\{\{(EX|LP|REASON|PY)\.(\w+)\}\}")
 
 def fill(tpl, bank, keys, first, birth_name, dob_text):
     missing, out = set(), {}
     def line(m):
-        got = bank.get(m.group(1), {}).get(keys[m.group(1)], {}).get(m.group(2))
-        if not got: missing.add(f"{m.group(1)} {keys[m.group(1)]} {m.group(2)}"); return ""
+        got = bank.get(m.group(1), {}).get(keys.get(m.group(1), ""), {}).get(m.group(2))
+        if not got: missing.add(f"{m.group(1)} {keys.get(m.group(1), '?')} {m.group(2)}"); return ""
         return got
     for k, parts in tpl["sections"].items():
         s = "".join(p if isinstance(p, str) else p["opts"][keys[p["tag"]]] for p in parts)
         s = FILL.sub(line, s)
         s = s.replace("{{FIRST}}", first).replace("{{BIRTH_NAME}}", birth_name).replace("{{DOB}}", dob_text)
+        s = s.replace("{{NEXT_BDAY}}", keys.get("NEXT_BDAY", "{{NEXT_BDAY}}"))
         out[k] = re.sub(r"\n{3,}", "\n\n", s).strip()
     if missing: raise Hold("no shared line yet for: " + " · ".join(sorted(missing)))
     left = sorted(set(re.findall(r"\{\{[^}]*\}\}|\[\[|\]\]|⟪", "\n".join(out.values()))))
@@ -128,10 +129,22 @@ def numbers(birth_name, dob_iso):
     if not su or not ex: raise Hold("name gives no Soul Urge or Expression: test with another name")
     return su, ex, lp, f"{MONTHS[mm - 1]} {dd}, {yy}"
 
-def reading_for(birth_name, dob_iso, first=None, path=None, bank=None):
+def year_ahead(dob_iso, today=None):
+    """Her next birthday (the day her new year starts) and that year's number, 1-9.
+    The year runs birthday to birthday: number = month + day + the year it starts in, reduced to one digit."""
+    import datetime as _dt
+    today = today or _dt.date.today()
+    yy, mm, dd = map(int, dob_iso.split("-"))
+    if mm == 2 and dd == 29: dd = 28
+    start = today.year if (mm, dd) >= (today.month, today.day) else today.year + 1
+    n = _reduce(mm) + _reduce(dd) + _reduce(_sd(start))
+    while n > 9: n = _sd(n)
+    return {"PY": str(n), "NEXT_BDAY": f"{MONTHS[mm - 1]} {dd}"}
+
+def reading_for(birth_name, dob_iso, first=None, path=None, bank=None, today=None):
     su, ex, lp, dob_text = numbers(birth_name, dob_iso)
     path = path or report_path(su)
-    keys = keys_for(su, ex, lp)
+    keys = keys_for(su, ex, lp); keys.update(year_ahead(dob_iso, today))
     sec = fill(parse_report(path), bank or load_bank(), keys, first or birth_name.split()[0], birth_name, dob_text)
     return {"su": su, "ex": ex, "lp": lp, "keys": keys, "sections": sec}
 

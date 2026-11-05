@@ -1,127 +1,215 @@
 {
-  "_note": "Shared fill-in lines for every 11 report (all 12 Soul Urges). Keys: EX and LP = her Expression / Life Path (1-9, 11, 22; a 33 uses 6). REASON = one-digit Life Path mod 3 (11->2, 22->4, 33->6). Every line must read right in all 12 reports, so none may name or lean on one Soul Urge's subject. Frames each field drops into are in product/0-REPORT-WORKFLOW-11.md, 'The shared list'.",
+  "_note": "Shared fill-in lines for every 11 report (all 12 Soul Urges). Keys: EX and LP = her Expression / Life Path (1-9, 11, 22; a 33 uses 6). REASON = one-digit Life Path mod 3 (11->2, 22->4, 33->6). Every line must read right in all 12 reports, so none may name or lean on one Soul Urge's subject. Frames each field drops into are in product/0-REPORT-WORKFLOW-11.md, 'The shared list'. PY = the number of the year that starts on her next birthday (month + day + that year, to one digit; lib11_assemble.year_ahead). Its line drops into: 'Your birthday, {{NEXT_BDAY}}, starts a new year for you, and I can see what kind of year it is. {{PY.ahead}}'",
   "EX": {
     "1": {
+      "trait": "You don't wait to be asked. While everyone else is still talking it over, you've already started, and half of it's done.",
       "saw": "a woman who went first while everyone else looked at their shoes",
+      "praise": "Without somebody like you willing to move before it's safe, most good plans would still be sitting on a kitchen table somewhere.",
       "use": "the part of you that stepped up so they didn't have to",
       "letter": "you never waited to be told. You'd already started before anybody else had made up their mind.",
-      "kept": "the get-up-and-go"
+      "never": "I still catch myself standing around waiting for somebody to make the first move. Nobody ever does, not the way you did.",
+      "moment": "The day the neighbors' moving truck never showed, the rest of us milled about on the lawn arguing about who to call. You rolled up your sleeves and had one end of their couch off the porch, dust all down your shirt. So I grabbed the other end. I never told you I'd have let it sit there till dark.",
+      "kept": "the get-up-and-go",
+      "last": "Somebody out there is going to say \"we really should\" one day, and you'll have the ladder out before they've finished. I hope they can keep up."
     },
     "2": {
+      "trait": "People tell you things they've never told anybody, because you put down what you're doing and let them get all the way to the end.",
       "saw": "a woman who'd sit still and really listen, and make room for them",
+      "praise": "Most folks are only waiting for their turn to speak. You hand over the one comfort nobody can buy, and somebody made it through their worst week on that alone.",
       "use": "your ear, the one that always had time for them",
       "letter": "you'd stop what you were doing when I talked. You heard the whole thing, even the parts that went nowhere.",
-      "kept": "the listening"
+      "never": "I talk to plenty of people now. Not one of them has ever let me ramble to the end without checking their phone.",
+      "moment": "One night at a gas station, the clerk mentioned her mother was in the hospital. You set your coffee down on the counter, and twenty minutes later you were handing her napkins while I sat in the car with the engine running. I honked once. I never admitted I was jealous of a gas station clerk.",
+      "kept": "the listening",
+      "last": "The one you let in next gets somebody who'll put the remote down and take in every bit, dull stretches and all. I hope they know their luck."
     },
     "3": {
+      "trait": "Ten minutes after you walk into a quiet kitchen, everybody's talking, and even the shy one in the corner is telling a story.",
       "saw": "a woman who lit up a room and made them feel like somebody",
+      "praise": "That's worth more than people give it credit for. Plenty of lonely folks got through a dinner party, or a funeral, because you were standing next to them.",
       "use": "the part of you that made them look good",
       "letter": "people perked up when you were around. You asked me things like my answer mattered.",
-      "kept": "the good times"
+      "never": "Parties went back to being something I sit through. Not one person since has gotten a story out of me the way you could.",
+      "moment": "At my office picnic, I'd warned you nobody there liked each other. By the time the burgers were gone, you had my boss doing an impression of the mailman and the new hire laughing so hard she spilled her lemonade. On the drive home I acted like it was no big deal. I was so proud of you I couldn't speak.",
+      "kept": "the good times",
+      "last": "The next person at your side will walk into a crowd of strangers with you and leave with three new friends, and they'll think they did it themselves."
     },
     "4": {
+      "trait": "If you say you'll be there at nine, nobody bothers to call and check, because you've never once left anybody waiting.",
       "saw": "a woman who stayed put and kept her word",
+      "praise": "Money can't buy that. Kids, old folks, whoever's been let down before: around you they finally stop bracing for the worst.",
       "use": "the part of you that showed up every single time",
       "letter": "you said you'd be there and you were. You weren't going anywhere, and I knew it.",
-      "kept": "the steady part"
+      "never": "I keep a backup plan for everybody now. You're the only one I never needed one for.",
+      "moment": "A little after two one morning, my car died out on the highway. I didn't even have to think who to phone. You pulled up behind me in your slippers, with a thermos of coffee and the jumper cables on the seat beside you. I'd never once doubted you'd come, so I never thanked you properly.",
+      "kept": "the steady part",
+      "last": "Anybody who has you next gets to quit watching the clock. I hope they never take that for granted the way I did."
     },
     "5": {
+      "trait": "Somebody suggests a last-minute trip and you've got your coat on before they finish the sentence. The best stories people tell have you in them.",
       "saw": "a woman with some life in her, game for just about anything",
+      "praise": "Lots of folks keep promising themselves they'll do something fun one of these weekends, and never do. Half of what they'll remember when they're old, you talked them into.",
       "use": "the part of you that livened things up for them",
       "letter": "you were up for anything. Whatever I came up with, you were in before I'd finished saying it.",
-      "kept": "the good times"
+      "never": "Everybody I've been around since needs a week's notice and a reason. Not one of them has ever said yes to a drive with no plan.",
+      "moment": "We pulled off a back road once because you saw a hand-painted sign for a county fair. You had powdered sugar on your chin and got me onto a ride I'd sworn I'd never get on. I screamed the whole way down. I never told you that was the hardest I'd laughed in a long time.",
+      "kept": "the good times",
+      "last": "Some lucky person is going to get a phone call on a dull Saturday and end up somewhere they'd never have gone alone. I hope they say yes."
     },
     "6": {
+      "trait": "You're the one people call when something's gone wrong, and you never send a bill for it.",
       "saw": "a woman who took care of everybody and never kept score",
+      "praise": "And they were right. Folks like you hold whole families together, and most of you go without a word of thanks for it.",
       "use": "all the ways you made their life easier",
       "letter": "you saw to everybody. Whoever needed something got it, and you never made anybody feel they owed you.",
-      "kept": "the help"
+      "never": "I've had plenty of people around me since, and not one of them ever looked after me without keeping count.",
+      "moment": "The winter the old man next door broke his hip, you shoveled his walk every morning before work, in my boots because yours had a hole in them. He never found out who it was. I didn't tell him, and I never said to you how proud of you I was.",
+      "kept": "the help",
+      "last": "Whoever gets you in their life next is getting somebody who'll show up with soup before they've even said they're sick. I hope they know it."
     },
     "7": {
+      "trait": "Not much gets past you: a new haircut, a word left out of a story, a price that crept up a dollar since last week.",
       "saw": "a woman who noticed things other people walked right past",
+      "praise": "Every family needs a pair of eyes like yours. Without you, the bad deal is signed, the leak goes unfixed, and nobody catches what the kids are hiding.",
       "use": "the part of you that noticed what they missed",
       "letter": "you caught the little things nobody else did. Not much got by you.",
-      "kept": "the sharp eyes"
+      "never": "I can come home with new glasses and go a whole month before anybody says a word. You'd have spotted them from the driveway.",
+      "moment": "At a friend's birthday dinner, you saw she'd stopped wearing her ring. Not one other person at that table picked up on it, me included. A few weeks later the whole thing came out. I never said so, but it scared me a bit, how much you could see.",
+      "kept": "the sharp eyes",
+      "last": "Somebody's going to come home in a new sweater, or with a rotten afternoon behind them, and never have to point at either. You'll have seen both from the door."
     },
     "8": {
+      "trait": "Hand you a mess and you'll have it sorted by suppertime, the bills paid, the paperwork filed, and everybody knowing what they're supposed to do.",
       "saw": "a woman who could walk into a mess and straighten it out",
+      "praise": "One person like you keeps a whole household afloat. Take that person away and it's shutoff notices, missed school, and folks blaming each other.",
       "use": "the part of you that got things done",
       "letter": "you were the one who handled things. Something needed doing, you did it, no fuss.",
-      "kept": "the handy part"
+      "never": "Nobody since has taken a single thing off my hands. When the car starts making a funny noise now, I just drive it till it quits.",
+      "moment": "My office flooded one March, and I came home and sat on the stairs with my coat still on. By eight that night you had a legal pad covered in phone numbers, the insurance company on hold and a pot of coffee going. I went to bed. I never admitted I'd have let it all go under.",
+      "kept": "the handy part",
+      "last": "Lucky them, whoever's with you next. They'll get to sleep through a crisis for once and wake up to find it all in order."
     },
     "9": {
+      "trait": "Everybody else has written somebody off, and you're still saying they've had a hard year and deserve one more chance.",
       "saw": "a woman who'd give to anybody and look for the good in them first",
+      "praise": "Some folks only turned their lives around because a person kept a door open for them. Plenty of times, that was you.",
       "use": "the part of you that kept on giving",
       "letter": "you thought the best of me. Even when I hadn't earned it, you'd find some reason to.",
-      "kept": "the second chances"
+      "never": "Since you, every mistake I make gets brought up again a month later. You were the last person who ever let me start over clean.",
+      "moment": "Somebody's teenage kid lifted twenty dollars out of your wallet at a cookout once. Everyone else wanted the parents told. You took that kid aside by the cooler, and by the end of summer he was mowing your lawn for pay. I never said I'd have marched straight to the parents.",
+      "kept": "the second chances",
+      "last": "One day someone new is going to slip up in front of you and get a cup of coffee and another try instead of a lecture."
     },
     "11": {
+      "trait": "Nobody has to explain themselves to you. You'll say out loud the thing they couldn't find words for, and they'll say that's exactly it.",
       "saw": "a woman who knew what they needed before they'd said a word",
+      "praise": "Being understood that fast is what most folks want their whole life and never get. Whoever had you got to stop being lonely for a while.",
       "use": "the part of you that kept track of their moods",
       "letter": "you could tell what was going on with me from my face. I never had to explain myself.",
-      "kept": "the mind-reading"
+      "never": "I've known people who love me since, and I still have to spell out every last thing for them.",
+      "moment": "Outside the room where my father was, I was rattling on about parking and the vending machines. You put a hand flat on my back and said, \"You're scared he won't recognize you.\" I'd been carrying that all day and couldn't have put it into one sentence. I just stood there and nodded.",
+      "kept": "the mind-reading",
+      "last": "Whoever's beside you next gets to walk in the door upset and hear you say it for them. Most people never get that once."
     },
     "22": {
+      "trait": "Starting from next to nothing has never stopped you. You'll take some odds and ends and a few borrowed hands and build something that's still standing long after.",
       "saw": "a woman who could start with next to nothing and build something real",
+      "praise": "Whole towns exist because of a handful of people with your kind of grit. Without them, there'd be no corner store, no church hall, no family business.",
       "use": "the part of you that did the heavy lifting",
       "letter": "you could make something out of whatever you had. You didn't wait around for it to be handed to you.",
-      "kept": "what you built"
+      "never": "Nobody I've been with since builds anything. They wait for the money, the permit, the perfect time, and you'd have had the thing half done out of scrap and favors.",
+      "moment": "That empty lot down the street sat full of weeds till the spring you took it on. You hauled in old pallets from behind the lumberyard with a cracked wheelbarrow, and by June there were tomatoes coming up in twelve beds. I'd said out loud it would never work. I never once said I was wrong.",
+      "kept": "what you built",
+      "last": "Give you a few loose boards and somebody else's bad idea, and you'll turn it into something that lasts. Whoever gets that next had better stick around."
     }
   },
   "LP": {
     "1": {
+      "trait": "And when something breaks, nobody has to come rescue you. It's fixed, paid for, or worked around before most people would have finished asking for help.",
       "then": "When it went wrong with them, you put your head down and handled it by yourself. You didn't call anybody or let on. If something needed fixing, you fixed it, and if you couldn't, you went without. Asking would have meant explaining, and you'd had enough of being at somebody's mercy. Doing it alone got you through, and back then it made sense.",
+      "praise": "Standing on your own two feet like that takes guts most people never find. Plenty of grown adults still freeze at a flat tire or a late bill.",
       "now": "you tell them you've got it before they've even offered, and soon enough they take you at your word and leave you be",
+      "admire": "I used to brag that you'd have a burst pipe shut off and mopped up before the plumber even called back. I liked that about you more than I ever let on.",
       "letter": "When something went wrong, you dealt with it and I heard about it after, if I heard at all. You never once came to me with it. I'd made sure coming to me got you nowhere."
     },
     "2": {
+      "trait": "And give two people who haven't spoken in weeks one evening with you in the room, and they're passing each other the salt.",
       "then": "When it went wrong with them, you said yes before you'd had a chance to think, and then lay awake sore about it. You kept checking where you stood, reading every look for a sign you were still liked. Keeping the peace kept things from getting worse, and when you didn't know what else to do, it was how you held on.",
+      "praise": "That warmth of yours is a real strength. Families stay together and friends make up because somebody like you won't let a grudge settle in.",
       "now": "you go along with all of it, then hold it against them on the quiet, till they feel something's off and drift away without ever knowing what",
+      "admire": "I was proud of the way you could sit two feuding people at the same table and have them laughing by dessert. I watched you do it with folks who swore they never would.",
       "letter": "You'd agree to anything I said, and a day later it'd come out sideways. You kept asking if we were okay. I never gave you a straight answer, and I knew what that did to you."
     },
     "3": {
+      "trait": "And on the worst day of somebody's year, you can still get a real laugh out of them, and that laugh gets them through the week.",
       "then": "When it went wrong with them, you made a joke of it before anybody else could. You filled every day so full there wasn't a quiet minute left to think in. People asked and got the funny version, and the real thing stayed put. That got you through. If you'd stopped long enough to say it, you'd have had to feel it, and you weren't ready to.",
+      "praise": "Not many folks can pull a laugh out of a hospital waiting room. Whole families have breathed easier for an hour because you were in it.",
       "now": "you crack a joke the minute it gets close to anything real, and after a while they quit trying",
+      "admire": "There was a night the lights went out at somebody's birthday, and inside two minutes you had the whole place howling in the dark. I loved watching you do that.",
       "letter": "When something bothered you, you'd get funny and find a job that needed doing. I don't think I ever heard you say what was really wrong. I never asked. It was easier on me that way."
     },
     "4": {
+      "trait": "And anything that passes through your hands gets done properly, checked twice, and finished, so it never has to be done again.",
       "then": "When it went wrong with them, you got organized. You made rules for yourself and stuck to them. You worked till you dropped and went back over everything a second time, then checked it again. If every last thing was done right, nothing could catch you out. When nothing else would hold still, that was something you could hold on to, and it worked.",
+      "praise": "That kind of care is what people trust with the important stuff: the accounts, the wiring, the kids' medicine. Nobody hands those to someone sloppy.",
       "now": "you've got a way things have to be done, and you watch how they do it, till they feel checked up on and give up",
+      "admire": "I'd show anybody who came over the shelves you hung, dead level to the sixteenth of an inch, like I'd had some part in it. I didn't. That was all you.",
       "letter": "When something got to you, you'd start making lists. You'd do things over that were fine the first time, and you wouldn't let up till it was all just so. A lot of what you were holding together was my mess. I know that."
     },
     "5": {
+      "trait": "And new towns, new jobs, new faces don't rattle you. Inside a month you've got a favorite diner and people waving at you from across the street.",
       "then": "When it went wrong with them, you changed the scenery. Different place, different people, and every time you meant it to be the clean start. Sitting still meant sitting in it, and you couldn't. Moving on gave you air when you were short of it, and it got you out from under something heavy. Back then, that was the right instinct.",
+      "praise": "Not everybody can land somewhere brand new and make friends by Friday. That kind of nerve is beyond most folks, and they stay stuck because of it.",
       "now": "you're itching to go the minute things start to feel ordinary, and they're left standing there wondering what they did",
+      "admire": "Drop you somewhere you didn't know a single person, and within a week the mailman knew your name. I watched it happen more than once, and it never stopped impressing me.",
       "letter": "When something got to you, you were halfway out the door before anybody knew anything was wrong. A lot of the time it was me you were getting away from. I can see that now."
     },
     "6": {
+      "trait": "And whatever's missing, you've already handled it. The extra chair's out, the prescription's been picked up, and the dog's been fed before anybody thought to ask.",
       "then": "When it went wrong with them, you took care of everybody in sight. If people were busy being helped by you, nobody was close enough to see how you were doing. You ran yourself ragged, and some nights you were fed up with all of them and never said so. Being the one everybody needed gave you somewhere to stand, and it kept you going.",
+      "praise": "Kindness like that is the reason sick folks get visited and kids get a hot supper. A whole street runs better with you on it.",
       "now": "you jump in and start taking care of them, and there's never an opening for them to do a thing for you, so they go find somebody who'll let them",
+      "admire": "You never missed a thing anybody was short of. I used to tell people you kept a spare umbrella in the car for strangers, and you handed it over more than once.",
       "letter": "When something upset you, you'd go make yourself useful to somebody. Everybody got your time but you, and you'd end up worn out and mad about it. I let you carry me right along with the rest of them. That's on me."
     },
     "7": {
+      "trait": "And it's hard to sell you a story. You'll go quiet, dig until you've got the real answer, and when you finally say what you think, it holds up.",
       "then": "When it went wrong with them, you clammed up, chewed on it, and wouldn't move till you were sure. You had good reason to. Late at night, on your own, you went over it and over it, hunting for the one thing that would settle it. You'd been hurt, and going quiet kept you standing while it had to.",
+      "praise": "A careful head like yours is worth a lot. You're the one who spots the bad contract and the slick offer before anybody signs.",
       "now": "you clam up and wait till you're sure of them, and before long you've found what's wrong with them",
+      "admire": "I trusted your judgment over my own. Once you'd made up your mind about somebody, I quit arguing, because you'd turn out right nearly every time.",
       "letter": "When something got to you, you'd go real quiet. You'd turn it over in your head for days and you wouldn't budge, not till you knew for certain. I gave you plenty to turn over. I know that too."
     },
     "8": {
+      "trait": "And in a crisis, people turn and look at you. You make the calls, you keep everything running, and you never once look like you're about to fold.",
       "then": "When it went wrong with them, you took the wheel and kept both hands on it. You made the decisions, you kept everything running, and you didn't let one person see you need a thing. If you were in charge, nobody could pull the floor out from under you again. Staying on top of it held you together when you had every reason to fold.",
+      "praise": "Steadiness like yours is what gets a business and a family through a bad winter. Plenty of people crack long before you'd even blink.",
       "now": "you take over everything and won't let them so much as carry a bag for you, till they feel like hired help and stop coming around",
+      "admire": "The night of that big ice storm, you had the neighbors' kids bundled up by the fire and the pipes wrapped before I'd found a flashlight. I thought nothing on earth could rattle you.",
       "letter": "When something knocked you down, you'd grab the reins tighter. I never once saw you ask anybody for a hand. With me around, you'd have been a fool to. I'm the one who taught you that."
     },
     "9": {
+      "trait": "And there isn't a collection jar, a fundraiser, or a stranger down on their luck that you can walk past. Whoever's struggling, near or far, gets something from you.",
       "then": "When it went wrong with them, you gave. You gave to good causes and to people you'd never meet, to anybody whose story got to you, and you meant every bit of it. Up close was another matter. You kept the people nearby at a little distance, even the good ones. Giving from a distance let you go on caring at all, after caring up close had cost you so much.",
+      "praise": "A big heart like yours keeps food banks stocked and shelters open. Whole towns lean on folks like you without ever learning your name.",
       "now": "you're kind to them the way you're kind to strangers, warm but at arm's length, and the first time they let you down, you're done",
+      "admire": "More than once I saw you hand your lunch to the man outside the bank without even breaking your stride. I bragged about that to people more than you know.",
       "letter": "When something got to you, you'd go do something good for a stranger. You never expected much from the people right in front of you. I'm a big part of the reason."
     },
     "11": {
+      "trait": "And you read a room before you're through the door. Somebody's upset and you know it before they've said a word, and you're usually right.",
       "then": "When it went wrong with them, you started reading into everything. A short answer or a door shut a little too hard, and you'd be up half the night working out what it meant. Most of the time there was something there to see. Watching that close was how you saw trouble coming before it got to you, and back then you needed that.",
+      "praise": "That's a real gift, and I don't say that lightly. Most people go their whole lives missing what you catch in a second.",
       "now": "you read a whole lot into one offhand thing they say, and they get tired of answering for things they never meant",
+      "admire": "Half the fun of a party was seeing you walk in and tell, within a minute, which couple had been fighting in the car. I'd bet against you, and I lost every time.",
       "letter": "Anything bothered you and you'd go hunting for what it meant. A look from me could put you off for a week, and I knew it. I gave you reasons to keep watching me. I won't pretend I didn't."
     },
     "22": {
+      "trait": "And long before anybody else has thought about next year, you've worked out what it'll take, step by step, and which piece has to go in first.",
       "then": "When it went wrong with them, you worked the whole thing out in your head, a long way down the road, and wouldn't start anything till every piece was in place. Other people saw you standing still. To you it was the only way not to get caught out twice, and it made sense.",
+      "praise": "Thinking ahead like that is what keeps a roof over a family and a business alive through a slump. Most folks can't plan past payday.",
       "now": "you need to know how it all ends before you'll take one step with them, and they get tired of waiting at the starting line",
+      "admire": "It amazed me how far ahead you could see. You had the car paid off and a rainy-day fund put by while the rest of us were living week to week.",
       "letter": "When something shook you, you'd sit down and think it through from start to finish before you'd so much as move. With me you never knew where anything was headed. That part's mine."
     }
   },
@@ -137,6 +225,35 @@
     "2": {
       "headline": "doing nothing doesn't cost them a thing",
       "letter": "Nothing happens to me if I leave it be, and I've always taken the easy way out."
+    }
+  },
+  "PY": {
+    "1": {
+      "ahead": "It's a year of firsts. Something you've never done comes your way early in it, and you say yes to it. By the middle of the year you'll have a story to tell that nobody has heard from you before."
+    },
+    "2": {
+      "ahead": "It's a year for people. Someone comes closer in it, slowly, the way the good ones do. It might be a friendship that deepens or someone new who's easy to be around. You won't have to chase any of it. It comes to you."
+    },
+    "3": {
+      "ahead": "It's a year of good times, the kind you'd forgotten you liked. More invitations than you've had in a long while, and more laughing. Before it's half over, somebody will tell you that you look well, and they'll mean more by it than the words."
+    },
+    "4": {
+      "ahead": "It's a year for setting your life up the way you want it. The room you've put off, the routine that's run too long, the thing at home that needs fixing: this is the year they get done, and they'll go easier than you expect."
+    },
+    "5": {
+      "ahead": "It's a year of change, and plenty of it. A trip, a new routine, a new face, a move of some kind. Something in your life shifts in a way you didn't plan, and by the end of the year you'll be glad it did."
+    },
+    "6": {
+      "ahead": "It's a year for love and home. The people close to you come closer. Somebody shows they care in a way you've waited a long time to see, and this time you let them."
+    },
+    "7": {
+      "ahead": "It's a quieter year, and a good one. Things that have puzzled you for a long time come clear in it. You'll stop going over the past, because by the end of the year you'll understand it, and there'll be nothing left to go over."
+    },
+    "8": {
+      "ahead": "It's a year when what you've put in starts coming back to you. A decision goes your way, or something you've worked at gets noticed. People take you more seriously in it, and you take yourself more seriously too."
+    },
+    "9": {
+      "ahead": "It's a year for clearing out. Old papers, old habits, old hurts: they go. It feels like an ending at first. Then you notice how much room it's left, and what starts moving into it."
     }
   }
 }
