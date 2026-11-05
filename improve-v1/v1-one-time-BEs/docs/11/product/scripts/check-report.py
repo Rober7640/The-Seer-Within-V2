@@ -189,14 +189,26 @@ if BAR:   # trait flattery read like a reference letter (blind read, 2026-11-05)
 raw = open(path, encoding="utf-8").read()
 PRON_MAX = 55
 PRON_N = len(re.findall(r"\b(they|them|their|theirs|themselves|they've|they'd|they're|they'll)\b", raw, re.I))
-CARD_NAMES = re.findall(r"\d+ ((?:the )?[A-Z][a-z]+(?: [A-Z][a-z]+)?)", raw.split("\n")[2])   # header line 3, as written
+CARD_NAMES = re.findall(r"\d+ ((?:the )?[A-Z][a-z]+(?: (?:of )?[A-Z][a-z]+)?)", raw.split("\n")[2])   # header line 3, as written
 
 # The deal: each card from its act's pool, the must-cards at 8/10/12, Death only at 8 or 10, none twice.
 import json
 acts = json.load(open(os.path.join(os.path.dirname(L.BANK_PATH), "11-acts.json"), encoding="utf-8"))
 slugs = [n.lower().replace(" ", "-") for n in tpl["cards"]]
 pool = {i: acts["pools"][f"act{(i - 1) // 3 + 1}"] for i in range(1, 13)}
-bad = [f"{i} {s}" for i, s in enumerate(slugs, 1) if s not in pool[i]]
+# Bar shape (operator, 2026-11-05): cards 1 and 2 are fixed per Soul Urge and replace the act-1 pool.
+# Card 1 = the major numbered for her heart's number (Soul Urge); card 2 answers "did they love me?".
+# Only master numbers share a card 2 with their base (11→2, 33→6). The free-letter cards (Hermit,
+# Judgement, Devil) stay out, and Death stays at 8/10. SU 7, 8 and 9 are pending on that conflict.
+FIRST_TWO = {1: ("the-magician", "the-star"), 2: ("the-high-priestess", "the-moon"), 3: ("the-empress", "the-sun"),
+             4: ("the-emperor", "the-tower"), 5: ("the-hierophant", "wheel-of-fortune"), 6: ("the-lovers", "temperance"),
+             11: ("justice", "the-moon"), 22: ("the-fool", "the-world"), 33: ("the-hanged-man", "temperance")}
+SU_N = int(re.search(r"Soul Urge (\d+) buyer", raw.split("\n")[0]).group(1))
+fixed = BAR and SU_N in FIRST_TWO
+bad = [f"{i} {s}" for i, s in enumerate(slugs, 1) if s not in pool[i] and not (fixed and i <= 2)]
+if fixed:
+    bad += [f"{i} {slugs[i-1]} (bar shape: SU {SU_N} card {i} is {FIRST_TWO[SU_N][i-1]})" for i in (1, 2) if slugs[i-1] != FIRST_TWO[SU_N][i-1]]
+    bad += [f"{i} {s} (a free-letter card)" for i, s in enumerate(slugs, 1) if s in acts["excluded"]]
 bad += [f"{i} {slugs[i-1]} (needs {'/'.join(m)})" for i, m in ((int(k), v) for k, v in acts["deal_rules"]["must"].items()) if slugs[i-1] not in m]
 bad += [f"{i} death" for i, s in enumerate(slugs, 1) if s == "death" and i not in acts["deal_rules"]["death_only_at"]]
 bad += [f"twice: {s}" for s in set(slugs) if slugs.count(s) > 1]

@@ -1,6 +1,6 @@
 11-P3 — The Unsent Letter: the fixed report for every Soul Urge 6 buyer (the part of you that loves with your whole heart · cover word "I'm done with all that"). letter-first shape, question shape, bar shape (each card answers one of her questions, in her words; one spine image, the jar of honey gone hard; the thing named once, the Bookkeeper; a habits list and the lie; a dated close, signs and three instructions), v2 to the writing bar, 2026-11-05.
 Fill-ins: {{FIRST}} {{BIRTH_NAME}} {{DOB}} · shared list ../n8n/scripts/11-swapins.json: {{EX.trait|saw|use|letter|never|moment|kept|last}} {{LP.trait|then|now|admire|letter}} {{PY.ahead}} {{NEXT_BDAY}} {{REASON.headline|letter}} · versions written here: [[REASON 0|1|2]] [[FORK get_back|giving]].
-Cards: 1 the Fool · 2 the Chariot · 3 the Empress · 4 Justice · 5 the Hanged Man · 6 Temperance · 7 the Lovers · 8 the Tower · 9 the Moon · 10 the Sun · 11 the Star · 12 the World
+Cards: 1 the Lovers · 2 Temperance · 3 the Empress · 4 Justice · 5 the Hanged Man · 6 the Emperor · 7 Wheel of Fortune · 8 the Tower · 9 the Moon · 10 the Sun · 11 the Star · 12 the World
 
 [OPENING]
 
@@ -16,11 +16,11 @@ Two things up front. This is someone living. And nothing here asks you to get in
 
 [CARD 1]
 
-**Card 1, the Fool: What did they take from me?**
+**Card 1, the Lovers: What did they take from me?**
 
 **They took the part of you that loves with your whole heart, {{FIRST}}.**
 
-The Fool walks to the edge of a cliff with his eyes on the sky, a small white dog leaping at his heel. He doesn't check the drop first. He's the part that left.
+Your birth name carries a 6 at its heart. The card numbered 6 is the Lovers. Above the two people on it, an angel spreads its arms wide over both. That's the part that left.
 
 Somebody who's known you for ages said it once: "You used to throw your whole heart into things."
 
@@ -30,17 +30,17 @@ Something moved into the room it left. I call it the Bookkeeper. It keeps a tall
 
 [CARD 2]
 
-**Card 2, the Chariot: Did they ever really love me?**
+**Card 2, Temperance: Did they ever really love me?**
 
 **Yes. Back then, it was real.**
 
-On the Chariot, a man stands upright under a canopy of stars. Two sphinxes sit in front of him, one black and one white, and there are no reins. Nothing keeps them there but choosing to stay.
+On Temperance, an angel in a white robe pours water between two cups, and the stream crosses the gap instead of falling straight down.
 
 Here's how I know. Before the first card was down, your name and date told me who I was laying them for. {{EX.trait}} {{LP.trait}}
 
 They saw something in you: {{EX.saw}}. That's what they loved. They leaned on {{EX.use}}, and you let them, because a whole heart doesn't hold anything back from the one it's chosen.
 
-You didn't imagine it. It was chosen every day, the way those sphinxes stay put.
+You didn't imagine it. It went both ways, every day, like the water between those cups.
 
 [[FORK get_back]]Remember "back then." Whatever gets asked of you will come dressed in that love, and the love is in the past.[[/FORK]][[FORK giving]][[/FORK]]
 
@@ -88,23 +88,23 @@ It's the honey again. Nothing's gone bad. It's only gone hard.
 
 [CARD 6]
 
-**Card 6, Temperance: What do they regret?**
+**Card 6, the Emperor: What do they regret?**
 
 **Having all of your heart, and treating it like it would always be there.**
 
-An angel stands with one foot in a pool, pouring water from a higher cup into a lower one. None of it runs back up.
+The Emperor sits square on a stone throne, armor under his robe, a gold ball held in one hand. Behind him the mountains are bare.
 
-The sorry is real. [[FORK get_back]]But under it, what's missed is being loved like that, all the way, with nothing asked back. That isn't the same thing as missing you.[[/FORK]][[FORK giving]]It isn't about wanting you back. You come to mind over there more than you'd guess, but the door's shut from that side.[[/FORK]] It runs one way, like the water, and none of it reaches you.
+The sorry is real. [[FORK get_back]]But under it, what's missed is being loved like that, all the way, with nothing asked back. That isn't the same thing as missing you.[[/FORK]][[FORK giving]]It isn't about wanting you back. You come to mind over there more than you'd guess, but the door's shut from that side.[[/FORK]] It stays behind the armor, and none of it reaches you.
 
-It was midnight when I laid Temperance down, and the Bookkeeper started pushing back. Every card came with the same dry word, like somebody closing a ledger: enough. I kept turning.
+It was midnight when I laid the Emperor down, and the Bookkeeper started pushing back. Every card came with the same dry word, like somebody closing a ledger: enough. I kept turning.
 
 [CARD 7]
 
-**Card 7, the Lovers: Why does nobody new get close?**
+**Card 7, Wheel of Fortune: Why does nobody new get close?**
 
 **Because the Bookkeeper gets to them first, and it's already counting.**
 
-The Lovers stand close enough to touch, an angel's arms spread wide over them both, and neither one reaches.
+On the Wheel of Fortune, a sphinx lies on top with a sword held across it. Whoever climbs up the side meets the sword first.
 
 {{LP.then}}
 

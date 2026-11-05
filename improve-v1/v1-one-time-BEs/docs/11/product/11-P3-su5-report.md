@@ -1,6 +1,6 @@
 11-P3 — The Unsent Letter: the fixed report for every Soul Urge 5 buyer (the part of you that moves forward · cover word "I've moved on"). letter-first shape, question shape, bar shape (each card answers one of her questions, in her words; one spine image, the chair and its dents; the thing named once, the Keeper; a habits list and the lie; a dated close, signs and three instructions), v5 to the writing bar, 2026-11-05.
 Fill-ins: {{FIRST}} {{BIRTH_NAME}} {{DOB}} · shared list ../n8n/scripts/11-swapins.json: {{EX.trait|saw|use|letter|never|moment|kept|last}} {{LP.trait|then|now|admire|letter}} {{PY.ahead}} {{NEXT_BDAY}} {{REASON.headline|letter}} · versions written here: [[REASON 0|1|2]] [[FORK get_back|giving]].
-Cards: 1 the Fool · 2 the Empress · 3 the Sun · 4 Justice · 5 the Hierophant · 6 Temperance · 7 the Lovers · 8 the Moon · 9 the Hanged Man · 10 Death · 11 the Star · 12 the World
+Cards: 1 the Hierophant · 2 Wheel of Fortune · 3 the Sun · 4 Justice · 5 the High Priestess · 6 Temperance · 7 the Lovers · 8 the Moon · 9 the Hanged Man · 10 Death · 11 the Star · 12 the World
 
 [OPENING]
 
@@ -16,29 +16,29 @@ Two things up front. This is someone living. And nothing here asks you to get in
 
 [CARD 1]
 
-**Card 1, the Fool: What did they take from me?**
+**Card 1, the Hierophant: What did they take from me?**
 
 **They took the part of you that moves forward, {{FIRST}}.**
 
-The Fool steps off a cliff edge with his eyes on the sky. He's the part that left.
+Your birth name carries a 5 at its heart, and the card numbered 5 is the Hierophant, with two men kneeling below him, taking his word.
 
 Somebody who's known you a long time saw it go, and said so once, half joking: "I miss the old you." You laughed it off.
 
 Your heart did its mending. What went is the part that gets restless when a week goes stale, and changes something.
 
-Something moved into the room it left. I call it the Keeper. It keeps things the way they are: the same week, the same chair, the same answer when somebody asks what's new. It kept you steady when you needed steady. It isn't a second thing to get rid of. It's only what grows in a room that's been left empty, and it goes quiet once what belongs there comes back.
+Something moved into the room it left. I call it the Keeper, and the Hierophant is its face. It keeps things the same way, every time: the same week, the same chair, the same answer when somebody asks what's new. It kept you steady when you needed steady. It isn't a second thing to get rid of. It's only what grows in a room that's been left empty, and it goes quiet once what belongs there comes back.
 
 A life that's stood still this long doesn't start up slowly. Once it gets going, it goes.
 
 [CARD 2]
 
-**Card 2, the Empress: Did they ever really love me?**
+**Card 2, Wheel of Fortune: Did they ever really love me?**
 
 **Yes. Back then, it was real.**
 
-The Empress sits in a field of ripening wheat, a heart-shaped shield beside her.
+On the Wheel of Fortune, a dog-headed figure comes up one side as the wheel turns. It was real on the way up.
 
-Here's how I know. Before the first card was down, your name and date told me who I was laying them for. {{EX.trait}} {{LP.trait}}
+Here's how I know: your name and date told me who I was laying them for. {{EX.trait}} {{LP.trait}}
 
 They saw something in you: {{EX.saw}}. That's what they loved. They leaned on {{EX.use}}, the way you lean on a railing you've stopped noticing is there.
 
@@ -70,11 +70,11 @@ Keeping it costs nothing. From the outside, it looks like one more life that wen
 
 [CARD 5]
 
-**Card 5, the Hierophant: Why has it taken this long?**
+**Card 5, the High Priestess: Why has it taken this long?**
 
 **Because one line let them off: "You'd moved on." It looked true, so nobody asked the next question.**
 
-The Hierophant sits up high with one hand raised, and two men kneel below him, taking his word. Neither one asks a thing.
+The High Priestess holds a scroll, half of it hidden under her mantle. Everybody read the half that showed.
 
 You'd say "I've moved on" and mean it, and you had. Your life just didn't come along. From the outside, it looks like contentment. Here's what people see:
 
