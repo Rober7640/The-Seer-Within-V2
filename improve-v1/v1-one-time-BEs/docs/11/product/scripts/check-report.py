@@ -113,6 +113,9 @@ def rules(sec):
 
             yield f"q card {i}: the flat answer, in bold, right under it", len(paras) > 1 and paras[1].startswith("**") and paras[1].rstrip().endswith("**")
         yield f"q close: **{CLOSE_Q}** then a bold answer", f"**{CLOSE_Q}**\n\n**" in last
+        # Blind read 2026-11-05: every "they" for the one who left broke the spell ("it was one man"). The ex stays
+        # gender-neutral, so the fix is fewer pronouns: at most 55 across the whole template, every fork branch counted.
+        yield f"q they/them/their in the template: {PRON_N} (max {PRON_MAX})", PRON_N <= PRON_MAX
 
     total = sum(len(v.split()) for v in sec.values())
     yield f"total words {TOTAL[0]}-{TOTAL[1]}", TOTAL[0] <= total <= TOTAL[1]
@@ -152,6 +155,8 @@ if V2:   # the personal read before the first card (operator, 2026-11-05)
     FRAMES["{{LP.admire}}"] = "\n\n{{LP.admire}}\n\n{{LP.letter}}\n\n"
     FRAMES["{{EX.last}}"] = "\n\n{{EX.last}}\n\nI won't call"
 raw = open(path, encoding="utf-8").read()
+PRON_MAX = 55
+PRON_N = len(re.findall(r"\b(they|them|their|theirs|themselves|they've|they'd|they're|they'll)\b", raw, re.I))
 CARD_NAMES = re.findall(r"\d+ ((?:the )?[A-Z][a-z]+(?: [A-Z][a-z]+)?)", raw.split("\n")[2])   # header line 3, as written
 
 # The deal: each card from its act's pool, the must-cards at 8/10/12, Death only at 8 or 10, none twice.
