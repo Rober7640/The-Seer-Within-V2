@@ -67,6 +67,20 @@ describe('the allow-list', () => {
     assert.equal(paiEligibleLander('v1-tarot', 'cards-meant-alone'), true);
     assert.equal(paiEligibleLander('v1-tarot', 'cards-come-back'), true);
   });
+  it('admits Joel’s four Version C landers (2026-11-05) — and only on /fb-tarot', () => {
+    for (const h of ['cards-end-same-way', 'cards-give-more', 'cards-marry-more-than-once', 'cards-more-affection']) {
+      assert.equal(paiEligibleLander('v1-tarot', h), true, h);
+      assert.equal(paiEligibleLander('v1-tarot', ` ${h} `), true, `${h} with spaces`);
+      assert.equal(paiEligibleLander('v1-fb', h), false, `${h} on /fb`);
+    }
+  });
+  it('none of the eligible tarot hooks is a soulmate lander (they must file to the shared lists)', async () => {
+    const { SOULMATE_LANDER_HOOKS } = await import('@shared/soulmateLanderHooks');
+    const { PAI_ELIGIBLE_LANDERS } = await import('@shared/paymentGateway');
+    for (const l of PAI_ELIGIBLE_LANDERS) {
+      if (l.hook) assert.equal(SOULMATE_LANDER_HOOKS.includes(l.hook), false, `${l.hook} is a soulmate lander`);
+    }
+  });
   it('refuses near-twins, other hooks, other funnels and root', () => {
     // cards-meant-alone-still-time is a NEAR TWIN of cards-meant-alone (tarotRedirect.ts).
     assert.equal(paiEligibleLander('v1-tarot', 'cards-meant-alone-still-time'), false);

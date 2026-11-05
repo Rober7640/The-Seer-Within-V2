@@ -41,6 +41,15 @@ export const GATEWAY_ARM_PAI = 'paymentsai';
 export const PAI_ELIGIBLE_LANDERS: ReadonlyArray<{ funnel: string; hook: string | null }> = [
   { funnel: 'v1-tarot', hook: 'cards-meant-alone' },
   { funnel: 'v1-tarot', hook: 'cards-come-back' },
+  // Joel's four Version C landers (2026-11-05). Same check as the two above: none is a
+  // soulmate or money lander (not in shared/soulmateLanderHooks.ts, bucket is not money),
+  // so all four file to the shared V1 AWeber lists with the default bump key — the path
+  // already walked on Payments.AI. Lewis, 2026-11-05. Each must ALSO be added to the
+  // experiment's scope in /admin/experiments before any buyer is split.
+  { funnel: 'v1-tarot', hook: 'cards-end-same-way' },
+  { funnel: 'v1-tarot', hook: 'cards-give-more' },
+  { funnel: 'v1-tarot', hook: 'cards-marry-more-than-once' },
+  { funnel: 'v1-tarot', hook: 'cards-more-affection' },
 ];
 
 export function paiEligibleLander(funnel: unknown, hook: unknown): boolean {
