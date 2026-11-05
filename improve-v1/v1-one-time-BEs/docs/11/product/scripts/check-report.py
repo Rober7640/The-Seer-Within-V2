@@ -87,6 +87,9 @@ def rules(sec):
             yield f"v2 card {c}: quotes a line of the letter as its own *\"...\"* paragraph", bool(got)
             yield f"v2 card {c}: its quoted line is in the letter word for word", bool(got) and all(g in sec["letter"] for g in got)
     if QS:
+        # the reader can be a man (operator, 2026-11-05: "we have male customers who might refund because of this")
+        g = sorted(set(m.group(0) for m in re.finditer(r"\b(a woman (who|with|like)|women like you|woman like you|you're a woman|dear girl|ladies)\b", low)))
+        yield "the reader's gender is never assumed" + (f": {', '.join(g)}" if g else ""), not g
         for i, q in enumerate(QUESTIONS, 1):
             paras = [x.strip() for x in sec[str(i)].split("\n\n") if x.strip()]
             want = f"**Card {i}, {CARD_NAMES[i-1]}: {q}**"

@@ -108,6 +108,11 @@ if (!ex) { ex = 1 + (seedOf(birthName + '|ex') % 9); number_fallback = true; }
 const one = (n) => ({ 11: 2, 22: 4, 33: 6 }[n] || n);
 const fork = (one(su) + one(ex) + one(lp)) % 3 === 0 ? 'get_back' : 'giving';
 const M = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+// Her year ahead (lib11_assemble.year_ahead): it starts on her next birthday; number = month + day + that year, to one digit.
+const now = new Date(); const tm = now.getMonth() + 1, td = now.getDate();
+const bd = (mm === 2 && dd === 29) ? 28 : dd;
+const start = (mm > tm || (mm === tm && bd >= td)) ? now.getFullYear() : now.getFullYear() + 1;
+let py = reduce(mm) + reduce(bd) + reduce(sumDigits(start)); while (py > 9) py = sumDigits(py);
 return [{ json: {
   order_id: s.id, email, first_name: firstName, birth_name: birthName, dob_iso: dob,
   dob_text: `${M[mm - 1]} ${dd}, ${yy}`, paid_at: new Date((s.created || 0) * 1000).toISOString(),
@@ -115,7 +120,7 @@ return [{ json: {
   numbers: { su, ex, lp, number_fallback },
   // The shared-list keys. EX/LP keep 11/22 as their own rows, 33 uses 6; the reason uses the one-digit sum.
   keys: { EX: String(ex === 33 ? 6 : ex), LP: String(lp === 33 ? 6 : lp),
-          REASON: String(one(lp) % 3), FORK: fork },
+          REASON: String(one(lp) % 3), FORK: fork, PY: String(py), NEXT_BDAY: `${M[mm - 1]} ${bd}` },
 } }];
 """
 
@@ -133,12 +138,13 @@ const missing = new Set();
 const sections = {};
 for (const [k, parts] of Object.entries(t.sections)) {
   let s = parts.map((p) => (typeof p === 'string' ? p : p.opts[j.keys[p.tag]])).join('');
-  s = s.replace(/\{\{(EX|LP|REASON)\.(\w+)\}\}/g, (_, tag, field) => {
+  s = s.replace(/\{\{(EX|LP|REASON|PY)\.(\w+)\}\}/g, (_, tag, field) => {
     const got = ((BANK[tag] || {})[j.keys[tag]] || {})[field];
     if (!got) { missing.add(`${tag} ${j.keys[tag]} ${field}`); return ''; }
     return got;
   });
   s = s.split('{{FIRST}}').join(j.first_name).split('{{BIRTH_NAME}}').join(j.birth_name).split('{{DOB}}').join(j.dob_text);
+  s = s.split('{{NEXT_BDAY}}').join(j.keys.NEXT_BDAY || '{{NEXT_BDAY}}');
   sections[k] = s.replace(/\n{3,}/g, '\n\n').trim();
 }
 if (missing.size) throw new Error(`HOLD: no shared line yet for: ${[...missing].sort().join(' · ')}`);

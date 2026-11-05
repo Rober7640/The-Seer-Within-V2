@@ -3,7 +3,7 @@
   "EX": {
     "1": {
       "trait": "You don't wait to be asked. While everyone else is still talking it over, you've already started, and half of it's done.",
-      "saw": "a woman who went first while everyone else looked at their shoes",
+      "saw": "someone who went first while everyone else looked at their shoes",
       "praise": "Without somebody like you willing to move before it's safe, most good plans would still be sitting on a kitchen table somewhere.",
       "use": "the part of you that stepped up so they didn't have to",
       "letter": "you never waited to be told. You'd already started before anybody else had made up their mind.",
@@ -14,7 +14,7 @@
     },
     "2": {
       "trait": "People tell you things they've never told anybody, because you put down what you're doing and let them get all the way to the end.",
-      "saw": "a woman who'd sit still and really listen, and make room for them",
+      "saw": "someone who'd sit still and really listen, and make room for them",
       "praise": "Most folks are only waiting for their turn to speak. You hand over the one comfort nobody can buy, and somebody made it through their worst week on that alone.",
       "use": "your ear, the one that always had time for them",
       "letter": "you'd stop what you were doing when I talked. You heard the whole thing, even the parts that went nowhere.",
@@ -25,7 +25,7 @@
     },
     "3": {
       "trait": "Ten minutes after you walk into a quiet kitchen, everybody's talking, and even the shy one in the corner is telling a story.",
-      "saw": "a woman who lit up a room and made them feel like somebody",
+      "saw": "someone who lit up a room and made them feel like somebody",
       "praise": "That's worth more than people give it credit for. Plenty of lonely folks got through a dinner party, or a funeral, because you were standing next to them.",
       "use": "the part of you that made them look good",
       "letter": "people perked up when you were around. You asked me things like my answer mattered.",
@@ -36,7 +36,7 @@
     },
     "4": {
       "trait": "If you say you'll be there at nine, nobody bothers to call and check, because you've never once left anybody waiting.",
-      "saw": "a woman who stayed put and kept her word",
+      "saw": "someone who stayed put and kept their word",
       "praise": "Money can't buy that. Kids, old folks, whoever's been let down before: around you they finally stop bracing for the worst.",
       "use": "the part of you that showed up every single time",
       "letter": "you said you'd be there and you were. You weren't going anywhere, and I knew it.",
@@ -47,7 +47,7 @@
     },
     "5": {
       "trait": "Somebody suggests a last-minute trip and you've got your coat on before they finish the sentence. The best stories people tell have you in them.",
-      "saw": "a woman with some life in her, game for just about anything",
+      "saw": "someone with some life in them, game for just about anything",
       "praise": "Lots of folks keep promising themselves they'll do something fun one of these weekends, and never do. Half of what they'll remember when they're old, you talked them into.",
       "use": "the part of you that livened things up for them",
       "letter": "you were up for anything. Whatever I came up with, you were in before I'd finished saying it.",
@@ -58,7 +58,7 @@
     },
     "6": {
       "trait": "You're the one people call when something's gone wrong, and you never send a bill for it.",
-      "saw": "a woman who took care of everybody and never kept score",
+      "saw": "someone who took care of everybody and never kept score",
       "praise": "And they were right. Folks like you hold whole families together, and most of you go without a word of thanks for it.",
       "use": "all the ways you made their life easier",
       "letter": "you saw to everybody. Whoever needed something got it, and you never made anybody feel they owed you.",
@@ -69,7 +69,7 @@
     },
     "7": {
       "trait": "Not much gets past you: a new haircut, a word left out of a story, a price that crept up a dollar since last week.",
-      "saw": "a woman who noticed things other people walked right past",
+      "saw": "someone who noticed things other people walked right past",
       "praise": "Every family needs a pair of eyes like yours. Without you, the bad deal is signed, the leak goes unfixed, and nobody catches what the kids are hiding.",
       "use": "the part of you that noticed what they missed",
       "letter": "you caught the little things nobody else did. Not much got by you.",
@@ -80,7 +80,7 @@
     },
     "8": {
       "trait": "Hand you a mess and you'll have it sorted by suppertime, the bills paid, the paperwork filed, and everybody knowing what they're supposed to do.",
-      "saw": "a woman who could walk into a mess and straighten it out",
+      "saw": "someone who could walk into a mess and straighten it out",
       "praise": "One person like you keeps a whole household afloat. Take that person away and it's shutoff notices, missed school, and folks blaming each other.",
       "use": "the part of you that got things done",
       "letter": "you were the one who handled things. Something needed doing, you did it, no fuss.",
@@ -91,7 +91,7 @@
     },
     "9": {
       "trait": "Everybody else has written somebody off, and you're still saying they've had a hard year and deserve one more chance.",
-      "saw": "a woman who'd give to anybody and look for the good in them first",
+      "saw": "someone who'd give to anybody and look for the good in them first",
       "praise": "Some folks only turned their lives around because a person kept a door open for them. Plenty of times, that was you.",
       "use": "the part of you that kept on giving",
       "letter": "you thought the best of me. Even when I hadn't earned it, you'd find some reason to.",
@@ -102,7 +102,7 @@
     },
     "11": {
       "trait": "Nobody has to explain themselves to you. You'll say out loud the thing they couldn't find words for, and they'll say that's exactly it.",
-      "saw": "a woman who knew what they needed before they'd said a word",
+      "saw": "someone who knew what they needed before they'd said a word",
       "praise": "Being understood that fast is what most folks want their whole life and never get. Whoever had you got to stop being lonely for a while.",
       "use": "the part of you that kept track of their moods",
       "letter": "you could tell what was going on with me from my face. I never had to explain myself.",
@@ -113,7 +113,7 @@
     },
     "22": {
       "trait": "Starting from next to nothing has never stopped you. You'll take some odds and ends and a few borrowed hands and build something that's still standing long after.",
-      "saw": "a woman who could start with next to nothing and build something real",
+      "saw": "someone who could start with next to nothing and build something real",
       "praise": "Whole towns exist because of a handful of people with your kind of grit. Without them, there'd be no corner store, no church hall, no family business.",
       "use": "the part of you that did the heavy lifting",
       "letter": "you could make something out of whatever you had. You didn't wait around for it to be handed to you.",

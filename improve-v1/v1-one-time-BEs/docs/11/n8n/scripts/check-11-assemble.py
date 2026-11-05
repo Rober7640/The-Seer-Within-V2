@@ -32,6 +32,7 @@ for su, path in L.written_reports().items():
         for lp in L.NUMBER_KEYS:
             for fork in ("get_back", "giving"):
                 keys = L.keys_for(int(su), int(ex), int(lp)); keys["FORK"] = fork
+                keys.update({"PY": str((int(ex) + int(lp)) % 9 + 1), "NEXT_BDAY": "March 14"})   # her year ahead
                 cases.append({"numbers": {"su": int(su)}, "keys": keys, "first_name": "Testina",
                               "birth_name": "Testina Rose Testerly", "dob_text": "November 5, 1962"})
                 try: want.append(L.fill(tpl, bank, keys, "Testina", "Testina Rose Testerly", "November 5, 1962"))

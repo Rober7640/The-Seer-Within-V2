@@ -978,9 +978,14 @@ if (missing.length) throw new Error(`the reading has no text for: ${missing.join
 const byHouse = Object.fromEntries(j.deal.map((d) => [d.house, d]));
 const cardBlock = (h) => { const d = byHouse[h];
   const crop = CROP_DEATH && d.card === 'death';
-  return `<section class="card"><h3>The ${ORD[h - 1]} card: ${esc(d.card_name.replace(/^The /, 'the '))}</h3>
+  // Question shape (11, 2026-11-05): the card's first line "**Card N, name: question**" becomes its heading.
+  let body = String(sec[String(h)] || '').trim();
+  const q = body.match(/^\*\*(Card \d+, [^*\n]+?: [^*\n]+\?)\*\*\s*\n/);
+  const head = q ? esc(q[1]) : `The ${ORD[h - 1]} card: ${esc(d.card_name.replace(/^The /, 'the '))}`;
+  if (q) body = body.slice(q[0].length);
+  return `<section class="card"><h3>${head}</h3>
     <figure${crop ? ' class="crop"' : ''}><img src="${S3}${d.card}.jpg" alt=""></figure>
-    <div class="prose">${paras(sec[String(h)])}</div></section>`; };
+    <div class="prose">${paras(body)}</div></section>`; };
 const acts = ACTS.map((a) => `<div class="act"><h2>${esc(a.name)}</h2>${a.houses.map(cardBlock).join('')}</div>`).join('');
 const DATE = (iso) => { const d = new Date(iso);
   const M = ['January','February','March','April','May','June','July','August','September','October','November','December'];

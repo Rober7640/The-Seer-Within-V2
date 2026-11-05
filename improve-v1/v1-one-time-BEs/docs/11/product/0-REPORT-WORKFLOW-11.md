@@ -73,6 +73,8 @@ Nothing is final until the operator has read the whole report.
 
 ## The report format
 
+*(The fill-in rules below hold for both shapes. The frame table is the OLD shape's. The question shape's frames are in `FRAMES` in `check-report.py`, and SU 5 shows them in place.)*
+
 `lib11_assemble.py` is the one reading of these rules. Line 3 of the report lists its 12 cards.
 
 | In the report | What it becomes |
@@ -98,6 +100,77 @@ Nothing is final until the operator has read the whole report.
 
 Written in each report, because they carry its own thing: card 5's one excuse (the line in quotes, then why it held, how she backed it up, how she still does their work; the letter's "I told myself …" echoes the same line), the sentence or two after card 10's bold line (`[[REASON 0|1|2]]`), and every path difference (`[[FORK …]]`): card 6's regret line, all of card 9, card 10's "they hold it out" paragraph, card 12's warning about the ask, the letter's last lines, and the close's line about the ask.
 
+## The question shape: the format every report now uses (operator, 2026-11-05)
+
+> "this is the strongest format imo." The model is **`11-P3-su5-report.md`**: read it before writing any report. The older reports keep the shape described above until this run replaces them.
+
+**Why it changed.** The operator found the cards "add v little value" when each was a tarot lecture and the letter was 9% of the report. Now every card answers one question she asked, in her words, and hands back one line of the letter. The letter is the product: about 1,400 words, roughly a third of the report.
+
+**Header line 1** must contain `letter-first shape` and `question shape` (the checker switches its rules on these). Line 2 lists the fill-ins. Line 3 lists the 12 cards (`1 the Fool · 2 the Empress …`), and the card labels must match it.
+
+**Opening** (300–460 words):
+1. What the reading is for: something of hers left with them, things were never settled, one flat answer each with no "only you can know", and it ends with the letter.
+2. `Your birth name and date set how I lay your twelve cards.` plus one line of Evelyn's night.
+3. `Before I turned a card, your name and date told me who I was laying them for. {{EX.trait}} {{LP.trait}}`
+4. The safety lines: `This is someone living.`, the no-contact line, `If this person hurt you, you owe them no reply.`
+5. The **contents list**: the sales email's four headings in bold, each card as `Card N, name: question` on its own line, then `**After the letter**` / `Will I be happy again?`
+
+**The 12 questions**, identical in every report (the checker matches them character for character):
+
+| Group | Card | Question | The answer comes from |
+|---|---|---|---|
+| What they took | 1 | What did they take from me? | the report's own thing, from outside ("I miss the old you") + praise of that thing |
+| | 2 | Did they ever really love me? | yes, back then, it was real; what they saw in you (`{{EX.saw}}` `{{EX.praise}}` `{{EX.use}}`); regret now isn't love |
+| | 3 | Was it my fault? | no; stop asking what's wrong with you; "yours finishes well" |
+| Why they kept it | 4 | Why have they still got it? | giving it back means owning up |
+| | 5 | Why has it taken this long? | the report's one excuse, in quotes |
+| | 6 | What do they regret? | fork-split regret, with "I'm sorry" from the letter |
+| What it's cost you | 7 | Why does nobody new get close? | `{{LP.then}}` `{{LP.praise}}` `{{LP.now}}` + "somebody decent is going to ask you…" |
+| | 8 | Is it too late for me? | no; the time stays gone, the thing comes back; the best of your life isn't behind you (the only card that may say "years") |
+| | 9 | Are they giving it back, or trying to get me back? | the fork |
+| How it comes back | 10 | Will they ever do anything about it? | no, because `{{REASON.headline}}`; the turn |
+| | 11 | What did they never say? | the unsaid sentence, in quotes; you owe them no reply |
+| | 12 | What do I do now? | five to seven days, **Stop going back.**, **The one thing to do.** |
+| After the letter | close | Will I be happy again? | yes; the birthday forecast (`{{NEXT_BDAY}}` `{{PY.ahead}}`); six months out; `It's back. Go and use it.` |
+
+**Every card, in this order:**
+1. `**Card N, name: question**`
+2. The flat answer in bold, 1–2 sentences.
+3. The picture, 1–2 sentences.
+4. One line of their letter as its own `*"…"*` paragraph, word for word in the letter.
+5. Evelyn, a few short lines.
+
+Bands: cards 1, 9, 10, 12 run 180–340 words; the rest 80–230. Letter 1,300–1,800. Close 80–260. Total 2,800–4,250.
+
+**The letter** says plainly what buyers want to hear (P6 + 2026-11-05):
+- "I did love you" (past tense only; card 2)
+- not your fault (card 3)
+- "I'm sorry" (card 6)
+- the best of your life isn't behind you (card 8)
+- "I want you happy. Not fine, not getting by. Happy." (the close)
+- "You can put me down now" (giving)
+
+In the get-back version, those lines lead into the ask. It also carries the personal spots:
+- `{{EX.letter}}` `{{EX.never}}` `{{EX.moment}}` (a remembered scene)
+- `{{LP.admire}}` → `{{LP.letter}}`
+- `{{EX.kept}}`
+- `{{EX.last}}` (the last compliment)
+- `Every {{NEXT_BDAY}} I think about picking up the phone…`
+
+The exact frames are `FRAMES` in `scripts/check-report.py`. Copy them from the SU 5 report, never from memory.
+
+**What each report writes for itself:**
+- what they took, and card 1's praise of it
+- the cover line and the big idea (P6 table)
+- card 5's one excuse (echoed by the letter's "I told myself …")
+- the unsaid sentence
+- the one thing to do
+- the card choices
+- every fork and reason block
+- all the fixed text
+
+Everything personal comes from the shared list, so a report never invents her life.
+
 ## The run for the other 11 (operator: "just proceed", 2026-11-04)
 
 - **Order:** batches 1–4, 5–8, then 11, 22, 33. Four writers at a time.
@@ -107,6 +180,15 @@ Written in each report, because they carry its own thing: card 5's one excuse (t
 - **Hands off:** never touches live n8n, Stripe or AWeber; never sends anything.
 - **Writer extras** (from read 5): cards don't all run one pattern; `{{FIRST}}` at most 5 times; card 5 has one excuse; SU 4 says once that her safety comes first.
 - **The operator still reads every report before anything ships.** The outlines weren't shown first (operator's call).
+
+## The run in the question shape (operator, 2026-11-05: "1. yes 2. yes 3. yes 4. yes")
+
+- **What:** rewrite the 11 other reports in the question shape, each to its P6 big idea (`11-P6-voc-what-buyers-say.md`, "All 12" table). The writer brief is **Appendix C**.
+- **Order:** SU 1–4 first, as a check that the brief works. Then 6–9, then 11, 22, 33.
+- **Per Soul Urge:** writer → `check-report.py` ALL PASS → main thread reads it → blind read vs that SU's last approved report (old shape, same buyer) → up to 2 fix rounds → commit.
+- **Pass bar:** "worth $35" ≥ 7, and the new shape not below the old one on "worth $35" or "written for me".
+- **Shared files:** writers never edit `11-swapins.json` or `11-acts.json`. Each writer leaves its acts row (took, word, cover, regret, unsaid, do) in the scratchpad, and the main thread merges it.
+- **Hands off,** as before: no live n8n, Stripe or AWeber; nothing sent.
 
 ## Lessons that cost us a run
 - A full list of what's on a card gets written out as a list. Hand over one detail.
@@ -169,6 +251,62 @@ Send it as written, with the three file paths from step 4. Use the same persona 
 > **Then:** which one you'd rather have received, and why, in one honest paragraph. If anything made either feel off or not quite human, say what (gut only).
 >
 > **Output:** write it all to `<out_dir>/verdict.md`. Reply in under 250 words: the scores side by side, which you'd rather have, and the single biggest problem in each.
+
+## Appendix C — the writer brief for the question shape (2026-11-05)
+
+Fill in the `<…>` parts and send it as written. The subagent has none of our conversation.
+
+> You are rewriting ONE fixed report for "The Unsent Letter" ($35, tarot reader Evelyn Cross): the report every buyer with Soul Urge <N> receives. Do the writing yourself and don't spawn agents. Touch ONLY `product/11-P3-su<N>-report.md` (overwrite it) and `<scratchpad>/acts-su<N>.json`. Don't commit. Paths below are under `improve-v1/v1-one-time-BEs/docs/11/`.
+>
+> **Read first, in this order:**
+> 1. `product/11-P3-su5-report.md`: THE MODEL. Copy its structure, headers, frames, fork and reason blocks, contents list, card labels and letter spots exactly. Don't reuse its SU 5 wording ("moves forward", "I've moved on", the chair, the Sundays).
+> 2. `product/0-REPORT-WORKFLOW-11.md`, section "The question shape". It holds the 12 questions and what each answer carries.
+> 3. `product/scripts/check-report.py`: rules(), BANNED, FRAMES and the QS block. Your file must print ALL PASS.
+> 4. `product/11-P6-voc-what-buyers-say.md`: how buyers talk. Your row is below.
+> 5. `n8n/scripts/11-swapins.json`: the shared lines. Your fixed text must read right around EVERY number's lines.
+> 6. `n8n/scripts/11-acts.json`: "pools", "deal_rules" and "cards" (what is actually drawn on each card).
+> 7. `sales-emails/11-E2-esl.md`: the sales letter she read. Keep its promises, never quote it.
+> 8. `product/11-P3-su<N>-report.md` (the CURRENT, old-shape report): material only. Its excuse, reasons, forks and lines that passed blind reads may be reused when they fit the new big idea.
+>
+> **Your Soul Urge (operator-approved direction, from real buyer words):**
+> - Their word: <their word (share)>
+> - Cover line, which she says, means, and is a little proud of: "<cover>"
+> - Big idea: <big idea>
+> - Unsaid sentence, word for word in card 11 and the letter: "<unsaid>"
+> - Old acts row, for reference only: <old took/cover/regret/unsaid/do>
+>
+> Decide, and write each to `<scratchpad>/acts-su<N>.json` as `{"took": …, "word": …, "cover": …, "regret": …, "unsaid": …, "do": …}`:
+> - **what they took:** a short noun phrase she'd say herself, in the style of "the part of you that moves forward"
+> - **the one thing to do:** once a day for seven days, small, nothing involving them
+> - **the regret**
+>
+> **Must carry over from the model:** the opening's "what this reading is for" and the contents list; card 1 naming what was taken through what someone close said ("I miss the old you" kind), plus a paragraph of praise for that thing; card 2 "Yes. Back then, it was real." in spirit, and "regret isn't love, you miss what they left with"; card 3 "No."; card 5 ONE excuse in quotes, echoed in the letter's "I told myself …"; card 7's prediction ("somebody decent is going to ask you to …"); card 8 "No." to too late, the only card that says "years"; the hope beats (card 3 "yours finishes well", card 8 "closer than it looks"); card 12's labels and "five to seven days"; the close's birthday forecast frame, six-months picture and last line `It's back. Go and use it.`; and the letter's must-says (I did love you, past tense / not your fault / I'm sorry / best of your life isn't behind you / I want you happy / You can put me down now), with the get-back version leading them into the ask.
+>
+> **Your thing runs through all of it:** the cover line is named at card 1 or 2, shown at card 5 as the excuse they leaned on, retired at card 12. Show her habit NOW, the one she's proud of; never what they did to her, never who she used to be. SU 4 only: say once, plainly, that if she isn't safe where she is, that comes first.
+>
+> **Cards:** pick 12 legal cards (pools by act; 8 = Tower, Death or Moon; 10 = Death, Star or Sun; 12 = Strength or World; Death only at 8 or 10; none twice; never the Hermit, Judgement or the Devil). For each, choose the card whose picture answers ITS question with no explaining. Describe only what is on the card, in one or two sentences. Update header line 3.
+>
+> **Hard rules:**
+> - Never assume the reader's gender.
+> - Never "you've felt", "you've noticed", "you know the day I mean": show change through what others said or anyone could see.
+> - The BANNED lists.
+> - American spelling.
+> - Picture before meaning.
+> - About 40% contractions.
+> - No aphorisms.
+> - `{{FIRST}}` at most 5 times.
+> - No two cards in a row end the same way.
+> - Evelyn's night: one line in the opening and one in card 10 at most.
+> - No planning words on the page.
+>
+> **Verify:** from `docs/11/`, run `python3 product/scripts/check-report.py product/11-P3-su<N>-report.md` until ALL PASS.
+>
+> **Report back in under 250 words:**
+> - the WORDS block
+> - your acts row
+> - the 12 bold answers, one line each
+> - the cards, with why each fits its question
+> - anything you bent, and why
 
 ## Results so far
 
