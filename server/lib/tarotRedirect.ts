@@ -159,6 +159,14 @@ export function tarotBTarget(originalUrl: string): string {
 // team's EXISTING /b ads on those hooks, and cards-met-already was the single busiest
 // tarot lander at the time (582 exposures/14d). The URL is the ad's to choose; the
 // server cannot tell two ads on the same hook apart.
+// ── 2026-11-05: FOUR NEW HOOKS FOR A /c CAMPAIGN ─────────────────────────────
+//
+// cards-end-same-way, cards-give-more, cards-marry-more-than-once and cards-more-affection
+// were written for Version C and their ads use /fb-tarot/c URLs. All four are brand new, so
+// none has an experiment exposure and none is inside the CONCLUDED v1_tarot_version_bc_2026:
+// the list ALONE is sufficient. Each carries every Version C prerequisite — a registry hook, a
+// validHooks slot in routes.ts, a TAROT_QUESTION opener, and context + tendency + a frame Set
+// in server/lib/prompts.ts.
 export const TAROT_C_EXEMPT_HOOKS: ReadonlySet<string> = new Set([
   'cards-after-marriage',
   'cards-allowed-to-want',
@@ -177,10 +185,12 @@ export const TAROT_C_EXEMPT_HOOKS: ReadonlySet<string> = new Set([
   'cards-destined-alone',
   'cards-destined-or-not-yet',
   'cards-empty-house-alone',
+  'cards-end-same-way',
   'cards-energy-away',
   'cards-energy-soulmate',
   'cards-ever-back',
   'cards-found-me-yet',
+  'cards-give-more',
   'cards-god-mean-me-alone',
   'cards-gods-intention-alone',
   'cards-god-with-me-alone',
@@ -192,10 +202,12 @@ export const TAROT_C_EXEMPT_HOOKS: ReadonlySet<string> = new Set([
   'cards-longer-to-wait',
   'cards-love-never-stays',
   'cards-love-not-happened-yet',
+  'cards-marry-more-than-once',
   'cards-meant-alone',
   'cards-meant-alone-still-time',
   'cards-met-already',
   'cards-missed-chance',
+  'cards-more-affection',
   'cards-more-years-alone',
   'cards-moved-on',
   'cards-real-connection-coming',

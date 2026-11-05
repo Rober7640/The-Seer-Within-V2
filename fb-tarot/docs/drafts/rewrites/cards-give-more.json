@@ -1,0 +1,46 @@
+{
+  "hook": "cards-give-more",
+  "headline": "Why do I give more than I get in love?",
+  "method": "natural-cut",
+  "frame": "soulmate-keyword",
+  "note": "NEW HOOK 2026-11-05, Natural Tarot-Cut (7 cuts), face-down return-mhf, SOULMATE-KEYWORD frame. NOT YET WIRED: the hook is in no registry and not in SOULMATE_KEYWORD_TAROT_HOOKS, so it must be added to that Set at wiring or it falls through to decode-him ('This reading is about HIM') and the model invents a man.\n\nWHY THIS FRAME. The headline asks her to be blamed: 'why do I give more' invites 'because you give too much'. The keyword frame's job is exactly that refusal: the thing she named (her giving) is hers and is NOT the fault, and the read does not just deny it and stop. It says what the giving IS on the card, then names what stands across it.\n\nTHE WORD DOING THE WORK is 'give', with 'get' as the wound (VOC q2, 227 rows / 21 buyers: 'I had to break up with my life partner last night because I was giving more than I was receiving in return, which is the story of my life'). She does not regret giving ('I want to feel the same love and affection I give to others'). THE FEAR UNDER IT is not generosity but being unchosen DESPITE giving ('I give my all to men, and I'm left or they choose someone else').\n\nCUT 3 ANSWERS THAT FEAR FLAT, a different answer per card, each warranted by what is drawn: a (Magician standing at his table in plain sight, holding nothing back, on purpose = will and intention) = the way you give was never the flaw; holding nothing back is where the strength is. b (Hanged Man, one rope at one ankle, the rest of him loose) = your giving isn't what's tied up; one rope is, and it isn't the way you love. c (Fool, the white rose = innocence, a clean heart) = what you give is as clean as that rose, there's no fault in it, and it isn't why you get less. Cut 7 on every card aims at what has kept the love from coming back to her, left unresolved and never a 'who': a = what's kept the love you give from being given back; b = what that one rope has been holding back from you; c = what catches that love on its way back to you.\n\nBANS AND WHY. (1) NO MAN: the card figure stays a card figure, never her ex, partner or future man. The buyers are mostly just out of it (dumped, broke up, ghosted) and a few are still partnered and 'walking on eggshells', so a figure who becomes 'him' either reopens a door or promises a new man; 'across the table from you' was rejected for that reason. (2) NO SELF-BLAME, including the kind-sounding forms (too much, people pleaser, you give too easily, you pick takers, you attract, boundaries, self-worth, know your worth, love yourself first): she arrives already told 'I love him probably too much' and already calling herself a 'people pleaser', so any of these confirms the case against her that the read exists to refuse. (3) NO TACTIC, never give less or give more, never stay or leave: the pull includes one-sided and narcissistic relationships, so 'give less' blames her and 'give more' sends her back in. (4) NO THERAPY OR DIAGNOSIS WORDS (attachment, codependent, trauma, wounds, inner child, healing, narcissist, toxic, 'do the work'): the frame's guard line forbids them and she is already labelled. (5) NO CONVICTING THE MEN (takers, users): they are not in this read and naming them is a ruling on real people. (6) NEVER SCORE HER (low, blocked, closed, depleted, empty): the frame's guard line. (7) NO DATE, LENGTH, COUNT OR ODDS; no fate, karma or lesson; no mediumship. (8) NO INVENTED LIFE FACT: cut 6 uses only her headline words (give, more, get, love) plus what cuts 1-5 established; 'the same' in c5 restates her own 'more than I get', not an episode.",
+  "voc": {
+    "pulled": "2026-11-05",
+    "pattern": "q2-give-more",
+    "matched": 227,
+    "buyers": 21,
+    "verdict": "ok",
+    "why": ""
+  },
+  "decks": {
+    "return-mhf": {
+      "a": [
+        "None of the three showed its face when you picked. You turned the Magician — see how he stands at his table, in plain sight.",
+        "You asked why you give more than you get in love. The Magician holds nothing back, and he does it on purpose.",
+        "So the way you give was never the flaw, dear. On this card, holding nothing back is where the strength is.",
+        "That table only shows what he sets out, though. Nothing on it shows what comes back.",
+        "And for all that strength out in the open, less comes back to you than you give.",
+        "Which is why you asked about what you get. You already know what you give.",
+        "Let me look closer at what's kept the love you give from being given back…"
+      ],
+      "b": [
+        "You chose it face down, like the other two. You turned the Hanged Man — look, one rope holds him, and only at one ankle.",
+        "You asked why you give more than you get in love. The rest of him hangs loose, so just one thing is holding him.",
+        "Your giving hangs as free as the rest of him. The way you love isn't what's caught.",
+        "But you can't tell from the card what that rope is. You can only see that it holds.",
+        "So you've given freely, and with that rope holding, less has come back to you.",
+        "That's why your love goes out freely, dear, and what you get stays held.",
+        "Let me see what that one rope has been holding back from you…"
+      ],
+      "c": [
+        "You couldn't tell one card's back from another. You turned the Fool, and there's a white rose in his hand.",
+        "You asked why you give more than you get in love. That white rose stands for a clean heart, with no catch in it.",
+        "What you give is as clean as that rose. There's no fault in it, and it isn't why you get less.",
+        "Still, the card only shows him setting out. It doesn't show where that rose ends up.",
+        "Yet clean as it is, the love you give doesn't come back to you the same.",
+        "So you weren't asking what's wrong with you. You were asking where all that love goes.",
+        "Now let's look at what catches that love on its way back to you…"
+      ]
+    }
+  }
+}

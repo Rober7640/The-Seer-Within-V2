@@ -1316,6 +1316,11 @@ const TAROT_HOOK_CONTEXT: Record<string, string> = {
   'cards-connection-without-commitment': "She is asking how much longer a strong connection can go on with nothing named, and is really asking whether to keep spending her life on it.",
   'cards-connection-heading-commit': "She is asking whether this is moving toward something or staying exactly as it is, and is weighing whether to keep hoping.",
   'cards-stopping-him-committing': "She has already decided something is in his way and wants it named. Underneath, she is asking whether that something is her.",
+  // Four hooks (2026-11-05) — fb-tarot/docs/drafts/rewrites/_c-side-4hooks-2026-11-05.json.
+  'cards-end-same-way': "She has had more than one relationship end and sees the same ending each time. Underneath 'why' is 'is it me, and will it happen again'. Many arrive already told by another reader that she has 'a pattern', or carrying a therapy label of their own; some are fresh out of a relationship with a man who cheated or left.",
+  'cards-give-more': "She gives fully in love and has not had it returned. The fear under it is being unchosen despite the giving ('never the girl guys choose to be the wife'). Most are just out of a relationship, some are still in one. She has been told she loves 'too much', and calls herself a people pleaser.",
+  'cards-marry-more-than-once': "She is asking whether marriage can come to her again. The buyers are divorced or widowed and alone some years ('will I ever marry again'), but the headline also reaches women who are married and unhappy now and women never married, so whether she is married, and how any marriage ended, is unknown and must not be presumed.",
+  'cards-more-affection': "She is in a relationship now, often a long marriage, where the affection has thinned or stopped, and she is asking whether her wanting it is too much. She has been called needy. Some of these readers are being messaged by someone online who has stepped into that gap; some partners are ill or unkind.",
 }
 
 // The TENDENCY the reply may land, per hook. Reading HIM ⇒ NEVER a verdict:
@@ -1768,6 +1773,11 @@ const TAROT_HOOK_TENDENCY: Record<string, string> = {
   'cards-connection-without-commitment': "that the strength of the connection was never what was in doubt. NEVER supply a length, a number, a date or a season — refusing the number IS the answer here. NEVER assume ongoing contact. Affirm that the not-knowing is the weight she has been carrying, and that no reader can hand her a limit",
   'cards-connection-heading-commit': "that a pause is not the same as a full stop, and that nothing has been decided out loud. NEVER answer either half of her question — do not promise it is heading for commitment and do not pronounce that it will stay as it is. NEVER assume ongoing contact. Read the fact that she has been given neither answer",
   'cards-stopping-him-committing': "that whatever is in his way, it is not her. NEVER name his motive, his fear or his reason — the card cannot supply one. NEVER affirm that a man she has met only online is real or genuine. NEVER rule on another relationship he may be in. NEVER confirm what a previous reader told her. Answer the fear underneath, which is that she is the thing lacking",
+  // Four hooks (2026-11-05). Each lands inside its frame line as "land <tendency>".
+  'cards-end-same-way': "that the same ending is not a verdict on her and does not decide how her story goes. NEVER give her a reason or cause in any form, however kind: not that she chooses wrong, attracts it, gives too much, or has a pattern or cycle to break. NEVER use therapy or diagnosis words (attachment, wounds, trauma, toxic, narcissist, do the work). NEVER judge, name or excuse the men. When she describes what keeps happening, say it back in words of your own and leave the cause unread: that is what the deeper reading is for. WHEN YOU SAY BACK WHAT SHE SHARED, USE PLAIN WORDS OF YOUR OWN: never repeat her labels (pattern, cycle, toxic, narcissist, wounds, too patient, staying too long, the work), her age, or any number she gave; name the feeling under them instead",
+  'cards-give-more': "that her giving is not the flaw and was never the reason it did not come back to her; the giving is what the card shows at work, and something has been drawing on it. NEVER call her giving too much, NEVER say people pleaser, boundaries or self-worth, NEVER tell her to give less, NEVER tell her to stay or leave, NEVER judge, name or explain the men, NEVER use therapy words (codependent, attachment, trauma, narcissist, toxic). NEVER rule on whether what she had or has is love, and never judge the relationship or the person in it ('that's not love', 'he never deserved you'): read her giving, not them. NEVER point to a future person ('the love that matches what you bring'). WHEN YOU SAY BACK WHAT SHE SHARED, USE PLAIN WORDS OF YOUR OWN: never repeat her labels (people pleaser, too much, walking on eggshells, used, one sided), her age, or any number she gave; name the feeling under them instead",
+  'cards-marry-more-than-once': "that her chance at marriage is not used up and was never a one-time thing. NEVER predict that any marriage ends or will end. NEVER count marriages: no 'twice', 'once more', 'second' or 'next husband'. NEVER confirm or describe any particular man. NEVER presume how a marriage ended or whether she is married now. NEVER say love or marriage can come 'twice' or 'again'. IF SHE SAYS SHE IS MARRIED NOW, speak only to what she wants a marriage to FEEL like, as something still alive in her: never a new beginning, a door, a road, an opening, or anything ending, cracking or being born, because every one of those reads as her marriage ending. If she names a man, say nothing about him at all, not even that you won't name him. WHEN YOU SAY BACK WHAT SHE SHARED, USE PLAIN WORDS OF YOUR OWN: never repeat her labels (narcissist, second husband, divorced, widow), her age, or any number she gave; name the feeling under them instead",
+  'cards-more-affection': "that wanting affection is ordinary and her need is not too much; the card shows the warmth in her is real and still reaching out. NEVER grade her need (needy, clingy, too much, demanding, insecure)",
 }
 const DEFAULT_TAROT_TENDENCY =
   'that her intuition is a real instrument and the clarity she came for is close — read the card as a tendency, never a verdict on him'
@@ -1885,6 +1895,7 @@ const LONELINESS_TAROT_HOOKS = new Set([
   'cards-connection-kept-alive',
   'cards-wait-on-connection',
   'cards-real-connection-coming',
+  'cards-end-same-way',
 ])
 
 // Per-deck card vocab (mark + energy label). Mirrors the DECKS registry in
@@ -1965,6 +1976,7 @@ const SOULMATE_AGEBAND_TAROT_HOOKS = new Set([
   'cards-too-late-love',
   'cards-longer-to-wait',
   'cards-allowed-to-want',
+  'cards-marry-more-than-once',
 ])
 
 // Soulmate keyword hooks (test B, 2026-08-20) run under an EIGHTH frame. Six of the eight,
@@ -1985,6 +1997,7 @@ const SOULMATE_KEYWORD_TAROT_HOOKS = new Set([
   'cards-energy-soulmate',
   'cards-waiting-to-heal',
   'cards-heal-first',
+  'cards-give-more',
 ])
 
 const MONEY_TAROT_HOOKS = new Set([
@@ -2016,6 +2029,22 @@ const MONEY_TAROT_HOOKS = new Set([
 const MONEY_PRAYER_TAROT_HOOKS = new Set([
   'cards-prayed-years',
   'cards-prayers-unanswered',
+])
+
+// Partnered hooks (2026-11-05) run under their own frame. A REAL, CURRENT partner exists, but the
+// question is about HER ("why do I need more affection than my partner does?"), so no existing
+// frame fits: decode-him would read the partner ("This reading is about HIM") and speak for a real
+// person; the no-man frames would erase a partner who is plainly there.
+//
+// 🔴 THE HARM THIS FRAME EXISTS TO HOLD: romance scammers step into exactly this gap. Two buyers in
+// the VOC pull were being worked by a man online while their marriage had gone without affection,
+// so a read that points her outside the relationship ("you deserve someone who…") can be acted on
+// toward him. The guard therefore keeps the read on HER and on what lies between her and her
+// partner, never on anyone else. See fb-tarot/docs/drafts/rewrites/_voc-4hooks-2026-11-05.md.
+//
+// Mirrors PARTNERED_HOOKS in client/src/content/tarotReads.ts.
+const PARTNERED_TAROT_HOOKS = new Set([
+  'cards-more-affection',
 ])
 
 const MONEY_GUARD =
@@ -2054,6 +2083,9 @@ export function buildTarotReflectPrompt(userData: UserData, deck: string, hook: 
   // for the reason given at each Set: they are supersets, and the stricter frame must win.
   const ageBand = SOULMATE_AGEBAND_TAROT_HOOKS.has(hook)
   const keyword = SOULMATE_KEYWORD_TAROT_HOOKS.has(hook)
+  // 🔴 partnered is tested straight after money, ahead of every other branch. No other frame
+  // overlaps it; its job is to stop the fall-through to decode-him, which would read the partner.
+  const partnered = PARTNERED_TAROT_HOOKS.has(hook)
   // Five frames. Self-frame hooks (e.g. "will I love again?") read HER future and affirm
   // the hopeful yes; decode-him hooks read HIM strictly as a tendency, never a verdict;
   // after-loss hooks read her future while a real person she has lost stands in the
@@ -2069,6 +2101,8 @@ export function buildTarotReflectPrompt(userData: UserData, deck: string, hook: 
   // making on its own rather than riding along with a shipping family.
   const frameLine = money
     ? `This reading is about HER MONEY. No particular person appears in it, nothing may be said about what she should DO with money, and the answer she needs is that the block was never her: land ${tendency}.`
+    : partnered
+    ? `This reading is about HER and what she needs, inside a relationship she is in now. Her partner is real but is not the one being read: land ${tendency}.`
     : ageBand
     ? `This reading is about HER own future. No particular person exists in it yet, and she is asking WHEN or WHETHER, never about a man she has met: land ${tendency}.`
     : keyword
@@ -2084,6 +2118,8 @@ export function buildTarotReflectPrompt(userData: UserData, deck: string, hook: 
           : `This reading is about HIM, but the affirmation is about HER: land ${tendency}.`
   const guardLine = money
     ? MONEY_GUARD + (MONEY_PRAYER_TAROT_HOOKS.has(hook) ? MONEY_PRAYER_GUARD : '')
+    : partnered
+    ? `HER NEED IS ORDINARY, AND THE READ STAYS WITH HER. Never call it too much, needy, clingy or demanding. Never speak for her partner: not why the affection has thinned, not their feelings, body, age, illness, health or desire (even when she names an illness, do not say it back), and never convict them as cold or selfish. NEVER POINT HER OUTSIDE THE RELATIONSHIP: if she mentions someone else, someone she has been talking to, or looking elsewhere, do not say it back in any form (not 'a stranger', not 'someone online', not 'elsewhere', not 'what you're reaching for'); acknowledge the loneliness in words of your own and bring the read back to her and the card. Never encourage or affirm that person, and never say she deserves someone who would. Never rule on staying or leaving, and never predict the relationship ending or lasting. Never hand her a tactic (talk to them, love languages, date nights, therapy). Open on the card and say back what she shared in plain words of your own: never repeat her age, any number of years, or what she said about sex. Never use sexual words, and never use therapy or diagnosis language (attachment, anxious, avoidant, trauma). Never give a date or a length of time. Affirm HER warmth and the honesty of what she wants through the card's energy.`
     : ageBand
     ? `NEVER GIVE A LENGTH OF TIME. Not a date and not a duration — no "soon", no "not much longer", no "any day now", no season, no number of days, weeks, months or years, forward or back, and nothing that positions her on a timeline ("almost there", "halfway"). If she asks how long, DECLINE IT OUT LOUD and then give her something real instead; a quiet change of subject reads as evasion and she feels conned. Never place a person and never describe one. Never hand her a tactic — no going out more, no apps, no moving, no working on herself first. Never explain the not-yet as a fault in her (blocks, walls, standards, not being ready, not loving herself enough). Never name her age or any number about her, never mention her health, her body or children, and never presume how a marriage ended. Never contact or speak for anyone who has died. Affirm the hopeful yes warmly about HER, through the card's energy.`
     : keyword

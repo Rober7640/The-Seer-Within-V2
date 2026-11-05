@@ -1,0 +1,46 @@
+{
+  "hook": "cards-end-same-way",
+  "headline": "Why do my relationships always end the same way?",
+  "method": "natural-cut",
+  "frame": "loneliness",
+  "note": "NEW HOOK 2026-11-05, Natural Tarot-Cut (7 cuts), face-down return-mhf, LONELINESS frame (no man exists in this read). NOT YET WIRED: the hook is in no registry and not in LONELINESS_TAROT_HOOKS, so until it is added there it would fall through to decode-him. Add it to that Set at wiring time.\n\nTHE WORD DOING THE WORK is 'same'. She can see the ending coming (VOC q1, 179 rows / 26 buyers: 'Tired of trying in relationships because they all end the same way'). THE FEAR UNDER IT: it's me, and it will keep happening, out to 'I fear I will be alone without a partner for the rest of my life.'\n\nCUT 3 ANSWERS THAT FEAR FLAT, a different answer per card, each warranted by what is drawn: a (Magician, the full table) = the same ending doesn't mean something's missing in you. b (Hanged Man, living wood with leaves) = you're not being punished, and nothing in you deserves it. c (Fool, the small bundle) = those endings aren't packed into what he carries, so they don't decide what comes next for you. Together: the sameness is not a verdict on her and not proof of how her story goes.\n\nBANS AND WHY. (1) NO MAN: the card figure stays a card figure, never her ex or a future man. The ad pulls women just out of cheating/toxic relationships and women stuck in a ghost-and-return cycle with ONE man ('over a year of this same cycle'); a figure who becomes 'him' either reopens the door to that man or promises a new one. (2) NOTHING FATED either way: no destiny, lesson, purpose, karma or 'reason this happens'; never 'you'll always be alone' and never 'someone is coming'. 'Not the last word / doesn't decide what comes next' is the ceiling, because the reader fearing 'alone for the rest of my life' hears either direction as a ruling. (3) NO SELF-BLAME, including the kind-sounding forms (you keep choosing, you attract, self-sabotage, a pattern your soul is ready to break, you give/love too much, too patient): the repeated ending is mostly something done TO her ('every relationship I have had they cheated. Two husbands', 'gone on to marry the next woman'), so any of these blames her for what was done to her. (4) NO THERAPY OR DIAGNOSIS WORDS (attachment, wounds, trauma, inner child, healing, 'do the work', toxic, narcissist) and NEVER 'a pattern' or 'break the cycle': she arrives already told 'there is some kind of pattern repeating itself' by another reader and already calling herself 'childhood attachment wounds… I have done the work, for years'. Echoing either confirms the case against her that the read exists to refuse. (5) NO BLAME ON THE MEN: they don't exist in this read, and convicting them is a ruling on real people. (6) NO TACTIC, DATE, LENGTH, COUNT OR ODDS: 'every one' and 'ending after ending' only restate her own 'always'. (7) NO INVENTED LIFE FACT: cut 6 uses only her headline words plus what cuts 1-5 established. (8) NO MEDIUMSHIP. The guard line's 'never presume whether she has had love before' is satisfied by using only HER word, 'relationships', which the headline itself supplies; the read never says 'love before'.\n\nCUT 7 on every card aims at what keeps bringing the endings to the same place, left unresolved: a = what turns them toward that ending when nothing's missing; b = what's kept that rope tied; c = what pulls each one toward that same ending.",
+  "voc": {
+    "pulled": "2026-11-05",
+    "pattern": "q1-same-way",
+    "matched": 179,
+    "buyers": 26,
+    "verdict": "ok",
+    "why": ""
+  },
+  "decks": {
+    "return-mhf": {
+      "a": [
+        "You chose while all three were face down. You turned the Magician — see the cup, coin, blade and wand on his table.",
+        "Your relationships always end the same way, and you asked why. The Magician has all he needs right there in front of him.",
+        "So the same ending doesn't mean something's missing in you, dear. Nothing was.",
+        "But his table doesn't show what's been ending them.",
+        "Every piece was on the table, yet they ended the same way.",
+        "That's why you had to ask why. With nothing missing, the same ending doesn't add up.",
+        "Let me look closer at what turns them toward that ending when nothing's missing…"
+      ],
+      "b": [
+        "The backs showed you nothing. You turned the Hanged Man — he's upside down, but see the green leaves on the wood he hangs from.",
+        "You want to know why your relationships always end the same way. That wood is alive, so he's paused there, not punished.",
+        "And you're not being punished either. The same ending doesn't mean something in you deserves it.",
+        "Still, one rope holds his ankle, and the card doesn't show what put it there.",
+        "That rope isn't your doing, and still every ending lands in the same place.",
+        "So your question was never about what you deserve. It's about what keeps tying each ending to that rope, dear.",
+        "Let me see what's kept that rope tied, ending after ending…"
+      ],
+      "c": [
+        "Nothing on the three backs told them apart. You turned the Fool — notice the small bundle tied to his stick.",
+        "You asked why your relationships always end the same way. The Fool's just setting out, and that bundle is all he's brought.",
+        "Those endings aren't packed in that bundle, so they don't get to decide what comes next for you.",
+        "The Fool only shows a beginning. What brings your relationships to their end isn't on this card.",
+        "And still, every one of them has ended the same way.",
+        "You didn't ask why they end. You asked why they end the same way.",
+        "Now let's look at what pulls each one toward that same ending…"
+      ]
+    }
+  }
+}
