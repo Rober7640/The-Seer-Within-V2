@@ -1,0 +1,46 @@
+{
+  "hook": "cards-more-affection",
+  "headline": "Why do I need more affection than my partner does?",
+  "method": "natural-cut",
+  "frame": "partnered (NEW — not yet in prompts.ts)",
+  "note": "NEW HOOK 2026-11-05, Natural Tarot-Cut (7 cuts), face-down return-mhf. Needs the new PARTNERED frame Set at wiring, tested ahead of decode-him. It is the only lander on the funnel where a real, current partner exists but the question is about HER, so no existing frame covers it. Until that Set exists the hook would fall through to decode-him ('This reading is about HIM'), which is exactly wrong here: it would have the model speak for her partner.\n\nTHE WORD DOING THE WORK is 'need more', meaning: is my wanting excessive? THE READER (VOC q4, 402 rows / 61 buyers, ~12 of them this partnered reader): mostly a long-married woman in a marriage with no touch in it ('married for 28 years, for the past 5 years my husband and I don't share intimacy' · 'if I try to show affection of any type I get pushed away'). She has already been told her need is the problem: 'He told me I was too needy.'\n\nCUT 3 ANSWERS THAT FEAR FLAT, a different answer per card, each warranted by what is drawn: a (Magician, the roses and lilies at his feet, explained plainly as love and tenderness) = your need for affection isn't too much; even the card of will has love growing where he stands. b (Hanged Man, upside down but his arms hang loose, nothing ties them) = wanting to be held is no fault in you, any more than his loose arms are. c (Fool, eyes up on the sky, face lifted to the light) = there's nothing strange in your need; it's as simple as his face lifting to the light. Cuts 4-6 set that answer against the fact that the affection she needs still isn't reaching her. Cut 7 names a narrow, unresolved obstruction (never a who): a = what's kept that tenderness from passing between the two of you; b = what the one rope is, and why it keeps affection from moving between you and your partner; c = what's in the way of the closeness you want with your partner.\n\nBANS AND WHY. (1) NEVER POINT HER OUTSIDE THE RELATIONSHIP: no 'you deserve someone who', no another / elsewhere / someone out there / a future man. 🔴 The sharpest harm in the pull: TWO buyers had a romance scammer step into exactly this gap ('My husband had not touched me in yrs… talking to a man online, I think he is a scammer' · 'the guy I thought loved me is a scammer for 2 years… I rented a place, bought…'), plus 'I find myself looking elsewhere'. A line like 'you deserve the touch he won't give' can be acted on toward the man online. That is also why every cut 7 places the affection BETWEEN HER AND HER PARTNER (or 'the two of you'): an unanchored 'what's kept the affection from reaching you' lets a scam reader cast her marriage as the block and the man online as the affection. On card b this matters most, because a married reader can read the rope as 'my marriage ties me'; b6-b7 put the rope between the two of them, not around her. (2) NEVER GRADE HER NEED: not needy, clingy, too much, demanding, insecure, 'expecting too much'. She has been told 'too needy'; any grade confirms it. Cut 3a's 'isn't too much' only names the grade to refuse it. (3) NEVER SPEAK FOR THE PARTNER: not why the partner gives less, not their feelings, desire, body, age, health or medication (the pull includes a husband with dementia; Meta health ban), and never convict them either (cold, selfish, withholding). 'Your partner' throughout, as she wrote it; the partner's gender is never assumed and he/him only ever refers to the card figure, who never becomes her partner. (4) NO STAY/LEAVE RULING and no prediction of the relationship ending or lasting (the pull includes criticism, cheating and being pushed away; either direction is a ruling on a real marriage). (5) NO SEXUAL WORDS anywhere (Meta sexual-practices ban): affection, touch, being held, closeness, tenderness, love only. (6) NO TACTIC (talk to your partner, love languages, date nights, therapy, ask for what you need) and NO THERAPY OR DIAGNOSIS WORDS (attachment, anxious, avoidant, trauma, wounds, 'do the work'). (7) NO DATE, LENGTH, COUNT OR ODDS; no fate; no mediumship. (8) NO INVENTED LIFE FACT: cut 6 uses only her headline words plus what cuts 1-5 established; nothing says 'for years' or assumes they live together. 'The affection you need isn't reaching you' is tied to her own 'need more', not to a claim that she gets none.\n\nART ANCHORS (assigned to avoid sibling collisions): a opens on the roses and lilies, not the four objects; b on the loose arms (he isn't tied up), with the one rope only from cut 4, never 'by his own choice'; c on his eyes up on the sky, and the cliff edge / drop is never mentioned.",
+  "voc": {
+    "pulled": "2026-11-05",
+    "pattern": "q4-affection",
+    "matched": 402,
+    "buyers": 61,
+    "verdict": "ok",
+    "why": "broad pattern; ~12 buyers are the partnered no-affection reader"
+  },
+  "decks": {
+    "return-mhf": {
+      "a": [
+        "You couldn't see a single face when you chose. You turned the Magician — now look down at the roses and lilies at his feet.",
+        "You asked why you need more affection than your partner does. Those roses and lilies stand for love and tenderness.",
+        "Your need for affection isn't too much. Even the Magician, with all his power, has love growing right where he stands.",
+        "But those flowers stay down at his feet. Nothing on the card carries their tenderness to you.",
+        "The love is right there in the picture, and still the affection you need isn't getting to you.",
+        "That's why you're the one asking why you need more than your partner does.",
+        "Let me look closer at what's kept that tenderness from passing between the two of you…"
+      ],
+      "b": [
+        "Every card was face down when you picked. You turned the Hanged Man — he's upside down, but look how loose his arms hang behind him.",
+        "Why do you need more affection than your partner does? Nothing ties those arms, so most of him is free and at ease.",
+        "Wanting to be held is no fault in you, any more than his loose arms are.",
+        "Up at his ankle, though, one rope holds him in place. The card doesn't say what that rope is.",
+        "One rope is enough to keep him there. Your want is no fault, yet the affection you need isn't reaching you.",
+        "You asked why you need more, as if the trouble sat in you. On this card, dear, it sits at that one rope.",
+        "Let me see what that rope is, and why it keeps affection from moving between you and your partner…"
+      ],
+      "c": [
+        "You only had the plain backs to go on, and you turned the Fool. Look where his eyes are: up at the sky.",
+        "You need more affection than your partner does, and you asked why. The Fool lifts his face to the light without a second thought.",
+        "There's nothing strange in your need for affection. It's as simple as his face lifting to the light.",
+        "Still, a face turned up is as far as the card goes. It doesn't show you being held.",
+        "Wanting it is that simple, dear, but the affection you need isn't coming to you.",
+        "So your question isn't about wanting less. It's about why you're not held the way you need.",
+        "Now let's look at what's in the way of the closeness you want with your partner…"
+      ]
+    }
+  }
+}

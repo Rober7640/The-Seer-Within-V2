@@ -120,6 +120,7 @@ const setOf = (name: string) => {
 }
 const FRAMES: Array<[string, string]> = [
   ['money', 'MONEY_TAROT_HOOKS'],
+  ['partnered', 'PARTNERED_TAROT_HOOKS'],
   ['soulmate × keyword', 'SOULMATE_KEYWORD_TAROT_HOOKS'],
   ['soulmate × age band', 'SOULMATE_AGEBAND_TAROT_HOOKS'],
   ['soulmate × after loss', 'AFTER_LOSS_TAROT_HOOKS'],

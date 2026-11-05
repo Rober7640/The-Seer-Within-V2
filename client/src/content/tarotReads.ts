@@ -829,6 +829,18 @@ export type TarotHook =
   | 'cards-connection-without-commitment' // How long can a connection this strong go without commitment?
   | 'cards-connection-heading-commit' // Is this connection heading for commitment, or staying as it is?
   | 'cards-stopping-him-committing' // Something is stopping him from committing. What is it?
+  // ── Four hooks, 2026-11-05 (Natural Tarot-Cut, return-mhf only) ─────────────────────
+  // Drafts + VOC: fb-tarot/docs/drafts/rewrites/<hook>.json and _voc-4hooks-2026-11-05.md.
+  // Each runs under a server frame Set (server/lib/prompts.ts); without it the hook falls
+  // through to decode-him ("This reading is about HIM") and the model invents a man.
+  //   end-same-way          -> LONELINESS_TAROT_HOOKS       (no man exists in the read)
+  //   give-more             -> SOULMATE_KEYWORD_TAROT_HOOKS (the thing she named is hers, not the fault)
+  //   marry-more-than-once  -> SOULMATE_AGEBAND_TAROT_HOOKS (no length of time; never "again")
+  //   more-affection        -> PARTNERED_TAROT_HOOKS        (NEW: a real partner, but the read is about HER)
+  | 'cards-end-same-way' // Why do my relationships always end the same way?
+  | 'cards-give-more' // Why do I give more than I get in love?
+  | 'cards-marry-more-than-once' // Will I marry more than once?
+  | 'cards-more-affection' // Why do I need more affection than my partner does?
 export type TarotCard = 'a' | 'b' | 'c' // the option the visitor tapped (A/B/C)
 export type TarotOption = TarotCard
 export type TarotVersion = 'a' | 'b' | 'c'
@@ -1414,6 +1426,8 @@ export type TarotAngle =
   | 'loneliness-ageband'
   | 'commitment-ageband'
   | 'commitment-connection'
+  // The partnered angle (2026-11-05) — see PARTNERED_HOOKS.
+  | 'partnered'
 
 export function angleForHook(hook: TarotHook): TarotAngle {
   if (SELF_FRAME_HOOKS.includes(hook)) return 'self-frame'
@@ -1458,6 +1472,9 @@ export function angleForHook(hook: TarotHook): TarotAngle {
   if (LONELINESS_AGEBAND_HOOKS.includes(hook)) return 'loneliness-ageband'
   if (COMMITMENT_AGEBAND_HOOKS.includes(hook)) return 'commitment-ageband'
   if (COMMITMENT_CONNECTION_HOOKS.includes(hook)) return 'commitment-connection'
+  if (SOULMATE_ENERGY_ADJACENT_HOOKS.includes(hook)) return 'soulmate-energy'
+  if (SOULMATE_AGEBAND_ADJACENT_HOOKS.includes(hook)) return 'soulmate-ageband'
+  if (PARTNERED_HOOKS.includes(hook)) return 'partnered'
   return 'decode-him'
 }
 
@@ -1525,6 +1542,7 @@ export const LONELINESS_AGEBAND_HOOKS: TarotHook[] = [
   'cards-connection-kept-alive',
   'cards-wait-on-connection',
   'cards-real-connection-coming',
+  'cards-end-same-way',
 ]
 export const COMMITMENT_AGEBAND_HOOKS: TarotHook[] = [
   'cards-picking-noncommittal-men',
@@ -1552,6 +1570,30 @@ export const COMMITMENT_CONNECTION_HOOKS: TarotHook[] = [
   'cards-connection-without-commitment',
   'cards-connection-heading-commit',
   'cards-stopping-him-committing',
+]
+
+// The 2026-11-05 hooks that report under an EXISTING soulmate angle without joining its roster.
+//
+// 🔴 DELIBERATELY NOT ADDED TO shared/soulmateLanderHooks.ts. That roster is not only a reporting
+// label: shared/soulmateLander.ts keys the soulmate AWeber list and the order's bumpProduct off
+// it, and the soulmate copy guards pin its members "by decision". Joining it would move these
+// two onto the soulmate list/bump the moment AWEBER_LIST_ID_TAROT_SOULMATE is set, and put their
+// copy under keyword/age-band guards written for other headlines. The angle label is the only
+// thing borrowed here; the server frame Set (prompts.ts) is what carries the safety.
+//   cards-give-more             -> 'soulmate-energy'  (frame: SOULMATE_KEYWORD_TAROT_HOOKS, like cards-energy-away)
+//   cards-marry-more-than-once  -> 'soulmate-ageband' (frame: SOULMATE_AGEBAND_TAROT_HOOKS, like cards-after-marriage)
+export const SOULMATE_ENERGY_ADJACENT_HOOKS: TarotHook[] = [
+  'cards-give-more',
+]
+export const SOULMATE_AGEBAND_ADJACENT_HOOKS: TarotHook[] = [
+  'cards-marry-more-than-once',
+]
+
+// The PARTNERED angle (2026-11-05). Its own label because no existing angle fits: a real, current
+// partner exists, but the question is about HER need, not about him — so it is neither decode-him
+// nor any no-man family. Mirrors PARTNERED_TAROT_HOOKS in server/lib/prompts.ts.
+export const PARTNERED_HOOKS: TarotHook[] = [
+  'cards-more-affection',
 ]
 
 export const TAROT_HOOKS: TarotHook[] = [
@@ -1709,6 +1751,10 @@ export const TAROT_HOOKS: TarotHook[] = [
   'cards-connection-without-commitment',
   'cards-connection-heading-commit',
   'cards-stopping-him-committing',
+  'cards-end-same-way',
+  'cards-give-more',
+  'cards-marry-more-than-once',
+  'cards-more-affection',
 ]
 
 // Shown when /fb-tarot is hit without a recognized ?hook= / ?deck= (bare visit).
@@ -1942,6 +1988,11 @@ export const HEADLINES: Record<TarotHook, string> = {
   'cards-connection-without-commitment': "How long can a connection this strong go without commitment?",
   'cards-connection-heading-commit': "Is this connection heading for commitment, or staying as it is?",
   'cards-stopping-him-committing': "Something is stopping him from committing. What is it?",
+  // Four hooks, 2026-11-05.
+  'cards-end-same-way': "Why do my relationships always end the same way?",
+  'cards-give-more': "Why do I give more than I get in love?",
+  'cards-marry-more-than-once': "Will I marry more than once?",
+  'cards-more-affection': "Why do I need more affection than my partner does?",
 }
 
 // Version C opener question, per hook. C opens with the card line + this, then
@@ -2294,6 +2345,11 @@ const TAROT_QUESTION: Record<TarotHook, string> = {
   'cards-connection-without-commitment': "Before I look closer, tell me… what keeps you holding on to this one?",
   'cards-connection-heading-commit': "Before I look closer, tell me… what would it take for you to call this settled?",
   'cards-stopping-him-committing': "Before I look closer, tell me… when did you first notice him stop short of it?",
+  // Four hooks, 2026-11-05 — from fb-tarot/docs/drafts/rewrites/_c-side-4hooks-2026-11-05.json.
+  'cards-end-same-way': "You asked why your relationships always end the same way. Before I look closer, tell me… how did the last one end, and what about it felt all too familiar?",
+  'cards-give-more': "You asked why you give more than you get in love. Before I look closer, tell me… what's something you always give that never seems to come back?",
+  'cards-marry-more-than-once': "You asked if you'll marry more than once. Before I look closer, tell me… what would you want a marriage to feel like now?",
+  'cards-more-affection': "You asked why you need more affection than your partner does. Before I look closer, tell me… what kind of affection do you wish you had more of?",
 }
 
 // ── Deck registry ────────────────────────────────────────────────────────────
@@ -2916,6 +2972,14 @@ const RETURN_MHF: CardSetConfig = {
     'cards-connection-kept-alive': "Think of what's on your mind. Tap the card that calls you.",
     'cards-wait-on-connection': "Think of what's on your mind. Tap the card that calls you.",
     'cards-real-connection-coming': "Think of what's on your mind. Tap the card that calls you.",
+    // 2026-11-05 — the four new hooks. Every one of their drafts bans "the man" outright
+    // (no-man, no future man, never her partner or the man online), so the deck default
+    // "Think of the man on your mind" is wrong for all four — neutral line, as on
+    // cards-love-never-stays.
+    'cards-end-same-way': "Think of what's on your mind. Tap the card that calls you.",
+    'cards-give-more': "Think of what's on your mind. Tap the card that calls you.",
+    'cards-marry-more-than-once': "Think of what's on your mind. Tap the card that calls you.",
+    'cards-more-affection': "Think of what's on your mind. Tap the card that calls you.",
   },
   strip: { url: '/tarot/return-mhf-strip.png', width: 972, height: 540 },
   // Face-down: the tap targets are backs, but the reveal flips to the real card
@@ -2943,6 +3007,90 @@ const RETURN_MHF: CardSetConfig = {
     c: 'Look — one foot already over the cliff edge, eyes on the sky, everything they own tied in one small bundle.',
   },
   reads: {
+    // ── Four hooks (2026-11-05) ──────────────────────────────────────────────────
+    // Natural Tarot-Cut. Seven authored cuts folded 1 | 2 | 3+4+5+6 | 7, from
+    // fb-tarot/docs/drafts/rewrites/<hook>.json — approved copy, folded verbatim by
+    // scripts/wire-4hooks-2026-11.mjs.
+    'cards-end-same-way': {
+      a: [
+        "You chose while all three were face down. You turned the Magician — see the cup, coin, blade and wand on his table.",
+        "Your relationships always end the same way, and you asked why. The Magician has all he needs right there in front of him.",
+        "So the same ending doesn't mean something's missing in you, dear. Nothing was.\nBut his table doesn't show what's been ending them.\nEvery piece was on the table, yet they ended the same way.\nThat's why you had to ask why. With nothing missing, the same ending doesn't add up.",
+        "Let me look closer at what turns them toward that ending when nothing's missing…",
+      ],
+      b: [
+        "The backs showed you nothing. You turned the Hanged Man — he's upside down, but see the green leaves on the wood he hangs from.",
+        "You want to know why your relationships always end the same way. That wood is alive, so he's paused there, not punished.",
+        "And you're not being punished either. The same ending doesn't mean something in you deserves it.\nStill, one rope holds his ankle, and the card doesn't show what put it there.\nThat rope isn't your doing, and still every ending lands in the same place.\nSo your question was never about what you deserve. It's about what keeps tying each ending to that rope, dear.",
+        "Let me see what's kept that rope tied, ending after ending…",
+      ],
+      c: [
+        "Nothing on the three backs told them apart. You turned the Fool — notice the small bundle tied to his stick.",
+        "You asked why your relationships always end the same way. The Fool's just setting out, and that bundle is all he's brought.",
+        "Those endings aren't packed in that bundle, so they don't get to decide what comes next for you.\nThe Fool only shows a beginning. What brings your relationships to their end isn't on this card.\nAnd still, every one of them has ended the same way.\nYou didn't ask why they end. You asked why they end the same way.",
+        "Now let's look at what pulls each one toward that same ending…",
+      ],
+    },
+    'cards-give-more': {
+      a: [
+        "None of the three showed its face when you picked. You turned the Magician — see how he stands at his table, in plain sight.",
+        "You asked why you give more than you get in love. The Magician holds nothing back, and he does it on purpose.",
+        "So the way you give was never the flaw, dear. On this card, holding nothing back is where the strength is.\nThat table only shows what he sets out, though. Nothing on it shows what comes back.\nAnd for all that strength out in the open, less comes back to you than you give.\nWhich is why you asked about what you get. You already know what you give.",
+        "Let me look closer at what's kept the love you give from being given back…",
+      ],
+      b: [
+        "You chose it face down, like the other two. You turned the Hanged Man — look, one rope holds him, and only at one ankle.",
+        "You asked why you give more than you get in love. The rest of him hangs loose, so just one thing is holding him.",
+        "Your giving hangs as free as the rest of him. The way you love isn't what's caught.\nBut you can't tell from the card what that rope is. You can only see that it holds.\nSo you've given freely, and with that rope holding, less has come back to you.\nThat's why your love goes out freely, dear, and what you get stays held.",
+        "Let me see what that one rope has been holding back from you…",
+      ],
+      c: [
+        "You couldn't tell one card's back from another. You turned the Fool, and there's a white rose in his hand.",
+        "You asked why you give more than you get in love. That white rose stands for a clean heart, with no catch in it.",
+        "What you give is as clean as that rose. There's no fault in it, and it isn't why you get less.\nStill, the card only shows him setting out. It doesn't show where that rose ends up.\nYet clean as it is, the love you give doesn't come back to you the same.\nSo you weren't asking what's wrong with you. You were asking where all that love goes.",
+        "Now let's look at what catches that love on its way back to you…",
+      ],
+    },
+    'cards-marry-more-than-once': {
+      a: [
+        "You picked before a single picture showed. You turned the Magician — now look up, at the sign above his head.",
+        "You asked if you'll marry more than once. The sign over him has no end, and neither does what he has to give.",
+        "So your chance at marriage isn't used up, dear. What you have to give hasn't run out.\nBut that sign stops at what you have to give. It says nothing about who, or when, or how.\nHis sign is in plain sight, yet your own chance is harder to see.\nThat's why you asked if you'll marry more than once. From where you stand, that chance is hard to see.",
+        "Let me look closer at what's been hiding that chance from you…",
+      ],
+      b: [
+        "The backs all looked alike when you chose. You turned the Hanged Man — he's upside down, but look how calm his face is.",
+        "You wonder if you'll marry more than once. A face that calm says this is a pause, and nothing on the card has closed.",
+        "And your chance at marriage hasn't closed, either.\nStill, all his face shows is the pause. I won't pretend to know when, or who.\nYour chance is open, dear, and still nothing on this card is moving.\nThat stillness is why you had to ask if you'll marry more than once.",
+        "Let me see what's keeping your chance in that pause…",
+      ],
+      c: [
+        "None of the backs gave anything away. You turned the Fool — see how full and high the sun is behind him.",
+        "You're asking whether you'll marry more than once. The Fool is starting out, and under a sun that high, nothing about it is hidden.",
+        "A marriage that feels right is still open to you. That was never a one-time chance.\nThe sun only lights the beginning, though. The card doesn't show who it's with, or how it goes.\nThe Fool is already walking, but for you marriage is still a question.\nSo when you ask about more than once, you're asking if that beginning is yours to walk into, dear.",
+        "Now let's look at what's been standing between you and that beginning…",
+      ],
+    },
+    'cards-more-affection': {
+      a: [
+        "You couldn't see a single face when you chose. You turned the Magician — now look down at the roses and lilies at his feet.",
+        "You asked why you need more affection than your partner does. Those roses and lilies stand for love and tenderness.",
+        "Your need for affection isn't too much. Even the Magician, with all his power, has love growing right where he stands.\nBut those flowers stay down at his feet. Nothing on the card carries their tenderness to you.\nThe love is right there in the picture, and still the affection you need isn't getting to you.\nThat's why you're the one asking why you need more than your partner does.",
+        "Let me look closer at what's kept that tenderness from passing between the two of you…",
+      ],
+      b: [
+        "Every card was face down when you picked. You turned the Hanged Man — he's upside down, but look how loose his arms hang behind him.",
+        "Why do you need more affection than your partner does? Nothing ties those arms, so most of him is free and at ease.",
+        "Wanting to be held is no fault in you, any more than his loose arms are.\nUp at his ankle, though, one rope holds him in place. The card doesn't say what that rope is.\nOne rope is enough to keep him there. Your want is no fault, yet the affection you need isn't reaching you.\nYou asked why you need more, as if the trouble sat in you. On this card, dear, it sits at that one rope.",
+        "Let me see what that rope is, and why it keeps affection from moving between you and your partner…",
+      ],
+      c: [
+        "You only had the plain backs to go on, and you turned the Fool. Look where his eyes are: up at the sky.",
+        "You need more affection than your partner does, and you asked why. The Fool lifts his face to the light without a second thought.",
+        "There's nothing strange in your need for affection. It's as simple as his face lifting to the light.\nStill, a face turned up is as far as the card goes. It doesn't show you being held.\nWanting it is that simple, dear, but the affection you need isn't coming to you.\nSo your question isn't about wanting less. It's about why you're not held the way you need.",
+        "Now let's look at what's in the way of the closeness you want with your partner…",
+      ],
+    },
     // ── Commitment age-matrix + connection-vocab (2026-08-27) ────────────────────
     // Natural Tarot-Cut. Seven authored cuts folded 1 | 2 | 3+4+5+6 | 7, from
     // fb-tarot/docs/writeups/natural/REVIEW-commit-vocab-2026-08-27.md — approved copy,

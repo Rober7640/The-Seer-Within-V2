@@ -6,11 +6,11 @@
 > so the live section cannot claim a lander is something the code says it is not.
 > Draft candidates come from the typed `DRAFT_CANDIDATES` roster in `scripts/lander-registry.mts`.
 
-**148 live landers.** money **22** · soulmate × keyword **6** · soulmate × age band **11** · soulmate × after loss **3** · soulmate × where **3** · loneliness **27** · self-frame **2** · decode-him **74**
+**158 live landers.** money **22** · partnered **1** · soulmate × keyword **7** · soulmate × age band **12** · soulmate × after loss **3** · soulmate × where **3** · loneliness **28** · self-frame **2** · decode-him **80**
 
 **0 draft candidates** with both Natural and Shadow manuscripts written for review. They are not routable or armed.
 
-**81 armed** for the Inherited Shadow (`natural + shadow` below): `fb-tarot/docs/writeups/shadow-split-test-checklist.md`
+**87 armed** for the Inherited Shadow (`natural + shadow` below): `fb-tarot/docs/writeups/shadow-split-test-checklist.md`
 
 **A lander is one hook.** Most live only on `return-mhf`, the face-down deck every live ad
 points at; some also have `arcana-mfh` / `arcana-eef` / `decode-him` variants, and an edit has
@@ -61,7 +61,15 @@ Frame Set: `MONEY_TAROT_HOOKS` (`server/lib/prompts.ts`)
 |  | `cards-trusted-loss-blocking-money` | I lost what I had through someone I trusted. Is that still blocking my money? | natural + shadow | return-mhf |
 |  | `cards-working-money-by-now` | I'm still working. What's blocking the money I should have by now? | natural + shadow | return-mhf |
 
-## soulmate × keyword — 6
+## partnered — 1
+
+Frame Set: `PARTNERED_TAROT_HOOKS` (`server/lib/prompts.ts`)
+
+| | Hook | Ad headline | Method | Decks |
+|---|---|---|---|---|
+|  | `cards-more-affection` | Why do I need more affection than my partner does? | natural | return-mhf |
+
+## soulmate × keyword — 7
 
 Frame Set: `SOULMATE_KEYWORD_TAROT_HOOKS` (`server/lib/prompts.ts`)
 
@@ -71,10 +79,11 @@ Frame Set: `SOULMATE_KEYWORD_TAROT_HOOKS` (`server/lib/prompts.ts`)
 |  | `cards-blocking-soulmate` | Is something blocking me from meeting my soulmate? | natural + shadow | return-mhf |
 |  | `cards-energy-away` | Is my energy keeping my soulmate away? | natural + shadow | return-mhf |
 |  | `cards-energy-soulmate` | What does my energy say about my soulmate? | natural + shadow | return-mhf |
+|  | `cards-give-more` | Why do I give more than I get in love? | natural | return-mhf |
 |  | `cards-heal-first` | Do I need to heal before my soulmate arrives? | natural + shadow | return-mhf |
 |  | `cards-waiting-to-heal` | Is my soulmate waiting for me to heal? | natural + shadow | return-mhf |
 
-## soulmate × age band — 11
+## soulmate × age band — 12
 
 Frame Set: `SOULMATE_AGEBAND_TAROT_HOOKS` (`server/lib/prompts.ts`)
 
@@ -87,6 +96,7 @@ Frame Set: `SOULMATE_AGEBAND_TAROT_HOOKS` (`server/lib/prompts.ts`)
 |  | `cards-found-me-yet` | Why hasn't my soulmate found me yet? | natural + shadow | return-mhf |
 |  | `cards-keeps-waiting` | How long does a soulmate keep you waiting? | natural + shadow | return-mhf |
 |  | `cards-longer-to-wait` | How much longer do I have to wait for my soulmate? | natural + shadow | return-mhf |
+|  | `cards-marry-more-than-once` | Will I marry more than once? | natural | return-mhf |
 |  | `cards-missed-chance` | Is my soulmate still coming, or have I already missed him? | natural + shadow | return-mhf |
 |  | `cards-second-time` | How long does it take to find a soulmate the second time? | natural + shadow | return-mhf |
 |  | `cards-slipping-past` | Why does my soulmate keep slipping past me? | natural + shadow | return-mhf |
@@ -112,7 +122,7 @@ Frame Set: `SOULMATE_WHERE_TAROT_HOOKS` (`server/lib/prompts.ts`)
 |  | `cards-soulmate-closer` | Is my soulmate closer than I think? | natural + shadow | return-mhf |
 |  | `cards-where-soulmate` | Where is my soulmate right now? | natural + shadow | return-mhf |
 
-## loneliness — 27
+## loneliness — 28
 
 Frame Set: `LONELINESS_TAROT_HOOKS` (`server/lib/prompts.ts`)
 
@@ -127,6 +137,7 @@ Frame Set: `LONELINESS_TAROT_HOOKS` (`server/lib/prompts.ts`)
 |  | `cards-destined-alone` | Why do I feel destined to be alone? | natural + shadow | return-mhf |
 |  | `cards-destined-or-not-yet` | Am I destined to be alone, or has it just not happened yet? | natural + shadow | return-mhf |
 |  | `cards-empty-house-alone` | Why is being alone hardest now that the house is empty? | natural + shadow | return-mhf |
+|  | `cards-end-same-way` | Why do my relationships always end the same way? | natural | return-mhf |
 |  | `cards-end-up-alone` | Why do I keep ending up alone? | natural | return-mhf |
 |  | `cards-given-up` | Have I given up on love without realizing it? | natural | return-mhf |
 |  | `cards-god-mean-me-alone` | How much longer does God mean me to be alone? | natural + shadow | return-mhf |
@@ -155,7 +166,7 @@ Frame Set: `SELF_FRAME_TAROT_HOOKS` (`server/lib/prompts.ts`)
 |  | `cards-love-again` | Will I love again? | natural | arcana-mfh · arcana-eef |
 |  | `cards-soulmate` | When is my soulmate coming? | natural | arcana-mfh · arcana-eef |
 
-## decode-him — 74
+## decode-him — 80
 
 No frame Set — these fall through to the default `decode-him` clause.
 
@@ -167,11 +178,14 @@ No frame Set — these fall through to the default `decode-him` clause.
 |  | `cards-come-back` | Will he come back? | natural | return-mhf |
 |  | `cards-commit-or-company` | Does he want to commit, or does he just want company? | natural + shadow | return-mhf |
 |  | `cards-commitment-uncertain-years` | Why is commitment still uncertain after all these years? | natural + shadow | return-mhf |
+|  | `cards-connection-heading-commit` | Is this connection heading for commitment, or staying as it is? | natural + shadow | return-mhf |
 |  | `cards-connection-nothing` | Why does this connection feel like my soulmate when nothing is happening? | natural | return-mhf |
 |  | `cards-connection-soulmate` | Is this connection my soulmate, or something else? | natural | return-mhf |
+|  | `cards-connection-without-commitment` | How long can a connection this strong go without commitment? | natural + shadow | return-mhf |
 |  | `cards-deceived` | Am I being deceived? | natural | return-mhf |
 |  | `cards-doing-wrong-wont-commit` | What am I doing wrong that he won't commit? | natural + shadow | return-mhf |
 |  | `cards-ever-back` | Will he ever come back to me? | natural | return-mhf |
+|  | `cards-expecting-too-much` | Am I expecting too much, or should he have committed by now? | natural + shadow | return-mhf |
 |  | `cards-faithful` | Is he being faithful to me? | natural | return-mhf |
 |  | `cards-feel-about-me` | How does he really feel about me? | natural | return-mhf |
 |  | `cards-feel-like-myself` | Am I ever going to feel like myself again? | natural | return-mhf |
@@ -188,6 +202,7 @@ No frame Set — these fall through to the default `decode-him` clause.
 |  | `cards-honest` | Is he being honest with you? | natural | arcana-mfh · arcana-eef · return-mhf |
 |  | `cards-how-much-longer-commit` | How much longer do I wait for him to commit? | natural + shadow | return-mhf |
 |  | `cards-imagining-it` | Does he love me, or am I imagining it? | natural | return-mhf |
+|  | `cards-instant-connection-commit` | The connection was instant. So why won't he commit? | natural + shadow | return-mhf |
 |  | `cards-left-without-word` | Why did he leave without a word? | natural | return-mhf |
 |  | `cards-lied-to` | Am I being lied to? | natural | return-mhf |
 |  | `cards-live-apart` | Why do we still live apart? | natural | return-mhf |
@@ -202,6 +217,7 @@ No frame Set — these fall through to the default `decode-him` clause.
 |  | `cards-not-enough` | Was I not enough for him to stay? | natural | return-mhf |
 |  | `cards-on-my-mind` | Why is he always on my mind? | natural | return-mhf |
 |  | `cards-picking-noncommittal-men` | Why do I keep picking non-committal men? | natural + shadow | return-mhf |
+|  | `cards-played-the-wife` | I've played the wife without the commitment. Why? | natural + shadow | return-mhf |
 |  | `cards-pulling-away` | Why is he pulling away from me? | natural | return-mhf |
 |  | `cards-ready-commit` | Is he ever going to be ready for real commitment? | natural + shadow | arcana-mfh · return-mhf |
 |  | `cards-real-person` | Is he the real person, or just a picture? | natural | arcana-mfh · return-mhf |
@@ -218,6 +234,7 @@ No frame Set — these fall through to the default `decode-him` clause.
 |  | `cards-still-think` | Does he still think about me? | natural | return-mhf |
 |  | `cards-stop-hurting` | I miss him so much — will this ever stop hurting? | natural | return-mhf |
 |  | `cards-stop-missing` | Will I ever stop missing him? | natural | return-mhf |
+|  | `cards-stopping-him-committing` | Something is stopping him from committing. What is it? | natural + shadow | return-mhf |
 |  | `cards-talking-someone` | Is he talking to someone else? | natural | return-mhf |
 |  | `cards-time-to-commit-before-moving-on` | How long do I give him to commit before I move on? | natural + shadow | return-mhf |
 |  | `cards-too-long` | Have I already given him too long? | natural | return-mhf |
