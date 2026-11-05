@@ -30,6 +30,8 @@ import {
 import NatalChartWheel, { type NatalChartData } from "@/components/NatalChartWheel";
 import VedicChartDiamond, { type VedicChartData } from "@/components/VedicChartDiamond";
 import BuyCreditsModal from "@/components/BuyCreditsModal";
+import LongCopyPaywallModal from "@/components/LongCopyPaywallModal";
+import type { BonusPreviewTier } from "@shared/paywall";
 import { paywallCopy } from "@/components/paywall/paywallCopy";
 import type { PaywallVariant } from "@shared/paywall";
 import TeaserCreditModal from "@/components/TeaserCreditModal";
@@ -577,6 +579,9 @@ export default function ChatServicePage() {
   // variant with no flash. Defaults to 'A' (current UI) until/unless resolved.
   const [paywallVariant, setPaywallVariant] = useState<PaywallVariant>("A");
   const [paywallTiers, setPaywallTiers] = useState<PricingTier[] | undefined>(undefined);
+  // Long-copy test ("updated test 1"): non-null only when the server enrols this
+  // user, and picks which paywall to render. null = today's BuyCreditsModal.
+  const [longCopyTest, setLongCopyTest] = useState<{ active: boolean; mode: "first_timer" | "repeat" } | null>(null);
   useEffect(() => {
     if (!selectedPersonaId) return;
     let cancelled = false;
@@ -589,6 +594,7 @@ export default function ChatServicePage() {
         if (cancelled || !data) return;
         setPaywallVariant(data.variant === "B" ? "B" : "A");
         if (Array.isArray(data.tiers) && data.tiers.length > 0) setPaywallTiers(data.tiers);
+        setLongCopyTest(data.longCopyTest?.active ? data.longCopyTest : null);
       })
       .catch(() => {});
     return () => { cancelled = true; };
@@ -1999,6 +2005,75 @@ export default function ChatServicePage() {
     );
   }
 
+  // Shared paywall handlers — used by BOTH BuyCreditsModal and (test arm)
+  // LongCopyPaywallModal, so the dismiss-while-out-of-credits + post-purchase
+  // resume behaviour is identical whichever paywall the user sees.
+  const handlePaywallOpenChange = (open: boolean) => {
+    setShowBuyCredits(open);
+    // User dismissed without paying while out of credits — clear stale session and show divider
+    if (!open && !oocPaymentSucceededRef.current && coinBalance <= 0) {
+      sessionActiveRef.current = false;
+      setSession(null);
+      setCoinBalance(0);
+      setInitialCoinBalance(0);
+      setReadingEnded(true);
+      refreshUser();
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: `reading-ended-${Date.now()}`,
+          role: "assistant" as const,
+          content: "",
+          sentAt: new Date().toISOString(),
+          isReadingEndedDivider: true,
+        },
+      ]);
+    }
+  };
+
+  const handlePaywallSuccess = async (newBalance: number) => {
+    oocPaymentSucceededRef.current = true;
+    // Auto-close the refill modal so billing resumes immediately
+    setShowBuyCredits(false);
+
+    // If reading had ended, resume the session with context
+    if (readingEnded) {
+      await resumeAfterPurchase(newBalance);
+      oocPaymentSucceededRef.current = false;
+      return;
+    }
+
+    setCoinBalance(newBalance);
+    lastUserMessageAt.current = Date.now();
+
+    // Dismiss refill banner and reset its state
+    setShowRefillBanner(false);
+    setRefillBannerDismissed(false);
+
+    // Recalibrate initialCoinBalance so the header coin display updates
+    const continuousElapsed = sessionStartTimeRef.current
+      ? Math.floor((Date.now() - sessionStartTimeRef.current) / 1000)
+      : 0;
+    const cpm = coinsPerMinuteRef.current;
+    const coinsUsedSoFar = secondsToCoins(continuousElapsed, cpm);
+    setInitialCoinBalance(newBalance + coinsUsedSoFar);
+
+    // Show credits purchased divider in chat
+    setMessages((prev) => [
+      ...prev,
+      {
+        id: `credits-purchased-${Date.now()}`,
+        role: "assistant" as const,
+        content: "",
+        sentAt: new Date().toISOString(),
+        isCreditsPurchasedDivider: true,
+      },
+    ]);
+
+    toast({ title: "Minutes added!", description: "Your reading continues." });
+    oocPaymentSucceededRef.current = false;
+  };
+
   return (
     <div className="fixed inset-0 flex overflow-hidden">
       {/* Debug overlay hidden for production — uncomment to re-enable
@@ -2709,79 +2784,33 @@ export default function ChatServicePage() {
       </div>
 
       {/* Buy Credits Modal */}
+      {longCopyTest?.active ? (
+      <LongCopyPaywallModal
+        open={showBuyCredits}
+        onOpenChange={handlePaywallOpenChange}
+        mode={longCopyTest.mode}
+        personaId={selectedPersonaId}
+        personaName={selectedPersona?.displayName}
+        avatarUrl={selectedPersona?.avatarUrl ?? undefined}
+        tiers={(paywallTiers ?? []) as BonusPreviewTier[]}
+        coinsPerMinute={selectedPersona?.coinsPerMinute ?? COINS_PER_MINUTE}
+        isOutOfCredits={coinBalance <= 0}
+        stillSee={null}
+        onSuccess={handlePaywallSuccess}
+      />
+      ) : (
       <BuyCreditsModal
         open={showBuyCredits}
-        onOpenChange={(open) => {
-          setShowBuyCredits(open);
-          // User dismissed without paying while out of credits — clear stale session and show divider
-          if (!open && !oocPaymentSucceededRef.current && coinBalance <= 0) {
-            sessionActiveRef.current = false;
-            setSession(null);
-            setCoinBalance(0);
-            setInitialCoinBalance(0);
-            setReadingEnded(true);
-            refreshUser();
-            setMessages((prev) => [
-              ...prev,
-              {
-                id: `reading-ended-${Date.now()}`,
-                role: "assistant" as const,
-                content: "",
-                sentAt: new Date().toISOString(),
-                isReadingEndedDivider: true,
-              },
-            ]);
-          }
-        }}
+        onOpenChange={handlePaywallOpenChange}
         personaId={selectedPersonaId}
         personaName={selectedPersona?.displayName}
         isOutOfCredits={coinBalance <= 0}
         pricingTiers={paywallTiers}
         coinsPerMinute={selectedPersona?.coinsPerMinute ?? COINS_PER_MINUTE}
         avatarUrl={selectedPersona?.avatarUrl ?? undefined}
-        onSuccess={async (newBalance) => {
-          oocPaymentSucceededRef.current = true;
-          // Auto-close the refill modal so billing resumes immediately
-          setShowBuyCredits(false);
-
-          // If reading had ended, resume the session with context
-          if (readingEnded) {
-            await resumeAfterPurchase(newBalance);
-            oocPaymentSucceededRef.current = false;
-            return;
-          }
-
-          setCoinBalance(newBalance);
-          lastUserMessageAt.current = Date.now();
-
-          // Dismiss refill banner and reset its state
-          setShowRefillBanner(false);
-          setRefillBannerDismissed(false);
-
-          // Recalibrate initialCoinBalance so the header coin display updates
-          const continuousElapsed = sessionStartTimeRef.current
-            ? Math.floor((Date.now() - sessionStartTimeRef.current) / 1000)
-            : 0;
-          const cpm = coinsPerMinuteRef.current;
-          const coinsUsedSoFar = secondsToCoins(continuousElapsed, cpm);
-          setInitialCoinBalance(newBalance + coinsUsedSoFar);
-
-          // Show credits purchased divider in chat
-          setMessages((prev) => [
-            ...prev,
-            {
-              id: `credits-purchased-${Date.now()}`,
-              role: "assistant" as const,
-              content: "",
-              sentAt: new Date().toISOString(),
-              isCreditsPurchasedDivider: true,
-            },
-          ]);
-
-          toast({ title: "Minutes added!", description: "Your reading continues." });
-          oocPaymentSucceededRef.current = false;
-        }}
+        onSuccess={handlePaywallSuccess}
       />
+      )}
 
       {/* Teaser Credit Modal (Nebula-style) */}
       <TeaserCreditModal

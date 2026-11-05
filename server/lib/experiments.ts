@@ -43,6 +43,16 @@ import { TEA_READING_PRICE_CENTS, TEA_READING_TEST_CENTS } from '@shared/backend
 // ── Paywall test constants (the one experiment Phase 1 folds in) ──────────────
 export const PAYWALL_EXPERIMENT_KEY = 'paywall_copy_2026';
 
+// ── Long-copy + bonus-pack paywall test ("updated test 1") ────────────────────
+// A SEPARATE experiment from paywall_copy_2026: the control arm keeps today's
+// paywall, the test arm shows the long-copy first-timer / repeat-buyer paywalls
+// with the bonus-minute ladder (incl. the $100 pack). Evelyn-scoped (scope.personaId)
+// via the experiment row. Ships `draft` → assign() returns control for everyone
+// until it's flipped to `running`, so merging changes nothing live. Arms: 'A'
+// (control, today's paywall) / 'B' (the long-copy test).
+export const LONGCOPY_EXPERIMENT_KEY = 'improve_v2_paywall_2026';
+export const LONGCOPY_TEST_ARM = 'B';
+
 // ── Persona prompt A/B (Phase 4b) ─────────────────────────────────────────────
 // Every system-prompt experiment shares this key prefix so the chat engine can
 // resolve "the active prompt test for this persona" at request time WITHOUT a
@@ -1130,12 +1140,95 @@ export interface GatewayAttemptRow {
   approvalPct: number;
 }
 
+/**
+ * One lander's slice of the split — the same per-arm numbers as gatewayDetail,
+ * grouped by the funnel + tarot hook recorded on each checkout exposure. Slices of a
+ * small test are noisy: read them for "is one lander behaving very differently",
+ * not for a per-lander winner.
+ */
+export interface GatewayLanderRow {
+  funnel: string | null;
+  hook: string | null;
+  checkouts: number;
+  arms: GatewayArmDetail[];
+}
+
 export interface GatewaySplitResult extends TallyResult {
   gatewayDetail: GatewayArmDetail[];
+  byLander: GatewayLanderRow[];
   attempts: GatewayAttemptRow[];
 }
 
 const usd = (cents: unknown) => Math.round(Number(cents) || 0) / 100;
+
+// The per-arm money columns for the by-lander tally. Kept column-for-column
+// identical to the pooled SELECT in tallyGatewaySplit (the unit test checks the
+// lander rows add up to the pooled ones), so the two never disagree.
+const GATEWAY_ARM_AGG = sql`
+           count(*)                                                                AS viewers,
+           count(*) FILTER (WHERE ${V1_IN_TEST_PURCHASE})                          AS buyers,
+           count(*) FILTER (WHERE ${V1_IN_TEST_PURCHASE} AND c.payment_gateway = 'paymentsai') AS paid_pai,
+           count(*) FILTER (WHERE ${V1_IN_TEST_PURCHASE} AND COALESCE(c.payment_gateway, 'stripe') = 'stripe') AS paid_stripe,
+           COALESCE(sum(c.main_purchase_amount)          FILTER (WHERE ${V1_IN_TEST_PURCHASE}), 0) AS main_cents,
+           COALESCE(sum(COALESCE(c.bump_amount_cents, 0)) FILTER (WHERE ${V1_IN_TEST_PURCHASE}), 0) AS bump_cents,
+           count(*) FILTER (WHERE ${V1_IN_TEST_PURCHASE} AND c.upsell_purchased)   AS u1_buyers,
+           COALESCE(sum(COALESCE(c.upsell_amount, 0))  FILTER (WHERE ${V1_IN_TEST_PURCHASE} AND c.upsell_purchased), 0)  AS u1_cents,
+           count(*) FILTER (WHERE ${V1_IN_TEST_PURCHASE} AND c.upsell2_purchased)  AS u2_buyers,
+           COALESCE(sum(COALESCE(c.upsell2_amount, 0)) FILTER (WHERE ${V1_IN_TEST_PURCHASE} AND c.upsell2_purchased), 0) AS u2_cents`;
+
+function gatewayArmDetail(variant: string, q: Record<string, unknown>): GatewayArmDetail {
+  const checkouts = Number(q.viewers) || 0;
+  const total =
+    (Number(q.main_cents) || 0) + (Number(q.bump_cents) || 0) +
+    (Number(q.u1_cents) || 0) + (Number(q.u2_cents) || 0);
+  return {
+    variant,
+    checkouts,
+    buyers: Number(q.buyers) || 0,
+    paidOnStripe: Number(q.paid_stripe) || 0,
+    paidOnPaymentsai: Number(q.paid_pai) || 0,
+    mainRevenueUsd: usd(q.main_cents),
+    bumpRevenueUsd: usd(q.bump_cents),
+    upsell1Buyers: Number(q.u1_buyers) || 0,
+    upsell1RevenueUsd: usd(q.u1_cents),
+    upsell2Buyers: Number(q.u2_buyers) || 0,
+    upsell2RevenueUsd: usd(q.u2_cents),
+    totalRevenueUsd: usd(total),
+    revPerCheckoutUsd: checkouts ? Math.round(total / checkouts) / 100 : 0,
+  };
+}
+
+/**
+ * Pure: group by-lander SQL rows into one entry per lander, arms in control →
+ * treatment order (an arm with no checkouts on that lander gets a zero row so the
+ * two are always side by side), busiest lander first.
+ */
+export function assembleGatewayByLander(
+  raw: Record<string, unknown>[],
+  controlKey: string,
+  treatmentKey: string,
+): GatewayLanderRow[] {
+  const landers = new Map<string, { funnel: string | null; hook: string | null; arms: Map<string, Record<string, unknown>> }>();
+  for (const r of raw) {
+    const funnel = r.funnel == null ? null : String(r.funnel);
+    const hook = r.hook == null ? null : String(r.hook);
+    const key = `${funnel ?? ''}\u0000${hook ?? ''}`;
+    if (!landers.has(key)) landers.set(key, { funnel, hook, arms: new Map() });
+    landers.get(key)!.arms.set(String(r.variant), r);
+  }
+  const order = (v: string) => (v === controlKey ? 0 : v === treatmentKey ? 1 : 2);
+  const out: GatewayLanderRow[] = [];
+  for (const l of Array.from(landers.values())) {
+    const variants = new Set<string>([controlKey, treatmentKey, ...Array.from(l.arms.keys())]);
+    const arms = Array.from(variants)
+      .sort((a, b) => order(a) - order(b) || a.localeCompare(b))
+      .map((v) => gatewayArmDetail(v, l.arms.get(v) ?? {}));
+    out.push({ funnel: l.funnel, hook: l.hook, checkouts: arms.reduce((s, a) => s + a.checkouts, 0), arms });
+  }
+  return out.sort(
+    (a, b) => b.checkouts - a.checkouts || `${a.funnel}${a.hook}`.localeCompare(`${b.funnel}${b.hook}`),
+  );
+}
 
 export async function tallyGatewaySplit(opts: V1MainTallyOptions): Promise<GatewaySplitResult> {
   const result = await db.execute(sql`
@@ -1192,6 +1285,20 @@ export async function tallyGatewaySplit(opts: V1MainTallyOptions): Promise<Gatew
     };
   });
 
+  // Same columns, same window, split by the lander recorded on the exposure.
+  const lander = await db.execute(sql`
+    SELECT e.variant AS variant,
+           e.context->>'funnel' AS funnel,
+           e.context->>'hook'   AS hook,
+           ${GATEWAY_ARM_AGG}
+    FROM experiment_exposures e
+    LEFT JOIN conversations c ON c.id = e.context->>'conversationId'
+    WHERE e.experiment_key = ${opts.key}
+      AND e.created_at >= ${opts.startISO}
+    GROUP BY 1, 2, 3;
+  `);
+  const byLander = assembleGatewayByLander(lander.rows as Record<string, unknown>[], controlKey, treatmentKey);
+
   // Attempts on THIS test's orders only. The main charge joins on email as well as the
   // order id: a DECLINED Payments.AI main charge never becomes the conversation's order
   // id (only an approved one is written), but it is still her attempt.
@@ -1233,7 +1340,7 @@ export async function tallyGatewaySplit(opts: V1MainTallyOptions): Promise<Gatew
     };
   });
 
-  return { ...stats, gatewayDetail, attempts };
+  return { ...stats, gatewayDetail, byLander, attempts };
 }
 
 export interface TallyBySignRow {

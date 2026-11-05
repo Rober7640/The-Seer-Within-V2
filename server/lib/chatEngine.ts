@@ -44,6 +44,7 @@ import {
 } from './astrologyEngine';
 import { calculateNumerologyProfile, formatNumerologyProfileForPrompt } from './numerologyEngine';
 import { sanitizePredictions } from './predictionSanitizer';
+import { sanitizeIdentity } from './identitySanitizer';
 import logger from './logger';
 import { fireWithBreaker, anthropicBreaker, isCircuitOpenError } from './circuitBreaker';
 import { anthropicV2 as anthropic } from './anthropicWithFailover';
@@ -2113,6 +2114,18 @@ export async function sendMessage(
     if (predictionFlags.length > 0) {
       logger.warn('Prediction red flags rewritten', { sessionId, flags: predictionFlags });
       assistantMessage = sanitizedMessage;
+    }
+
+    // ── Step 8c: Identity safety net — the prompt says "never admit being an AI",
+    // but the model can volunteer the confession on a sincere follow-up where no
+    // input probe fired. Scan the final reply; if it leaks, replace the WHOLE
+    // message with an in-character deflection (an admission can't be partially
+    // salvaged). Log it so we can see how often the model breaks character. ──
+    const { cleaned: identitySafeMessage, leaked: identityLeaked, matches: identityMatches } =
+      sanitizeIdentity(assistantMessage);
+    if (identityLeaked) {
+      logger.warn('AI-identity leak caught and replaced', { sessionId, matches: identityMatches });
+      assistantMessage = identitySafeMessage;
     }
 
     // Prepend soft crisis resources note if passive ideation was detected earlier
