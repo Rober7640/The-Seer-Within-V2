@@ -969,8 +969,15 @@ const esc = (s) => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</
 // The writer may bold and italicise. A stray asterisk never reaches the page.
 const inline = (t) => esc(t).replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
   .replace(/\*([^*]+)\*/g, '<em>$1</em>').replace(/\*/g, '');
-const paras = (t) => String(t || '').trim().split(/\n\s*\n/).filter(Boolean)
-  .map((p) => `<p>${inline(p.trim().replace(/\n/g, ' '))}</p>`).join('');
+// Lines starting "- " become a bullet list (11 habits and signs, 2026-11-05); other lines stay one paragraph.
+const block = (p) => { const out = []; let txt = [], li = [];
+  const flushP = () => { if (txt.length) out.push(`<p>${inline(txt.join(' '))}</p>`); txt = []; };
+  const flushL = () => { if (li.length) out.push(`<ul>${li.map((x) => `<li>${inline(x)}</li>`).join('')}</ul>`); li = []; };
+  for (const line of p.trim().split('\n')) { const m = line.match(/^\s*-\s+(.*)$/);
+    if (m) { flushP(); li.push(m[1].trim()); } else if (li.length && /^\s+\S/.test(line)) { li[li.length - 1] += ' ' + line.trim(); }
+    else { flushL(); if (line.trim()) txt.push(line.trim()); } }
+  flushP(); flushL(); return out.join(''); };
+const paras = (t) => String(t || '').trim().split(/\n\s*\n/).filter(Boolean).map(block).join('');
 const ORD = ['first','second','third','fourth','fifth','sixth','seventh','eighth','ninth','tenth','eleventh','twelfth'];
 const sec = j.sections;
 const missing = ['opening', ...Array.from({ length: 12 }, (_, i) => String(i + 1)), 'letter', 'close'].filter((k) => !String(sec[k] || '').trim());
@@ -1022,6 +1029,7 @@ const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><style>
   section.card figure.crop { height: 2.47in; overflow: hidden; border-bottom: 1pt solid #DDD6C6; }
   section.card:after { content: ''; display: block; clear: both; }
   p { margin: 0 0 9pt; orphans: 3; widows: 3; }
+  ul { margin: 0 0 9pt 16pt; padding: 0; } li { margin: 0 0 4pt; }
   .letter { page-break-before: always; break-before: page; background: #FBF6E9; border: 1pt solid #E2D7BC; padding: 26pt 30pt 22pt; }
   .letter h2 { font-size: 17pt; font-weight: normal; font-style: italic; text-align: center; margin: 0 0 16pt; }
   .letter p { font-size: 12pt; line-height: 1.7; }

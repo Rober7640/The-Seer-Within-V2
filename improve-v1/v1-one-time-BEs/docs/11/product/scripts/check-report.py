@@ -46,6 +46,20 @@ if QS:
     for c in (3, 4, 5, 6, 7, 8, 11): BAND[str(c)] = (80, 230)   # +the "Card N, name:" label
     BAND["2"] = (120, 310)                                      # + the personal read
     TOTAL = (2800, 4250)   # +the contents list in the opening
+# Bar shape (operator, 2026-11-05: a real buyer reading set the writing bar): one spine image set in the
+# opening and paid off in the close's last paragraph; a habits list in the cards; a dated close (7 days /
+# 30 days / 3 months), signs to watch for, and the three 30-day instructions, which move out of card 12
+# into the close. Marked by "bar shape" on the first line. Leaner cards, a shorter letter, a longer close.
+BAR = QS and "bar shape" in open(path, encoding="utf-8").readline()
+SPINE = {5: "dents"}   # per report: the spine image's key word, in the opening AND the close's last paragraph
+if BAR:
+    BAND = {"opening": (130, 230), "letter": (1000, 1250), "close": (420, 620)}   # close: dated future + signs + 3 instructions
+    for c in (1, 8): BAND[str(c)] = (130, 230)
+    for c in (9, 10): BAND[str(c)] = (150, 260)
+    BAND["5"] = (160, 260)                                      # + the habits list and the lie
+    for c in (3, 4, 6, 7, 11, 12): BAND[str(c)] = (60, 200)
+    BAND["2"] = (110, 230)                                      # + the personal read
+    TOTAL = (2900, 3550)   # the bar runs ~2,800; aim 2,900-3,400, the long LP/EX fill lines push the top end
 BANNED = {
     "numerology words": r"numerolog|karmic|vowel|soul urge|life path|\bexpression\b|\bsum\b",
     "words for what they were": r"\bex\b|husband|boyfriend|girlfriend|partner|\blover\b|spouse",
@@ -63,11 +77,24 @@ def rules(sec):
     op, c12, last = sec["opening"], sec["12"], sec["close"]
     yield "opening: the birth-name sentence, as its own sentence", "Your birth name and date set how I lay your twelve cards." in op
     yield "opening: this is someone living", "this is someone living" in op.lower()
-    yield "opening: you owe them no reply", "you owe them no reply" in op
+    if not BAR: yield "opening: you owe them no reply", "you owe them no reply" in op   # bar shape: said once, in card 11 (blind read 3: twice reads like a disclaimer)
     yield "card 11: you owe them no reply", "you owe them no reply" in sec["11"]
     for c in ("1", "9", "10"): yield f"card {c} opens in bold", sec[c].startswith("**")
-    yield "card 12: both bold labels", "**Stop going back.**" in c12 and "**The one thing to do.**" in c12
-    yield "card 12: the five-to-seven-day window", "five to seven days" in c12
+    if BAR:   # the instructions live in the close now, after the dated future and the signs
+        yield "close: both bold labels", "**Stop going back.**" in last and "**The one thing to do.**" in last
+        for when in ("Within 7 days", "Within 30 days", "Within 3 months"):
+            yield f"close: the dated future, **{when}.**", f"**{when}.**" in last
+        bul = lambda s: len(re.findall(r"^- \S", s, re.M))
+        nc = sum(bul(sec[str(c)]) for c in range(1, 13))
+        yield f"bar: the habits list, at least 5 bullet lines in the cards (found {nc})", nc >= 5
+        yield f"bar: signs to watch for, at least 4 bullet lines in the close (found {bul(last)})", bul(last) >= 4
+        sw = SPINE.get(SU)
+        last_para = [p for p in last.split("\n\n") if p.strip()][-1]
+        yield f"bar: the spine image ({sw}) set in the opening and paid off in the close's last paragraph", \
+            bool(sw) and sw in op.lower() and sw in last_para.lower()
+    else:
+        yield "card 12: both bold labels", "**Stop going back.**" in c12 and "**The one thing to do.**" in c12
+        yield "card 12: the five-to-seven-day window", "five to seven days" in c12
     # The old last line read cold to every reader; SU 5 tries the new one (2026-11-05). Either passes until rolled out.
     yield "close: exact last line", last.rstrip().endswith(("It's back. What you do with it is on you.", "It's back. Go and use it."))
     yield "card 5: the excuse line in quotes", '"' in sec["5"]
@@ -154,6 +181,11 @@ if V2:   # the personal read before the first card (operator, 2026-11-05)
     FRAMES["{{EX.moment}}"] = "{{EX.never}}\n\n{{EX.moment}}\n\n"
     FRAMES["{{LP.admire}}"] = "\n\n{{LP.admire}}\n\n{{LP.letter}}\n\n"
     FRAMES["{{EX.last}}"] = "\n\n{{EX.last}}\n\nI won't call"
+if BAR:   # trait flattery read like a reference letter (blind read, 2026-11-05): the praise now comes out of
+    # the wound, written in the report, so the two shared praise lines are dropped
+    del FRAMES["{{EX.praise}}"], FRAMES["{{LP.praise}}"]
+    for spot in ("{{EX.praise}}", "{{LP.praise}}"):
+        FRAMES[spot + " (dropped)"] = None
 raw = open(path, encoding="utf-8").read()
 PRON_MAX = 55
 PRON_N = len(re.findall(r"\b(they|them|their|theirs|themselves|they've|they'd|they're|they'll)\b", raw, re.I))
@@ -174,6 +206,11 @@ if bad: fails.append("cards")
 print()
 print("FRAMES")
 for spot, frame in FRAMES.items():
+    if frame is None:   # a slot this shape drops: it must not be used at all
+        s = spot.split(" ")[0]; n = raw.count(s) - raw.split("\n", 3)[1].count(s); ok = n == 0
+        print(f"  {'ok  ' if ok else 'FAIL'} {spot:20} used {n}× (must be 0)")
+        if not ok: fails.append(f"frame {spot}")
+        continue
     n, f = raw.count(spot) - raw.split("\n", 3)[1].count(spot), raw.count(frame)
     ok = n == 1 and f == 1
     print(f"  {'ok  ' if ok else 'FAIL'} {spot:20} used {n}×, in its frame {f}×")
