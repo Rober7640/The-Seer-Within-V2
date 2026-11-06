@@ -2,7 +2,15 @@ import { useEffect, useRef, useState } from "react";
 import { useSearch, useLocation } from "wouter";
 import { CosmicBackground } from "../../components/CosmicBackground";
 import { BackgroundMusic } from "../../components/BackgroundMusic";
-import { UpsellCTA, ShippingForm, QuickReplies } from "../../components/upsell";
+import {
+  UpsellCTA,
+  Upsell2DownsellCTA,
+  ShippingForm,
+  QuickReplies,
+  EvelynChatHeader,
+  EvelynAvatarSlot,
+  endsEvelynRun,
+} from "../../components/upsell";
 import { STRIPE_CHECKOUT_SHIPPING_COUNTRIES } from "@shared/shippingCountries";
 import { useUpsellChat } from "../../hooks/useUpsellChat";
 import { upsell1CopyForOffer } from "../../lib/backendOffers";
@@ -10,7 +18,7 @@ import { isBackendOfferKey, type BackendOfferKey } from "@shared/backendOffers";
 import { track as trackPH } from "../../lib/posthog";
 import { backendOfferFunnel } from "../../lib/funnel";
 import { trackPurchase } from "../../lib/facebook";
-import { Volume2, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import type { Bucket } from "@shared/types";
@@ -32,6 +40,9 @@ interface UserData {
   personName: string | null;
   stripeCustomerId?: string | null;
   upsell1PriceCents?: number;
+  // 12's own U1 product and its downsell price. Absent for every other offer.
+  upsell1Product?: string;
+  upsell1DownsellCents?: number | null;
   bumpAmountCents?: number;
   // ⭐ Task 11 (spec §7): the ONLY booking session that sets this is Evelyn VSL
   // (soulmate-initials) — every other be_ offer's session has no `funnel` key, so
@@ -175,6 +186,14 @@ export default function OffersUpsell1() {
     isComplete,
     upsellPriceLabel,
     acceptLabel,
+    ctaReassurance,
+    showDownsellCTA,
+    downsellPriceLabel,
+    downsellAcceptLabel,
+    downsellDeclineLabel,
+    downsellReassurance,
+    handleDownsellAccept,
+    handleDownsellDecline,
     showContinue,
     continueLabel,
     handleContinue,
@@ -201,7 +220,7 @@ export default function OffersUpsell1() {
         behavior: "smooth",
       });
     }
-  }, [messages, isTyping, showQuickReplies, showContinue, showCTA, showShippingForm]);
+  }, [messages, isTyping, showQuickReplies, showContinue, showCTA, showDownsellCTA, showShippingForm]);
 
   // On completion (accept-and-shipped OR decline, the hook sets isComplete for
   // both — see useUpsellChat's DECLINED/COMPLETE stages), carry the session
@@ -266,13 +285,8 @@ export default function OffersUpsell1() {
           prefix-agnostic route — the pinned shell is unconditional here. */}
       <BackgroundMusic positionClass="absolute top-2 right-3" />
 
-      {/* Header */}
-      <div className="relative z-10 p-4 text-center border-b border-white/10 bg-black/20 backdrop-blur-sm">
-        <div className="flex items-center justify-center gap-2 text-sm text-white/60">
-          <Volume2 className="w-4 h-4" data-testid="icon-volume" />
-          <span>Sound on for best experience</span>
-        </div>
-      </div>
+      {/* Header — Evelyn's face, so the buyer sees who's talking. */}
+      <EvelynChatHeader volumeTestId="icon-volume" />
 
       {/* Chat Container */}
       <div
@@ -291,12 +305,13 @@ export default function OffersUpsell1() {
           </div>
 
           {/* Messages */}
-          {messages.map((msg) => (
+          {messages.map((msg, i) => (
             <div
               key={msg.id}
               className={`flex w-full ${msg.role === "user" ? "justify-end" : "justify-start"}`}
               data-testid={`message-${msg.role}-${msg.id}`}
             >
+              {msg.role !== "user" && <EvelynAvatarSlot show={endsEvelynRun(messages, i, isTyping)} />}
               {msg.role === "image" ? (
                 <div className="max-w-[70%] rounded-2xl overflow-hidden shadow-lg border border-purple-200/30">
                   <img
@@ -325,6 +340,7 @@ export default function OffersUpsell1() {
               className="flex justify-start w-full animate-fade-in"
               data-testid="indicator-typing"
             >
+              <EvelynAvatarSlot show />
               <div className="bg-white border border-gray-100 rounded-2xl rounded-bl-none px-4 py-3 shadow-sm flex items-center gap-1">
                 <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce [animation-delay:-0.3s]"></span>
                 <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce [animation-delay:-0.15s]"></span>
@@ -335,8 +351,9 @@ export default function OffersUpsell1() {
         </div>
       </div>
 
-      {/* Interactive Elements — only render footer when something inside it is visible */}
-      {(showQuickReplies || showContinue || (inputEnabled && !showCTA && !showShippingForm) || showCTA || showShippingForm) && (
+      {/* Interactive Elements — only render footer when something inside it is visible.
+          showDownsellCTA is only ever true on an offer with a U1 downsell (12). */}
+      {(showQuickReplies || showContinue || (inputEnabled && !showCTA && !showShippingForm) || showCTA || showDownsellCTA || showShippingForm) && (
       <div className="relative z-10 shrink-0 bg-black/30 backdrop-blur-sm border-t border-white/10">
         {/* Continue tap — one button, no branch, nothing captured. */}
         {showContinue && (
@@ -393,6 +410,23 @@ export default function OffersUpsell1() {
               isProcessing={isProcessing}
               priceLabel={upsellPriceLabel}
               acceptLabel={acceptLabel}
+              reassurance={ctaReassurance}
+              priceNoteItem={copy?.priceNoteItem}
+            />
+          </div>
+        )}
+
+        {/* The optional U1 downsell (12). Never shown for an offer without one. */}
+        {showDownsellCTA && (
+          <div className="max-w-lg mx-auto">
+            <Upsell2DownsellCTA
+              onAccept={handleDownsellAccept}
+              onDecline={handleDownsellDecline}
+              isProcessing={isProcessing}
+              acceptLabel={downsellAcceptLabel}
+              declineLabel={downsellDeclineLabel}
+              reassurance={downsellReassurance}
+              priceNote={`${downsellPriceLabel} includes ${copy?.priceNoteItem ?? 'charged stone'} + free shipping`}
             />
           </div>
         )}

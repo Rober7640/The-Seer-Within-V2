@@ -911,6 +911,7 @@ export function useUpsell2Chat({
   return {
     messages,
     downsellDeclineLabel: copy.downsellDeclineLabel,
+    downsellReassurance: copy.downsellReassurance,
     showContinue,
     continueLabel,
     handleContinue,
