@@ -46,6 +46,9 @@ export interface BackendCheckoutRequest {
   /** From the letter's ?c=. Which sales letter she bought from — fulfilment reads it
    *  off Stripe metadata (`c`) to decide which letter's promises the reading owes. */
   letterCode?: string | null;
+  /** 11 and 12: her full birth name. Goes to OUR server and be_order_intake, never to Stripe.
+   *  (dateOfBirth / stone / email already exist below, shared with the Evelyn VSL offer.) */
+  fullBirthName?: string | null;
   /** PRICE-TESTED offers only (04): the split-test ARM the screen PRINTED ('A' / 'B'), never a
    *  price. The server re-resolves her arm and charges that; a mismatch is a 409 price_changed. */
   quotedArm?: string | null;
@@ -59,7 +62,8 @@ export interface BackendCheckoutRequest {
 export type BackendCheckoutResult =
   | { status: 'preview' }
   | { status: 'redirecting' }
-  | { status: 'error'; message: string }
+  /** `code`: the server's reason, when it gave one, so a screen can mark the right field. */
+  | { status: 'error'; message: string; code?: string }
   /** 04: the server would charge another arm than the screen printed. Show `current`, ask her
    *  to press again, and re-send with `quotedArm: current.arm`. Nothing was charged. */
   | { status: 'price_changed'; current: PriceQuote; message: string };
@@ -107,6 +111,7 @@ export async function beginBackendCheckout(
         // Evelyn VSL intake — sent to OUR server only. Task 5 gates these out of
         // Stripe metadata (birth date / name must never reach Stripe).
         ...(req.dateOfBirth ? { dateOfBirth: req.dateOfBirth } : {}),
+        ...(req.fullBirthName ? { fullBirthName: req.fullBirthName } : {}),
         ...(req.stone ? { stone: req.stone } : {}),
         ...(req.email ? { email: req.email } : {}),
         // The A/B visitor subject (02's booking treatment, 04's price test), so the purchase
@@ -133,7 +138,11 @@ export async function beginBackendCheckout(
     if (!response.ok || !data?.url) {
       // The server's own message when it has one — a refused amount needs to say what
       // to change, not just fail. Anything else falls back to the generic line.
-      return { status: 'error', message: data?.error || GENERIC_ERROR };
+      return {
+        status: 'error',
+        message: data?.error || GENERIC_ERROR,
+        ...(typeof data?.code === 'string' ? { code: data.code } : {}),
+      };
     }
 
     window.location.href = data.url;
