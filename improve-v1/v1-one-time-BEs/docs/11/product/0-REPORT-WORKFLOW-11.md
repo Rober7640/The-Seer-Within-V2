@@ -328,3 +328,23 @@ Fill in the `<…>` parts and send it as written. The subagent has none of our c
 
 **Read 5 (2026-11-04), the first reading built by the assembler for a buyer who isn't the test buyer:** the giving path matched or beat the approved get-back path on all five. The reader preferred it because it closes ("I paid to be done with him"), and named the excuse-1 card 5 lines as her life ("it's only a cold", "but I'm okay"). Fixed after: card 6's "a regret you've been writing for them" (read as being told she invented it) and card 9's "under all that anger" (nothing set it up). **Still open, in both versions:** every card runs the same pattern (bold line, picture, "that's you") and felt mechanical by card 6; Evelyn's night still reads staged; her first name 7 times felt like a mail merge to this reader.
 
+
+## SU 1–4 in the bar shape (2026-11-06)
+
+Written from the `writing-paid-readings` skill, one writer per number, then a blind read against the question-shape drafts (cfc6f36), same buyer (Testina, EX 8 · LP 7, get-back). *A model reader, not a buyer; the same model family wrote the reports.*
+
+| SU | Spine · habit-character | New vs old (kept reading / written for me / worth $35 / trust / tell a friend) | Record |
+|---|---|---|---|
+| 1 | the stepladder · the Inspector | **7/7/7/7/7** vs 6/7/6/7/6 | `11-P3-su1-blind-read-4.md` |
+| 2 | the spare key · the Lookout | **8/8/8/7/7** vs 6/7/6/6/5 | `11-P3-su2-blind-read-3.md` |
+| 3 | the kitchen radio · the Chaperone | **8/8/8/7/7** vs 6/7/6/7/5 | `11-P3-su3-blind-read-2.md` |
+| 4 | the porch light · the Watchman | **8/7/8/7/6** vs 6/5/6/5/4 | `11-P3-su4-blind-read-4.md` |
+
+All four won; each got its reader's fixes after the read. With these, all 12 reports pass `check-report.py`, so the live build holds no Soul Urge. Proven on n8n: test-drive run 52591 (sub-runs 52597–52600) built all four PDFs through the live chain.
+
+**What every SU 1–4 reader said, for the operator to decide:**
+- The close reads as homework (dated future, signs, three instructions, then the spine-image task). That is the bar shape's close, shared by SU 5–7.
+- The habit-character, named 9–12 times, "starts to sound like a workbook". Now 6–7 mentions each.
+- It "turning up at Evelyn's table" confused readers. The midnight beat now reads "every card I turned after that said the same thing your X says". SU 5–7 still have the older wording.
+- Card 5's "You said it yourself, so nobody asked" reads as blame. SU 1 and 3 now have "they hid behind…". SU 6 and 7 still carry the old line.
+- Shared lines repeat word for word in every reading for a number, and the card 2 traits come back almost verbatim in the letter. Examples: EX 8 "sorted by suppertime" and "Lucky them, whoever's with you next"; LP 7 "clammed up, chewed on it". This is a `11-swapins.json` question, not a per-report fix.

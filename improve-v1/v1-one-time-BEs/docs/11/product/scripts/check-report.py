@@ -51,7 +51,9 @@ if QS:
 # 30 days / 3 months), signs to watch for, and the three 30-day instructions, which move out of card 12
 # into the close. Marked by "bar shape" on the first line. Leaner cards, a shorter letter, a longer close.
 BAR = QS and "bar shape" in open(path, encoding="utf-8").readline()
-SPINE = {5: "dents", 6: "honey", 7: "alarm"}   # per report: the spine image's key word, in the opening AND the close's last paragraph
+SPINE = {1: "stepladder", 2: "spare key", 3: "radio", 4: "porch light", 5: "dents", 6: "honey", 7: "alarm"}   # per report: the spine image's key word, in the opening AND the close's last paragraph
+_sw = re.search(r'spine word "([^"]+)"', open(path, encoding="utf-8").readline())   # a new report may declare its own on line 1
+if _sw and SU not in SPINE: SPINE[SU] = _sw.group(1).lower()
 if BAR:
     BAND = {"opening": (130, 230), "letter": (1000, 1250), "close": (420, 620)}   # close: dated future + signs + 3 instructions
     for c in (1, 8): BAND[str(c)] = (130, 230)

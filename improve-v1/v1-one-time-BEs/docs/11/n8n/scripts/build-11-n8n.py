@@ -981,7 +981,7 @@ const paras = (t) => String(t || '').trim().split(/\n\s*\n/).filter(Boolean).map
 const ORD = ['first','second','third','fourth','fifth','sixth','seventh','eighth','ninth','tenth','eleventh','twelfth'];
 const sec = j.sections;
 const missing = ['opening', ...Array.from({ length: 12 }, (_, i) => String(i + 1)), 'letter', 'close'].filter((k) => !String(sec[k] || '').trim());
-if (missing.length) throw new Error(`the reading has no text for: ${missing.join(', ')}`);
+if (missing.length) throw new Error(`HOLD — the reading has no text for ${missing.join(', ')}`);
 const byHouse = Object.fromEntries(j.deal.map((d) => [d.house, d]));
 const cardBlock = (h) => { const d = byHouse[h];
   const crop = CROP_DEATH && d.card === 'death';
@@ -994,18 +994,19 @@ const cardBlock = (h) => { const d = byHouse[h];
     <figure${crop ? ' class="crop"' : ''}><img src="${S3}${d.card}.jpg" alt=""></figure>
     <div class="prose">${paras(body)}</div></section>`; };
 const acts = ACTS.map((a) => `<div class="act"><h2>${esc(a.name)}</h2>${a.houses.map(cardBlock).join('')}</div>`).join('');
-const DATE = (iso) => { const d = new Date(iso);
-  const M = ['January','February','March','April','May','June','July','August','September','October','November','December'];
-  return `${M[d.getUTCMonth()]} ${d.getUTCDate()}, ${d.getUTCFullYear()}`; };
+// The cover date in US Eastern time: most buyers are American, and UTC printed tomorrow's date on an evening order.
+const DATE = (iso) => new Date(iso).toLocaleDateString('en-US', { timeZone: 'America/New_York', month: 'long', day: 'numeric', year: 'numeric' });
+const closeParts = String(sec.close || '').trim().split(/\n\s*\n/).filter(Boolean);
 const coverRow = (label) => `<div class="row"><span class="lab">${esc(label)}</span><i></i><i></i><i></i></div>`;
 
 const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><style>
   /* ⛔ NO BACKTICKS IN THIS BLOCK. One ends the template literal and the node stops parsing. */
-  @page { size: Letter; margin: .6in 0 .6in; @bottom-center { content: "The Unsent Letter · " counter(page); font-family: Georgia, serif; font-size: 9pt; color: #62594C; } }
+__FONTS__
+  @page { size: Letter; margin: .6in 0 .6in; @bottom-center { content: "The Unsent Letter · " counter(page); font-family: Gelasio, Georgia, serif; font-size: 9pt; color: #62594C; } }
   @page :first { margin: 0; }
   @page cover { margin: 0; @bottom-center { content: none; } }
   * { -webkit-print-color-adjust: exact; print-color-adjust: exact; box-sizing: border-box; }
-  body { font-family: Georgia, 'Times New Roman', serif; color: #2A2622; margin: 0; font-size: 11.5pt; line-height: 1.62; }
+  body { font-family: Gelasio, Georgia, 'Times New Roman', serif; color: #2A2622; margin: 0; font-size: 11.5pt; line-height: 1.62; }
   .cover { page: cover; position: relative; width: 8.5in; height: 11in; overflow: hidden; page-break-after: always; background: #1F1B2A; color: #EFE6D2; text-align: center; padding-top: .8in; }
   .cover h1 { font-size: 34pt; font-weight: normal; letter-spacing: .02em; margin: 0 0 6pt; color: #EFE6D2; }
   .cover .laid { font-size: 12.5pt; color: #BFB39A; margin: 0 0 .42in; }
@@ -1023,7 +1024,11 @@ const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><style>
   .opening p:first-child { font-weight: bold; }
   .act h2 { font-size: 17pt; font-weight: bold; margin: 26pt 0 4pt; padding-top: 16pt; border-top: 1pt solid #DED4BE; page-break-after: avoid; break-after: avoid; }
   section.card { margin-top: 16pt; }
-  section.card h3 { font-size: 12.5pt; color: #5C5348; margin: 0 0 10pt; page-break-after: avoid; break-after: avoid; }
+  /* The heading carries an invisible 3.9in tail (padding, cancelled by the negative margin) and can't be split,
+     so it only sits where its picture fits under it. Before this a heading could end a page with its card on the next
+     (n8n run 52507, Peggy card 8). The picture is 1.9in wide, about 3.3in tall, plus its margins: 3.45in was too
+     little (run 52534, Carol card 8 still split), so the tail is 3.9in. */
+  section.card h3 { font-size: 12.5pt; color: #5C5348; margin: 0 0 calc(10pt - 3.9in); padding-bottom: 3.9in; page-break-inside: avoid; break-inside: avoid; page-break-after: avoid; break-after: avoid; }
   section.card figure { float: left; width: 1.9in; margin: 2pt 20pt 10pt 0; page-break-inside: avoid; break-inside: avoid; }
   section.card figure img { width: 100%; display: block; border: 1pt solid #DDD6C6; }
   section.card figure.crop { height: 2.47in; overflow: hidden; border-bottom: 1pt solid #DDD6C6; }
@@ -1034,7 +1039,9 @@ const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><style>
   .letter h2 { font-size: 17pt; font-weight: normal; font-style: italic; text-align: center; margin: 0 0 16pt; }
   .letter p { font-size: 12pt; line-height: 1.7; }
   .close { margin-top: 20pt; }
-  .close p:last-of-type { font-size: 13pt; }
+  .close .end > p:last-of-type, .close .signoff p:last-of-type { font-size: 13pt; }
+  /* Her last paragraph, the sign-off and the colophon move as one, so the colophon never sits alone on the last page. */
+  .end { page-break-inside: avoid; break-inside: avoid; }
   .signoff { margin-top: 16pt; }
   .signoff p { margin: 0 0 3pt; }
   .bump { page-break-before: always; break-before: page; }
@@ -1052,15 +1059,34 @@ const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><style>
     <div class="opening">${paras(sec.opening)}</div>
     ${acts}
     <div class="letter"><h2>The letter they never sent</h2>${paras(sec.letter)}</div>
-    <div class="close">${paras(sec.close)}
-      <div class="signoff"><p>Your friend, even when you'd rather I wasn't,</p><p>&mdash; Evelyn</p></div>
+    <div class="close">${paras(closeParts.slice(0, -1).join('\n\n'))}
+      <div class="end">${paras(closeParts.slice(-1)[0])}
+        <div class="signoff"><p>Your friend, even when you'd rather I wasn't,</p><p>&mdash; Evelyn</p></div>
+        <div class="colophon"><p>About this reading: your twelve cards were set by your birth name and date. The words are written with machine help in Evelyn's voice.</p></div>
+      </div>
     </div>
-    <div class="colophon"><p>About this reading: your twelve cards were set by your birth name and date. The words are written with machine help in Evelyn's voice.</p></div>
     ${j.bump && CLOSING_THE_DOOR ? `<div class="bump">${CLOSING_THE_DOOR}</div>` : ''}
   </div>
 </body></html>`;
 return [{ json: { ...j, html, pdfFileName: `${j.order_id}.pdf` } }];
 """
+
+# The report's font, embedded in the page. PDFShift's Chrome has no Georgia and fell back to a
+# Times face (n8n run 52380, 2026-11-05: 12-13 pages instead of 14). Gelasio is drawn to Georgia's
+# metrics, so local and PDFShift renders now match. Google Fonts' latin subset, variable 400-700,
+# OFL (scripts/fonts/Gelasio-OFL.txt). Base64 has no backticks, so the template literal is safe.
+def _font_faces():
+    import base64
+    out = []
+    for style in ("normal", "italic"):
+        with open(os.path.join(_HERE, "fonts", f"gelasio-{style}.woff2"), "rb") as f:
+            b64 = base64.b64encode(f.read()).decode("ascii")
+        out.append("  @font-face { font-family: Gelasio; font-style: %s; font-weight: 400 700; "
+                   "src: url(data:font/woff2;base64,%s) format('woff2'); }" % (style, b64))
+    return "\n".join(out)
+
+HTML_JS = HTML_JS.replace("__FONTS__", _font_faces(), 1)
+assert "__FONTS__" not in HTML_JS and "`" not in _font_faces()
 
 # ─── assembly ──────────────────────────────────────────────────────────────────
 def wf_name(base):
