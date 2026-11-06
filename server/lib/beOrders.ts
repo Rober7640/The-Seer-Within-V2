@@ -130,12 +130,23 @@ export async function saveOrderIntake(intake: InsertBeOrderIntake): Promise<bool
 }
 
 /**
- * 11: her first name, which rides no Stripe metadata (`piiOutOfStripe`), so the upsell chain
- * asks here. Null when she came without ?fn=, or the read failed: she is "dear" either way.
+ * Her display first name when no ?fn= arrived: the FIRST word of the birth name she typed on the
+ * booking page (11/12). It is her own entry, so it is hers — unlike the name on the card (a full
+ * name that may not be hers). Null only when the birth name is empty too.
+ */
+export function firstNameFromBirthName(fullBirthName: string | null | undefined): string | null {
+  const first = (fullBirthName ?? '').replace(/\s+/g, ' ').trim().split(' ')[0];
+  return first || null;
+}
+
+/**
+ * 11/12: her first name, which rides no Stripe metadata (`piiOutOfStripe`), so the upsell chain
+ * asks here. Prefers the letter's ?fn=; falls back to the first word of the birth name she typed
+ * on the booking page. Null (→ "dear") only when she gave neither.
  */
 export async function intakeFirstName(sessionId: string): Promise<string | null> {
   const row = await intakeFor(sessionId);
-  return row?.firstName || null;
+  return row?.firstName || firstNameFromBirthName(row?.fullBirthName) || null;
 }
 
 /** Read back what she typed. Null when there is none — every 02/03 order, and any 07
@@ -220,12 +231,13 @@ export async function recordBackendOrder(
   // the card, so a buyer who arrived without ?fn= still gets her name on the AWeber list
   // instead of a blank "Friend".
   //
-  // 11 and 12: only what the letter's ?fn= parked on the intake (11-C1: with no ?fn= she is
-  // "dear" everywhere). ⛔ Never the name on the card: it is a full name, and may not be hers.
+  // 11 and 12: prefer the letter's ?fn= parked on the intake; else the FIRST word of the birth
+  // name she typed on the booking page (her own entry → hers). ⛔ Never the name on the card: a
+  // full name that may not be hers. Null (→ "dear") only when she gave neither.
   const birthIntake = takesBirthIntake(offer.key);
   const firstName =
     birthIntake
-      ? intake?.firstName || null
+      ? intake?.firstName || firstNameFromBirthName(intake?.fullBirthName) || null
       : be08?.fields.displayFirstName || metadata.firstName || session.customer_details?.name || null;
 
   let row: BeOrder | undefined;
