@@ -1,6 +1,6 @@
 # 07 · Burning ears — the old signs say someone, never who
 
-📝 **DRAFT 2026-10-08 — not reviewed, not scheduled, not sent. No short link minted, nothing on S3.** Format G · The List — stress test (`../formats/G-list.md`), the **open list** version: all seven items (the WHAT) given free; which one is hers, and whether it's him (the HOW), is the chat. Closest sibling: B · Watermelon (`02-apple-peel.md`). Voice, formatting density and CTA mechanics follow the gold (`01-grandma-moses.md`, `04-book-of-fate.md`, `05-tuesday-rose.md`). Build HTML with `scripts/build-email.py`.
+✅ **Copy approved · short link `/e/e0LSkBI` · picture on S3 `evelyn/story/07-burning-ears.jpg` · rescheduled 2026-11-06 (its 14 Oct broadcast was deleted in AWeber).** Format G · The List — stress test (`../formats/G-list.md`), the **open list** version: all seven items (the WHAT) given free; which one is hers, and whether it's him (the HOW), is the chat. Closest sibling: B · Watermelon (`02-apple-peel.md`). Voice, formatting density and CTA mechanics follow the gold (`01-grandma-moses.md`, `04-book-of-fate.md`, `05-tuesday-rose.md`). Build HTML with `scripts/build-email.py`.
 
 **Subject:** `💭 Is he thinking about you right now?`
 
@@ -11,6 +11,8 @@
 _Subject history (v1, 2026-10-08; bytes measured with `len(s.encode())`, emoji + name tag included): pick 💭 "Is he thinking about you right now?" (40 bytes · her desire as a direct question, no name · paid off word for word in line 1, "Is he thinking about me right now?"); challenger 👂 "{name}, are your ears burning?" (69 bytes · playful idiom question about her = "is someone talking about you?", name first · paid off by sign 1, ~110 words in · works with the same preheader); backup 💭 "Are you on his mind, or just on someone's?" (47 bytes · curiosity + pain, the email's turn as a question · paid off late, at the turn ~260 words in, so not the pick); backup 📱 "{name}, the question you'd never dare text him" (85 bytes · pain tease · paid off in line 3, "you can't exactly ring him up and ask" · ⚠ leans on her having a "him" — operator to judge). Rejected: "7 old signs someone is thinking of you" (describes the list — the README's "don't describe the object" rule — and the brief's "not 'old signs that…'"); "7 signs he can't stop thinking about you" (a promise, and untrue: no sign says who); "Does he still think about you?" ("still" claims Evelyn knows her past). Preheader (71 bytes) clarifies, isn't a second puzzle, shares no words with either subject. None of the four says Evelyn knows the reader: all are questions to her or about "him/someone" in general._
 
 **Bucket:** love
+
+**Short Link:** `https://www.theseerwithin.com/e/e0LSkBI?email={!email}`
 
 **Big Idea:** the old signs that someone is thinking of you — burning ears, a sneeze, a loose shoelace — and how they say "someone", never who
 
