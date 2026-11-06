@@ -16,7 +16,7 @@
 | 04 | `04-book-of-fate` | ✅ (minted 2026-10-08) | `/e/AVOUYBs` — **not yet in the file** | ❌ | ❌ |
 | 05 | `05-tuesday-rose` | ✅ (minted 2026-10-08) | `/e/g4UKAUY` — **not yet in the file** | ❌ | ❌ |
 | 06 | `06-north-wind-sun` | ✅ (minted 2026-10-08) | `/e/K4T6TCI` — **not yet in the file** | ❌ | ❌ |
-| 07 | `07-burning-ears` | ✅ (minted 2026-10-08) | `/e/e0LSkBI` ✅ in file (2026-11-06, redirect checked) | ✅ `evelyn/story/07-burning-ears.jpg` | ✅ · **scheduled via API Wed 18 Nov 10:30 UTC (AWeber 61486140)** |
+| 07 | `07-burning-ears` | ✅ (minted 2026-10-08) | `/e/e0LSkBI` ✅ in file (2026-11-06, redirect checked) | ✅ `evelyn/story/07-burning-ears.jpg` | ✅ · **scheduled via API Fri 6 Nov 10:30 UTC (AWeber 61486140)** |
 | 09 | `09-fifty-words` (🔒 locked 2026-10-08) | ✅ (minted 2026-10-12) | `/e/9E1E60w` ✅ in file (redirect checked) | ✅ `evelyn/story/09-fifty-words.jpg` | ✅ · **scheduled via API Thu 15 Oct 10:30 UTC (AWeber 61495170)** |
 
 All 7 reading briefs are rows in **production** `email_link_codes` (persona `evelyn-cross`, campaigns `story-0N-<slug>`). The "reading brief" is what lets Evelyn's chat continue the email instead of greeting the reader cold — see README "Reading brief + short link". It only reaches the chat if the reader arrived within 24 h and only for the first 4 messages (`server/lib/arrivalReading.ts`).
