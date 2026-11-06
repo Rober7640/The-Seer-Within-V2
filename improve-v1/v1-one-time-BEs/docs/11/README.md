@@ -10,3 +10,4 @@ tried to reach me.* Start at [0-WORKFLOW-11.md](0-WORKFLOW-11.md).
 | `order-emails/` | `11-T3` confirmation, `11-T4` delivery |
 | `upsells/` | `11-U1a`, `11-U2a` opening beats |
 | `product/` | `11-P1` the reading and the letter, plus images |
+| `n8n/` | the delivery flow: generator scripts, builds, checkers. Start with [`n8n/HANDOVER.md`](n8n/HANDOVER.md) |

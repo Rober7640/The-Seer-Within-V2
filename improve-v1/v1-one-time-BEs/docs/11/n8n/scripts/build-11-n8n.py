@@ -37,7 +37,7 @@ MODEL
   either. Effort must be one of low/medium/high/xhigh/max. Never send temperature, top_p,
   logprobs or top_logprobs.
 """
-import json, os, sys
+import html as _html, json, os, re, sys
 
 _HERE = os.path.dirname(os.path.abspath(__file__))
 SPEC = json.load(open(os.path.join(_HERE, "11-acts.json"), encoding="utf-8"))
@@ -949,10 +949,36 @@ return [{ json: { ...j, attempt: j.attempt + 1, first_failure: { failed: verdict
 """
 
 # ─── 10 · the PDF's HTML ───────────────────────────────────────────────────────
-# ⛔ 11-C4 (Closing the Door) IS NOT WRITTEN. When it is, set this to its HTML. Until then a bump
-#    buyer's order stops at node 10 with a red execution, which is the visible hold. Nothing with
-#    a placeholder page can reach her. No backticks: this lands in a JS template literal.
-CLOSING_THE_DOOR_HTML = None
+# 11-C4 (Closing the Door, the $12.77 bump), written 2026-11-06: the page under "## The page" in
+# booking-page/11-C4-closing-the-door.md becomes the last page of a bump buyer's PDF. Allowed markup
+# there: one "### " title, plain paragraphs, one numbered list. If the file is missing this is None
+# and a bump buyer's order HOLDs (the AI test flows) or alerts the team (the live flow), so nothing
+# with a placeholder page can reach her.
+C4_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "booking-page", "11-C4-closing-the-door.md")
+
+def _closing_the_door_html():
+    if not os.path.exists(C4_PATH): return None
+    txt = open(C4_PATH, encoding="utf-8").read()
+    if "\n## The page\n" not in txt: raise SystemExit("11-C4: no '## The page' section")
+    body = txt.split("\n## The page\n", 1)[1].split("\n---\n", 1)[0].strip()
+    esc = lambda t: _html.escape(re.sub(r'"([^"]+)"', "\u201c\\1\u201d", t.strip()).replace("'", "\u2019"), quote=False)
+    out = []
+    for block in re.split(r"\n\s*\n", body):
+        lines = [l for l in block.strip().splitlines() if l.strip()]
+        if not lines: continue
+        if lines[0].startswith("### "):
+            out.append(f"<h2>{esc(lines[0][4:])}</h2>")
+        elif all(re.match(r"\d+\. ", l) for l in lines):
+            out.append("<ol>" + "".join(f"<li>{esc(re.sub(r'^\d+\. ', '', l))}</li>" for l in lines) + "</ol>")
+        elif any(re.match(r"\s*([-*>#|]|\d+\. )", l) for l in lines) or re.search(r"[*_`\[]", block):
+            raise SystemExit(f"11-C4: markup the PDF can't carry: {block[:60]!r}")
+        else:
+            out.append(f"<p>{esc(' '.join(lines))}</p>")
+    words = len(re.sub(r"<[^>]+>", " ", "".join(out)).split())
+    if words > 310: raise SystemExit(f"11-C4: {words} words, more than one page")
+    return "".join(out)
+
+CLOSING_THE_DOOR_HTML = _closing_the_door_html()
 
 HTML_JS = r"""
 // PDFShift takes one HTML string. The card art is looked up from the deal, never from model text.
@@ -1044,7 +1070,10 @@ __FONTS__
   .end { page-break-inside: avoid; break-inside: avoid; }
   .signoff { margin-top: 16pt; }
   .signoff p { margin: 0 0 3pt; }
-  .bump { page-break-before: always; break-before: page; }
+  .bump { page-break-before: always; break-before: page; page-break-inside: avoid; break-inside: avoid; }
+  .bump h2 { font-size: 20pt; font-weight: normal; font-style: italic; text-align: center; margin: 0 0 16pt; }
+  .bump ol { margin: 4pt 0 12pt; padding-left: 20pt; }
+  .bump li { margin: 0 0 6pt; }
   .colophon { margin-top: 26pt; border-top: 1pt solid #DED4BE; padding-top: 10pt; }
   .colophon p { font-size: 9pt; line-height: 1.5; color: #7C776D; margin: 0; }
 </style></head><body>

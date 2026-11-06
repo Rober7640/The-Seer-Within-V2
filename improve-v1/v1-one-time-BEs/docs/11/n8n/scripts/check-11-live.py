@@ -65,7 +65,14 @@ cf = by["9b · Tag + 11 reading link (the send)"]["parameters"]["bodyParameters"
 need(A.AWEBER_FIELD in cf and "...($json.custom_fields" in cf and not re.search(r"[{,]\s*reading_url\s*:", cf),
      f"the send writes only {A.AWEBER_FIELD} (other fields written back as found)")
 need(links["9 · Find her on AWeber"]["main"][0][0]["node"] == "9a · Can we email her?", "AWeber find is checked before the send")
-need(links["10a · Closing the Door owed?"]["main"][0][0]["node"].startswith("10b"), "a bump buyer's run tells the team after delivery")
+html_js = by[A.HTML_NODE]["parameters"]["jsCode"]
+if A.B.CLOSING_THE_DOOR_HTML:
+    need("<h2>Closing the Door</h2>" in html_js and "j.bump && CLOSING_THE_DOOR ?" in html_js,
+         "a bump buyer's PDF ends with Closing the Door (11-C4's page is in node 5)")
+    need(not any(k.startswith(("10a", "10b")) for k in by) and links["10 · Mark delivered"]["main"][0][0]["node"] == "Done — delivered",
+         "nothing is owed after delivery: no team alert for bump buyers")
+else:
+    need(links["10a · Closing the Door owed?"]["main"][0][0]["node"].startswith("10b"), "a bump buyer's run tells the team after delivery")
 
 # n8n's Code node keeps only the text after the LAST colon of a thrown message (run 52542 emailed the team
 # "5, 6, 7, 8, 9, 11, 22, 33) [line 10]"). Strip ${...} and check the literal text of every throw.
@@ -75,8 +82,9 @@ for n in wf["nodes"]:
         lit = re.sub(r"\$\{[^}]*\}", "", m.group(1))
         if ":" in lit: colon.append(f"{n['name']}: {m.group(1)[:60]}")
 need(not colon, "no colon in any thrown message (the team's email would show only the tail)" + (f" {colon}" if colon else ""))
-stop = by["10b · Tell the team: Closing the Door owed"]["parameters"]["errorMessage"]
-need(":" not in re.sub(r"\{\{.*?\}\}", "", stop[1:]), "the Closing the Door alert has no colon either")
+if "10b · Tell the team: Closing the Door owed" in by:
+    stop = by["10b · Tell the team: Closing the Door owed"]["parameters"]["errorMessage"]
+    need(":" not in re.sub(r"\{\{.*?\}\}", "", stop[1:]), "the Closing the Door alert has no colon either")
 
 print("4. the live fill against Python")
 tmp = tempfile.mkdtemp()

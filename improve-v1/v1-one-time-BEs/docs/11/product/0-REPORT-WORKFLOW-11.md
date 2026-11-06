@@ -348,3 +348,12 @@ All four won; each got its reader's fixes after the read. With these, all 12 rep
 - It "turning up at Evelyn's table" confused readers. The midnight beat now reads "every card I turned after that said the same thing your X says". SU 5–7 still have the older wording.
 - Card 5's "You said it yourself, so nobody asked" reads as blame. SU 1 and 3 now have "they hid behind…". SU 6 and 7 still carry the old line.
 - Shared lines repeat word for word in every reading for a number, and the card 2 traits come back almost verbatim in the letter. Examples: EX 8 "sorted by suppertime" and "Lucky them, whoever's with you next"; LP 7 "clammed up, chewed on it". This is a `11-swapins.json` question, not a per-report fix.
+
+## Closing the Door, the bump page (2026-11-06)
+
+- Operator: keep the $12.77 bump paid, and deliver it automatically (no team alert).
+- Written by one writer agent from 11-C3's promises: [`booking-page/11-C4-closing-the-door.md`](../booking-page/11-C4-closing-the-door.md), 290 words. One change on review: step 2 "Open it wide" became "Open it" (a buyer who left someone dangerous shouldn't stand in a wide-open door).
+- `build-11-n8n.py` reads the page under "## The page" into node 5; a bump buyer's PDF gets it as its last page, on its own page. The live flow drops nodes 10a/10b (23 nodes now); they come back only if the file goes missing.
+- Checks: check-11-live ALL PASS, check-11-assemble ALL MATCH, chain 39/39 (its bump check now expects the page), architecture 29/29, promises 53/53, testdrive 51/51. Local render: one page.
+- n8n run 52613 (one bump order, Peggy SU 7, 1 PDFShift credit, 25 in total): delivered, no alert node ran, PDF 16 pages with Closing the Door alone on page 16. PDF saved as `n8n/runs/11-n8n-52613-su7-peggy-bump.pdf`.
+

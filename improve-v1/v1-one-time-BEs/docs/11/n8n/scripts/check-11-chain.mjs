@@ -145,11 +145,14 @@ const bad = report('11 · the chain, faked outside calls, real nodes and wiring'
       const fake = fakeOpenAI({ sections: (k) => (k === '11' ? `${gold[k]}\n\nYou should write to them.` : gold[k]), verdicts: [fakeVerdict(), fakeVerdict()] });
       const r = execute(dianeWf(), { start: START, http: fake.http, patch: { [NODE3]: handDeal } });
       return r.last('7a ·').verdict.pass === false; }],
-    ['bump buyer holds at node 10 with a clear reason', () => expectThrow(() => {
+    // 11-C4 written 2026-11-06: a bump buyer is no longer held. Her PDF's last page is Closing the Door.
+    ['bump buyer gets Closing the Door as the last page', () => {
       const wf = withFixture(dianeWf(), { metadata: { bump: '1' } });
       const fake = fakeOpenAI({ sections: SECTIONS });
-      execute(wf, { start: START, http: fake.http, patch: { [NODE3]: handDeal } });
-    }, /^HOLD: this buyer took the bump/)],
+      const h = execute(wf, { start: START, http: fake.http, patch: { [NODE3]: handDeal } }).last('10 ·').html || '';
+      const tail = h.split('class="bump">')[1] || '';
+      return tail.startsWith('<h2>Closing the Door</h2>') && /<\/div>\s*<\/div>\s*<\/body>/.test(tail)
+        ? true : { ok: false, note: 'no Closing the Door page at the end' }; }],
     ['no birth name holds at node 3', () => expectThrow(() => {
       const wf = withFixture(dianeWf(), {}, { fullBirthName: '' });
       execute(wf, { start: START, http: fakeOpenAI({ sections: SECTIONS }).http });

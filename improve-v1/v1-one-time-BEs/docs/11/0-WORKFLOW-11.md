@@ -9,6 +9,8 @@ decision answers live here; rules and craft live in the master. Structure model:
 
 **Operator, 2026-11-01:** the reading takes 24 hours to prepare. No database pull: real quotes come only from docs already in the repo, and the send list cannot be checked against chats.
 
+**Status 2026-11-06:** all 12 reports pass, the no-model delivery flow is built and test-driven on n8n (inactive), Closing the Door is written and automatic. How the flow works: [`n8n/HANDOVER.md`](n8n/HANDOVER.md). The 2026-11-02 status below is history.
+
 **Status 2026-11-02:** A1 done, every decision in [11-DELIVERABLES.md](11-DELIVERABLES.md), which wins over any older wording on this page. A2–A8 built and walked on branch `11-unsent-letter`, uncommitted and dark: nothing has met a real server, a real database or Stripe. Next: the operator's review of the screens in `booking-page/screens/`, then Phase B.
 
 

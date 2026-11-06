@@ -318,7 +318,8 @@ def passing_reports():
 # Stripe → is it 11 → the app's order (refunded / delivered stop here) → numbers → fill → HTML → PDF
 # → Supabase → wait to paid + 23h30m → ask the app again (refunded during the wait stops here)
 # → signed URL → find her on AWeber (not on the list / unsubscribed HOLD) → tag + her 11 link = the send
-# → mark delivered → if she bought Closing the Door, tell the team it's owed.
+# → mark delivered. A bump buyer's PDF ends with Closing the Door (11-C4, written 2026-11-06), so nothing
+# else is owed; only if 11-C4's file goes missing does the flow fall back to telling the team it's owed.
 # Every failure fails the run, and the run's errorWorkflow emails the team. Nothing fails silently.
 
 # The host and login the LIVE 08 flows already use for the same app endpoints (08 PDF flow
@@ -399,7 +400,7 @@ const f = $input.first().json;
 const order = $('5 · Build the HTML').first().json.order_id;
 const entries = Array.isArray(f.entries) ? f.entries : [];
 if (!entries.length)
-  throw new Error(`HOLD ${order} — she isn't on the customer list (AWeber __LIST__). Her reading is uploaded but NOT sent. Add her, then retry this run, or email her the link by hand.`);
+  throw new Error(`HOLD ${order} — she isn't on the customer list (AWeber __LIST__). Her reading is uploaded but NOT sent. Add her, then start her order again from the beginning (Retry reuses the old lookup and fails again), or email her the link by hand.`);
 const sub = entries[0];
 if (sub.status !== 'subscribed')
   throw new Error(`HOLD ${order} — her AWeber status is "${sub.status}", so the delivery email can't reach her. Her reading is uploaded but NOT sent. Email her the link by hand.`);
@@ -452,7 +453,8 @@ def build_live():
     B.code("4 · Pick the report + fill it", [200, y], fill_js,
            "No model. The finished report for her Soul Urge. HOLDs (the team is emailed) if her report isn't cleared yet: "
            + (f"SU {', '.join(held)} at this build." if held else "none at this build."))
-    B.code(HTML_NODE, [400, y], html_js, "Card art by deal record. A bump buyer still gets this reading; 10a tells the team Closing the Door is owed.")
+    B.code(HTML_NODE, [400, y], html_js, ("Card art by deal record. A bump buyer's PDF ends with Closing the Door (11-C4)." if B.CLOSING_THE_DOOR_HTML else
+              "Card art by deal record. A bump buyer still gets this reading; 10a tells the team Closing the Door is owed."))
     reuse("11 · PDFShift → PDF", "6 · PDFShift → PDF", [600, y], RETRY)
     B.node("7 · Upload to Supabase Storage", "n8n-nodes-base.httpRequest", 4.2, [800, y], {
         "method": "POST", "url": EXPR("upload_url"),
@@ -506,11 +508,13 @@ def build_live():
         "options": {"timeout": 30000},
     }, {"credentials": {"httpHeaderAuth": FULFIL_CRED}, **RETRY,
         "notes": "delivered_at is COALESCEd by the app, so a retry never moves it."})
-    if_true("10a · Closing the Door owed?", [2800, y], H + ".bump_owed")
-    B.node("10b · Tell the team: Closing the Door owed", "n8n-nodes-base.stopAndError", 1, [3000, y - dy], {
-        "errorMessage": ("=Delivered the main reading for {{ " + H + ".order_id }}. She also paid for Closing the Door "
-                         "(11-C4), which isn't written — send it by hand or refund the bump."),
-    }, {"notes": "Fails the run on purpose, AFTER delivery, so the error flow emails the team."})
+    C4 = bool(B.CLOSING_THE_DOOR_HTML)   # written: the bump is the PDF's last page, nothing to alert
+    if not C4:
+        if_true("10a · Closing the Door owed?", [2800, y], H + ".bump_owed")
+        B.node("10b · Tell the team: Closing the Door owed", "n8n-nodes-base.stopAndError", 1, [3000, y - dy], {
+            "errorMessage": ("=Delivered the main reading for {{ " + H + ".order_id }}. She also paid for Closing the Door "
+                             "(11-C4), which isn't written — send it by hand or refund the bump."),
+        }, {"notes": "Fails the run on purpose, AFTER delivery, so the error flow emails the team."})
     B.node("Done — delivered", "n8n-nodes-base.noOp", 1, [3000, y], {})
 
     nodes = list(B.NODES)
@@ -534,13 +538,15 @@ def build_live():
     link("8a · Re-check the order", "8b · Still owed?"); link("8a · Re-check the order", "8b · Still owed?", 1)
     link("8b · Still owed?", "8c · Still to deliver?")
     link("8c · Still to deliver?", "8d · Get signed URL"); link("8c · Still to deliver?", "Stop — refunded or delivered during the wait", 1)
+    after_delivered = "Done — delivered" if C4 else "10a · Closing the Door owed?"
     for a, b in zip(["8d · Get signed URL", "9 · Find her on AWeber", "9a · Can we email her?",
                      "9b · Tag + 11 reading link (the send)", "10 · Mark delivered"],
                     ["9 · Find her on AWeber", "9a · Can we email her?", "9b · Tag + 11 reading link (the send)",
-                     "10 · Mark delivered", "10a · Closing the Door owed?"]):
+                     "10 · Mark delivered", after_delivered]):
         link(a, b)
-    link("10a · Closing the Door owed?", "10b · Tell the team: Closing the Door owed")
-    link("10a · Closing the Door owed?", "Done — delivered", 1)
+    if not C4:
+        link("10a · Closing the Door owed?", "10b · Tell the team: Closing the Door owed")
+        link("10a · Closing the Door owed?", "Done — delivered", 1)
     # Every node referenced by name must exist, and every link must land on a node.
     refs = set(re.findall(r"\$\('([^']+)'\)", json.dumps(nodes, ensure_ascii=False)))
     bad = sorted((refs | {d["node"] for v in LINKS.values() for o in v["main"] for d in o}) - set(names))
@@ -610,7 +616,7 @@ def drive_scenarios():
     S = [
         order("carol", label="normal", expect="^delivered", due="soon"),
         order("sherry", label="no-first-name", expect="^delivered", name_in_intake=False, name_in_order=False),
-        order("peggy", label="bump", expect="Closing the Door", bump=True),
+        order("peggy", label="bump", expect="^delivered" if B.CLOSING_THE_DOOR_HTML else "Closing the Door", bump=True),
         order("testina", label="refunded-in-wait", expect="After the wait — .*isn't paid", app_recheck="409"),
         order("sharon", label="not-on-aweber", expect="isn't on the customer list", aweber=None),
         order("joyce", label="unsubscribed", expect='status is "unsubscribed"', aweber="unsubscribed"),
