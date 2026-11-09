@@ -55,8 +55,11 @@ const OFFERS = {
   // 11 is $35 fixed + the $12.77 bump, plus the shared upsell chain's prices its U specs quote
   // (Protection Ritual / Manifestation Bracelet $47, bracelet downsell $30).
   '11': { name: 'The Unsent Letter', sla: /\b24 hours?\b/i, prices: ['35', '35.00', '12.77', '47', '30'] },
+  // 12 is $35 fixed + the $12.77 bump (The Full Year, total $47.77), plus the shared upsell chain's
+  // prices its U2 spec quotes (Manifestation Bracelet $47, downsell $30). U1's price is pending.
+  '12': { name: 'Lucky Numbers', sla: /\b24 hours?\b/i, prices: ['35', '35.00', '12.77', '47.77', '47', '30'] },
 };
-const ALL_PRICES = ['35.00', '35', '45', '47', '57', '67', '87', '12.77', '300', '250', '11.11', '59', '59.00', '30'];
+const ALL_PRICES = ['35.00', '35', '45', '47', '47.77', '57', '67', '87', '12.77', '300', '250', '11.11', '59', '59.00', '30'];
 
 // ── per-file rules ─────────────────────────────────────────────────────────────────────────
 const BANNED = [

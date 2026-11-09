@@ -4,6 +4,7 @@ import { CosmicBackground } from "../../components/CosmicBackground";
 import { BackgroundMusic } from "../../components/BackgroundMusic";
 import {
   UpsellCTA,
+  Upsell2DownsellCTA,
   ShippingForm,
   QuickReplies,
   EvelynChatHeader,
@@ -39,6 +40,9 @@ interface UserData {
   personName: string | null;
   stripeCustomerId?: string | null;
   upsell1PriceCents?: number;
+  // 12's own U1 product and its downsell price. Absent for every other offer.
+  upsell1Product?: string;
+  upsell1DownsellCents?: number | null;
   bumpAmountCents?: number;
   // ⭐ Task 11 (spec §7): the ONLY booking session that sets this is Evelyn VSL
   // (soulmate-initials) — every other be_ offer's session has no `funnel` key, so
@@ -183,6 +187,13 @@ export default function OffersUpsell1() {
     upsellPriceLabel,
     acceptLabel,
     ctaReassurance,
+    showDownsellCTA,
+    downsellPriceLabel,
+    downsellAcceptLabel,
+    downsellDeclineLabel,
+    downsellReassurance,
+    handleDownsellAccept,
+    handleDownsellDecline,
     showContinue,
     continueLabel,
     handleContinue,
@@ -209,7 +220,7 @@ export default function OffersUpsell1() {
         behavior: "smooth",
       });
     }
-  }, [messages, isTyping, showQuickReplies, showContinue, showCTA, showShippingForm]);
+  }, [messages, isTyping, showQuickReplies, showContinue, showCTA, showDownsellCTA, showShippingForm]);
 
   // On completion (accept-and-shipped OR decline, the hook sets isComplete for
   // both — see useUpsellChat's DECLINED/COMPLETE stages), carry the session
@@ -340,8 +351,9 @@ export default function OffersUpsell1() {
         </div>
       </div>
 
-      {/* Interactive Elements — only render footer when something inside it is visible */}
-      {(showQuickReplies || showContinue || (inputEnabled && !showCTA && !showShippingForm) || showCTA || showShippingForm) && (
+      {/* Interactive Elements — only render footer when something inside it is visible.
+          showDownsellCTA is only ever true on an offer with a U1 downsell (12). */}
+      {(showQuickReplies || showContinue || (inputEnabled && !showCTA && !showShippingForm) || showCTA || showDownsellCTA || showShippingForm) && (
       <div className="relative z-10 shrink-0 bg-black/30 backdrop-blur-sm border-t border-white/10">
         {/* Continue tap — one button, no branch, nothing captured. */}
         {showContinue && (
@@ -399,6 +411,22 @@ export default function OffersUpsell1() {
               priceLabel={upsellPriceLabel}
               acceptLabel={acceptLabel}
               reassurance={ctaReassurance}
+              priceNoteItem={copy?.priceNoteItem}
+            />
+          </div>
+        )}
+
+        {/* The optional U1 downsell (12). Never shown for an offer without one. */}
+        {showDownsellCTA && (
+          <div className="max-w-lg mx-auto">
+            <Upsell2DownsellCTA
+              onAccept={handleDownsellAccept}
+              onDecline={handleDownsellDecline}
+              isProcessing={isProcessing}
+              acceptLabel={downsellAcceptLabel}
+              declineLabel={downsellDeclineLabel}
+              reassurance={downsellReassurance}
+              priceNote={`${downsellPriceLabel} includes ${copy?.priceNoteItem ?? 'charged stone'} + free shipping`}
             />
           </div>
         )}

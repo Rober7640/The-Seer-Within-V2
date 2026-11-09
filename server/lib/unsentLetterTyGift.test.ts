@@ -295,7 +295,8 @@ describe('5 · a non-11 buyer is unchanged', () => {
   });
 
   it('the tier chain: no 11 row, /fb tier as before', async () => {
-    q.selects = [[], [{ id: 'fb-arrival' }]];
+    // 11's row, then 12's (asked between 11 and /fb since 2026-11-03), then /fb's.
+    q.selects = [[], [], [{ id: 'fb-arrival' }]];
     expect(await resolveWelcomeGrantTier('u1', 'persona-1')).toBe('evelyn-thankyou');
   });
 

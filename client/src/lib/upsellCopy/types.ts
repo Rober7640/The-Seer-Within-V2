@@ -71,6 +71,24 @@ export interface Upsell1Copy {
   acceptLabel: string;
   // The italic line above that button. Unset: V1's own line, for every offer but 11.
   ctaReassurance?: string;
+  // ── Optional U1 downsell (12 first). ⛔ Default OFF: with DOWNSELL unset a decline goes
+  // straight to SOFT_DECLINE, exactly as V1. Set ⇒ the first decline plays DOWNSELL and shows
+  // a downsell button that charges the offer's U1 product at its `downsellCents`; a second
+  // decline plays SOFT_DECLINE. Copy writes the price as `{downsellPrice}`, never typed.
+  // The engine also needs the server to report `upsell1DownsellCents` (only an offer with its
+  // own `upsell1Product` does), so copy alone can never switch it on for the Protection Ritual.
+  DOWNSELL?: string[];
+  // The downsell button's label AND the bubble it posts as her reply. Takes `{downsellPrice}`.
+  downsellAcceptLabel?: string;
+  downsellDeclineLabel?: string;
+  // The italic line above the downsell button. "" ⇒ none.
+  downsellReassurance?: string;
+  // The picture shown after LAVA_INTRO. Unset ⇒ the lava stone (V1 and every offer before 12).
+  // null ⇒ no picture: 12 sells a citrine bracelet, and no citrine picture exists yet.
+  stoneImage?: string | null;
+  // What the small print under the buy buttons says she gets: "{price} includes <this> + free
+  // shipping". Unset ⇒ V1's "charged stone".
+  priceNoteItem?: string;
   // First names that are placeholders rather than names. /api/upsell/user-data's
   // Stripe fallback stamps "Friend" when checkout carried no firstName metadata,
   // which 02's does not — and "It's done, Friend" is worse copy than Evelyn's own

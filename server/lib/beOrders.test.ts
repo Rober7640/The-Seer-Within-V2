@@ -786,7 +786,14 @@ describe('11 · an unsent-letter order', () => {
     }
   });
 
-  it('no ?fn=: no name on the order, never the card', async () => {
+  it('no ?fn=: the name derives from the birth name she typed, never the card', async () => {
+    state.intake = { firstName: null, fullBirthName: 'Sarah Jane Miller' };
+    await recordBackendOrder(session({ customer_details: { name: 'Robert Cardholder' } } as never, META));
+    // First word of HER own birth-name entry — "Sarah", not the cardholder "Robert".
+    expect(state.inserted).toMatchObject({ firstName: 'Sarah' });
+  });
+
+  it('no ?fn= and no birth name: the order has no name (→ "dear")', async () => {
     state.intake = { firstName: null };
     await recordBackendOrder(session({ customer_details: { name: 'Robert Cardholder' } } as never, META));
     expect(state.inserted).toMatchObject({ firstName: null });

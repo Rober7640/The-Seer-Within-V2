@@ -140,6 +140,7 @@ export default function PaiCheckoutPage() {
         body: JSON.stringify({
           orderToken: order.orderToken,
           cardToken: s.cardToken,
+          cardName: s.cardName,
           phone: s.phone,
           ...(s.smsConsent ? { smsConsent: s.smsConsent } : {}),
         }),

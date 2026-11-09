@@ -39,6 +39,8 @@ export interface ShippingAddress {
 
 export interface PaiCardSubmit {
   cardToken: string;
+  /** "Name on card" as she typed it — the server makes the PAI customer's name from it. */
+  cardName: string;
   phone: string;
   smsConsent?: 'yes' | 'no';
   shipping?: ShippingAddress;
@@ -231,6 +233,7 @@ export function PaiCardForm(props: {
       if (!cardToken || typeof cardToken !== 'string') throw new Error('no token');
       props.onSubmit({
         cardToken,
+        cardName: fullName,
         phone: cleanPhone,
         ...(sms ? { smsConsent: sms } : {}),
         ...(askShipping ? { shipping: { ...ship, line2: ship.line2 || undefined } } : {}),

@@ -11,9 +11,11 @@ interface UpsellCTAProps {
   acceptLabel?: string
   // 11 can't carry "journey". Defaults to V1's exact line for every other funnel.
   reassurance?: string
+  // 12 sells a bracelet. Defaults to V1's exact words.
+  priceNoteItem?: string
 }
 
-export function UpsellCTA({ onAccept, onDecline, isProcessing = false, priceLabel = '$47', acceptLabel = 'Yes, protect what we clear', reassurance = 'Take your time. This is your journey.' }: UpsellCTAProps) {
+export function UpsellCTA({ onAccept, onDecline, isProcessing = false, priceLabel = '$47', acceptLabel = 'Yes, protect what we clear', reassurance = 'Take your time. This is your journey.', priceNoteItem = 'charged stone' }: UpsellCTAProps) {
   return (
     <div className="p-4 space-y-4" data-testid="container-upsell-cta">
       <p className="text-center text-sm text-muted-foreground italic">
@@ -41,7 +43,7 @@ export function UpsellCTA({ onAccept, onDecline, isProcessing = false, priceLabe
       </Button>
 
       <div className="text-center">
-        <span className="text-xs text-muted-foreground">{priceLabel} includes charged stone + free shipping</span>
+        <span className="text-xs text-muted-foreground">{priceLabel} includes {priceNoteItem} + free shipping</span>
       </div>
 
       <Button

@@ -121,8 +121,16 @@ describe('shouldRedirectTarotC', () => {
 });
 
 describe('TAROT_C_EXEMPT_HOOKS', () => {
-  it('holds exactly the 49 campaign landers', () => {
-    expect(TAROT_C_EXEMPT_HOOKS.size).toBe(49);
+  it('holds exactly the 53 campaign landers', () => {
+    expect(TAROT_C_EXEMPT_HOOKS.size).toBe(53);
+  });
+
+  // 2026-11-05: four new hooks, written for Version C. Asserted on the URL as well as the Set.
+  it('serves Version C for the 2026-11-05 batch', () => {
+    for (const h of ['cards-end-same-way', 'cards-give-more', 'cards-marry-more-than-once', 'cards-more-affection']) {
+      expect(TAROT_C_EXEMPT_HOOKS.has(h), `${h} must be exempt`).toBe(true);
+      expect(shouldRedirectTarotC(`/fb-tarot/c?hook=${h}`), `${h} must reach C`).toBe(false);
+    }
   });
 
   // 2026-09-08: a new /c batch. Both of these 302'd to /b in production — the ads

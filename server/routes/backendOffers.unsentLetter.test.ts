@@ -284,7 +284,9 @@ describe('6 · the intake row', () => {
     expect(saveOrderIntake.mock.calls[0][0].fullBirthName).toBe('Sarah Jane Miller');
   });
 
-  it('with no ?fn= the first name is null, never the first word of her birth name', async () => {
+  it('with no ?fn= the stored intake first name is null (the display name derives from the birth name on read)', async () => {
+    // Checkout does not fabricate a ?fn= — the raw value stays null. The display first name is
+    // derived later from the birth name (firstNameFromBirthName / intakeFirstName), not here.
     await post({ firstName: undefined });
     expect(saveOrderIntake.mock.calls[0][0].firstName).toBeNull();
   });

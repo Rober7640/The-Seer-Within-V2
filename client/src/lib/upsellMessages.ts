@@ -35,6 +35,9 @@ export type UpsellStage =
   | 'SHIPPING'
   | 'DECLINED'
   | 'COMPLETE'
+  // The optional U1 downsell (Upsell1Copy.DOWNSELL). Never entered on V1.
+  | 'DOWNSELL'
+  | 'DOWNSELL_CTA'
 
 // ============================================
 // SECTION 1: CONFIRMATION (3 messages)
@@ -319,17 +322,18 @@ export function formatUpsellPrice(cents?: number | null): string {
   return cents ? `$${Math.round(cents / 100)}` : '$47'
 }
 
+// `{downsellPrice}` is the U1 downsell's price (12 first), fed from the server's
+// `upsell1DownsellCents` like `{upsellPrice}`. No V1 line carries it, so V1 output is
+// unchanged. Its fallback is the only downsell price the deck has ever had, $30.
 export function personalizeMessages(
   messages: string[],
   firstName: string,
   personName?: string,
-  upsellPrice?: string
+  upsellPrice?: string,
+  downsellPrice?: string
 ): string[] {
   return messages.map((msg) =>
-    msg
-      .replace(/{firstName}/g, firstName || 'dear')
-      .replace(/{personName}/g, personName || 'them')
-      .replace(/{upsellPrice}/g, upsellPrice || '$47')
+    personalizeMessage(msg, firstName, personName, upsellPrice, downsellPrice)
   )
 }
 
@@ -337,12 +341,14 @@ export function personalizeMessage(
   message: string,
   firstName: string,
   personName?: string,
-  upsellPrice?: string
+  upsellPrice?: string,
+  downsellPrice?: string
 ): string {
   return message
     .replace(/{firstName}/g, firstName || 'dear')
     .replace(/{personName}/g, personName || 'them')
     .replace(/{upsellPrice}/g, upsellPrice || '$47')
+    .replace(/{downsellPrice}/g, downsellPrice || '$30')
 }
 
 // ============================================

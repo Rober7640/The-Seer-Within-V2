@@ -49,8 +49,9 @@ const READING_DEST = `/reading?persona=${EVELYN_PERSONA_SLUG}`;
 // /fb thank-you arrivals (server/lib/evelynThankyouGift.ts). These readers have just
 // had their reading and paid, so they skip the lander mechanic entirely and are handed
 // straight into the chat, where Evelyn already knows their reading.
-// Offer 11's receipt page arrives the same way, under its own tag (unsentLetterTyGift.ts).
-const THANKYOU_CAMPAIGNS: Array<string | null> = ["v1-ty-evelyn", "be11-ty-evelyn"];
+// Offer 11's receipt page arrives the same way, under its own tag (unsentLetterTyGift.ts),
+// and so does offer 12's (luckyNumbersTyGift.ts).
+const THANKYOU_CAMPAIGNS: Array<string | null> = ["v1-ty-evelyn", "be11-ty-evelyn", "be12-ty-evelyn"];
 const SESSION_KEY = "evelyn_lander_token";
 const HISTORY_KEY = "evelyn_lander_history";
 // Which campaign the cached history belongs to. Without it the cache is replayed

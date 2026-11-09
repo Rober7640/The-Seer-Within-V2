@@ -104,6 +104,30 @@ const CATALOGUE = {
     // tripwire row for it would report "guard did NOT bite" and be misread as a broken guard.
     // It is a trend guard, not a clause guard, and the ACTOR rows cover the shape it protects.
   ],
+  // November four (Joel, 2026-11-05) — four landers, four frames. One row per ban, minimal.
+  'nov-four': [
+    ['DURATION',   'cards-marry-more-than-once', 'a', 4, 'It will happen soon, dear.', 'universal — no duration'],
+    ['FATE',       'cards-end-same-way',         'b', 4, 'It was meant to be, dear.', 'universal — no fate'],
+    ['HEALTH',     'cards-more-affection',       'c', 4, 'It is about his health, dear.', 'universal — health/body (Meta)'],
+    ['THERAPY',    'cards-give-more',            'a', 4, 'It is your attachment style, dear.', 'therapy language'],
+    ['TACTIC',     'cards-more-affection',       'a', 4, 'Try date nights, dear.', 'hands her a tactic'],
+    ['RULING',     'cards-end-same-way',         'c', 4, 'You should leave, dear.', 'stay/leave ruling'],
+    ['PATTERN',    'cards-end-same-way',         'a', 4, 'It is a pattern you repeat, dear.', 'end-same-way — hands her a pattern'],
+    ['CAUSE',      'cards-end-same-way',         'b', 4, 'You attract the same men, dear.', 'end-same-way — gives her the cause'],
+    ['GRADE-GIVE', 'cards-give-more',            'b', 4, 'You give too much, dear.', 'give-more — grades her giving'],
+    ['FUTURE',     'cards-give-more',            'c', 4, 'The love that matches yours is coming, dear.', 'give-more — future person'],
+    ['COUNT',      'cards-marry-more-than-once', 'b', 4, 'You will marry twice, dear.', 'marry — counts marriages'],
+    ['AGAIN',      'cards-marry-more-than-once', 'c', 4, 'You will marry again, dear.', 'marry — "again" is a count'],
+    ['PRESUME',    'cards-marry-more-than-once', 'a', 4, 'Your divorce is behind you, dear.', 'marry — presumes how it ended'],
+    ['NEEDY',      'cards-more-affection',       'b', 4, 'You are a little needy, dear.', 'affection — grades her need'],
+    // 🔴🔴 the scam ban — the row carries a NEGATOR, because this sweep must not exempt one
+    ['OUTSIDE',    'cards-more-affection',       'a', 4, 'Not here, dear, but online.', 'affection — points her outside (negator-proof)'],
+    ['DESERVE',    'cards-more-affection',       'c', 4, 'You deserve someone better, dear.', 'affection — deserve someone'],
+    ['PARTNER',    'cards-more-affection',       'b', 4, "Your partner doesn't love you, dear.", 'affection — speaks for the partner'],
+    ['SEXUAL',     'cards-more-affection',       'c', 4, 'It is about intimacy, dear.', 'affection — sexual words (Meta)'],
+    ['UNANCHORED', 'cards-more-affection',       'a', 6, 'Let me look closer at what keeps affection from reaching you…', 'affection — cut 7 not anchored to her partner'],
+    ['WHO',        'cards-give-more',            'a', 6, 'Let me look closer at who took it from you…', 'cut 7 asks WHO'],
+  ],
 }
 const cases = (CATALOGUE[family] ?? []).filter((c) => !only || c[0] === only)
 if (!cases.length) {
@@ -130,7 +154,11 @@ const beatOf = (idx) => (idx <= 1 ? [idx, 0] : idx === 6 ? [3, 0] : [2, idx - 2]
 // Replace one bubble inside one card of one wired hook, in the TS source. Returns the file's
 // original contents so the caller can put it back byte-for-byte.
 const poisonRegistry = (hook, card, idx, text) => {
-  const original = readFileSync(REGISTRY, 'utf8')
+  const raw = readFileSync(REGISTRY, 'utf8')
+  // A Windows checkout (core.autocrlf=true) has CRLF on disk and every pattern below expects
+  // LF. Match on an LF copy and write the poisoned LF copy; the caller restores `raw`, so the
+  // file still comes back byte-for-byte.
+  const original = raw.replace(/\r\n/g, '\n')
   const start = original.search(new RegExp(`^ {4}'${hook}': \\{`, 'm'))
   if (start < 0) throw new Error(`${hook} is not in the registry`)
   const end = original.indexOf('\n    },', start) + '\n    },'.length
@@ -149,7 +177,7 @@ const poisonRegistry = (hook, card, idx, text) => {
   const rebuilt = indent + JSON.stringify(parts.join('\n')) + ','
   const newArr = arr[0].replace(lines[beat], rebuilt)
   writeFileSync(REGISTRY, original.slice(0, start) + block.replace(arr[0], newArr) + original.slice(end))
-  return original
+  return raw
 }
 
 // Everything we have touched, so the finally block can put it all back.

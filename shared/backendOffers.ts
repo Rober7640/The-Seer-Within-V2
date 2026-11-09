@@ -42,7 +42,8 @@ export type BackendOfferKey =
   | 'marcus-reading'
   | 'heart-cleanser'
   | 'soulmate-initials'
-  | 'unsent-letter';
+  | 'unsent-letter'
+  | 'lucky-numbers';
 
 /** Which of the two booking treatments sold it — decides where a cancel returns to. */
 export type BookingTreatment = 'page' | 'chat';
@@ -247,6 +248,32 @@ export const UNSENT_LETTER_BUMP_PRODUCT_KEY = 'closing_the_door';
 /** Every 11 reading arrives within this many hours, bump or no bump. */
 export const UNSENT_LETTER_DELIVERY_HOURS = 24;
 
+// 12 — Lucky Numbers, a numbers reading by Evelyn Cross (no tarot). Same money as 11: $35 fixed.
+// Her full birth name and date of birth are collected on OUR booking page and parked on
+// be_order_intake, never on Stripe — exactly as 11 (docs/12/12-DELIVERABLES.md).
+export const LUCKY_NUMBERS_PRICE_CENTS = 3500;
+
+// 12's bump — "The Full Year": every lucky day she has in 2027, on one calendar page, the last
+// page of her PDF. ⛔ NOT a speed bump: delivery is 24 hours with or without it.
+export const LUCKY_NUMBERS_BUMP_CENTS = 1277;
+
+// ⛔ 12's bump key — see the note on 02's above. n8n exact-matches this string.
+export const LUCKY_NUMBERS_BUMP_PRODUCT_KEY = 'full_year';
+
+/** Every 12 reading arrives within this many hours, bump or no bump. */
+export const LUCKY_NUMBERS_DELIVERY_HOURS = 24;
+
+/**
+ * The offers whose booking page takes her full birth name and date of birth (11 and 12). The
+ * server checks both fields, parks them on be_order_intake, and reads her ?fn= first name back
+ * from there — never from Stripe, never from the name on the card.
+ */
+export const BIRTH_INTAKE_OFFERS: readonly BackendOfferKey[] = ['unsent-letter', 'lucky-numbers'];
+
+export function takesBirthIntake(key: unknown): boolean {
+  return typeof key === 'string' && (BIRTH_INTAKE_OFFERS as readonly string[]).includes(key);
+}
+
 // ─── The catalog ───────────────────────────────────────────────────────────────
 
 /** 07's rungs. ⛔ The key is what the browser may send; the price is looked up here. */
@@ -323,7 +350,7 @@ export interface BackendOfferBump {
 export interface BackendOffer {
   key: BackendOfferKey;
   /** The deck's number, as every doc cites it. */
-  number: '02' | '03' | '04' | '06' | '07' | '08' | '09' | '10' | '11';
+  number: '02' | '03' | '04' | '06' | '07' | '08' | '09' | '10' | '11' | '12';
   /** What Stripe shows her at checkout. */
   stripeName: string;
   stripeDescription: string;
@@ -346,6 +373,12 @@ export interface BackendOffer {
    * upsells, straight to the receipt (e.g. an ACT offer with nothing to sell after).
    */
   upsellEntryPath?: string;
+  /**
+   * The `be_` product Upsell 1 sells for this offer (a key of the server's BACKEND_UPSELLS).
+   * Undefined ⇒ the Protection Ritual, as every offer before 12. When set, /upsell/user-data
+   * returns it (with its price and downsell price) and the U1 chat charges it by name.
+   */
+  upsell1Product?: string;
   /**
    * Does everything AFTER the money exist for this offer?
    *
@@ -401,7 +434,7 @@ export interface BackendOffer {
   checkoutCustomFields?: readonly BackendCheckoutCustomField[];
   /**
    * When true, firstName/DOB are persisted to intake only and kept OUT of Stripe metadata
-   * (spec §5). 10 and 11. ⚠ `funnel: 'evelyn_vsl'` and `stone` are 10's alone, not part of this.
+   * (spec §5). 10, 11 and 12. ⚠ `funnel: 'evelyn_vsl'` and `stone` are 10's alone, not part of this.
    */
   piiOutOfStripe?: boolean;
 }
@@ -757,6 +790,46 @@ export const BACKEND_OFFER_CATALOG: Record<BackendOfferKey, BackendOffer> = {
     // 🔴 FALSE. Flip only when the reading exists, the fulfilment flow and delivery exist,
     //    the AWeber Campaigns on the be-11 tags exist, the lawyer has read it (11-C), and a
     //    Stripe TEST-mode order has been walked end to end — delivery email included.
+    readyForMoney: false,
+  },
+
+  // ⭐ 12 — Lucky Numbers. A READING by Evelyn Cross, sold by email to past buyers (a split test:
+  // arm A ?c=1…5, arm B ?c=11…15): her 3 lucky numbers, 6 to play, a 4-digit PIN, 12 days in
+  // 2027 and the number to stop using. Numbers only, no tarot. Page treatment only, 11's shape.
+  // Docs: improve-v1/v1-one-time-BEs/docs/12/12-DELIVERABLES.md.
+  'lucky-numbers': {
+    key: 'lucky-numbers',
+    number: '12',
+    // ⚠ Both lines print on her card receipt, so they are plain and true. Never "buy", and
+    // nothing about her name and date, and ⛔ no win.
+    stripeName: 'Lucky Numbers — a reading by Evelyn Cross',
+    stripeDescription: 'Your lucky numbers and days, written for you and sent within 24 hours.',
+    stripeProduct: 'be_lucky_numbers',
+    pricing: { model: 'fixed', priceCents: LUCKY_NUMBERS_PRICE_CENTS },
+    bump: {
+      productKey: LUCKY_NUMBERS_BUMP_PRODUCT_KEY,
+      cents: LUCKY_NUMBERS_BUMP_CENTS,
+      // 12-C3's Stripe line item. Prints on her card receipt — plain.
+      stripeName: 'The Full Year',
+    },
+    // Page treatment only. Both keys point at the one booking page so a Stripe cancel always
+    // returns somewhere real — the same pattern as 11.
+    bookingPath: {
+      page: '/numerology/lucky-numbers',
+      chat: '/numerology/lucky-numbers',
+    },
+    successPath: '/numerology/lucky-numbers/success',
+    // The shared backend upsell engine, as 11. U1 sells its OWN product: Evelyn's Wish Ritual
+    // + charged citrine bracelet ($47, downsell $30 — operator 2026-11-02; 12-U1a).
+    upsellEntryPath: '/offers/upsell/welcome1',
+    upsell1Product: 'be_citrine_wish_ritual',
+    // A digital reading: email only, no mailing address.
+    collectsShipping: false,
+    // Her birth details and first name live on be_order_intake only, as 11's.
+    piiOutOfStripe: true,
+    // 🔴 FALSE. Flip only when the reading exists, the fulfilment flow and delivery exist, the
+    //    AWeber Campaigns on the be-12 tags exist, U1's product is settled, and a Stripe
+    //    TEST-mode order has been walked end to end — delivery email included.
     readyForMoney: false,
   },
 };

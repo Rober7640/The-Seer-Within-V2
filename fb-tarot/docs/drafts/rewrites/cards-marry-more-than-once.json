@@ -1,0 +1,46 @@
+{
+  "hook": "cards-marry-more-than-once",
+  "headline": "Will I marry more than once?",
+  "method": "natural-cut",
+  "frame": "soulmate-ageband",
+  "note": "NEW HOOK 2026-11-05, Natural Tarot-Cut (7 cuts), face-down return-mhf, SOULMATE AGE-BAND frame (SOULMATE_AGEBAND_TAROT_HOOKS, server/lib/prompts.ts): no particular person exists in this read, and she is asking WHETHER. NOT YET WIRED: the hook is in no registry and not in SOULMATE_AGEBAND_TAROT_HOOKS, so until it is added there it falls through to decode-him ('This reading is about HIM') and the model invents a man. It must be added to SOULMATE_AGEBAND_TAROT_HOOKS at wiring.\n\nTHE HEADLINE IS KEPT VERBATIM (operator's call after seeing the VOC), but nobody in 862 rows says 'more than once' about marrying. Every buyer who asks it says AGAIN (VOC q3, 79 buyers, ~12 ask it outright: 'Just wondering if I will ever marry again' · 'I'm a widow for five years now… is there a possibility of me remarrying?'). THE FEAR UNDER IT: was marriage a one-time chance, and have I used mine up?\n\nTHREE PEOPLE READ THIS HEADLINE (VOC §Q3 table). The buyer, divorced or widowed and alone some years, hears 'will I marry again'. A currently married, unhappy woman ('married to my second husband and I've never been so unhappy') hears 'will this marriage end', so any yes predicts a divorce or a death. A never-married woman hears 'will I marry, then marry again', so a yes predicts her first marriage failing. So the read NEVER says 'again', 'second', 'next husband', 'twice' or 'once more', never gives a count of marriages, and never says anything about a marriage ending or how one ended. The headline's own words 'more than once' are echoed only as her question (cuts 2 and 6), never as a claim.\n\nCUT 3 ANSWERS THE FEAR FLAT, ABOUT HER CHANCE, NEVER ABOUT A NEXT MARRIAGE. A different answer per card, each warranted by what is drawn: a (Magician, the sign over his head with no end, read ONLY as endlessness, never a loop or coming round) = your chance at marriage isn't used up; what you have to give hasn't run out. b (Hanged Man, the calm face, upside down said and defused in cut 1) = your chance at marriage hasn't closed. c (Fool, the sun full and high) = a new start in marriage is still open to you; marriage was never one chance and done. All three are status-neutral: 'a new start in marriage' and 'what you have to give' read as a fresh start inside a marriage for the married reader and as a first marriage for the never-married reader; none of them predicts that anything ends.\n\nBANS AND WHY. (1) NO LENGTH OF TIME, DATE, SEASON, 'SOON' OR TIMELINE POSITION (age-band guardLine; VOC buyers ask 'how soon'). b4 declines when and who out loud, as the frame asks, rather than changing the subject. The sun is read as broad daylight, never as midday or 'not late'. (2) NEVER HER AGE OR ANY NUMBER ABOUT HER; never her health, body or children (frame). (3) NEVER PRESUME HER STATUS: no 'again', no 'since', no 'still single', no 'waiting', because the married-unhappy and never-married readers are in the pull. (4) NO SPEAKING FOR THE DEAD: widows are the core buyer ('this is my second husband passed. I'm afraid to love again'); nothing in the read mentions loss or anyone gone. (5) NEVER PLACE, DESCRIBE OR CONFIRM A PERSON: one buyer asked of a drawing another product sold her 'is he my next husband'. The card figure stays a card figure; 'who' appears only as something the card does not show. (6) NO TACTIC (going out, apps, working on herself) and NEVER THE NOT-YET AS HER FAULT: each cut 7 names something outside her that hides, holds or stands in front of the chance. (7) NO FATE, DESTINY, ODDS OR MEDIUMSHIP: 'meant for you' was rejected for that reason. (8) NO INVENTED LIFE FACT: cut 6 uses only her headline words plus what cuts 1-5 established (a: she couldn't see whether her chance was used up; b: the stillness on the card; c: the beginning in the open). (9) CARD SAFETY: the lemniscate is endlessness only (symbols.md); the Hanged Man is never there by his own choice; the Fool's cliff edge is never mentioned. Cut-1 anchors (lemniscate / calm face / full sun) were assigned to avoid the sibling landers' table, living wood and bundle.\n\nCUT 7 on every card aims at what keeps that chance from being walked into, left unresolved and outside her: a = what's been hiding that chance from you; b = what's keeping your chance in that pause; c = what's been standing between you and that beginning.",
+  "voc": {
+    "pulled": "2026-11-05",
+    "pattern": "q3-marry-again",
+    "matched": 862,
+    "buyers": 79,
+    "verdict": "ok",
+    "why": "broad pattern; ~12 buyers ask the question outright, all as 'again'"
+  },
+  "decks": {
+    "return-mhf": {
+      "a": [
+        "You picked before a single picture showed. You turned the Magician — now look up, at the sign above his head.",
+        "You asked if you'll marry more than once. The sign over him has no end, and neither does what he has to give.",
+        "So your chance at marriage isn't used up, dear. What you have to give hasn't run out.",
+        "But that sign stops at what you have to give. It says nothing about who, or when, or how.",
+        "His sign is in plain sight, yet your own chance is harder to see.",
+        "That's why you asked if you'll marry more than once. From where you stand, that chance is hard to see.",
+        "Let me look closer at what's been hiding that chance from you…"
+      ],
+      "b": [
+        "The backs all looked alike when you chose. You turned the Hanged Man — he's upside down, but look how calm his face is.",
+        "You wonder if you'll marry more than once. A face that calm says this is a pause, and nothing on the card has closed.",
+        "And your chance at marriage hasn't closed, either.",
+        "Still, all his face shows is the pause. I won't pretend to know when, or who.",
+        "Your chance is open, dear, and still nothing on this card is moving.",
+        "That stillness is why you had to ask if you'll marry more than once.",
+        "Let me see what's keeping your chance in that pause…"
+      ],
+      "c": [
+        "None of the backs gave anything away. You turned the Fool — see how full and high the sun is behind him.",
+        "You're asking whether you'll marry more than once. The Fool is starting out, and under a sun that high, nothing about it is hidden.",
+        "A marriage that feels right is still open to you. That was never a one-time chance.",
+        "The sun only lights the beginning, though. The card doesn't show who it's with, or how it goes.",
+        "The Fool is already walking, but for you marriage is still a question.",
+        "So when you ask about more than once, you're asking if that beginning is yours to walk into, dear.",
+        "Now let's look at what's been standing between you and that beginning…"
+      ]
+    }
+  }
+}

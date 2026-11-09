@@ -411,9 +411,31 @@ export function mainMetadata(order: PaiOrder): Record<string, string> {
   };
 }
 
+/**
+ * The name we put on her Payments.AI customer.
+ *
+ * 🔴 Payments.AI saves a customer's name ONLY when firstName AND lastName are both
+ * sent (support, 5 Nov). We used to send firstName alone, so every live customer
+ * had a blank name. The V1 funnel never asks for a last name, but the card form
+ * asks for the name on her card: first word = first name, the rest = last name.
+ * One word only (or no card name) ⇒ lastName "-", the placeholder support gave
+ * (an empty string is refused; "-" shows on her profile/invoices/emails).
+ */
+export function customerName(cardName: unknown, chatFirstName: string): { firstName: string; lastName: string } {
+  const clean = (s: string) => s.replace(/[\u0000-\u001f\u007f]/g, '').slice(0, 50).trim();
+  const parts = String(cardName ?? '').trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return { firstName: clean(chatFirstName) || 'Friend', lastName: '-' };
+  return {
+    firstName: clean(parts[0]) || 'Friend',
+    lastName: parts.length > 1 ? clean(parts.slice(1).join(' ')) || '-' : '-',
+  };
+}
+
 export interface MainChargeInput {
   order: PaiOrder;
   cardToken: string;
+  /** "Name on card" from the card form — becomes the customer's first + last name. */
+  cardName?: string;
   phone: string;
   smsAnswer: unknown;
   ip?: string;
@@ -470,7 +492,7 @@ async function chargeMainOnce(input: MainChargeInput, deps: PaiLiveDeps): Promis
   };
 
   const cust = await createCustomer(
-    { email: order.email, firstName: order.firstName, phoneNumber: input.phone },
+    { email: order.email, ...customerName(input.cardName, order.firstName), phoneNumber: input.phone },
     cfg,
   );
   if (!cust.ok || !cust.data?.id) {
