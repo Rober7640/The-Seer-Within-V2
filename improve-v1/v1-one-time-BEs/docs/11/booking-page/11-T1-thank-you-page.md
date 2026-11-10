@@ -68,13 +68,27 @@ P.S. You added Closing the Door. It's the last page of your reading. Don't do it
 
 *(Verified, paid orders only, under the receipt. ⛔ Never on the fallback. If the link can't be built, nothing shows.)*
 
+*Card design ported from 12's receipt on 2026-11-06 ([`12-T1-gift`](../../12/booking-page/12-T1-gift.md), operator-approved 2026-11-03: the bare voucher "looks thin, not an appealing CTA"). It now reads as an invitation from her.* ⚠ The first "bring" line is 11's own and not yet approved by the operator.
+
+**Header:** Evelyn's photo (`/evelyn-avatar.png`, with a green "online" dot), then the headline in her voice: Come and talk to me, Sarah. *(No usable first name: "Come and talk to me.")* Under it: Evelyn Cross.
+
 **While it's being written:** While I write, come and talk to me. The first 15 minutes are on me.
 
 **Once it's been sent** *(`deliveredAt` is set)*: Once you've read it, come and talk to me. The first 15 minutes are on me.
 
+**Three things to bring** *(gold sparkle each)*:
+
+- Tell me what you want back in your life
+- Bring the question that's been on your mind
+- Being written: Ask me where to start, once your reading's in · Sent: Ask me where to start with your reading
+
+⛔ None of them asks her to contact, wait for or forgive anyone.
+
 **Voucher:** Free · 15 min | Gift voucher · 15 minutes of free chat · with Evelyn Cross
 
-**Button:** Talk to Evelyn →
+**Button** *(gold, full width, larger)*: Claim my 15 free minutes →
+
+**Under the button:** A private chat, just you and me. Your 15 minutes are already set aside.
 
 ---
 

@@ -20,6 +20,8 @@ import { CHECKOUT, forgetIntake } from '@/lib/unsentLetterBooking'
 import {
   EMAIL_SUBJECTS,
   LETTER_GIFT,
+  letterGiftBring,
+  letterGiftHeadline,
   letterGiftLine,
   loadLetterGiftHref,
   loadLetterReceipt,
@@ -146,14 +148,44 @@ function LetterGift({ order, sessionId }: { order: VerifiedLetterOrder; sessionI
 
   if (!href) return null
 
+  const name = receiptFirstName(order.firstName)
+
   return (
     <div
-      className="w-full rounded-2xl border border-purple-500/30 bg-slate-900/80 p-6 shadow-2xl backdrop-blur-sm md:p-8"
+      className="w-full rounded-2xl border border-amber-300/40 bg-gradient-to-b from-slate-900/90 to-indigo-950/90 p-6 shadow-[0_0_40px_rgba(251,191,36,0.15)] backdrop-blur-sm md:p-8"
       data-testid="card-letter-gift"
     >
-      <p className="mb-5 leading-relaxed text-purple-100/85" data-testid="text-gift-line">
+      {/* Her face and her invitation first: the card is from Evelyn, not from a system (12's card). */}
+      <div className="mb-4 flex items-center gap-4">
+        <div className="relative shrink-0">
+          <img
+            src="/evelyn-avatar.png"
+            alt="Evelyn Cross"
+            className="h-16 w-16 rounded-full border-2 border-amber-300/60 object-cover"
+            data-testid="img-gift-evelyn"
+          />
+          <span className="absolute bottom-0.5 right-0.5 h-3.5 w-3.5 rounded-full border-2 border-slate-900 bg-emerald-400" aria-hidden="true" />
+        </div>
+        <div className="min-w-0 text-left">
+          <h2 className="font-serif text-2xl leading-tight text-white" data-testid="text-gift-headline">
+            {letterGiftHeadline(name === 'dear' ? null : name)}
+          </h2>
+          <p className="mt-1 text-sm text-amber-100/80">Evelyn Cross</p>
+        </div>
+      </div>
+
+      <p className="mb-4 leading-relaxed text-purple-100/90" data-testid="text-gift-line">
         {letterGiftLine(order)}
       </p>
+
+      <ul className="mb-5 space-y-2 text-left" data-testid="list-gift-bring">
+        {letterGiftBring(order).map((line) => (
+          <li key={line} className="flex items-start gap-2.5 text-purple-50/90">
+            <Sparkles className="mt-1 h-4 w-4 shrink-0 text-amber-300" aria-hidden="true" />
+            <span>{line}</span>
+          </li>
+        ))}
+      </ul>
 
       {/* The same ticket as SuccessPage's, so the gift looks like the gift it is. */}
       <div className="mb-5 flex items-stretch overflow-hidden rounded-xl border border-amber-300/50 bg-gradient-to-br from-amber-400/20 via-yellow-300/10 to-amber-500/20">
@@ -180,11 +212,14 @@ function LetterGift({ order, sessionId }: { order: VerifiedLetterOrder; sessionI
 
       <a
         href={href}
-        className="block w-full rounded-lg bg-gradient-to-r from-purple-500 to-indigo-500 px-4 py-3 text-center font-medium text-white transition-colors hover:from-purple-400 hover:to-indigo-400"
+        className="block w-full rounded-xl bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-400 px-4 py-4 text-center text-lg font-semibold text-slate-900 shadow-lg shadow-amber-500/30 transition-transform hover:scale-[1.02]"
         data-testid="link-letter-gift"
       >
         {LETTER_GIFT.button} &nbsp;→
       </a>
+      <p className="mt-3 text-center text-xs text-purple-200/70" data-testid="text-gift-note">
+        {LETTER_GIFT.note}
+      </p>
     </div>
   )
 }

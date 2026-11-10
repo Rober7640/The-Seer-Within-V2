@@ -784,10 +784,10 @@ export const BACKEND_OFFER_CATALOG: Record<BackendOfferKey, BackendOffer> = {
     // `c`, never them. ⛔ Her first name then has no Stripe backstop: the upsells and the
     // receipt read it back from the intake, and with no ?fn= she is "dear" everywhere.
     piiOutOfStripe: true,
-    // 🔴 FALSE. Flip only when the reading exists, the fulfilment flow and delivery exist,
-    //    the AWeber Campaigns on the be-11 tags exist, the lawyer has read it (11-C), and a
-    //    Stripe TEST-mode order has been walked end to end — delivery email included.
-    readyForMoney: false,
+    // ✅ LIVE 2026-11-10. The reading is written + Joel-approved, the no-wait n8n delivery flow
+    //    + the AWeber campaign on be-11-unsent-letter exist, and a Stripe test-mode order was
+    //    walked end to end on development.
+    readyForMoney: true,
   },
 
   // ⭐ 12 — Lucky Numbers. A READING by Evelyn Cross, sold by email to past buyers (a split test:

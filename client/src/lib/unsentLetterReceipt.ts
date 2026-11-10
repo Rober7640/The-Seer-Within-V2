@@ -168,12 +168,33 @@ export const LETTER_GIFT = {
   eyebrow: 'Gift voucher',
   title: '15 minutes of free chat',
   withName: 'with Evelyn Cross',
-  button: 'Talk to Evelyn',
+  // 12's gift card, ported 2026-11-06 (operator, 2026-11-03: the bare voucher "looks thin, not an
+  // appealing CTA"). So the card is an invitation from her: a headline in her voice, three things
+  // to bring, a bigger claim button. ⛔ Nothing here asks her to contact, wait for or forgive anyone.
+  headline: 'Come and talk to me',
+  bring: [
+    'Tell me what you want back in your life',
+    "Bring the question that's been on your mind",
+  ],
+  bringWriting: "Ask me where to start, once your reading's in",
+  bringDelivered: 'Ask me where to start with your reading',
+  button: 'Claim my 15 free minutes',
+  note: 'A private chat, just you and me. Your 15 minutes are already set aside.',
 } as const;
 
 /** The line over the voucher. It must not say she's still writing a reading that's gone out. */
 export function letterGiftLine(order: Pick<VerifiedLetterOrder, 'delivered'>): string {
   return order.delivered ? LETTER_GIFT.delivered : LETTER_GIFT.writing;
+}
+
+/** "Come and talk to me, Sarah." Without a usable first name, just the invitation. */
+export function letterGiftHeadline(firstName: string | null): string {
+  return firstName ? `${LETTER_GIFT.headline}, ${firstName}.` : `${LETTER_GIFT.headline}.`;
+}
+
+/** The three things to bring. The last one follows whether her reading has gone out. */
+export function letterGiftBring(order: Pick<VerifiedLetterOrder, 'delivered'>): string[] {
+  return [...LETTER_GIFT.bring, order.delivered ? LETTER_GIFT.bringDelivered : LETTER_GIFT.bringWriting];
 }
 
 export const GIFT_HANDOFF_URL = '/api/backend/unsent-letter/gift-handoff';

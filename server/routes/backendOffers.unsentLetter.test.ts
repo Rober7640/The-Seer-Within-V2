@@ -121,17 +121,16 @@ const post = (overrides?: Record<string, unknown>) =>
   request(app).post('/api/backend/checkout').send(checkoutBody(overrides));
 
 describe('1 · the gate', () => {
-  it('11 is not ready for money, in the real catalog', () => {
-    expect(BACKEND_OFFER_CATALOG['unsent-letter'].readyForMoney).toBe(false);
+  it('11 IS ready for money in the real catalog (live on Production)', () => {
+    expect(BACKEND_OFFER_CATALOG['unsent-letter'].readyForMoney).toBe(true);
   });
 
-  it('refuses a perfect checkout, and nothing reaches Stripe or the intake', async () => {
+  it('a perfect checkout now succeeds without the test-mode gate (live)', async () => {
     state.liftGate = false;
     const res = await post();
-    expect(res.status).toBeGreaterThanOrEqual(400);
-    expect(res.body.url).toBeUndefined();
-    expect(create).not.toHaveBeenCalled();
-    expect(saveOrderIntake).not.toHaveBeenCalled();
+    expect(res.status).toBe(200);
+    expect(create).toHaveBeenCalled();
+    expect(saveOrderIntake).toHaveBeenCalled();
   });
 });
 

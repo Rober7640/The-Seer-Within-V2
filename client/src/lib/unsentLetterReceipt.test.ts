@@ -13,6 +13,8 @@ import {
   RECEIPT_BUMP_PS,
   UNSENT_LETTER_TY_CAMPAIGN,
   letterGiftHref,
+  letterGiftBring,
+  letterGiftHeadline,
   letterGiftLine,
   loadLetterGiftHref,
   loadLetterReceipt,
@@ -45,10 +47,15 @@ describe('the gift', () => {
     expect(T1).toContain(`${LETTER_GIFT.stubLabel} · ${LETTER_GIFT.stubAmount}`);
     expect(T1).toContain(`${LETTER_GIFT.eyebrow} · ${LETTER_GIFT.title} · ${LETTER_GIFT.withName}`);
     expect(T1).toContain(`${LETTER_GIFT.button} →`);
+    for (const line of [...LETTER_GIFT.bring, LETTER_GIFT.bringWriting, LETTER_GIFT.bringDelivered, LETTER_GIFT.note]) {
+      expect(T1).toContain(line);
+    }
+    expect(T1).toContain(letterGiftHeadline('Sarah'));
+    expect(T1).toContain(letterGiftHeadline(null));
   });
 
   it('carries none of the banned words, and no price', () => {
-    for (const line of Object.values(LETTER_GIFT)) {
+    for (const line of Object.values(LETTER_GIFT).flat()) {
       expect(line).not.toMatch(/\b(energy|journey|universe|perhaps)\b/i);
       expect(line).not.toMatch(/\$\d/);
     }
@@ -58,6 +65,23 @@ describe('the gift', () => {
     expect(letterGiftLine({ delivered: false })).toBe(LETTER_GIFT.writing);
     expect(letterGiftLine({ delivered: true })).toBe(LETTER_GIFT.delivered);
     expect(LETTER_GIFT.delivered).not.toMatch(/\bwrit/i);
+  });
+
+  it('never asks her to contact, wait for or forgive anyone', () => {
+    for (const line of Object.values(LETTER_GIFT).flat()) {
+      expect(line).not.toMatch(/\b(write to them|call them|contact|reach out|wait for|forgive|text them)\b/i);
+    }
+  });
+
+  it('the bring list follows the reading: three lines, the last one changes once it is sent', () => {
+    expect(letterGiftBring({ delivered: false })).toEqual([...LETTER_GIFT.bring, LETTER_GIFT.bringWriting]);
+    expect(letterGiftBring({ delivered: true })).toEqual([...LETTER_GIFT.bring, LETTER_GIFT.bringDelivered]);
+    expect(LETTER_GIFT.bringDelivered).not.toMatch(/once your reading/i);
+  });
+
+  it('the headline names her, or just invites', () => {
+    expect(letterGiftHeadline('Sarah')).toBe('Come and talk to me, Sarah.');
+    expect(letterGiftHeadline(null)).toBe('Come and talk to me.');
   });
 
   it('a buyer with an account gets a login link, under 11’s tag', () => {
