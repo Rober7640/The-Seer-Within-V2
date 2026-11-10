@@ -105,7 +105,7 @@ describe('what the page must never say', () => {
 describe('the catalog', () => {
   const offer = BACKEND_OFFER_CATALOG['unsent-letter'];
 
-  it('is offer 11, $35 fixed, dark', () => {
+  it('is offer 11, $35 fixed, live', () => {
     expect(offer).toMatchObject({
       key: 'unsent-letter',
       number: '11',
@@ -115,7 +115,7 @@ describe('the catalog', () => {
       upsellEntryPath: '/offers/upsell/welcome1',
       collectsShipping: false,
       piiOutOfStripe: true,
-      readyForMoney: false,
+      readyForMoney: true,
     });
   });
 
