@@ -37,7 +37,7 @@ MODEL
   either. Effort must be one of low/medium/high/xhigh/max. Never send temperature, top_p,
   logprobs or top_logprobs.
 """
-import json, os, sys
+import html as _html, json, os, re, sys
 
 _HERE = os.path.dirname(os.path.abspath(__file__))
 SPEC = json.load(open(os.path.join(_HERE, "11-acts.json"), encoding="utf-8"))
@@ -223,6 +223,7 @@ _CARDS_FOR_RUN = {k: {"name": v["name"], "plain": v["plain"],
                                 (v["drawn_cropped"] if SPEC["death_crop"] else v["drawn_full"]))}
                   for k, v in SPEC["cards"].items()}
 _RUNTIME = {k: SPEC[k] for k in ("pools", "deal_rules", "acts", "segments", "sections", "soul_urge",
+                                 "karmic_debt",
                                  "expression", "life_path", "flat", "devices", "art_links",
                                  "target_words", "floor_words", "ceiling_words", "letter_words",
                                  "death_crop")}
@@ -281,10 +282,29 @@ if (!su) su = 1 + (seedOf(birthName + '|su') % 9);
 if (!ex) { ex = 1 + (seedOf(birthName + '|ex') % 9); number_fallback = true; }
 const one = (n) => ({ 11: 2, 22: 4, 33: 6 }[n] || n);    // §5: brought to one digit for the sums only
 const row = S.soul_urge[String(su)];
+// ── the karmic debt: the one thing she is owed back this lifetime, hidden in the raw
+//    sums before they reduce. A core number carries a debt (13/14/16/19) when its
+//    reduction passes through one of those. Mirrors server/lib/numerologyEngine.ts
+//    detectKarmicDebt. Birth DATE (Life Path) is read first, then the name's numbers.
+//    When she carries one, the debt — not the Soul Urge — names what they took; when
+//    she does not, it falls back to the Soul Urge exactly as before.
+const detectKarmicDebt = (rawSum) => { let n = Math.abs(rawSum);
+  while (n > 9 && n !== 11 && n !== 22 && n !== 33) {
+    if (n === 13 || n === 14 || n === 16 || n === 19) return n; n = sumDigits(n); }
+  return 0; };
+const kdLp = detectKarmicDebt(reduce(mm) + reduce(dd) + reduce(sumDigits(yy)));
+const kdEx = detectKarmicDebt(allSum);
+const kdSu = detectKarmicDebt(vowelSum);
+const karmic = kdLp || kdEx || kdSu || 0;
+const karmic_source = kdLp ? 'life_path' : kdEx ? 'expression' : kdSu ? 'soul_urge' : null;
+// ⛔ Operator 2026-11-03: the Soul Urge names what they took for EVERY buyer. Karmic debt is a
+//    lesson she owes, which reads as blaming her, and only ~44% carry one. It is still computed
+//    and passed on (numbers.karmic) for a possible card-7 use later, but it decides nothing.
+const debt = row;
 const fork = (one(su) + one(ex) + one(lp)) % 3 === 0 ? 'get_back' : 'giving';
 const answers = {
-  took: row.took, took_word: row.word, cover: row.cover, regret: row.regret, unsaid: row.unsaid,
-  do: row.do, safety: row.safety || null,
+  took: debt.took, took_word: debt.word, cover: debt.cover, regret: debt.regret, unsaid: debt.unsaid,
+  do: debt.do, safety: debt.safety || null,
   saw: S.expression[String(ex === 33 ? 6 : ex)],
   pattern: S.life_path[String(lp === 33 ? 6 : lp)],
   fork, excuse: S.flat.excuse[String(one(ex) % 3)], reason: S.flat.reason[String(one(lp) % 3)],
@@ -373,8 +393,8 @@ const devices = {
   prop: devShuffle(D.prop, 'prop')[0],
 };
 
-return [{ json: { ...order, numbers: { su, ex, lp, number_fallback }, answers, deal, links, devices,
-  dob_iso: dob, attempt: 1, target_words: S.target_words } }];
+return [{ json: { ...order, numbers: { su, ex, lp, karmic, karmic_source, number_fallback },
+  answers, deal, links, devices, dob_iso: dob, attempt: 1, target_words: S.target_words } }];
 """.replace("__SPEC__", SPEC_JSON)
 
 # ─── shared fact block for the plan and the writer ─────────────────────────────
@@ -454,7 +474,14 @@ PLAN_SCHEMA = {
         "through_line": {"type": "string"},
         "sections": {"type": "array", "items": {
             "type": "object", "additionalProperties": False,
-            "properties": {"section": {"type": "string"}, "picture_detail": {"type": "string"},
+            # ⛔ enum, not a free string: gpt-6.1-sol returned "1 — the Magician" etc. and node 3c,
+            # which exact-matches the bare keys, threw "missing sections 1..12". Strict json_schema
+            # (proven on this model) makes the contract unbreakable. Card identity is set by code
+            # (node 3), never by the model, so it never needs the card name here.
+            "properties": {"section": {"type": "string", "enum": [
+                               "opening", "1", "2", "3", "4", "5", "6",
+                               "7", "8", "9", "10", "11", "12", "letter"]},
+                           "picture_detail": {"type": "string"},
                            "what_happens": {"type": "string"}, "leans_on": {"type": "string"},
                            "hands_on": {"type": "string"}},
             "required": ["section", "picture_detail", "what_happens", "leans_on", "hands_on"]}},
@@ -922,10 +949,36 @@ return [{ json: { ...j, attempt: j.attempt + 1, first_failure: { failed: verdict
 """
 
 # ─── 10 · the PDF's HTML ───────────────────────────────────────────────────────
-# ⛔ 11-C4 (Closing the Door) IS NOT WRITTEN. When it is, set this to its HTML. Until then a bump
-#    buyer's order stops at node 10 with a red execution, which is the visible hold. Nothing with
-#    a placeholder page can reach her. No backticks: this lands in a JS template literal.
-CLOSING_THE_DOOR_HTML = None
+# 11-C4 (Closing the Door, the $12.77 bump), written 2026-11-06: the page under "## The page" in
+# booking-page/11-C4-closing-the-door.md becomes the last page of a bump buyer's PDF. Allowed markup
+# there: one "### " title, plain paragraphs, one numbered list. If the file is missing this is None
+# and a bump buyer's order HOLDs (the AI test flows) or alerts the team (the live flow), so nothing
+# with a placeholder page can reach her.
+C4_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "booking-page", "11-C4-closing-the-door.md")
+
+def _closing_the_door_html():
+    if not os.path.exists(C4_PATH): return None
+    txt = open(C4_PATH, encoding="utf-8").read()
+    if "\n## The page\n" not in txt: raise SystemExit("11-C4: no '## The page' section")
+    body = txt.split("\n## The page\n", 1)[1].split("\n---\n", 1)[0].strip()
+    esc = lambda t: _html.escape(re.sub(r'"([^"]+)"', "\u201c\\1\u201d", t.strip()).replace("'", "\u2019"), quote=False)
+    out = []
+    for block in re.split(r"\n\s*\n", body):
+        lines = [l for l in block.strip().splitlines() if l.strip()]
+        if not lines: continue
+        if lines[0].startswith("### "):
+            out.append(f"<h2>{esc(lines[0][4:])}</h2>")
+        elif all(re.match(r"\d+\. ", l) for l in lines):
+            out.append("<ol>" + "".join(f"<li>{esc(re.sub(r'^\d+\. ', '', l))}</li>" for l in lines) + "</ol>")
+        elif any(re.match(r"\s*([-*>#|]|\d+\. )", l) for l in lines) or re.search(r"[*_`\[]", block):
+            raise SystemExit(f"11-C4: markup the PDF can't carry: {block[:60]!r}")
+        else:
+            out.append(f"<p>{esc(' '.join(lines))}</p>")
+    words = len(re.sub(r"<[^>]+>", " ", "".join(out)).split())
+    if words > 310: raise SystemExit(f"11-C4: {words} words, more than one page")
+    return "".join(out)
+
+CLOSING_THE_DOOR_HTML = _closing_the_door_html()
 
 HTML_JS = r"""
 // PDFShift takes one HTML string. The card art is looked up from the deal, never from model text.
@@ -942,31 +995,44 @@ const esc = (s) => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</
 // The writer may bold and italicise. A stray asterisk never reaches the page.
 const inline = (t) => esc(t).replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
   .replace(/\*([^*]+)\*/g, '<em>$1</em>').replace(/\*/g, '');
-const paras = (t) => String(t || '').trim().split(/\n\s*\n/).filter(Boolean)
-  .map((p) => `<p>${inline(p.trim().replace(/\n/g, ' '))}</p>`).join('');
+// Lines starting "- " become a bullet list (11 habits and signs, 2026-11-05); other lines stay one paragraph.
+const block = (p) => { const out = []; let txt = [], li = [];
+  const flushP = () => { if (txt.length) out.push(`<p>${inline(txt.join(' '))}</p>`); txt = []; };
+  const flushL = () => { if (li.length) out.push(`<ul>${li.map((x) => `<li>${inline(x)}</li>`).join('')}</ul>`); li = []; };
+  for (const line of p.trim().split('\n')) { const m = line.match(/^\s*-\s+(.*)$/);
+    if (m) { flushP(); li.push(m[1].trim()); } else if (li.length && /^\s+\S/.test(line)) { li[li.length - 1] += ' ' + line.trim(); }
+    else { flushL(); if (line.trim()) txt.push(line.trim()); } }
+  flushP(); flushL(); return out.join(''); };
+const paras = (t) => String(t || '').trim().split(/\n\s*\n/).filter(Boolean).map(block).join('');
 const ORD = ['first','second','third','fourth','fifth','sixth','seventh','eighth','ninth','tenth','eleventh','twelfth'];
 const sec = j.sections;
 const missing = ['opening', ...Array.from({ length: 12 }, (_, i) => String(i + 1)), 'letter', 'close'].filter((k) => !String(sec[k] || '').trim());
-if (missing.length) throw new Error(`the reading has no text for: ${missing.join(', ')}`);
+if (missing.length) throw new Error(`HOLD — the reading has no text for ${missing.join(', ')}`);
 const byHouse = Object.fromEntries(j.deal.map((d) => [d.house, d]));
 const cardBlock = (h) => { const d = byHouse[h];
   const crop = CROP_DEATH && d.card === 'death';
-  return `<section class="card"><h3>The ${ORD[h - 1]} card: ${esc(d.card_name.replace(/^The /, 'the '))}</h3>
+  // Question shape (11, 2026-11-05): the card's first line "**Card N, name: question**" becomes its heading.
+  let body = String(sec[String(h)] || '').trim();
+  const q = body.match(/^\*\*(Card \d+, [^*\n]+?: [^*\n]+\?)\*\*\s*\n/);
+  const head = q ? esc(q[1]) : `The ${ORD[h - 1]} card: ${esc(d.card_name.replace(/^The /, 'the '))}`;
+  if (q) body = body.slice(q[0].length);
+  return `<section class="card"><h3>${head}</h3>
     <figure${crop ? ' class="crop"' : ''}><img src="${S3}${d.card}.jpg" alt=""></figure>
-    <div class="prose">${paras(sec[String(h)])}</div></section>`; };
+    <div class="prose">${paras(body)}</div></section>`; };
 const acts = ACTS.map((a) => `<div class="act"><h2>${esc(a.name)}</h2>${a.houses.map(cardBlock).join('')}</div>`).join('');
-const DATE = (iso) => { const d = new Date(iso);
-  const M = ['January','February','March','April','May','June','July','August','September','October','November','December'];
-  return `${M[d.getUTCMonth()]} ${d.getUTCDate()}, ${d.getUTCFullYear()}`; };
+// The cover date in US Eastern time: most buyers are American, and UTC printed tomorrow's date on an evening order.
+const DATE = (iso) => new Date(iso).toLocaleDateString('en-US', { timeZone: 'America/New_York', month: 'long', day: 'numeric', year: 'numeric' });
+const closeParts = String(sec.close || '').trim().split(/\n\s*\n/).filter(Boolean);
 const coverRow = (label) => `<div class="row"><span class="lab">${esc(label)}</span><i></i><i></i><i></i></div>`;
 
 const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><style>
   /* ⛔ NO BACKTICKS IN THIS BLOCK. One ends the template literal and the node stops parsing. */
-  @page { size: Letter; margin: .6in 0 .6in; @bottom-center { content: "The Unsent Letter · " counter(page); font-family: Georgia, serif; font-size: 9pt; color: #62594C; } }
+__FONTS__
+  @page { size: Letter; margin: .6in 0 .6in; @bottom-center { content: "The Unsent Letter · " counter(page); font-family: Gelasio, Georgia, serif; font-size: 9pt; color: #62594C; } }
   @page :first { margin: 0; }
   @page cover { margin: 0; @bottom-center { content: none; } }
   * { -webkit-print-color-adjust: exact; print-color-adjust: exact; box-sizing: border-box; }
-  body { font-family: Georgia, 'Times New Roman', serif; color: #2A2622; margin: 0; font-size: 11.5pt; line-height: 1.62; }
+  body { font-family: Gelasio, Georgia, 'Times New Roman', serif; color: #2A2622; margin: 0; font-size: 11.5pt; line-height: 1.62; }
   .cover { page: cover; position: relative; width: 8.5in; height: 11in; overflow: hidden; page-break-after: always; background: #1F1B2A; color: #EFE6D2; text-align: center; padding-top: .8in; }
   .cover h1 { font-size: 34pt; font-weight: normal; letter-spacing: .02em; margin: 0 0 6pt; color: #EFE6D2; }
   .cover .laid { font-size: 12.5pt; color: #BFB39A; margin: 0 0 .42in; }
@@ -984,20 +1050,30 @@ const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><style>
   .opening p:first-child { font-weight: bold; }
   .act h2 { font-size: 17pt; font-weight: bold; margin: 26pt 0 4pt; padding-top: 16pt; border-top: 1pt solid #DED4BE; page-break-after: avoid; break-after: avoid; }
   section.card { margin-top: 16pt; }
-  section.card h3 { font-size: 12.5pt; color: #5C5348; margin: 0 0 10pt; page-break-after: avoid; break-after: avoid; }
+  /* The heading carries an invisible 3.9in tail (padding, cancelled by the negative margin) and can't be split,
+     so it only sits where its picture fits under it. Before this a heading could end a page with its card on the next
+     (n8n run 52507, Peggy card 8). The picture is 1.9in wide, about 3.3in tall, plus its margins: 3.45in was too
+     little (run 52534, Carol card 8 still split), so the tail is 3.9in. */
+  section.card h3 { font-size: 12.5pt; color: #5C5348; margin: 0 0 calc(10pt - 3.9in); padding-bottom: 3.9in; page-break-inside: avoid; break-inside: avoid; page-break-after: avoid; break-after: avoid; }
   section.card figure { float: left; width: 1.9in; margin: 2pt 20pt 10pt 0; page-break-inside: avoid; break-inside: avoid; }
   section.card figure img { width: 100%; display: block; border: 1pt solid #DDD6C6; }
   section.card figure.crop { height: 2.47in; overflow: hidden; border-bottom: 1pt solid #DDD6C6; }
   section.card:after { content: ''; display: block; clear: both; }
   p { margin: 0 0 9pt; orphans: 3; widows: 3; }
+  ul { margin: 0 0 9pt 16pt; padding: 0; } li { margin: 0 0 4pt; }
   .letter { page-break-before: always; break-before: page; background: #FBF6E9; border: 1pt solid #E2D7BC; padding: 26pt 30pt 22pt; }
   .letter h2 { font-size: 17pt; font-weight: normal; font-style: italic; text-align: center; margin: 0 0 16pt; }
   .letter p { font-size: 12pt; line-height: 1.7; }
   .close { margin-top: 20pt; }
-  .close p:last-of-type { font-size: 13pt; }
+  .close .end > p:last-of-type, .close .signoff p:last-of-type { font-size: 13pt; }
+  /* Her last paragraph, the sign-off and the colophon move as one, so the colophon never sits alone on the last page. */
+  .end { page-break-inside: avoid; break-inside: avoid; }
   .signoff { margin-top: 16pt; }
   .signoff p { margin: 0 0 3pt; }
-  .bump { page-break-before: always; break-before: page; }
+  .bump { page-break-before: always; break-before: page; page-break-inside: avoid; break-inside: avoid; }
+  .bump h2 { font-size: 20pt; font-weight: normal; font-style: italic; text-align: center; margin: 0 0 16pt; }
+  .bump ol { margin: 4pt 0 12pt; padding-left: 20pt; }
+  .bump li { margin: 0 0 6pt; }
   .colophon { margin-top: 26pt; border-top: 1pt solid #DED4BE; padding-top: 10pt; }
   .colophon p { font-size: 9pt; line-height: 1.5; color: #7C776D; margin: 0; }
 </style></head><body>
@@ -1012,15 +1088,34 @@ const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><style>
     <div class="opening">${paras(sec.opening)}</div>
     ${acts}
     <div class="letter"><h2>The letter they never sent</h2>${paras(sec.letter)}</div>
-    <div class="close">${paras(sec.close)}
-      <div class="signoff"><p>Your friend, even when you'd rather I wasn't,</p><p>&mdash; Evelyn</p></div>
+    <div class="close">${paras(closeParts.slice(0, -1).join('\n\n'))}
+      <div class="end">${paras(closeParts.slice(-1)[0])}
+        <div class="signoff"><p>Your friend, even when you'd rather I wasn't,</p><p>&mdash; Evelyn</p></div>
+        <div class="colophon"><p>About this reading: your twelve cards were set by your birth name and date. The words are written with machine help in Evelyn's voice.</p></div>
+      </div>
     </div>
-    <div class="colophon"><p>About this reading: your twelve cards were set by your birth name and date. The words are written with machine help in Evelyn's voice.</p></div>
     ${j.bump && CLOSING_THE_DOOR ? `<div class="bump">${CLOSING_THE_DOOR}</div>` : ''}
   </div>
 </body></html>`;
 return [{ json: { ...j, html, pdfFileName: `${j.order_id}.pdf` } }];
 """
+
+# The report's font, embedded in the page. PDFShift's Chrome has no Georgia and fell back to a
+# Times face (n8n run 52380, 2026-11-05: 12-13 pages instead of 14). Gelasio is drawn to Georgia's
+# metrics, so local and PDFShift renders now match. Google Fonts' latin subset, variable 400-700,
+# OFL (scripts/fonts/Gelasio-OFL.txt). Base64 has no backticks, so the template literal is safe.
+def _font_faces():
+    import base64
+    out = []
+    for style in ("normal", "italic"):
+        with open(os.path.join(_HERE, "fonts", f"gelasio-{style}.woff2"), "rb") as f:
+            b64 = base64.b64encode(f.read()).decode("ascii")
+        out.append("  @font-face { font-family: Gelasio; font-style: %s; font-weight: 400 700; "
+                   "src: url(data:font/woff2;base64,%s) format('woff2'); }" % (style, b64))
+    return "\n".join(out)
+
+HTML_JS = HTML_JS.replace("__FONTS__", _font_faces(), 1)
+assert "__FONTS__" not in HTML_JS and "`" not in _font_faces()
 
 # ─── assembly ──────────────────────────────────────────────────────────────────
 def wf_name(base):
@@ -1230,7 +1325,7 @@ def make_testdrive(wf):
     drop = {"1 · Stripe webhook", "Not 11 — ignore", "2a · Load the intake", "2b · Join session + intake",
             "8b · Log the first failure", "9 · Log the verdict", "13 · Hold to the 24h mark",
             "14 · Find her on AWeber", "14a · Tag + reading_url (the send)", "15 · Mark delivered"}
-    wf["name"] = wf_name(f"11 · Unsent Letter — TEST DRIVE ({FIXTURE} fixture, never delivers)")
+    wf["name"] = wf_name(f"11 · Unsent Letter — {'MANUAL ' if '--manual-only' in sys.argv else ''}TEST DRIVE ({FIXTURE} fixture, never delivers)")
     wf["nodes"] = [n for n in wf["nodes"] if n["name"] not in drop]
     wf["connections"] = {s: o for s, o in wf["connections"].items() if s not in drop}
     for outs in wf["connections"].values():

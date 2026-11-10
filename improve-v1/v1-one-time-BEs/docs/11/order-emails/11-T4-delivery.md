@@ -3,8 +3,8 @@
 | | |
 |---|---|
 | **Subject** | `%FIRSTNAME% — your letter is written out` — ⛔ word for word what [`11-T1`](../booking-page/11-T1-thank-you-page.md) and [`11-T3`](11-T3-confirmation.md) told her to watch for |
-| **Trigger** | AWeber Campaign, tag applied: `be-11-delivered` *(proposed)*. Wait: none. The tag and `reading_url` are set in the same call |
-| **Carries** | the link to her PDF, custom field `reading_url`, written here as `{{AWEBER_READING_URL}}`. One PDF per buyer (11-D) |
+| **Trigger** | AWeber Campaign, tag applied: `be-11-delivered`. Wait: none. The tag and `11_unsent_letter_reading_url` are set in the same call |
+| **Carries** | the link to her PDF, 11's own custom field `11_unsent_letter_reading_url` (⛔ NOT the shared `reading_url`: a buyer of two offers would get the other offer's link), written here as `{{AWEBER_READING_URL}}`. One PDF per buyer (11-D) |
 | **Purpose** | The envelope. Hand it over, give the one instruction that stops a refund, point at the fork, one line of admin. **Sells nothing. Summarises nothing** |
 
 ---

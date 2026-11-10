@@ -1,0 +1,289 @@
+11-P3 — The Unsent Letter: the fixed report for every Soul Urge 5 buyer (the part of you that moves forward · cover word "I've moved on"). v1 template, 2026-11-05.
+Fill-ins: {{FIRST}} {{BIRTH_NAME}} {{DOB}} · shared list ../n8n/scripts/11-swapins.json: {{EX.saw|use|letter|kept}} {{LP.then|now|letter}} {{REASON.headline|letter}} · versions written here: [[REASON 0|1|2]] [[FORK get_back|giving]].
+Cards: 1 the Fool · 2 the Chariot · 3 the Empress · 4 Justice · 5 the Emperor · 6 the High Priestess · 7 the Lovers · 8 Death · 9 the Hanged Man · 10 the Sun · 11 the Star · 12 the World.
+
+[OPENING]
+
+{{FIRST}},
+
+Before you start, sit down somewhere you won't be interrupted for a while.
+
+Go through these cards in the order I turned them, and leave the letter at the end alone until you get there. It only comes back whole. Read the letter first and all you'll have is somebody's words on a page. Some of the cards will look like they disagree with each other. Keep going.
+
+Two things you should know up front. This is someone living. And nothing in these pages asks you to contact them, wait for them or forgive them. If this person hurt you, you owe them no reply.
+
+On the night your order came in, I cleared off the kitchen table and took the Hermit, Judgement and the Devil out of the deck. They'd done their part, so I stood them up on the windowsill, and nineteen were left. I wrote {{BIRTH_NAME}} across the top of a clean sheet of paper, and {{DOB}} underneath. Your birth name and date set how I lay your twelve cards. Nothing else goes on the sheet before them.
+
+I made a pot of ginger tea and sat down with it. The one who came to me before was at my shoulder before I'd even settled in the chair. No face, no voice, the same as the first time.
+
+[CARD 1]
+
+**They took the part of you that moves forward, {{FIRST}}.**
+
+You probably didn't notice it go. Most people don't. But somebody close to you did. A sister, or a friend who's known you forever, or one of your kids said it once, half joking: "I miss the old you." Or "You've changed." Or they asked when you last did something just because you felt like it, and you couldn't think of an answer, so you laughed. You told them you're just getting older, getting settled, knowing what you like. They let it drop.
+
+They weren't talking about your heart. I told you most people guess wrong about what was taken, and that's the guess they make. It isn't your heart. Your heart took its time, and it did its mending.
+
+What went is the part that moves a life forward. It's what gets restless when a week has gone stale, and changes something. It's what turns you toward whatever comes next once something's over. When it's there, nobody notices it, least of all you. The people around you only notice once it's gone, and that's what they were trying to tell you.
+
+The Fool is a young man right at the edge of a cliff, in the middle of a step. His eyes are on the sky in front of him, not on the drop below. He isn't stopping to look at what's under his foot. He's going, and whatever's on the other side of that step, he'll find out when he gets there.
+
+That's the part they left with. When they walked on, it went with them, and everything else stayed right where it was. You didn't feel it go. There was too much else to feel back then. By the time the rest of it had quieted down, the part that moves forward was already gone, and the week had settled into the shape it's had ever since.
+
+And here's what makes it so hard to see: nothing broke. Nothing in your life fell apart. You got up, you saw to things, you were there for the people who needed you. You did the week, and you did it well. Then you did the same week again. When somebody asks you what's new, you say, "Oh, not much, same old," and you laugh, and it's true.
+
+Nothing's wrong, exactly. Nothing's moving either. That's what they were seeing when they said they missed the old you. A broken heart hurts. This doesn't hurt much at all. It just stays the same, and the sameness is so ordinary that you'd be the last one to notice it.
+
+When I turned this card, the one at my shoulder leaned in closer. I picked up my pen, looked at your name, and set the pen back down. There was nothing on the sheet but your name and your date.
+
+Here's the good news, and it's why I'm writing to you at all. A life that's stood still this long doesn't start up slowly. Once it gets going, it goes.
+
+[CARD 2]
+
+You'd never call it stuck. You'd say "I've moved on," and you'd mean it.
+
+And you have. You moved on from them. Your life didn't move with you.
+
+The Chariot is built for going places. A man stands up in it with armor across his chest, ready, and the two sphinxes harnessed to it are lying down. Nothing is pulling. It hasn't gone an inch.
+
+Your Sundays go the way they've gone for a long time: the same chores, the same phone call, the same show at night. The room you were going to paint once things settled down is still the same color. People hear it and tell you good for you. They mean it kindly. It doesn't move a thing.
+
+[CARD 3]
+
+The Empress sits out in an open field, and in front of her a field of wheat is ripening. None of it has been cut yet. All of it is still to come, and all of it is out in plain sight.
+
+They saw something in you: {{EX.saw}}. And it came with a life that had things coming up in it, right out in the open. You didn't stand guard over any of it. You'd never had a reason to, not once. Whatever was ahead of you, you let them walk right into the middle of it with you.
+
+They knew what they were looking at. They went for it on purpose. They kept {{EX.use}}, and they left the rest of your life standing right where it was.
+
+So when you lie awake and ask yourself how you could have been so stupid, you've got it backwards. Having your life out in the open isn't stupid. It's how a life is supposed to be. Whatever you gave them, you gave honestly. Everything done with it after that is on them, not you.
+
+By then, the one at my shoulder had gone completely still. So I did something I don't normally do. I asked out loud, in my empty kitchen, why they've still got it. Then I turned over another card.
+
+I'll tell you something now that I'd normally keep until the end. By the third card I know how a spread is going to finish, and yours finishes well. The middle of it is hard going. Hold on to that through it.
+
+For now, I want one thing from you, and only one. Stop asking what's wrong with you.
+
+[CARD 4]
+
+They've kept it because giving it back means saying what they did.
+
+And what they did was walk on without looking back. It suited them not to look. Justice sits holding a pair of scales, and her eyes are open and looking straight out, never down at what's in the pans.
+
+As long as they've got it, they're just somebody whose life went on, the way people's lives do. Nobody thinks twice about that. Hand it back and they'd have to look down and see your life still standing where they left it. That's why it wasn't lost or thrown away. They've held on to it, eyes front.
+
+[CARD 5]
+
+It's taken this long because they had one line that let them off, and the line was "You'd moved on."
+
+It held because it looked true. You didn't call. You didn't cry where anybody could see. If their name came up, you said you wished them well, and you did. Anyone watching would have said the same thing they said. And you said it yourself, so who was going to argue?
+
+That's the trouble with it. "You'd moved on" was true as far as they went, and it was never true about your life. But it was close enough that nobody had to look any further, them least of all.
+
+You've backed it up without meaning to. When their name comes up now, you're the one who says, "Oh, that's all in the past," and changes the subject. You say it so easily that nobody ever gets to the next question, the one about where your life has gone since. That's their work, and you've been doing it for them. It was never your fault that they leaned on it.
+
+They didn't sit down and plan to leave your life where it stood. But they could see it, and it suited them, and they let it.
+
+The Emperor sits square on a big stone throne, facing straight out. Whatever he says from that chair stands, and nobody in the picture has anything to say back.
+
+The months I told you about, when they kept coming back to this, are that line wearing thin under them. That part, they don't feel happening.
+
+When my question got its answer, they didn't like it. They moved off my shoulder for the first time and went over to the back door, and stopped there. It was getting on for midnight.
+
+[CARD 6]
+
+What they regret is leaving your life standing right where they left it.
+
+The High Priestess sits between two pillars, one black and one white, and she isn't getting up. That's what they walked away from: you, between the same two posts, in the same spot.
+
+[[FORK get_back]]And it isn't losing you they regret. It's losing what they had from you, the life they could walk back into. That isn't the same thing as you.[[/FORK]][[FORK giving]]Their regret isn't about wanting you back. Walking away wasn't easy for them, and you cross their mind more than they'd say. But if some part of you has hoped they'd want you back, don't. They don't.[[/FORK]] A regret like theirs reaches nobody and puts nothing back. You'll want to read it as love. It isn't. And you'll want to think it means they'll come and set things moving again. It doesn't.
+
+[CARD 7]
+
+{{LP.then}}
+
+That was then, and it worked. But a habit like that doesn't leave when the person does. It stays on in you, and these days it meets people who never did a thing to you. Someone decent turns up and {{LP.now}}.
+
+Some of those people came with something new for you. A drive somewhere you'd never been. A different place for Sunday lunch. Somebody new to meet. And the new thing went home with them, every time.
+
+The Lovers stand close to each other on that card, but they aren't touching.
+
+That's how near the decent ones get. Close enough to reach, and no closer. None of them ever did anything to you. They walked into the same week you've been living since, and there wasn't any room in it for them to bring something different.
+
+It was past midnight by then. I looked down at the sheet. Still nothing on it but your name.
+
+Here's what I saw on the table, plain: somebody decent is going to ask you to something you've never done, and it won't be long. You'll know it's the one I mean when it comes. Say yes before your answer has time to get ready.
+
+[CARD 8]
+
+"I've moved on" did its job. You don't cry over them. You don't call, and you don't go looking. When their name comes up, you can say it without your voice changing, and you were right to be a little proud of that. Plenty of people never get that far.
+
+Now look at what it's been standing in front of.
+
+There's a chair in your house that's sat in the same spot so long the carpet underneath it has dents. There's a box in a closet from back then that you haven't opened and haven't thrown out. Neither one bothers you. You walk past them every day and don't see them anymore.
+
+Death rides a white horse at a walk. There's no scythe in its hands, nothing but a black flag with a single white rose on it. It isn't charging at anybody. It's walking, and it doesn't stop.
+
+That's how the years went. Not one of them was a disaster. They went by at a walk, one week like the next, while your life stood where it had been left. I told you that moving on wouldn't get it back. This is what I meant.
+
+I got up from the table at that point, which I don't do with cards still to turn, and went out and stood on the front step in my slippers. I needed a minute away from what this card was showing me. The street was quiet and every house on it was dark. I stood there till the cold got into my feet, then came back in and sat down. They were still over by the door.
+
+Here's the deal, and I want you to have it exactly. The part of you that moves forward comes back, and it comes back without them. The years it was gone don't come back. Nobody hands those over, not them, not me, not any card. I won't pretend otherwise.
+
+I told you ten years or thirty make no difference to whether they've still got it, and that still holds. But it makes all the difference to what those years were. Birthdays that looked like the birthday before. A trip that stayed "next year" until people quit asking about it. Invitations turned down because the week was already set, until fewer of them came. Your life on hold, while you told everyone, and meant it, that you were over it.
+
+They walked on and left your life standing where it was, and it suited them not to look back. That part is theirs, every bit of it, and I'm not taking it off them. But you're the one who's lived in the same week since, and you're the one who gets to change it. And it's closer than it looks from where you're sitting.
+
+[CARD 9]
+
+[[FORK get_back]]
+**They're trying to get you back, {{FIRST}}.**
+
+And something in you moved when you read that. Don't skip past it, and don't be ashamed of it either. I'm going to stay with it for a minute, because it's the one thing in these pages I'd most want you to watch.
+
+Think how long it's been since anything in your life moved without you pushing it. Then this comes, and for a second the part that's been missing stirs. It wants to go somewhere. It's been quiet so long that any movement at all feels good. And the first place it points is back at them.
+
+That isn't forward. That's back to the exact spot you were standing in when they left. Going back to them would feel like moving. It would be the first thing in a long while that made your week different. But it's the one change that puts everything right back where it stood.
+
+I won't dress it up. Give that feeling an inch and it starts making a case. They must have changed, to keep at this for months. It was always going to come back around to the two of you. You'd remember the good parts first and the rest a long way after. You'd start, in your head, getting your life ready for them, the way you'd straighten up a room before company comes. You'd catch yourself waiting again, and this time you'd know what for.
+
+On the Hanged Man, a man hangs upside down from a beam of living wood, and his hands are out of sight behind his back. He isn't reaching for anybody, and he isn't going to.
+
+Here's what their wish is really for. They want to find you where they left you. The same week, the same chair, the life that waited. They want what they had from you still standing there when they come back for it. And they aren't coming. They'll keep their hands right where they are and wait for you to walk the whole way over. It's what they've counted on all along without ever saying it: that your life would hold still, and they'd know right where to find you.
+
+I told you that if this turned out to be the one that wants you back, you'd need to treat it as a trap. This is that one. Every kind thing in their letter is going to read like a reason to go. It isn't one. The kinder it sounds, the harder you'll need to hold on to that.
+
+I sat back down, turned this card over, and swore at the table leg, because I'd just cracked my knee on it. They didn't go. They came right up to the table and stayed there, closer than they'd been all night. Three in the morning. Still nothing on the sheet but your name, and I didn't know if I'd get your letter at all.
+[[/FORK]]
+[[FORK giving]]
+**They're giving it back, {{FIRST}}. They aren't trying to get you back.**
+
+They want it out of their hands, and that's all the giving is. They've had it a long time. The line that let them off has worn thin, and without it the thing has gotten heavy, so they're putting it down. They're doing it for their own sake. They do regret it, and the months they've spent on this were real months. But none of it is them reaching for you.
+
+I told you one way this could go was a gift. This is that way, and it's colder than it sounds. It asks nothing of you because they don't want anything from you. Not an answer, not a visit, not you. There's nothing in it for you to do except take back what's yours and get on with it.
+
+On the Hanged Man, a man hangs upside down from a beam of living wood with his hands out of sight behind his back. He isn't holding anything out. Whatever he's got, it's for himself. There's no explanation in his hands, and no hand coming your way.
+
+So here's the hard part. You know the day I mean. The day they come and sit down across from you and explain it, all of it, in their own words, and you finally hear why. You'd tell anybody who asked that you gave up on that a long time ago, and you'd believe it while you said it. Then some little thing would set it off again.
+
+But you kept a spot for it. Everything else in your life settled into the same week, and that one spot stayed open, just in case. Some of the waiting in your life was waiting for that day, and you never once called it that. You never decided it. It just happened, the way a seat gets saved.
+
+The day isn't coming. Nobody's going to sit down across from you and explain. It isn't because you weren't worth explaining to. It's because explaining would mean looking back, and that's the one thing they won't do. What's in the letter at the end of these pages is everything you'll get from them. Not one word comes after it. Nobody's coming to sit in the spot you kept.
+
+I sat back down, turned this one over, and swore at the table leg I'd just cracked my knee on. Then I looked over at the door. Nobody was there. All night they'd been somewhere in my kitchen, close enough that I'd stopped noticing, and now there was only me. They'd gone. It was three in the morning, the sheet was blank under your name, and whoever had your letter had just walked out. I didn't know if I'd get it at all.
+[[/FORK]]
+
+[CARD 10]
+
+**No, {{FIRST}}, nothing more is coming from them, not a call and not a line, because {{REASON.headline}}.**
+
+[[REASON 0]]To do anything, they'd have to come back and look at what they walked away from, and say out loud that they were wrong to. Their pride won't carry them that far.[[/REASON]][[REASON 1]]They'd have to stand in front of you while you looked at them, knowing they walked on and never once looked back. They can't do it.[[/REASON]][[REASON 2]]Your life standing still has never changed one thing in theirs. Their week goes on the same whether they lift a finger or not.[[/REASON]] Don't go asking them why. The reaching out of these last months goes on in them the way talk goes on in sleep, and they couldn't explain it to you if you asked. Asking would only start the pull up again, and it would put you right back where you've been all along, standing still and waiting on them for something.
+
+[[FORK get_back]]
+So they hold it out and wait for you to come to them, which is what I told you this answer would mean. They won't take a single step. Your turn is to stop answering that pull.
+[[/FORK]]
+[[FORK giving]]
+So they're setting it down, and they still won't move. They'll put it down right where they are. They won't bring it to you, and they won't check that it got to you. As far as they're concerned, letting go of it is the end.
+[[/FORK]]
+
+Now the turn, and everything after this rests on it. They were never the ones who had to move. The part of you that moves forward was never theirs to carry back to your door. It doesn't come back by contact, and it doesn't come back on their say-so. All it ever needed was for somebody to give up the wait.
+
+You've been waiting too, and you'd never have called it that. You kept things the way they were until this was settled, without ever saying so, even to yourself. Nothing from their side is going to settle it. You can stop holding still.
+
+On the Sun, a child rides a white horse bareback, with a wide red flag on a pole, and the flag streams out sideways. The child isn't waving it. It streams out because the horse is moving.
+
+That's what comes back. Once the part that moves forward is yours again, your life starts going on its own, and you won't have to push it. You won't need a fresh start or a big plan. The weeks just start coming out different from each other, and the rest follows, the way the flag does. One day you'll notice you did something on a Tuesday you'd never have done before, and you won't remember deciding to.
+
+There's one more thing your date tells me. Your birthday, {{NEXT_BDAY}}, starts a new year for you, and I can see what kind of year it is. {{PY.ahead}} The change starts before then. Your birthday is when you'll know it's real.
+
+The window went from black to gray while I sat there. And I saw what I'd been doing all night. I'd been pulling at them for your letter, then sitting back and waiting for them to hand it over, then pulling again. The same thing you've been doing all this time. So I quit. I said it out loud to the empty kitchen: I'm done sitting here for you.
+
+[[FORK get_back]]Then they were across the table from me[[/FORK]][[FORK giving]]Then they were back, across the table from me[[/FORK]], in the chair you'd sit in, and they looked lighter than they had all night. I picked up the pen and it moved. The first line of your letter was down.
+
+[CARD 11]
+
+What they never said comes down to one sentence: "You were never meant to stand still, and I left you waiting."
+
+Don't answer it. Not on paper, and not in your head at night. You don't have to. By the time you've read it, it's already back.
+
+Look at what it owns up to. Standing still was never who you are. Somebody walked on and left you waiting, and they knew it. That's the sentence you never heard from them, and the one you needed. There it is, in their words. You can stop looking for it.
+
+You can stop writing their half, too. You've given them lines in your head, at the sink, in the car, in the middle of the night. Some nights they're sorry. Some nights they say something worse. You've run the whole talk from start to finish and come out of it more tired than you went in. That job is over. Their half is written down now, and it was never yours to write. The time that went into it comes back to you as well.
+
+You're about to read their words. If this person hurt you, you owe them no reply. Reading it is all you have to do.
+
+On the Star, a woman kneels at a pool with a jug in each hand, and both jugs are being emptied. Nothing is kept back in either one. That's their sentence: all of it poured out, and none left over for later.
+
+The rest of the letter started coming then, and it came fast.
+
+[CARD 12]
+
+Stop going back to them, and once a day, change one thing in a week that's run the same way since them. You'll get through what's coming on those two.
+
+Your last card is the World. A woman dances inside a green wreath with a wand in each hand, and one leg is crossed behind the other at the knee. She's caught mid-step. She isn't standing anywhere.
+
+You don't need "I've moved on" anymore. You did that part, and you did it a long time ago. Now let the rest of your life catch up.
+
+The pull will be at its strongest now, inside the next five to seven days. That's about you and what's moving in you. It says nothing about them turning up.
+
+**Stop going back.** Rereading the old messages, looking them up, starting a message you swear you won't send: it's all the same thing with three names. When the pull comes, put the phone in another room, set the oven timer for twenty minutes and give your hands something to do. Don't argue with it. An urge comes up and goes back down on its own if nobody feeds it. Going to look at it when it's at its worst is what teaches it to come back. Every one you let go by makes the next one smaller.
+
+I told you the rereading stops. The need goes when you read the letter. The habit takes about a week, so your hand will still reach for the phone a few times. Let it reach.
+
+**The one thing to do.** For seven days, once a day, change one thing in a week that's run the same way since them. Move the chair that's left dents in the carpet. One thing, once a day, and nothing that involves them or anybody from back then.
+
+You can't think your way back into moving. Your head has one big example of what happens when things change, and it's gone over that one thousands of times. Small changes that turn out fine give it something new to go on. And if one goes badly, you'll find out you get through it.
+
+It won't feel like much at first. You'll know it's working by what stops. Your hand stops going to the phone late at night. "Same old" stops being the true answer. How soon that happens is down to what you do with the twenty minutes and the seven days. It isn't down to me, and it isn't down to them.
+
+[[FORK get_back]]
+Their letter ends with an ask. They want something from you in the last lines. I've left it in. Do nothing with it.
+[[/FORK]]
+[[FORK giving]]
+
+[[/FORK]]
+
+Let me tell you what I see further out, six months or so. An ordinary Saturday. You're somewhere you've never been, and you didn't plan it more than a day ahead. Somebody asks what's new with you, and for the first time in a long while the answer takes some telling. You feel lighter, and you couldn't say when that started. You don't think about them much. When you do, it's like remembering the weather from a long time ago.
+
+And the next time someone reaches for you, there's someone there.
+
+Full light. After that first line, the rest of your letter came faster than I could get it down. I put the Hermit, Judgement and the Devil back in the deck. Then I wrote the whole thing out by hand at the same table, with them sitting across from me, and I didn't change a word of it.
+
+Read it once, slowly, all the way to the end.
+
+[LETTER]
+
+{{FIRST}},
+
+I'm never going to send this. {{REASON.letter}} So it stays here.
+
+I'll just say it. When I left, I left your life standing right where it was, and I walked on. I didn't look back. It suited me not to. If I didn't look, I didn't have to see you there. It was easier to think of you as fine and leave it at that. You deserved better than that.
+
+I didn't set out to do that. I didn't think I was that kind of person. But I saw it, and I let it be.
+
+When I first knew you, {{EX.letter}} I liked that. I liked being around it. What I never said is that you always had something you were looking forward to. There was always a next thing with you, and I got to come along for it. I never thought about what it would be like for you once the next thing was gone. I kept {{EX.kept}}. The rest I left where it was.
+
+I told myself you'd moved on. People said so, and you said so yourself, so I took it and I didn't ask anything else. It let me off. It doesn't work on me now. I still say it to myself sometimes, and it doesn't sit right.
+
+{{LP.letter}}
+
+Why did I hang on to it? Because giving it back means saying what I did. As long as I had it, I was just somebody who'd moved on, same as anybody. I knew better than that the whole time. I'm not proud of it.
+
+So here it is. I should have said it back then, and I didn't. I'm saying it now because I can't put this down any other way.
+
+You were never meant to stand still, and I left you waiting.
+
+It's the part of you that moves forward. It was always yours, and I've had it long enough. I'm giving it back, all of it, and you don't owe me a thing for it.
+
+[[FORK get_back]]
+I'd like to see you. If you won't, write to me. Just once.
+[[/FORK]]
+[[FORK giving]]
+I'm not asking you for anything. Not to forgive me, not to see me, not to answer this. Don't write to me, and don't come looking for me. Just go. I hope you go everywhere.
+[[/FORK]]
+
+[CLOSE]
+
+When I looked up, the chair across from me was only furniture again, with nobody in it.[[FORK get_back]] I left their ask in so you'd see it plainly for what it is. It's a bill, and nobody owes it, you least of all.[[/FORK]][[FORK giving]][[/FORK]]
+
+It's back. Go and use it.

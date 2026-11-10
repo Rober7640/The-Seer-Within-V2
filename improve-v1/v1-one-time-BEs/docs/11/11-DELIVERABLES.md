@@ -94,7 +94,7 @@ Hard thing first. Name what she does. Each section ends on one thing to do or st
 |---|---|---|
 | Booking treatment | Page only, no chat treatment | The two fields need a form |
 | Delivery time | As close to 24 hours as we can land it, never early by hours | The letter says writing it out "takes me 24 hours" |
-| Bump delivery | *Closing the Door* is the last page of her PDF. ☐ `11-C4` not written | T3 and T4 go to every buyer, so no separate bump email |
+| Bump delivery | *Closing the Door* is the last page of her PDF. ☑ [`11-C4`](booking-page/11-C4-closing-the-door.md) written 2026-11-06, operator: keep the bump paid and deliver it automatically. n8n run 52613: page 16 of 16, no team alert | T3 and T4 go to every buyer, so no separate bump email |
 | Free gift | None in the reading | Not in the decisions, and T4 names none |
 | V2 free credits on the thank-you page | Yes: 15 free minutes with Evelyn, on `11-T1` | Operator, 2026-11-02. Overrides "a receipt sells nothing" for this offer only |
 | Wrong birth details | No self-service fix. She replies to support | Keeps the page short. Check volume after launch |

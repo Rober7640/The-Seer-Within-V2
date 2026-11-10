@@ -1,7 +1,12 @@
 #!/usr/bin/env python3
 """Push an 11 workflow to n8n over the public REST API. Never activates.
 
+    python3 scripts/push-11-n8n.py --live [--dry-run] [--update <id>]   # the live no-model flow (build-11-assemble.py --live)
     python3 scripts/push-11-n8n.py --testdrive [--fixture giving] [--manual-only] [--openai] [--dry-run] [--update <id>]
+
+⛔ --live pushes build/11-fulfilment-ASSEMBLY.n8n.json, the no-model delivery flow. The old AI-writing flow
+   (11-fulfilment.n8n.json) is never pushed live any more: it shares nothing with the live path.
+⛔ Never activates. Turn it on in the n8n UI (an API activation doesn't register the webhook).
 
 ⛔ The API is fussier than the UI importer: it takes only name / nodes / connections / settings.
 ⛔ The live build is refused while it still carries TODO placeholders.
@@ -24,10 +29,12 @@ def env(k):
 # ⛔ EXPLICIT SUFFIXES, AND AN UNKNOWN FLAG IS AN ERROR. An earlier 02 version knew only --test, so
 #    `--testdrive` fell through and it pushed the FULL build, delivery nodes and all, over the test
 #    drive. A flag this script doesn't understand must stop it, never be ignored.
-KNOWN = {"--testdrive", "--fixture", "--dry-run", "--update", "--openai", "--manual-only"}
+KNOWN = {"--live", "--testdrive", "--fixture", "--dry-run", "--update", "--openai", "--manual-only"}
 unknown = [a for a in sys.argv[1:] if a.startswith("--") and a not in KNOWN]
 if unknown:
     raise SystemExit(f"unknown flag(s): {' '.join(unknown)}")
+if ("--live" in sys.argv) == ("--testdrive" in sys.argv):
+    raise SystemExit("say which: --live (the no-model delivery flow) or --testdrive")
 if "--manual-only" in sys.argv and "--testdrive" not in sys.argv:
     raise SystemExit("--manual-only requires --testdrive")
 fixture = sys.argv[sys.argv.index("--fixture") + 1] if "--fixture" in sys.argv else "getback"
@@ -38,7 +45,8 @@ if "--fixture" in sys.argv and "--testdrive" not in sys.argv:
 suffix = ""
 if "--testdrive" in sys.argv:
     suffix = ("-MANUAL" if "--manual-only" in sys.argv else "-TESTDRIVE") + ("-GIVING" if fixture == "giving" else "-GETBACK")
-src = os.path.join(HERE, "../build/11-fulfilment%s.n8n.json" % suffix)
+src = (os.path.join(HERE, "../build/11-fulfilment-ASSEMBLY.n8n.json") if "--live" in sys.argv
+       else os.path.join(HERE, "../build/11-fulfilment%s.n8n.json" % suffix))
 wf = json.load(open(src, encoding="utf-8"))
 if wf.get("active") is not False:
     raise SystemExit("REFUSING: the build says active")
@@ -51,6 +59,8 @@ if "--testdrive" in sys.argv:
         raise SystemExit(f"REFUSING: delivery nodes in a test drive: {left}")
 elif "TODO" in text:
     raise SystemExit("REFUSING: the live build still has TODO placeholders. Only --testdrive can go up.")
+elif not body["settings"].get("errorWorkflow"):
+    raise SystemExit("REFUSING: the live build has no errorWorkflow, so a failed order would email nobody.")
 
 print(f"  {body['name']}")
 print(f"    {len(body['nodes'])} nodes, {sum(len(b) for o in body['connections'].values() for b in o['main'])} edges")

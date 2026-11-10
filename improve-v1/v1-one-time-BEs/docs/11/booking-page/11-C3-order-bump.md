@@ -6,10 +6,10 @@
 | **Price** | $12.77, added to the $35 at checkout |
 | **Renders** | on [`11-C1`](11-C1-booking-page.md), above the total, from the start. It's the only box on the page and it's optional. ⛔ **Never pre-checked.** A pre-selected paid add-on is a negative option under FTC and card-network rules |
 | **Voice** | Hers, first person |
-| **Product code** | `closing_the_door` *(proposed)*. ⚠ It needs its own code: the fulfilment robot matches on exact text, so a reused code sends the wrong thing |
+| **Product code** | `closing_the_door` (in `shared/backendOffers.ts`). ⚠ It needs its own code: the fulfilment robot matches on exact text, so a reused code sends the wrong thing |
 | **Stripe line item** | Closing the Door |
 | **Adjacency** | 11 gives back what was taken. The bump shuts the way it left |
-| **Deliverable** | ⚠ A one-page ritual, **not written yet** (11-C4). This copy sells nothing until it exists |
+| **Deliverable** | ✅ A one-page ritual, [`11-C4`](11-C4-closing-the-door.md) (written 2026-11-06). The last page of her PDF, on its own page. Proven on n8n run 52613 |
 | **Component** | [00e §4](../../00e-FRAMEWORK-BEs.md) |
 
 ---
@@ -40,7 +40,7 @@ Lives in [`11-T1`](11-T1-thank-you-page.md).
 - **Rule 3, the limit is the first line.** It says the letter can't shut the door, without saying the letter falls short. "It comes back when you read it" stays true: the door is a separate job.
 - **Rule 4, it protects the product.** It picks up the product's last line: "It's back. What you do with it is on you."
 - **Timing lives on the label.** "After I've read the letter" stops her doing it first. It's also why T1 can't hand it over the way 02 does: she has nothing to read yet.
-- ⚠ **How it reaches her (needs a decision).** T3 and T4 go to every buyer, so neither can carry it. I've assumed it's the last page of her PDF, which works because there's one PDF per buyer (11-D). T1 says so. If that's wrong, change T1.
+- **How it reaches her (decided 2026-11-06: the last page of her PDF, automatic, the bump stays paid).** T3 and T4 go to every buyer, so neither can carry it. I've assumed it's the last page of her PDF, which works because there's one PDF per buyer (11-D). T1 says so. If that's wrong, change T1.
 - ⛔ **Notes for whoever writes 11-C4.**
   - No contact: no letter sent, no call, no looking them up, nothing that needs them.
   - The reading's last card gives "the one thing to do". This must be a different thing.

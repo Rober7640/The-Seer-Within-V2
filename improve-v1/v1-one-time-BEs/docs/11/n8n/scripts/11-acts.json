@@ -327,7 +327,7 @@
       "cover": "sensible",
       "regret": "they got her to back down, and liked it",
       "unsaid": "You could have stood up to me, and I made sure you didn't.",
-      "do": "One thing a day she'd normally talk herself out of, or ask leave for."
+      "do": "One thing a day she'd normally talk herself out of, or ask permission for."
     },
     "2": {
       "took": "your trust",
@@ -343,7 +343,7 @@
       "cover": "grown up",
       "regret": "making her feel silly for it",
       "unsaid": "You were never too much. I liked you smaller.",
-      "do": "Once a day, say the daft thing out loud to someone before she edits it."
+      "do": "Once a day, say the silly thing out loud to someone before she edits it."
     },
     "4": {
       "took": "your sense of being safe",
@@ -355,12 +355,12 @@
       "safety": "Some women who get this row are not safe now. In this section, once, in your plain voice, say that if she isn't safe where she is, that comes first, and she should tell someone who can help."
     },
     "5": {
-      "took": "your freedom",
-      "word": "freedom",
-      "cover": "settled",
-      "regret": "making a small life look like her own idea",
-      "unsaid": "You were always allowed to go, and I made you think you weren't.",
-      "do": "One thing a day she doesn't clear or explain to anyone."
+      "took": "the part of you that moves forward",
+      "word": "moving forward",
+      "cover": "I've moved on",
+      "regret": "leaving her life standing where they left it",
+      "unsaid": "You were never meant to stand still, and I left you waiting.",
+      "do": "Once a day, change one thing in a week that's run the same way since them."
     },
     "6": {
       "took": "your belief that you'd be looked after",
@@ -371,8 +371,8 @@
       "do": "Ask for one small help a day and take it with only a thank you."
     },
     "7": {
-      "took": "your faith in your own judgement",
-      "word": "judgement",
+      "took": "your faith in your own judgment",
+      "word": "judgment",
       "cover": "a second opinion",
       "regret": "telling her she was wrong when she was right",
       "unsaid": "You saw it, you were right, and I told you that you weren't.",
@@ -408,7 +408,7 @@
       "cover": "one day at a time",
       "regret": "letting her plan on them when they knew better",
       "unsaid": "I let you build on me, and I knew it wouldn't hold.",
-      "do": "Each day, put one thing in the diary further off than she'd normally dare."
+      "do": "Each day, put one thing on the calendar further off than she'd normally dare."
     },
     "33": {
       "took": "your wanting",
@@ -417,6 +417,45 @@
       "regret": "teaching her that what she wanted didn't count",
       "unsaid": "You were allowed to want things, and I made that too much to ask.",
       "do": "Each day, before anyone else speaks, say what she wants, however small."
+    }
+  },
+  "karmic_debt": {
+    "_note": "The one thing she is owed back this lifetime — a numerology Karmic Debt (13/14/16/19), hidden in a raw sum before it reduces. Read first off the birth DATE (Life Path), then the name's numbers; see build-11-n8n.py node 3. ⛔ PARKED 2026-11-03 (operator): it no longer names what they took; the Soul Urge does, for every buyer. Kept only for a possible card-7 (her half) use later. Standard debt meanings in the offer's voice. ⛔ Never say 'karmic', 'debt', 'numerology' or any number to the buyer.",
+    "13": {
+      "took": "your ease",
+      "word": "ease",
+      "cover": "capable",
+      "regret": "they let her carry all of it and still called her the strong one",
+      "unsaid": "I let you hold the whole weight because it cost me nothing.",
+      "do": "Once a day, leave one thing undone on purpose, and go to bed anyway.",
+      "safety": "If holding everything up was the price of being kept, that was theirs to answer for, not a debt you owe."
+    },
+    "14": {
+      "took": "your freedom",
+      "word": "freedom",
+      "cover": "easy-going",
+      "regret": "they made her world small and called it love",
+      "unsaid": "I kept you close by making everywhere else feel unsafe.",
+      "do": "Once a day, do one thing without telling anyone first.",
+      "safety": "Being made smaller was never your fault. You owe no one a reason for wanting room."
+    },
+    "16": {
+      "took": "your trust that love holds",
+      "word": "trust",
+      "cover": "independent",
+      "regret": "they let her build her whole weight on them, knowing they wouldn't hold",
+      "unsaid": "I let you lean everything on me when I already knew I'd go.",
+      "do": "Once a day, let one small thing matter out loud before you know how it ends.",
+      "safety": "The fall was theirs to own. Trusting someone who swore they were solid never made you a fool."
+    },
+    "19": {
+      "took": "your right to lean on anyone",
+      "word": "leaning",
+      "cover": "strong",
+      "regret": "they left her to manage alone and let her believe that was strength",
+      "unsaid": "I taught you to need no one, so you'd never ask anything of me.",
+      "do": "Once a day, let one person help with one thing, and don't take it back.",
+      "safety": "Needing people was never the weakness. Being left to prove you didn't is the harm."
     }
   },
   "expression": {
@@ -673,7 +712,7 @@
         "a sphinx lying on top of the wheel with a sword held across it",
         "a snake going down the left side of the wheel, head first",
         "a dog-headed figure coming up the right side",
-        "four figures in the four wheaters, each in cloud with an open book — a man, an eagle, a bull, a lion"
+        "four figures in the four corners, each in cloud with an open book — a man, an eagle, a bull, a lion"
       ]
     },
     "justice": {
@@ -789,7 +828,7 @@
         "a naked woman dancing inside an elliptic green wreath, a violet scarf blown loose around her loins",
         "a wand held in each hand, one and one, and nothing else carried",
         "the wreath tied top and bottom with a red ribbon, the same knot both ends",
-        "four heads in the four wheaters of the card, each in cloud — a man, an eagle, a bull, a lion",
+        "four heads in the four corners of the card, each in cloud — a man, an eagle, a bull, a lion",
         "one leg crossed behind the other at the knee, caught mid-step",
         "nothing inside the wreath but her and the sky, no ground drawn under her feet"
       ]

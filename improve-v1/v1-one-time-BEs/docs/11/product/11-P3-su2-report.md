@@ -1,0 +1,299 @@
+11-P3 — The Unsent Letter: the fixed report for every Soul Urge 2 buyer (the part of you that takes people at their word · cover line "I'm careful now"). letter-first shape, question shape, bar shape (each card answers one of her questions, in her words; one spine image, the spare key in the kitchen drawer, spine word "spare key"; the thing named once, the Lookout; a habits list and the lie; a dated close, signs and three instructions), v1 to the writing bar, 2026-11-06.
+Fill-ins: {{FIRST}} {{BIRTH_NAME}} {{DOB}} · shared list ../n8n/scripts/11-swapins.json: {{EX.trait|saw|use|letter|never|moment|kept|last}} {{LP.trait|then|now|admire|letter}} {{PY.ahead}} {{NEXT_BDAY}} {{REASON.headline|letter}} · versions written here: [[REASON 0|1|2]] [[FORK get_back|giving]].
+Cards: 1 the High Priestess · 2 the Moon · 3 the Chariot · 4 the Emperor · 5 the Hierophant · 6 the Hanged Man · 7 the Lovers · 8 the Tower · 9 Wheel of Fortune · 10 the Sun · 11 the Star · 12 Strength
+
+[OPENING]
+
+{{FIRST}},
+
+Before I turned a single card for you, I saw a spare key at the back of a kitchen drawer, under the takeout menus. It had been cut to hand to somebody. It still turned the lock fine. Nobody had held it in a long while, that's all.
+
+Somebody left with something of yours. Since then you've said, "I'm careful now," and you are. You call it careful. It's waiting to be let down. Each of your twelve cards answers one question you've been carrying, flat out. At the end is the letter that never got sent.
+
+Your birth name and date set how I lay your twelve cards. I wrote {{BIRTH_NAME}} and {{DOB}} at the top of a clean sheet at my kitchen table. The one who came to me was at my shoulder before I'd cut the deck.
+
+Two things up front. This is someone living. And nothing here asks you to get in touch, to wait or to forgive.
+
+[CARD 1]
+
+**Card 1, the High Priestess: What did they take from me?**
+
+**They took the part of you that takes people at their word, {{FIRST}}.**
+
+Your birth name carries a 2 at its heart. The card numbered 2 is the High Priestess. Behind her hangs a veil, and her back is to it. She never turns around to check what's behind. That's the part that left.
+
+Somebody who's known you a long time said it once, after you'd called to check a plan twice: "You never used to need it in writing."
+
+Your judgment's fine. What went is the part that could hear "I'll be there at six" and stop thinking about it.
+
+Something moved into the room it left. I call it the Lookout. It's at the window ten minutes before anybody's due, and it's never surprised when somebody's late. It's kept you from being let down twice. It isn't a second thing to get rid of. It's only what grows in a room that's been left empty, and it goes quiet once what belongs there comes back.
+
+[CARD 2]
+
+**Card 2, the Moon: Did they ever really love me?**
+
+**Yes. Back then, it was real.**
+
+On the Moon, an orange dog and a pale wolf howl at the same moon. From far off, you couldn't say which is which. You got near enough to see. It was the dog.
+
+Here's how I know: your name and date told me who I was laying them for. {{EX.trait}} {{LP.trait}}
+
+They saw something in you: {{EX.saw}}. That's what they loved. They leaned on {{EX.use}}, and on how you believed all of it.
+
+You weren't a fool to take it as it came. What's over there now is regret, and that's a different animal.
+
+[[FORK get_back]]Hold on to "back then." The letter at the end leans hard on that love.[[/FORK]][[FORK giving]][[/FORK]]
+
+[CARD 3]
+
+**Card 3, the Chariot: Was it my fault?**
+
+**No. Counting on somebody is never the mistake.**
+
+On the Chariot, a man stands in a stone chariot with two sphinxes harnessed in front, and there are no reins in his hands. He's counting on the pair to go.
+
+Somebody said, "Leave it to me," and you let go of the reins, every time. What got done with it after is on whoever asked. The Lookout isn't your fault either. Anybody let down like that grows one.
+
+By the third card I could see your spread ends well. Keep that with you through the middle.
+
+[CARD 4]
+
+**Card 4, the Emperor: Why have they still got it?**
+
+**Because giving it back means admitting the word you took was never any good.**
+
+The Emperor sits square on a stone throne with a gold staff in one hand and a gold ball in the other. Both hands are full. To give anything over, he'd have to set something down.
+
+In those hands is a picture of somebody solid, somebody you could set your watch by. While what was taken stays over there, so does the picture. Handing one back means putting down the other.
+
+[CARD 5]
+
+**Card 5, the Hierophant: Why has it taken this long?**
+
+**Because one line let them off: "You learned your lesson." It sounded wise, so nobody asked the next question.**
+
+On the Hierophant, a robed figure sits up high with two fingers raised, about to teach, and two ministers kneel below him, taking it in. It's the lesson everybody hands out after a let-down, and it's the wrong one.
+
+You'd say "I'm careful now" and mean it, and you're a little proud of it. From the outside, it looks like good sense. Here's what people see:
+
+- The night before any plan, you text to make sure it's still on.
+- When somebody says, "I'll take care of it," you take care of it too, just in case.
+- When somebody offers you a ride, you've already worked out another way home.
+- When a friend picks the restaurant, you've read the menu before you get there.
+- When somebody says something nice about you, you laugh and say, "What do you want?"
+
+And under all of it, the one line the Lookout lives by: "If I never count on anybody, nobody can let me down again."
+
+That's the spare key again. It works fine. It just never leaves the drawer.
+
+[CARD 6]
+
+**Card 6, the Hanged Man: What do they regret?**
+
+**Asking you to count on them, and then not being there when you did.**
+
+On the Hanged Man, a man hangs head-down by one ankle, his hands out of sight behind his back.
+
+The sorry is real. [[FORK get_back]]But under it, what's missed is being believed without a second look. Nobody since has done that. It isn't the same as missing you.[[/FORK]][[FORK giving]]It isn't about wanting you back. It's about having been trusted that far once, and what came of it. That door's shut from the other side.[[/FORK]] The sorry stays where his hands are, and none of it reaches you.
+
+It was midnight when I laid the Hanged Man down, and every card I turned after that said the same three words your Lookout says: don't count on it. I kept turning.
+
+[CARD 7]
+
+**Card 7, the Lovers: Why does nobody new get close?**
+
+**Because the Lookout meets everybody new at the door, braced for the let-down.**
+
+On the Lovers, two people stand close enough to touch. Far off, a gray mountain stands up in the gap between them. Neither one put it there.
+
+{{LP.then}}
+
+But the habit stayed on after the reason for it was gone. Someone decent turns up and {{LP.now}}.
+
+Remember the dog and the wolf? In the dark it can't tell them apart, so it treats everybody as the wolf.
+
+[CARD 8]
+
+**Card 8, the Tower: Is it too late for me?**
+
+**No. The years spent on watch don't come back, but what was taken does, and sooner than you'd think.**
+
+The Tower stands on bare rock, and there's no door drawn anywhere on it. Lightning has just hit the top, and fire is pushing out through three windows, outward, not up.
+
+That's what all the watching built: a tower nobody new can get into. But think of the spare key. All that time in a drawer, and it still fits the lock.
+
+And here's what being let down built in you. You know what a promise weighs, so you don't make one you can't keep. When the part that takes people at their word comes back, it comes back to somebody whose own word holds. Plenty of people believe easily. Fewer keep every promise. You'll do both.
+
+Whatever's been shut up in there is on its way out.
+
+[CARD 9]
+
+**Card 9, Wheel of Fortune: Are they giving it back, or trying to get me back?**
+
+[[FORK get_back]]
+**Trying to get you back, {{FIRST}}.**
+
+On Wheel of Fortune, a wheel hangs in the sky with nothing holding it up. A snake goes down one side head first, and a dog-headed figure comes up the other. What goes down comes back around, and that's what's wanted here: things back where they were.
+
+The letter ends with an ask: a visit, and if you won't come, a letter back.
+
+If part of you wants to believe it, don't be ashamed of that. The part that was taken is stirring, and the first word it wants to take is the one it knows best. Look at what's being asked for. Not forgiveness. Trust, the very thing that was taken, handed over again on your say-so.
+
+The kinder the letter sounds, the harder you hold on to that.
+[[/FORK]]
+[[FORK giving]]
+**Giving it back, {{FIRST}}. Not trying to get you back.**
+
+On Wheel of Fortune, a wheel hangs in the sky with nothing holding it up. No hand is on it anywhere.
+
+The letter ends by asking you for nothing at all. Not forgiveness, not a visit, not even an answer.
+
+The point is to be rid of it. That's a gift, but a cool one. It asks nothing of you because there's nothing left it wants.
+
+You've kept a day free: the one where somebody sits down across from you and tells you why it went the way it went. That day isn't coming. The letter at the end is everything you'll get. Once you've read it, the day is yours again.
+[[/FORK]]
+
+It was three in the morning when I turned this one, and the letter stalled. The one at my shoulder would give me half a line and stop, like somebody who's used up being believed. I put the pen down and waited.
+
+[CARD 10]
+
+**Card 10, the Sun: Will they ever do anything about it?**
+
+**No, {{FIRST}}, there won't be a call or a knock at the door, because {{REASON.headline}}.**
+
+On the Sun, a child rides a white horse bareback with both arms open, and a low gray wall runs right across the card. The horse is already out in front of it.
+
+[[REASON 0]]Doing more would mean standing in front of you and owning every no-show, and pride won't carry anybody that far.[[/REASON]][[REASON 1]]You took every word on trust, and nobody wants to look the one person in the eye who believed all of it.[[/REASON]][[REASON 2]]All your checking and double-checking has never cost the other side a thing. Nothing over there changes either way.[[/REASON]] [[FORK get_back]]So it's held out, and you're expected to walk over and take it.[[/FORK]][[FORK giving]]So it's being left right where it is. Nobody's carrying it over.[[/FORK]]
+
+Here's what I can't do: I can't make that letter get sent. No card can. What I can do is read it to you, and I have.
+
+You've been holding out for one more word from that side before you'd take anybody else's. You can stop. Nobody has to open a gate for you. Look at the horse: it's already past the wall.
+
+By the time I turned the Sun, the window over my sink was going gray, and the cards had stopped saying don't count on it. The one at my shoulder sat down across from me, and the letter started to come.
+
+[CARD 11]
+
+**Card 11, the Star: What did they never say?**
+
+**That you were right to believe, and the fault was all on the other side.**
+
+On the Star, a woman kneels with one knee on the grass and her other foot on the water of a pool, as if it were solid ground.
+
+Here's the one line never said out loud:
+
+"You were right to trust me. I'm the one who wasn't worth it."
+
+There it is. You can stop going back over it to find where you went wrong. If this person hurt you, you owe them no reply.
+
+[CARD 12]
+
+**Card 12, Strength: What do I do now?**
+
+**Stop going back, and start taking people at their word again, a little at a time.**
+
+Your last card is Strength: a woman in a white dress, with a chain of flowers running from her waist and looping over a lion's neck. The lion could snap it. It doesn't.
+
+That's trust, working: a hold made of flowers, and nobody checking the knot. You don't need "I'm careful now" anymore. Let somebody hold the other end.
+
+Read the letter first. After it come thirty days of small things to do.
+
+[[FORK get_back]]
+The letter ends with an ask. I've left it in. Do nothing with it.
+[[/FORK]]
+[[FORK giving]]
+
+[[/FORK]]
+
+[LETTER]
+
+{{FIRST}},
+
+I'm never going to send this. {{REASON.letter}} So it stays here.
+
+I'm writing it anyway. I've had something of yours for too long, and I'm tired of carrying it around like it's mine.
+
+When I first knew you, {{EX.letter}} I liked that. I liked being around it. {{EX.never}}
+
+{{EX.moment}}
+
+You believed people. Me most of all. If I said I'd be home by six, you'd have dinner on at five-thirty. If I said I'd handle a bill, you never looked at it again. You'd fall asleep in the passenger seat with me driving. You'd hand me your phone to read a message out loud and never check what else I looked at. You'd give a neighbor you'd known a month a spare key, just in case. I don't think anybody has taken my word like that before or since.
+
+I got used to it. That's the worst thing I can say about myself. I'd say I'd be there, and sometimes I wasn't, and I always had a reason ready, and you took the reason too. Then you started checking. You'd text the night before. You'd have your own way home worked out. I saw it start, and I didn't say a word, because the checking let me off. If you were ready for me not to show, I didn't have to feel bad when I didn't.
+
+I took {{EX.kept}} for granted. I took your believing me the same way, like it came free.
+
+{{LP.admire}}
+
+{{LP.letter}}
+
+Here's what I told myself, since I'm being honest for once. I told myself you'd learned your lesson. You said you were careful now, people said nobody would put one over on you again, and I took that and didn't ask anything more. I told myself everybody gets let down once, and better by me than by somebody worse. When somebody asked about you, I said, "Nobody's fool, that one," like it was something I'd given you. It wasn't a gift. It was the worst thing I left behind.
+
+There was a minute, right at the end, at the door. I told you I'd call that week so we could talk it through properly. You said all right. You believed that too, the way you believed everything I said. I knew when I said it that I wasn't going to call. I walked out and let you wait.
+
+When I left, I took the part of you that takes people at their word, and I knew I had it.
+
+Why did I hang on to it? While I had it, I was still somebody whose word had been good once. Giving it back means writing down that it never was.
+
+None of this was your fault. You believed me because I asked you to. Nobody's a fool for that.
+
+I did love you. Back then, it was real. Whatever you decide about me, don't decide that part was one more thing I said and didn't mean.
+
+I'm sorry. Not that it ended. Things end for everybody. I'm sorry I let you lean your whole weight on me after I knew I wouldn't hold. Nobody made me. I knew, and I let you lean anyway.
+
+I don't know what your life looks like now. I haven't tried to find out. But I know how I left it. Somebody kind says they'll come by at seven, and you're at the window by a quarter to, with a way home of your own worked out. That's mine. I put you at that window.
+
+I can't give you back the time, and I would if I could. But I knew you. The best of your life isn't behind you. Not for somebody who never once let me down.
+
+So here's the thing I should have said back then and didn't:
+
+You were right to trust me. I'm the one who wasn't worth it.
+
+It was yours before me, and it's yours now. I want you to have all of it back: the part that hears "I'll be there" and stops thinking about it, the part that falls asleep in the passenger seat, the part that hands a neighbor the spare key and forgets which drawer it came out of. It never did me one bit of good. It only works for the one it belongs to. Give a little to somebody who shows up, and a little more when they show up again. Who gets it isn't mine to say, and it never was.
+
+I want you happy. Not careful, not braced for it. Happy.
+
+{{EX.last}}
+
+I won't call. You can take my word on that one. I won't turn up at your door either. This is as far as I go.
+
+[[FORK get_back]]
+I meant every word of this, the love and the sorry and the rest. I still think about you, most days. I'd like to see you, so you can see I've changed. Trust me that far. If you won't come, write to me. Just once.
+[[/FORK]]
+[[FORK giving]]
+I'm not asking you for anything. Not to forgive me, not to see me, not to write back. Don't come looking for me. You can put me down now. I hope the next one you believe is worth it.
+[[/FORK]]
+
+[CLOSE]
+
+It was full light when I put the pen down, and nobody was across from me.[[FORK get_back]] I left the ask in so you'd see it plainly: one more "trust me," and you don't owe it.[[/FORK]][[FORK giving]][[/FORK]]
+
+**Will I be happy again?**
+
+**Yes. Happy, and easy around people again.**
+
+Your birthday, {{NEXT_BDAY}}, starts a new year for you. {{PY.ahead}} The change doesn't wait for the date.
+
+**Within 7 days.** The pull will be at its strongest late at night. You'll want to reread something old or look up the name. That's one last check, not a sign that anybody's coming back.
+
+**Within 30 days.** Somebody will say, "Leave it with me," about something small, and you'll leave it there without checking.
+
+**Within 3 months.** An ordinary evening. Somebody says they'll pick you up at seven, and at five to seven you're still looking for your shoes, not standing at the window.
+
+Signs to watch for:
+
+- Going to bed the night before a plan without texting to check.
+- Somebody saying something nice, and you saying "Thank you," not "What do you want?"
+- The Lookout's "don't count on it," and you counting on somebody anyway.
+- A spare key that's sat in a drawer for ages starting to bother you.
+
+If three of these turn up inside a month, it's on its way back.
+
+Three small things, for thirty days:
+
+**Stop going back.** Rereading old messages, looking up the name, checking whether anything over there has changed: it's all one habit. When the pull comes, put the phone in another room and set the oven timer for twenty minutes. By the time it rings, the worst has passed.
+
+**The one thing to do.** Once a day, take one person at their word on one small thing, and don't check it. Somebody says they'll call at six: don't text at five-thirty. Only people who've never given you a reason not to, and nobody from back then.
+
+**Let one thing get done for you.** Once this month, when somebody offers to take care of something, a ride or a repair, say yes, and don't do it as well just in case. You'll want to check. Leave it.
+
+Start with the spare key, if there's one in a drawer at your place. Dig it out from under the takeout menus and hang it on a hook by the door, where you'll see it. You don't have to give it to anybody. It's only out of the drawer, the way you are. When somebody's shown up every time they said they would, you'll know where it is, and the drawer will shut a little easier. It's back. Go and use it.
