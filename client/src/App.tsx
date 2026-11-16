@@ -88,6 +88,7 @@ const TeaReadingThankYouPage = lazyWithRetry(() => import("@/pages/offers/tea-re
 const UnsentLetterSalesPage = lazyWithRetry(() => import("@/pages/offers/unsent-letter/SalesPage"));
 const UnsentLetterBookingPage = lazyWithRetry(() => import("@/pages/offers/unsent-letter/BookingPage"));
 const UnsentLetterThankYouPage = lazyWithRetry(() => import("@/pages/offers/unsent-letter/ThankYouPage"));
+const LuckyNumbersSalesPage = lazyWithRetry(() => import("@/pages/offers/lucky-numbers/SalesPage"));
 const LuckyNumbersBookingPage = lazyWithRetry(() => import("@/pages/offers/lucky-numbers/BookingPage"));
 const LuckyNumbersThankYouPage = lazyWithRetry(() => import("@/pages/offers/lucky-numbers/ThankYouPage"));
 const PixiuBookingPage = lazyWithRetry(() => import("@/pages/offers/pixiu-bracelet/BookingPage"));
@@ -439,8 +440,12 @@ function Router() {
             lander_view fires with funnel 'unsentletter'. Specific before root. */}
         <Route path="/tarot/unsent-letter/letter" component={UnsentLetterSalesPage} />
         <Route path="/tarot/unsent-letter" component={UnsentLetterBookingPage} />
-        {/* 12 Lucky Numbers — page-only booking + receipt; upsells are the shared /offers/upsell/*. */}
+        {/* 12 Lucky Numbers — page-only booking + receipt; upsells are the shared /offers/upsell/*.
+            /letter is the standalone ESL (arm A) the follow-up emails point at; its CTA forwards
+            ?fn=/?c=/utm_* to the booking page below. Under the prefix, so lander_view fires with
+            funnel 'luckynumbers'. Specific before root. */}
         <Route path="/numerology/lucky-numbers/success" component={LuckyNumbersThankYouPage} />
+        <Route path="/numerology/lucky-numbers/letter" component={LuckyNumbersSalesPage} />
         <Route path="/numerology/lucky-numbers" component={LuckyNumbersBookingPage} />
 
         {/* Backend deck, offer 06 — the Wishing Bracelet (Pixiu). Reading-shaped
