@@ -40,6 +40,7 @@ import paiFunnelRouter from "./routes/paiFunnel";
 // /api/checkout put on Payments.AI, or by an order whose id is a Payments.AI `txn_…`
 // (isPaiOrderId). A Stripe order never enters it.
 import { createPaiLiveRouter } from "./routes/paiLive";
+import { registerAppleDomainFile } from "./routes/appleDomainFile";
 import {
   resolveGateway,
   testBuyerCents,
@@ -631,6 +632,8 @@ export async function registerRoutes(
   app.use("/api/pai", paiFunnelRouter);
   // The live split's card form. 404s unless PAI_LIVE_ENABLED=1 + PAI_LIVE_* are set.
   app.use("/api/pai-live", createPaiLiveRouter(paiLiveDeps));
+  // Apple Pay domain file for the Payments.AI checkout (server/routes/appleDomainFile.ts).
+  registerAppleDomainFile(app);
   app.use("/api/evelyn-lander", evelynLanderRouter);
   // Generalized lander for the additional personas (Marcus, Luna, Nova, Maren).
   app.use("/api/persona-lander/:persona", personaLanderRouter);
