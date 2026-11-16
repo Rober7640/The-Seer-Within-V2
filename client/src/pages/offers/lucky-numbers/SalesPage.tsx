@@ -154,11 +154,11 @@ export default function LuckyNumbersSalesPage() {
             </h1>
             {/* The three small miracles as their own bullets (operator, 2026-11-16) — the payoff of
                 the headline, read one at a time rather than a run-on after the colon. */}
-            <ul className="mx-auto mt-4 flex max-w-xs flex-col gap-2 text-left md:mt-5">
+            <ul className="mx-auto mt-4 flex max-w-sm flex-col gap-2.5 text-left md:mt-5">
               {['a raffle that goes your way', 'a cheque you weren’t expecting', 'a yes you’d stopped waiting for'].map(
                 (miracle) => (
-                  <li key={miracle} className="flex items-start gap-2.5 text-[16px] leading-snug text-purple-100/90 md:text-[18px]">
-                    <span aria-hidden="true" className="mt-[3px] shrink-0 text-amber-300">✦</span>
+                  <li key={miracle} className="flex items-start gap-3 text-[19px] font-semibold leading-snug text-white md:text-[23px]">
+                    <span aria-hidden="true" className="mt-[4px] shrink-0 text-[17px] text-amber-300 md:text-[20px]">✦</span>
                     <span>{miracle}</span>
                   </li>
                 ),
