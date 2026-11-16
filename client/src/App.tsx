@@ -85,6 +85,7 @@ const JudgementThankYouPage = lazyWithRetry(() => import("@/pages/JudgementThank
 const TeaReadingBookingPage = lazyWithRetry(() => import("@/pages/offers/tea-reading/BookingPage"));
 const TeaReadingBookingChat = lazyWithRetry(() => import("@/pages/offers/tea-reading/BookingChat"));
 const TeaReadingThankYouPage = lazyWithRetry(() => import("@/pages/offers/tea-reading/ThankYouPage"));
+const UnsentLetterSalesPage = lazyWithRetry(() => import("@/pages/offers/unsent-letter/SalesPage"));
 const UnsentLetterBookingPage = lazyWithRetry(() => import("@/pages/offers/unsent-letter/BookingPage"));
 const UnsentLetterThankYouPage = lazyWithRetry(() => import("@/pages/offers/unsent-letter/ThankYouPage"));
 const LuckyNumbersBookingPage = lazyWithRetry(() => import("@/pages/offers/lucky-numbers/BookingPage"));
@@ -433,6 +434,10 @@ function Router() {
             the last page of her PDF: no page of its own. Route order: specific before root.
             Spec: improve-v1/v1-one-time-BEs/docs/11/booking-page/11-C1-booking-page.md */}
         <Route path="/tarot/unsent-letter/success" component={UnsentLetterThankYouPage} />
+        {/* Standalone long-form sales page (the ESL on the web). Follow-up emails point here; its
+            CTA forwards ?fn=/?c=/utm_* to the booking page below. Under the prefix, so App.tsx's
+            lander_view fires with funnel 'unsentletter'. Specific before root. */}
+        <Route path="/tarot/unsent-letter/letter" component={UnsentLetterSalesPage} />
         <Route path="/tarot/unsent-letter" component={UnsentLetterBookingPage} />
         {/* 12 Lucky Numbers — page-only booking + receipt; upsells are the shared /offers/upsell/*. */}
         <Route path="/numerology/lucky-numbers/success" component={LuckyNumbersThankYouPage} />
