@@ -150,9 +150,20 @@ export default function LuckyNumbersSalesPage() {
             </div>
             <h1 className="mx-auto mt-2 font-serif text-[26px] leading-[1.18] text-white md:mt-3 md:text-[38px]">
               {name ? `${name}, give` : 'Give'} me one evening and I&rsquo;ll reveal the lucky numbers that bring you
-              small miracles in 2027: a raffle that goes your way, a cheque you weren&rsquo;t expecting, a yes you&rsquo;d
-              stopped waiting for
+              small miracles in 2027:
             </h1>
+            {/* The three small miracles as their own bullets (operator, 2026-11-16) — the payoff of
+                the headline, read one at a time rather than a run-on after the colon. */}
+            <ul className="mx-auto mt-4 flex max-w-xs flex-col gap-2 text-left md:mt-5">
+              {['a raffle that goes your way', 'a cheque you weren’t expecting', 'a yes you’d stopped waiting for'].map(
+                (miracle) => (
+                  <li key={miracle} className="flex items-start gap-2.5 text-[16px] leading-snug text-purple-100/90 md:text-[18px]">
+                    <span aria-hidden="true" className="mt-[3px] shrink-0 text-amber-300">✦</span>
+                    <span>{miracle}</span>
+                  </li>
+                ),
+              )}
+            </ul>
             <p className="mx-auto mt-3 max-w-xl text-[15px] italic leading-snug text-purple-100/85 md:text-[17px]">
               Small ones, dear. Not the jackpot. Your three lucky numbers, six to play, a new PIN, and twelve dates in
               2027 to use them on. All from your birth name and your birth date.
