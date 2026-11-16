@@ -364,6 +364,12 @@ export interface BackendOffer {
   bump?: BackendOfferBump;
   /** Where each treatment sends her back to when she cancels out of Stripe. */
   bookingPath: Record<BookingTreatment, string>;
+  /**
+   * A standalone long-form web sales page (the ESL on the web), when one exists. Follow-up
+   * emails point here; its CTA forwards ?fn=/?c=/utm_* on to `bookingPath`. UNDEFINED ⇒ the
+   * offer sells straight from the email letter into the booking page, with no web sales page.
+   */
+  salesPagePath?: string;
   /** Where Stripe returns her after paying. Gets `?s=<session>` appended. */
   successPath: string;
   /**
@@ -778,6 +784,9 @@ export const BACKEND_OFFER_CATALOG: Record<BackendOfferKey, BackendOffer> = {
       page: '/tarot/unsent-letter',
       chat: '/tarot/unsent-letter',
     },
+    // The ESL as a standalone web page. Follow-up emails point here; its CTA carries ?fn=/?c=
+    // straight through to the booking page above.
+    salesPagePath: '/tarot/unsent-letter/letter',
     successPath: '/tarot/unsent-letter/success',
     // V1's two upsells through the shared backend upsell engine, exactly as 03/04/06/09.
     upsellEntryPath: '/offers/upsell/welcome1',
