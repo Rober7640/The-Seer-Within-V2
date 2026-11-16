@@ -827,6 +827,9 @@ export const BACKEND_OFFER_CATALOG: Record<BackendOfferKey, BackendOffer> = {
       page: '/numerology/lucky-numbers',
       chat: '/numerology/lucky-numbers',
     },
+    // The standalone ESL (arm A) the follow-up emails point at. Its CTA forwards ?fn=/?c=/utm_*
+    // to the booking page above, so checkout + attribution are unchanged. Same pattern as 11.
+    salesPagePath: '/numerology/lucky-numbers/letter',
     successPath: '/numerology/lucky-numbers/success',
     // The shared backend upsell engine, as 11. U1 sells its OWN product: Evelyn's Wish Ritual
     // + charged citrine bracelet ($47, downsell $30 — operator 2026-11-02; 12-U1a).

@@ -2460,3 +2460,20 @@ reaches Payments.AI until "v1-fb" is also in `v1_gateway_split_2026`'s scope.
 - [ ] Playwright spec for the above against a muted local sandbox (today's walks were a script, not a spec)
 - [ ] Before prod: PAI_TEST_BUYERS empty on Railway PROD (a listed email bypasses the split on /fb the moment this deploys)
 - [ ] After prod scope change: by-lander table shows a v1-fb row in both arms
+
+## Backend offer 12 — Lucky Numbers standalone sales page (`/numerology/lucky-numbers/letter`, 2026-11-16)
+
+The ESL (arm A, "small miracles") as a long-form web page the follow-up emails point at. Its only
+job: show the letter and forward the reader to the EXISTING booking page with her query string intact.
+Arm A only — arm B has never been mailed. Covered at source level in `luckyNumbersSalesPage.test.ts`.
+
+- [x] Every CTA targets `/numerology/lucky-numbers` + `window.location.search` (forwards `?fn=`/`?c=`/`utm_*`); no CTA builds its own path *(luckyNumbersSalesPage.test.ts)*
+- [x] Never hardcodes a `?c=` — the reader's own arm code rides through to Stripe/attribution *(…)*
+- [x] No checkout logic on the page (no `beginBackendCheckout`); reads `?fn=` via `bookingFirstName` *(…)*
+- [x] Arm A copy only (promise + lottery bullet present; none of arm B's "not promising you a win"/hand-over copy/`c=11…15`) *(…)*
+- [x] Letter words trace to `docs/12/sales-emails/12-E2-esl-A.md` *(…)*
+- [x] Route registered at `/letter` under the prefix, BEFORE the booking root; catalog `salesPagePath` points at it *(…)*
+- [ ] Playwright: visit `/numerology/lucky-numbers/letter?fn=sarah&c=3&utm_source=aweber` → page renders the letter, headline greets "Sarah", a `lander_view` fires with `funnel=luckynumbers`
+- [ ] Playwright: click any CTA → lands on `/numerology/lucky-numbers?fn=sarah&c=3&utm_source=aweber` (fn/c/utm preserved), booking page works unchanged
+- [ ] Playwright: visit with no `?fn=` → letter reads to "dear", no broken name tokens
+- [ ] If arm B is ever mailed: branch the page on `?c=` (1–5 → A, 11–15 → B) and add the A/B render tests here
