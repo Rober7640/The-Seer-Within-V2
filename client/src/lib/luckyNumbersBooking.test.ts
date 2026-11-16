@@ -193,12 +193,12 @@ describe('her details across a Stripe cancel', () => {
 });
 
 describe('the page is 11’s, with 12’s words', () => {
-  it('the same testids (bar 12’s Evelyn photo), so one walk shape serves both', () => {
+  it('the same testids, so one walk shape serves both', () => {
     const ids = (src: string) => [...src.matchAll(/data-testid="([^"]+)"/g)].map((m) => m[1]).sort();
-    // 12 adds one testid 11 does not have: the Evelyn avatar beside the reason line
-    // (added deliberately). Everything else must still match 11.
-    const EXTRA_ON_12 = ['img-booking-evelyn'];
-    expect(ids(PAGE).filter((id) => !EXTRA_ON_12.includes(id))).toEqual(ids(PAGE_11));
+    // Both pages carry the Evelyn avatar beside the reason line (img-booking-evelyn): 12 always did,
+    // and 11 gained it when it went live (d5c4c2f2). So the two booking pages are now at EXACT testid
+    // parity, and the one shared walk shape serves both — no per-offer exception needed.
+    expect(ids(PAGE)).toEqual(ids(PAGE_11));
   });
 
   it('the bump starts unticked', () => {
