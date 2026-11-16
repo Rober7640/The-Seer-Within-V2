@@ -33,7 +33,8 @@ function P({ children }: { children: ReactNode }) {
 }
 
 function H({ children }: { children: ReactNode }) {
-  return <h2 className="mb-3 mt-9 font-serif text-[21px] leading-tight text-gray-900 md:text-[25px]">{children}</h2>
+  // Section subheadlines — bold Playfair so each lands harder than the body (Joel, 2026-11-16).
+  return <h2 className="mb-3 mt-9 font-serif text-[21px] font-bold leading-tight text-gray-900 md:text-[25px]">{children}</h2>
 }
 
 function CardImg({ src, alt }: { src: string; alt: string }) {
