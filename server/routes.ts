@@ -41,6 +41,7 @@ import paiFunnelRouter from "./routes/paiFunnel";
 // (isPaiOrderId). A Stripe order never enters it.
 import { createPaiLiveRouter } from "./routes/paiLive";
 import { createPaiProdTestRouter } from "./routes/paiProdTest";
+import { registerAppleDomainFile } from "./routes/appleDomainFile";
 import {
   resolveGateway,
   testBuyerCents,
@@ -634,6 +635,8 @@ export async function registerRoutes(
   app.use("/api/pai-live", createPaiLiveRouter(paiLiveDeps));
   // TEMPORARY live-card test page (16 Oct 2026). 404s unless PAI_PROD_TEST_* are set. Remove after the test.
   app.use("/pai-prod-test", createPaiProdTestRouter());
+  // Apple Pay domain file for the Payments.AI checkout (server/routes/appleDomainFile.ts).
+  registerAppleDomainFile(app);
   app.use("/api/evelyn-lander", evelynLanderRouter);
   // Generalized lander for the additional personas (Marcus, Luna, Nova, Maren).
   app.use("/api/persona-lander/:persona", personaLanderRouter);
