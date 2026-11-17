@@ -9,7 +9,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import express from 'express';
 import type { AddressInfo } from 'node:net';
-import { APPLE_DOMAIN_FILE_PATH, registerAppleDomainFile } from './appleDomainFile';
+import { APPLE_DOMAIN_ASSOCIATION, APPLE_DOMAIN_FILE_PATH, registerAppleDomainFile } from './appleDomainFile';
 
 async function serve(contents: string) {
   const app = express();
@@ -46,4 +46,11 @@ test('received: exact contents, 200, text/plain, no redirect, both spellings', a
   } finally {
     await s.close();
   }
+});
+
+test('the real Payments.AI file is filled in and is their hex-encoded JSON', () => {
+  assert.match(APPLE_DOMAIN_ASSOCIATION, /^[0-9a-f]+$/);
+  const decoded = JSON.parse(Buffer.from(APPLE_DOMAIN_ASSOCIATION, 'hex').toString('utf8'));
+  assert.equal(decoded.version, 1);
+  assert.match(decoded.pspId, /^[0-9A-F]{64}$/);
 });
