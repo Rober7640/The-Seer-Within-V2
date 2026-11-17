@@ -18,8 +18,13 @@ import type { Express, Request, Response } from 'express';
 
 export const APPLE_DOMAIN_FILE_PATH = '/.well-known/apple-developer-merchantid-domain-association';
 
-/** Exact contents of the file Payments.AI supplies. Empty = not received yet. */
-export const APPLE_DOMAIN_ASSOCIATION = '';
+/**
+ * Exact contents of the file Payments.AI supplies (Tim, 16 Nov 2026 email attachment).
+ * Hex-encoded JSON: {"version":1,"pspId":"754F58C5…BC35","createdOn":1787579514973}.
+ * Served as-is — do NOT decode it. Empty = not received yet.
+ */
+export const APPLE_DOMAIN_ASSOCIATION =
+  '7b2276657273696f6e223a312c227073704964223a2237353446353843353030354538444538413035413232353844373830323745394143304346323830333637314641384130413841463438333743454342433335222c22637265617465644f6e223a313738373537393531343937337d';
 
 export function appleDomainFileHandler(contents: string) {
   return (_req: Request, res: Response) => {
