@@ -9,6 +9,9 @@
 // which topic was offered, the buyer would be charged for a reading other than the
 // one she said yes to. One table, imported by both.
 
+import { msg, translate } from './i18n';
+import type { LocaleCode } from './locales';
+
 /** The four topics the V1 funnel reads on. Mirrors the client `Bucket` union. */
 export type BumpBucket = 'love' | 'money' | 'purpose' | 'someone';
 
@@ -87,11 +90,16 @@ export const BUMP_PAIRINGS: Record<BumpBucket, BumpBucket> = {
 
 /** How the paired topic is NAMED in the offer copy ("your Money path"). */
 export const BUMP_TOPIC_LABELS: Record<BumpBucket, string> = {
-  love: 'Love',
-  money: 'Money',
-  purpose: 'Purpose',
-  someone: 'Love',
+  love: msg('Love'),
+  money: msg('Money'),
+  purpose: msg('Purpose'),
+  someone: msg('Love'),
 };
+
+// Copy below is built from msg() templates through translate(): for English
+// (the default locale argument) that is plain interpolation, so every string is
+// byte-identical to the template literals it replaced.
+const topicLabel = (paired: BumpBucket, locale: LocaleCode) => translate(locale, BUMP_TOPIC_LABELS[paired]);
 
 /** True when `v` is one of the four buckets. Guards untrusted client input. */
 export function isBumpBucket(v: unknown): v is BumpBucket {
@@ -160,8 +168,8 @@ export function bumpProductName(
  * her wondering what the extra charge is for, while keeping the product NAME
  * fixed and generic for fulfilment. Nothing matches on this string.
  */
-export function bumpLineDescription(paired: BumpBucket): string {
-  return `Your second reading — ${BUMP_TOPIC_LABELS[paired]} path`;
+export function bumpLineDescription(paired: BumpBucket, locale: LocaleCode = 'en'): string {
+  return translate(locale, msg('Your second reading — {topic} path'), { topic: topicLabel(paired, locale) });
 }
 
 /** `metadata.bumpProduct` — the value Mike's n8n branches on. Bucket-agnostic. */
@@ -389,13 +397,16 @@ export function srcMetadata(value: unknown): { src?: CheckoutSrc } {
  * ⚠ PLACEHOLDER COPY, from Joel's own wording on the 7/27 call — directional until
  * he approves the mockup.
  */
-export function bumpOfferCopy(paired: BumpBucket, cents: number = V1_BUMP_CENTS): string {
-  const topic = BUMP_TOPIC_LABELS[paired];
-  return `Before I prepare your clearing… I'm also sensing something blocking your ${topic} path. Want me to reveal that too? Just ${bumpPriceLabel(cents)} more for the double reading.`;
+export function bumpOfferCopy(paired: BumpBucket, cents: number = V1_BUMP_CENTS, locale: LocaleCode = 'en'): string {
+  return translate(
+    locale,
+    msg("Before I prepare your clearing… I'm also sensing something blocking your {topic} path. Want me to reveal that too? Just {price} more for the double reading."),
+    { topic: topicLabel(paired, locale), price: bumpPriceLabel(cents) },
+  );
 }
 
-export const BUMP_ACCEPT_LABEL = 'Yes, double it';
-export const BUMP_DECLINE_LABEL = 'No, just my reading';
+export const BUMP_ACCEPT_LABEL = msg('Yes, double it');
+export const BUMP_DECLINE_LABEL = msg('No, just my reading');
 
 // ─── COPY SPLIT TEST (2026-08-11) ────────────────────────────────────────────
 // Spec: docs/superpowers/specs/2026-08-11-order-bump-copy-test.md
@@ -504,14 +515,16 @@ export interface BumpCopyPack {
  * `firstName` is optional and the copy closes over its absence cleanly — a lead
  * can reach the CTA without a captured name on the no-optin arm.
  */
-function variationAOffer(firstName?: string, cents: number = V1_BUMP_CENTS): string {
+function variationAOffer(firstName?: string, cents: number = V1_BUMP_CENTS, locale: LocaleCode = 'en'): string {
   const name = (firstName ?? '').trim();
-  const address = name ? `Before I begin, ${name} — one thing.` : 'Before I begin — one thing.';
+  const address = name
+    ? translate(locale, msg('Before I begin, {name} — one thing.'), { name })
+    : translate(locale, msg('Before I begin — one thing.'));
   return [
     address,
-    "A shadow this old has roots. Three hours gets its hold. It doesn't always get the root.",
-    `For ${bumpPriceLabel(cents)} I'll go twice as deep tonight. Six hours instead of three, double the force, all the way down.`,
-    'It drains me more. But nothing gets left in you.',
+    translate(locale, msg("A shadow this old has roots. Three hours gets its hold. It doesn't always get the root.")),
+    translate(locale, msg("For {price} I'll go twice as deep tonight. Six hours instead of three, double the force, all the way down."), { price: bumpPriceLabel(cents) }),
+    translate(locale, msg('It drains me more. But nothing gets left in you.')),
   ].join('\n\n');
 }
 
@@ -522,11 +535,15 @@ function variationAOffer(firstName?: string, cents: number = V1_BUMP_CENTS): str
  * new sitting). It deliberately does NOT argue *why that topic*; read a win
  * accordingly.
  */
-function variationBOffer(paired: BumpBucket, cents: number = V1_BUMP_CENTS): string {
-  return (
-    `I'm already in your energy tonight — the channel's open, and I can see a second thread ` +
-    `pulling at your ${BUMP_TOPIC_LABELS[paired]} side. Reading it now costs ${bumpPriceLabel(cents)} ` +
-    `because I don't have to open the way twice. Tomorrow it's a new reading at full price.`
+function variationBOffer(paired: BumpBucket, cents: number = V1_BUMP_CENTS, locale: LocaleCode = 'en'): string {
+  return translate(
+    locale,
+    msg(
+      "I'm already in your energy tonight — the channel's open, and I can see a second thread " +
+        'pulling at your {topic} side. Reading it now costs {price} ' +
+        "because I don't have to open the way twice. Tomorrow it's a new reading at full price.",
+    ),
+    { topic: topicLabel(paired, locale), price: bumpPriceLabel(cents) },
   );
 }
 
@@ -545,27 +562,30 @@ export function bumpCopy(
   // pre-existing caller — including bumpProductName() above, which only wants the
   // product name — keeps byte-identical output without being touched.
   cents: number = V1_BUMP_CENTS,
+  // The buyer's locale (client: currentLocale(), server: requestLocale()). The
+  // Stripe productName stays English in every locale — fulfilment reads it.
+  locale: LocaleCode = 'en',
 ): BumpCopyPack {
   const control: BumpCopyPack = {
-    offer: bumpOfferCopy(paired, cents),
-    accept: BUMP_ACCEPT_LABEL,
-    decline: BUMP_DECLINE_LABEL,
+    offer: bumpOfferCopy(paired, cents, locale),
+    accept: translate(locale, BUMP_ACCEPT_LABEL),
+    decline: translate(locale, BUMP_DECLINE_LABEL),
     productName: V1_BUMP_PRODUCT_NAME,
-    lineDescription: bumpLineDescription(paired),
+    lineDescription: bumpLineDescription(paired, locale),
   };
 
   switch (variant) {
     case 'A':
       return {
-        offer: variationAOffer(firstName, cents),
-        accept: 'Yes — go all the way down',
-        decline: 'No, the standard clearing is enough',
+        offer: variationAOffer(firstName, cents, locale),
+        accept: translate(locale, msg('Yes — go all the way down')),
+        decline: translate(locale, msg('No, the standard clearing is enough')),
         productName: '+ Double-Strength Clearing',
-        lineDescription: "Twice the depth on tonight's clearing",
+        lineDescription: translate(locale, msg("Twice the depth on tonight's clearing")),
       };
     case 'B':
       // Description-only by design — everything else is control's, by reference.
-      return { ...control, offer: variationBOffer(paired, cents) };
+      return { ...control, offer: variationBOffer(paired, cents, locale) };
     default:
       return control;
   }

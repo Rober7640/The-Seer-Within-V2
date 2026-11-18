@@ -174,6 +174,7 @@ import {
 } from "./lib/aweber";
 import { collectsPhoneAtCheckout } from "./lib/checkoutPhone";
 import { smsConsentSessionParams, smsConsentSessionMetadata } from "./lib/smsConsent";
+import { requestLocale } from "./lib/locale";
 import { addLeadToKit } from "./lib/kit";
 import { resolveLunaTyHandoff } from "./lib/lunaThankyouGift";
 import { evelynTyPersonaFor, isEvelynTyConversation, resolveEvelynTyHandoff } from "./lib/evelynThankyouGift";
@@ -1387,6 +1388,7 @@ export async function registerRoutes(
                     bumpBucket as BumpBucket,
                     undefined,
                     bumpCentsResolved,
+                    requestLocale(),
                   ).lineDescription,
                 }
               : {}),
@@ -1481,6 +1483,7 @@ export async function registerRoutes(
                         bumpBucket as BumpBucket,
                         undefined,
                         bumpCentsResolved,
+                        requestLocale(),
                       ).lineDescription,
                     },
                     unit_amount: bumpCentsResolved,

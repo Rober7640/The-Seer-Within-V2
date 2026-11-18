@@ -13,7 +13,7 @@ export const NON_COPY_KEYS = new Set([
   "inputMode", "target", "rel", "method", "state", "inputType", "value", "stage",
   "bucket", "funnel", "param", "prefix", "posthog", "event", "eventName", "kind",
   "mode", "currency", "product", "bumpProduct", "metadata", "color", "icon",
-  "fill", "stroke", "viewBox", "d", "transform", "as", "asChild", "accept",
+  "fill", "stroke", "viewBox", "d", "transform", "as", "asChild",
   "media_type", "model", "status", "code", "countryCode", "slug", "deck", "card",
   // analytics payloads: Meta / PostHog match these exactly, so they stay English
   "content_name", "content_category", "content_type", "content_ids", "contentName",
@@ -39,7 +39,9 @@ const MATCH_METHODS = new Set([
 export function isClassNameLike(t: string): boolean {
   const tokens = t.split(/\s+/).filter(Boolean);
   if (!tokens.every((tok) => /^[!a-z0-9:\[\]\/\.\-#%_()]+$/i.test(tok))) return false;
-  const classy = tokens.filter((tok) => /[-:\[]/.test(tok) || /^(flex|grid|block|hidden|relative|absolute|fixed|inline|italic|uppercase|truncate|underline|rounded|shadow|border|transition|container)$/.test(tok));
+  // A Tailwind variant has something AFTER its colon ("hover:bg-x"); a word that
+  // merely ends in one ("Shipping to:", "Email:") is a label, not a class.
+  const classy = tokens.filter((tok) => /[-\[]/.test(tok) || /:./.test(tok) || /^(flex|grid|block|hidden|relative|absolute|fixed|inline|italic|uppercase|truncate|underline|rounded|shadow|border|transition|container)$/.test(tok));
   return classy.length / tokens.length >= 0.5;
 }
 
@@ -90,6 +92,8 @@ function directCallOf(node: ts.Node): ts.CallExpression | ts.NewExpression | nul
 export function inNonCopyPosition(node: ts.Node): boolean {
   const k = keyOf(node);
   if (k && NON_COPY_KEYS.has(k)) return true;
+  // <input accept="image/*"> is a file filter; an object's `accept:` is a button label.
+  if (k === "accept" && node.parent && (ts.isJsxAttribute(node.parent) || ts.isJsxExpression(node.parent))) return true;
   for (let n: ts.Node | undefined = node.parent; n; n = n.parent) {
     // anything inside a style object (style={{…}} or style: {…}) is CSS, never copy
     if (ts.isJsxAttribute(n) && n.name.getText() === "style") return true;
@@ -120,10 +124,19 @@ export function inFunctionScope(node: ts.Node): boolean {
 /** True when the node is already the text argument of t()/tl(). */
 export function alreadyTranslated(node: ts.Node): boolean {
   const p = node.parent;
-  if (!p || !ts.isCallExpression(p)) return false;
+  if (!p) return false;
+  // msg("a " + "b {x}"): each piece of a folded key
+  if (ts.isBinaryExpression(p) && p.operatorToken.kind === ts.SyntaxKind.PlusToken) {
+    let top: ts.Node = p;
+    while (top.parent && ts.isBinaryExpression(top.parent) && top.parent.operatorToken.kind === ts.SyntaxKind.PlusToken) top = top.parent;
+    if (top.parent && ts.isParenthesizedExpression(top.parent)) top = top.parent;
+    const call = top.parent;
+    return !!call && ts.isCallExpression(call) && call.expression.getText() === "msg" && call.arguments[0] === top;
+  }
+  if (!ts.isCallExpression(p)) return false;
   const callee = p.expression.getText();
-  if ((callee === "t" || callee === "tr" || callee === "tx") && p.arguments[0] === node) return true;
-  if (callee === "tl" && p.arguments[1] === node) return true;
+  if ((callee === "t" || callee === "tr" || callee === "tx" || callee === "msg") && p.arguments[0] === node) return true;
+  if ((callee === "tl" || callee === "translate") && p.arguments[1] === node) return true;
   return false;
 }
 
@@ -206,8 +219,18 @@ export function translatedText(e: ts.Expression): string | null {
 export const RICH_TAG = /<([a-z][a-z0-9]*)>([\s\S]*?)<\/\1>/g;
 
 /** Key text as the inventory records it: declared {vars} → ${}, and for tx() each <tag>…</tag> → ${}. */
-export function normalizeKey(call: ts.CallExpression, key: string): string {
+export function normalizeKey(call: ts.CallExpression | ts.BinaryExpression, key: string): string {
+  // A piece of msg("a " + "b {x}"): find the msg() call it belongs to.
+  while (!ts.isCallExpression(call)) {
+    const up: ts.Node = call.parent;
+    if (ts.isCallExpression(up)) { call = up; break; }
+    if (!ts.isBinaryExpression(up) && !ts.isParenthesizedExpression(up)) return key;
+    call = up as ts.BinaryExpression;
+  }
   const callee = call.expression.getText();
+  // msg() declares no vars (they are passed where the text is translated): every
+  // {name} in it is a placeholder.
+  if (callee === "msg") return key.replace(/\{([A-Za-z_][A-Za-z0-9_]*)\}/g, "${}");
   const names = declaredVars(call, callee === "tx" ? 2 : callee === "tl" ? 2 : 1);
   let out = key.replace(/\{([A-Za-z_][A-Za-z0-9_]*)\}/g, (w, n: string) => (names.has(n) ? "${}" : w));
   if (callee === "tx") out = out.replace(RICH_TAG, "${}");

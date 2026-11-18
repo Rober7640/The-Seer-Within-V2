@@ -37,7 +37,7 @@ export function UpsellComplete({ address, userName }: UpsellCompleteProps) {
         <div className="bg-muted/30 rounded-lg p-4 text-left text-sm text-muted-foreground mb-4" data-testid="card-shipping-address">
           <div className="text-muted-foreground/60 text-xs mb-2 flex items-center gap-1" data-testid="label-shipping-to">
             <MapPin className="w-3 h-3" data-testid="icon-map-pin" />
-            <span data-testid="text-shipping-to-label">Shipping to:</span>
+            <span data-testid="text-shipping-to-label">{t("Shipping to:")}</span>
           </div>
           <div className="text-foreground" data-testid="text-shipping-name">{address.name}</div>
           <div data-testid="text-shipping-line1">{address.line1}</div>

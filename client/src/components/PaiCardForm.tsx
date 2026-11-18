@@ -275,7 +275,7 @@ export function PaiCardForm(props: {
 
   /** What she still has to fill in besides the card itself, or null when nothing. */
   function missingDetail(phoneNow: string): string | null {
-    if (askPhone && !isFullPhone(phoneNow)) return PHONE_ERROR;
+    if (askPhone && !isFullPhone(phoneNow)) return t(PHONE_ERROR);
     if (askShipping && (!ship.name.trim() || !ship.line1.trim() || !ship.city.trim() || !ship.postal.trim())) {
       return t("Please enter your full shipping address.");
     }

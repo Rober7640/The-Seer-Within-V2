@@ -1,3 +1,4 @@
+import { currentLocale } from "@/lib/locale";
 import {
   bumpCopy,
   bumpPriceLabel,
@@ -50,7 +51,7 @@ export function BumpOfferCard({
   // 🔴 Derived from bumpCents, never a literal. A hardcoded 12.77 here was the one
   // place the card could show a total that disagreed with the Stripe charge.
   const total = (mainDollars + bumpCents / 100).toFixed(2)
-  const copy = bumpCopy(variant, paired, firstName, bumpCents)
+  const copy = bumpCopy(variant, paired, firstName, bumpCents, currentLocale())
 
   return (
     <div className="p-4 animate-cta-appear" data-testid="bump-offer-card">
