@@ -1,5 +1,5 @@
 {
- "generatedAt": "2026-11-18T12:00:08.293Z",
+ "generatedAt": "2026-11-18T13:22:40.197Z",
  "files": [
   "client/src/assets/images/citrine-wish-bracelet.jpg",
   "client/src/assets/images/lava-stone.jpg",
@@ -1072,6 +1072,12 @@
    "line": 31,
    "kind": "string",
    "text": "Your"
+  },
+  {
+   "file": "client/src/components/upsell/UpsellComplete.tsx",
+   "line": 38,
+   "kind": "jsx",
+   "text": "Shipping to:"
   },
   {
    "file": "client/src/components/upsell/UpsellComplete.tsx",
@@ -33439,6 +33445,12 @@
   },
   {
    "file": "client/src/pages/FAQPage.tsx",
+   "line": 69,
+   "kind": "jsx",
+   "text": "Purchase minutes:"
+  },
+  {
+   "file": "client/src/pages/FAQPage.tsx",
    "line": 75,
    "kind": "string",
    "text": "When do my minutes expire?"
@@ -34621,9 +34633,21 @@
   },
   {
    "file": "client/src/pages/PrivacyPage.tsx",
+   "line": 217,
+   "kind": "jsx",
+   "text": "Transaction records:"
+  },
+  {
+   "file": "client/src/pages/PrivacyPage.tsx",
    "line": 218,
    "kind": "jsx",
    "text": "${} Retained until you unsubscribe or withdraw consent."
+  },
+  {
+   "file": "client/src/pages/PrivacyPage.tsx",
+   "line": 218,
+   "kind": "jsx",
+   "text": "Marketing preferences:"
   },
   {
    "file": "client/src/pages/PrivacyPage.tsx",
@@ -34633,9 +34657,21 @@
   },
   {
    "file": "client/src/pages/PrivacyPage.tsx",
+   "line": 219,
+   "kind": "jsx",
+   "text": "Text-message consent records:"
+  },
+  {
+   "file": "client/src/pages/PrivacyPage.tsx",
    "line": 220,
    "kind": "jsx",
    "text": "${} Account data is deleted or anonymised within 90 days of account closure, subject to the retention periods above for transaction records."
+  },
+  {
+   "file": "client/src/pages/PrivacyPage.tsx",
+   "line": 220,
+   "kind": "jsx",
+   "text": "Closed accounts:"
   },
   {
    "file": "client/src/pages/PrivacyPage.tsx",
@@ -34747,15 +34783,33 @@
   },
   {
    "file": "client/src/pages/PrivacyPage.tsx",
+   "line": 278,
+   "kind": "jsx",
+   "text": "Essential cookies:"
+  },
+  {
+   "file": "client/src/pages/PrivacyPage.tsx",
    "line": 279,
    "kind": "jsx",
    "text": "${} Used to understand how users interact with our platform in aggregate."
   },
   {
    "file": "client/src/pages/PrivacyPage.tsx",
+   "line": 279,
+   "kind": "jsx",
+   "text": "Analytics cookies:"
+  },
+  {
+   "file": "client/src/pages/PrivacyPage.tsx",
    "line": 280,
    "kind": "jsx",
    "text": "${} We use the Facebook Pixel and Facebook Conversions API to measure the effectiveness of our advertising. These track specific events (page views, purchases) and may transmit hashed email addresses to Facebook for matching purposes."
+  },
+  {
+   "file": "client/src/pages/PrivacyPage.tsx",
+   "line": 280,
+   "kind": "jsx",
+   "text": "Marketing pixels:"
   },
   {
    "file": "client/src/pages/PrivacyPage.tsx",
@@ -36091,6 +36145,12 @@
   },
   {
    "file": "client/src/pages/TermsPage.tsx",
+   "line": 199,
+   "kind": "jsx",
+   "text": "Program:"
+  },
+  {
+   "file": "client/src/pages/TermsPage.tsx",
    "line": 200,
    "kind": "jsx",
    "text": "${} Recurring automated marketing text messages, such as invitations to continue your readings with our guides and offers for further readings and related products."
@@ -36121,9 +36181,21 @@
   },
   {
    "file": "client/src/pages/TermsPage.tsx",
+   "line": 202,
+   "kind": "jsx",
+   "text": "Frequency:"
+  },
+  {
+   "file": "client/src/pages/TermsPage.tsx",
    "line": 203,
    "kind": "jsx",
    "text": "${} Message and data rates may apply, depending on your mobile plan."
+  },
+  {
+   "file": "client/src/pages/TermsPage.tsx",
+   "line": 203,
+   "kind": "jsx",
+   "text": "Cost:"
   },
   {
    "file": "client/src/pages/TermsPage.tsx",
@@ -36133,9 +36205,21 @@
   },
   {
    "file": "client/src/pages/TermsPage.tsx",
+   "line": 204,
+   "kind": "jsx",
+   "text": "To stop:"
+  },
+  {
+   "file": "client/src/pages/TermsPage.tsx",
    "line": 207,
    "kind": "jsx",
    "text": "${} Reply ${} to any message, or email ${}."
+  },
+  {
+   "file": "client/src/pages/TermsPage.tsx",
+   "line": 207,
+   "kind": "jsx",
+   "text": "For help:"
   },
   {
    "file": "client/src/pages/TermsPage.tsx",
@@ -36145,15 +36229,33 @@
   },
   {
    "file": "client/src/pages/TermsPage.tsx",
+   "line": 210,
+   "kind": "jsx",
+   "text": "Carriers:"
+  },
+  {
+   "file": "client/src/pages/TermsPage.tsx",
    "line": 211,
    "kind": "jsx",
    "text": "${} You must be 18 or older and the account holder of the mobile number, or have the account holder's permission."
   },
   {
    "file": "client/src/pages/TermsPage.tsx",
+   "line": 211,
+   "kind": "jsx",
+   "text": "Eligibility:"
+  },
+  {
+   "file": "client/src/pages/TermsPage.tsx",
    "line": 212,
    "kind": "jsx",
    "text": "${} See section 13 of our ${}. We never share your mobile number or text-message consent with third parties for their marketing."
+  },
+  {
+   "file": "client/src/pages/TermsPage.tsx",
+   "line": 212,
+   "kind": "jsx",
+   "text": "Privacy:"
   },
   {
    "file": "client/src/pages/TermsPage.tsx",
@@ -40660,6 +40762,12 @@
    "line": 529,
    "kind": "string",
    "text": "because I don't have to open the way twice. Tomorrow it's a new reading at full price."
+  },
+  {
+   "file": "shared/orderBump.ts",
+   "line": 561,
+   "kind": "string",
+   "text": "Yes — go all the way down"
   },
   {
    "file": "shared/orderBump.ts",

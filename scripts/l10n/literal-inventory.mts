@@ -118,7 +118,7 @@ function collectScope(): string[] {
 // of the template literal the codemod replaced; normalise them back so the
 // before/after multiset compares like with like.
 function normalizePlaceholders(node: ts.Node, value: string): string {
-  return normalizeKey(node.parent as ts.CallExpression, value);
+  return normalizeKey(node.parent as ts.CallExpression | ts.BinaryExpression, value);
 }
 
 function templateText(node: ts.TemplateExpression): string {
@@ -237,8 +237,13 @@ function compare(beforePath: string, afterPath: string): number {
   return 1;
 }
 
-const args = process.argv.slice(2);
-if (args[0] === "--compare") {
+export { collectScope };
+
+const isMain = process.argv[1] && path.resolve(process.argv[1]) === new URL(import.meta.url).pathname;
+const args = isMain ? process.argv.slice(2) : ["--imported"];
+if (args[0] === "--imported") {
+  // imported by another script (extract.mts): scope helpers only
+} else if (args[0] === "--compare") {
   process.exit(compare(args[1], args[2]));
 } else {
   const outIdx = args.indexOf("--out");

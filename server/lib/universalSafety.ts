@@ -766,7 +766,7 @@ export async function checkAndLogSafety(
     // to its own market's line, never to 988.
     const fallbackCountry = locale === 'en' ? null : localeDef(locale).market.hotlineCountry;
     const hotline = getHotlineForCountry(context.countryCode ?? fallbackCountry);
-    const disclaimer = buildCrisisDisclaimer(hotline);
+    const disclaimer = buildCrisisDisclaimer(hotline, locale);
 
     if (!result.safe && result.response) {
       // Hard crisis — replace response with warm, localized message
