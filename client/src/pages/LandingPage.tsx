@@ -52,8 +52,14 @@ export default function LandingPage() {
     : base;
 
   return (
-    <div className="min-h-screen relative flex flex-col items-center justify-center p-4">
+    <div className={`min-h-screen relative flex flex-col items-center p-4 ${lane ? '' : 'justify-center'}`}>
       <CosmicBackground />
+
+      {/* First screen: the card alone. On a lane, it fills the viewport (min-h 100svh
+          + centered) so the below-card keyword sections start BELOW the fold — they are
+          for Meta's crawler, and keeping them off the first screen protects CR (Joel,
+          2026-11-18). Plain /fb uses display:contents, so its layout is unchanged. */}
+      <div className={lane ? 'flex flex-col items-center w-full min-h-[100svh] justify-center' : 'contents'}>
 
       {/* Logo Area */}
       <div className="mb-8 flex items-center gap-3 animate-fade-in text-center">
@@ -105,6 +111,8 @@ export default function LandingPage() {
 
         {/* Trust badges */}
         <TrustBadges label={content.trust} />
+      </div>
+
       </div>
 
       {lane && <LaneSections lane={lane} />}

@@ -113,6 +113,19 @@ test.describe('JavaScript on — the React page and the chat opener', () => {
     expect(g.liveApi).toEqual([])
   })
 
+  test('mobile: the card fills the first screen; the keyword sections start below the fold', async ({ page, context }) => {
+    // Joel, 2026-11-18: the below-card copy is for Meta's crawler, not the visitor —
+    // on load she must see only the card (as on today's /fb), to protect CR.
+    const vh = 664
+    await page.setViewportSize({ width: 390, height: vh })
+    await gotoGuarded(page, context, '/fb?lane=manifest')
+    // The CTA is on the first screen; the sections exist but sit below the fold.
+    const ctaTop = (await page.getByRole('link', { name: LANE.card.b }).first().boundingBox())!.y
+    expect(ctaTop).toBeLessThan(vh)
+    const sectionsTop = (await page.getByTestId('lane-sections').boundingBox())!.y
+    expect(sectionsTop).toBeGreaterThanOrEqual(vh)
+  })
+
   test('plain /fb is today\'s page: no sections, button goes to /fb/chat', async ({ page, context }) => {
     const g = await gotoGuarded(page, context, '/fb')
     await expect(page.getByRole('heading', { level: 2, name: 'Something Is Holding You Back — I Can See It' })).toBeVisible()
