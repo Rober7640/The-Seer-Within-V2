@@ -27,13 +27,19 @@ function loaders(): Record<string, () => Promise<{ default: LocaleBundle }>> {
   return import.meta.glob<{ default: LocaleBundle }>("../l10n/*/index.ts");
 }
 
-/** Fetch + register a locale's catalog and data twins. English resolves at once. */
-export async function loadLocale(locale: LocaleCode): Promise<void> {
-  if (locale === "en") return;
+/**
+ * Fetch + register a locale's catalog and data twins. Resolves true when the
+ * locale has a bundle. False = declared but nothing translated yet: the visit
+ * must settle on English (this is what keeps a locale OFF until its bundle
+ * ships). English resolves true at once.
+ */
+export async function loadLocale(locale: LocaleCode): Promise<boolean> {
+  if (locale === "en") return true;
   const loader = loaders()[`../l10n/${locale}/index.ts`];
-  if (!loader) return; // locale declared but nothing translated yet → English fallback
+  if (!loader) return false;
   const { default: bundle } = await loader();
   registerCatalog(locale, bundle.catalog);
   for (const [key, value] of Object.entries(bundle.data ?? {})) registerData(locale, key, value);
   if (bundle.lang) registerLangPack(bundle.lang);
+  return true;
 }

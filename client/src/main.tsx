@@ -39,7 +39,8 @@ if (sentryDsn) {
 // locale first fetches its own bundle (catalog + data twins) so the very first
 // bubble is already translated. If this page is not covered in that locale
 // (another funnel, an untranslated tarot lander) or the bundle fails to load,
-// the visit settles on English — never a half-translated page.
+// the visit settles on English — never a half-translated page. A locale with
+// no bundle yet (client/src/l10n/<code>/index.ts) is OFF: always English.
 const locale = captureLocale();
 const mount = () => createRoot(document.getElementById("root")!).render(<App />);
 if (locale === "en") {
@@ -49,8 +50,8 @@ if (locale === "en") {
   mount();
 } else {
   loadLocale(locale)
-    .then(() => {
-      const ok = localeCoversPage(locale, window.location.pathname, window.location.search);
+    .then((loaded) => {
+      const ok = loaded && localeCoversPage(locale, window.location.pathname, window.location.search);
       settleLocale(ok ? locale : "en");
       if (ok) document.documentElement.lang = localeDef(locale).htmlLang;
     })
