@@ -1,0 +1,384 @@
+{
+  "id": "pattern",
+  "num": 2,
+  "name": "Pattern",
+  "link": "/fb?lane=pattern",
+  "status": "Complete copy, awaiting approval",
+  "belief": "It isn't bad luck, and it isn't him. A lesson she learned as a little girl answers first: it picks the same kind of man, and it makes her go quiet. The pattern has a start date in childhood, and Evelyn finds where it started, from her first name.",
+  "words": [
+    "**Source and method.** Live DB, read only (`LIVE_AUDIT_CONFIRM=1`). Love and someone chats from the past year: 90,529 chats, 6,653 paid (7.3%). 80,782 of them have a first message, 6,639 paid (8.2%). Our chat asks for this lane's words (\"Where did this start...\" and \"Has anyone in your family struggled with this same pattern?\"), so every number below is from **her first message only**, before Evelyn asks anything. Compare words with each other, never with the base rate.",
+    "**Our question inflates the lane.** \"Childhood\" is in 97 first messages but 1,357 chats across all four answers, and 1,084 of those are the answer to \"Where did this start\". \"Pattern\" is in 117 first messages against 811 overall. The README's lane size (3,107 chats; 3,427 and 484 paid when re-run today) is mostly our own question. The same word list in first messages alone: **551 chats, 77 paid (14.0%)**.",
+    "**Her own word is \"the same\".** 1,614 first messages say \"same\" (202 paid). In the pattern sense (\"always choosing the same type of man\", \"it always ends up the same way\", \"the same mistake, just a different person\"): 167. She also says \"always\" (always pick, always attract, always end up: 377 chats, 12.5% paid) and \"keep\" (keep meeting, keep attracting: 196). \"Wrong men\": 205.",
+    "**Both stories are already in her words.** \"Choose me / pick me\": 241 first messages (12.0% paid). \"Just friends / friend zone / as his friend\": 243 (13.2%), which is This Is My Friend. \"Won't marry / won't commit\": 70 (12.9%), which is He Still Doesn't Know.",
+    "**The pattern words buy best.** Childhood 97 chats, 21.6% paid. Repeat 87, 20.7%. Cycle 70, 18.6%. Pattern 117, 15.4%. \"Go quiet\", the first ad's word, is 166 (10.8%).",
+    "**Community words barely appear in buyer chats.** Inner child 4 first messages (21 overall). Little girl 17 (102). Red flags 42. Boundaries 92. Self-love 17. Your type 28. A break from dating 8 (2 paid). Shadow work 11, none paid. So \"inner child\" is on the page for Meta and the community; \"pattern\", \"the same\" and \"childhood\" are hers.",
+    "**What the keep-out list costs.** Heal or healing is the biggest word in this territory: 1,038 first messages (14.3% paid). Trauma 202 (20.8%). Narcissist 367. Toxic 219. Abandon 126. Attachment 46. All stay off the page.",
+    "**Therapy is common here.** Therapy, therapist or counselling: 99 first messages, 19.2% paid. These women often have a therapist, so the page never mentions or compares therapy, and the directive tells the chat to respect any help she's had, without naming therapy.",
+    "**Not pulled in this run:** Instagram and TikTok (Virlo), the Meta Ad Library and Reddit. No paid calls were allowed. The only community lines are from the saved Instagram pull on the 2026-11-17 draft page, not refreshed: an inner-child reel, \"The quiet one. The girl who learned to read the room, keep the peace, and sometimes make herself smaller\", and a 129k-view post, \"A child who had to earn love often becomes an adult who's terrified of losing it.\" Both back \"go quiet\" and \"the little girl\"."
+  ],
+  "keywords": [
+    {
+      "role": "Main",
+      "words": "pattern, your pattern, the same pattern (117 first messages, 15.4% paid; the third ad's word)"
+    },
+    {
+      "role": "Second",
+      "words": "childhood (97 first messages, 21.6% paid, the best rate of the lane's words)"
+    },
+    {
+      "role": "Buyer's own word",
+      "words": "**the same**: the same man, the same ending, the same lesson. 1,614 first messages say \"same\"; 167 in the pattern sense"
+    },
+    {
+      "role": "Supporting",
+      "words": "inner child (the lane's name, for Meta; buyers rarely type it), the little girl, go quiet (the first ad), never chooses you (241 say \"choose me\"), started / start date (the third ad and the button), repeat"
+    },
+    {
+      "role": "Once each (community terms)",
+      "words": "red flags, your type, a break from dating, boundaries, self-love"
+    },
+    {
+      "role": "Keep out",
+      "words": "trauma, heal / healing, attachment style, anxious / avoidant, narcissist, toxic, abandonment, codependent (clinical labels, health-claim words, or the excluded trauma-bonding territory). Therapy and therapist: not banned, but kept off the page so nothing compares Evelyn with it. Cycle: left for the family lane. Money, prediction and banned words as always"
+    }
+  ],
+  "kw": [
+    {
+      "key": "innerchild",
+      "label": "inner child",
+      "regex": "\\binner child\\b",
+      "target": "2–3",
+      "lo": 2,
+      "hi": 3
+    },
+    {
+      "key": "littlegirl",
+      "label": "the little girl",
+      "regex": "\\blittle girl\\b",
+      "target": "1–2",
+      "lo": 1,
+      "hi": 2
+    },
+    {
+      "key": "startdate",
+      "label": "start date",
+      "regex": "\\bstart date\\b",
+      "target": "1",
+      "lo": 1,
+      "hi": 1
+    },
+    {
+      "key": "redflag",
+      "label": "red flag(s)",
+      "regex": "\\bred flags?\\b",
+      "target": "1",
+      "lo": 1,
+      "hi": 1
+    },
+    {
+      "key": "type",
+      "label": "your type",
+      "regex": "\\byour type\\b",
+      "target": "1",
+      "lo": 1,
+      "hi": 1
+    },
+    {
+      "key": "break",
+      "label": "a break from dating",
+      "regex": "\\bbreak from dating\\b",
+      "target": "1",
+      "lo": 1,
+      "hi": 1
+    },
+    {
+      "key": "bound",
+      "label": "boundaries",
+      "regex": "\\bboundar\\w*",
+      "target": "1",
+      "lo": 1,
+      "hi": 1
+    },
+    {
+      "key": "selflove",
+      "label": "self-love",
+      "regex": "\\bself-love\\b",
+      "target": "1",
+      "lo": 1,
+      "hi": 1
+    },
+    {
+      "key": "pattern",
+      "label": "pattern",
+      "regex": "\\bpatterns?\\b",
+      "target": "6–8",
+      "lo": 6,
+      "hi": 8
+    },
+    {
+      "key": "childhood",
+      "label": "childhood",
+      "regex": "\\bchildhood\\b",
+      "target": "2–3",
+      "lo": 2,
+      "hi": 3
+    },
+    {
+      "key": "same",
+      "label": "the same (buyer word)",
+      "regex": "\\bsame\\b",
+      "target": "3–4",
+      "lo": 3,
+      "hi": 4
+    },
+    {
+      "key": "quiet",
+      "label": "quiet (the first ad)",
+      "regex": "\\bquiet\\b",
+      "target": "3–4",
+      "lo": 3,
+      "hi": 4
+    },
+    {
+      "key": "choose",
+      "label": "choose / chooses",
+      "regex": "\\bchoos\\w*",
+      "target": "1–2",
+      "lo": 1,
+      "hi": 2
+    },
+    {
+      "key": "started",
+      "label": "started",
+      "regex": "\\bstarted\\b",
+      "target": "4–5",
+      "lo": 4,
+      "hi": 5
+    },
+    {
+      "key": "repeat",
+      "label": "repeat / repeating",
+      "regex": "\\brepeat\\w*",
+      "target": "1–2",
+      "lo": 1,
+      "hi": 2
+    }
+  ],
+  "card": {
+    "v2": {
+      "h": "Your Pattern Started Long Before Him, and It's Still Blocking Love — I Can See It",
+      "alts": [
+        "Something Is Keeping You Stuck in the Same Pattern With Men — I Can See It",
+        "It Isn't Him. Something in Your Pattern Is Blocking Love — I Can See It"
+      ],
+      "why": "**1 · Start date (recommended).** Bets on the third ad and the button. \"Long before him\" takes the blame off him without putting it on her, \"pattern\" is the second word, and \"still blocking love\" names the problem. **2 · Stuck in the same pattern.** Bets that she sees the repeat before she sees the cause. It's the plainest, and the closest to today's \"Something Is Holding You Back\". \"Pattern\" sits mid-line. **3 · It isn't him.** Bets on the first ad's turn. Strongest for a woman who has blamed the men; riskiest for one still angry at him.",
+      "s": "Evelyn has sensed an old lesson from your childhood. It's why the same kind of man never quite chooses you. She can see where it started, from your first name.",
+      "b": "Yes Evelyn, Show Me Where It Started",
+      "sc": "It's free to message Evelyn. She's online now."
+    }
+  },
+  "meta": {
+    "title": "Why the Same Pattern Keeps Repeating With Men · Evelyn Cross",
+    "desc": "Your inner child learned what to expect from love. If the same kind of man still finds you, your pattern started there. It's free to message Evelyn.",
+    "alt": "Evelyn Cross, who helps women find where their pattern with men started, back in childhood."
+  },
+  "body": [
+    {
+      "t": "h",
+      "text": "Why the same pattern keeps repeating with men"
+    },
+    {
+      "t": "p",
+      "text": "Your friends saw it before you did."
+    },
+    {
+      "t": "p",
+      "text": "One says, \"He's just like the last one.\""
+    },
+    {
+      "t": "p",
+      "text": "Another asks, \"Why do you go so quiet when you like someone?\""
+    },
+    {
+      "t": "p",
+      "text": "Different face. Same ending. He's warm, and he keeps you close. He just won't choose you all the way."
+    },
+    {
+      "t": "p",
+      "text": "So you go quiet. You make yourself easy to be with. Then it happens again, with him or the next one."
+    },
+    {
+      "t": "p",
+      "text": "It isn't bad luck. It's a pattern, and yours started long before him."
+    },
+    {
+      "t": "h",
+      "text": "What you've tried to break the pattern"
+    },
+    {
+      "t": "list",
+      "lead": "You've worked hard at this.",
+      "items": [
+        "Learning every red flag, so you'd spot him sooner.",
+        "Swearing off your type, then meeting him again.",
+        "A long break from dating, to reset.",
+        "Setting boundaries early this time.",
+        "Self-love first, before anyone else.",
+        "Asking a friend to look him over first."
+      ],
+      "closer": "None of it was wrong. It just didn't look that far back."
+    },
+    {
+      "t": "h",
+      "text": "Where your pattern started"
+    },
+    {
+      "t": "p",
+      "text": "Long ago, somebody taught you how to be loved. Keep quiet. Want nothing. Make it easy to stay."
+    },
+    {
+      "t": "p",
+      "text": "You were small. You'd learned it so well, you stopped seeing it."
+    },
+    {
+      "t": "p",
+      "text": "Some call that little girl your inner child. She learned to be no trouble."
+    },
+    {
+      "t": "p",
+      "text": "She still answers first, before you've thought a thing. And a man who's never all the way there feels like home."
+    },
+    {
+      "t": "p",
+      "text": "That's why it's the same man in a different face. One old lesson keeps picking him."
+    },
+    {
+      "t": "p",
+      "text": "There's a start date, somewhere back in your childhood."
+    },
+    {
+      "t": "p",
+      "text": "Evelyn finds where it started, from your first name."
+    },
+    {
+      "t": "h",
+      "text": "Who Evelyn is"
+    },
+    {
+      "t": "p",
+      "text": "Evelyn Cross is a seer in the west of Ireland. Her teacher could do this. So could her teacher's teacher."
+    },
+    {
+      "t": "p",
+      "text": "She works at night, by candlelight. One first name at a time. She doesn't need your birthday, a photo, or his name."
+    },
+    {
+      "t": "p",
+      "text": "She knows the inner child the way you do. She doesn't look at the man. She looks for the little girl who learned it."
+    },
+    {
+      "t": "h",
+      "text": "When you send your first name"
+    },
+    {
+      "t": "p",
+      "text": "You send your first name. That's all."
+    },
+    {
+      "t": "p",
+      "text": "Evelyn writes back. Her first message is short. Then she'll ask you one question."
+    },
+    {
+      "t": "p",
+      "text": "Messaging Evelyn is free."
+    },
+    {
+      "t": "p",
+      "text": "If she sees where it started, she'll offer to write it down. A letter, written at night, by candlelight. That part isn't free. She'll tell you so plainly before anything happens."
+    },
+    {
+      "t": "p",
+      "text": "It starts the same way for every woman. One first name."
+    },
+    {
+      "t": "h",
+      "text": "Questions women ask about patterns in love"
+    },
+    {
+      "t": "faq",
+      "items": [
+        {
+          "q": "Why do I keep falling for the wrong men?",
+          "a": "It isn't bad luck. A pattern from childhood answers first. It picks the man it's used to."
+        },
+        {
+          "q": "What does my inner child have to do with love?",
+          "a": "More than you'd think. She learned what love looks like. She's still the one picking."
+        },
+        {
+          "q": "Why do I go quiet with men I like?",
+          "a": "Somebody taught you, long ago, that it kept people close. It worked then, so you're still doing it."
+        },
+        {
+          "q": "Is it free to message Evelyn?",
+          "a": "Yes. The chat is free."
+        }
+      ]
+    },
+    {
+      "t": "ask"
+    }
+  ],
+  "chat": [
+    {
+      "who": "e",
+      "text": "You've seen this pattern before, haven't you."
+    },
+    {
+      "who": "e",
+      "text": "What's your first name, dear?"
+    },
+    {
+      "who": "me",
+      "text": "{her first name}"
+    },
+    {
+      "who": "e",
+      "text": "{Name}... you've learned every red flag. You've sworn off your type."
+    },
+    {
+      "who": "e",
+      "text": "And still, you end up in the same place. Kept close, and never chosen."
+    },
+    {
+      "who": "e",
+      "text": "That started long before him, dear. I can see the edge of it already."
+    },
+    {
+      "who": "q",
+      "text": "Tell me how it usually goes with men, dear... and how far back you can remember it."
+    }
+  ],
+  "chatnote": "Her answer gives the later chat two things in her own words: the shape of the pattern (how it goes with men) and its first memory (how far back). The second half is what the chat's own \"Where did this start\" step will build on.",
+  "directive": "She came from a page about her pattern with men: the same kind of man in a different face, kept close and never chosen, going quiet so he'll stay. Reuse her own words for it, especially 'the same' and 'always', and the page's words: pattern, childhood, inner child, the little girl. Hold the lane's belief: it isn't bad luck and it isn't her fault, because a lesson she learned as a little girl answers first and picks the same man. Use plain words for her pattern, never a clinical label, and never say what's coming. If she mentions anyone who has helped her with this, speak of that help with respect.",
+  "notes": [
+    "<b>Every-ad fit, recommended headline.</b> Ad 1, \"I used to think it was him... always me going quiet\": ✓, \"long before him\" is her turn. Ad 2, \"the same man in different faces... never quite picks me\": ✓, it started before any of them. Ad 3, \"My pattern had a start date\": ✓, nearly its own words. This Is My Friend (he called her his friend): ✓. He Still Doesn't Know (one man, won't marry her): ✓, \"long before him\" holds for one man as well as many. The therapist source video: ✓, nothing on the page argues with \"it all looked normal\".",
+    "<b>Every-ad fit, the other two.</b> \"Stuck in the Same Pattern With Men\": ✓ for all five; it reads as many men, but the pattern can be with one man. \"It Isn't Him\": ✓ for the three hooks and This Is My Friend; ✗ risk for He Still Doesn't Know, where she heard him say why he won't marry her and may not want him excused.",
+    "Nothing on the page belongs to one ad. \"Then it happens again, with him or the next one\" is written to hold for the one-man story and the many-men hooks. \"Kept close, and never chosen\" in the opener covers the friend story and the won't-marry story. Jules's photo, the wall and the six years stay in the ads.",
+    "\"Keep quiet. Want nothing. Make it easy to stay.\" is the mentor's line from the He Still Doesn't Know video, kept for message match. It states the belief, not her biography, so it holds for every ad.",
+    "The two friend lines (\"He's just like the last one\", \"Why do you go so quiet when you like someone?\") are composites, not buyer quotes. They show her pattern from outside instead of saying \"you've felt it\".",
+    "Therapy is never mentioned on the page: no comparison, no \"Evelyn isn't a therapist\", nothing a woman in therapy could read as a dig. The directive covers it if she brings it up in the chat, without naming therapy, so the chat never raises it first.",
+    "\"What you've tried to break the pattern\" carries the main keyword, which the list heading in lanes 1 and 4 doesn't. Inner child work is kept out of the tried list on purpose: it is the lane's belief, and the list's closer (\"None of it was wrong. It just didn't look that far back\") would read as a dig at it.",
+    "\"Started\" runs 5 times below the card, counting the closing button (and once more on the card's own button). It's the third ad's word and the button's. If the page reads repetitive, it's the word to trim first.",
+    "The page description says \"Your inner child learned what to expect from love\" instead of listing inner child work among the things she tried. Listed there, it read as one more thing that failed her."
+  ],
+  "open": [
+    "Which headline: 1 (start date, recommended), 2 (stuck in the same pattern) or 3 (it isn't him)?",
+    "Therapy stays off the page entirely, and the chat only respects it if she raises it. Is that right, or do you want one respectful line for the viewers of the therapist video? If so, it belongs in that ad, not the page.",
+    "Inner child 3 times and the little girl twice. Buyers rarely type either (4 and 17 first messages). Enough for Meta, or does it start to sound like a counselling page?",
+    "Heal or healing (1,038 first messages) and trauma (202, 20.8% paid) stay off the page and out of the chat. Confirm.",
+    "Cycle (70 first messages, 18.6% paid) is left for the family lane's 'break the cycle'. Use it here too?",
+    "Beat 6 asks how far back she remembers it. That sets up the chat's own 'Where did this start' step, so that step may now feel like a repeat. Keep it, or end beat 6 at 'how it usually goes with men'?",
+    "Boundaries and self-love in the tried list: right for women 35 to 65 and up? Shadow work was left off (11 first messages, none paid)."
+  ]
+}
