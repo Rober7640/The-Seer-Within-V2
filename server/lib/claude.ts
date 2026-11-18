@@ -6,6 +6,7 @@ import { fireWithBreaker, anthropicBreaker, isCircuitOpenError } from './circuit
 import { getModelForOperation } from './modelConfig'
 import { sanitizePredictionsV1 } from './predictionSanitizer'
 import { requestLangPack, requestLocale, tl } from './locale'
+import { applyLocaleTypography } from '@shared/typography'
 import type { UserData } from '../../shared/types'
 import {
   buildReading1Prompt,
@@ -74,8 +75,11 @@ async function callClaude(prompt: string): Promise<ClaudeResponse> {
     if (jsonMatch) {
       const parsed = JSON.parse(jsonMatch[0])
       if (Array.isArray(parsed.messages)) {
+        const locale = requestLocale()
+        const sanitized = sanitizePredictionsV1(parsed.messages)
         return {
-          messages: sanitizePredictionsV1(parsed.messages),
+          // Non-English: the language's typography (FR: espaces insécables). English: untouched.
+          messages: locale === 'en' ? sanitized : sanitized.map((m) => applyLocaleTypography(m, locale)),
           needsClarification: parsed.needsClarification || false,
           detectedTopic: parsed.detectedTopic,
           subBucket: parsed.subBucket,

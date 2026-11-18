@@ -346,3 +346,12 @@ describe("client: intent, upsell replies, names (French session)", () => {
   ];
   for (const [text, who, want] of names) it(`name: ${text} → ${want}`, () => { fr(); expect(nameFromAnswer(text, who)).toBe(want); });
 });
+
+describe("FR market — the US SMS opt-in", () => {
+  it("shows for a US (English) session, never for a French one", async () => {
+    const { showsSmsConsent } = await import("../../server/lib/smsConsent");
+    const READ_ONLY = new Set(["v1-read"]);
+    expect(showsSmsConsent("v1-read", "tea", READ_ONLY)).toBe(true);
+    expect(withLocale(FR, () => showsSmsConsent("v1-read", "tea", READ_ONLY))).toBe(false);
+  });
+});
