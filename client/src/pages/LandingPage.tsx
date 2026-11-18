@@ -2,6 +2,8 @@ import { CosmicBackground } from '../components/CosmicBackground';
 import { StatusIndicator } from '../components/StatusIndicator';
 import { CTAButton } from '../components/CTAButton';
 import { TrustBadges } from '../components/TrustBadges';
+import { LaneSections } from '../components/LaneSections';
+import { resolveLane } from '@/lib/laneAttribution';
 import { Link } from 'wouter';
 import { Sparkles } from 'lucide-react';
 
@@ -38,7 +40,16 @@ const variants: Record<string, {
 export default function LandingPage() {
   const params = new URLSearchParams(window.location.search);
   const v = params.get('v') || 'default';
-  const content = variants[v] || variants.default;
+  const base = variants[v] || variants.default;
+  // Belief lane (/fb?lane=<id>, shared/beliefLanes.ts). /fb only — resolveLane returns
+  // undefined on /, /fb2, /gdn and for any id the registry does not know, so those pages
+  // render exactly as before. A lane fills the four card spots (headline, sub-line,
+  // button, the line under it) and adds the sections below the card. Avatar, status,
+  // the button's 3-second delay, trust row and footer are untouched.
+  const lane = resolveLane(window.location.pathname, window.location.search);
+  const content = lane
+    ? { ...base, headline: lane.card.h, subheadline: lane.card.s, cta: lane.card.b, scarcity: lane.card.sc }
+    : base;
 
   return (
     <div className="min-h-screen relative flex flex-col items-center justify-center p-4">
@@ -85,7 +96,7 @@ export default function LandingPage() {
         </p>
 
         {/* CTA Button */}
-        <CTAButton label={content.cta} />
+        <CTAButton label={content.cta} lane={lane?.id} />
 
         {/* Scarcity text */}
         <p className="text-center text-xs text-gray-400 mt-4 italic">
@@ -95,6 +106,8 @@ export default function LandingPage() {
         {/* Trust badges */}
         <TrustBadges label={content.trust} />
       </div>
+
+      {lane && <LaneSections lane={lane} />}
 
       <footer className="mt-8 text-white/40 text-xs text-center space-y-2">
         <div className="flex items-center justify-center gap-3 flex-wrap">

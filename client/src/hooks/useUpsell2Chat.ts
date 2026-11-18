@@ -46,6 +46,7 @@ import { backendOfferFunnel, currentFunnel, getPostHogFunnel, isTwinFlameOffer }
 import type { BackendOfferKey } from "@shared/backendOffers";
 import { track as trackPH } from "@/lib/posthog";
 import { tarotEventProps } from "@/lib/tarotAttribution";
+import { laneEventProps } from "@/lib/laneAttribution";
 import { getTrackdeskClickId } from "@/lib/facebook";
 
 // Fire the Trackdesk upsell-2 affiliate conversion from the browser. Backup to
@@ -505,6 +506,8 @@ export function useUpsell2Chat({
 
     trackPH("upsell_accepted", {
       funnel: offer ? backendOfferFunnel(offer) : (getPostHogFunnel() ?? "unknown"),
+      // Belief lane for the tab (/fb?lane=<id>); empty for every other funnel.
+      ...laneEventProps(),
       step: "upsell2",
       product: "manifestation_bracelet",
       // U2 has two prices ($47 full / $30 downsell) that were previously
@@ -589,6 +592,8 @@ export function useUpsell2Chat({
         // authenticate and pay (A7). Webhook records + fires PostHog on success.
         trackPH("upsell_fallback_redirect", {
           funnel: offer ? backendOfferFunnel(offer) : (getPostHogFunnel() ?? "unknown"),
+          // Belief lane for the tab (/fb?lane=<id>); empty for every other funnel.
+          ...laneEventProps(),
           step: "upsell2",
           product: "be_bracelet",
         });
@@ -614,6 +619,8 @@ export function useUpsell2Chat({
         // distinguishable from an abandoned page.
         trackPH("upsell_fallback_redirect", {
           funnel: offer ? backendOfferFunnel(offer) : (getPostHogFunnel() ?? "unknown"),
+          // Belief lane for the tab (/fb?lane=<id>); empty for every other funnel.
+          ...laneEventProps(),
           step: "upsell2",
           product: "manifestation_bracelet",
           price_tier: "full",
@@ -673,6 +680,8 @@ export function useUpsell2Chat({
       const tarot = getPostHogFunnel() === "tarot" ? tarotEventProps() : undefined;
       trackPH("upsell_declined", {
         funnel: offer ? backendOfferFunnel(offer) : (getPostHogFunnel() ?? "unknown"),
+        // Belief lane for the tab (/fb?lane=<id>); empty for every other funnel.
+        ...laneEventProps(),
         step: "upsell2",
         product: "manifestation_bracelet",
         price_tier: "full",
@@ -696,6 +705,8 @@ export function useUpsell2Chat({
     const tarot = getPostHogFunnel() === "tarot" ? tarotEventProps() : undefined;
     trackPH("upsell_accepted", {
       funnel: offer ? backendOfferFunnel(offer) : (getPostHogFunnel() ?? "unknown"),
+      // Belief lane for the tab (/fb?lane=<id>); empty for every other funnel.
+      ...laneEventProps(),
       step: "upsell2",
       product: "manifestation_bracelet",
       price_tier: "downsell",
@@ -774,6 +785,8 @@ export function useUpsell2Chat({
         // be_bracelet DOWNSELL, where she can authenticate and pay (A7).
         trackPH("upsell_fallback_redirect", {
           funnel: offer ? backendOfferFunnel(offer) : (getPostHogFunnel() ?? "unknown"),
+          // Belief lane for the tab (/fb?lane=<id>); empty for every other funnel.
+          ...laneEventProps(),
           step: "upsell2",
           product: "be_bracelet",
           price_tier: "downsell",
@@ -797,6 +810,8 @@ export function useUpsell2Chat({
       } else if (result.fallback) {
         trackPH("upsell_fallback_redirect", {
           funnel: offer ? backendOfferFunnel(offer) : (getPostHogFunnel() ?? "unknown"),
+          // Belief lane for the tab (/fb?lane=<id>); empty for every other funnel.
+          ...laneEventProps(),
           step: "upsell2",
           product: "manifestation_bracelet",
           price_tier: "downsell",
@@ -853,6 +868,8 @@ export function useUpsell2Chat({
     const tarot = getPostHogFunnel() === "tarot" ? tarotEventProps() : undefined;
     trackPH("upsell_declined", {
       funnel: offer ? backendOfferFunnel(offer) : (getPostHogFunnel() ?? "unknown"),
+      // Belief lane for the tab (/fb?lane=<id>); empty for every other funnel.
+      ...laneEventProps(),
       step: "upsell2",
       product: "manifestation_bracelet",
       price_tier: "downsell",
