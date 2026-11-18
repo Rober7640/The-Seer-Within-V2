@@ -101,6 +101,64 @@ export function laneStaticMarkup(lane: BeliefLane): string {
   return out.join('')
 }
 
+// The canonical site. A lane page's og:url and canonical point at the production
+// URL even when dev serves it — that is what canonical is for, and it is the URL the
+// ad actually sends her to. Kept here (not from the request) so renderLaneHtml stays pure.
+const SITE_ORIGIN = 'https://www.theseerwithin.com'
+
+/** The lane's clean canonical URL (no tracking params). */
+function laneCanonical(lane: BeliefLane): string {
+  return `${SITE_ORIGIN}${LANE_LANDER_PATH}?lane=${lane.id}`
+}
+
+/**
+ * schema.org JSON-LD for a lane: a WebPage (name, description, keywords, image) and,
+ * from the lane's own FAQ, a FAQPage. Returned as an object; the caller serialises it
+ * and neutralises `<` so no lane string can break out of the <script>.
+ */
+export function laneJsonLd(lane: BeliefLane): Record<string, unknown> {
+  const canonical = laneCanonical(lane)
+  const graph: Record<string, unknown>[] = [
+    {
+      '@type': 'WebPage',
+      name: lane.meta.title,
+      description: lane.meta.desc,
+      url: canonical,
+      inLanguage: 'en',
+      keywords: lane.meta.keywords.join(', '),
+      about: { '@type': 'Thing', name: lane.name },
+      isPartOf: { '@type': 'WebSite', name: 'The Seer Within', url: SITE_ORIGIN },
+      primaryImageOfPage: { '@type': 'ImageObject', url: `${SITE_ORIGIN}/evelyn-avatar.png`, caption: lane.meta.alt },
+    },
+  ]
+  const faq = lane.body.find((b) => b.t === 'faq')
+  if (faq && faq.t === 'faq') {
+    graph.push({
+      '@type': 'FAQPage',
+      mainEntity: faq.items.map((it) => ({
+        '@type': 'Question',
+        name: it.q,
+        acceptedAnswer: { '@type': 'Answer', text: it.a },
+      })),
+    })
+  }
+  return { '@context': 'https://schema.org', '@graph': graph }
+}
+
+/** The extra <head> tags for a lane: keywords, og:url, canonical, JSON-LD. */
+export function laneHeadExtras(lane: BeliefLane): string {
+  const canonical = laneCanonical(lane)
+  // JSON-LD is raw JSON inside <script>, NOT HTML-escaped — but `<` is neutralised so
+  // a lane string can never close the <script> or open a new tag.
+  const ld = JSON.stringify(laneJsonLd(lane)).replace(/</g, '\\u003c')
+  return [
+    `<meta name="keywords" content="${escapeHtml(lane.meta.keywords.join(', '))}" />`,
+    `<meta property="og:url" content="${escapeHtml(canonical)}" />`,
+    `<link rel="canonical" href="${escapeHtml(canonical)}" />`,
+    `<script type="application/ld+json">${ld}</script>`,
+  ].join('\n    ')
+}
+
 /** Rewrite index.html for one lane. Callers go through applyLaneHtml. */
 export function renderLaneHtml(html: string, lane: BeliefLane): string {
   const { title, desc, alt } = lane.meta
@@ -119,6 +177,8 @@ export function renderLaneHtml(html: string, lane: BeliefLane): string {
     /(<meta property="og:image" content="[^"]*"\s*\/?>)/,
     (m) => `${m}\n    <meta property="og:image:alt" content="${escapeHtml(alt)}" />`,
   )
+  // Rich metadata (keywords, og:url, canonical, JSON-LD) just before </head>.
+  out = out.replace(/<\/head>/, () => `    ${laneHeadExtras(lane)}\n  </head>`)
   out = out.replace(/<div id="root"><\/div>/, () => `<div id="root">${laneStaticMarkup(lane)}</div>`)
   return out
 }

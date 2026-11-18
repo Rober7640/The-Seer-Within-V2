@@ -110,11 +110,28 @@ describe('applyLaneHtml — /fb?lane=manifest', () => {
     assert.equal((root.match(/href="\/fb\/chat\?lane=manifest"/g) ?? []).length, 2)
   })
 
+  it('adds keywords, og:url, canonical and FAQPage JSON-LD', () => {
+    assert.ok(html.includes(`<meta name="keywords" content="${escapeHtml(LANE.meta.keywords.join(', '))}" />`))
+    const canonical = `https://www.theseerwithin.com/fb?lane=manifest`
+    assert.ok(html.includes(`<meta property="og:url" content="${canonical}" />`))
+    assert.ok(html.includes(`<link rel="canonical" href="${canonical}" />`))
+    // The JSON-LD parses, and carries a WebPage and a FAQPage built from the lane FAQ.
+    const ld = html.slice(html.indexOf('<script type="application/ld+json">') + '<script type="application/ld+json">'.length)
+    const json = JSON.parse(ld.slice(0, ld.indexOf('</script>')))
+    const types = json['@graph'].map((n: { '@type': string }) => n['@type'])
+    assert.deepEqual(types, ['WebPage', 'FAQPage'])
+    const faqItems = (LANE.body.find((b) => b.t === 'faq') as { items: unknown[] }).items
+    assert.equal(json['@graph'][1].mainEntity.length, faqItems.length)
+    assert.equal(json['@graph'][0].keywords, LANE.meta.keywords.join(', '))
+  })
+
   it('changes nothing outside <head> meta and #root', () => {
     const strip = (h: string) =>
       h
         .replace(/<title>[\s\S]*?<\/title>/, '')
         .replace(/\s*<meta (property|name)="(og:title|og:description|og:image:alt|twitter:title|twitter:description|description)" content="[^"]*" \/>/g, '')
+        // The whole rich-metadata block injected before </head> (keywords → JSON-LD).
+        .replace(/\s*<meta name="keywords"[\s\S]*?<\/script>/, '')
         .replace(/<div id="root">[\s\S]*?<\/main><\/div>/, '<div id="root"></div>')
     assert.equal(strip(html), strip(INDEX))
   })
@@ -138,7 +155,7 @@ describe('renderLaneHtml — escaping', () => {
       ...LANE,
       id: 'x"><script>',
       card: { h: '<script>alert(1)</script>', s: 'a & b', b: '"quoted"', sc: "it's <b>" },
-      meta: { title: '</title><script>', desc: '" onload="x', alt: '"><img src=x>' },
+      meta: { title: '</title><script>', desc: '" onload="x', alt: '"><img src=x>', keywords: ['</script><script>bad', '" x'] },
       body: [{ t: 'h', text: '<h1>' }, { t: 'p', text: '</div>' }, { t: 'list', lead: '<', items: ['>'], closer: '&' }, { t: 'faq', items: [{ q: '<q>', a: '<a>' }] }, { t: 'ask' }],
     }
     const out = renderLaneHtml(INDEX, evil)
@@ -149,6 +166,10 @@ describe('renderLaneHtml — escaping', () => {
     assert.ok(out.includes('&lt;script&gt;alert(1)&lt;/script&gt;'))
     assert.ok(out.includes('&quot;quoted&quot;'))
     assert.ok(out.includes('a &amp; b'))
+    // The JSON-LD can't be broken out of either: no raw </script> from a lane string,
+    // and exactly one real </script> closes the ld+json block.
+    const ld = out.slice(out.indexOf('application/ld+json'))
+    assert.ok(ld.slice(0, ld.indexOf('</script>')).includes('\\u003c/script>'), 'the evil </script> is neutralised inside the JSON-LD')
   })
 
   it('escapes the real copy\'s quotes and apostrophes', () => {
