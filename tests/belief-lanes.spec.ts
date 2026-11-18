@@ -64,7 +64,7 @@ test.describe('JavaScript off — the server HTML Meta reads', () => {
 
   test('an unknown lane is plain /fb', async ({ page, context }) => {
     await guard(context)
-    await page.goto('/fb?lane=astrology')
+    await page.goto('/fb?lane=pattern')
     await expect(page).toHaveTitle(ORIGINAL_TITLE)
     await expect(page.locator('[data-lane-static]')).toHaveCount(0)
   })
@@ -79,7 +79,7 @@ test.describe('server HTML bytes (dev server)', () => {
   test('no-lane and unknown-lane /fb are identical to plain /fb', async ({ request }) => {
     const plain = norm(await (await request.get('/fb')).text())
     expect(plain).toContain(`<title>${ORIGINAL_TITLE}</title>`)
-    for (const url of ['/fb?lane=', '/fb?lane=nope', '/fb?lane=astrology', '/fb?utm_source=facebook', '/fb/chat?lane=manifest']) {
+    for (const url of ['/fb?lane=', '/fb?lane=nope', '/fb?lane=pattern', '/fb?utm_source=facebook', '/fb/chat?lane=manifest']) {
       expect(norm(await (await request.get(url)).text()), url).toBe(plain)
     }
     expect(norm(await (await request.get('/fb?lane=manifest')).text())).not.toBe(plain)
