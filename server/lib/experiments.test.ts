@@ -7,7 +7,7 @@ import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import crypto from 'crypto';
 
-import { experimentBucket, pickVariant, twoSidedP, shouldForceRunning, matchesFunnelScope, matchesLanderScope, bookingTreatmentOf, PAYWALL_EXPERIMENT_KEY } from './experiments';
+import { experimentBucket, pickVariant, twoSidedP, shouldForceRunning, matchesFunnelScope, matchesLanderScope, landerScopeApplies, bookingTreatmentOf, PAYWALL_EXPERIMENT_KEY } from './experiments';
 import type { ExperimentVariant } from '../../shared/schema';
 
 const ref = (id: string, key: string) =>
@@ -182,6 +182,57 @@ describe('matchesFunnelScope (funnel enrolment filter)', () => {
     const scope = [null, 'v1-tarot', 42, ''] as unknown as string[];
     assert.equal(matchesFunnelScope(scope, 'v1-tarot'), true);
     assert.equal(matchesFunnelScope(scope, 'v1-palm'), false);
+  });
+});
+
+describe('landerScopeApplies (U1 3-way: all of /fb + named tarot ads, 2026-11-18)', () => {
+  // Mirrors assign()'s three scope checks for the U1 test's exact scope.
+  const SCOPE = {
+    funnel: ['v1-fb', 'v1-tarot'],
+    landers: [
+      { hook: 'cards-will-commit', deck: 'return-mhf' },
+      { hook: 'cards-meant-alone', deck: 'return-mhf' },
+      { hook: 'cards-met-already', deck: 'return-mhf' },
+    ],
+  };
+  const inScope = (funnel: string | null, hook: string | null, deck: string | null) =>
+    matchesFunnelScope(SCOPE.funnel, funnel) &&
+    (!landerScopeApplies(funnel) || matchesLanderScope(SCOPE.landers, hook, deck));
+
+  it('only tarot (and a context with no funnel) is lander-filtered', () => {
+    assert.equal(landerScopeApplies('v1-tarot'), true);
+    assert.equal(landerScopeApplies(null), true);
+    assert.equal(landerScopeApplies(undefined), true);
+    assert.equal(landerScopeApplies(''), true);
+    assert.equal(landerScopeApplies('v1-fb'), false);
+    assert.equal(landerScopeApplies('v1-palm'), false);
+  });
+
+  it('enrols all of /fb and exactly the three tarot ads', () => {
+    assert.equal(inScope('v1-fb', null, null), true);
+    assert.equal(inScope('v1-tarot', 'cards-will-commit', 'return-mhf'), true);
+    assert.equal(inScope('v1-tarot', 'cards-meant-alone', 'return-mhf'), true);
+    assert.equal(inScope('v1-tarot', 'cards-met-already', 'return-mhf'), true);
+  });
+
+  it('leaves every other lander/funnel out', () => {
+    assert.equal(inScope('v1-tarot', 'cards-return', 'return-mhf'), false);
+    assert.equal(inScope('v1-tarot', 'cards-will-commit', 'arcana-mfh'), false); // same hook, other deck
+    assert.equal(inScope('v1-tarot', null, null), false);
+    assert.equal(inScope('v1-palm', null, null), false);
+    assert.equal(inScope('v1-fb2', null, null), false);
+    assert.equal(inScope('v1-read', null, null), false);
+    assert.equal(inScope(null, null, null), false); // root V1
+  });
+
+  it('a tarot-only lander test is unchanged (other funnels still out via funnel scope)', () => {
+    const tarotOnly = { funnel: 'v1-tarot', landers: SCOPE.landers };
+    const tIn = (f: string | null, h: string | null, d: string | null) =>
+      matchesFunnelScope(tarotOnly.funnel, f) &&
+      (!landerScopeApplies(f) || matchesLanderScope(tarotOnly.landers, h, d));
+    assert.equal(tIn('v1-fb', null, null), false);
+    assert.equal(tIn('v1-tarot', 'cards-return', 'return-mhf'), false);
+    assert.equal(tIn('v1-tarot', 'cards-meant-alone', 'return-mhf'), true);
   });
 });
 

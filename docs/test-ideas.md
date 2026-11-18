@@ -2513,3 +2513,20 @@ Registry `shared/beliefLanes.ts`; server HTML `server/lib/laneHtml.ts` (static.t
 - [ ] Lane survives a reload of /fb/chat (sessionStorage + saved userData.lane); a fresh tab on plain /fb clears it
 - [ ] Meta Sharing Debugger on the deployed /fb?lane=manifest shows the lane title, description and image alt
 - [ ] /, /fb2, /gdn, /fb-tarot, /fb-palm with ?lane=manifest behave exactly as without it
+
+### Upsell 1 price 3-way test — $47 / $39 / $35 on FE landers (2026-11-18)
+
+Experiment `u1_price_2026`, scope `funnel: ['v1-fb','v1-tarot']` + `landers` (cards-will-commit,
+cards-meant-alone, cards-met-already on `return-mhf`). /fb is enrolled whole; tarot only by (hook, deck).
+Pure scope logic covered in `server/lib/experiments.test.ts` (landerScopeApplies).
+
+- [x] `/fb` lead → enrolled; stored `upsell1_amount_cents` matches the arm (A 4700 / B 3900 / C 3500) *(sandbox, 60 leads)*
+- [x] Each of the 3 tarot ad URLs → enrolled, stored price matches arm *(sandbox, 30 leads each)*
+- [x] Out of scope stays $47 with NO exposure: other tarot hook, same hook on `arcana-mfh`, /fb-palm, /fb2, root *(sandbox)*
+- [x] `/start` refuses `u1_price_2026` without `scope.funnel` *(sandbox)*
+- [x] `/api/upsell/user-data` returns the arm price; charge-path lookup (`getVariantForEmail`) returns it for every enrolled buyer *(sandbox, 162/162)*
+- [x] `/fb/welcome1` and `/fb-tarot/welcome1` chat says "The Protection Ritual is $39/$35/$47" per arm *(sandbox browser)*
+- [ ] Playwright: Upsell 1 CTA button label shows the arm price (not the `$47` default)
+- [ ] Stripe TEST: 1-click + fallback checkout charge the arm amount for B and C
+- [ ] Returning visitor with a stored price keeps her Upsell 1 price (not re-enrolled)
+- [ ] Appending a 4th lander to `scope.landers` on a running test enrols it without moving existing buyers

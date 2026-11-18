@@ -1058,7 +1058,9 @@ router.post('/:key/start', async (req: Request, res: Response) => {
     const hasFunnelScope = Array.isArray(scopedFunnels)
       ? scopedFunnels.some((f) => typeof f === 'string' && f.length > 0)
       : typeof scopedFunnels === 'string' && scopedFunnels.length > 0;
-    if (V1_MAIN_FUNNEL_KEYS.includes(key) && !hasFunnelScope) {
+    // The Upsell-1 price key too (2026-11-18): it REPLACES the U1 charge amount, so
+    // starting it without scope.funnel would reprice Upsell 1 on every V1 lander.
+    if ((V1_MAIN_FUNNEL_KEYS.includes(key) || key === U1_PRICE_EXPERIMENT_KEY) && !hasFunnelScope) {
       return res.status(400).json({
         error: `the '${key}' test must set scope.funnel before starting (it applies to those funnels only)`,
       });
