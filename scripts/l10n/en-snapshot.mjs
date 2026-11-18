@@ -81,7 +81,10 @@ for (const p of PAGES) {
     await page.waitForLoadState("load").catch(() => {});
     let prev = 0;
     for (const ms of STEPS_MS) { await page.clock.runFor(ms - prev); prev = ms; await page.waitForTimeout(150); }
-    const html = await page.evaluate(() => document.body.innerHTML.replace(/\s+/g, " "));
+    // Message ids come from Math.random (lib/typing.ts generateId); how many
+    // draws happen before a bubble depends on load timing, so they are masked.
+    const html = (await page.evaluate(() => document.body.innerHTML.replace(/\s+/g, " ")))
+      .replace(/data-testid="message-(bot|user|image|system)-[a-z0-9]+"/g, 'data-testid="message-$1-ID"');
     out[`${p} @${vp.width}`] = html;
     await ctx.close();
   }

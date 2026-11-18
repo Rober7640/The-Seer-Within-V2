@@ -47,11 +47,11 @@ function offerFor(pathname?: string): BackendOfferCopy | undefined {
 // Resolved from the URL, like every other per-funnel behaviour in the shared V1
 // components.
 export function upsell1Copy(pathname?: string): Upsell1Copy {
-  return offerFor(pathname)?.upsell1 ?? V1_UPSELL1;
+  return offerFor(pathname)?.upsell1 ?? pick("upsell1.v1", V1_UPSELL1);
 }
 
 export function upsell2Copy(pathname?: string): Upsell2Copy {
-  return offerFor(pathname)?.upsell2 ?? V1_UPSELL2;
+  return offerFor(pathname)?.upsell2 ?? pick("upsell2.v1", V1_UPSELL2);
 }
 
 /**
@@ -91,3 +91,4 @@ export type {
   Upsell1Copy,
   Upsell2Copy,
 } from "./upsellCopy/types";
+import { pick } from "@/lib/i18n";

@@ -1,4 +1,5 @@
 import type { Bucket } from '@/types/chat'
+import { pick } from "@/lib/i18n";
 
 interface QuickReplyButtonsProps {
   onSelect: (bucket: Bucket) => void
@@ -14,7 +15,7 @@ const BUCKETS: { key: Bucket; label: string; icon: string }[] = [
 export function QuickReplyButtons({ onSelect }: QuickReplyButtonsProps) {
   return (
     <div className="p-4 space-y-2">
-      {BUCKETS.map(({ key, label, icon }) => (
+      {pick('chat.bucketButtons', BUCKETS).map(({ key, label, icon }) => (
         <button
           key={key}
           onClick={() => onSelect(key)}

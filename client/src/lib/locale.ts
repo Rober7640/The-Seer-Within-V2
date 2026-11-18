@@ -51,6 +51,16 @@ export function captureLocale(search?: string): LocaleCode {
   return locale;
 }
 
+/**
+ * Settle the locale for this visit (after coverage checks at boot). Rewrites
+ * the cookie too, so the server — which reads it for Evelyn's replies, emails
+ * and checkout — always agrees with what is on screen.
+ */
+export function settleLocale(locale: LocaleCode): void {
+  cached = locale;
+  writeCookie(LOCALE_COOKIE, locale === DEFAULT_LOCALE ? null : locale);
+}
+
 /** The locale captured at boot (English if capture never ran). */
 export function currentLocale(): LocaleCode {
   return cached ?? DEFAULT_LOCALE;

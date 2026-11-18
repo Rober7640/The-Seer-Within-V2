@@ -6,7 +6,7 @@ import { LaneSections } from '../components/LaneSections';
 import { resolveLane } from '@/lib/laneAttribution';
 import { Link } from 'wouter';
 import { Sparkles } from 'lucide-react';
-import { t } from "@/lib/i18n";
+import { t, pick } from "@/lib/i18n";
 
 const variants: Record<string, {
   headline: string;
@@ -41,7 +41,8 @@ const variants: Record<string, {
 export default function LandingPage() {
   const params = new URLSearchParams(window.location.search);
   const v = params.get('v') || 'default';
-  const base = variants[v] || variants.default;
+  const vs = pick('landing.variants', variants)
+  const base = vs[v] || vs.default;
   // Belief lane (/fb?lane=<id>, shared/beliefLanes.ts). /fb only — resolveLane returns
   // undefined on /, /fb2, /gdn and for any id the registry does not know, so those pages
   // render exactly as before. A lane fills the four card spots (headline, sub-line,

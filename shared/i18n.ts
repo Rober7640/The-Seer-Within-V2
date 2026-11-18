@@ -69,10 +69,48 @@ export function translate(locale: LocaleCode, text: string, vars?: Vars): string
   return interpolate(hit, vars);
 }
 
+/**
+ * A data twin is an OVERLAY on the English value: plain objects merge key by key
+ * (so a twin may carry only the landers / stages translated so far), while
+ * strings, arrays and functions are replaced whole (a translation may split a
+ * message into a different number of bubbles). Whether a page may be served
+ * in a locale at all is decided before mount (coverage), never here.
+ */
+function isPlainObject(v: unknown): v is Record<string, unknown> {
+  if (v === null || typeof v !== "object" || Array.isArray(v)) return false;
+  const proto = Object.getPrototypeOf(v);
+  return proto === Object.prototype || proto === null;
+}
+
+export function overlay<T>(english: T, twin: unknown): T {
+  if (twin === undefined) return english;
+  if (!isPlainObject(twin) || !(isPlainObject(english) || isModuleNamespace(english))) return twin as T;
+  const out: Record<string, unknown> = { ...(english as Record<string, unknown>) };
+  for (const [k, v] of Object.entries(twin)) out[k] = overlay(out[k], v);
+  return out as T;
+}
+
+function isModuleNamespace(v: unknown): v is Record<string, unknown> {
+  return v !== null && typeof v === "object" && (v as { [Symbol.toStringTag]?: string })[Symbol.toStringTag] === "Module";
+}
+
+const merged = new Map<string, { english: unknown; twin: unknown; value: unknown }>();
+
 export function pickData<T>(locale: LocaleCode, key: string, english: T): T {
   if (locale === "en") return english;
   const twin = dataTwins.get(locale)?.get(key);
-  return (twin as T | undefined) ?? english;
+  if (twin === undefined) return english;
+  const memoKey = `${locale}\u0000${key}`;
+  const hit = merged.get(memoKey);
+  if (hit && hit.english === english && hit.twin === twin) return hit.value as T;
+  const value = overlay(english, twin);
+  merged.set(memoKey, { english, twin, value });
+  return value;
+}
+
+/** The registered twin itself (no overlay) — for coverage checks. */
+export function twinFor(locale: LocaleCode, key: string): unknown {
+  return locale === "en" ? undefined : dataTwins.get(locale)?.get(key);
 }
 
 /** Source texts requested in `locale` that had no translation (for QA pages). */
@@ -85,4 +123,5 @@ export function __resetI18nForTests(): void {
   catalogs.clear();
   dataTwins.clear();
   missing.clear();
+  merged.clear();
 }

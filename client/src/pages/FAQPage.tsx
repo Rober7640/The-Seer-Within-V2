@@ -1,7 +1,7 @@
 import { Link } from 'wouter';
 import { ArrowLeft, ChevronDown, ChevronUp } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { t } from "@/lib/i18n";
+import { t, pick } from "@/lib/i18n";
 import { tx } from "@/lib/rich";
 
 interface FAQItem {
@@ -351,7 +351,7 @@ export default function FAQPage() {
         </p>
 
         <div className="space-y-10">
-          {faqSections.map((section) => (
+          {pick('faq.sections', faqSections).map((section) => (
             <section key={section.title}>
               <h2 className="text-xl font-semibold text-white mb-4">{section.title}</h2>
               <FAQAccordion items={section.items} />

@@ -73,3 +73,23 @@ describe("resolveLocale", () => {
     expect(LOCALES.en.market.stripeLocale).toBeUndefined();
   });
 });
+
+describe("pickData overlay", () => {
+  const EN = { reads: { a: ["one"], b: ["two"] }, eyebrow: "Pull the card", fn: () => "en" };
+  it("a partial twin overlays only what it carries", () => {
+    registerData("fr-FR", "deck", { reads: { a: ["un"] }, eyebrow: "Tirez la carte" });
+    const v = pickData("fr-FR", "deck", EN);
+    expect(v.reads.a).toEqual(["un"]);
+    expect(v.reads.b).toEqual(["two"]);
+    expect(v.eyebrow).toBe("Tirez la carte");
+    expect(v.fn()).toBe("en");
+  });
+  it("arrays are replaced whole (a translation may have a different bubble count)", () => {
+    registerData("fr-FR", "msgs", { lines: ["un"] });
+    expect(pickData("fr-FR", "msgs", { lines: ["one", "two"] }).lines).toEqual(["un"]);
+  });
+  it("returns the same merged object on repeat calls (memoised)", () => {
+    registerData("fr-FR", "deck", { eyebrow: "x" });
+    expect(pickData("fr-FR", "deck", EN)).toBe(pickData("fr-FR", "deck", EN));
+  });
+});

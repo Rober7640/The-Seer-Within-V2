@@ -51,7 +51,7 @@ import { getLane, laneOpenerBeforeName, laneOpenerAfterName, laneQuestion } from
 import { resolveLane, laneEventProps } from '@/lib/laneAttribution'
 import { isSlidingCloseVariant } from '@shared/types'
 import { pairedBumpBucket, isBumpCopyVariant, resolveBumpCents, V1_BUMP_CENTS, type BumpTier } from '@shared/orderBump'
-import { t } from "@/lib/i18n";
+import { t, pick } from "@/lib/i18n";
 
 const STORAGE_KEY = 'seer_conversation'
 const SESSION_EXPIRY_HOURS = 24
@@ -2059,7 +2059,7 @@ export function useConversation() {
   // === BUCKET SELECTION HANDLER ===
 
   const handleBucketSelect = useCallback(async (bucket: Bucket) => {
-    addMessage('user', BUCKET_LABELS[bucket])
+    addMessage('user', pick('chat.bucketLabels', BUCKET_LABELS)[bucket])
     updateUserData({ bucket })
     updateState({ showBucketButtons: false, inputEnabled: false })
 
@@ -2068,7 +2068,7 @@ export function useConversation() {
 
     // If re-clarifying after topic mismatch, ask for a fresh concern matching the bucket
     if (isReClarifying) {
-      await sendBotMessage(t("Let's focus on {bucket} then, {firstName}...", { bucket: BUCKET_LABELS[bucket].toLowerCase(), firstName }))
+      await sendBotMessage(t("Let's focus on {bucket} then, {firstName}...", { bucket: pick('chat.bucketLabels', BUCKET_LABELS)[bucket].toLowerCase(), firstName }))
 
       // Clear the old mismatched concern and ask fresh
       updateUserData({ concern: null })

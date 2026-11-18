@@ -53,6 +53,14 @@ export interface LocaleDef {
    * Empty for English so English stays byte-identical.
    */
   suffix: { product: string; aweber: string };
+  /**
+   * Where this locale may be served. A visitor carrying it on any other page
+   * (another funnel, the V2 app) gets English for that visit, so no page is
+   * ever half translated. `funnels` = FunnelDef.posthog keys
+   * (shared/funnelConfig.ts); `paths` = exact non-funnel paths (legal pages).
+   * English serves everything (null).
+   */
+  serves: null | { funnels: readonly string[]; paths: readonly string[] };
 }
 
 export const LOCALES: Record<LocaleCode, LocaleDef> = {
@@ -63,6 +71,7 @@ export const LOCALES: Record<LocaleCode, LocaleDef> = {
     label: "English",
     market: { country: "US", currency: "usd", intl: "en-US", hotlineCountry: "US" },
     suffix: { product: "", aweber: "" },
+    serves: null,
   },
   "fr-FR": {
     code: "fr-FR",
@@ -72,6 +81,7 @@ export const LOCALES: Record<LocaleCode, LocaleDef> = {
     register: "vous",
     market: { country: "FR", currency: "eur", stripeLocale: "fr", intl: "fr-FR", hotlineCountry: "FR" },
     suffix: { product: " - FR", aweber: "-fr" },
+    serves: { funnels: ["fb", "tarot"], paths: ["/privacy", "/terms", "/refund"] },
   },
 };
 

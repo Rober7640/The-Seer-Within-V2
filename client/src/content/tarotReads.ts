@@ -37,7 +37,7 @@ import { SHADOW_READS } from './tarotReadsShadow'
 //                               the LLM reads her answer (falls back to static)
 
 import type { Bucket } from '@/types/chat'
-import { t } from "@/lib/i18n";
+import { t, pick } from "@/lib/i18n";
 
 export type TarotHook =
   // Decode-him hooks (read HIM, "tendency, never verdict").
@@ -7164,14 +7164,26 @@ export const DECKS: Record<TarotDeck, CardSetConfig> = {
   'return-mhf': RETURN_MHF,
 }
 
+// ── l10n ──────────────────────────────────────────────────────────────────────
+// Every read of the registry's COPY goes through these, so a locale's data twin
+// (client/src/l10n/<locale>/) overlays the English per deck / hook. For English
+// pick() returns the objects themselves, so nothing an English visitor sees can
+// change. Structure checks (isTarotDeck, the hook rosters) stay on the English.
+const decksL = () => pick('tarot.decks', DECKS)
+const questionsL = () => pick('tarot.questions', TAROT_QUESTION)
+const shadowL = () => pick('tarot.shadow', SHADOW_READS)
+/** The lander's printed question (HEADLINES), in the visitor's locale. */
+export function headlineFor(hook: TarotHook): string {
+  return pick('tarot.headlines', HEADLINES)[hook]
+}
 export function getDeck(deck: TarotDeck): CardSetConfig {
-  return DECKS[deck]
+  return decksL()[deck]
 }
 
 // The S1 tap instruction for a hook on a deck. The deck's own line unless that hook overrides
 // it — which the money hooks do, because return-mhf's line names a man.
 export function instructionFor(deck: TarotDeck, hook: TarotHook | null): string {
-  const cfg = DECKS[deck]
+  const cfg = decksL()[deck]
   return (hook && cfg.hookInstruction?.[hook]) || cfg.instruction
 }
 
@@ -7221,9 +7233,9 @@ export function parseTarotParams(
   const deckParam = p.get('deck')
   const deck: TarotDeck = isTarotDeck(deckParam) ? deckParam : DEFAULT_DECK
   // The tapped card must be one this deck actually offers.
-  if (!DECKS[deck].options.includes(card)) return null
+  if (!decksL()[deck].options.includes(card)) return null
   // The hook must carry reads for this deck; otherwise no tarot divergence.
-  if (!DECKS[deck].reads[hook]) return null
+  if (!decksL()[deck].reads[hook]) return null
 
   const vParam = p.get('v')
   const version: TarotVersion = vParam === 'b' ? 'b' : vParam === 'c' ? 'c' : 'a'
@@ -7236,7 +7248,7 @@ export function parseTarotParams(
 // rejects combos without reads), so the DEFAULT_HOOK fallback never fires in
 // practice — it keeps the lookup total for TypeScript.
 function readsFor(deck: TarotDeck, hook: TarotHook): Record<TarotOption, string[]> {
-  return DECKS[deck].reads[hook] ?? DECKS[deck].reads[DEFAULT_HOOK]!
+  return decksL()[deck].reads[hook] ?? decksL()[deck].reads[DEFAULT_HOOK]!
 }
 
 /**
@@ -7258,7 +7270,7 @@ function readsForMethod(
   method: TarotMethod,
 ): Record<TarotOption, string[]> {
   if (method === 'shadow') {
-    const shadow = SHADOW_READS[deck]?.[hook]
+    const shadow = shadowL()[deck]?.[hook]
     if (shadow) return shadow
   }
   return readsFor(deck, hook)
@@ -7272,7 +7284,7 @@ export function cardReveal(deck: TarotDeck, hook: TarotHook, card: TarotOption):
 // Version A — brief chat greeting AFTER the card (don't re-deliver the reveal;
 // acknowledge it and hand into name capture).
 export function greetingA(deck: TarotDeck, card: TarotOption): string {
-  const d = DECKS[deck]
+  const d = decksL()[deck]
   return t("Mmm… {card}. I felt it {chooseMoment}. The connection only opens once I know who I'm speaking with, though… what's your first name, dear?", { card: d.mark[card], chooseMoment: d.chooseMoment })
 }
 
@@ -7295,7 +7307,7 @@ export interface TarotCardArt {
 }
 
 export function cardArtFor(deck: TarotDeck, card: TarotOption): TarotCardArt {
-  const cfg = DECKS[deck] ?? DECKS[DEFAULT_DECK]
+  const cfg = decksL()[deck] ?? decksL()[DEFAULT_DECK]
   const strip = cfg.revealStrip ?? cfg.strip
   const count = cfg.options.length
   const i = Math.max(0, cfg.options.indexOf(card))
@@ -7363,7 +7375,7 @@ export function openerB(
   method: TarotMethod = 'natural',
 ): string[] {
   const [beat1, ...rest] = readsForMethod(deck, hook, method)[card]
-  const picture = PICTURE_HOOKS.has(hook) ? DECKS[deck].cardPicture?.[card] : undefined
+  const picture = PICTURE_HOOKS.has(hook) ? decksL()[deck].cardPicture?.[card] : undefined
   return [
     ...intoBubbles(beat1WithPicture(beat1, picture)),
     ...rest.flatMap(intoBubbles),
@@ -7374,7 +7386,7 @@ export function openerB(
 // Version C opener (static, instant): the card line (sentence 1) + the open
 // question. Then the LLM reads HER answer.
 export function openerCStart(deck: TarotDeck, hook: TarotHook, card: TarotOption): string[] {
-  return [readsFor(deck, hook)[card][0], TAROT_QUESTION[hook]]
+  return [readsFor(deck, hook)[card][0], questionsL()[hook]]
 }
 
 // Version C fallback (if the reflect LLM call fails): the rest of the static
