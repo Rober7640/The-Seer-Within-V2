@@ -50,6 +50,7 @@ import { trackGAdsLead, trackGAdsCheckout, getGclid } from '@/lib/gtm'
 import { isSlidingCloseVariant } from '@shared/types'
 import { pairedBumpBucket, isBumpCopyVariant, resolveBumpCents, V1_BUMP_CENTS, type BumpTier } from '@shared/orderBump'
 import { t, pick } from "@/lib/i18n";
+import { nameFromAnswer } from "@/lib/langPack";
 
 const STORAGE_KEY = 'seer_conversation'
 const SESSION_EXPIRY_HOURS = 24
@@ -741,8 +742,7 @@ export function useConversation() {
   )
 
   const handleNameCapture = useCallback(async (input: string) => {
-    const firstName = input.trim().split(' ')[0]
-    const capitalized = firstName.charAt(0).toUpperCase() + firstName.slice(1).toLowerCase()
+    const capitalized = nameFromAnswer(input, 'self')
     updateUserData({ firstName: capitalized })
 
     // Palm "quiz bridge" traffic: the ad hook already told us the topic, so skip
@@ -1061,8 +1061,7 @@ export function useConversation() {
   }, [chat.userData, sendBotMessage, sendBotMessages, updateState, updateUserData])
 
   const handlePersonNameCapture = useCallback(async (input: string) => {
-    const personName = input.trim().split(' ')[0]
-    const capitalized = personName.charAt(0).toUpperCase() + personName.slice(1).toLowerCase()
+    const capitalized = nameFromAnswer(input, 'other')
     updateUserData({ personName: capitalized })
 
     // no-optin variant: skip the email anchor, go straight into the reading.

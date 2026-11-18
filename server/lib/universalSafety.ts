@@ -7,6 +7,11 @@ import { db } from './db';
 import { safetyViolations } from '@shared/schema';
 import logger from './logger';
 import { getHotlineForCountry, buildCrisisResponse, buildSoftCrisisNote, buildCrisisDisclaimer } from './crisisHotlines';
+import { msg } from '@shared/i18n';
+import { localeDef, type LocaleCode } from '@shared/locales';
+import { foldText } from '@shared/lang/fold';
+import type { LangPack } from '@shared/lang/types';
+import { requestLangPack, requestLocale, tl } from './locale';
 
 // ============================================================
 // Types
@@ -53,43 +58,50 @@ export interface ViolationLogEntry {
 // Safety Responses
 // ============================================================
 
+// Copy: each reply is a catalog key (msg), translated where it is used (respond).
+// `{language}` is the session language's own name (LocaleDef.languageName).
 const SAFETY_RESPONSES: Record<ViolationType, string> = {
-  crisis:
+  crisis: msg(
     "I need to pause here - what you're sharing sounds very serious.\n" +
     'Please reach out to someone who can truly help:\n' +
     '  - 988 Suicide & Crisis Lifeline (call or text 988)\n' +
     '  - Crisis Text Line: Text HOME to 741741\n' +
-    'Your life matters. Please reach out to them right now.',
+    'Your life matters. Please reach out to them right now.'),
 
-  inappropriate:
+  inappropriate: msg(
     "I'm going to stop you right there.\n" +
     'This is a space for spiritual guidance, not that kind of conversation.\n' +
     "If you're here for genuine help, I'm happy to continue.\n" +
-    "Otherwise, I'll need to end this session.",
+    "Otherwise, I'll need to end this session."),
 
-  prompt_injection:
+  prompt_injection: msg(
     "That's not really what I'm here for, love.\n" +
     "I'm here to guide you — your path, your energy, your questions about life.\n" +
-    "What's actually on your heart right now?",
+    "What's actually on your heart right now?"),
 
-  harassment:
+  harassment: msg(
     "I don't respond to hostility.\n" +
     "If you'd like to have a respectful conversation, I'm here.\n" +
-    "Otherwise, I think we're done.",
+    "Otherwise, I think we're done."),
 
-  gibberish:
+  gibberish: msg(
     'I sense confusion in your energy...\n' +
     'Take a breath. Center yourself.\n' +
-    "Tell me clearly - what's truly on your mind?",
+    "Tell me clearly - what's truly on your mind?"),
 
-  non_english:
-    'My readings are conducted in English.\n' +
-    'Please send your message in English and I will be happy to continue.',
+  non_english: msg(
+    'My readings are conducted in {language}.\n' +
+    'Please send your message in {language} and I will be happy to continue.'),
 
-  minor:
+  minor: msg(
     "I appreciate you reaching out, but this service is for adults 18 and older.\n" +
-    "Please come back when you're of age. Take care of yourself. 💛",
+    "Please come back when you're of age. Take care of yourself. 💛"),
 };
+
+/** A fixed safety reply in the session's language. English = the text above. */
+function respond(type: ViolationType, locale: LocaleCode): string {
+  return tl(locale, SAFETY_RESPONSES[type], { language: localeDef(locale).languageName });
+}
 
 // ============================================================
 // Pattern Definitions
@@ -97,11 +109,11 @@ const SAFETY_RESPONSES: Record<ViolationType, string> = {
 
 // Neutral note prepended to the persona's response when passive ideation is detected.
 // Deliberately brief — the persona continues normally below it.
-const SOFT_CRISIS_NOTE =
+const SOFT_CRISIS_NOTE = msg(
   '---\n' +
   'If things ever feel too heavy: **988 Suicide & Crisis Lifeline** (call or text 988)' +
   ' · Text HOME to **741741**\n' +
-  '---\n\n';
+  '---\n\n');
 
 // Passive ideation patterns — these do NOT block the conversation but trigger SOFT_CRISIS_NOTE.
 // Phrases users in emotional distress commonly use without stating explicit intent to harm.
@@ -187,8 +199,16 @@ const CRISIS_DENIAL_TAIL = new RegExp(
   'i',
 );
 
-function isDeniedCrisisMatch(text: string, matchIndex: number): boolean {
-  return CRISIS_DENIAL_TAIL.test(text.slice(Math.max(0, matchIndex - 48), matchIndex));
+function isDeniedCrisisMatch(
+  text: string,
+  matchIndex: number,
+  tail: RegExp = CRISIS_DENIAL_TAIL,
+  packTail?: RegExp,
+): boolean {
+  const before = text.slice(Math.max(0, matchIndex - 48), matchIndex);
+  // packTail (non-English session): the session language's denials, on folded text,
+  // so the French entries above are denial-aware in a French session too.
+  return tail.test(before) || (!!packTail && packTail.test(foldText(before)));
 }
 
 /**
@@ -197,15 +217,20 @@ function isDeniedCrisisMatch(text: string, matchIndex: number): boolean {
  * 'denied' — crisis phrases found, but every one sits in a denial context → soft note.
  * 'none'   — no crisis phrase at all.
  */
-function scanCrisis(text: string): 'hard' | 'denied' | 'none' {
+function scanCrisis(
+  text: string,
+  patterns: RegExp[] = CRISIS_PATTERNS,
+  tail: RegExp = CRISIS_DENIAL_TAIL,
+  packTail?: RegExp,
+): 'hard' | 'denied' | 'none' {
   let denied = false;
-  for (const pattern of CRISIS_PATTERNS) {
+  for (const pattern of patterns) {
     let offset = 0;
     while (offset < text.length) {
       const m = pattern.exec(text.slice(offset));
       if (!m) break;
       const abs = offset + m.index;
-      if (!isDeniedCrisisMatch(text, abs)) return 'hard';
+      if (!isDeniedCrisisMatch(text, abs, tail, packTail)) return 'hard';
       denied = true;
       offset = abs + Math.max(1, m[0].length);
     }
@@ -319,9 +344,9 @@ const MINOR_PATTERNS: RegExp[] = [
  * Checks if a message indicates the user is a minor (under 18).
  * Numeric age patterns are checked against the captured age value.
  */
-function indicatesMinor(message: string): boolean {
+function indicatesMinor(message: string, patterns: RegExp[] = MINOR_PATTERNS): boolean {
   const trimmed = message.trim();
-  for (const pattern of MINOR_PATTERNS) {
+  for (const pattern of patterns) {
     const match = pattern.exec(trimmed);
     if (match) {
       // If the pattern captured a numeric age, verify it's under 18
@@ -480,6 +505,22 @@ function isNonEnglish(message: string): boolean {
   return false;
 }
 
+/**
+ * Non-English session: the buyer may write the session language OR English
+ * (both are answered), so only a THIRD language is turned away. Non-Latin
+ * script is unambiguous; otherwise it takes the pack's threshold of
+ * high-confidence words from the other languages.
+ */
+function isThirdLanguage(message: string, pack: LangPack): boolean {
+  const trimmed = message.trim();
+  if (trimmed.length < 8) return false;
+  if (NON_LATIN_SCRIPT.test(trimmed)) return true;
+  const hits = foldText(trimmed)
+    .split(/\s+/)
+    .filter((w) => pack.safety.foreignWords.has(w.replace(/[^a-z]/g, ''))).length;
+  return hits >= pack.safety.foreignThreshold;
+}
+
 // ============================================================
 // Main Safety Check
 // ============================================================
@@ -490,22 +531,33 @@ function isNonEnglish(message: string): boolean {
  * Returns { safe: true } for passing messages.
  * Performance target: <50ms.
  */
-export function checkUniversalSafety(message: string): SafetyCheckResult {
+export function checkUniversalSafety(message: string, locale: LocaleCode = requestLocale()): SafetyCheckResult {
   if (!message || typeof message !== 'string') {
     return { safe: true, violationType: null, response: null, confidence: 1 };
   }
 
   const trimmed = message.trim();
 
+  // Non-English session: its language pack runs ALONGSIDE every English check
+  // below (buyers mix languages), on the folded text. English: pack is null and
+  // every check is exactly the English one.
+  const pack = requestLangPack(locale);
+  const folded = pack ? foldText(trimmed) : '';
+  const packHit = (patterns: RegExp[]) => !!pack && patterns.some((p) => p.test(folded));
+
   // 1. Crisis detection - FIRST and most strict. A crisis phrase inside an explicit
   //    denial ("I'm NOT going to hurt myself") downgrades to the soft note instead of
   //    the hard template (2026-07-14 audit false-positive fix).
-  const crisisScan = scanCrisis(trimmed);
+  let crisisScan = scanCrisis(trimmed, CRISIS_PATTERNS, CRISIS_DENIAL_TAIL, pack?.safety.crisisDenialTail);
+  if (pack && crisisScan !== 'hard') {
+    const packScan = scanCrisis(folded, pack.safety.crisis, pack.safety.crisisDenialTail);
+    if (packScan !== 'none') crisisScan = packScan;
+  }
   if (crisisScan === 'hard') {
     return {
       safe: false,
       violationType: 'crisis',
-      response: SAFETY_RESPONSES.crisis,
+      response: respond('crisis', locale),
       confidence: 0.95,
     };
   }
@@ -515,7 +567,7 @@ export function checkUniversalSafety(message: string): SafetyCheckResult {
       violationType: 'crisis',
       response: null,
       confidence: 0.6,
-      softCrisisNote: SOFT_CRISIS_NOTE,
+      softCrisisNote: tl(locale, SOFT_CRISIS_NOTE),
     };
   }
 
@@ -528,17 +580,26 @@ export function checkUniversalSafety(message: string): SafetyCheckResult {
         violationType: 'crisis',
         response: null,
         confidence: 0.7,
-        softCrisisNote: SOFT_CRISIS_NOTE,
+        softCrisisNote: tl(locale, SOFT_CRISIS_NOTE),
       };
     }
   }
+  if (pack && packHit(pack.safety.softCrisis)) {
+    return {
+      safe: true,
+      violationType: 'crisis',
+      response: null,
+      confidence: 0.7,
+      softCrisisNote: tl(locale, SOFT_CRISIS_NOTE),
+    };
+  }
 
   // 2. Minor/underage detection — service is 18+ only
-  if (indicatesMinor(trimmed)) {
+  if (indicatesMinor(trimmed) || (pack && indicatesMinor(folded, pack.safety.minor))) {
     return {
       safe: false,
       violationType: 'minor',
-      response: SAFETY_RESPONSES.minor,
+      response: respond('minor', locale),
       confidence: 0.9,
     };
   }
@@ -546,11 +607,12 @@ export function checkUniversalSafety(message: string): SafetyCheckResult {
   // 3. Non-English detection — runs before other checks so non-English bypass attempts
   //    (e.g. prompt injection or sexual content in another language) are blocked.
   //    Crisis check above already runs first so users in crisis still get the 988 response.
-  if (isNonEnglish(trimmed)) {
+  //    In a non-English session only a THIRD language is turned away (isThirdLanguage).
+  if (pack ? isThirdLanguage(trimmed, pack) : isNonEnglish(trimmed)) {
     return {
       safe: false,
       violationType: 'non_english',
-      response: SAFETY_RESPONSES.non_english,
+      response: respond('non_english', locale),
       confidence: 0.85,
     };
   }
@@ -561,10 +623,18 @@ export function checkUniversalSafety(message: string): SafetyCheckResult {
       return {
         safe: false,
         violationType: 'inappropriate',
-        response: SAFETY_RESPONSES.inappropriate,
+        response: respond('inappropriate', locale),
         confidence: 0.9,
       };
     }
+  }
+  if (pack && packHit(pack.safety.inappropriate)) {
+    return {
+      safe: false,
+      violationType: 'inappropriate',
+      response: respond('inappropriate', locale),
+      confidence: 0.9,
+    };
   }
 
   // 4. Prompt injection
@@ -573,10 +643,18 @@ export function checkUniversalSafety(message: string): SafetyCheckResult {
       return {
         safe: false,
         violationType: 'prompt_injection',
-        response: SAFETY_RESPONSES.prompt_injection,
+        response: respond('prompt_injection', locale),
         confidence: 0.85,
       };
     }
+  }
+  if (pack && packHit(pack.safety.injection)) {
+    return {
+      safe: false,
+      violationType: 'prompt_injection',
+      response: respond('prompt_injection', locale),
+      confidence: 0.85,
+    };
   }
 
   // 5. Harassment
@@ -585,18 +663,26 @@ export function checkUniversalSafety(message: string): SafetyCheckResult {
       return {
         safe: false,
         violationType: 'harassment',
-        response: SAFETY_RESPONSES.harassment,
+        response: respond('harassment', locale),
         confidence: 0.9,
       };
     }
   }
+  if (pack && packHit(pack.safety.harassment)) {
+    return {
+      safe: false,
+      violationType: 'harassment',
+      response: respond('harassment', locale),
+      confidence: 0.9,
+    };
+  }
 
-  // 6. Gibberish
-  if (isGibberish(trimmed)) {
+  // 6. Gibberish (folded in a non-English session, so accented vowels count as vowels)
+  if (isGibberish(pack ? folded : trimmed)) {
     return {
       safe: false,
       violationType: 'gibberish',
-      response: SAFETY_RESPONSES.gibberish,
+      response: respond('gibberish', locale),
       confidence: 0.7,
     };
   }
@@ -654,20 +740,24 @@ export async function checkAndLogSafety(
     countryCode?: string | null;
   },
 ): Promise<SafetyCheckResult> {
-  const result = checkUniversalSafety(message);
+  const locale = requestLocale();
+  const result = checkUniversalSafety(message, locale);
 
   // For crisis violations, replace generic response with country-specific version
   if (result.violationType === 'crisis') {
-    const hotline = getHotlineForCountry(context.countryCode ?? null);
+    // No geo answer: English keeps today's default (US); another locale falls back
+    // to its own market's line, never to 988.
+    const fallbackCountry = locale === 'en' ? null : localeDef(locale).market.hotlineCountry;
+    const hotline = getHotlineForCountry(context.countryCode ?? fallbackCountry);
     const disclaimer = buildCrisisDisclaimer(hotline);
 
     if (!result.safe && result.response) {
       // Hard crisis — replace response with warm, localized message
-      result.response = buildCrisisResponse(hotline);
+      result.response = buildCrisisResponse(hotline, locale);
       result.crisisDisclaimer = disclaimer;
     } else if (result.safe && result.softCrisisNote) {
       // Soft crisis — replace note with localized version
-      result.softCrisisNote = buildSoftCrisisNote(hotline);
+      result.softCrisisNote = buildSoftCrisisNote(hotline, locale);
       result.crisisDisclaimer = disclaimer;
     }
   }

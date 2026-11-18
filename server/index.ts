@@ -8,6 +8,7 @@ import { startHeartbeat, recoverActiveSessions, startInactiveSessionCleanup } fr
 import { shouldRunBackgroundJobs } from "./lib/backgroundJobsGate";
 import { initializeCronJobs } from "./lib/cronJobs";
 import logger, { requestIdMiddleware } from "./lib/logger";
+import { localeMiddleware } from "./lib/locale";
 
 // Initialize Sentry for server-side error monitoring
 if (process.env.SENTRY_DSN) {
@@ -54,6 +55,9 @@ app.use(express.text({ type: 'text/plain' }));
 
 // Attach request IDs and log API requests
 app.use(requestIdMiddleware);
+// Locale from the seer_locale cookie, for everything below this request
+// (no cookie = English = today's behaviour). server/lib/locale.ts
+app.use(localeMiddleware);
 
 (async () => {
   await registerRoutes(httpServer, app);

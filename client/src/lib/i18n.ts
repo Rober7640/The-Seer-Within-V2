@@ -8,6 +8,7 @@
 
 import { pickData, registerCatalog, registerData, translate, type LocaleBundle, type Vars } from "@shared/i18n";
 import type { LocaleCode } from "@shared/locales";
+import { registerLangPack } from "@shared/lang/registry";
 import { currentLocale } from "./locale";
 
 export function t(text: string, vars?: Vars): string {
@@ -34,4 +35,5 @@ export async function loadLocale(locale: LocaleCode): Promise<void> {
   const { default: bundle } = await loader();
   registerCatalog(locale, bundle.catalog);
   for (const [key, value] of Object.entries(bundle.data ?? {})) registerData(locale, key, value);
+  if (bundle.lang) registerLangPack(bundle.lang);
 }

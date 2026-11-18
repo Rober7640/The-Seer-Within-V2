@@ -212,6 +212,21 @@ function compare(beforePath: string, afterPath: string): number {
     return m;
   };
   const b = count(before), a = count(after);
+  // Deliberate rewrites into {placeholder} keys (localize/baseline/rewrites.json),
+  // each with a test proving byte-identical English. Accepted only whole.
+  const rwPath = path.join(path.dirname(beforePath), "rewrites.json");
+  const accepted: string[] = [];
+  if (fs.existsSync(rwPath)) {
+    const { rewrites } = JSON.parse(fs.readFileSync(rwPath, "utf8")) as { rewrites: { file: string; before: string[]; after: string[]; proof: string }[] };
+    for (const rw of rewrites) {
+      const applies = rw.before.every((t) => (b.get(t) ?? 0) > (a.get(t) ?? 0)) && rw.after.every((t) => (a.get(t) ?? 0) > (b.get(t) ?? 0));
+      if (!applies) continue;
+      for (const t of rw.before) b.set(t, b.get(t)! - 1);
+      for (const t of rw.after) a.set(t, a.get(t)! - 1);
+      accepted.push(`${rw.file} (proof: ${rw.proof})`);
+    }
+  }
+  if (accepted.length) { console.log(`accepted ${accepted.length} listed rewrite(s):`); accepted.forEach((x) => console.log("  ~ " + x)); }
   const lost: string[] = [], gained: string[] = [];
   for (const [t, n] of b) if ((a.get(t) ?? 0) < n) lost.push(`${n - (a.get(t) ?? 0)}× ${t}`);
   for (const [t, n] of a) if ((b.get(t) ?? 0) < n) gained.push(`${n - (b.get(t) ?? 0)}× ${t}`);

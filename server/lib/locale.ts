@@ -8,14 +8,41 @@
 // registered once at import from shared/l10n/serverBundles.ts. Stripe webhooks have no cookie: they read `metadata.locale`,
 // which checkout creation writes from this function.
 
-import type { Request } from "express";
+import { AsyncLocalStorage } from "node:async_hooks";
+import type { NextFunction, Request, Response } from "express";
 import { LOCALE_COOKIE, resolveLocale, type LocaleCode } from "@shared/locales";
 import { pickData, registerCatalog, registerData, translate, type Vars } from "@shared/i18n";
 import { SERVER_BUNDLES } from "@shared/l10n/serverBundles";
+import { LANG_PACKS } from "@shared/lang/packs";
+import { langPackFor, registerLangPack } from "@shared/lang/registry";
+import type { LangPack } from "@shared/lang/types";
 import { parseCookies } from "./visitorCookie";
 
 export function localeFromRequest(req: Request): LocaleCode {
   return resolveLocale(parseCookies(req)[LOCALE_COOKIE]);
+}
+
+// The request's locale, readable anywhere below a request (prompts, safety,
+// sanitizers) without threading a parameter through every signature. Outside a
+// request — webhooks with no cookie, crons, scripts, tests — it is English.
+const store = new AsyncLocalStorage<LocaleCode>();
+
+export function localeMiddleware(req: Request, _res: Response, next: NextFunction): void {
+  store.run(localeFromRequest(req), next);
+}
+
+export function requestLocale(): LocaleCode {
+  return store.getStore() ?? "en";
+}
+
+/** Run `fn` with an explicit locale (webhooks that read metadata.locale, tests). */
+export function withLocale<T>(locale: LocaleCode, fn: () => T): T {
+  return store.run(locale, fn);
+}
+
+/** The language pack of this request's locale; null for English. */
+export function requestLangPack(locale: LocaleCode = requestLocale()): LangPack | null {
+  return langPackFor(locale);
 }
 
 /** Translate server copy for a known locale. English returns the source text. */
@@ -27,7 +54,8 @@ export function pickFor<T>(locale: LocaleCode, key: string, english: T): T {
   return pickData(locale, key, english);
 }
 
-// Register every shipped locale bundle once, at import.
+// Register every language pack and every shipped locale bundle once, at import.
+for (const pack of LANG_PACKS) registerLangPack(pack);
 for (const [code, bundle] of Object.entries(SERVER_BUNDLES) as [LocaleCode, NonNullable<(typeof SERVER_BUNDLES)[keyof typeof SERVER_BUNDLES]>][]) {
   registerCatalog(code, bundle.catalog);
   for (const [key, value] of Object.entries(bundle.data ?? {})) registerData(code, key, value);

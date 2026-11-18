@@ -5,6 +5,7 @@ import logger from './logger'
 import { fireWithBreaker, anthropicBreaker, isCircuitOpenError } from './circuitBreaker'
 import { getModelForOperation } from './modelConfig'
 import { sanitizePredictionsV1 } from './predictionSanitizer'
+import { requestLangPack, requestLocale, tl } from './locale'
 import type { UserData } from '../../shared/types'
 import {
   buildReading1Prompt,
@@ -44,11 +45,16 @@ async function callClaude(prompt: string): Promise<ClaudeResponse> {
     // model, byte-identical to previous behavior. Set to 'claude-sonnet-5' on dev/local to test
     // the migration; V2 (chatEngine.ts) is unaffected — it never reads this.
     const model = process.env.V1_CONVERSATION_MODEL?.trim() || getModelForOperation('conversation')
+    // Non-English session: the prompts stay English (one source of truth for the
+    // reading's logic) and the language pack's output block says what language,
+    // register and conventions to WRITE in. English: the prompt, unchanged.
+    const outputBlock = requestLangPack()?.outputBlock
+    const content = outputBlock ? `${prompt}\n\n${outputBlock}` : prompt
     const response = await fireWithBreaker(anthropicBreaker, () =>
       anthropic.messages.create({
         model,
         max_tokens: 1000,
-        messages: [{ role: 'user', content: prompt }],
+        messages: [{ role: 'user', content }],
         // Sonnet 5 runs adaptive thinking ON when `thinking` is omitted; a leading thinking
         // block would make the JSON extraction below miss the text, and every V1 reply would
         // fall back to canned messages. Disable thinking on Sonnet 5. Older models (e.g. 4.5)
@@ -91,10 +97,11 @@ async function callClaude(prompt: string): Promise<ClaudeResponse> {
 }
 
 function getFallbackMessages(): string[] {
+  const locale = requestLocale()
   return [
-    "I sense something shifting in your energy...",
-    "Let me focus more deeply...",
-    "There's more here than meets the eye...",
+    tl(locale, "I sense something shifting in your energy..."),
+    tl(locale, "Let me focus more deeply..."),
+    tl(locale, "There's more here than meets the eye..."),
   ]
 }
 

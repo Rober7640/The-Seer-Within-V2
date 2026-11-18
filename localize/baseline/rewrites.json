@@ -1,0 +1,23 @@
+{
+  "_why": "Source strings deliberately rewritten into catalog keys with {placeholders}. Each rewrite renders byte-identical English; the test named in `proof` asserts the exact English output. literal-inventory --compare accepts a rewrite only when ALL its `before` texts are gone and ALL its `after` texts are present.",
+  "rewrites": [
+    {
+      "file": "server/lib/crisisHotlines.ts",
+      "before": ["Since you're in ${}, you can reach out to:", "If you're in immediate danger, please call emergency services (${}) right now.", "If things ever feel too heavy: **${}** (${})"],
+      "after": ["Since you're in {country}, you can reach out to:", "If you're in immediate danger, please call emergency services ({emergency}) right now.", "If things ever feel too heavy: {line}"],
+      "proof": "tests/l10n/lang-fr.test.ts › English session unchanged › English crisis builder is byte-identical"
+    },
+    {
+      "file": "server/lib/refundDeflection.ts",
+      "before": ["not through the readings here. Please email", "from the address on your"],
+      "after": ["not through the readings here. Please email {email} from the address on your"],
+      "proof": "tests/l10n/lang-fr.test.ts › English session unchanged › English refund reply is the original template"
+    },
+    {
+      "file": "server/lib/universalSafety.ts",
+      "before": ["My readings are conducted in English.", "Please send your message in English and I will be happy to continue."],
+      "after": ["My readings are conducted in {language}.", "Please send your message in {language} and I will be happy to continue."],
+      "proof": "tests/l10n/lang-fr.test.ts › English session unchanged › English non_english text is the original"
+    }
+  ]
+}
