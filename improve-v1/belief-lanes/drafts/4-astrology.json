@@ -1,0 +1,334 @@
+{
+ "id": "astrology",
+ "num": 4,
+ "name": "Astrology",
+ "link": "/fb?lane=astrology",
+ "status": "Test run, written from scratch. Complete copy, awaiting approval",
+ "belief": "Astrology is right about how she was born to love. A lesson somebody taught her later, about how long to wait, sits on top of her sign and answers first. That's why a man she's so compatible with keeps her close and never chooses her all the way.",
+ "words": [
+  "**Source.** Live DB, read only (`lane_words.mjs`, `LIVE_AUDIT_CONFIRM=1`): love and someone chats, past 365 days, short answer columns only. Base 90,520 chats, 6,653 paid (7.3%). Our traffic is the astrology audience, so these chats are the right source for this lane. Compare words with each other, not with 7.3%.",
+  "**She names signs. She rarely says \"astrology\".** Ten sign names (Cancer and Leo left out, because they also match illness and men's names): 365 chats, 45 paid (12.3%). \"Astrology\" or \"astrologer\": 26 chats (6 paid). Horoscope 17, zodiac 15, \"my / his / your sign\" 15, star sign 5. Most named: Scorpio 73, Taurus 55, Aries 53, Gemini 53, Virgo 48, Capricorn 47, Aquarius 46. Typical line: \"he is a Scorpio and I am a Gemini\".",
+  "**She uses his sign to explain him.** \"He's Virgo. They do that.\" \"Keeps going hot & cold… apparently because he's a Gemini.\" \"Loving, caring but sometimes distant\" (an Aquarius). Astrology chats that also say distant, cold, walls, ghosting or pulled away: 46 chats, 10 paid (21.7%), the strongest pairing in the pull. So the page lets astrology explain him, and Evelyn looks at her.",
+  "**A quarter of her astrology chats are about commitment.** Of the 414 chats with any astrology word, 107 also say commit, marry or marriage (18 paid, 16.8%). Across all love chats: commit 1,661 chats (206 paid), \"choose me / never chooses me\" 384 (39 paid), \"just friends\" 193 (35 paid, 18.1%), \"won't / never marry\" 27 (6 paid, 22.2%). These are both ads' story words, so the page says \"won't commit\" and \"never chooses you all the way\".",
+  "**\"Compatible\" is her concept word.** Compatible or compatibility: 155 chats (17 paid, 11.0%). \"Good / perfect / true match\": 41 (10 paid, 24.4%), as in \"I know he's my perfect match in every way\". \"The stars\": 29 chats (8 paid, 27.6%), as in \"I wish but I really don't think it's in the stars\".",
+  "**The jargon is almost absent.** Birth or natal chart 4 chats, Saturn 2, retrograde 2, synastry 2, eclipse 3, moon sign or rising about 29 (some are false hits like \"rising level\"). The women who do use it go deep (\"Aries, Leo rising, Scorpio moon\"). So each jargon term goes in once, in the list.",
+  "**What the bans cost.** \"Soulmate\" appears in 104 of the ~470 chats that name an astrology word, about 1 in 5. Twin flame 21 and karmic or past life 13 (4 paid) also turn up there. All three stay off this page: soul is banned, and twin flame and karmic are their own lanes later.",
+  "**Not pulled in this run:** Instagram and TikTok (Virlo), the Meta Ad Library and Reddit. No paid calls were allowed. The list's community terms come from the buyer chats' own jargon lines and plain astrology vocabulary, not from a fresh social pull."
+ ],
+ "keywords": [
+  {
+   "role": "Main",
+   "words": "astrology, astrologer (the audience's interest word, for Meta; buyers rarely type it)"
+  },
+  {
+   "role": "Second",
+   "words": "compatible, compatibility (155 buyer chats; her concept word)"
+  },
+  {
+   "role": "Buyer's own word",
+   "words": "**sign**: his sign, your sign. She names signs (365+ chats name one, Scorpio most) and uses his to explain him"
+  },
+  {
+   "role": "Supporting",
+   "words": "the stars, birth chart, commit (the ads' story word, 1,661 chats)"
+  },
+  {
+   "role": "Once each (community terms)",
+   "words": "horoscope, zodiac, moon sign, rising, Mercury retrograde"
+  },
+  {
+   "role": "Keep out",
+   "words": "soulmate (soul is banned; ~1 in 5 astrology chats use it), twin flame and karmic (their own lanes), prediction words (forecast, destiny, will he come back), reading, psychic, money and career words"
+  }
+ ],
+ "kw": [
+  {
+   "key": "astro",
+   "label": "astrology / astrologer",
+   "regex": "\\bastrolog\\w*",
+   "target": "6–8",
+   "lo": 6,
+   "hi": 8
+  },
+  {
+   "key": "compat",
+   "label": "compatible / compatibility",
+   "regex": "\\bcompatib\\w*",
+   "target": "3–4",
+   "lo": 3,
+   "hi": 4
+  },
+  {
+   "key": "moon",
+   "label": "moon sign",
+   "regex": "\\bmoon signs?\\b",
+   "target": "1",
+   "lo": 1,
+   "hi": 1
+  },
+  {
+   "key": "sign",
+   "label": "sign (buyer word)",
+   "regex": "\\bsigns?\\b",
+   "target": "3–5",
+   "lo": 3,
+   "hi": 5
+  },
+  {
+   "key": "stars",
+   "label": "the stars",
+   "regex": "\\bthe stars\\b",
+   "target": "1–2",
+   "lo": 1,
+   "hi": 2
+  },
+  {
+   "key": "chart",
+   "label": "birth chart",
+   "regex": "\\bbirth charts?\\b",
+   "target": "1–2",
+   "lo": 1,
+   "hi": 2
+  },
+  {
+   "key": "commit",
+   "label": "commit",
+   "regex": "\\bcommit\\w*",
+   "target": "2–3",
+   "lo": 2,
+   "hi": 3
+  },
+  {
+   "key": "horo",
+   "label": "horoscope",
+   "regex": "\\bhoroscopes?\\b",
+   "target": "1",
+   "lo": 1,
+   "hi": 1
+  },
+  {
+   "key": "zodiac",
+   "label": "zodiac",
+   "regex": "\\bzodiac\\b",
+   "target": "1",
+   "lo": 1,
+   "hi": 1
+  },
+  {
+   "key": "rising",
+   "label": "rising",
+   "regex": "\\brising\\b",
+   "target": "1",
+   "lo": 1,
+   "hi": 1
+  },
+  {
+   "key": "merc",
+   "label": "Mercury retrograde",
+   "regex": "\\bmercury retrograde\\b",
+   "target": "1",
+   "lo": 1,
+   "hi": 1
+  }
+ ],
+ "card": {
+  "v2": {
+   "h": "Something Is Blocking What Astrology Says Should Work — I Can See It",
+   "s": "Evelyn has sensed an old block in the way you love. It's why your signs match, and he still holds back. She can see where it started, from your first name.",
+   "b": "Yes Evelyn, Show Me Where It Started",
+   "sc": "It's free to message Evelyn. She's online now.",
+   "alts": [
+    "Something Under Your Sign Is Blocking Love — I Can See It",
+    "Something Is Blocking Love Your Signs Say Should Work — I Can See It"
+   ],
+   "why": "Why the pick: \"astrology\" is the fifth word, so Meta reads the lane from the first line. It names a problem, a block, and puts the block outside her astrology, so it never says her stars are wrong. It fits both ads: Jules's man calls her his friend, Laurel's won't marry her after six years, and in both it should be working and isn't. The first alternate fits more women (it doesn't assume their signs match) but loses the main keyword."
+  }
+ },
+ "meta": {
+  "title": "When Astrology Says You Match and He Still Won't Commit · Evelyn Cross",
+  "desc": "You know his sign. You've checked every compatibility chart. If he still won't choose you, an old lesson is answering first. It's free to message Evelyn.",
+  "alt": "Evelyn Cross, who helps women who follow astrology see why he won't commit."
+ },
+ "body": [
+  {
+   "t": "h",
+   "text": "When astrology says you match and he still won't commit"
+  },
+  {
+   "t": "p",
+   "text": "Your friends know his sign by now. They know yours too."
+  },
+  {
+   "t": "p",
+   "text": "One of them's said it out loud. \"You two are so compatible. What's he waiting for?\""
+  },
+  {
+   "t": "p",
+   "text": "He keeps you close. He's kind, mostly. He just never chooses you all the way."
+  },
+  {
+   "t": "p",
+   "text": "So you've looked for the reason in astrology. It's where you've always found answers. You've done more homework on him than he's ever done on you."
+  },
+  {
+   "t": "h",
+   "text": "What you've already asked the stars"
+  },
+  {
+   "t": "list",
+   "lead": "You've done the looking.",
+   "items": [
+    "His horoscope, before your own.",
+    "Every zodiac compatibility test you could find.",
+    "Your birth chart and his, side by side.",
+    "His moon sign and his rising, learned by heart.",
+    "A text you held back until Mercury retrograde was over.",
+    "Every video about his sign that sounded just like him."
+   ],
+   "closer": "None of it was wrong. It's just all been about him."
+  },
+  {
+   "t": "h",
+   "text": "Why he still won't choose you when you're compatible"
+  },
+  {
+   "t": "p",
+   "text": "Your sign is how you were born to love. Astrology gets that part right."
+  },
+  {
+   "t": "p",
+   "text": "But somebody taught you something later. Long before you met him."
+  },
+  {
+   "t": "p",
+   "text": "How much to ask for. How long to wait. How to be easy to keep around."
+  },
+  {
+   "t": "p",
+   "text": "That lesson sits on top of how you love. It answers first."
+  },
+  {
+   "t": "p",
+   "text": "So a man can match you on paper. He can match you in the stars. And you'll still be the one who waits."
+  },
+  {
+   "t": "p",
+   "text": "Evelyn finds where it started, from your first name."
+  },
+  {
+   "t": "h",
+   "text": "Who Evelyn is"
+  },
+  {
+   "t": "p",
+   "text": "Evelyn Cross is a seer in the west of Ireland. Her teacher could do this. So could her teacher's teacher."
+  },
+  {
+   "t": "p",
+   "text": "She works at night, by candlelight, one first name at a time."
+  },
+  {
+   "t": "p",
+   "text": "She'll never tell you astrology is wrong. Your sign is how you were born to love. She looks for what you learned after."
+  },
+  {
+   "t": "h",
+   "text": "When you send your first name"
+  },
+  {
+   "t": "p",
+   "text": "You send your first name. That's all."
+  },
+  {
+   "t": "p",
+   "text": "Evelyn writes back. Her first message is short. Then she'll ask you one question."
+  },
+  {
+   "t": "p",
+   "text": "Messaging Evelyn is free."
+  },
+  {
+   "t": "p",
+   "text": "If she sees where it started, she'll offer to write it down. A letter, written at night, by candlelight. That part isn't free. She'll tell you so plainly before anything happens."
+  },
+  {
+   "t": "p",
+   "text": "It starts the same way for every woman. One first name."
+  },
+  {
+   "t": "h",
+   "text": "Astrology and love: questions women ask"
+  },
+  {
+   "t": "faq",
+   "items": [
+    {
+     "q": "Why won't he commit if our signs are compatible?",
+     "a": "Your charts show how you two fit. An old lesson decides how long you'll wait. That's the part Evelyn looks at."
+    },
+    {
+     "q": "Can astrology explain why he won't choose me?",
+     "a": "It can tell you a lot about him. Why you stay is a different question. The answer goes back long before him."
+    },
+    {
+     "q": "Do I need my birth chart, or his?",
+     "a": "No. Evelyn only needs your first name."
+    },
+    {
+     "q": "Is it free to message Evelyn?",
+     "a": "Yes. The chat is free."
+    }
+   ]
+  },
+  {
+   "t": "ask"
+  }
+ ],
+ "chat": [
+  {
+   "who": "e",
+   "text": "You know his sign by heart, don't you."
+  },
+  {
+   "who": "e",
+   "text": "What's your first name, dear?"
+  },
+  {
+   "who": "me",
+   "text": "{her first name}"
+  },
+  {
+   "who": "e",
+   "text": "{Name}... you've checked how your signs fit. More than once."
+  },
+  {
+   "who": "e",
+   "text": "And still, he holds something back from you."
+  },
+  {
+   "who": "e",
+   "text": "Your sign is how you love. Somebody else taught you to wait."
+  },
+  {
+   "who": "q",
+   "text": "Tell me his sign, dear... and the one thing he still won't say to you."
+  }
+ ],
+ "chatnote": "Her answer gives his sign, her own vocabulary, and the unsaid thing (\"you're my girlfriend\", \"marry me\"). That fits Jules and Laurel alike. The unsaid thing is the lesson Evelyn names next: how long she learned to wait.",
+ "directive": "She came from a page about astrology and love: his sign, her sign, how compatible they are, and a man who keeps her close but never chooses her all the way. Reuse her words: the signs she names, 'compatible', and the thing he still won't say. Hold the lane's belief: her sign is how she was born to love, and a lesson somebody taught her later, about how long to wait, answers first. Take the signs she gives as how she sees him and herself, then turn to where the waiting started. Talk about signs as someone at home with them. Never tell her astrology is wrong, and never say what a sign means he'll do next.",
+ "notes": [
+  "<b>Every-ad fit.</b> Headline, sub-line and below-card copy against each ad. This Is My Friend (Jules: \"He introduced me as his friend.\") ✓: it should work, he keeps it as friendship, he holds back, never chooses her all the way, won't commit. He Still Doesn't Know (Laurel: \"I heard why he won't marry me.\" six years) ✓: six years should work, he holds back, \"won't commit\" covers won't marry. An astrology woman with no ad cut yet ✓ if she believes their signs match, ✗ if her charts say they clash (the first alternate headline fits her too). Neither story's own picture (the introduction, the overheard reason, the six years) is on the page: those stay in the ads.",
+  "<b>Evelyn is never set apart from astrology.</b> The operator (2026-11-18): \"in the world of spirituality, they are the same.\" The \"Is Evelyn an astrologer? No.\" heading and the birth-time line were cut. She never says astrology is wrong; the split is how she was born to love vs what she learned after.",
+  "<b>Nothing mocks astrology.</b> Every line takes it as true: \"Astrology gets that part right.\" \"None of it was wrong. It's just all been about him.\" The block sits on top of her sign, not in it. The FAQ answer \"It can tell you a lot about him\" grants astrology its own ground before turning to her.",
+  "The friend's line (\"You two are so compatible. What's he waiting for?\") is a composite, not a buyer quote. It's worded to fit his friend, a boyfriend, or six years in.",
+  "\"Sign\" is capped at 4 on purpose. It's her word, but past 5 it starts to repeat inside sections. \"Compatible\" carries the rest of her vocabulary.",
+  "The photo description runs 13 words, one descriptive sentence by design."
+ ],
+ "open": [
+  "The headline assumes her signs match (\"What Astrology Says Should Work\"). It fits both ads, but a woman whose charts say they clash may not see herself. Keep it, or take the first alternate (\"Something Under Your Sign Is Blocking Love\"), which fits every astrology woman but drops the main keyword from the card?",
+  "Evelyn asks for his sign in the first question, though she never interprets it. Keep it (her vocabulary, a concrete hook for later messages), or ask only for what he still won't say?",
+  "An exception for 'soulmate'? About 1 in 5 of the chats that name an astrology word use it.",
+  "Karmic and twin flame stay off this page for their own lanes. Karmic or past life is small in astrology chats (13 chats, 4 paid). Leave it out, or add it once in the FAQ?",
+  "Mercury retrograde, moon sign and rising: one mention each. Buyers almost never type them. Keep for Meta and the deep-astrology woman, or swap for plainer lines?"
+ ]
+}

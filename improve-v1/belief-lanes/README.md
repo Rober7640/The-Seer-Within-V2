@@ -29,6 +29,8 @@ Each headline has to fit **every** ad in its lane, not one cut. Every ad in a la
 | [`01-keyword-placement.md`](./01-keyword-placement.md) | The method: why keywords matter, the seven spots, how much is enough, signs of spam, voice rules, how to find a lane's words |
 | [`02-chat-openers.md`](./02-chat-openers.md) | The six-beat shape of Evelyn's first messages, what it replaces, and the derail risk to build for |
 | [`lanes/`](./lanes/) | Per lane: `<n>-<name>.json` is the **only copy source**, and `<n>-<name>.md` is rendered from it (don't hand-edit). Lanes 2 and 3 are still hand-written stubs |
+| [`HANDOFF.md`](./HANDOFF.md) | Where the work stands, the next action, locked decisions and guardrails (2026-11-18) |
+| [`drafts/`](./drafts/) | Lane JSONs written by the skill and waiting on the operator (astrology, pattern, family), each with its review notes. Approved ones move to `lanes/` |
 | [`review-pages/`](./review-pages/) | HTML sources of the review pages (links below) |
 | [`evidence/`](./evidence/) | One-off word-count scripts from the first two lanes, and the hand-written lane docs from before the JSON switch |
 
