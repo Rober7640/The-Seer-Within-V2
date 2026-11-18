@@ -234,7 +234,7 @@ export function PaiCardForm(props: {
   /** At least one wallet button actually drew on this device. */
   const [walletShown, setWalletShown] = useState(false);
   /** A wallet token waiting for a detail she still has to type (phone / address). */
-  const [heldWallet, setHeldWallet] = useState<{ token: string; name: string } | null>(null);
+  const [heldWallet, setHeldWallet] = useState<{ token: string; name: string; wallet: string } | null>(null);
   /**
    * Pay was pressed and the card is being secured by Payments.AI (createToken) —
    * 1-3 s on a phone, BEFORE the page's own `busy` starts. Without this the button
@@ -297,11 +297,9 @@ export function PaiCardForm(props: {
     if (props.busy || securingRef.current) return;
     const id = tokenIdOf(token);
     if (!id) return setLocalError('That payment did not go through. Please try again or pay by card.');
-    if (props.track) {
-      const kind = String(token?.method ?? token?.paymentInstrument?.method ?? '').toLowerCase();
-      const wallet = kind.includes('apple') ? 'apple_pay' : kind.includes('google') ? 'google_pay' : undefined;
-      trackPayClicked(props.track, 'wallet', wallet);
-    }
+    const kind = String(token?.method ?? token?.paymentInstrument?.method ?? '').toLowerCase();
+    const wallet = kind.includes('apple') ? 'apple_pay' : kind.includes('google') ? 'google_pay' : undefined;
+    if (props.track) trackPayClicked(props.track, 'wallet', wallet);
     const cardName = walletNameOf(token, extras, name) || 'Friend';
     let phoneNow = cleanPhoneOf(phone);
     if (askPhone && !isFullPhone(phoneNow)) {
@@ -313,8 +311,16 @@ export function PaiCardForm(props: {
     }
     const missing = missingDetail(phoneNow);
     if (missing) {
-      setHeldWallet({ token: id, name: cardName });
-      return setLocalError(`Almost done. ${missing.replace(/\.?$/, '.')} Then press the button below to finish.`);
+      // Hold the token and show ONLY what's still needed (phone / address): the card
+      // boxes hide while she finishes, and a calm note — not a red error — says what
+      // to do (Lewis + PH tester, 18 Nov: the old red box over a full card form
+      // confused people).
+      setHeldWallet({
+        token: id,
+        name: cardName,
+        wallet: wallet === 'apple_pay' ? 'Apple Pay' : wallet === 'google_pay' ? 'Google Pay' : 'Your wallet',
+      });
+      return setLocalError(null);
     }
     setLocalError(null);
     send(id, cardName, phoneNow, 'wallet');
@@ -460,10 +466,35 @@ export function PaiCardForm(props: {
     }
   }
 
-  const error = localError ?? props.error;
+  // While a NEW wallet payment is being finished, an older server error (e.g. the
+  // previous attempt's decline) is stale — hide it under the green note. A decline of
+  // THIS attempt clears heldWallet (effect above), so it still shows.
+  const error = localError ?? (heldWallet ? null : props.error);
+
+  /** Back to the full form (wallet buttons + card boxes), dropping the held wallet token. */
+  function switchToCard() {
+    setHeldWallet(null);
+    setLocalError(null);
+  }
 
   return (
     <form ref={formRef} onSubmit={submit} className="space-y-3" data-testid="pai-card-form">
+      {heldWallet && (
+        <div className="rounded-lg border border-emerald-400/40 bg-emerald-500/10 px-3 py-3 text-sm text-emerald-100" data-testid="pai-wallet-held">
+          <div className="font-semibold">✓ {heldWallet.wallet} approved</div>
+          <div className="mt-1 text-emerald-100/85">
+            Just {askPhone && askShipping ? 'add your phone number and shipping address' : askShipping ? 'add your shipping address' : 'add your phone number'} below, then press <strong>Finish payment</strong>.
+          </div>
+          <button type="button" onClick={switchToCard} className="mt-2 text-xs text-white/60 underline" data-testid="pai-wallet-change">
+            Use a different card instead
+          </button>
+        </div>
+      )}
+      {/* Wallet buttons + card boxes. While a wallet payment is being finished they are
+          HIDDEN (CSS only — the card iframes stay mounted, so "Use a different card"
+          brings them straight back). A normal card payment never sets heldWallet, so
+          for card buyers this block is exactly as before. */}
+      <div className={heldWallet ? 'hidden' : 'space-y-3'} data-testid="pai-card-section">
       {/* Apple Pay / Google Pay. Empty (zero height) when not available here. */}
       <div className="space-y-2" data-testid="pai-wallets">
         <div id={`${mountId}-apple`} className={walletBoxCls} data-testid="pai-apple-pay" />
@@ -529,6 +560,7 @@ export function PaiCardForm(props: {
           <Loader2 className="h-3 w-3 animate-spin" /> Loading secure card form…
         </div>
       )}
+      </div>
 
       {askPhone && (
         <div>
