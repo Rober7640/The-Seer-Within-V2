@@ -29,7 +29,7 @@ const PLAIN_URLS = [
   '/fb?',
   '/fb?lane=',
   '/fb?lane=nope',
-  '/fb?lane=astrology', // drafted, not approved — not in the registry
+  '/fb?lane=pattern', // drafted, not approved — not in the registry
   '/fb?lane=MANIFEST',
   '/fb?lane=__proto__',
   '/fb?lane=toString',
