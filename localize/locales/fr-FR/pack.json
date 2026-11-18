@@ -1,0 +1,67 @@
+{
+  "_doc": "Locale pack for funnel-localize. Language facts drive translation; market facts drive code (shared/locales.ts mirrors the market half). Decisions marked `decide` are proposals for the operator at Gate G2.",
+  "code": "fr-FR",
+  "language": "French (France)",
+  "register": "vous",
+  "buyerGender": {
+    "value": "feminine",
+    "decide": "The funnel's buyers are women (VOC). French must agree adjectives with her: « prête », « sûre ». Proposed: feminine by default."
+  },
+  "market": {
+    "country": "FR",
+    "currency": "EUR",
+    "stripeLocale": "fr",
+    "intl": "fr-FR",
+    "hotline": "FR (3114, SOS Amitié; emergency 112 / 15)",
+    "shipping": [
+      "FR",
+      "BE",
+      "LU",
+      "MC",
+      "CH",
+      "DE",
+      "ES",
+      "IT",
+      "NL",
+      "PT",
+      "AT",
+      "IE"
+    ],
+    "legal": "EU consumer law + French Code de la consommation; see legal.md"
+  },
+  "prices": {
+    "_note": "Same numbers as the US funnel, in euros, incl. VAT (TTC). Written « 35 € » / « 12,77 € » (comma decimals, space before €).",
+    "decide": "Mirror the US numbers 1:1 in EUR (proposed), or set a French table.",
+    "main": 35,
+    "downsell": 25,
+    "bump": 12.77,
+    "downsellBump": 9.77,
+    "upsell1": 47,
+    "upsell2": 47,
+    "upsell2Downsell": 30
+  },
+  "priceRule": "Three shapes in the English. (1) '${x}': the $ is a literal sign and {x} is a bare number → write '{x} €' (number, space, €). (2) '{price}', '{priceLabel}': the placeholder already holds the full amount with its currency → never add € or $ next to it. (3) a written amount like '$30' → '30 €' (same number). No '$' may remain in the French. The code formats the numbers fr-FR (comma decimals) and the checker makes the space before € non-breaking.",
+  "suffix": {
+    "product": " - FR",
+    "aweber": "-fr"
+  },
+  "lengthBands": {
+    "cta": 1.2,
+    "ui": 1.3,
+    "headline": 1.3,
+    "bubble": 1.35,
+    "server": 1.4,
+    "legal": 1.5
+  },
+  "doNotTranslate": [
+    "Evelyn Cross",
+    "Evelyn",
+    "The Seer Within",
+    "Luna Voss",
+    "Marcus Stone",
+    "Stripe",
+    "Apple Pay",
+    "Google Pay",
+    "PayPal"
+  ]
+}

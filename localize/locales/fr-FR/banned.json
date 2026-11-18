@@ -1,0 +1,31 @@
+{
+  "_doc": "Checked on every French segment (stage 4), on accent-folded lower-case text (foldText: é→e, ’→'). level fail = the segment must change; level review = a candidate the adjudicator looks at in context (these words are good French in other meanings). scope voice = only Evelyn's lines, headlines and reply buttons (kinds bubble, headline, cta); scope all = every segment. Text inside « » (a buyer's quoted words) is exempt from register rules. v2 after Codex's pack review 2026-11-18.",
+  "rules": [
+    { "group": "register", "level": "fail", "scope": "all", "pattern": "\\b(?:tu|toi|te)\\b|\\bt'(?=[a-z])|\\b(?:ta|tes)\\b", "fix": "vous / votre / vos (vous everywhere)" },
+    { "group": "register", "level": "review", "scope": "all", "pattern": "\\bton\\b", "fix": "possessive ton → votre (the noun « le ton » is fine)" },
+
+    { "group": "calque", "level": "fail", "scope": "voice", "pattern": "\\b(?:faire|fais|fait|faites|faisons|font|faisait|faisaient|faisais|fera|ferait|feront)\\s+(?:du\\s+)?sens\\b", "fix": "avoir du sens / c'est logique / ça veut dire quelque chose" },
+    { "group": "calque", "level": "fail", "scope": "all", "pattern": "\\b(?:prendre|prenez|prenons|prend|prennent|pris|prise|prises)\\s+(?:une\\s+|des\\s+)?actions?\\b", "fix": "agir / passer à l'action" },
+    { "group": "calque", "level": "fail", "scope": "all", "pattern": "\\b(?:faire|faites|faisons|fait|font)\\s+(?:une|votre|la|des|vos|les)\\s+decisions?\\b", "fix": "prendre une décision" },
+    { "group": "calque", "level": "fail", "scope": "all", "pattern": "\\b(?:appliquer|appliquez|applique|appliquent|appliquee?s?)\\s+pour\\s+(?:(?:un|une|le|la|ce|cet|cette)\\s+)?(?:poste|emploi|offre\\s+d'emploi)\\b", "fix": "postuler / présenter sa candidature" },
+    { "group": "calque", "level": "review", "scope": "all", "pattern": "\\bdefinitivement\\b", "fix": "fine for 'for good' (fermer définitivement); wrong for 'definitely' → vraiment / sans hésiter" },
+    { "group": "calque", "level": "review", "scope": "all", "pattern": "\\beventuellement\\b", "fix": "means 'possibly'; for 'eventually' → un jour / finalement / tôt ou tard" },
+    { "group": "calque", "level": "review", "scope": "all", "pattern": "\\bopportunites?\\b", "fix": "fine in moderation; often « occasion » / « chance » reads more natural" },
+    { "group": "calque", "level": "review", "scope": "voice", "pattern": "\\bexcitee?s?\\b", "fix": "'excited' → impatiente / heureuse / j'ai hâte (« excitée » has a sexual reading)" },
+    { "group": "calque", "level": "review", "scope": "all", "pattern": "\\brealis(?:er|ez|e|ent|ees?|es)\\s+(?:que\\b|qu')", "fix": "prefer se rendre compte que / comprendre que in Evelyn's voice" },
+    { "group": "calque", "level": "review", "scope": "all", "pattern": "\\bsupport(?:er|e|es|ez|ons|ent|ee?s?)\\b", "fix": "'support someone' → soutenir / accompagner; keep « supporter » for bear / tolerate / pay for" },
+    { "group": "calque", "level": "review", "scope": "all", "pattern": "\\badress(?:er|ez|e|ent|ees?|es)\\s+(?:ce|cet|cette|ces|le|la|les|vos|votre)\\s+(?:problemes?|blocages?|questions?|sujets?)\\b", "fix": "tackle → aborder / traiter / résoudre (addressing a question TO someone is fine)" },
+    { "group": "calque", "level": "review", "scope": "all", "pattern": "\\bc'est\\s+suppose\\s+(?:etre|faire|vous\\b)", "fix": "c'est censé…" },
+    { "group": "calque", "level": "review", "scope": "voice", "pattern": "\\bsentez-vous\\s+libre\\b|\\bn'hesitez\\s+pas\\s+a\\b", "fix": "customer-service register; say it as Evelyn would" },
+    { "group": "calque", "level": "review", "scope": "voice", "pattern": "^(?:en\\s+effet|par\\s+ailleurs|de\\s+plus|neanmoins),", "fix": "essay connector opening a chat line; fine once, not stacked" },
+    { "group": "calque", "level": "review", "scope": "voice", "pattern": "\\bdans\\s+un\\s+monde\\s+ou\\b|\\bil\\s+est\\s+important\\s+de\\s+noter\\b", "fix": "cliché" },
+
+    { "group": "promise", "level": "fail", "scope": "voice", "pattern": "\\bgaranti(?:e|es|s)?\\b(?!\\s+(?:de\\s+remboursement\\b|legales?\\b))|\\bje\\s+(?:vous\\s+)?garantis\\b", "fix": "no guaranteed outcome; the one allowed use is « garantie de remboursement »" },
+    { "group": "promise", "level": "fail", "scope": "voice", "pattern": "\\bje\\s+vous\\s+(?:le\\s+)?promets\\b", "fix": "je le sens / je le vois" },
+    { "group": "promise", "level": "fail", "scope": "voice", "pattern": "\\b100\\s*%(?!\\s+rembours(?:e|ee|es|ees)\\b)", "fix": "no certainty claims (« 100 % remboursée » is fine)" },
+    { "group": "promise", "level": "fail", "scope": "voice", "pattern": "\\bguer(?:ir(?:ai|as|a|ons|ez|ont|ais|ait|ions|iez|aient)?|i(?:e|es|s|t)?|iss(?:ant|ants|ante|antes|ons|ez|ent|ais|ait|ions|iez|aient)|isons?)\\b", "fix": "no healing claims; and don't keep the same medical claim under « apaiser »" },
+    { "group": "promise", "level": "review", "scope": "voice", "pattern": "(?<!pas\\s)\\bforcement\\b|\\ba\\s+coup\\s+sur\\b|\\bsans\\s+aucun\\s+doute\\b", "fix": "certainty about the future? (« pas forcément » is a hedge and fine)" },
+
+    { "group": "regional", "level": "fail", "scope": "all", "pattern": "\\b(?:magasiner|magasinage|chum)\\b", "fix": "Québec usage; France French" }
+  ]
+}
