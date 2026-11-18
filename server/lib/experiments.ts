@@ -354,6 +354,31 @@ export function matchesLanderScope(
 }
 
 /**
+ * Funnels whose landers are identified by (hook, deck) pairs — the only funnels
+ * `scope.landers` can say anything about.
+ */
+export const LANDER_SCOPED_FUNNELS: readonly string[] = ['v1-tarot'];
+
+/**
+ * Should `scope.landers` filter this subject at all?
+ *
+ * A lander list names /fb-tarot ad URLs. It has nothing to say about a funnel
+ * that has no (hook, deck) landers — /fb is ONE lander — so a test pooled across
+ * `scope.funnel: ['v1-fb', 'v1-tarot']` + a tarot lander list means "all of /fb,
+ * plus these tarot ads" (the Upsell-1 3-way price test, 2026-11-18).
+ *
+ * Only a context that NAMES a funnel outside LANDER_SCOPED_FUNNELS skips the
+ * filter. No funnel in the context keeps the filter, exactly as before. Every
+ * lander-scoped test before this one is also funnel-scoped to 'v1-tarot' only, so
+ * any other funnel was already turned away by matchesFunnelScope one line
+ * earlier — for those tests this is byte-identical.
+ */
+export function landerScopeApplies(contextFunnel: string | null | undefined): boolean {
+  if (typeof contextFunnel !== 'string' || contextFunnel.length === 0) return true;
+  return LANDER_SCOPED_FUNNELS.includes(contextFunnel);
+}
+
+/**
  * Authoritative variant for (experiment, subject) — sticky, config-gated,
  * scope-aware. Returns:
  *   - null                              if the experiment/subject is unknown
@@ -406,8 +431,14 @@ export async function assign(
   // Lander scope (per-AD-URL /fb-tarot tests): narrows to an explicit list of
   // (hook, deck) pairs, so a test on four ad URLs never enrols the other tarot
   // landers running alongside them. Absent scope.landers = no filter (every
-  // existing test unchanged).
-  if (!matchesLanderScope(exp.scope?.landers, context?.hook, context?.deck)) return controlArm;
+  // existing test unchanged). Applied only to funnels that HAVE such landers (see
+  // landerScopeApplies), so one test can pool all of /fb with a few tarot ads.
+  if (
+    landerScopeApplies(context?.funnel) &&
+    !matchesLanderScope(exp.scope?.landers, context?.hook, context?.deck)
+  ) {
+    return controlArm;
+  }
 
   // Concluded test → roll the declared winner out to the in-scope population:
   // not enrolled (test is over, no more exposures) but its payload IS applied,
@@ -901,17 +932,28 @@ function payloadCents(payload: Record<string, unknown> | undefined, field: strin
  * is written once to conversations.upsell1AmountCents at lead capture, so it is
  * sticky per email and read by both the display and the charge sites unchanged.
  * `enrolled` (running only) tells the caller to log the exposure (the denominator).
+ *
+ * `where` = the funnel + (for /fb-tarot) the resolved hook/deck she came through,
+ * so the test can be scoped with scope.funnel / scope.landers (2026-11-18: the
+ * $47/$39/$35 3-way on /fb + three tarot ads). Without it a scoped test would
+ * enrol nobody; an unscoped test ignores it, so omitting it keeps the old global
+ * behaviour.
  */
 export async function resolveUpsell1Cents(
   email: string,
   fallbackCents: number,
   key: string = U1_PRICE_EXPERIMENT_KEY, // overridable so tests never touch the live experiment
+  where?: { funnel?: string | null; hook?: string | null; deck?: string | null },
 ): Promise<{ cents: number; variant: string | null; enrolled: boolean }> {
   // Bucket on the NORMALISED email so the sticky arm matches the exposure dedup
   // (which keys on hashEmail = sha256 of the same normalised address). Otherwise
   // 'Foo@x.com' and 'foo@x.com' could bucket to different arms / prices.
-  // (The U1 test is global; funnel-scoped assignment is not wired yet.)
-  const a = await assign(key, email.trim().toLowerCase(), { personaId: null });
+  const a = await assign(key, email.trim().toLowerCase(), {
+    personaId: null,
+    funnel: where?.funnel ?? null,
+    hook: where?.hook ?? null,
+    deck: where?.deck ?? null,
+  });
   if (a?.applied) {
     const cents = payloadCents(a.payload, 'upsell1Cents');
     if (cents !== null) return { cents, variant: a.variant, enrolled: a.enrolled };

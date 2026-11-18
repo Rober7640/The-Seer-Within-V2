@@ -534,7 +534,13 @@ export async function assignVariantIfMissing(
     let upsell1Cents = legacyUpsell1Cents;
     let u1Assignment: { variant: string | null; enrolled: boolean } | null = null;
     if (legacyUpsell1Cents === DEFAULT_UPSELL1_CENTS) {
-      const u1 = await resolveUpsell1Cents(email, DEFAULT_UPSELL1_CENTS);
+      // Funnel + tarot lander identity, so the test can be scoped to named landers
+      // (scope.funnel / scope.landers) instead of every V1 lead.
+      const u1 = await resolveUpsell1Cents(email, DEFAULT_UPSELL1_CENTS, U1_PRICE_EXPERIMENT_KEY, {
+        funnel: funnel ?? null,
+        hook: tarotLander?.hook ?? null,
+        deck: tarotLander?.deck ?? null,
+      });
       upsell1Cents = u1.cents;
       u1Assignment = u1;
     }
@@ -583,8 +589,14 @@ export async function assignVariantIfMissing(
       .where(eq(conversations.id, row.id));
     const subjectId = hashEmail(email);
     if (u1Assignment?.enrolled && u1Assignment.variant) {
+      // 🔴 ONE-SHOT WRITE (unique(key, subject_id)) — the lander labels go in now
+      // or never, so results can later be split per lander (diagnostic only; the
+      // pooled per-arm row decides the test).
       await logExposure(U1_PRICE_EXPERIMENT_KEY, subjectId, u1Assignment.variant, 'upsell1_assigned', {
         conversationId: row.id,
+        funnel: funnel ?? null,
+        ...(tarotLander?.deck ? { deck: tarotLander.deck } : {}),
+        ...(tarotLander?.hook ? { hook: tarotLander.hook } : {}),
       });
     }
     if (v1.enrolled && v1.variant) {
