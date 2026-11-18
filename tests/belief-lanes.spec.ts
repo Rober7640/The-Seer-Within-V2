@@ -64,7 +64,7 @@ test.describe('JavaScript off — the server HTML Meta reads', () => {
 
   test('an unknown lane is plain /fb', async ({ page, context }) => {
     await guard(context)
-    await page.goto('/fb?lane=astrology')
+    await page.goto('/fb?lane=pattern')
     await expect(page).toHaveTitle(ORIGINAL_TITLE)
     await expect(page.locator('[data-lane-static]')).toHaveCount(0)
   })
@@ -79,7 +79,7 @@ test.describe('server HTML bytes (dev server)', () => {
   test('no-lane and unknown-lane /fb are identical to plain /fb', async ({ request }) => {
     const plain = norm(await (await request.get('/fb')).text())
     expect(plain).toContain(`<title>${ORIGINAL_TITLE}</title>`)
-    for (const url of ['/fb?lane=', '/fb?lane=nope', '/fb?lane=astrology', '/fb?utm_source=facebook', '/fb/chat?lane=manifest']) {
+    for (const url of ['/fb?lane=', '/fb?lane=nope', '/fb?lane=pattern', '/fb?utm_source=facebook', '/fb/chat?lane=manifest']) {
       expect(norm(await (await request.get(url)).text()), url).toBe(plain)
     }
     expect(norm(await (await request.get('/fb?lane=manifest')).text())).not.toBe(plain)
@@ -111,6 +111,19 @@ test.describe('JavaScript on — the React page and the chat opener', () => {
     // The server's static copy is gone once React mounts.
     await expect(page.locator('[data-lane-static]')).toHaveCount(0)
     expect(g.liveApi).toEqual([])
+  })
+
+  test('mobile: the card fills the first screen; the keyword sections start below the fold', async ({ page, context }) => {
+    // Joel, 2026-11-18: the below-card copy is for Meta's crawler, not the visitor —
+    // on load she must see only the card (as on today's /fb), to protect CR.
+    const vh = 664
+    await page.setViewportSize({ width: 390, height: vh })
+    await gotoGuarded(page, context, '/fb?lane=manifest')
+    // The CTA is on the first screen; the sections exist but sit below the fold.
+    const ctaTop = (await page.getByRole('link', { name: LANE.card.b }).first().boundingBox())!.y
+    expect(ctaTop).toBeLessThan(vh)
+    const sectionsTop = (await page.getByTestId('lane-sections').boundingBox())!.y
+    expect(sectionsTop).toBeGreaterThanOrEqual(vh)
   })
 
   test('plain /fb is today\'s page: no sections, button goes to /fb/chat', async ({ page, context }) => {
