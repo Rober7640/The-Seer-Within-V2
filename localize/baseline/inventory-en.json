@@ -1,5 +1,5 @@
 {
- "generatedAt": "2026-11-18T11:53:15.010Z",
+ "generatedAt": "2026-11-18T12:00:08.293Z",
  "files": [
   "client/src/assets/images/citrine-wish-bracelet.jpg",
   "client/src/assets/images/lava-stone.jpg",
@@ -37,13 +37,11 @@
   "client/src/hooks/useUpsellChat.ts",
   "client/src/lib/backendOffers.ts",
   "client/src/lib/checkoutSteps.ts",
-  "client/src/lib/facebook.ts",
   "client/src/lib/funnel.ts",
   "client/src/lib/geolocation.ts",
   "client/src/lib/gtm.ts",
   "client/src/lib/intent.ts",
   "client/src/lib/paiCheckout.ts",
-  "client/src/lib/posthog.ts",
   "client/src/lib/retargetBuy.ts",
   "client/src/lib/tarotAttribution.ts",
   "client/src/lib/tarotRetarget.ts",
@@ -85,7 +83,6 @@
   "server/lib/smsConsent.ts",
   "server/lib/universalSafety.ts",
   "shared/backendOffers.ts",
-  "shared/fbPixelConfig.ts",
   "shared/fixedFunnelPrices.ts",
   "shared/funnelConfig.ts",
   "shared/orderBump.ts",
@@ -112,6 +109,12 @@
   },
   {
    "file": "client/src/components/BumpOfferCard.tsx",
+   "line": 87,
+   "kind": "jsx",
+   "text": "$${} total"
+  },
+  {
+   "file": "client/src/components/BumpOfferCard.tsx",
    "line": 110,
    "kind": "jsx",
    "text": "🔒 30-Day Guarantee"
@@ -130,7 +133,7 @@
   },
   {
    "file": "client/src/components/ClearingChoiceCard.tsx",
-   "line": 27,
+   "line": 26,
    "kind": "jsx",
    "text": "What your offering carries"
   },
@@ -154,43 +157,43 @@
   },
   {
    "file": "client/src/components/ClearingChoiceCard.tsx",
-   "line": 55,
+   "line": 54,
    "kind": "jsx",
    "text": "I need a little grace"
   },
   {
    "file": "client/src/components/ClearingChoiceCard.tsx",
-   "line": 58,
+   "line": 57,
    "kind": "jsx",
-   "text": "Begin My Energy Clearing · $"
+   "text": "Begin My Energy Clearing · $${}"
   },
   {
    "file": "client/src/components/ClearingChoiceCard.tsx",
-   "line": 62,
+   "line": 61,
    "kind": "jsx",
    "text": "This offering exists so money is never in the way — the clearing is the same."
   },
   {
    "file": "client/src/components/ClearingChoiceCard.tsx",
-   "line": 68,
+   "line": 67,
    "kind": "jsx",
    "text": "Recommended"
   },
   {
    "file": "client/src/components/ClearingChoiceCard.tsx",
-   "line": 76,
+   "line": 75,
    "kind": "jsx",
    "text": "Cover the Full Offering"
   },
   {
    "file": "client/src/components/ClearingChoiceCard.tsx",
-   "line": 79,
+   "line": 78,
    "kind": "jsx",
-   "text": "Begin My Energy Clearing · $"
+   "text": "Begin My Energy Clearing · $${}"
   },
   {
    "file": "client/src/components/ClearingChoiceCard.tsx",
-   "line": 84,
+   "line": 83,
    "kind": "jsx",
    "text": "This is what the work fully asks."
   },
@@ -226,6 +229,12 @@
   },
   {
    "file": "client/src/components/CommitmentGateCard.tsx",
+   "line": 33,
+   "kind": "jsx",
+   "text": "${} — I need to know you're truly ready."
+  },
+  {
+   "file": "client/src/components/CommitmentGateCard.tsx",
    "line": 34,
    "kind": "template",
    "text": "${}, before I prepare this for you"
@@ -238,19 +247,13 @@
   },
   {
    "file": "client/src/components/CommitmentGateCard.tsx",
-   "line": 34,
+   "line": 58,
    "kind": "jsx",
-   "text": "— I need to know you're truly ready."
+   "text": "Begin My Energy Clearing - $${}"
   },
   {
    "file": "client/src/components/CommitmentGateCard.tsx",
-   "line": 63,
-   "kind": "jsx",
-   "text": "Begin My Energy Clearing - $"
-  },
-  {
-   "file": "client/src/components/CommitmentGateCard.tsx",
-   "line": 67,
+   "line": 66,
    "kind": "jsx",
    "text": "Check all three to continue"
   },
@@ -394,9 +397,15 @@
   },
   {
    "file": "client/src/components/PaiCardForm.tsx",
-   "line": 486,
+   "line": 484,
    "kind": "jsx",
-   "text": "Just"
+   "text": "✓ ${} approved"
+  },
+  {
+   "file": "client/src/components/PaiCardForm.tsx",
+   "line": 485,
+   "kind": "jsx",
+   "text": "Just ${} below, then press ${}."
   },
   {
    "file": "client/src/components/PaiCardForm.tsx",
@@ -420,25 +429,19 @@
    "file": "client/src/components/PaiCardForm.tsx",
    "line": 486,
    "kind": "jsx",
-   "text": "below, then press"
-  },
-  {
-   "file": "client/src/components/PaiCardForm.tsx",
-   "line": 486,
-   "kind": "jsx",
    "text": "Finish payment"
   },
   {
    "file": "client/src/components/PaiCardForm.tsx",
-   "line": 489,
+   "line": 488,
    "kind": "jsx",
    "text": "Use a different card instead"
   },
   {
    "file": "client/src/components/PaiCardForm.tsx",
-   "line": 506,
+   "line": 504,
    "kind": "jsx",
-   "text": "or pay by card"
+   "text": "${}or pay by card${}"
   },
   {
    "file": "client/src/components/PaiCardForm.tsx",
@@ -484,9 +487,9 @@
   },
   {
    "file": "client/src/components/PaiCardForm.tsx",
-   "line": 560,
+   "line": 559,
    "kind": "jsx",
-   "text": "Loading secure card form…"
+   "text": "${} Loading secure card form…"
   },
   {
    "file": "client/src/components/PaiCardForm.tsx",
@@ -604,21 +607,21 @@
   },
   {
    "file": "client/src/components/PaiCardForm.tsx",
-   "line": 670,
+   "line": 668,
    "kind": "jsx",
-   "text": "Secure payment — your card details are encrypted and never stored on our servers."
+   "text": "${}Secure payment — your card details are encrypted and never stored on our servers."
   },
   {
    "file": "client/src/components/PermissionButton.tsx",
-   "line": 12,
+   "line": 8,
    "kind": "jsx",
    "text": "Yes, please help me Evelyn!"
   },
   {
    "file": "client/src/components/PurchaseCTA.tsx",
-   "line": 13,
+   "line": 9,
    "kind": "jsx",
-   "text": "Begin My Energy Clearing - $"
+   "text": "Begin My Energy Clearing - $${}"
   },
   {
    "file": "client/src/components/PurchaseCTA.tsx",
@@ -658,7 +661,7 @@
   },
   {
    "file": "client/src/components/SmsOptInCard.tsx",
-   "line": 59,
+   "line": 55,
    "kind": "jsx",
    "text": "Thanks — you're signed up for texts from The Seer Within. Reply STOP at any time to opt out."
   },
@@ -670,19 +673,19 @@
   },
   {
    "file": "client/src/components/SmsOptInCard.tsx",
-   "line": 97,
+   "line": 96,
    "kind": "jsx",
    "text": "Mobile number"
   },
   {
    "file": "client/src/components/SmsOptInCard.tsx",
-   "line": 127,
+   "line": 126,
    "kind": "jsx",
    "text": "Terms"
   },
   {
    "file": "client/src/components/SmsOptInCard.tsx",
-   "line": 131,
+   "line": 130,
    "kind": "jsx",
    "text": "Privacy Policy"
   },
@@ -736,7 +739,7 @@
   },
   {
    "file": "client/src/components/upsell/EvelynChat.tsx",
-   "line": 33,
+   "line": 32,
    "kind": "jsx",
    "text": "Evelyn Cross"
   },
@@ -852,7 +855,7 @@
    "file": "client/src/components/upsell/ShippingForm.tsx",
    "line": 104,
    "kind": "jsx",
-   "text": "Where should I send your"
+   "text": "Where should I send your ${}?"
   },
   {
    "file": "client/src/components/upsell/ShippingForm.tsx",
@@ -906,11 +909,11 @@
    "file": "client/src/components/upsell/ShippingForm.tsx",
    "line": 247,
    "kind": "jsx",
-   "text": "Ship My"
+   "text": "Ship My ${} →"
   },
   {
    "file": "client/src/components/upsell/Upsell2CTA.tsx",
-   "line": 14,
+   "line": 13,
    "kind": "jsx",
    "text": "Eight stones. One intention. Your desire, amplified."
   },
@@ -996,7 +999,7 @@
    "file": "client/src/components/upsell/UpsellCTA.tsx",
    "line": 46,
    "kind": "jsx",
-   "text": "+ free shipping"
+   "text": "${} includes ${} + free shipping"
   },
   {
    "file": "client/src/components/upsell/UpsellCTA.tsx",
@@ -1048,9 +1051,15 @@
   },
   {
    "file": "client/src/components/upsell/UpsellComplete.tsx",
-   "line": 27,
+   "line": 26,
    "kind": "jsx",
    "text": "Protection Complete"
+  },
+  {
+   "file": "client/src/components/upsell/UpsellComplete.tsx",
+   "line": 30,
+   "kind": "jsx",
+   "text": "${} charged volcanic stone will ship within 48 hours."
   },
   {
    "file": "client/src/components/upsell/UpsellComplete.tsx",
@@ -1066,13 +1075,7 @@
   },
   {
    "file": "client/src/components/upsell/UpsellComplete.tsx",
-   "line": 31,
-   "kind": "jsx",
-   "text": "charged volcanic stone will ship within 48 hours."
-  },
-  {
-   "file": "client/src/components/upsell/UpsellComplete.tsx",
-   "line": 53,
+   "line": 52,
    "kind": "jsx",
    "text": "Watch your inbox for tracking info."
   },
@@ -26643,108 +26646,6 @@
    "text": "Address saved. We'll confirm details via email."
   },
   {
-   "file": "client/src/lib/facebook.ts",
-   "line": 148,
-   "kind": "string",
-   "text": "Lead"
-  },
-  {
-   "file": "client/src/lib/facebook.ts",
-   "line": 149,
-   "kind": "string",
-   "text": "Email Capture"
-  },
-  {
-   "file": "client/src/lib/facebook.ts",
-   "line": 159,
-   "kind": "string",
-   "text": "Lead"
-  },
-  {
-   "file": "client/src/lib/facebook.ts",
-   "line": 159,
-   "kind": "string",
-   "text": "Email Capture"
-  },
-  {
-   "file": "client/src/lib/facebook.ts",
-   "line": 170,
-   "kind": "string",
-   "text": "Energy Clearing Ritual"
-  },
-  {
-   "file": "client/src/lib/facebook.ts",
-   "line": 197,
-   "kind": "string",
-   "text": "Soulmate Initials Reading"
-  },
-  {
-   "file": "client/src/lib/facebook.ts",
-   "line": 219,
-   "kind": "string",
-   "text": "Energy Clearing Ritual"
-  },
-  {
-   "file": "client/src/lib/facebook.ts",
-   "line": 235,
-   "kind": "string",
-   "text": "Purchase"
-  },
-  {
-   "file": "client/src/lib/facebook.ts",
-   "line": 244,
-   "kind": "string",
-   "text": "Purchase"
-  },
-  {
-   "file": "client/src/lib/facebook.ts",
-   "line": 281,
-   "kind": "string",
-   "text": "Account Verified"
-  },
-  {
-   "file": "client/src/lib/facebook.ts",
-   "line": 288,
-   "kind": "string",
-   "text": "Account Verified"
-  },
-  {
-   "file": "client/src/lib/facebook.ts",
-   "line": 296,
-   "kind": "string",
-   "text": "Manifestation Bracelet"
-  },
-  {
-   "file": "client/src/lib/facebook.ts",
-   "line": 323,
-   "kind": "string",
-   "text": "Purchase"
-  },
-  {
-   "file": "client/src/lib/facebook.ts",
-   "line": 332,
-   "kind": "string",
-   "text": "Purchase"
-  },
-  {
-   "file": "client/src/lib/facebook.ts",
-   "line": 350,
-   "kind": "string",
-   "text": "Manifestation Bracelet"
-  },
-  {
-   "file": "client/src/lib/facebook.ts",
-   "line": 373,
-   "kind": "string",
-   "text": "Purchase"
-  },
-  {
-   "file": "client/src/lib/facebook.ts",
-   "line": 382,
-   "kind": "string",
-   "text": "Purchase"
-  },
-  {
    "file": "client/src/lib/geolocation.ts",
    "line": 36,
    "kind": "string",
@@ -33454,19 +33355,19 @@
   },
   {
    "file": "client/src/pages/ChatPage.tsx",
-   "line": 138,
+   "line": 137,
    "kind": "jsx",
    "text": "Evelyn Cross"
   },
   {
    "file": "client/src/pages/ChatPage.tsx",
-   "line": 141,
+   "line": 140,
    "kind": "jsx",
    "text": "Online Now"
   },
   {
    "file": "client/src/pages/ChatPage.tsx",
-   "line": 150,
+   "line": 146,
    "kind": "jsx",
    "text": "Exit"
   },
@@ -33484,9 +33385,9 @@
   },
   {
    "file": "client/src/pages/ChatPage.tsx",
-   "line": 367,
+   "line": 365,
    "kind": "jsx",
-   "text": "Private & Confidential Reading"
+   "text": "${}Private & Confidential Reading"
   },
   {
    "file": "client/src/pages/FAQPage.tsx",
@@ -33502,7 +33403,7 @@
   },
   {
    "file": "client/src/pages/FAQPage.tsx",
-   "line": 56,
+   "line": 55,
    "kind": "jsx",
    "text": "Reading minutes are prepaid time you use to access AI guide sessions on The Seer Within. Each spiritual guide charges a per-minute rate (shown on the guide's profile before you start a session). Minutes are deducted in real time as you chat."
   },
@@ -33522,19 +33423,19 @@
    "file": "client/src/pages/FAQPage.tsx",
    "line": 68,
    "kind": "jsx",
-   "text": "Free welcome minutes:"
+   "text": "${} Every new account receives 3 free minutes automatically when you register."
   },
   {
    "file": "client/src/pages/FAQPage.tsx",
    "line": 68,
    "kind": "jsx",
-   "text": "Every new account receives 3 free minutes automatically when you register."
+   "text": "Free welcome minutes:"
   },
   {
    "file": "client/src/pages/FAQPage.tsx",
    "line": 69,
    "kind": "jsx",
-   "text": "You can buy additional minute packages at any time from the Minutes page after logging in."
+   "text": "${} You can buy additional minute packages at any time from the Minutes page after logging in."
   },
   {
    "file": "client/src/pages/FAQPage.tsx",
@@ -33544,9 +33445,9 @@
   },
   {
    "file": "client/src/pages/FAQPage.tsx",
-   "line": 78,
+   "line": 77,
    "kind": "jsx",
-   "text": "Purchased minutes expire"
+   "text": "Purchased minutes expire ${}. Each purchase has its own independent expiry date. Free welcome minutes expire 6 months after your account is created. We will do our best to send you a reminder email about 14 days before expiry, but it is your responsibility to use minutes before they lapse."
   },
   {
    "file": "client/src/pages/FAQPage.tsx",
@@ -33556,21 +33457,15 @@
   },
   {
    "file": "client/src/pages/FAQPage.tsx",
-   "line": 78,
-   "kind": "jsx",
-   "text": ". Each purchase has its own independent expiry date. Free welcome minutes expire 6 months after your account is created. We will do our best to send you a reminder email about 14 days before expiry, but it is your responsibility to use minutes before they lapse."
-  },
-  {
-   "file": "client/src/pages/FAQPage.tsx",
    "line": 86,
    "kind": "string",
    "text": "My minutes expired — can I get a refund?"
   },
   {
    "file": "client/src/pages/FAQPage.tsx",
-   "line": 89,
+   "line": 88,
    "kind": "jsx",
-   "text": "Unfortunately, expired minutes are forfeited and are not eligible for a refund or reactivation. Our goodwill refund window is 30 days from the date of purchase, which is well before the 6-month expiry. If your minutes are approaching expiry, use them or request a refund on unused minutes within the 30-day window. See our"
+   "text": "Unfortunately, expired minutes are forfeited and are not eligible for a refund or reactivation. Our goodwill refund window is 30 days from the date of purchase, which is well before the 6-month expiry. If your minutes are approaching expiry, use them or request a refund on unused minutes within the 30-day window. See our ${} for full details."
   },
   {
    "file": "client/src/pages/FAQPage.tsx",
@@ -33580,19 +33475,13 @@
   },
   {
    "file": "client/src/pages/FAQPage.tsx",
-   "line": 96,
-   "kind": "jsx",
-   "text": "for full details."
-  },
-  {
-   "file": "client/src/pages/FAQPage.tsx",
    "line": 101,
    "kind": "string",
    "text": "Can I share or transfer my minutes to another account?"
   },
   {
    "file": "client/src/pages/FAQPage.tsx",
-   "line": 104,
+   "line": 103,
    "kind": "jsx",
    "text": "No. Minutes are personal and non-transferable. They are linked to your account and cannot be gifted, sold, or moved to another user's account."
   },
@@ -33604,7 +33493,7 @@
   },
   {
    "file": "client/src/pages/FAQPage.tsx",
-   "line": 113,
+   "line": 112,
    "kind": "jsx",
    "text": "Yes — your existing unused minutes remain in your balance when you purchase additional minutes. Each purchase creates its own 6-month expiry window, so minutes from older purchases will expire first."
   },
@@ -33622,7 +33511,7 @@
   },
   {
    "file": "client/src/pages/FAQPage.tsx",
-   "line": 128,
+   "line": 127,
    "kind": "jsx",
    "text": "We accept all major credit and debit cards (Visa, Mastercard, American Express) through Stripe, our payment processor. Payment details are entered directly on Stripe's secure page — we never store your card number."
   },
@@ -33634,9 +33523,9 @@
   },
   {
    "file": "client/src/pages/FAQPage.tsx",
-   "line": 138,
+   "line": 137,
    "kind": "jsx",
-   "text": "Yes. Stripe sends an automatic payment receipt to the email address on your account immediately after a successful purchase. If you did not receive one, check your spam folder or contact us at"
+   "text": "Yes. Stripe sends an automatic payment receipt to the email address on your account immediately after a successful purchase. If you did not receive one, check your spam folder or contact us at ${}."
   },
   {
    "file": "client/src/pages/FAQPage.tsx",
@@ -33666,13 +33555,7 @@
    "file": "client/src/pages/FAQPage.tsx",
    "line": 157,
    "kind": "jsx",
-   "text": "If minutes still haven't appeared after 30 minutes, email us at"
-  },
-  {
-   "file": "client/src/pages/FAQPage.tsx",
-   "line": 161,
-   "kind": "jsx",
-   "text": "with your purchase receipt and we will investigate promptly."
+   "text": "If minutes still haven't appeared after 30 minutes, email us at ${} with your purchase receipt and we will investigate promptly."
   },
   {
    "file": "client/src/pages/FAQPage.tsx",
@@ -33682,7 +33565,7 @@
   },
   {
    "file": "client/src/pages/FAQPage.tsx",
-   "line": 171,
+   "line": 170,
    "kind": "jsx",
    "text": "Yes — we offer a goodwill refund on unused purchased minutes, subject to these conditions:"
   },
@@ -33690,7 +33573,7 @@
    "file": "client/src/pages/FAQPage.tsx",
    "line": 174,
    "kind": "jsx",
-   "text": "The request must be made within"
+   "text": "The request must be made within ${} of the purchase date."
   },
   {
    "file": "client/src/pages/FAQPage.tsx",
@@ -33700,15 +33583,9 @@
   },
   {
    "file": "client/src/pages/FAQPage.tsx",
-   "line": 174,
-   "kind": "jsx",
-   "text": "of the purchase date."
-  },
-  {
-   "file": "client/src/pages/FAQPage.tsx",
    "line": 175,
    "kind": "jsx",
-   "text": "Only minutes that have"
+   "text": "Only minutes that have ${} in any session are eligible."
   },
   {
    "file": "client/src/pages/FAQPage.tsx",
@@ -33718,21 +33595,15 @@
   },
   {
    "file": "client/src/pages/FAQPage.tsx",
-   "line": 175,
-   "kind": "jsx",
-   "text": "in any session are eligible."
-  },
-  {
-   "file": "client/src/pages/FAQPage.tsx",
    "line": 176,
    "kind": "jsx",
    "text": "If some minutes were used, only the unused portion may be refunded on a pro-rata basis."
   },
   {
    "file": "client/src/pages/FAQPage.tsx",
-   "line": 179,
+   "line": 178,
    "kind": "jsx",
-   "text": "Free welcome minutes have no cash value and are not refundable. Full details are in our"
+   "text": "Free welcome minutes have no cash value and are not refundable. Full details are in our ${}."
   },
   {
    "file": "client/src/pages/FAQPage.tsx",
@@ -33748,7 +33619,7 @@
   },
   {
    "file": "client/src/pages/FAQPage.tsx",
-   "line": 192,
+   "line": 191,
    "kind": "jsx",
    "text": "Once we approve your refund, it is processed immediately on our end. Your bank or card issuer typically takes 5–10 business days to post the credit to your account. If you haven't seen it after 15 business days, please check with your bank first, then contact us."
   },
@@ -33760,15 +33631,9 @@
   },
   {
    "file": "client/src/pages/FAQPage.tsx",
-   "line": 203,
+   "line": 202,
    "kind": "jsx",
-   "text": "Email us straight away at"
-  },
-  {
-   "file": "client/src/pages/FAQPage.tsx",
-   "line": 207,
-   "kind": "jsx",
-   "text": "with your account email and the transaction details from your bank statement. We will investigate with Stripe and resolve any billing errors promptly."
+   "text": "Email us straight away at ${} with your account email and the transaction details from your bank statement. We will investigate with Stripe and resolve any billing errors promptly."
   },
   {
    "file": "client/src/pages/FAQPage.tsx",
@@ -33784,15 +33649,9 @@
   },
   {
    "file": "client/src/pages/FAQPage.tsx",
-   "line": 221,
+   "line": 220,
    "kind": "jsx",
-   "text": "To request account deletion, email us at"
-  },
-  {
-   "file": "client/src/pages/FAQPage.tsx",
-   "line": 225,
-   "kind": "jsx",
-   "text": "from the email address associated with your account. We will process your request and delete or anonymise your account data within 90 days, subject to retaining transaction records for 7 years as required by Singapore accounting laws. Any remaining unused minutes will be forfeited upon deletion and are not eligible for a cash refund unless a valid refund request is submitted before deletion."
+   "text": "To request account deletion, email us at ${} from the email address associated with your account. We will process your request and delete or anonymise your account data within 90 days, subject to retaining transaction records for 7 years as required by Singapore accounting laws. Any remaining unused minutes will be forfeited upon deletion and are not eligible for a cash refund unless a valid refund request is submitted before deletion."
   },
   {
    "file": "client/src/pages/FAQPage.tsx",
@@ -33840,19 +33699,13 @@
    "file": "client/src/pages/FAQPage.tsx",
    "line": 245,
    "kind": "jsx",
-   "text": "See our"
+   "text": "See our ${} for the full picture."
   },
   {
    "file": "client/src/pages/FAQPage.tsx",
    "line": 245,
    "kind": "jsx",
    "text": "Privacy Policy"
-  },
-  {
-   "file": "client/src/pages/FAQPage.tsx",
-   "line": 245,
-   "kind": "jsx",
-   "text": "for the full picture."
   },
   {
    "file": "client/src/pages/FAQPage.tsx",
@@ -33862,15 +33715,9 @@
   },
   {
    "file": "client/src/pages/FAQPage.tsx",
-   "line": 253,
+   "line": 252,
    "kind": "jsx",
-   "text": "Under the Personal Data Protection Act 2012 (Singapore), you have the right to access the personal data we hold about you. Email your request to"
-  },
-  {
-   "file": "client/src/pages/FAQPage.tsx",
-   "line": 258,
-   "kind": "jsx",
-   "text": ". We will verify your identity and respond within 30 days."
+   "text": "Under the Personal Data Protection Act 2012 (Singapore), you have the right to access the personal data we hold about you. Email your request to ${}. We will verify your identity and respond within 30 days."
   },
   {
    "file": "client/src/pages/FAQPage.tsx",
@@ -33880,15 +33727,9 @@
   },
   {
    "file": "client/src/pages/FAQPage.tsx",
-   "line": 266,
+   "line": 265,
    "kind": "jsx",
-   "text": "You can update your name and email address from your account settings once logged in. For any other corrections, email us at"
-  },
-  {
-   "file": "client/src/pages/FAQPage.tsx",
-   "line": 271,
-   "kind": "jsx",
-   "text": "and we will make the correction as soon as practicable."
+   "text": "You can update your name and email address from your account settings once logged in. For any other corrections, email us at ${} and we will make the correction as soon as practicable."
   },
   {
    "file": "client/src/pages/FAQPage.tsx",
@@ -33898,15 +33739,9 @@
   },
   {
    "file": "client/src/pages/FAQPage.tsx",
-   "line": 279,
+   "line": 278,
    "kind": "jsx",
-   "text": "Click the \"Unsubscribe\" link at the bottom of any marketing email from us. You can also email"
-  },
-  {
-   "file": "client/src/pages/FAQPage.tsx",
-   "line": 284,
-   "kind": "jsx",
-   "text": "to be removed from our list. Note: unsubscribing from marketing emails does not stop transactional emails such as purchase receipts and minutes expiry notices."
+   "text": "Click the \"Unsubscribe\" link at the bottom of any marketing email from us. You can also email ${} to be removed from our list. Note: unsubscribing from marketing emails does not stop transactional emails such as purchase receipts and minutes expiry notices."
   },
   {
    "file": "client/src/pages/FAQPage.tsx",
@@ -33916,9 +33751,15 @@
   },
   {
    "file": "client/src/pages/FAQPage.tsx",
-   "line": 294,
+   "line": 293,
    "kind": "jsx",
    "text": "We share data only with service providers who help us operate the platform, including:"
+  },
+  {
+   "file": "client/src/pages/FAQPage.tsx",
+   "line": 297,
+   "kind": "jsx",
+   "text": "${} (processes your messages to generate AI responses)"
   },
   {
    "file": "client/src/pages/FAQPage.tsx",
@@ -33928,9 +33769,9 @@
   },
   {
    "file": "client/src/pages/FAQPage.tsx",
-   "line": 297,
+   "line": 298,
    "kind": "jsx",
-   "text": "(processes your messages to generate AI responses)"
+   "text": "${} (payment processing)"
   },
   {
    "file": "client/src/pages/FAQPage.tsx",
@@ -33940,9 +33781,9 @@
   },
   {
    "file": "client/src/pages/FAQPage.tsx",
-   "line": 298,
+   "line": 299,
    "kind": "jsx",
-   "text": "(payment processing)"
+   "text": "${} (database hosting)"
   },
   {
    "file": "client/src/pages/FAQPage.tsx",
@@ -33952,21 +33793,15 @@
   },
   {
    "file": "client/src/pages/FAQPage.tsx",
-   "line": 299,
-   "kind": "jsx",
-   "text": "(database hosting)"
-  },
-  {
-   "file": "client/src/pages/FAQPage.tsx",
    "line": 300,
    "kind": "jsx",
-   "text": "(email marketing, only if you've opted in)"
+   "text": "${} (email marketing, only if you've opted in)"
   },
   {
    "file": "client/src/pages/FAQPage.tsx",
-   "line": 303,
+   "line": 302,
    "kind": "jsx",
-   "text": "We do not sell your personal data. See our"
+   "text": "We do not sell your personal data. See our ${} for full details including cross-border transfer safeguards."
   },
   {
    "file": "client/src/pages/FAQPage.tsx",
@@ -33976,19 +33811,13 @@
   },
   {
    "file": "client/src/pages/FAQPage.tsx",
-   "line": 307,
-   "kind": "jsx",
-   "text": "for full details including cross-border transfer safeguards."
-  },
-  {
-   "file": "client/src/pages/FAQPage.tsx",
    "line": 313,
    "kind": "string",
    "text": "What happens to my session memory if I close my account?"
   },
   {
    "file": "client/src/pages/FAQPage.tsx",
-   "line": 316,
+   "line": 315,
    "kind": "jsx",
    "text": "Session memory summaries (notes our system uses to personalise your readings) are deleted when your account is closed, within the same 90-day window as your other account data. If you want to delete only your session memory without closing your account, contact us and we can arrange that separately."
   },
@@ -34000,21 +33829,21 @@
   },
   {
    "file": "client/src/pages/FAQPage.tsx",
-   "line": 338,
+   "line": 336,
    "kind": "jsx",
-   "text": "Back to Guides"
+   "text": "${}Back to Guides"
   },
   {
    "file": "client/src/pages/FAQPage.tsx",
-   "line": 343,
+   "line": 342,
    "kind": "jsx",
    "text": "Frequently Asked Questions"
   },
   {
    "file": "client/src/pages/FAQPage.tsx",
-   "line": 346,
+   "line": 345,
    "kind": "jsx",
-   "text": "Can't find what you're looking for? Email us at"
+   "text": "Can't find what you're looking for? Email us at ${}"
   },
   {
    "file": "client/src/pages/FAQPage.tsx",
@@ -34038,7 +33867,7 @@
    "file": "client/src/pages/FAQPage.tsx",
    "line": 369,
    "kind": "jsx",
-   "text": "Cosmo Numerology Pte Ltd. All rights reserved."
+   "text": "© ${} Cosmo Numerology Pte Ltd. All rights reserved."
   },
   {
    "file": "client/src/pages/LandingPage.tsx",
@@ -34080,7 +33909,7 @@
    "file": "client/src/pages/LandingPage.tsx",
    "line": 24,
    "kind": "jsx",
-   "text": "Evelyn has sensed the blessings you so richly deserve."
+   "text": "Evelyn has sensed the blessings you so richly deserve. ${}${}"
   },
   {
    "file": "client/src/pages/LandingPage.tsx",
@@ -34138,7 +33967,7 @@
   },
   {
    "file": "client/src/pages/LandingPage.tsx",
-   "line": 51,
+   "line": 50,
    "kind": "jsx",
    "text": "The Seer Within"
   },
@@ -34170,7 +33999,7 @@
    "file": "client/src/pages/LandingPage.tsx",
    "line": 113,
    "kind": "jsx",
-   "text": "Cosmo Numerology Pte Ltd. For Entertainment Purposes Only."
+   "text": "© ${} Cosmo Numerology Pte Ltd. For Entertainment Purposes Only."
   },
   {
    "file": "client/src/pages/PaiCheckoutPage.tsx",
@@ -34222,15 +34051,15 @@
   },
   {
    "file": "client/src/pages/PaiCheckoutPage.tsx",
-   "line": 209,
+   "line": 208,
    "kind": "jsx",
-   "text": "Confirming your payment…"
+   "text": "${} Confirming your payment…"
   },
   {
    "file": "client/src/pages/PaiCheckoutPage.tsx",
-   "line": 218,
+   "line": 213,
    "kind": "jsx",
-   "text": "Back"
+   "text": "${} Back"
   },
   {
    "file": "client/src/pages/PaiCheckoutPage.tsx",
@@ -34258,9 +34087,9 @@
   },
   {
    "file": "client/src/pages/PaiCheckoutPage.tsx",
-   "line": 267,
+   "line": 266,
    "kind": "jsx",
-   "text": "Loading secure checkout…"
+   "text": "${} Loading secure checkout…"
   },
   {
    "file": "client/src/pages/PrivacyPage.tsx",
@@ -34270,9 +34099,9 @@
   },
   {
    "file": "client/src/pages/PrivacyPage.tsx",
-   "line": 16,
+   "line": 14,
    "kind": "jsx",
-   "text": "Back to Guides"
+   "text": "${}Back to Guides"
   },
   {
    "file": "client/src/pages/PrivacyPage.tsx",
@@ -34294,13 +34123,13 @@
   },
   {
    "file": "client/src/pages/PrivacyPage.tsx",
-   "line": 28,
+   "line": 27,
    "kind": "jsx",
    "text": "Cosmo Numerology Pte Ltd (\"we\", \"our\", \"us\") is the data controller for personal data collected through The Seer Within platform. We are committed to protecting your personal data in accordance with the Personal Data Protection Act 2012 of Singapore (PDPA), as amended by the Personal Data Protection (Amendment) Act 2020."
   },
   {
    "file": "client/src/pages/PrivacyPage.tsx",
-   "line": 34,
+   "line": 33,
    "kind": "jsx",
    "text": "This Privacy Policy explains what personal data we collect, why we collect it, how we use and protect it, and your rights under Singapore law. Please read it carefully before using our services."
   },
@@ -34330,9 +34159,9 @@
   },
   {
    "file": "client/src/pages/PrivacyPage.tsx",
-   "line": 47,
+   "line": 46,
    "kind": "jsx",
-   "text": "Data Protection Enquiries:"
+   "text": "Data Protection Enquiries: ${}"
   },
   {
    "file": "client/src/pages/PrivacyPage.tsx",
@@ -34504,9 +34333,15 @@
   },
   {
    "file": "client/src/pages/PrivacyPage.tsx",
-   "line": 106,
+   "line": 105,
    "kind": "jsx",
    "text": "We collect and use your personal data only for the purposes for which it was collected (the PDPA's Purpose Limitation Obligation), including:"
+  },
+  {
+   "file": "client/src/pages/PrivacyPage.tsx",
+   "line": 110,
+   "kind": "jsx",
+   "text": "${} — registering your account, enabling AI guide sessions, and processing payments."
   },
   {
    "file": "client/src/pages/PrivacyPage.tsx",
@@ -34516,9 +34351,9 @@
   },
   {
    "file": "client/src/pages/PrivacyPage.tsx",
-   "line": 110,
+   "line": 111,
    "kind": "jsx",
-   "text": "— registering your account, enabling AI guide sessions, and processing payments."
+   "text": "${} — using session memory to provide contextually relevant readings in future sessions."
   },
   {
    "file": "client/src/pages/PrivacyPage.tsx",
@@ -34528,9 +34363,9 @@
   },
   {
    "file": "client/src/pages/PrivacyPage.tsx",
-   "line": 111,
+   "line": 112,
    "kind": "jsx",
-   "text": "— using session memory to provide contextually relevant readings in future sessions."
+   "text": "${} — managing minutes, purchases, and refunds."
   },
   {
    "file": "client/src/pages/PrivacyPage.tsx",
@@ -34540,9 +34375,9 @@
   },
   {
    "file": "client/src/pages/PrivacyPage.tsx",
-   "line": 112,
+   "line": 113,
    "kind": "jsx",
-   "text": "— managing minutes, purchases, and refunds."
+   "text": "${} — sending transactional emails (receipts, minutes expiry reminders, account notices) and, where you have consented, promotional emails and text messages."
   },
   {
    "file": "client/src/pages/PrivacyPage.tsx",
@@ -34552,9 +34387,9 @@
   },
   {
    "file": "client/src/pages/PrivacyPage.tsx",
-   "line": 113,
+   "line": 114,
    "kind": "jsx",
-   "text": "— sending transactional emails (receipts, minutes expiry reminders, account notices) and, where you have consented, promotional emails and text messages."
+   "text": "${} — detecting and preventing fraud, abuse, and unauthorised account access."
   },
   {
    "file": "client/src/pages/PrivacyPage.tsx",
@@ -34564,9 +34399,9 @@
   },
   {
    "file": "client/src/pages/PrivacyPage.tsx",
-   "line": 114,
+   "line": 115,
    "kind": "jsx",
-   "text": "— detecting and preventing fraud, abuse, and unauthorised account access."
+   "text": "${} — analysing aggregated usage patterns to improve our platform."
   },
   {
    "file": "client/src/pages/PrivacyPage.tsx",
@@ -34576,9 +34411,9 @@
   },
   {
    "file": "client/src/pages/PrivacyPage.tsx",
-   "line": 115,
+   "line": 116,
    "kind": "jsx",
-   "text": "— analysing aggregated usage patterns to improve our platform."
+   "text": "${} — complying with applicable Singapore laws and responding to lawful requests from authorities."
   },
   {
    "file": "client/src/pages/PrivacyPage.tsx",
@@ -34588,19 +34423,13 @@
   },
   {
    "file": "client/src/pages/PrivacyPage.tsx",
-   "line": 116,
-   "kind": "jsx",
-   "text": "— complying with applicable Singapore laws and responding to lawful requests from authorities."
-  },
-  {
-   "file": "client/src/pages/PrivacyPage.tsx",
    "line": 121,
    "kind": "jsx",
    "text": "5. Disclosure to Third Parties"
   },
   {
    "file": "client/src/pages/PrivacyPage.tsx",
-   "line": 123,
+   "line": 122,
    "kind": "jsx",
    "text": "We do not sell your personal data. We share it only with the following categories of service providers who process it strictly on our behalf and for the purposes described in this Policy:"
   },
@@ -34612,7 +34441,7 @@
   },
   {
    "file": "client/src/pages/PrivacyPage.tsx",
-   "line": 131,
+   "line": 130,
    "kind": "jsx",
    "text": "Processes conversation messages to generate AI guide responses. Message content is transmitted to Anthropic's API for this purpose. Anthropic's data use is governed by its API usage policy."
   },
@@ -34624,7 +34453,7 @@
   },
   {
    "file": "client/src/pages/PrivacyPage.tsx",
-   "line": 139,
+   "line": 138,
    "kind": "jsx",
    "text": "Processes payment card data for minute purchases. We do not store your full card details — these are handled exclusively by Stripe in compliance with PCI-DSS."
   },
@@ -34636,7 +34465,7 @@
   },
   {
    "file": "client/src/pages/PrivacyPage.tsx",
-   "line": 146,
+   "line": 145,
    "kind": "jsx",
    "text": "Provides our hosted PostgreSQL database. Your account, session, and transaction data is stored on Supabase-managed infrastructure."
   },
@@ -34648,7 +34477,7 @@
   },
   {
    "file": "client/src/pages/PrivacyPage.tsx",
-   "line": 153,
+   "line": 152,
    "kind": "jsx",
    "text": "Manages our email list. Your email address and, if you provided it at checkout, your phone number are shared with AWeber to deliver your purchase and, where you have opted in, marketing communications."
   },
@@ -34660,13 +34489,13 @@
   },
   {
    "file": "client/src/pages/PrivacyPage.tsx",
-   "line": 161,
+   "line": 160,
    "kind": "jsx",
    "text": "Sends our text messages. If you have agreed to receive texts, your mobile number and the content of the messages we exchange with you are processed by Twilio for this purpose only."
   },
   {
    "file": "client/src/pages/PrivacyPage.tsx",
-   "line": 168,
+   "line": 167,
    "kind": "jsx",
    "text": "We may also disclose your data where required by law, court order, or lawful direction from a competent Singapore authority."
   },
@@ -34678,7 +34507,7 @@
   },
   {
    "file": "client/src/pages/PrivacyPage.tsx",
-   "line": 176,
+   "line": 175,
    "kind": "jsx",
    "text": "Some of our service providers are located outside Singapore (notably in the United States). Under Section 26 of the PDPA, we take steps to ensure that overseas recipients of your personal data provide a standard of protection at least comparable to that under the PDPA. These steps include:"
   },
@@ -34708,7 +34537,7 @@
   },
   {
    "file": "client/src/pages/PrivacyPage.tsx",
-   "line": 191,
+   "line": 190,
    "kind": "jsx",
    "text": "We implement appropriate technical and organisational measures to protect your personal data against unauthorised access, loss, destruction, or alteration, including:"
   },
@@ -34744,7 +34573,7 @@
   },
   {
    "file": "client/src/pages/PrivacyPage.tsx",
-   "line": 202,
+   "line": 201,
    "kind": "jsx",
    "text": "No method of internet transmission is completely secure. In the event of a data breach that is likely to result in significant harm to affected individuals, we will notify the Personal Data Protection Commission (PDPC) and affected users as required by law."
   },
@@ -34756,9 +34585,15 @@
   },
   {
    "file": "client/src/pages/PrivacyPage.tsx",
-   "line": 211,
+   "line": 210,
    "kind": "jsx",
    "text": "We retain your personal data only for as long as necessary to fulfil the purposes for which it was collected or as required by applicable law:"
+  },
+  {
+   "file": "client/src/pages/PrivacyPage.tsx",
+   "line": 215,
+   "kind": "jsx",
+   "text": "${} Retained for the duration of your account."
   },
   {
    "file": "client/src/pages/PrivacyPage.tsx",
@@ -34768,9 +34603,9 @@
   },
   {
    "file": "client/src/pages/PrivacyPage.tsx",
-   "line": 215,
+   "line": 216,
    "kind": "jsx",
-   "text": "Retained for the duration of your account."
+   "text": "${} Retained for 24 months from the date of each session to support session memory features and dispute resolution."
   },
   {
    "file": "client/src/pages/PrivacyPage.tsx",
@@ -34780,33 +34615,27 @@
   },
   {
    "file": "client/src/pages/PrivacyPage.tsx",
-   "line": 216,
-   "kind": "jsx",
-   "text": "Retained for 24 months from the date of each session to support session memory features and dispute resolution."
-  },
-  {
-   "file": "client/src/pages/PrivacyPage.tsx",
    "line": 217,
    "kind": "jsx",
-   "text": "Retained for 7 years from the date of transaction for accounting and tax compliance purposes."
+   "text": "${} Retained for 7 years from the date of transaction for accounting and tax compliance purposes."
   },
   {
    "file": "client/src/pages/PrivacyPage.tsx",
    "line": 218,
    "kind": "jsx",
-   "text": "Retained until you unsubscribe or withdraw consent."
+   "text": "${} Retained until you unsubscribe or withdraw consent."
   },
   {
    "file": "client/src/pages/PrivacyPage.tsx",
    "line": 219,
    "kind": "jsx",
-   "text": "Retained for as long as you are subscribed to text messages and for 5 years after you opt out, so that we can show when and how consent was given."
+   "text": "${} Retained for as long as you are subscribed to text messages and for 5 years after you opt out, so that we can show when and how consent was given."
   },
   {
    "file": "client/src/pages/PrivacyPage.tsx",
    "line": 220,
    "kind": "jsx",
-   "text": "Account data is deleted or anonymised within 90 days of account closure, subject to the retention periods above for transaction records."
+   "text": "${} Account data is deleted or anonymised within 90 days of account closure, subject to the retention periods above for transaction records."
   },
   {
    "file": "client/src/pages/PrivacyPage.tsx",
@@ -34816,7 +34645,7 @@
   },
   {
    "file": "client/src/pages/PrivacyPage.tsx",
-   "line": 227,
+   "line": 226,
    "kind": "jsx",
    "text": "Under the Personal Data Protection Act 2012 (as amended), you have the following rights in respect of your personal data:"
   },
@@ -34882,15 +34711,9 @@
   },
   {
    "file": "client/src/pages/PrivacyPage.tsx",
-   "line": 253,
+   "line": 252,
    "kind": "jsx",
-   "text": "To exercise any of these rights, please email us at"
-  },
-  {
-   "file": "client/src/pages/PrivacyPage.tsx",
-   "line": 257,
-   "kind": "jsx",
-   "text": ". We will respond to verifiable requests within 30 days. We may need to verify your identity before processing your request."
+   "text": "To exercise any of these rights, please email us at ${}. We will respond to verifiable requests within 30 days. We may need to verify your identity before processing your request."
   },
   {
    "file": "client/src/pages/PrivacyPage.tsx",
@@ -34900,7 +34723,7 @@
   },
   {
    "file": "client/src/pages/PrivacyPage.tsx",
-   "line": 265,
+   "line": 264,
    "kind": "jsx",
    "text": "Our services are intended for users who are 18 years of age or older. We do not knowingly collect personal data from individuals under 18. If we become aware that we have collected personal data from a person under 18 without appropriate consent, we will delete it promptly. If you believe we may have inadvertently collected data from a minor, please contact us."
   },
@@ -34912,7 +34735,7 @@
   },
   {
    "file": "client/src/pages/PrivacyPage.tsx",
-   "line": 275,
+   "line": 274,
    "kind": "jsx",
    "text": "We use cookies and similar technologies on our website. These include:"
   },
@@ -34920,23 +34743,23 @@
    "file": "client/src/pages/PrivacyPage.tsx",
    "line": 278,
    "kind": "jsx",
-   "text": "Required for core functionality such as session authentication. These cannot be disabled."
+   "text": "${} Required for core functionality such as session authentication. These cannot be disabled."
   },
   {
    "file": "client/src/pages/PrivacyPage.tsx",
    "line": 279,
    "kind": "jsx",
-   "text": "Used to understand how users interact with our platform in aggregate."
+   "text": "${} Used to understand how users interact with our platform in aggregate."
   },
   {
    "file": "client/src/pages/PrivacyPage.tsx",
    "line": 280,
    "kind": "jsx",
-   "text": "We use the Facebook Pixel and Facebook Conversions API to measure the effectiveness of our advertising. These track specific events (page views, purchases) and may transmit hashed email addresses to Facebook for matching purposes."
+   "text": "${} We use the Facebook Pixel and Facebook Conversions API to measure the effectiveness of our advertising. These track specific events (page views, purchases) and may transmit hashed email addresses to Facebook for matching purposes."
   },
   {
    "file": "client/src/pages/PrivacyPage.tsx",
-   "line": 283,
+   "line": 282,
    "kind": "jsx",
    "text": "You can control most non-essential cookies through your browser settings. Please note that disabling cookies may affect the functionality of our platform."
   },
@@ -34948,15 +34771,9 @@
   },
   {
    "file": "client/src/pages/PrivacyPage.tsx",
-   "line": 291,
+   "line": 290,
    "kind": "jsx",
-   "text": "We will only send you marketing communications if you have opted in (for example, by providing your email during checkout or by signing up to our mailing list). You may unsubscribe at any time by clicking the \"unsubscribe\" link in any marketing email or by emailing us at"
-  },
-  {
-   "file": "client/src/pages/PrivacyPage.tsx",
-   "line": 298,
-   "kind": "jsx",
-   "text": ". Transactional emails (such as receipts and account notifications) are not subject to marketing opt-out."
+   "text": "We will only send you marketing communications if you have opted in (for example, by providing your email during checkout or by signing up to our mailing list). You may unsubscribe at any time by clicking the \"unsubscribe\" link in any marketing email or by emailing us at ${}. Transactional emails (such as receipts and account notifications) are not subject to marketing opt-out."
   },
   {
    "file": "client/src/pages/PrivacyPage.tsx",
@@ -34966,39 +34783,27 @@
   },
   {
    "file": "client/src/pages/PrivacyPage.tsx",
-   "line": 306,
+   "line": 305,
    "kind": "jsx",
    "text": "If you give us your mobile number and agree to receive text messages, The Seer Within will send you recurring automated marketing text messages, such as invitations to continue your readings with our guides and related offers. Consent to receive text messages is not a condition of any purchase. Up to 3 messages per week. Message and data rates may apply."
   },
   {
    "file": "client/src/pages/PrivacyPage.tsx",
-   "line": 313,
+   "line": 312,
    "kind": "jsx",
-   "text": "You can stop text messages at any time by replying"
+   "text": "You can stop text messages at any time by replying ${} to any message. You will receive one final message confirming you have been unsubscribed. Reply ${} for help, or email us at ${}."
   },
   {
    "file": "client/src/pages/PrivacyPage.tsx",
-   "line": 313,
+   "line": 321,
    "kind": "jsx",
-   "text": "to any message. You will receive one final message confirming you have been unsubscribed. Reply"
+   "text": "${} Text-messaging opt-in data and consent are excluded from all other categories of sharing described in this Privacy Policy and will not be shared with any third party, except with the service providers (such as Twilio) that send messages on our behalf."
   },
   {
    "file": "client/src/pages/PrivacyPage.tsx",
-   "line": 315,
-   "kind": "jsx",
-   "text": "for help, or email us at"
-  },
-  {
-   "file": "client/src/pages/PrivacyPage.tsx",
-   "line": 323,
+   "line": 322,
    "kind": "jsx",
    "text": "We do not sell, rent or share your mobile number or your text-message consent with any third party or affiliate for their marketing or promotional purposes."
-  },
-  {
-   "file": "client/src/pages/PrivacyPage.tsx",
-   "line": 326,
-   "kind": "jsx",
-   "text": "Text-messaging opt-in data and consent are excluded from all other categories of sharing described in this Privacy Policy and will not be shared with any third party, except with the service providers (such as Twilio) that send messages on our behalf."
   },
   {
    "file": "client/src/pages/PrivacyPage.tsx",
@@ -35008,7 +34813,7 @@
   },
   {
    "file": "client/src/pages/PrivacyPage.tsx",
-   "line": 335,
+   "line": 334,
    "kind": "jsx",
    "text": "We may update this Privacy Policy from time to time to reflect changes in our practices or applicable law. We will notify you of material changes by email (if you have an account) or by posting a prominent notice on our platform. The updated Policy will display a revised \"Last updated\" date. We encourage you to review this Policy periodically."
   },
@@ -35020,7 +34825,7 @@
   },
   {
    "file": "client/src/pages/PrivacyPage.tsx",
-   "line": 345,
+   "line": 344,
    "kind": "jsx",
    "text": "If you have concerns about how we handle your personal data and are not satisfied with our response, you may lodge a complaint with the Personal Data Protection Commission (PDPC):"
   },
@@ -35038,13 +34843,19 @@
   },
   {
    "file": "client/src/pages/PrivacyPage.tsx",
+   "line": 351,
+   "kind": "jsx",
+   "text": "Website: ${}"
+  },
+  {
+   "file": "client/src/pages/PrivacyPage.tsx",
    "line": 359,
    "kind": "jsx",
    "text": "16. Contact Us"
   },
   {
    "file": "client/src/pages/PrivacyPage.tsx",
-   "line": 361,
+   "line": 360,
    "kind": "jsx",
    "text": "For any questions about this Privacy Policy or to exercise your data rights, please contact us:"
   },
@@ -35068,9 +34879,15 @@
   },
   {
    "file": "client/src/pages/PrivacyPage.tsx",
+   "line": 367,
+   "kind": "jsx",
+   "text": "Email: ${}"
+  },
+  {
+   "file": "client/src/pages/PrivacyPage.tsx",
    "line": 379,
    "kind": "jsx",
-   "text": "Cosmo Numerology Pte Ltd. All rights reserved."
+   "text": "© ${} Cosmo Numerology Pte Ltd. All rights reserved."
   },
   {
    "file": "client/src/pages/RefundPage.tsx",
@@ -35080,9 +34897,9 @@
   },
   {
    "file": "client/src/pages/RefundPage.tsx",
-   "line": 16,
+   "line": 14,
    "kind": "jsx",
-   "text": "Back to Guides"
+   "text": "${}Back to Guides"
   },
   {
    "file": "client/src/pages/RefundPage.tsx",
@@ -35104,27 +34921,21 @@
   },
   {
    "file": "client/src/pages/RefundPage.tsx",
-   "line": 28,
+   "line": 27,
    "kind": "jsx",
    "text": "At The Seer Within, operated by Cosmo Numerology Pte Ltd, we want you to feel confident in every purchase. While digital reading minutes are consumed immediately upon use, we recognise that circumstances change — and we extend a goodwill refund on unused minutes under the conditions set out in this Policy."
   },
   {
    "file": "client/src/pages/RefundPage.tsx",
-   "line": 34,
+   "line": 33,
    "kind": "jsx",
-   "text": "This Policy forms part of our"
+   "text": "This Policy forms part of our ${}. Defined terms used here have the same meaning as in those Terms."
   },
   {
    "file": "client/src/pages/RefundPage.tsx",
    "line": 36,
    "kind": "jsx",
    "text": "Terms of Service"
-  },
-  {
-   "file": "client/src/pages/RefundPage.tsx",
-   "line": 38,
-   "kind": "jsx",
-   "text": ". Defined terms used here have the same meaning as in those Terms."
   },
   {
    "file": "client/src/pages/RefundPage.tsx",
@@ -35148,7 +34959,7 @@
    "file": "client/src/pages/RefundPage.tsx",
    "line": 49,
    "kind": "jsx",
-   "text": "The request is made within"
+   "text": "The request is made within ${} of the original purchase date; and"
   },
   {
    "file": "client/src/pages/RefundPage.tsx",
@@ -35158,15 +34969,9 @@
   },
   {
    "file": "client/src/pages/RefundPage.tsx",
-   "line": 49,
-   "kind": "jsx",
-   "text": "of the original purchase date; and"
-  },
-  {
-   "file": "client/src/pages/RefundPage.tsx",
    "line": 50,
    "kind": "jsx",
-   "text": "The minutes from that purchase have"
+   "text": "The minutes from that purchase have ${} in any guide session."
   },
   {
    "file": "client/src/pages/RefundPage.tsx",
@@ -35176,13 +34981,7 @@
   },
   {
    "file": "client/src/pages/RefundPage.tsx",
-   "line": 50,
-   "kind": "jsx",
-   "text": "in any guide session."
-  },
-  {
-   "file": "client/src/pages/RefundPage.tsx",
-   "line": 53,
+   "line": 52,
    "kind": "jsx",
    "text": "Where a purchase has been partially used (i.e. some minutes from that purchase were consumed in sessions), only the unused portion is eligible for a goodwill refund. The refund amount will be calculated on a pro-rata basis against the original purchase price."
   },
@@ -35190,13 +34989,7 @@
    "file": "client/src/pages/RefundPage.tsx",
    "line": 57,
    "kind": "jsx",
-   "text": "The following minutes are"
-  },
-  {
-   "file": "client/src/pages/RefundPage.tsx",
-   "line": 57,
-   "kind": "jsx",
-   "text": "eligible for refund:"
+   "text": "The following minutes are ${} eligible for refund:"
   },
   {
    "file": "client/src/pages/RefundPage.tsx",
@@ -35224,7 +35017,7 @@
   },
   {
    "file": "client/src/pages/RefundPage.tsx",
-   "line": 65,
+   "line": 64,
    "kind": "jsx",
    "text": "This goodwill refund is provided at our sole discretion. It does not affect, and is in addition to, any statutory rights you may have under Singapore law."
   },
@@ -35242,21 +35035,15 @@
   },
   {
    "file": "client/src/pages/RefundPage.tsx",
-   "line": 76,
+   "line": 75,
    "kind": "jsx",
-   "text": "The Soulmate Initials Reading is a one-time digital reading (not reading minutes), and it carries its own, separate guarantee: if it does not resonate with you, email us within"
+   "text": "The Soulmate Initials Reading is a one-time digital reading (not reading minutes), and it carries its own, separate guarantee: if it does not resonate with you, email us within ${} of your purchase date for a full refund."
   },
   {
    "file": "client/src/pages/RefundPage.tsx",
    "line": 78,
    "kind": "jsx",
    "text": "60 calendar days"
-  },
-  {
-   "file": "client/src/pages/RefundPage.tsx",
-   "line": 78,
-   "kind": "jsx",
-   "text": "of your purchase date for a full refund."
   },
   {
    "file": "client/src/pages/RefundPage.tsx",
@@ -35284,7 +35071,7 @@
   },
   {
    "file": "client/src/pages/RefundPage.tsx",
-   "line": 91,
+   "line": 90,
    "kind": "jsx",
    "text": "This guarantee is provided at our discretion and does not affect, and is in addition to, any statutory rights you may have under Singapore law."
   },
@@ -35296,9 +35083,9 @@
   },
   {
    "file": "client/src/pages/RefundPage.tsx",
-   "line": 99,
+   "line": 98,
    "kind": "jsx",
-   "text": "As set out in our Terms of Service, purchased minutes expire"
+   "text": "As set out in our Terms of Service, purchased minutes expire ${}. Minutes that have expired are forfeited and are not eligible for any refund, extension, or reactivation."
   },
   {
    "file": "client/src/pages/RefundPage.tsx",
@@ -35308,13 +35095,7 @@
   },
   {
    "file": "client/src/pages/RefundPage.tsx",
-   "line": 100,
-   "kind": "jsx",
-   "text": ". Minutes that have expired are forfeited and are not eligible for any refund, extension, or reactivation."
-  },
-  {
-   "file": "client/src/pages/RefundPage.tsx",
-   "line": 104,
+   "line": 103,
    "kind": "jsx",
    "text": "We will endeavour (on a best-efforts basis) to send you a reminder email approximately 14 days before your minutes expire. However, it remains your responsibility to use minutes before they expire. A missed reminder notification does not entitle you to a refund or extension of expired minutes."
   },
@@ -35332,33 +35113,33 @@
   },
   {
    "file": "client/src/pages/RefundPage.tsx",
+   "line": 115,
+   "kind": "jsx",
+   "text": "${} If your item arrives damaged or defective, contact us within 7 days of delivery with clear photographs of the damage. We will replace the item at no additional cost or, at our discretion, issue a full refund."
+  },
+  {
+   "file": "client/src/pages/RefundPage.tsx",
    "line": 116,
    "kind": "jsx",
    "text": "Damaged or Defective Items:"
   },
   {
    "file": "client/src/pages/RefundPage.tsx",
-   "line": 116,
+   "line": 120,
    "kind": "jsx",
-   "text": "If your item arrives damaged or defective, contact us within 7 days of delivery with clear photographs of the damage. We will replace the item at no additional cost or, at our discretion, issue a full refund."
+   "text": "${} If your order does not arrive within 30 days of the estimated delivery date, contact us. We will investigate with the carrier and either reship the order or provide a full refund."
   },
   {
    "file": "client/src/pages/RefundPage.tsx",
-   "line": 121,
+   "line": 125,
    "kind": "jsx",
-   "text": "If your order does not arrive within 30 days of the estimated delivery date, contact us. We will investigate with the carrier and either reship the order or provide a full refund."
+   "text": "${} Due to the personalised and energetically prepared nature of our ritual items, we do not offer refunds on the basis of change of mind. Each item is prepared specifically for you upon order."
   },
   {
    "file": "client/src/pages/RefundPage.tsx",
    "line": 126,
    "kind": "jsx",
    "text": "Change of Mind:"
-  },
-  {
-   "file": "client/src/pages/RefundPage.tsx",
-   "line": 126,
-   "kind": "jsx",
-   "text": "Due to the personalised and energetically prepared nature of our ritual items, we do not offer refunds on the basis of change of mind. Each item is prepared specifically for you upon order."
   },
   {
    "file": "client/src/pages/RefundPage.tsx",
@@ -35374,15 +35155,9 @@
   },
   {
    "file": "client/src/pages/RefundPage.tsx",
-   "line": 138,
+   "line": 137,
    "kind": "jsx",
-   "text": "Email us at"
-  },
-  {
-   "file": "client/src/pages/RefundPage.tsx",
-   "line": 142,
-   "kind": "jsx",
-   "text": "with the subject line \"Refund Request\""
+   "text": "Email us at ${} with the subject line \"Refund Request\""
   },
   {
    "file": "client/src/pages/RefundPage.tsx",
@@ -35410,7 +35185,7 @@
   },
   {
    "file": "client/src/pages/RefundPage.tsx",
-   "line": 150,
+   "line": 149,
    "kind": "jsx",
    "text": "We aim to acknowledge all refund requests within 2 business days and to complete our review within 5 business days of receiving your request."
   },
@@ -35422,9 +35197,15 @@
   },
   {
    "file": "client/src/pages/RefundPage.tsx",
-   "line": 158,
+   "line": 157,
    "kind": "jsx",
    "text": "Approved refunds will be credited to your original payment method. Processing times vary by provider:"
+  },
+  {
+   "file": "client/src/pages/RefundPage.tsx",
+   "line": 162,
+   "kind": "jsx",
+   "text": "${} typically 5–10 business days after approval, depending on your card issuer."
   },
   {
    "file": "client/src/pages/RefundPage.tsx",
@@ -35434,9 +35215,9 @@
   },
   {
    "file": "client/src/pages/RefundPage.tsx",
-   "line": 162,
+   "line": 163,
    "kind": "jsx",
-   "text": "typically 5–10 business days after approval, depending on your card issuer."
+   "text": "${} timing will be communicated at the time of approval."
   },
   {
    "file": "client/src/pages/RefundPage.tsx",
@@ -35446,13 +35227,7 @@
   },
   {
    "file": "client/src/pages/RefundPage.tsx",
-   "line": 163,
-   "kind": "jsx",
-   "text": "timing will be communicated at the time of approval."
-  },
-  {
-   "file": "client/src/pages/RefundPage.tsx",
-   "line": 166,
+   "line": 165,
    "kind": "jsx",
    "text": "We have no control over your bank or card issuer's posting timelines. If your refund does not appear after 15 business days, please contact your bank before reaching out to us."
   },
@@ -35494,7 +35269,7 @@
   },
   {
    "file": "client/src/pages/RefundPage.tsx",
-   "line": 182,
+   "line": 181,
    "kind": "jsx",
    "text": "If we decline your request, we will explain the reason. You may contact us to discuss the decision further."
   },
@@ -35506,9 +35281,9 @@
   },
   {
    "file": "client/src/pages/RefundPage.tsx",
-   "line": 190,
+   "line": 189,
    "kind": "jsx",
-   "text": "This Refund Policy does not limit or affect your statutory rights as a consumer under the Consumer Protection (Fair Trading) Act (Cap. 52A) of Singapore or any other applicable Singapore consumer protection legislation. If you believe you have experienced an unfair trade practice, you may also seek assistance from the Consumers Association of Singapore (CASE) at"
+   "text": "This Refund Policy does not limit or affect your statutory rights as a consumer under the Consumer Protection (Fair Trading) Act (Cap. 52A) of Singapore or any other applicable Singapore consumer protection legislation. If you believe you have experienced an unfair trade practice, you may also seek assistance from the Consumers Association of Singapore (CASE) at ${}."
   },
   {
    "file": "client/src/pages/RefundPage.tsx",
@@ -35542,9 +35317,15 @@
   },
   {
    "file": "client/src/pages/RefundPage.tsx",
+   "line": 206,
+   "kind": "jsx",
+   "text": "Email: ${}"
+  },
+  {
+   "file": "client/src/pages/RefundPage.tsx",
    "line": 218,
    "kind": "jsx",
-   "text": "Cosmo Numerology Pte Ltd. All rights reserved."
+   "text": "© ${} Cosmo Numerology Pte Ltd. All rights reserved."
   },
   {
    "file": "client/src/pages/SuccessPage.tsx",
@@ -35554,9 +35335,9 @@
   },
   {
    "file": "client/src/pages/SuccessPage.tsx",
-   "line": 265,
+   "line": 264,
    "kind": "jsx",
-   "text": "Thank You,"
+   "text": "Thank You, ${}"
   },
   {
    "file": "client/src/pages/SuccessPage.tsx",
@@ -35566,7 +35347,7 @@
   },
   {
    "file": "client/src/pages/SuccessPage.tsx",
-   "line": 269,
+   "line": 268,
    "kind": "jsx",
    "text": "The moment you took action, something shifted. Most people stay curious. You chose to look."
   },
@@ -35578,31 +35359,31 @@
   },
   {
    "file": "client/src/pages/SuccessPage.tsx",
-   "line": 279,
+   "line": 278,
    "kind": "jsx",
    "text": "Your personalized clearing begins tonight"
   },
   {
    "file": "client/src/pages/SuccessPage.tsx",
-   "line": 289,
+   "line": 288,
    "kind": "jsx",
    "text": "Protection Ritual + Volcanic Stone"
   },
   {
    "file": "client/src/pages/SuccessPage.tsx",
-   "line": 292,
+   "line": 291,
    "kind": "jsx",
    "text": "Your charged talisman ships within 48 hours"
   },
   {
    "file": "client/src/pages/SuccessPage.tsx",
-   "line": 303,
+   "line": 302,
    "kind": "jsx",
    "text": "Manifestation Bracelet"
   },
   {
    "file": "client/src/pages/SuccessPage.tsx",
-   "line": 306,
+   "line": 305,
    "kind": "jsx",
    "text": "Your 8-stone bracelet ships within 48 hours"
   },
@@ -35614,7 +35395,7 @@
   },
   {
    "file": "client/src/pages/SuccessPage.tsx",
-   "line": 317,
+   "line": 316,
    "kind": "jsx",
    "text": "Arrives in your inbox within 24 hours"
   },
@@ -35632,27 +35413,9 @@
   },
   {
    "file": "client/src/pages/SuccessPage.tsx",
-   "line": 335,
+   "line": 334,
    "kind": "jsx",
-   "text": "Your reading showed you the"
-  },
-  {
-   "file": "client/src/pages/SuccessPage.tsx",
-   "line": 335,
-   "kind": "jsx",
-   "text": ". A conversation with Evelyn tells you the"
-  },
-  {
-   "file": "client/src/pages/SuccessPage.tsx",
-   "line": 336,
-   "kind": "jsx",
-   "text": ", the"
-  },
-  {
-   "file": "client/src/pages/SuccessPage.tsx",
-   "line": 336,
-   "kind": "jsx",
-   "text": ", and the"
+   "text": "Your reading showed you the ${}. A conversation with Evelyn tells you the ${}, the ${}, and the ${}."
   },
   {
    "file": "client/src/pages/SuccessPage.tsx",
@@ -35662,27 +35425,9 @@
   },
   {
    "file": "client/src/pages/SuccessPage.tsx",
-   "line": 341,
+   "line": 340,
    "kind": "jsx",
-   "text": "A general reading tells you the"
-  },
-  {
-   "file": "client/src/pages/SuccessPage.tsx",
-   "line": 341,
-   "kind": "jsx",
-   "text": ". A conversation tells you the"
-  },
-  {
-   "file": "client/src/pages/SuccessPage.tsx",
-   "line": 342,
-   "kind": "jsx",
-   "text": ", the"
-  },
-  {
-   "file": "client/src/pages/SuccessPage.tsx",
-   "line": 342,
-   "kind": "jsx",
-   "text": ", and the"
+   "text": "A general reading tells you the ${}. A conversation tells you the ${}, the ${}, and the ${}."
   },
   {
    "file": "client/src/pages/SuccessPage.tsx",
@@ -35692,21 +35437,15 @@
   },
   {
    "file": "client/src/pages/SuccessPage.tsx",
-   "line": 350,
+   "line": 349,
    "kind": "jsx",
-   "text": "As a welcome gift, we've reserved"
+   "text": "As a welcome gift, we've reserved ${} for you to speak directly with ${} — the reader who just read for you."
   },
   {
    "file": "client/src/pages/SuccessPage.tsx",
-   "line": 352,
+   "line": 351,
    "kind": "jsx",
    "text": "15 minutes of free chat"
-  },
-  {
-   "file": "client/src/pages/SuccessPage.tsx",
-   "line": 354,
-   "kind": "jsx",
-   "text": "for you to speak directly with"
   },
   {
    "file": "client/src/pages/SuccessPage.tsx",
@@ -35716,39 +35455,21 @@
   },
   {
    "file": "client/src/pages/SuccessPage.tsx",
-   "line": 355,
+   "line": 359,
    "kind": "jsx",
-   "text": "— the reader who just read for you."
+   "text": "As a welcome gift, we've reserved ${} for you to speak directly with ${} — one of our most sought-after readers, known for cutting straight to the truth others tip-toe around."
   },
   {
    "file": "client/src/pages/SuccessPage.tsx",
-   "line": 360,
-   "kind": "jsx",
-   "text": "As a welcome gift, we've reserved"
-  },
-  {
-   "file": "client/src/pages/SuccessPage.tsx",
-   "line": 362,
+   "line": 361,
    "kind": "jsx",
    "text": "30 minutes of free chat (a $50 value)"
-  },
-  {
-   "file": "client/src/pages/SuccessPage.tsx",
-   "line": 364,
-   "kind": "jsx",
-   "text": "for you to speak directly with"
   },
   {
    "file": "client/src/pages/SuccessPage.tsx",
    "line": 365,
    "kind": "jsx",
    "text": "Astrologer Luna Voss"
-  },
-  {
-   "file": "client/src/pages/SuccessPage.tsx",
-   "line": 365,
-   "kind": "jsx",
-   "text": "— one of our most sought-after readers, known for cutting straight to the truth others tip-toe around."
   },
   {
    "file": "client/src/pages/SuccessPage.tsx",
@@ -35788,7 +35509,7 @@
   },
   {
    "file": "client/src/pages/SuccessPage.tsx",
-   "line": 401,
+   "line": 400,
    "kind": "jsx",
    "text": "Gift Voucher"
   },
@@ -35842,21 +35563,21 @@
   },
   {
    "file": "client/src/pages/SuccessPage.tsx",
-   "line": 430,
+   "line": 429,
    "kind": "jsx",
    "text": "The universe is already responding to your commitment."
   },
   {
    "file": "client/src/pages/SuccessPage.tsx",
-   "line": 438,
+   "line": 434,
    "kind": "jsx",
    "text": "Return Home"
   },
   {
    "file": "client/src/pages/SuccessPage.tsx",
-   "line": 445,
+   "line": 444,
    "kind": "jsx",
-   "text": "The Seer Within. For Entertainment Purposes Only."
+   "text": "© ${} The Seer Within. For Entertainment Purposes Only."
   },
   {
    "file": "client/src/pages/TarotBridge.tsx",
@@ -35892,7 +35613,7 @@
    "file": "client/src/pages/TarotBridge.tsx",
    "line": 259,
    "kind": "jsx",
-   "text": "Evelyn is reading your"
+   "text": "Evelyn is reading your ${}…"
   },
   {
    "file": "client/src/pages/TarotBridge.tsx",
@@ -35922,7 +35643,7 @@
    "file": "client/src/pages/TarotBridge.tsx",
    "line": 304,
    "kind": "jsx",
-   "text": "Cosmo Numerology Pte Ltd. For Entertainment Purposes Only."
+   "text": "© ${} Cosmo Numerology Pte Ltd. For Entertainment Purposes Only."
   },
   {
    "file": "client/src/pages/TarotBridge.tsx",
@@ -35933,7 +35654,7 @@
   {
    "file": "client/src/pages/TarotRetargetOffer.tsx",
    "line": 153,
-   "kind": "template",
+   "kind": "jsx",
    "text": "Was ${}, now ${}."
   },
   {
@@ -35945,7 +35666,7 @@
   {
    "file": "client/src/pages/TarotRetargetOffer.tsx",
    "line": 234,
-   "kind": "string",
+   "kind": "jsx",
    "text": "[data-testid=\"retarget-offer-page\"] .offer-p { font-family: Georgia, 'Times New Roman', serif; font-size: 1.0625rem; line-height: 1.65; color: #2e261f; margin: 0 0 1.05em; } @media (min-width: 640px) { [data-testid=\"retarget-offer-page\"] .offer-p { font-size: 1.125rem; } } [data-testid=\"retarget-offer-page\"] .offer-h2 { font-family: 'Playfair Display', Georgia, serif; font-size: 1.375rem; line-height: 1.3; color: #2a1d12; margin: 0 0 1rem; } @media (min-width: 640px) { [data-testid=\"retarget-offer-page\"] .offer-h2 { font-size: 1.625rem; } }"
   },
   {
@@ -35982,7 +35703,7 @@
    "file": "client/src/pages/TarotRetargetOffer.tsx",
    "line": 447,
    "kind": "jsx",
-   "text": "Cosmo Numerology Pte Ltd. For Entertainment Purposes Only."
+   "text": "© ${} Cosmo Numerology Pte Ltd. For Entertainment Purposes Only."
   },
   {
    "file": "client/src/pages/TermsPage.tsx",
@@ -35992,9 +35713,9 @@
   },
   {
    "file": "client/src/pages/TermsPage.tsx",
-   "line": 16,
+   "line": 14,
    "kind": "jsx",
-   "text": "Back to Guides"
+   "text": "${}Back to Guides"
   },
   {
    "file": "client/src/pages/TermsPage.tsx",
@@ -36016,7 +35737,7 @@
   },
   {
    "file": "client/src/pages/TermsPage.tsx",
-   "line": 28,
+   "line": 27,
    "kind": "jsx",
    "text": "By accessing or using The Seer Within website and services operated by Cosmo Numerology Pte Ltd (\"Company\", \"we\", \"our\", \"us\"), you agree to be bound by these Terms of Service and our Privacy Policy. If you do not agree to these terms, please do not use our services. These terms constitute a binding legal agreement between you and the Company under the laws of the Republic of Singapore."
   },
@@ -36028,13 +35749,13 @@
   },
   {
    "file": "client/src/pages/TermsPage.tsx",
-   "line": 39,
+   "line": 38,
    "kind": "jsx",
    "text": "The Seer Within offers spiritual readings, numerological insights, and intuitive guidance for the purposes of entertainment, self-reflection, and personal inspiration. Our guides draw on spiritual and metaphysical traditions to offer perspectives that many people find thought-provoking, comforting, and meaningful."
   },
   {
    "file": "client/src/pages/TermsPage.tsx",
-   "line": 45,
+   "line": 44,
    "kind": "jsx",
    "text": "By using our services, you acknowledge that:"
   },
@@ -36064,13 +35785,13 @@
   },
   {
    "file": "client/src/pages/TermsPage.tsx",
-   "line": 60,
+   "line": 59,
    "kind": "jsx",
    "text": "We believe in the power of self-exploration and the wisdom that can emerge from reflection — and we take seriously our responsibility to offer that experience with care and integrity."
   },
   {
    "file": "client/src/pages/TermsPage.tsx",
-   "line": 65,
+   "line": 64,
    "kind": "jsx",
    "text": "If you are experiencing a personal crisis, mental health difficulty, or any situation requiring urgent professional support, we encourage you to reach out to a qualified professional or an emergency service in your country."
   },
@@ -36082,7 +35803,7 @@
   },
   {
    "file": "client/src/pages/TermsPage.tsx",
-   "line": 74,
+   "line": 73,
    "kind": "jsx",
    "text": "You must be at least 18 years of age to use our services. By using our services, you represent and warrant that:"
   },
@@ -36112,7 +35833,7 @@
   },
   {
    "file": "client/src/pages/TermsPage.tsx",
-   "line": 87,
+   "line": 86,
    "kind": "jsx",
    "text": "Certain features of our service require you to register for an account. When you register, you agree to:"
   },
@@ -36142,7 +35863,7 @@
   },
   {
    "file": "client/src/pages/TermsPage.tsx",
-   "line": 96,
+   "line": 95,
    "kind": "jsx",
    "text": "You may hold only one account. We reserve the right to suspend or terminate accounts that we reasonably believe are duplicates or created for abusive purposes."
   },
@@ -36154,7 +35875,7 @@
   },
   {
    "file": "client/src/pages/TermsPage.tsx",
-   "line": 104,
+   "line": 103,
    "kind": "jsx",
    "text": "Access to AI guide sessions is provided on a prepaid basis, measured in reading minutes (\"Minutes\"). Minutes are consumed at a per-minute rate determined by the guide you select, as displayed at the time of purchase."
   },
@@ -36190,15 +35911,15 @@
   },
   {
    "file": "client/src/pages/TermsPage.tsx",
-   "line": 121,
+   "line": 120,
    "kind": "jsx",
-   "text": "Purchased minutes expire six (6) months from the date of purchase."
+   "text": "${} Each minute purchase carries its own independent expiry date based on when that specific purchase was made."
   },
   {
    "file": "client/src/pages/TermsPage.tsx",
    "line": 121,
    "kind": "jsx",
-   "text": "Each minute purchase carries its own independent expiry date based on when that specific purchase was made."
+   "text": "Purchased minutes expire six (6) months from the date of purchase."
   },
   {
    "file": "client/src/pages/TermsPage.tsx",
@@ -36226,7 +35947,7 @@
   },
   {
    "file": "client/src/pages/TermsPage.tsx",
-   "line": 134,
+   "line": 133,
    "kind": "jsx",
    "text": "It is your responsibility to use minutes before their expiry date."
   },
@@ -36238,7 +35959,7 @@
   },
   {
    "file": "client/src/pages/TermsPage.tsx",
-   "line": 141,
+   "line": 140,
    "kind": "jsx",
    "text": "All purchases are processed securely through Stripe, Inc. By making a purchase, you agree that:"
   },
@@ -36262,7 +35983,7 @@
   },
   {
    "file": "client/src/pages/TermsPage.tsx",
-   "line": 149,
+   "line": 148,
    "kind": "jsx",
    "text": "Prices are listed in United States Dollars (USD) unless otherwise stated. Applicable taxes or bank conversion fees based on your location are your sole responsibility."
   },
@@ -36274,21 +35995,15 @@
   },
   {
    "file": "client/src/pages/TermsPage.tsx",
-   "line": 157,
+   "line": 156,
    "kind": "jsx",
-   "text": "Our refund policy is set out in full in our"
+   "text": "Our refund policy is set out in full in our ${}, which forms part of these Terms of Service. In summary, we offer goodwill refunds on unused purchased minutes within 30 days of purchase, subject to the conditions described in that policy. Minutes consumed in sessions are non-refundable. Complimentary minutes carry no cash value and are not eligible for refund."
   },
   {
    "file": "client/src/pages/TermsPage.tsx",
    "line": 159,
    "kind": "jsx",
    "text": "Refund Policy"
-  },
-  {
-   "file": "client/src/pages/TermsPage.tsx",
-   "line": 161,
-   "kind": "jsx",
-   "text": ", which forms part of these Terms of Service. In summary, we offer goodwill refunds on unused purchased minutes within 30 days of purchase, subject to the conditions described in that policy. Minutes consumed in sessions are non-refundable. Complimentary minutes carry no cash value and are not eligible for refund."
   },
   {
    "file": "client/src/pages/TermsPage.tsx",
@@ -36346,7 +36061,7 @@
   },
   {
    "file": "client/src/pages/TermsPage.tsx",
-   "line": 181,
+   "line": 180,
    "kind": "jsx",
    "text": "We reserve the right to suspend or permanently terminate access for any user who violates these conduct requirements, without refund."
   },
@@ -36358,7 +36073,7 @@
   },
   {
    "file": "client/src/pages/TermsPage.tsx",
-   "line": 189,
+   "line": 188,
    "kind": "jsx",
    "text": "Physical products (such as protection stones and ritual items) will be shipped to the address you provide. Shipping times vary by location. The Company is not responsible for delays caused by shipping carriers, customs authorities, or events beyond our reasonable control. Risk in physical goods passes to you upon dispatch."
   },
@@ -36372,7 +36087,13 @@
    "file": "client/src/pages/TermsPage.tsx",
    "line": 199,
    "kind": "jsx",
-   "text": "The Seer Within text messages, sent by Cosmo Numerology Pte Ltd."
+   "text": "${} The Seer Within text messages, sent by Cosmo Numerology Pte Ltd."
+  },
+  {
+   "file": "client/src/pages/TermsPage.tsx",
+   "line": 200,
+   "kind": "jsx",
+   "text": "${} Recurring automated marketing text messages, such as invitations to continue your readings with our guides and offers for further readings and related products."
   },
   {
    "file": "client/src/pages/TermsPage.tsx",
@@ -36382,9 +36103,9 @@
   },
   {
    "file": "client/src/pages/TermsPage.tsx",
-   "line": 200,
+   "line": 201,
    "kind": "jsx",
-   "text": "Recurring automated marketing text messages, such as invitations to continue your readings with our guides and offers for further readings and related products."
+   "text": "${} By giving your mobile number at checkout and choosing \"Yes, text me\" in the optional text-message question. Consent is not a condition of purchase."
   },
   {
    "file": "client/src/pages/TermsPage.tsx",
@@ -36394,63 +36115,45 @@
   },
   {
    "file": "client/src/pages/TermsPage.tsx",
-   "line": 201,
-   "kind": "jsx",
-   "text": "By giving your mobile number at checkout and choosing \"Yes, text me\" in the optional text-message question. Consent is not a condition of purchase."
-  },
-  {
-   "file": "client/src/pages/TermsPage.tsx",
    "line": 202,
    "kind": "jsx",
-   "text": "Up to 3 messages per week."
+   "text": "${} Up to 3 messages per week."
   },
   {
    "file": "client/src/pages/TermsPage.tsx",
    "line": 203,
    "kind": "jsx",
-   "text": "Message and data rates may apply, depending on your mobile plan."
+   "text": "${} Message and data rates may apply, depending on your mobile plan."
   },
   {
    "file": "client/src/pages/TermsPage.tsx",
    "line": 204,
    "kind": "jsx",
-   "text": "Reply"
-  },
-  {
-   "file": "client/src/pages/TermsPage.tsx",
-   "line": 204,
-   "kind": "jsx",
-   "text": "to any message. You will receive one message confirming you are unsubscribed, and no further messages after that. You can also email"
+   "text": "${} Reply ${} to any message. You will receive one message confirming you are unsubscribed, and no further messages after that. You can also email ${}."
   },
   {
    "file": "client/src/pages/TermsPage.tsx",
    "line": 207,
    "kind": "jsx",
-   "text": "Reply"
-  },
-  {
-   "file": "client/src/pages/TermsPage.tsx",
-   "line": 207,
-   "kind": "jsx",
-   "text": "to any message, or email"
+   "text": "${} Reply ${} to any message, or email ${}."
   },
   {
    "file": "client/src/pages/TermsPage.tsx",
    "line": 210,
    "kind": "jsx",
-   "text": "Mobile carriers are not liable for delayed or undelivered messages."
+   "text": "${} Mobile carriers are not liable for delayed or undelivered messages."
   },
   {
    "file": "client/src/pages/TermsPage.tsx",
    "line": 211,
    "kind": "jsx",
-   "text": "You must be 18 or older and the account holder of the mobile number, or have the account holder's permission."
+   "text": "${} You must be 18 or older and the account holder of the mobile number, or have the account holder's permission."
   },
   {
    "file": "client/src/pages/TermsPage.tsx",
    "line": 212,
    "kind": "jsx",
-   "text": "See section 13 of our"
+   "text": "${} See section 13 of our ${}. We never share your mobile number or text-message consent with third parties for their marketing."
   },
   {
    "file": "client/src/pages/TermsPage.tsx",
@@ -36460,19 +36163,13 @@
   },
   {
    "file": "client/src/pages/TermsPage.tsx",
-   "line": 213,
-   "kind": "jsx",
-   "text": ". We never share your mobile number or text-message consent with third parties for their marketing."
-  },
-  {
-   "file": "client/src/pages/TermsPage.tsx",
    "line": 219,
    "kind": "jsx",
    "text": "12. Intellectual Property"
   },
   {
    "file": "client/src/pages/TermsPage.tsx",
-   "line": 221,
+   "line": 220,
    "kind": "jsx",
    "text": "All content on our platform — including text, graphics, logos, AI persona designs, prompt architecture, and software — is the property of Cosmo Numerology Pte Ltd or its licensors and is protected under applicable intellectual property laws. You may not reproduce, distribute, modify, or create derivative works from any of our content without our prior written consent. AI-generated reading content produced during your session is provided for your personal use only."
   },
@@ -36484,7 +36181,7 @@
   },
   {
    "file": "client/src/pages/TermsPage.tsx",
-   "line": 233,
+   "line": 232,
    "kind": "jsx",
    "text": "We aim to provide continuous access to our services but do not guarantee uninterrupted availability. We may suspend or discontinue the service (in whole or in part) for maintenance, updates, or other operational reasons. We will use reasonable endeavours to notify users in advance of planned downtime where practicable. The Company shall not be liable for any loss arising from service unavailability."
   },
@@ -36496,7 +36193,7 @@
   },
   {
    "file": "client/src/pages/TermsPage.tsx",
-   "line": 244,
+   "line": 243,
    "kind": "jsx",
    "text": "Our services are provided on an \"as is\" and \"as available\" basis without warranties of any kind, whether express or implied, including but not limited to warranties of merchantability, fitness for a particular purpose, or non-infringement. We do not warrant that our services will meet your specific expectations, be error-free, or produce any particular outcome. AI-generated content is inherently probabilistic and may be inaccurate, incomplete, or unsuitable for your circumstances."
   },
@@ -36508,7 +36205,7 @@
   },
   {
    "file": "client/src/pages/TermsPage.tsx",
-   "line": 256,
+   "line": 255,
    "kind": "jsx",
    "text": "To the fullest extent permitted by the laws of Singapore, Cosmo Numerology Pte Ltd, its directors, employees, and agents shall not be liable for any indirect, incidental, special, consequential, exemplary, or punitive damages arising from:"
   },
@@ -36538,13 +36235,13 @@
   },
   {
    "file": "client/src/pages/TermsPage.tsx",
-   "line": 267,
+   "line": 266,
    "kind": "jsx",
    "text": "In any event, the Company's total aggregate liability to you shall not exceed the total amount you paid to us in the 3 months immediately preceding the event giving rise to the claim."
   },
   {
    "file": "client/src/pages/TermsPage.tsx",
-   "line": 271,
+   "line": 270,
    "kind": "jsx",
    "text": "Nothing in these Terms limits liability for death or personal injury caused by negligence, fraud, or any other liability that cannot be excluded under Singapore law."
   },
@@ -36556,13 +36253,13 @@
   },
   {
    "file": "client/src/pages/TermsPage.tsx",
-   "line": 279,
+   "line": 278,
    "kind": "jsx",
    "text": "These Terms of Service are governed by and construed in accordance with the laws of the Republic of Singapore, without regard to its conflict of law provisions."
   },
   {
    "file": "client/src/pages/TermsPage.tsx",
-   "line": 283,
+   "line": 282,
    "kind": "jsx",
    "text": "Any dispute arising out of or in connection with these Terms, including any question regarding its existence, validity, or termination, shall be subject to the exclusive jurisdiction of the courts of Singapore. You agree to submit to the personal jurisdiction of the Singapore courts for this purpose."
   },
@@ -36574,7 +36271,7 @@
   },
   {
    "file": "client/src/pages/TermsPage.tsx",
-   "line": 293,
+   "line": 292,
    "kind": "jsx",
    "text": "We reserve the right to modify these Terms of Service at any time. Where changes are material, we will notify registered users by email or via a prominent notice on the platform at least 14 days before the changes take effect. Your continued use of our services after the effective date of any changes constitutes your acceptance of the revised terms. If you do not agree to the revised terms, you must stop using our services."
   },
@@ -36586,7 +36283,7 @@
   },
   {
    "file": "client/src/pages/TermsPage.tsx",
-   "line": 304,
+   "line": 303,
    "kind": "jsx",
    "text": "If any provision of these Terms is found to be unenforceable or invalid under applicable law, that provision will be limited or severed to the minimum extent necessary, and the remaining provisions will remain in full force and effect."
   },
@@ -36622,9 +36319,15 @@
   },
   {
    "file": "client/src/pages/TermsPage.tsx",
+   "line": 317,
+   "kind": "jsx",
+   "text": "Email: ${}"
+  },
+  {
+   "file": "client/src/pages/TermsPage.tsx",
    "line": 329,
    "kind": "jsx",
-   "text": "Cosmo Numerology Pte Ltd. All rights reserved."
+   "text": "© ${} Cosmo Numerology Pte Ltd. All rights reserved."
   },
   {
    "file": "client/src/pages/Upsell2Page.tsx",
@@ -36664,13 +36367,13 @@
   },
   {
    "file": "client/src/pages/Upsell2Page.tsx",
-   "line": 266,
+   "line": 264,
    "kind": "jsx",
-   "text": "Loading your session..."
+   "text": "${}Loading your session..."
   },
   {
    "file": "client/src/pages/Upsell2Page.tsx",
-   "line": 283,
+   "line": 278,
    "kind": "jsx",
    "text": "Return home"
   },
@@ -36694,7 +36397,7 @@
   },
   {
    "file": "client/src/pages/Upsell2Page.tsx",
-   "line": 397,
+   "line": 391,
    "kind": "jsx",
    "text": "Send"
   },
@@ -36724,13 +36427,13 @@
   },
   {
    "file": "client/src/pages/UpsellPage.tsx",
-   "line": 238,
+   "line": 236,
    "kind": "jsx",
-   "text": "Loading your session..."
+   "text": "${}Loading your session..."
   },
   {
    "file": "client/src/pages/UpsellPage.tsx",
-   "line": 255,
+   "line": 251,
    "kind": "jsx",
    "text": "Return home"
   },
@@ -36754,7 +36457,7 @@
   },
   {
    "file": "client/src/pages/UpsellPage.tsx",
-   "line": 395,
+   "line": 389,
    "kind": "jsx",
    "text": "Send"
   },
@@ -42512,7 +42215,6 @@
   "client/src/components/SmsOptInCard.tsx": 1,
   "client/src/content/tarotReads.ts": 1,
   "client/src/hooks/useConversation.ts": 2,
-  "client/src/lib/facebook.ts": 1,
   "client/src/lib/funnel.ts": 3,
   "client/src/lib/gtm.ts": 1,
   "client/src/lib/intent.ts": 22,

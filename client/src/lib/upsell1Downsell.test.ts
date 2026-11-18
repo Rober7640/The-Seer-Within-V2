@@ -120,8 +120,8 @@ describe('{downsellPrice}', () => {
 describe('the shared buttons keep their old words by default', () => {
   it('Upsell2DownsellCTA defaults to V1 U2’s exact labels', () => {
     const down = file('../components/upsell/Upsell2DownsellCTA.tsx');
-    expect(down).toContain("acceptLabel = 'Yes, send it to me for $30'");
-    expect(down).toContain("priceNote = '$30 includes bracelet + free shipping'");
+    expect(down).toMatch(/acceptLabel = (?:t\()?['"]Yes,\ send\ it\ to\ me\ for\ \$30['"]/);  // t() wrapper allowed: same words
+    expect(down).toMatch(/priceNote = (?:t\()?['"]\$30\ includes\ bracelet\ \+\ free\ shipping['"]/);  // t() wrapper allowed: same words
   });
 
   it("OffersUpsell2 (U2) passes neither new prop, so U2's button is unchanged everywhere", () => {

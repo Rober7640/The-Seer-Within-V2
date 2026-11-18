@@ -2,8 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'wouter';
 import { funnelPath } from '@/lib/funnel';
 import { getLane, laneChatPath } from '@shared/beliefLanes';
+import { t } from "@/lib/i18n";
 
-export function CTAButton({ label = "Yes Evelyn, Please Begin My FREE Reading!", lane }: { label?: string; lane?: string }) {
+export function CTAButton({ label = t("Yes Evelyn, Please Begin My FREE Reading!"), lane }: { label?: string; lane?: string }) {
   const [enabled, setEnabled] = useState(false);
 
   useEffect(() => {

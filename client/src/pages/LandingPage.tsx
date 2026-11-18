@@ -66,7 +66,8 @@ export default function LandingPage() {
       <div className="mb-8 flex items-center gap-3 animate-fade-in text-center">
         <Sparkles className="w-10 h-10 text-purple-300 filter drop-shadow-lg" />
         <h1 className="font-serif text-3xl md:text-4xl text-secondary drop-shadow-md">
-          {t("The Seer Within")}</h1>
+          {t("The Seer Within")}
+        </h1>
       </div>
 
       {/* Main Card */}
@@ -131,7 +132,7 @@ export default function LandingPage() {
             <span className="hover:text-white/70 cursor-pointer transition-colors" data-testid="link-refund">{t("Refund Policy")}</span>
           </Link>
         </div>
-        <p>&copy; {new Date().getFullYear()} {" "}{t("Cosmo Numerology Pte Ltd. For Entertainment Purposes Only.")}</p>
+        <p>{t("© {getFullYear} Cosmo Numerology Pte Ltd. For Entertainment Purposes Only.", { getFullYear: new Date().getFullYear() })}</p>
       </footer>
     </div>
   );

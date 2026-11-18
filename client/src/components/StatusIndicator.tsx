@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
+import { t } from "@/lib/i18n";
 
 type Status = 'busy-slow' | 'busy-fast' | 'connecting' | 'online';
 
 export function StatusIndicator() {
   const [status, setStatus] = useState<Status>('busy-slow');
-  const [text, setText] = useState('Busy');
+  const [text, setText] = useState(t("Busy"));
 
   useEffect(() => {
     // Phase 2: Fast pulse at 2s
@@ -13,13 +14,13 @@ export function StatusIndicator() {
     // Phase 3: Connecting at 2.5s
     const t2 = setTimeout(() => {
       setStatus('connecting');
-      setText('Connecting...');
+      setText(t("Connecting..."));
     }, 2500);
     
     // Phase 4: Online at 3s
     const t3 = setTimeout(() => {
       setStatus('online');
-      setText('Online');
+      setText(t("Online"));
     }, 3000);
 
     return () => {
@@ -41,7 +42,7 @@ export function StatusIndicator() {
 
   return (
     <div className="flex items-center justify-center gap-2 font-medium">
-      <span className="text-gray-500">Evelyn Cross is</span>
+      <span className="text-gray-500">{t("Evelyn Cross is")}</span>
       <span className={`w-2.5 h-2.5 rounded-full ${getStatusClass(status)}`} />
       <span className={status === 'online' ? 'text-green-600 font-semibold' : 'text-gray-500'}>
         {text}

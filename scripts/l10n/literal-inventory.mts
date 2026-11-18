@@ -19,7 +19,7 @@
 import ts from "typescript";
 import fs from "node:fs";
 import path from "node:path";
-import { isCopyText, inNonCopyPosition, alreadyTranslated, declaredVars, decodeJsxEntities, cleanJsxText } from "./copyFilter.mts";
+import { isCopyText, inNonCopyPosition, alreadyTranslated, normalizeKey, richInnerTexts, jsxRunText, NON_COPY_FILES } from "./copyFilter.mts";
 
 const ROOT = process.cwd();
 
@@ -53,6 +53,7 @@ const COPY_DIRS = ["client/src/copy", "shared/copy", "server/lib/lang"];
 const EXCLUDE_DIRS = ["client/src/components/ui/", "node_modules/", "client/src/lib/locale.ts", "client/src/lib/i18n.ts", "shared/locales.ts", "shared/i18n.ts"];
 
 interface Entry { file: string; line: number; kind: "jsx" | "string" | "template"; text: string }
+// kind "jsx" = one JSX element's children run (see jsxRunText), not a single text node.
 interface Inventory { generatedAt: string; files: string[]; entries: Entry[]; regexCount: Record<string, number> }
 
 function resolveImport(fromFile: string, spec: string): string | null {
@@ -71,6 +72,7 @@ function resolveImport(fromFile: string, spec: string): string | null {
 function isExcluded(abs: string): boolean {
   const rel = path.relative(ROOT, abs);
   if (/\.(test|spec)\.tsx?$/.test(rel)) return true;
+  if (NON_COPY_FILES.test(rel)) return true;
   return EXCLUDE_DIRS.some((d) => rel.startsWith(d) || rel.includes(`/${d}`));
 }
 
@@ -116,10 +118,7 @@ function collectScope(): string[] {
 // of the template literal the codemod replaced; normalise them back so the
 // before/after multiset compares like with like.
 function normalizePlaceholders(node: ts.Node, value: string): string {
-  const call = node.parent as ts.CallExpression;
-  const names = declaredVars(call, call.expression.getText() === "tl" ? 2 : 1);
-  if (!names.size) return value;
-  return value.replace(/\{([A-Za-z_][A-Za-z0-9_]*)\}/g, (w, n: string) => (names.has(n) ? "${}" : w));
+  return normalizeKey(node.parent as ts.CallExpression, value);
 }
 
 function templateText(node: ts.TemplateExpression): string {
@@ -141,11 +140,24 @@ function scan(file: string): { entries: Entry[]; regex: number } {
     const line = src.getLineAndCharacterOfPosition(node.getStart()).line + 1;
     entries.push({ file: rel, line, kind, text: value.replace(/\s+/g, " ").trim() });
   };
+  const consumed = new Set<ts.Node>();
   src.forEachChild(function visit(node) {
+    if (consumed.has(node)) return;
+    if (ts.isCallExpression(node)) {
+      // tx(): the emphasised words inside its tags were their own JSX elements before
+      const line = src.getLineAndCharacterOfPosition(node.getStart()).line + 1;
+      for (const inner of richInnerTexts(node)) if (isCopyText(inner)) entries.push({ file: rel, line, kind: "jsx", text: inner.replace(/\s+/g, " ").trim() });
+    }
     if (ts.isRegularExpressionLiteral(node)) regex++;
-    else if (ts.isJsxText(node)) {
-      const rendered = cleanJsxText(node.text);
-      if (rendered.trim()) push(node, "jsx", decodeJsxEntities(rendered) ?? rendered);
+    else if (ts.isJsxElement(node) || ts.isJsxFragment(node)) {
+      const run = jsxRunText(node);
+      if (isCopyText(run.text) && [...run.consumed].some((c) => !ts.isJsxText(c) || /[A-Za-z]/.test(c.text))) {
+        const line = src.getLineAndCharacterOfPosition(node.getStart()).line + 1;
+        entries.push({ file: rel, line, kind: "jsx", text: run.text.replace(/\s+/g, " ").trim() });
+        run.consumed.forEach((c) => consumed.add(c));
+      }
+    } else if (ts.isJsxText(node)) {
+      // whitespace-only, or part of a run that holds no copy
     } else if (ts.isStringLiteral(node) || ts.isNoSubstitutionTemplateLiteral(node)) {
       push(node, "string", node.text);
     } else if (ts.isTemplateExpression(node)) {

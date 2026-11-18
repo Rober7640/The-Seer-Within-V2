@@ -22,11 +22,11 @@ import fs from "node:fs";
 import path from "node:path";
 import {
   isCopyText, inNonCopyPosition, inFunctionScope, alreadyTranslated,
-  decodeJsxEntities, cleanJsxText,
+  decodeJsxEntities, cleanJsxText, NON_COPY_FILES, literalText,
 } from "./copyFilter.mts";
 
 interface Edit { start: number; end: number; text: string }
-interface Report { file: string; wrapped: number; moduleLevel: number; skipped: string[]; fragmented: string[] }
+interface Report { file: string; wrapped: number; merged: number; moduleLevel: number; skipped: string[]; fragmented: string[] }
 
 const IDENT = /^[A-Za-z_][A-Za-z0-9_]*$/;
 
@@ -60,6 +60,14 @@ function placeholderName(expr: ts.Expression): string | null {
   while (ts.isParenthesizedExpression(e) || ts.isNonNullExpression(e) || ts.isAsExpression(e)) e = e.expression;
   if (ts.isIdentifier(e)) return e.text;
   if (ts.isPropertyAccessExpression(e)) return e.name.text;
+  if (ts.isCallExpression(e)) {
+    const c = e.expression;
+    // x.toLowerCase() / x.trim() → name of x;  money(cents) → "money"
+    if (ts.isPropertyAccessExpression(c) && /^(toLowerCase|toUpperCase|trim|toString|toFixed|toLocaleString)$/.test(c.name.text)) return placeholderName(c.expression);
+    if (ts.isIdentifier(c)) return c.text;
+    if (ts.isPropertyAccessExpression(c)) return c.name.text;
+  }
+  if (ts.isElementAccessExpression(e)) return placeholderName(e.argumentExpression);
   return null;
 }
 
@@ -74,12 +82,37 @@ function hasNestedCopy(node: ts.Node): boolean {
   return hit;
 }
 
+// ---- type checker (used only to decide whether a JSX run can be merged) -----
+let checker: ts.TypeChecker;
+let program: ts.Program;
+function loadProgram(files: string[]) {
+  const cfgPath = ts.findConfigFile(process.cwd(), ts.sys.fileExists, "tsconfig.json")!;
+  const cfg = ts.getParsedCommandLineOfConfigFile(cfgPath, { noEmit: true, incremental: false }, { ...ts.sys, onUnRecoverableConfigFileDiagnostic: () => {} })!;
+  program = ts.createProgram({ rootNames: files.map((f) => path.resolve(f)), options: { ...cfg.options, incremental: false, tsBuildInfoFile: undefined } });
+  checker = program.getTypeChecker();
+}
+
+/** string | number (with null/undefined allowed): renders the same via JSX or String(). */
+function rendersAsText(e: ts.Expression): boolean {
+  const ok = (t: ts.Type): boolean => {
+    if (t.isUnion()) return t.types.every(ok);
+    const F = ts.TypeFlags;
+    return !!(t.flags & (F.StringLike | F.NumberLike | F.Null | F.Undefined)) && !(t.flags & (F.Any | F.Unknown));
+  };
+  const ty = checker.getTypeAtLocation(e);
+  // must include at least one string/number constituent (not just null)
+  const parts = ty.isUnion() ? ty.types : [ty];
+  return ok(ty) && parts.some((t) => !!(t.flags & (ts.TypeFlags.StringLike | ts.TypeFlags.NumberLike)));
+}
+
 function processFile(file: string, dry: boolean): Report {
   const abs = path.resolve(file);
   const original = fs.readFileSync(abs, "utf8");
-  const src = ts.createSourceFile(abs, original, ts.ScriptTarget.Latest, true, abs.endsWith("x") ? ts.ScriptKind.TSX : ts.ScriptKind.TS);
+  const src = program.getSourceFile(abs)!;
+  if (src.getFullText() !== original) throw new Error(`${file} changed on disk while loading`);
   const rel = path.relative(process.cwd(), abs);
-  const report: Report = { file: rel, wrapped: 0, moduleLevel: 0, skipped: [], fragmented: [] };
+  const report: Report = { file: rel, wrapped: 0, merged: 0, moduleLevel: 0, skipped: [], fragmented: [] };
+  if (NON_COPY_FILES.test(rel)) { report.skipped.push(`${rel} is analytics/tracking plumbing — never wrapped`); return report; }
   const existing = importsI18n(src);
   const fn = existing ?? (hasLocalT(src) ? "tr" : "t");
   const edits: Edit[] = [];
@@ -91,7 +124,82 @@ function processFile(file: string, dry: boolean): Report {
     return `${fn}(${lit}, { ${obj} })`;
   };
 
+  const nameSlots = () => {
+    const names = new Map<string, string>(); // exprText -> name
+    const used = new Set<string>();
+    let i = 0;
+    return {
+      names, used,
+      slot(expr: ts.Expression): string {
+        const exprText = expr.getText(src);
+        let name = names.get(exprText);
+        if (!name) {
+          let base = placeholderName(expr) ?? `v${i}`;
+          if (!IDENT.test(base)) base = `v${i}`;
+          name = base;
+          let n = 2;
+          while (used.has(name)) name = `${base}${n++}`;
+          used.add(name);
+          names.set(exprText, name);
+        }
+        i++;
+        return name;
+      },
+    };
+  };
+
+  /** Merge a JSX element's text + plain-value children into ONE t() call. */
+  const tryMergeRun = (el: ts.JsxElement | ts.JsxFragment): boolean => {
+    const kids = el.children;
+    let hasText = false, hasExpr = false;
+    for (const c of kids) {
+      if (ts.isJsxText(c)) { if (/[A-Za-z]/.test(cleanJsxText(c.text))) hasText = true; continue; }
+      if (!ts.isJsxExpression(c)) return false;           // nested element → not mergeable
+      if (!c.expression) return false;                     // comment inside: keep as is
+      if (literalText(c.expression) !== null && !ts.isTemplateExpression(c.expression)) continue; // {" "}
+      if (ts.isCallExpression(c.expression) && /^(t|tr)$/.test(c.expression.expression.getText())) return false;
+      if (hasNestedCopy(c.expression) || !rendersAsText(c.expression)) return false;
+      hasExpr = true;
+    }
+    if (!hasText || !hasExpr) return false;
+    const slots = nameSlots();
+    let text = "";
+    for (const c of kids) {
+      if (ts.isJsxText(c)) {
+        const r = cleanJsxText(c.text);
+        const d = decodeJsxEntities(r);
+        if (d === null) return false;
+        if (/\{[A-Za-z_]/.test(d)) return false; // literal braces in copy would read as placeholders
+        text += d;
+      } else if (ts.isJsxExpression(c) && c.expression) {
+        const lit = literalText(c.expression);
+        if (lit !== null && !ts.isTemplateExpression(c.expression)) text += lit;
+        else text += `{${slots.slot(c.expression)}}`;
+      }
+    }
+    if (!isCopyText(text.replace(/\{[A-Za-z0-9_]+\}/g, "x"))) return false;
+    const first = kids[0], last = kids[kids.length - 1];
+    const rawLead = ts.isJsxText(first) ? first.text.match(/^\s*/)![0] : "";
+    const rawTrail = ts.isJsxText(last) ? last.text.match(/\s*$/)![0] : "";
+    const spLead = text.match(/^ */)![0], spTrail = text.match(/ *$/)![0];
+    const lead = rawLead.includes("\n") ? rawLead : spLead ? `{${JSON.stringify(spLead)}}` : "";
+    const trail = rawTrail.includes("\n") ? rawTrail : spTrail ? `{${JSON.stringify(spTrail)}}` : "";
+    const vars: [string, string][] = [...slots.names.entries()].map(([expr, name]) => [name, expr]);
+    edits.push({ start: first.pos, end: last.end, text: `${lead}{${callFor(text.trim(), vars)}}${trail}` });
+    report.wrapped++;
+    report.merged++;
+    return true;
+  };
+
   const visit = (node: ts.Node): void => {
+    // ---- JSX element whose children are text + plain values: one t() -----
+    if ((ts.isJsxElement(node) || ts.isJsxFragment(node)) && inFunctionScope(node)) {
+      if (tryMergeRun(node)) {
+        // still visit attributes of the opening element (placeholder="…", aria-label="…")
+        if (ts.isJsxElement(node)) node.openingElement.forEachChild(visit);
+        return;
+      }
+    }
     // ---- JSX text -------------------------------------------------------
     if (ts.isJsxText(node)) {
       const rendered = cleanJsxText(node.text);
@@ -99,9 +207,16 @@ function processFile(file: string, dry: boolean): Report {
       if (!inFunctionScope(node)) { report.moduleLevel++; return; }
       const decoded = decodeJsxEntities(rendered);
       if (decoded === null) { report.skipped.push(`${rel}:${lineOf(src, node)} unknown HTML entity in JSX text: ${rendered.trim().slice(0, 60)}`); return; }
-      const lead = /^ /.test(decoded) ? '{" "}' : "";
-      const trail = / $/.test(decoded) ? '{" "}' : "";
-      edits.push({ start: node.getStart(), end: node.getEnd(), text: `${lead}{${callFor(decoded.trim())}}${trail}` });
+      // Keep the source layout: whitespace runs that contain a newline are
+      // dropped by React anyway, so they stay verbatim around the call; spaces
+      // React DOES render become explicit {" "} expressions.
+      // node.getStart() skips leading whitespace for JsxText; node.pos/node.text do not.
+      const raw = node.text;
+      const rawLead = raw.match(/^\s*/)![0], rawTrail = raw.match(/\s*$/)![0];
+      const spLead = decoded.match(/^ */)![0], spTrail = decoded.match(/ *$/)![0];
+      const lead = rawLead.includes("\n") ? rawLead : spLead ? `{${JSON.stringify(spLead)}}` : "";
+      const trail = rawTrail.includes("\n") ? rawTrail : spTrail ? `{${JSON.stringify(spTrail)}}` : "";
+      edits.push({ start: node.pos, end: node.end, text: `${lead}{${callFor(decoded.trim())}}${trail}` });
       report.wrapped++;
       const parent = node.parent;
       if (parent && (ts.isJsxElement(parent) || ts.isJsxFragment(parent))) {
@@ -129,25 +244,13 @@ function processFile(file: string, dry: boolean): Report {
       const literalOnly = node.head.text + node.templateSpans.map((sp) => sp.literal.text).join(" ");
       if (!isCopyText(probe) || !/[A-Za-z]{2,}/.test(literalOnly) || inNonCopyPosition(node)) { node.forEachChild(visit); return; }
       if (!inFunctionScope(node)) { report.moduleLevel++; return; }
-      const names = new Map<string, string>(); // exprText -> name
-      const used = new Set<string>();
+      const slots = nameSlots();
+      const { names, used } = slots;
       let key = node.head.text;
-      let i = 0;
       for (const span of node.templateSpans) {
         const exprText = span.expression.getText(src);
         if (hasNestedCopy(span.expression)) report.skipped.push(`${rel}:${lineOf(src, node)} copy nested inside \${${exprText.slice(0, 40)}} — left untranslated, fix by hand`);
-        let name = names.get(exprText);
-        if (!name) {
-          let base = placeholderName(span.expression) ?? `v${i}`;
-          if (!IDENT.test(base)) base = `v${i}`;
-          name = base;
-          let n = 2;
-          while (used.has(name)) name = `${base}${n++}`;
-          used.add(name);
-          names.set(exprText, name);
-        }
-        key += `{${name}}` + span.literal.text;
-        i++;
+        key += `{${slots.slot(span.expression)}}` + span.literal.text;
       }
       for (const name of used) {
         const literalCount = key.split(`{${name}}`).length - 1;
@@ -192,11 +295,12 @@ function processFile(file: string, dry: boolean): Report {
 const args = process.argv.slice(2);
 const dry = args.includes("--dry");
 const files = args.filter((a) => !a.startsWith("--"));
+loadProgram(files);
 let total = 0;
 for (const f of files) {
   const r = processFile(f, dry);
   total += r.wrapped;
-  console.log(`${String(r.wrapped).padStart(5)} wrapped  ${String(r.moduleLevel).padStart(4)} module-level (data twin)  ${r.file}`);
+  console.log(`${String(r.wrapped).padStart(5)} wrapped (${String(r.merged).padStart(2)} merged runs)  ${String(r.moduleLevel).padStart(4)} module-level (data twin)  ${r.file}`);
   for (const s of r.skipped) console.log(`        ⚠ ${s}`);
   for (const s of r.fragmented) console.log(`        ✂ ${s}`);
 }

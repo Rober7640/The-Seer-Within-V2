@@ -1,5 +1,6 @@
 import { Shield, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { t } from "@/lib/i18n";
 
 interface UpsellCTAProps {
   onAccept: () => void
@@ -15,7 +16,7 @@ interface UpsellCTAProps {
   priceNoteItem?: string
 }
 
-export function UpsellCTA({ onAccept, onDecline, isProcessing = false, priceLabel = '$47', acceptLabel = 'Yes, protect what we clear', reassurance = 'Take your time. This is your journey.', priceNoteItem = 'charged stone' }: UpsellCTAProps) {
+export function UpsellCTA({ onAccept, onDecline, isProcessing = false, priceLabel = '$47', acceptLabel = t("Yes, protect what we clear"), reassurance = t("Take your time. This is your journey."), priceNoteItem = t("charged stone") }: UpsellCTAProps) {
   return (
     <div className="p-4 space-y-4" data-testid="container-upsell-cta">
       <p className="text-center text-sm text-muted-foreground italic">
@@ -32,7 +33,7 @@ export function UpsellCTA({ onAccept, onDecline, isProcessing = false, priceLabe
         {isProcessing ? (
           <span className="flex items-center justify-center gap-2">
             <Loader2 className="w-5 h-5 animate-spin" data-testid="spinner-upsell" />
-            <span data-testid="text-processing">Processing...</span>
+            <span data-testid="text-processing">{t("Processing...")}</span>
           </span>
         ) : (
           <span className="flex items-center justify-center gap-2">
@@ -43,7 +44,7 @@ export function UpsellCTA({ onAccept, onDecline, isProcessing = false, priceLabe
       </Button>
 
       <div className="text-center">
-        <span className="text-xs text-muted-foreground">{priceLabel} includes {priceNoteItem} + free shipping</span>
+        <span className="text-xs text-muted-foreground">{t("{priceLabel} includes {priceNoteItem} + free shipping", { priceLabel, priceNoteItem })}</span>
       </div>
 
       <Button
@@ -53,7 +54,7 @@ export function UpsellCTA({ onAccept, onDecline, isProcessing = false, priceLabe
         data-testid="button-upsell-decline"
         className="w-full text-muted-foreground text-sm"
       >
-        <span data-testid="text-decline-button">Not right now</span>
+        <span data-testid="text-decline-button">{t("Not right now")}</span>
       </Button>
     </div>
   )

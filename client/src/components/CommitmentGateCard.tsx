@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { t } from "@/lib/i18n";
 
 // fb-palm commitment-gate A/B test ('35_palm_gate') — CRO pattern adapted from
 // competitor intel (docs/intel/how-i-built-a-60k-per-month-astrology-offer.md):
@@ -31,7 +32,7 @@ export function CommitmentGateCard({ firstName, onConfirm, priceDollars = 35 }: 
         <div className="pt-4 pb-3 px-5 text-center">
           <div className="text-amber-500/90 text-xs tracking-[0.3em]">✦</div>
           <h3 className="font-serif italic text-gray-800 text-base mt-1">
-            {firstName ? `${firstName}, before I prepare this for you` : 'Before I prepare this for you'} — I need to know you're truly ready.
+            {firstName ? t("{firstName}, before I prepare this for you", { firstName }) : t("Before I prepare this for you")}{" "}{t("— I need to know you're truly ready.")}
           </h3>
         </div>
 
@@ -60,19 +61,19 @@ export function CommitmentGateCard({ firstName, onConfirm, priceDollars = 35 }: 
               data-testid="button-commitment-confirm"
               className="w-full py-4 px-6 rounded-lg bg-gradient-to-r from-amber-500 to-orange-600 text-white font-bold text-lg shadow-lg hover:shadow-xl transition-all duration-300 animate-pulse hover:animate-none"
             >
-              Begin My Energy Clearing - ${priceDollars}
+              {t("Begin My Energy Clearing - ${priceDollars}", { priceDollars })}
             </button>
           ) : (
             <p className="text-center text-[11px] italic text-gray-400 py-2">
-              Check all three to continue
+              {t("Check all three to continue")}
             </p>
           )}
         </div>
       </div>
 
       <div className="flex justify-center gap-4 text-xs text-gray-400 mt-3">
-        <span>🔒 30-Day Guarantee</span>
-        <span>100% Secure</span>
+        <span>{t("🔒 30-Day Guarantee")}</span>
+        <span>{t("100% Secure")}</span>
       </div>
     </div>
   )

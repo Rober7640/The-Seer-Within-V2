@@ -239,7 +239,7 @@ function TarotBridgeQuiz() {
                   onClick={() => onPick(t)}
                   className="group rounded-xl border-2 border-gray-200 hover:border-purple-400 transition-all duration-200 hover:scale-[1.03] active:scale-[0.97] overflow-hidden bg-white"
                   data-testid={`tarot-card-${t}`}
-                  aria-label={tr("Card {v0}", { v0: OPTION_LABEL[t] })}
+                  aria-label={tr("Card {t}", { t: OPTION_LABEL[t] })}
                 >
                   <div className="w-full" style={optionStyle(t)} />
                 </button>
@@ -257,7 +257,7 @@ function TarotBridgeQuiz() {
         {phase === 'reading' && (
           <div className="flex flex-col items-center py-8 animate-fade-in">
             <Avatar />
-            <p className="text-gray-700 text-center mt-4 mb-3 font-serif text-lg">{tr("Evelyn is reading your")}{" "}{cfg.beatNoun}…</p>
+            <p className="text-gray-700 text-center mt-4 mb-3 font-serif text-lg">{tr("Evelyn is reading your {beatNoun}…", { beatNoun: cfg.beatNoun })}</p>
             <div className="flex gap-1.5 mb-3">
               <span className="w-2.5 h-2.5 bg-purple-400 rounded-full animate-bounce [animation-delay:-0.3s]" />
               <span className="w-2.5 h-2.5 bg-purple-400 rounded-full animate-bounce [animation-delay:-0.15s]" />
@@ -302,7 +302,7 @@ function TarotBridgeQuiz() {
             <span className="hover:text-white/70 cursor-pointer transition-colors" data-testid="link-refund">{tr("Refund Policy")}</span>
           </Link>
         </div>
-        <p>&copy; {new Date().getFullYear()} {" "}{tr("Cosmo Numerology Pte Ltd. For Entertainment Purposes Only.")}</p>
+        <p>{tr("© {getFullYear} Cosmo Numerology Pte Ltd. For Entertainment Purposes Only.", { getFullYear: new Date().getFullYear() })}</p>
       </footer>
     </div>
   )

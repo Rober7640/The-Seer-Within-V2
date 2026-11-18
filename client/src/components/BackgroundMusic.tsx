@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { Volume2, VolumeX } from 'lucide-react'
+import { t } from "@/lib/i18n";
 
 interface BackgroundMusicProps {
   // Where the toggle sits. The default keeps it pinned to the VIEWPORT's
@@ -64,7 +65,7 @@ export function BackgroundMusic({
       onClick={toggleAudio}
       data-testid="button-background-music"
       className={`${positionClass} p-3 bg-white/10 rounded-full text-white/60 hover:text-white/90 transition-colors z-50`}
-      aria-label={isPlaying ? 'Mute music' : 'Unmute music'}
+      aria-label={isPlaying ? t("Mute music") : t("Unmute music")}
     >
       {isPlaying ? <Volume2 size={20} /> : <VolumeX size={20} />}
     </button>

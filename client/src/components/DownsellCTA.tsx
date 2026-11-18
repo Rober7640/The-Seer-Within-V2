@@ -1,3 +1,4 @@
+import { t } from "@/lib/i18n";
 interface DownsellCTAProps {
   onClick: () => void
   priceDollars?: number
@@ -13,11 +14,11 @@ export function DownsellCTA({ onClick, priceDollars = 25, label }: DownsellCTAPr
         onClick={onClick}
         className="w-full py-4 px-6 rounded-lg bg-gradient-to-r from-violet-600 to-purple-700 text-white font-bold text-lg shadow-lg hover:shadow-xl transition-all duration-300"
       >
-        {label ?? `Get Your Written Reading - $${priceDollars}`}
+        {label ?? t("Get Your Written Reading - ${priceDollars}", { priceDollars })}
       </button>
       <div className="flex justify-center gap-4 text-xs text-gray-400">
-        <span>🔒 30-Day Guarantee</span>
-        <span>100% Secure</span>
+        <span>{t("🔒 30-Day Guarantee")}</span>
+        <span>{t("100% Secure")}</span>
       </div>
     </div>
   )

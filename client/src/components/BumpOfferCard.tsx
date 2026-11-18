@@ -5,6 +5,7 @@ import {
   type BumpBucket,
   type BumpCopyVariant,
 } from '@shared/orderBump'
+import { t } from "@/lib/i18n";
 
 // V1 ORDER BUMP ("double reading", v1_order_bump_2026) — the two quick replies
 // that follow Evelyn's offer turn. Rendered in place of the purchase CTA after
@@ -84,7 +85,7 @@ export function BumpOfferCard({
             </span>
             <span className="text-gray-400">·</span>
             {/* Shown so the total is never a surprise on the Stripe page. */}
-            <span className="text-gray-500">${total} total</span>
+            <span className="text-gray-500">{t("${total} total", { total })}</span>
           </div>
         </div>
 
@@ -107,8 +108,8 @@ export function BumpOfferCard({
       </div>
 
       <div className="flex justify-center gap-4 text-xs text-gray-400 mt-3">
-        <span>🔒 30-Day Guarantee</span>
-        <span>100% Secure</span>
+        <span>{t("🔒 30-Day Guarantee")}</span>
+        <span>{t("100% Secure")}</span>
       </div>
     </div>
   )

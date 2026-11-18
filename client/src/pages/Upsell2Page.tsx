@@ -264,7 +264,8 @@ export default function Upsell2Page() {
         <CosmicBackground />
         <div className="text-white/60 animate-pulse flex items-center gap-2">
           <Loader2 className="w-5 h-5 animate-spin" />
-          {t("Loading your session...")}</div>
+          {t("Loading your session...")}
+        </div>
       </div>
     );
   }
@@ -280,7 +281,8 @@ export default function Upsell2Page() {
             className="text-purple-400 hover:text-purple-300 transition-colors"
             data-testid="link-return-home"
           >
-            {t("Return home")}</button>
+            {t("Return home")}
+          </button>
         </div>
       </div>
     );
@@ -393,7 +395,8 @@ export default function Upsell2Page() {
                 size="sm"
                 data-testid="button-send-upsell2"
               >
-                {t("Send")}</Button>
+                {t("Send")}
+              </Button>
             </div>
           </form>
         )}

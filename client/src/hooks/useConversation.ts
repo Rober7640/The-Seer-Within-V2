@@ -2068,7 +2068,7 @@ export function useConversation() {
 
     // If re-clarifying after topic mismatch, ask for a fresh concern matching the bucket
     if (isReClarifying) {
-      await sendBotMessage(t("Let's focus on {v0} then, {firstName}...", { v0: BUCKET_LABELS[bucket].toLowerCase(), firstName }))
+      await sendBotMessage(t("Let's focus on {bucket} then, {firstName}...", { bucket: BUCKET_LABELS[bucket].toLowerCase(), firstName }))
 
       // Clear the old mismatched concern and ask fresh
       updateUserData({ concern: null })

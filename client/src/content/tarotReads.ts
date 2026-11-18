@@ -37,6 +37,7 @@ import { SHADOW_READS } from './tarotReadsShadow'
 //                               the LLM reads her answer (falls back to static)
 
 import type { Bucket } from '@/types/chat'
+import { t } from "@/lib/i18n";
 
 export type TarotHook =
   // Decode-him hooks (read HIM, "tendency, never verdict").
@@ -7272,7 +7273,7 @@ export function cardReveal(deck: TarotDeck, hook: TarotHook, card: TarotOption):
 // acknowledge it and hand into name capture).
 export function greetingA(deck: TarotDeck, card: TarotOption): string {
   const d = DECKS[deck]
-  return `Mmm… ${d.mark[card]}. I felt it ${d.chooseMoment}. The connection only opens once I know who I'm speaking with, though… what's your first name, dear?`
+  return t("Mmm… {card}. I felt it {chooseMoment}. The connection only opens once I know who I'm speaking with, though… what's your first name, dear?", { card: d.mark[card], chooseMoment: d.chooseMoment })
 }
 
 // Version B (and Version C fallback) — the 4-sentence reveal as a chat sequence,
@@ -7303,7 +7304,7 @@ export function cardArtFor(deck: TarotDeck, card: TarotOption): TarotCardArt {
     sizePct: count * 100,
     posPct: count > 1 ? (i / (count - 1)) * 100 : 0,
     aspect: strip.width / count / strip.height,
-    alt: cfg.mark[card] || 'the card you drew',
+    alt: cfg.mark[card] || t("the card you drew"),
   }
 }
 
@@ -7333,7 +7334,7 @@ const PICTURE_HOOKS = new Set<TarotHook>([])
 function beat1WithPicture(beat1: string, picture?: string): string {
   if (!picture) return beat1
   const m = /^(You (?:turned|chose) the .+?, dear) — (.+)$/.exec(beat1)
-  return m ? `${m[1]}. ${picture} This is ${m[2]}` : beat1
+  return m ? t("{v0}. {picture} This is {v2}", { v0: m[1], picture, v2: m[2] }) : beat1
 }
 
 // ── Bubble breaks ───────────────────────────────────────────────────────────
@@ -7366,7 +7367,7 @@ export function openerB(
   return [
     ...intoBubbles(beat1WithPicture(beat1, picture)),
     ...rest.flatMap(intoBubbles),
-    "Before I follow this thread any further, I need to know who I'm speaking with… what's your first name, dear?",
+    t("Before I follow this thread any further, I need to know who I'm speaking with… what's your first name, dear?"),
   ]
 }
 

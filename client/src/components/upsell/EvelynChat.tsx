@@ -4,6 +4,7 @@
 // ⛔ /evelyn-avatar.png only. /evelyn-avatar-new.png is a phone screenshot of an error page.
 
 import { Volume2 } from "lucide-react";
+import { t } from "@/lib/i18n";
 
 export const EVELYN_AVATAR_SRC = "/evelyn-avatar.png";
 
@@ -19,7 +20,7 @@ export function EvelynChatHeader({ volumeTestId }: { volumeTestId: string }) {
         <div className="relative shrink-0">
           <img
             src={EVELYN_AVATAR_SRC}
-            alt="Evelyn Cross"
+            alt={t("Evelyn Cross")}
             className="h-11 w-11 rounded-full border-2 border-amber-300/60 object-cover"
             data-testid="img-header-evelyn"
           />
@@ -30,13 +31,13 @@ export function EvelynChatHeader({ volumeTestId }: { volumeTestId: string }) {
         </div>
         <div className="min-w-0 text-left">
           <p className="font-serif text-lg font-bold leading-tight text-white" data-testid="text-header-name">
-            Evelyn Cross
+            {t("Evelyn Cross")}
           </p>
           <p className="flex items-center gap-1.5 whitespace-nowrap text-xs text-white/60">
-            <span className="font-medium text-emerald-400">Online now</span>
+            <span className="font-medium text-emerald-400">{t("Online now")}</span>
             <span aria-hidden="true">·</span>
             <Volume2 className="h-3.5 w-3.5 shrink-0" data-testid={volumeTestId} />
-            <span>Sound on</span>
+            <span>{t("Sound on")}</span>
           </p>
         </div>
       </div>
@@ -56,7 +57,7 @@ export function EvelynAvatarSlot({ show }: { show: boolean }) {
       {show && (
         <img
           src={EVELYN_AVATAR_SRC}
-          alt="Evelyn"
+          alt={t("Evelyn")}
           className="h-8 w-8 rounded-full border border-amber-300/50 object-cover"
           data-testid="img-bubble-evelyn"
         />

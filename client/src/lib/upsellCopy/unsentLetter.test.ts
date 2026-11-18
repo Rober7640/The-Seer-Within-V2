@@ -239,8 +239,8 @@ describe('the shared CTAs keep V1’s words for everyone else', () => {
   it('the components default to the exact old lines', () => {
     const cta = file('../../components/upsell/UpsellCTA.tsx');
     const down = file('../../components/upsell/Upsell2DownsellCTA.tsx');
-    expect(cta).toContain("reassurance = 'Take your time. This is your journey.'");
-    expect(down).toContain("reassurance = 'Same eight stones. Same manifestation energy.'");
+    expect(cta).toMatch(/reassurance = (?:t\()?['"]Take\ your\ time\.\ This\ is\ your\ journey\.['"]/);  // t() wrapper allowed: same words
+    expect(down).toMatch(/reassurance = (?:t\()?['"]Same\ eight\ stones\.\ Same\ manifestation\ energy\.['"]/);  // t() wrapper allowed: same words
   });
 
   it('only 11 and 12 override them', () => {

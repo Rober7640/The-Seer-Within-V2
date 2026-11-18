@@ -1,6 +1,8 @@
 import { Link } from 'wouter';
 import { ArrowLeft, ChevronDown, ChevronUp } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { t } from "@/lib/i18n";
+import { tx } from "@/lib/rich";
 
 interface FAQItem {
   question: string;
@@ -326,7 +328,7 @@ const faqSections: FAQSection[] = [
 
 export default function FAQPage() {
   useEffect(() => {
-    document.title = 'FAQ | The Seer Within';
+    document.title = t("FAQ | The Seer Within");
   }, []);
 
   return (
@@ -335,18 +337,17 @@ export default function FAQPage() {
         <Link href="/personas">
           <button className="flex items-center gap-2 text-purple-300 hover:text-white mb-8 transition-colors" data-testid="button-back-home">
             <ArrowLeft className="w-4 h-4" />
-            Back to Guides
+            {t("Back to Guides")}
           </button>
         </Link>
 
         <h1 className="font-serif text-3xl font-bold mb-2" data-testid="heading-faq">
-          Frequently Asked Questions
+          {t("Frequently Asked Questions")}
         </h1>
         <p className="text-purple-300 mb-8">
-          Can't find what you're looking for? Email us at{' '}
-          <a href="mailto:hi@theseerwithin.com" className="hover:text-white underline">
-            hi@theseerwithin.com
-          </a>
+          {tx("Can't find what you're looking for? Email us at <mail>hi@theseerwithin.com</mail>", {
+            mail: (c) => <a href="mailto:hi@theseerwithin.com" className="hover:text-white underline">{c}</a>,
+          })}
         </p>
 
         <div className="space-y-10">
@@ -360,13 +361,13 @@ export default function FAQPage() {
 
         <div className="mt-12 pt-8 border-t border-purple-700 space-y-2 text-center text-purple-400 text-sm">
           <p>
-            <Link href="/terms"><span className="hover:text-white underline cursor-pointer">Terms of Service</span></Link>
+            <Link href="/terms"><span className="hover:text-white underline cursor-pointer">{t("Terms of Service")}</span></Link>
             {' · '}
-            <Link href="/privacy"><span className="hover:text-white underline cursor-pointer">Privacy Policy</span></Link>
+            <Link href="/privacy"><span className="hover:text-white underline cursor-pointer">{t("Privacy Policy")}</span></Link>
             {' · '}
-            <Link href="/refund"><span className="hover:text-white underline cursor-pointer">Refund Policy</span></Link>
+            <Link href="/refund"><span className="hover:text-white underline cursor-pointer">{t("Refund Policy")}</span></Link>
           </p>
-          <p>&copy; {new Date().getFullYear()} Cosmo Numerology Pte Ltd. All rights reserved.</p>
+          <p>{t("© {getFullYear} Cosmo Numerology Pte Ltd. All rights reserved.", { getFullYear: new Date().getFullYear() })}</p>
         </div>
       </div>
     </div>
