@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import type { Bucket } from '@shared/types';
 import { upsell2CopyOverrideFor } from '../lib/upsellCopy/retargetUpsell2';
+import { t } from "@/lib/i18n";
 
 interface UserData {
   firstName: string;
@@ -63,17 +64,17 @@ export default function Upsell2Page() {
     if (demo === 'true' || sid === 'demo') {
       setSessionId('demo_session');
       setUserData({
-        firstName: 'Sarah',
+        firstName: t("Sarah"),
         email: 'demo@example.com',
         bucket: 'love',
-        concern: 'finding my soulmate',
+        concern: t("finding my soulmate"),
         personName: null,
         upsellPurchased: true,
         hasShipping: true,
         shipping: {
           name: 'Sarah Demo',
-          line1: '123 Demo St',
-          city: 'Demo City',
+          line1: t("123 Demo St"),
+          city: t("Demo City"),
           state: 'CA',
           postal: '90210',
           country: 'US',
@@ -84,7 +85,7 @@ export default function Upsell2Page() {
     }
 
     if (!sid) {
-      setError('Missing session');
+      setError(t("Missing session"));
       setIsLoading(false);
       return;
     }
@@ -176,7 +177,7 @@ export default function Upsell2Page() {
           setError('declined');
         }
       } catch (err) {
-        setError('Could not load your session');
+        setError(t("Could not load your session"));
         console.error(err);
       } finally {
         setIsLoading(false);
@@ -263,8 +264,7 @@ export default function Upsell2Page() {
         <CosmicBackground />
         <div className="text-white/60 animate-pulse flex items-center gap-2">
           <Loader2 className="w-5 h-5 animate-spin" />
-          Loading your session...
-        </div>
+          {t("Loading your session...")}</div>
       </div>
     );
   }
@@ -280,8 +280,7 @@ export default function Upsell2Page() {
             className="text-purple-400 hover:text-purple-300 transition-colors"
             data-testid="link-return-home"
           >
-            Return home
-          </button>
+            {t("Return home")}</button>
         </div>
       </div>
     );
@@ -304,7 +303,7 @@ export default function Upsell2Page() {
       <div className="relative z-10 p-4 text-center border-b border-white/10 bg-black/20 backdrop-blur-sm">
         <div className="flex items-center justify-center gap-2 text-sm text-white/60">
           <Volume2 className="w-4 h-4" data-testid="icon-volume-upsell2" />
-          <span>Sound on for best experience</span>
+          <span>{t("Sound on for best experience")}</span>
         </div>
       </div>
 
@@ -328,7 +327,7 @@ export default function Upsell2Page() {
                 <div className="max-w-[70%] rounded-2xl overflow-hidden shadow-lg border border-purple-200/30">
                   <img 
                     src={msg.content} 
-                    alt="Manifestation bracelet" 
+                    alt={t("Manifestation bracelet")} 
                     className="w-full h-auto"
                   />
                 </div>
@@ -383,7 +382,7 @@ export default function Upsell2Page() {
               <Input
                 value={inputValue}
                 onChange={(e) => setInputValue(e.target.value)}
-                placeholder="Or type your response..."
+                placeholder={t("Or type your response...")}
                 disabled={isTyping}
                 className="flex-1 bg-white/10 border-white/20 text-white placeholder:text-white/40"
                 data-testid="input-chat-upsell2"
@@ -394,8 +393,7 @@ export default function Upsell2Page() {
                 size="sm"
                 data-testid="button-send-upsell2"
               >
-                Send
-              </Button>
+                {t("Send")}</Button>
             </div>
           </form>
         )}
@@ -425,7 +423,7 @@ export default function Upsell2Page() {
           <div className="max-w-lg mx-auto p-4">
             <ShippingForm
               defaultName={userData?.firstName || ''}
-              productLabel="manifestation bracelet"
+              productLabel={t("manifestation bracelet")}
               onSubmit={handleShippingSubmit}
             />
           </div>

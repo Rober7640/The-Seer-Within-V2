@@ -48,6 +48,7 @@ import { track as trackPH } from "@/lib/posthog";
 import { tarotEventProps } from "@/lib/tarotAttribution";
 import { laneEventProps } from "@/lib/laneAttribution";
 import { getTrackdeskClickId } from "@/lib/facebook";
+import { t } from "@/lib/i18n";
 
 // Fire the Trackdesk upsell-2 affiliate conversion from the browser. Backup to
 // the server-side fire in /api/upsell2/charge — same externalId so Trackdesk
@@ -296,7 +297,7 @@ export function useUpsell2Chat({
             } else {
               await sendBotMessage(
                 pMsg(
-                  "I see something beyond the block, {firstName}... something trying to reach you.",
+                  t("I see something beyond the block, {firstName}... something trying to reach you."),
                 ),
               );
             }
@@ -368,7 +369,7 @@ export function useUpsell2Chat({
             } else {
               await sendBotMessage(
                 pMsg(
-                  "The stones that speak loudest to your energy are calling, {firstName}.",
+                  t("The stones that speak loudest to your energy are calling, {firstName}."),
                 ),
               );
             }
@@ -498,7 +499,7 @@ export function useUpsell2Chat({
 
     setShowCTA(false);
     setIsProcessing(true);
-    addUserMessage("Yes, I want the Manifestation Bracelet");
+    addUserMessage(t("Yes, I want the Manifestation Bracelet"));
 
     // Tab-scoped tarot attribution, gated on the funnel so a palm/fb upsell in the
     // same tab can never pick up tarot properties. No-op for every other funnel.
@@ -597,7 +598,7 @@ export function useUpsell2Chat({
           step: "upsell2",
           product: "be_bracelet",
         });
-        await sendBotMessage("Let me set up a secure payment page for you...");
+        await sendBotMessage(t("Let me set up a secure payment page for you..."));
         const fallbackResponse = await fetch("/api/backend/upsell/fallback-checkout", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -608,7 +609,7 @@ export function useUpsell2Chat({
           window.location.href = url;
         } else {
           await sendBotMessage(
-            "That didn't go through, dear. Give it a moment and try once more.",
+            t("That didn't go through, dear. Give it a moment and try once more."),
           );
           setIsProcessing(false);
           setShowCTA(true);
@@ -628,7 +629,7 @@ export function useUpsell2Chat({
           ...(tarot ?? {}),
         });
 
-        await sendBotMessage("Let me set up a secure payment page for you...");
+        await sendBotMessage(t("Let me set up a secure payment page for you..."));
 
         const fallbackResponse = await fetch("/api/upsell2/fallback-checkout", {
           method: "POST",
@@ -651,7 +652,7 @@ export function useUpsell2Chat({
       }
     } catch (error) {
       console.error("Upsell2 error:", error);
-      await sendBotMessage("Something went wrong. Let me try another way...");
+      await sendBotMessage(t("Something went wrong. Let me try another way..."));
       setIsProcessing(false);
       setShowCTA(true);
     }
@@ -673,10 +674,10 @@ export function useUpsell2Chat({
     setShowCTA(false);
 
     if (objectionCount === 0) {
-      addUserMessage("Not right now");
+      addUserMessage(t("Not right now"));
       await processStage("OBJECTION_1");
     } else {
-      addUserMessage("No thanks");
+      addUserMessage(t("No thanks"));
       const tarot = getPostHogFunnel() === "tarot" ? tarotEventProps() : undefined;
       trackPH("upsell_declined", {
         funnel: offer ? backendOfferFunnel(offer) : (getPostHogFunnel() ?? "unknown"),
@@ -697,7 +698,7 @@ export function useUpsell2Chat({
 
     setShowDownsellCTA(false);
     setIsProcessing(true);
-    addUserMessage("Yes, send me the bracelet for $30");
+    addUserMessage(t("Yes, send me the bracelet for $30"));
 
     // The $30 downsell accept previously fired NOTHING — the buyer vanished from the
     // client funnel and only reappeared on the server-side purchase_completed, so the
@@ -791,7 +792,7 @@ export function useUpsell2Chat({
           product: "be_bracelet",
           price_tier: "downsell",
         });
-        await sendBotMessage("Let me set up a secure payment page for you...");
+        await sendBotMessage(t("Let me set up a secure payment page for you..."));
         const fallbackResponse = await fetch("/api/backend/upsell/fallback-checkout", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -802,7 +803,7 @@ export function useUpsell2Chat({
           window.location.href = url;
         } else {
           await sendBotMessage(
-            "That didn't go through, dear. Give it a moment and try once more.",
+            t("That didn't go through, dear. Give it a moment and try once more."),
           );
           setIsProcessing(false);
           setShowCTA(true);
@@ -819,7 +820,7 @@ export function useUpsell2Chat({
           ...(tarot ?? {}),
         });
 
-        await sendBotMessage("Let me set up a secure payment page for you...");
+        await sendBotMessage(t("Let me set up a secure payment page for you..."));
 
         const fallbackResponse = await fetch("/api/upsell2/fallback-checkout", {
           method: "POST",
@@ -842,7 +843,7 @@ export function useUpsell2Chat({
       }
     } catch (error) {
       console.error("Upsell2 downsell error:", error);
-      await sendBotMessage("Something went wrong. Let me try another way...");
+      await sendBotMessage(t("Something went wrong. Let me try another way..."));
       setIsProcessing(false);
       setShowDownsellCTA(true);
     }
@@ -862,7 +863,7 @@ export function useUpsell2Chat({
 
   const handleDownsellDecline = useCallback(async () => {
     setShowDownsellCTA(false);
-    addUserMessage("No thanks");
+    addUserMessage(t("No thanks"));
     // Final refusal of the funnel's last offer — the terminal node. Also previously
     // untracked, so the funnel just ended with no event.
     const tarot = getPostHogFunnel() === "tarot" ? tarotEventProps() : undefined;
@@ -905,7 +906,7 @@ export function useUpsell2Chat({
         await processStage("COMPLETE");
       } catch (error) {
         console.error("Shipping error:", error);
-        await sendBotMessage("Address saved. We'll confirm details via email.");
+        await sendBotMessage(t("Address saved. We'll confirm details via email."));
         setIsComplete(true);
       }
     },

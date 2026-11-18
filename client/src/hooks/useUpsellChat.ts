@@ -39,6 +39,7 @@ import type { BackendOfferKey } from "@shared/backendOffers";
 import { track as trackPH } from "@/lib/posthog";
 import { tarotEventProps } from "@/lib/tarotAttribution";
 import { laneEventProps } from "@/lib/laneAttribution";
+import { t } from "@/lib/i18n";
 
 // ============================================
 // TYPES
@@ -527,7 +528,7 @@ export function useUpsellChat({
           step: "upsell1",
           product: userData.upsell1Product ?? "be_protection_ritual",
         });
-        await sendBotMessage("Let me set up a secure payment page for you...");
+        await sendBotMessage(t("Let me set up a secure payment page for you..."));
         const fallbackResponse = await fetch("/api/backend/upsell/fallback-checkout", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -539,7 +540,7 @@ export function useUpsellChat({
         } else {
           // Even the hosted page could not be created — let her retry rather than strand her.
           await sendBotMessage(
-            "That didn't go through, dear. Give it another moment and try once more.",
+            t("That didn't go through, dear. Give it another moment and try once more."),
           );
           setIsProcessing(false);
           if (isDownsell) setShowDownsellCTA(true);
@@ -561,7 +562,7 @@ export function useUpsellChat({
           ...(tarot ?? {}),
         });
 
-        await sendBotMessage("Let me set up a secure payment page for you...");
+        await sendBotMessage(t("Let me set up a secure payment page for you..."));
 
         const fallbackResponse = await fetch("/api/upsell/fallback-checkout", {
           method: "POST",
@@ -583,7 +584,7 @@ export function useUpsellChat({
       }
     } catch (error) {
       console.error("Upsell error:", error);
-      await sendBotMessage("Something went wrong. Let me try another way...");
+      await sendBotMessage(t("Something went wrong. Let me try another way..."));
       setIsProcessing(false);
       if (isDownsell) setShowDownsellCTA(true);
       else setShowCTA(true);
@@ -609,7 +610,7 @@ export function useUpsellChat({
   // Handle CTA Decline
   const handleDecline = useCallback(async () => {
     setShowCTA(false);
-    addUserMessage("Not right now");
+    addUserMessage(t("Not right now"));
     const tarot = getPostHogFunnel() === "tarot" ? tarotEventProps() : undefined;
     trackPH("upsell_declined", {
       funnel: offer ? backendOfferFunnel(offer) : (getPostHogFunnel() ?? "unknown"),
@@ -627,7 +628,7 @@ export function useUpsellChat({
   // The downsell's own decline (12). Her reply bubble is the button's label.
   const handleDownsellDecline = useCallback(async () => {
     setShowDownsellCTA(false);
-    addUserMessage(copy.downsellDeclineLabel ?? "Not right now");
+    addUserMessage(copy.downsellDeclineLabel ?? t("Not right now"));
     trackPH("upsell_declined", {
       funnel: offer ? backendOfferFunnel(offer) : (getPostHogFunnel() ?? "unknown"),
       // Belief lane for the tab (/fb?lane=<id>); empty for every other funnel.
@@ -669,7 +670,7 @@ export function useUpsellChat({
         await processStage("COMPLETE");
       } catch (error) {
         console.error("Shipping error:", error);
-        await sendBotMessage("Address saved. We'll confirm details via email.");
+        await sendBotMessage(t("Address saved. We'll confirm details via email."));
         setIsComplete(true);
       }
     },

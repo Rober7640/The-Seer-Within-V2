@@ -19,6 +19,7 @@
 import ts from "typescript";
 import fs from "node:fs";
 import path from "node:path";
+import { isCopyText, inNonCopyPosition, alreadyTranslated, declaredVars, decodeJsxEntities, cleanJsxText } from "./copyFilter.mts";
 
 const ROOT = process.cwd();
 
@@ -49,20 +50,7 @@ const SERVER_FILES = [
 
 const COPY_DIRS = ["client/src/copy", "shared/copy", "server/lib/lang"];
 
-const EXCLUDE_DIRS = ["client/src/components/ui/", "node_modules/"];
-
-// JSX attributes and object keys whose string values are never copy.
-const NON_COPY_KEYS = new Set([
-  "className", "class", "key", "href", "src", "id", "type", "variant", "name",
-  "role", "htmlFor", "to", "path", "data-testid", "style", "size", "autoComplete",
-  "inputMode", "target", "rel", "method", "state", "inputType", "value", "stage",
-  "bucket", "funnel", "param", "prefix", "posthog", "event", "eventName", "kind",
-  "mode", "currency", "product", "bumpProduct", "metadata", "color", "icon",
-  "fill", "stroke", "viewBox", "d", "transform", "as", "asChild", "accept",
-  "media_type", "model", "status", "code", "countryCode", "slug", "deck", "card",
-]);
-
-const LOG_CALLEES = /^(console|logger|log|Sentry|posthog|captureException|track)\b/;
+const EXCLUDE_DIRS = ["client/src/components/ui/", "node_modules/", "client/src/lib/locale.ts", "client/src/lib/i18n.ts", "shared/locales.ts", "shared/i18n.ts"];
 
 interface Entry { file: string; line: number; kind: "jsx" | "string" | "template"; text: string }
 interface Inventory { generatedAt: string; files: string[]; entries: Entry[]; regexCount: Record<string, number> }
@@ -124,55 +112,14 @@ function collectScope(): string[] {
   return [...seen].sort();
 }
 
-function isClassNameLike(t: string): boolean {
-  const tokens = t.split(/\s+/).filter(Boolean);
-  if (!tokens.every((tok) => /^[!a-z0-9:\[\]\/\.\-#%_()]+$/i.test(tok))) return false;
-  const classy = tokens.filter((tok) => /[-:\[]/.test(tok) || /^(flex|grid|block|hidden|relative|absolute|fixed|inline|italic|uppercase|truncate|underline|rounded|shadow|border|transition|container)$/.test(tok));
-  return classy.length / tokens.length >= 0.5;
-}
-
-function isCopy(raw: string): boolean {
-  const t = raw.trim();
-  if (t.length < 2 || !/[A-Za-z]/.test(t)) return false;
-  if (/^(https?:|mailto:|tel:|\/|\.\/|#)/.test(t)) return false;
-  if (isClassNameLike(t)) return false;
-  if (!/\s/.test(t)) {
-    // single token: keep Capitalised words, words with apostrophes, punctuated words
-    if (/^[A-Z][a-zà-ÿ']+[.!?…,:]*$/.test(t)) return true;
-    if (/[a-z]'[a-z]/i.test(t) || /[.!?…]$/.test(t)) return /[a-z]{2,}/i.test(t);
-    return false;
-  }
-  if (/^[A-Z0-9_]+( [A-Z0-9_]+)*$/.test(t) && /_/.test(t)) return false; // ENUM_LIKE
-  return true;
-}
-
-function keyOf(node: ts.Node): string | null {
-  const p = node.parent;
-  if (!p) return null;
-  if (ts.isPropertyAssignment(p) && p.initializer === node) {
-    const n = p.name;
-    if (ts.isIdentifier(n) || ts.isStringLiteral(n)) return n.text;
-  }
-  if (ts.isJsxAttribute(p)) return p.name.getText();
-  if (ts.isJsxExpression(p) && p.parent && ts.isJsxAttribute(p.parent)) return p.parent.name.getText();
-  if (ts.isBinaryExpression(p) && p.right === node && ts.isPropertyAccessExpression(p.left)) return p.left.name.text;
-  return null;
-}
-
-function insideLogCall(node: ts.Node): boolean {
-  for (let n: ts.Node | undefined = node.parent; n; n = n.parent) {
-    if (ts.isCallExpression(n)) {
-      const callee = n.expression.getText();
-      if (LOG_CALLEES.test(callee)) return true;
-    }
-    if (ts.isImportDeclaration(n) || ts.isExportDeclaration(n)) return true;
-    if (ts.isElementAccessExpression(n) && n.argumentExpression === node) return true;
-    if (ts.isLiteralTypeNode(n)) return true; // string-literal types
-    if (ts.isCaseClause(n) && n.expression === node) return true;
-  }
-  if (node.parent && ts.isBinaryExpression(node.parent) &&
-      [ts.SyntaxKind.EqualsEqualsEqualsToken, ts.SyntaxKind.ExclamationEqualsEqualsToken, ts.SyntaxKind.EqualsEqualsToken].includes(node.parent.operatorToken.kind)) return true;
-  return false;
+// Inside t("…{name}…", { name }) the placeholders correspond to the ${…} slots
+// of the template literal the codemod replaced; normalise them back so the
+// before/after multiset compares like with like.
+function normalizePlaceholders(node: ts.Node, value: string): string {
+  const call = node.parent as ts.CallExpression;
+  const names = declaredVars(call, call.expression.getText() === "tl" ? 2 : 1);
+  if (!names.size) return value;
+  return value.replace(/\{([A-Za-z_][A-Za-z0-9_]*)\}/g, (w, n: string) => (names.has(n) ? "${}" : w));
 }
 
 function templateText(node: ts.TemplateExpression): string {
@@ -188,17 +135,17 @@ function scan(file: string): { entries: Entry[]; regex: number } {
   const entries: Entry[] = [];
   let regex = 0;
   const push = (node: ts.Node, kind: Entry["kind"], value: string) => {
-    const k = keyOf(node);
-    if (k && NON_COPY_KEYS.has(k)) return;
-    if (insideLogCall(node)) return;
-    if (!isCopy(value)) return;
+    if (!alreadyTranslated(node) && inNonCopyPosition(node)) return;
+    if (alreadyTranslated(node)) value = normalizePlaceholders(node, value);
+    if (!isCopyText(value)) return;
     const line = src.getLineAndCharacterOfPosition(node.getStart()).line + 1;
     entries.push({ file: rel, line, kind, text: value.replace(/\s+/g, " ").trim() });
   };
   src.forEachChild(function visit(node) {
     if (ts.isRegularExpressionLiteral(node)) regex++;
     else if (ts.isJsxText(node)) {
-      if (node.text.trim()) push(node, "jsx", node.text);
+      const rendered = cleanJsxText(node.text);
+      if (rendered.trim()) push(node, "jsx", decodeJsxEntities(rendered) ?? rendered);
     } else if (ts.isStringLiteral(node) || ts.isNoSubstitutionTemplateLiteral(node)) {
       push(node, "string", node.text);
     } else if (ts.isTemplateExpression(node)) {

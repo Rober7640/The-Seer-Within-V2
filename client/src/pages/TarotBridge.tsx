@@ -23,6 +23,7 @@ import {
   type TarotDeck,
   type TarotVersion,
 } from '../content/tarotReads'
+import { t as tr } from "@/lib/i18n";
 
 // The /fb-tarot "decode-him card" quiz-bridge lander. Parallel to PalmBridge but
 // a SEPARATE component reading the tarot registry (palm is never touched).
@@ -100,7 +101,7 @@ function TarotBridgeQuiz() {
       aspectRatio: `${strip.width / count} / ${strip.height}`,
       backgroundImage: `url('${strip.url}')`,
       backgroundSize: `${count * 100}% 100%`,
-      backgroundPosition: `${pos}% center`,
+      backgroundPosition: tr("{pos}% center", { pos }),
       backgroundRepeat: 'no-repeat',
     }
   }
@@ -116,7 +117,7 @@ function TarotBridgeQuiz() {
       aspectRatio: `${a.aspect}`,
       backgroundImage: `url('${a.url}')`,
       backgroundSize: `${a.sizePct}% 100%`,
-      backgroundPosition: `${a.posPct}% center`,
+      backgroundPosition: tr("{posPct}% center", { posPct: a.posPct }),
       backgroundRepeat: 'no-repeat',
     }
   }
@@ -210,7 +211,7 @@ function TarotBridgeQuiz() {
       {/* Logo */}
       <div className="mb-6 flex items-center gap-3 text-center">
         <Sparkles className="w-8 h-8 text-purple-300 drop-shadow-lg" />
-        <h1 className="font-serif text-2xl md:text-3xl text-secondary drop-shadow-md">The Seer Within</h1>
+        <h1 className="font-serif text-2xl md:text-3xl text-secondary drop-shadow-md">{tr("The Seer Within")}</h1>
       </div>
 
       <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-2xl p-6 md:p-8 max-w-md w-full mx-auto relative z-10 border border-white/20">
@@ -238,7 +239,7 @@ function TarotBridgeQuiz() {
                   onClick={() => onPick(t)}
                   className="group rounded-xl border-2 border-gray-200 hover:border-purple-400 transition-all duration-200 hover:scale-[1.03] active:scale-[0.97] overflow-hidden bg-white"
                   data-testid={`tarot-card-${t}`}
-                  aria-label={`Card ${OPTION_LABEL[t]}`}
+                  aria-label={tr("Card {v0}", { v0: OPTION_LABEL[t] })}
                 >
                   <div className="w-full" style={optionStyle(t)} />
                 </button>
@@ -248,7 +249,7 @@ function TarotBridgeQuiz() {
             {/* Trust / privacy reassurance */}
             <div className="mt-5 flex items-center justify-center gap-2 text-xs text-gray-500">
               <Lock className="w-3.5 h-3.5 text-gray-400" />
-              <span>100% Private · 2,400+ readings</span>
+              <span>{tr("100% Private · 2,400+ readings")}</span>
             </div>
           </>
         )}
@@ -256,13 +257,13 @@ function TarotBridgeQuiz() {
         {phase === 'reading' && (
           <div className="flex flex-col items-center py-8 animate-fade-in">
             <Avatar />
-            <p className="text-gray-700 text-center mt-4 mb-3 font-serif text-lg">Evelyn is reading your {cfg.beatNoun}…</p>
+            <p className="text-gray-700 text-center mt-4 mb-3 font-serif text-lg">{tr("Evelyn is reading your")}{" "}{cfg.beatNoun}…</p>
             <div className="flex gap-1.5 mb-3">
               <span className="w-2.5 h-2.5 bg-purple-400 rounded-full animate-bounce [animation-delay:-0.3s]" />
               <span className="w-2.5 h-2.5 bg-purple-400 rounded-full animate-bounce [animation-delay:-0.15s]" />
               <span className="w-2.5 h-2.5 bg-purple-400 rounded-full animate-bounce" />
             </div>
-            <p className="text-gray-400 text-center text-sm italic">Hold still, dear.</p>
+            <p className="text-gray-400 text-center text-sm italic">{tr("Hold still, dear.")}</p>
           </div>
         )}
 
@@ -290,18 +291,18 @@ function TarotBridgeQuiz() {
       <footer className="mt-8 text-white/40 text-xs text-center space-y-2">
         <div className="flex items-center justify-center gap-3 flex-wrap">
           <Link href="/privacy">
-            <span className="hover:text-white/70 cursor-pointer transition-colors" data-testid="link-privacy">Privacy Policy</span>
+            <span className="hover:text-white/70 cursor-pointer transition-colors" data-testid="link-privacy">{tr("Privacy Policy")}</span>
           </Link>
           <span>·</span>
           <Link href="/terms">
-            <span className="hover:text-white/70 cursor-pointer transition-colors" data-testid="link-terms">Terms of Service</span>
+            <span className="hover:text-white/70 cursor-pointer transition-colors" data-testid="link-terms">{tr("Terms of Service")}</span>
           </Link>
           <span>·</span>
           <Link href="/refund">
-            <span className="hover:text-white/70 cursor-pointer transition-colors" data-testid="link-refund">Refund Policy</span>
+            <span className="hover:text-white/70 cursor-pointer transition-colors" data-testid="link-refund">{tr("Refund Policy")}</span>
           </Link>
         </div>
-        <p>&copy; {new Date().getFullYear()} Cosmo Numerology Pte Ltd. For Entertainment Purposes Only.</p>
+        <p>&copy; {new Date().getFullYear()} {" "}{tr("Cosmo Numerology Pte Ltd. For Entertainment Purposes Only.")}</p>
       </footer>
     </div>
   )
@@ -310,7 +311,7 @@ function TarotBridgeQuiz() {
 function Avatar() {
   return (
     <div className="w-24 h-24 rounded-full overflow-hidden border-4 border-white shadow-xl bg-purple-100">
-      <img src="/evelyn-avatar.png" alt="Evelyn Cross" className="w-full h-full object-cover" />
+      <img src="/evelyn-avatar.png" alt={tr("Evelyn Cross")} className="w-full h-full object-cover" />
     </div>
   )
 }

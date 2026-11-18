@@ -6,6 +6,7 @@ import { LaneSections } from '../components/LaneSections';
 import { resolveLane } from '@/lib/laneAttribution';
 import { Link } from 'wouter';
 import { Sparkles } from 'lucide-react';
+import { t } from "@/lib/i18n";
 
 const variants: Record<string, {
   headline: string;
@@ -65,8 +66,7 @@ export default function LandingPage() {
       <div className="mb-8 flex items-center gap-3 animate-fade-in text-center">
         <Sparkles className="w-10 h-10 text-purple-300 filter drop-shadow-lg" />
         <h1 className="font-serif text-3xl md:text-4xl text-secondary drop-shadow-md">
-          The Seer Within
-        </h1>
+          {t("The Seer Within")}</h1>
       </div>
 
       {/* Main Card */}
@@ -76,7 +76,7 @@ export default function LandingPage() {
           <div className="w-28 h-28 rounded-full overflow-hidden border-4 border-white shadow-xl bg-purple-100">
             <img
               src="/evelyn-avatar.png"
-              alt="Evelyn Cross"
+              alt={t("Evelyn Cross")}
               className="w-full h-full object-cover"
               data-testid="img-avatar-landing"
             />
@@ -120,18 +120,18 @@ export default function LandingPage() {
       <footer className="mt-8 text-white/40 text-xs text-center space-y-2">
         <div className="flex items-center justify-center gap-3 flex-wrap">
           <Link href="/privacy">
-            <span className="hover:text-white/70 cursor-pointer transition-colors" data-testid="link-privacy">Privacy Policy</span>
+            <span className="hover:text-white/70 cursor-pointer transition-colors" data-testid="link-privacy">{t("Privacy Policy")}</span>
           </Link>
           <span>·</span>
           <Link href="/terms">
-            <span className="hover:text-white/70 cursor-pointer transition-colors" data-testid="link-terms">Terms of Service</span>
+            <span className="hover:text-white/70 cursor-pointer transition-colors" data-testid="link-terms">{t("Terms of Service")}</span>
           </Link>
           <span>·</span>
           <Link href="/refund">
-            <span className="hover:text-white/70 cursor-pointer transition-colors" data-testid="link-refund">Refund Policy</span>
+            <span className="hover:text-white/70 cursor-pointer transition-colors" data-testid="link-refund">{t("Refund Policy")}</span>
           </Link>
         </div>
-        <p>&copy; {new Date().getFullYear()} Cosmo Numerology Pte Ltd. For Entertainment Purposes Only.</p>
+        <p>&copy; {new Date().getFullYear()} {" "}{t("Cosmo Numerology Pte Ltd. For Entertainment Purposes Only.")}</p>
       </footer>
     </div>
   );
