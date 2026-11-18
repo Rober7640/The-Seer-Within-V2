@@ -55,7 +55,7 @@ describe('laneDirective — no lane / unknown lane changes nothing', () => {
   for (const [name, build] of [...WITH_DIRECTIVE, ...WITHOUT_DIRECTIVE]) {
     it(`${name}: identical for no lane, an unknown lane and a junk value`, () => {
       const plain = build(base)
-      for (const lane of [undefined, '', 'astrology', 'MANIFEST', '__proto__']) {
+      for (const lane of [undefined, '', 'pattern', 'MANIFEST', '__proto__']) {
         assert.equal(build({ ...base, lane }), plain, `lane=${JSON.stringify(lane)}`)
       }
     })
