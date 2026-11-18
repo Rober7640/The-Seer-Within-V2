@@ -75,6 +75,12 @@ export interface ConversationRecord {
   // reassigned, so a returning buyer on a fresh cookie stays credited to the lander
   // that originally converted her rather than moving between arms.
   abVisitorId?: string;
+  // The belief lane (/fb?lane=<id>) this lead came through, already validated
+  // against shared/beliefLanes.ts by the route. FIRST NON-NULL WRITE WINS, for the
+  // abVisitorId reason below: a returning buyer is never moved from one lane to
+  // another (or back to plain /fb) by a later visit. Needs
+  // improve-v1/add-conversations-lane-column-2026-11-18.sql applied first.
+  lane?: string;
 }
 
 export async function saveConversation(data: ConversationRecord): Promise<string | null> {
@@ -125,6 +131,10 @@ export async function saveConversation(data: ConversationRecord): Promise<string
           ...(data.abVisitorId
             ? { abVisitorId: sql`COALESCE(${conversations.abVisitorId}, ${data.abVisitorId})` }
             : {}),
+          // Same rule for the belief lane: never blanked, never moved.
+          ...(data.lane
+            ? { lane: sql`COALESCE(${conversations.lane}, ${data.lane})` }
+            : {}),
           updatedAt: new Date(),
         })
         .where(eq(conversations.id, existing[0].id));
@@ -154,6 +164,7 @@ export async function saveConversation(data: ConversationRecord): Promise<string
           conversationState: data.conversationState,
           messages: data.messages,
           abVisitorId: data.abVisitorId,
+          lane: data.lane,
         })
         .returning({ id: conversations.id });
 

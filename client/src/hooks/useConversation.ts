@@ -46,6 +46,8 @@ import {
   rememberTarotMethod,
 } from '@/lib/tarotAttribution'
 import { trackGAdsLead, trackGAdsCheckout, getGclid } from '@/lib/gtm'
+import { getLane, laneOpenerBeforeName, laneOpenerAfterName, laneQuestion } from '@shared/beliefLanes'
+import { resolveLane, laneEventProps } from '@/lib/laneAttribution'
 import { isSlidingCloseVariant } from '@shared/types'
 import { pairedBumpBucket, isBumpCopyVariant, resolveBumpCents, V1_BUMP_CENTS, type BumpTier } from '@shared/orderBump'
 
@@ -456,6 +458,7 @@ export function useConversation() {
       trackPH('email_gate_assigned', {
         funnel: getPostHogFunnel() ?? 'v1',
         email_gate: skipEmail() ? 'off' : 'on',
+        ...laneEventProps(),
       })
 
       addMessage('system', 'Evelyn has joined the chat')
@@ -578,6 +581,23 @@ export function useConversation() {
         } else {
           await sendBotMessage(tarotGreetingA(tarot.deck, tarot.card))
         }
+        updateState({
+          state: 'NAME_CAPTURE',
+          inputEnabled: true,
+          inputPlaceholder: 'Your name...',
+        })
+        return
+      }
+
+      // Belief-lane traffic (/fb/chat?lane=<id>, shared/beliefLanes.ts). Modelled on the
+      // /fb-read branch above (parse → skip the topic buttons → set the bucket → carry the
+      // identity into userData at name capture), NOT on the tarot branch, which keeps the
+      // deep flow generic on purpose. Beat 1 picks up where the page left off and REPLACES
+      // the greeting below; beat 2 is today's "What's your first name, dear?". resolveLane
+      // is undefined on every non-lane visit, so they fall through to the greeting as before.
+      const lane = resolveLane()
+      if (lane) {
+        await sendBotMessages(laneOpenerBeforeName(lane))
         updateState({
           state: 'NAME_CAPTURE',
           inputEnabled: true,
@@ -910,6 +930,51 @@ export function useConversation() {
       return
     }
 
+    // Belief-lane traffic (/fb/chat?lane=<id>): the /fb-read shape — skip the topic
+    // buttons (the lane already said the topic), set the bucket, and carry the lane into
+    // userData so laneDirective() in the shared reading/crisis builders keeps it alive
+    // after the opener (improve-v1/04-fb-palm-derail-PROVEN.md is the failure this
+    // guards against). Beats 3–5 replace "It's lovely to meet you" and the warmth lines.
+    // The email ask is unchanged (D3). Beat 6, the lane's first question, is asked as the
+    // FIRST DEEPENING INPUT: it is the last message before state DEEPENING_1, so her
+    // answer becomes userData.concern and feeds reading1 — sent here when the email gate
+    // is off, else in handleEmailCapture after "The link is complete.". The "our secret"
+    // line is kept (README decision) and sits right before beat 6 on both paths.
+    const lane = resolveLane()
+    if (lane) {
+      updateUserData({ bucket: lane.bucket, lane: lane.id })
+
+      await sendBotMessages(laneOpenerAfterName(lane, capitalized))
+      // no-optin variant: no email anchor, so beat 6 opens the deepening right here.
+      if (skipEmail()) {
+        await sendBotMessages([
+          "Everything we discuss stays between us... our secret.",
+          laneQuestion(lane, capitalized),
+        ])
+        updateState({
+          state: 'DEEPENING_1',
+          inputEnabled: true,
+          inputPlaceholder: "Share what's in your heart...",
+          inputType: 'text',
+        })
+        return
+      }
+
+      await sendBotMessages([
+        "Before I look deeper, I need to anchor our connection...",
+        "Sometimes the visions continue after we speak...",
+        "Where should I send them if more is revealed?",
+      ])
+
+      updateState({
+        state: 'EMAIL_CAPTURE',
+        inputEnabled: true,
+        inputPlaceholder: 'Your email...',
+        inputType: 'email',
+      })
+      return
+    }
+
     await sendBotMessages([
       `It's lovely to meet you, ${capitalized}.`,
       "Everything we discuss stays between us... our secret.",
@@ -1157,6 +1222,9 @@ export function useConversation() {
       // per lander the way tarot and palm already do. One-shot: the exposure row is
       // written once per subject and can never be back-filled.
       const readHook = readParams?.hook
+      // Belief lane (/fb?lane=<id>) for the tab — the `lane-<id>` AWeber tag and
+      // conversations.lane. Absent on every non-lane lead, so the body is unchanged.
+      const laneProps = laneEventProps()
 
       const leadRes = await fetch('/api/lead', {
         method: 'POST',
@@ -1186,6 +1254,7 @@ export function useConversation() {
             : {}),
           ...(readDevice ? { readDevice } : {}),
           ...(readHook ? { readHook } : {}),
+          ...laneProps,
           fbp: fbpMatch ? decodeURIComponent(fbpMatch[1]) : undefined,
           fbc: fbcMatch ? decodeURIComponent(fbcMatch[1]) : undefined,
         }),
@@ -1278,12 +1347,17 @@ export function useConversation() {
                 tarot_card: tarot.card,
               }
             : {}),
+          // Belief lane as a PERSON property, for the same reason as tarot_deck: the
+          // server-side purchase_completed events key off this identity and carry no
+          // lane of their own, so this is what makes revenue breakable-down per lane.
+          ...laneProps,
         })
         trackPH('lead_captured', {
           funnel: phFunnel,
           step: 'chat',
           sign: palmSign ?? tarot?.deck,
           ...(tarot ?? {}),
+          ...laneProps,
         })
       }
     } catch (e) {
@@ -1302,6 +1376,25 @@ export function useConversation() {
         "I've held everything you shared, dear... now let me look deeper.",
       ])
       await runReading1(currentChat.userData.concern, currentChat)
+      return
+    }
+
+    // Belief lane: beat 6, the lane's first question, replaces the generic "tell me
+    // more" pair as the first deepening input (see handleNameCapture). Read off
+    // userData — set at name capture — so a restored session keeps it.
+    const lane = getLane(currentChat.userData.lane)
+    if (lane) {
+      await sendBotMessages([
+        `Thank you, ${currentChat.userData.firstName}. The link is complete.`,
+        "Everything we discuss stays between us... our secret.",
+        laneQuestion(lane, currentChat.userData.firstName || 'dear'),
+      ])
+      updateState({
+        state: 'DEEPENING_1',
+        inputEnabled: true,
+        inputPlaceholder: "Share what's in your heart...",
+        inputType: 'text',
+      })
       return
     }
 
@@ -2326,6 +2419,7 @@ export function useConversation() {
           sign: palmSign ?? tarot?.deck,
           ...(tarot ?? {}),
           email_gate: skipEmail() ? 'off' : 'on',
+          ...laneEventProps(),
         })
       }
 
@@ -2388,6 +2482,9 @@ export function useConversation() {
         // /fb-tarot deck, beside the hook — recorded on the gateway-split exposure
         // so its report can be read per ad URL. Undefined on every other funnel.
         tarotDeck: getPostHogFunnel() === 'tarot' ? tarotEventProps()?.deck : undefined,
+        // Belief lane → an additive Stripe metadata key (`product` stays
+        // energy_clearing_ritual). Absent on every non-lane order.
+        ...laneEventProps(),
       }
       const response = await fetch('/api/checkout', {
         method: 'POST',
@@ -2478,6 +2575,7 @@ export function useConversation() {
       // Copy arm on the exposure AND on accept/decline below, so take-rate can be
       // read per arm in PostHog without waiting on the experiments tally.
       bump_copy: chat.userData.bumpCopy ?? 'control',
+      ...laneEventProps(),
     })
 
     // The offer copy now renders INSIDE BumpOfferCard, so we no longer send it as
@@ -2504,6 +2602,7 @@ export function useConversation() {
       price_cents: cents,
       bump_tier: tier,
       bump_copy: chat.userData.bumpCopy ?? 'control',
+      ...laneEventProps(),
     })
 
     await handlePurchase(tier, { offered: true, accepted, bucket: paired })

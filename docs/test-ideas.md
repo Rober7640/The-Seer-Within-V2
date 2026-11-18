@@ -2477,3 +2477,39 @@ Arm A only — arm B has never been mailed. Covered at source level in `luckyNum
 - [ ] Playwright: click any CTA → lands on `/numerology/lucky-numbers?fn=sarah&c=3&utm_source=aweber` (fn/c/utm preserved), booking page works unchanged
 - [ ] Playwright: visit with no `?fn=` → letter reads to "dear", no broken name tokens
 - [ ] If arm B is ever mailed: branch the page on `?c=` (1–5 → A, 11–15 → B) and add the A/B render tests here
+### Standalone SMS opt-in after payment (2026-11-02, DEV only — Twilio 30446 fix)
+
+Replaces the checkout dropdown on /fb-read tea + coffee (same `SMS_CONSENT_FUNNELS` switch).
+Box on `/fb-read/welcome1`; `GET /api/sms-optin/status`, `POST /api/sms-optin`; row source
+`post_purchase_optin`. Covered by `server/routes/smsOptIn.test.ts`, `server/lib/smsOptIn.db.test.ts`.
+
+- [ ] /fb-read tea and coffee Stripe checkout shows NO "Get texts" question
+- [ ] After paying (tea, coffee) the thank-you page shows the box: phone empty, checkbox UNTICKED, "Text me" disabled
+- [ ] "Text me" stays disabled until BOTH a valid number is typed and the box is ticked
+- [ ] Pressing "Text me" shows the thanks message and writes one `sms_consents` row (consented = true, source `post_purchase_optin`, E.164 phone, conversation linked)
+- [ ] Reloading the thank-you page after opting in shows the thanks message, not the form
+- [ ] Ignoring the box: upsell chat runs exactly as before and no `sms_consents` row is written
+- [ ] /fb-read dream, /fb-tarot, /fb, root thank-you pages show no box
+- [ ] `?demo=true` thank-you page shows no box
+- [ ] Terms + Privacy links in the box open in a new tab
+
+## Belief lanes on /fb — `/fb?lane=<id>`, lane 1 `manifest` (2026-11-18, uncommitted in ~/tsw-lanes)
+
+Registry `shared/beliefLanes.ts`; server HTML `server/lib/laneHtml.ts` (static.ts + vite.ts); opener in
+`useConversation.ts`; `laneDirective()` beside `readDirective()`. Covered by `npm run test:lanes`
+(registry + copy rules, server HTML byte-identity, prompt injection) and `tests/belief-lanes.spec.ts`.
+
+- [x] Unknown / empty / prototype lane ids resolve to nothing *(beliefLanes.test.ts)*
+- [x] Every registry string passes the voice rules (banned words, no "!", "free" only beside message/chat) *(beliefLanes.test.ts)*
+- [x] No-lane and unknown-lane /fb server HTML byte-identical, body and headers, prod path *(laneHtml.test.ts)*
+- [x] /fb?lane=manifest rewrites title, og:title, og:description, adds meta description; copy inside #root, escaped, nothing hidden *(laneHtml.test.ts)*
+- [x] laneDirective only in reading1, reading2, futureValidation, crisisReveal, crisisCost; no lane = prompts unchanged *(prompts.lane.test.ts)*
+- [x] JS off: lane title, h1, section heading, "free to message"; plain /fb keeps its title *(belief-lanes.spec.ts)*
+- [x] JS on: card spots filled, sections + FAQ, 3s delay intact, both buttons → /fb/chat?lane=manifest *(belief-lanes.spec.ts)*
+- [x] Chat: beats 1–2 replace the greeting, name → beats 3–5 + unchanged email ask; `noemail=1` → beat 6 as first deepening question *(belief-lanes.spec.ts)*
+- [ ] After the SQL is applied (dev): enter an email on /fb/chat?lane=manifest → `conversations.lane = 'manifest'`, AWeber tag `lane-manifest`
+- [ ] Dev checkout from a lane chat → Stripe session + PaymentIntent metadata `lane=manifest`, `product=energy_clearing_ritual`
+- [ ] PostHog: `lander_view`, `lead_captured`, `checkout_initiated`, bump and upsell events carry `lane`; plain /fb events carry none
+- [ ] Lane survives a reload of /fb/chat (sessionStorage + saved userData.lane); a fresh tab on plain /fb clears it
+- [ ] Meta Sharing Debugger on the deployed /fb?lane=manifest shows the lane title, description and image alt
+- [ ] /, /fb2, /gdn, /fb-tarot, /fb-palm with ?lane=manifest behave exactly as without it
