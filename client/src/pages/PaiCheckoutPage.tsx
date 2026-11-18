@@ -24,6 +24,11 @@ import {
   type PaiCheckoutOrder,
 } from '@/lib/paiCheckout';
 import { funnelPath } from '@/lib/funnel';
+import {
+  trackCheckoutViewed,
+  trackPaymentResult,
+  type CheckoutStepContext,
+} from '@/lib/checkoutSteps';
 
 const money = (cents: number) => `$${(cents / 100).toFixed(2)}`;
 
@@ -48,6 +53,18 @@ export default function PaiCheckoutPage() {
   const fellBack = useRef(false);
 
   const backUrl = order?.backUrl ?? `${funnelPath('/chat')}?cancelled=true`;
+
+  // Step tracking (lib/checkoutSteps.ts) — Tim's five steps.
+  const stepCtx: CheckoutStepContext = {
+    gateway: 'paymentsai',
+    page: 'main',
+    funnel: order?.funnel ?? null,
+    amount_cents: order?.totalCents,
+  };
+  useEffect(() => {
+    if (order && !isReturn) trackCheckoutViewed(stepCtx);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     if (!order) return;
@@ -86,6 +103,7 @@ export default function PaiCheckoutPage() {
         });
         const data: PayResponse = await res.json();
         if (data.ok && data.redirect) {
+          trackPaymentResult(stepCtx, 'approved');
           clearPending3ds();
           clearPaiOrder();
           window.location.href = data.redirect;
@@ -96,6 +114,7 @@ export default function PaiCheckoutPage() {
           return;
         }
         clearPending3ds();
+        trackPaymentResult(stepCtx, data.declined ? 'declined' : 'error');
         setError(data.error ?? 'Your payment could not be completed. Please try again.');
       } catch {
         setError('We could not confirm your payment. Please refresh this page.');
@@ -147,11 +166,13 @@ export default function PaiCheckoutPage() {
       });
       const data: PayResponse = await res.json();
       if (data.ok && data.redirect) {
+        trackPaymentResult(stepCtx, 'approved', s.payMethod);
         clearPaiOrder();
         window.location.href = data.redirect;
         return;
       }
       if (data.needs3ds && data.approvalLink && data.transactionId) {
+        trackPaymentResult(stepCtx, 'needs_3ds', s.payMethod);
         const saved = savePending3ds({
           transactionId: data.transactionId,
           phone: s.phone,
@@ -165,8 +186,10 @@ export default function PaiCheckoutPage() {
         window.location.href = data.approvalLink;
         return;
       }
+      trackPaymentResult(stepCtx, data.declined ? 'declined' : 'error', s.payMethod);
       setError(data.error ?? 'Your payment could not be completed. Please try again.');
     } catch {
+      trackPaymentResult(stepCtx, 'error', s.payMethod);
       setError('Your payment could not be completed. Please check your connection and try again.');
     }
     setBusy(false);
@@ -235,6 +258,7 @@ export default function PaiCheckoutPage() {
                 error={error}
                 onSubmit={pay}
                 onBootFailed={fallBackToStripe}
+                track={stepCtx}
               />
             ) : error ? (
               <div className="rounded-lg border border-red-400/30 bg-red-500/10 px-3 py-2 text-sm text-red-200">{error}</div>

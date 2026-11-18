@@ -10,6 +10,7 @@
  * complete PAI_LIVE_* config instead, and every request still needs a valid signed
  * order, which only /api/checkout can issue.
  */
+import { PHONE_ERROR } from '@shared/phone';
 import { Router, Request, Response } from 'express';
 import logger from '../lib/logger';
 import {
@@ -111,7 +112,7 @@ export function createPaiLiveRouter(deps: PaiLiveDeps): Router {
     if (!cardToken) return res.status(400).json({ ok: false, error: 'Please enter your card details.' });
     const phone = normalizePhone(req.body?.phone);
     if (!phone) {
-      return res.status(400).json({ ok: false, error: 'Please enter your phone number with the country code, e.g. +1 555 555 0123' });
+      return res.status(400).json({ ok: false, error: PHONE_ERROR });
     }
 
     // Where 3DS sends her back: the funnel's own checkout page, flagged to finish.
