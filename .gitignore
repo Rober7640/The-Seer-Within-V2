@@ -98,3 +98,4 @@ docs/aweber/*/sends/*/_build/
 # funnel tracks its candidates either.
 improve-v1/fb-read/images/candidates/
 samples/
+localize/runs/
