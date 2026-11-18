@@ -1,6 +1,7 @@
 import { MapPin, Sparkles } from 'lucide-react'
 import type { ShippingAddress } from './ShippingForm'
 import { t } from "@/lib/i18n";
+import { countryLabel } from "@/lib/countryName";
 
 export interface UpsellCompleteProps {
   address?: ShippingAddress
@@ -45,7 +46,7 @@ export function UpsellComplete({ address, userName }: UpsellCompleteProps) {
             {address.city}, {address.state} {address.postal}
           </div>
           <div data-testid="text-shipping-country">
-            {countryNames[address.country] || address.country}
+            {countryNames[address.country] ? countryLabel(address.country, countryNames[address.country]) : address.country}
           </div>
         </div>
       )}

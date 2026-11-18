@@ -2,7 +2,8 @@ import { createRoot } from "react-dom/client";
 import * as Sentry from "@sentry/react";
 import App from "./App";
 import { initPostHog, registerUTMs } from "./lib/posthog";
-import { captureLocale } from "./lib/locale";
+import { captureLocale, settleLocale } from "./lib/locale";
+import { localeServesPath, localeCoversPage } from "./l10n/coverage";
 import { loadLocale } from "./lib/i18n";
 import { localeDef } from "@shared/locales";
 import "./index.css";
@@ -36,16 +37,24 @@ if (sentryDsn) {
 // Locale: `?lang=` on the entry URL, else the session cookie, else English
 // (client/src/lib/locale.ts). English mounts exactly as before. Any other
 // locale first fetches its own bundle (catalog + data twins) so the very first
-// bubble is already translated; a failed fetch falls back to English copy
-// rather than a blank page.
+// bubble is already translated. If this page is not covered in that locale
+// (another funnel, an untranslated tarot lander) or the bundle fails to load,
+// the visit settles on English — never a half-translated page.
 const locale = captureLocale();
 const mount = () => createRoot(document.getElementById("root")!).render(<App />);
 if (locale === "en") {
   mount();
+} else if (!localeServesPath(locale, window.location.pathname)) {
+  settleLocale("en");
+  mount();
 } else {
-  document.documentElement.lang = localeDef(locale).htmlLang;
   loadLocale(locale)
-    .catch((err) => console.error("[locale] bundle failed to load", err))
+    .then(() => {
+      const ok = localeCoversPage(locale, window.location.pathname, window.location.search);
+      settleLocale(ok ? locale : "en");
+      if (ok) document.documentElement.lang = localeDef(locale).htmlLang;
+    })
+    .catch((err) => { console.error("[locale] bundle failed to load", err); settleLocale("en"); })
     .finally(mount);
 }
 

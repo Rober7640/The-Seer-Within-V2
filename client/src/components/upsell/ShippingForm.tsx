@@ -18,6 +18,8 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { t } from "@/lib/i18n";
+import { countryLabel, countryIntl } from "@/lib/countryName";
+import { useMemo } from "react";
 
 interface ShippingFormProps {
   defaultName?: string
@@ -41,14 +43,15 @@ export interface ShippingAddress {
   country: string
 }
 
-const shippingSchema = z.object({
-  name: z.string().min(1, 'Name is required'),
-  line1: z.string().min(1, 'Address is required'),
+// Built at render time so its messages are in the visitor's locale.
+const makeShippingSchema = () => z.object({
+  name: z.string().min(1, t("Name is required")),
+  line1: z.string().min(1, t("Address is required")),
   line2: z.string(),
-  city: z.string().min(1, 'City is required'),
-  state: z.string().min(1, 'State is required'),
-  postal: z.string().min(1, 'Postal code is required'),
-  country: z.string().min(1, 'Country is required'),
+  city: z.string().min(1, t("City is required")),
+  state: z.string().min(1, t("State is required")),
+  postal: z.string().min(1, t("Postal code is required")),
+  country: z.string().min(1, t("Country is required")),
 })
 
 const DEFAULT_COUNTRY_OPTIONS = [
@@ -64,20 +67,21 @@ const DEFAULT_COUNTRY_OPTIONS = [
 /** Codes → {value,label}, alphabetical. Country names come from the browser (Intl), so no list
  *  of 200 names lives in this repo; a browser without Intl.DisplayNames shows the code. */
 export function countryOptions(codes?: readonly string[]) {
-  if (!codes) return DEFAULT_COUNTRY_OPTIONS
+  if (!codes) return countryIntl() === 'en' ? DEFAULT_COUNTRY_OPTIONS : DEFAULT_COUNTRY_OPTIONS.map((o) => ({ ...o, label: countryLabel(o.value, o.label) }))
   let names: Intl.DisplayNames | null = null
   try {
-    names = new Intl.DisplayNames(['en'], { type: 'region' })
+    names = new Intl.DisplayNames([countryIntl()], { type: 'region' })
   } catch {
     names = null
   }
   return [...codes]
     .map((value) => ({ value, label: names?.of(value) ?? value }))
-    .sort((a, b) => a.label.localeCompare(b.label))
+    .sort((a, b) => a.label.localeCompare(b.label, countryIntl() === 'en' ? undefined : countryIntl()))
 }
 
 export function ShippingForm({ defaultName = '', productLabel = t("protection stone"), countries, onSubmit }: ShippingFormProps) {
   const countryList = countryOptions(countries)
+  const shippingSchema = useMemo(makeShippingSchema, [])
   const form = useForm<ShippingAddress>({
     resolver: zodResolver(shippingSchema),
     defaultValues: {

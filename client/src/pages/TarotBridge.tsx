@@ -10,7 +10,7 @@ import TarotRetargetOffer from './TarotRetargetOffer'
 import {
   DEFAULT_HOOK,
   DEFAULT_DECK,
-  HEADLINES,
+  headlineFor,
   angleForHook,
   cardArtFor,
   cardReveal,
@@ -227,7 +227,7 @@ function TarotBridgeQuiz() {
             </div>
 
             <h2 className="font-serif text-2xl md:text-3xl text-gray-900 text-center mb-2 leading-tight">
-              {HEADLINES[hook]}
+              {headlineFor(hook)}
             </h2>
             {/* The deck's tap line, unless this hook overrides it — return-mhf says "Think of
                 the man on your mind", which is the wrong sentence in front of a money hook. */}

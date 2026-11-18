@@ -4,7 +4,7 @@ import { CTAButton } from '../components/CTAButton';
 import { TrustBadges } from '../components/TrustBadges';
 import { Link } from 'wouter';
 import { Sparkles } from 'lucide-react';
-import { t } from "@/lib/i18n";
+import { t, pick } from "@/lib/i18n";
 
 const variants: Record<string, {
   headline: string;
@@ -39,7 +39,8 @@ const variants: Record<string, {
 export default function LandingPage() {
   const params = new URLSearchParams(window.location.search);
   const v = params.get('v') || 'default';
-  const content = variants[v] || variants.default;
+  const vs = pick('landing.variants', variants)
+  const content = vs[v] || vs.default;
 
   return (
     <div className="min-h-screen relative flex flex-col items-center justify-center p-4">

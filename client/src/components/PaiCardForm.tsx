@@ -19,6 +19,7 @@ import {
   type CheckoutStepContext,
 } from '@/lib/checkoutSteps';
 import { t } from "@/lib/i18n";
+import { countryLabel } from "@/lib/countryName";
 import { tx } from "@/lib/rich";
 
 const FRAMEPAY_SRC = 'https://framepay.payments.ai/framepay.js';
@@ -645,7 +646,7 @@ export function PaiCardForm(props: {
               <select id={`${mountId}-ship-country`} className={inputCls} value={ship.country}
                 onChange={(e) => setShip({ ...ship, country: e.target.value })}>
                 {COUNTRIES.map(([code, label]) => (
-                  <option key={code} value={code}>{label}</option>
+                  <option key={code} value={code}>{countryLabel(code, label)}</option>
                 ))}
               </select>
             </div>

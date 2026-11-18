@@ -10,31 +10,8 @@ import {
   detectU2Q1Intent,
   detectU2Q2Intent,
   detectU2Q3Intent,
-  UPSELL2_GAP,
-  UPSELL2_QUESTION_1,
-  UPSELL2_QUESTION_1_REPLIES,
-  UPSELL2_AFTER_Q1,
-  UPSELL2_INTRODUCE,
-  UPSELL2_STONES,
-  UPSELL2_QUESTION_2,
-  UPSELL2_QUESTION_2_REPLIES,
-  UPSELL2_AFTER_Q2,
-  UPSELL2_RITUAL_INSTRUCTION,
-  UPSELL2_RITUAL_PATH_A_EXTRA,
-  UPSELL2_WHAT_RECEIVE,
-  UPSELL2_QUESTION_3,
-  UPSELL2_QUESTION_3_REPLIES,
-  UPSELL2_AFTER_Q3,
-  UPSELL2_SOCIAL_PROOF,
-  UPSELL2_PRICE,
-  UPSELL2_URGENCY,
-  UPSELL2_DOWNSELL,
-  UPSELL2_SUCCESS,
-  UPSELL2_SUCCESS_HAS_SHIPPING,
-  UPSELL2_SUCCESS_NEEDS_SHIPPING,
-  UPSELL2_SHIPPING_CONFIRMED,
-  UPSELL2_SOFT_DECLINE,
 } from "@/lib/upsell2Messages";
+import * as UPSELL2_MESSAGES from "@/lib/upsell2Messages";
 import {
   upsell2Copy,
   displayName,
@@ -47,7 +24,10 @@ import type { BackendOfferKey } from "@shared/backendOffers";
 import { track as trackPH } from "@/lib/posthog";
 import { tarotEventProps } from "@/lib/tarotAttribution";
 import { getTrackdeskClickId } from "@/lib/facebook";
-import { t } from "@/lib/i18n";
+import { t, pick } from "@/lib/i18n";
+
+// l10n: the copy constants above are read through the locale's data twin (English = the module itself).
+const upsell2Msgs = () => pick("upsell2.messages", UPSELL2_MESSAGES);
 
 // Fire the Trackdesk upsell-2 affiliate conversion from the browser. Backup to
 // the server-side fire in /api/upsell2/charge — same externalId so Trackdesk
@@ -311,15 +291,15 @@ export function useUpsell2Chat({
           break;
 
         case "QUESTION_1":
-          await sendBotMessage(pMsg(UPSELL2_QUESTION_1));
-          setQuickReplies(UPSELL2_QUESTION_1_REPLIES);
+          await sendBotMessage(pMsg(upsell2Msgs().UPSELL2_QUESTION_1));
+          setQuickReplies(upsell2Msgs().UPSELL2_QUESTION_1_REPLIES);
           setShowQuickReplies(true);
           setInputEnabled(true);
           setStage("WAITING_Q1");
           break;
 
         case "AFTER_Q1": {
-          const after1 = copy.AFTER_Q1 ?? UPSELL2_AFTER_Q1;
+          const after1 = copy.AFTER_Q1 ?? upsell2Msgs().UPSELL2_AFTER_Q1;
           const q1Response = after1[responseKey || "default"] || after1.default;
           await sendBotMessages(p(q1Response));
           advance("AFTER_Q1");
@@ -340,15 +320,15 @@ export function useUpsell2Chat({
           break;
 
         case "QUESTION_2":
-          await sendBotMessage(pMsg(UPSELL2_QUESTION_2));
-          setQuickReplies(UPSELL2_QUESTION_2_REPLIES);
+          await sendBotMessage(pMsg(upsell2Msgs().UPSELL2_QUESTION_2));
+          setQuickReplies(upsell2Msgs().UPSELL2_QUESTION_2_REPLIES);
           setShowQuickReplies(true);
           setInputEnabled(true);
           setStage("WAITING_Q2");
           break;
 
         case "AFTER_Q2": {
-          const after2 = copy.AFTER_Q2 ?? UPSELL2_AFTER_Q2;
+          const after2 = copy.AFTER_Q2 ?? upsell2Msgs().UPSELL2_AFTER_Q2;
           const q2Response = after2[responseKey || "default"] || after2.default;
           await sendBotMessages(p(q2Response));
           advance("AFTER_Q2");
@@ -391,15 +371,15 @@ export function useUpsell2Chat({
           break;
 
         case "QUESTION_3":
-          await sendBotMessage(pMsg(UPSELL2_QUESTION_3));
-          setQuickReplies(UPSELL2_QUESTION_3_REPLIES);
+          await sendBotMessage(pMsg(upsell2Msgs().UPSELL2_QUESTION_3));
+          setQuickReplies(upsell2Msgs().UPSELL2_QUESTION_3_REPLIES);
           setShowQuickReplies(true);
           setInputEnabled(true);
           setStage("WAITING_Q3");
           break;
 
         case "AFTER_Q3": {
-          const after3 = copy.AFTER_Q3 ?? UPSELL2_AFTER_Q3;
+          const after3 = copy.AFTER_Q3 ?? upsell2Msgs().UPSELL2_AFTER_Q3;
           const q3Response = after3[responseKey || "default"] || after3.default;
           await sendBotMessages(p(q3Response));
           advance("AFTER_Q3");

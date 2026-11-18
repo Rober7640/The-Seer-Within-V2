@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { t } from "@/lib/i18n";
+import { t, pick } from "@/lib/i18n";
 
 // fb-palm commitment-gate A/B test ('35_palm_gate') — CRO pattern adapted from
 // competitor intel (docs/intel/how-i-built-a-60k-per-month-astrology-offer.md):
@@ -37,7 +37,7 @@ export function CommitmentGateCard({ firstName, onConfirm, priceDollars = 35 }: 
         </div>
 
         <div className="px-5 pb-4 space-y-2.5">
-          {COMMITMENTS.map((label, index) => (
+          {pick('commitmentGate.lines', COMMITMENTS).map((label, index) => (
             <label
               key={label}
               className="flex items-start gap-3 text-[13px] leading-snug text-gray-700 cursor-pointer"
