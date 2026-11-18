@@ -40,6 +40,9 @@ export interface LaneMeta {
   desc: string
   /** Photo description on Evelyn's picture (server HTML + og:image:alt). */
   alt: string
+  /** The lane's keywords, for <meta name="keywords"> and the WebPage JSON-LD.
+      Her own words and the ad's, so Meta reads the page as one more keyword signal. */
+  keywords: readonly string[]
 }
 
 export type LaneBlock =
@@ -87,6 +90,7 @@ const LANES = {
       title: "Manifesting Love and Still Attracting the Wrong Man · Evelyn Cross",
       desc: "Vision boards, scripting, the law of attraction. If love still comes back wrong, something older is answering first. It's free to message Evelyn.",
       alt: "Evelyn Cross, who helps women see why manifesting love keeps bringing the wrong man.",
+      keywords: ["manifest", "manifesting", "law of attraction", "attract", "vision board", "scripting", "369 method", "affirmations", "acting as if", "specific person"],
     },
     body: [
       { t: 'h', text: "Why the law of attraction keeps bringing the wrong man" },
@@ -163,6 +167,7 @@ const LANES = {
       title: "When Astrology Says You Match and He Still Won't Commit · Evelyn Cross",
       desc: "You know his sign. You've checked every compatibility chart. If he still won't choose you, an old lesson is answering first. It's free to message Evelyn.",
       alt: "Evelyn Cross, who helps women who follow astrology see why he won't commit.",
+      keywords: ["astrology", "compatible", "sign", "the stars", "birth chart", "commit", "horoscope", "zodiac", "moon sign", "rising", "Mercury retrograde"],
     },
     body: [
       { t: 'h', text: "When astrology says you match and he still won't commit" },
