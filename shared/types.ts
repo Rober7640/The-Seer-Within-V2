@@ -76,6 +76,12 @@ export interface UserData {
   // here: it changes the deep flow for 148 LIVE tarot landers, which is outside the
   // coffee launch. It is a real fix and should ship on its own.
   readHook?: string
+  // Belief lane (/fb?lane=<id>, shared/beliefLanes.ts). Set at lane name-capture and
+  // read by laneDirective() in the shared reading/crisis builders, beside readHook, so
+  // the lane reaches every later chat step and not only the opener. The server re-checks
+  // it against the registry on /api/chat and drops anything unknown. ONLY lane traffic
+  // sets it, so every other funnel's prompt stays byte-identical.
+  lane?: string
   // Close-depth A/B (v1_close_depth_2026) — 'deep' ⇒ the thickened pitch. Set
   // client-side from the /api/lead response (or the ?close_depth= preview
   // override) and carried here only because the client posts the whole userData

@@ -1,0 +1,339 @@
+{
+ "id": "astrology",
+ "num": 4,
+ "name": "Astrology",
+ "link": "/fb?lane=astrology",
+ "status": "Complete copy, awaiting approval",
+ "belief": "Astrology isn't wrong. Her sign shows how she loves, not where she learned to love this way.",
+ "words": [
+  "**Buyers name signs. They don't use chart jargon.** Of 90,321 love and someone chats in the past year, 625 used any astrology word. 367 named a sign (\"he is a Scorpian and I am a Gemini\", \"Interesting that all 3 are born under Gemini\") and 162 said \"compatible\". Chart words barely appear: horoscope 18, birth chart 15, zodiac 15, retrograde 2, Saturn return 0. Signs and \"compatible\" are this lane's \"attract\".",
+  "The buyers who name signs skew older (quotes mention 56, 61, 62, 68, 70), so plain words beat Instagram jargon.",
+  "**\"Karmic\" stands out.** 167 chats used it, and 20% of them bought, against 8–14% for the other spiritual words in the same pull (soulmate 7.8%, twin flame 10.8%, fate or \"meant to be\" 9.2%, the universe 13.9%).",
+  "**Instagram** astrology-love posts are almost all \"zodiac compatibility\" and \"comment your sign and his\". The most-commented one (545k views, 2.2k comments) asks which sign Scorpio \"falls in love with over and over again… without even realizing it\". That's the pattern belief in astrology clothes."
+ ],
+ "keywords": [
+  {
+   "role": "Main",
+   "words": "sign: your sign, his sign, zodiac sign"
+  },
+  {
+   "role": "Second",
+   "words": "compatible, compatibility"
+  },
+  {
+   "role": "Buyer's own word",
+   "words": "sign names, used inside real sentences, 3–4 on the page, never all twelve"
+  },
+  {
+   "role": "Supporting",
+   "words": "astrology, birth chart, horoscope, the stars"
+  },
+  {
+   "role": "Once each (community terms)",
+   "words": "Venus sign, Moon sign, Mercury retrograde, Saturn return, karmic"
+  }
+ ],
+ "kw": [
+  {
+   "key": "venus",
+   "label": "Venus sign",
+   "regex": "\\bVenus sign\\b",
+   "target": "1",
+   "lo": 1,
+   "hi": 1
+  },
+  {
+   "key": "moon",
+   "label": "Moon sign",
+   "regex": "\\bMoon sign\\b",
+   "target": "1",
+   "lo": 1,
+   "hi": 1
+  },
+  {
+   "key": "merc",
+   "label": "Mercury retrograde",
+   "regex": "\\bMercury retrograde\\b",
+   "target": "1",
+   "lo": 1,
+   "hi": 1
+  },
+  {
+   "key": "saturn",
+   "label": "Saturn return",
+   "regex": "\\bSaturn return\\b",
+   "target": "1",
+   "lo": 1,
+   "hi": 1
+  },
+  {
+   "key": "chart",
+   "label": "birth chart",
+   "regex": "\\bbirth chart\\b",
+   "target": "2–3",
+   "lo": 2,
+   "hi": 3
+  },
+  {
+   "key": "sign",
+   "label": "sign / signs",
+   "regex": "\\bsigns?\\b",
+   "target": "8–10",
+   "lo": 8,
+   "hi": 10
+  },
+  {
+   "key": "compat",
+   "label": "compatible / compatibility",
+   "regex": "\\bcompatib\\w*",
+   "target": "4–5",
+   "lo": 4,
+   "hi": 5
+  },
+  {
+   "key": "astro",
+   "label": "astrology / astrologer",
+   "regex": "\\bastrolog\\w*",
+   "target": "2–3",
+   "lo": 2,
+   "hi": 3
+  },
+  {
+   "key": "horo",
+   "label": "horoscope",
+   "regex": "\\bhoroscopes?\\b",
+   "target": "2",
+   "lo": 2,
+   "hi": 2
+  },
+  {
+   "key": "stars",
+   "label": "the stars",
+   "regex": "\\bthe stars\\b",
+   "target": "1–2",
+   "lo": 1,
+   "hi": 2
+  },
+  {
+   "key": "names",
+   "label": "sign names (buyer words)",
+   "regex": "\\b(?:Aries|Taurus|Gemini|Cancer|Leo|Virgo|Libra|Scorpio|Sagittarius|Capricorn|Aquarius|Pisces)\\b",
+   "target": "3–4",
+   "lo": 3,
+   "hi": 4
+  },
+  {
+   "key": "karmic",
+   "label": "karmic",
+   "regex": "\\bkarmic\\b",
+   "target": "1",
+   "lo": 1,
+   "hi": 1
+  }
+ ],
+ "card": {
+  "v2": {
+   "h": "Something Is Blocking Your Love Life — It's Not Your Sign, and I Can See It",
+   "s": "Evelyn has sensed an old block that no birth chart shows. It's why even compatible signs keep going wrong. She can see where it started, from your first name.",
+   "b": "Yes Evelyn, Show Me Where It Started",
+   "sc": "It's free to message Evelyn. She's online now.",
+   "alts": [
+    "Your Signs Are Compatible. Something Else Is Blocking Your Love — I Can See It",
+    "Something Older Than Your Birth Chart Is Holding Your Love Life Back — I Can See It"
+   ],
+   "why": ""
+  }
+ },
+ "meta": {
+  "title": "Zodiac Compatibility, and Why Love Still Goes Wrong · Evelyn Cross",
+  "desc": "Astrology, your sign, his sign, your birth chart. If love still keeps going wrong, something older than your stars is answering first. It's free to message Evelyn.",
+  "alt": "Evelyn Cross, who helps women see why love keeps going wrong, whatever their zodiac sign."
+ },
+ "body": [
+  {
+   "t": "h",
+   "text": "Why compatible signs still go wrong"
+  },
+  {
+   "t": "p",
+   "text": "Maybe you've said it yourself. \"He's a Scorpio. What did I expect.\" Or, \"Never again with a Gemini.\""
+  },
+  {
+   "t": "p",
+   "text": "Then the next one comes along. A different sign. The same ending."
+  },
+  {
+   "t": "p",
+   "text": "Your friends have heard it all. One sends you his horoscope. One swears a Taurus would settle you down. One says the stars are on your side."
+  },
+  {
+   "t": "p",
+   "text": "And it's still going the same way. He's warm, then he goes quiet. Or he stays close, and never all the way."
+  },
+  {
+   "t": "h",
+   "text": "What you've already checked"
+  },
+  {
+   "t": "list",
+   "lead": "You've looked everywhere.",
+   "items": [
+    "Your horoscope, first thing every morning.",
+    "His sign and yours, the night you met.",
+    "A compatibility chart that said you were a match.",
+    "Your birth chart, down to your Venus sign and Moon sign.",
+    "Waiting out Mercury retrograde before you texted him.",
+    "Hoping your Saturn return would finally change things."
+   ],
+   "closer": "None of it was wrong. It just can't show where this started."
+  },
+  {
+   "t": "h",
+   "text": "What your birth chart can't show"
+  },
+  {
+   "t": "p",
+   "text": "Astrology can tell you a lot about how you love. What you need from him. How you show it."
+  },
+  {
+   "t": "p",
+   "text": "It can't show where you learned to love this way."
+  },
+  {
+   "t": "p",
+   "text": "Long ago, somebody taught you what to expect from love. Want nothing. Be no trouble. Don't ask him to stay."
+  },
+  {
+   "t": "p",
+   "text": "That lesson answers first. It picks the same kind of man, whatever his sign."
+  },
+  {
+   "t": "p",
+   "text": "Evelyn finds where it started, from your first name."
+  },
+  {
+   "t": "h",
+   "text": "Who Evelyn is"
+  },
+  {
+   "t": "p",
+   "text": "Evelyn Cross is a seer in the west of Ireland. Her teacher could do this. So could her teacher's teacher."
+  },
+  {
+   "t": "p",
+   "text": "She works at night, by candlelight. One first name at a time. She doesn't need a photo, or his name."
+  },
+  {
+   "t": "p",
+   "text": "She knows astrology the way you do. She looks past the man, and his sign, to where it started."
+  },
+  {
+   "t": "h",
+   "text": "When you send your first name"
+  },
+  {
+   "t": "p",
+   "text": "You send your first name. That's all."
+  },
+  {
+   "t": "p",
+   "text": "Evelyn writes back. Her first message is short. Then she'll ask you one question."
+  },
+  {
+   "t": "p",
+   "text": "Messaging Evelyn is free."
+  },
+  {
+   "t": "p",
+   "text": "If she sees where it started, she'll offer to write it down. A letter, written at night, by candlelight. That part isn't free. She'll tell you so plainly before anything happens."
+  },
+  {
+   "t": "p",
+   "text": "It starts the same way for every woman. One first name."
+  },
+  {
+   "t": "h",
+   "text": "Questions women ask"
+  },
+  {
+   "t": "faq",
+   "items": [
+    {
+     "q": "Are our zodiac signs compatible?",
+     "a": "Maybe. Plenty of compatible signs still go wrong. Your sign shows how you love. It doesn't show what you learned to expect from love."
+    },
+    {
+     "q": "Why do I keep falling for the same sign?",
+     "a": "It isn't really the sign. An old lesson about love keeps picking the same kind of man. Evelyn finds where that lesson started."
+    },
+    {
+     "q": "Is this a karmic relationship?",
+     "a": "It can feel like one. The same lesson comes back in a new face. Evelyn looks at where it began."
+    },
+    {
+     "q": "Is it free to message Evelyn?",
+     "a": "Yes. The chat is free."
+    }
+   ]
+  },
+  {
+   "t": "ask"
+  }
+ ],
+ "chat": [
+  {
+   "who": "e",
+   "text": "You've looked to the stars for this answer, haven't you."
+  },
+  {
+   "who": "e",
+   "text": "What's your first name, dear?"
+  },
+  {
+   "who": "me",
+   "text": "{her first name}"
+  },
+  {
+   "who": "e",
+   "text": "{Name}... you know your sign. You know his. You've checked how well they match."
+  },
+  {
+   "who": "e",
+   "text": "And it still goes the same way."
+  },
+  {
+   "who": "e",
+   "text": "The stars can show how you love, dear. Not where you learned it."
+  },
+  {
+   "who": "q",
+   "text": "Tell me his sign, and yours... and what keeps happening between you."
+  }
+ ],
+ "chatnote": "Her answer brings in sign names, the words she already uses. Evelyn still asks only her first name, so the chat flow matches /fb. Asking her sign as its own step is an open decision.",
+ "directive": "She came from a page about astrology and love: her sign, his sign, compatibility, her horoscope. Love keeps going the same way, whatever his sign. Reuse the sign names she gives you. Hold the lane's belief: her sign shows how she loves, not where she learned to love this way, and an old lesson picks the same kind of man. Talk about signs as someone at home with them. Never call their signs a bad match, and never use a sign to say what's coming.",
+ "notes": [
+  "Astrology isn't wrong. It just can't show where this started. Her sign shows <i>how</i> she loves. It doesn't show where she learned to love this way. Evelyn is never set apart from astrology (operator, 2026-11-18: \"in the world of spirituality, they are the same\"). She sees what the chart can't, from the first name, so the flow stays the same as <code>/fb</code>.",
+  "\"Taurus would settle you down\" is a friend talking, so the page shows her life from outside rather than guessing her feelings.",
+  "\"Karmic\" is used once, in the FAQ. That decision is still open."
+ ],
+ "open": [
+  "Ask her sign as its own chat step? Left out of the first test so the test is only the copy.",
+  "An exception for 'soulmate'? 5,014 love chats use it, and Instagram astrology posts are built around 'soulmate signs'.",
+  "'Karmic' once, in the FAQ?"
+ ],
+ "parked": {
+  "note": "Card version 1 (her words) parked 2026-11-18: operator chose version 2 only for now.",
+  "card_v1": {
+   "h": "I know my sign, his sign, and our compatibility. Love still keeps going wrong.",
+   "s": "Evelyn knows why. Your sign shows how you love. It can't show where you learned to love this way. She can see where it started, from your first name.",
+   "b": "Send your first name to Evelyn",
+   "sc": "It's free to message Evelyn.",
+   "alts": [
+    "Astrology explains almost everything about me. Except why love keeps going wrong.",
+    "Different man. Different sign. The same ending every time."
+   ],
+   "why": "Why the pick: it carries both main keywords in her plain words, and \"our compatibility\" holds whether the signs matched or clashed. The second option says \"astrology\" but buyers rarely do. The third fits same-sign ads best and overlaps the pattern lane."
+  }
+ }
+}

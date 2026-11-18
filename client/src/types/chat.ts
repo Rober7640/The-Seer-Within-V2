@@ -123,6 +123,10 @@ export interface UserData {
   // to love, so every read seeker was being offered it. Joel’s fix; his persona walks
   // produced it near-verbatim twice out of seven.
   readHook?: string
+  // Belief lane id (/fb?lane=<id>, shared/beliefLanes.ts) — set at lane name-capture,
+  // read by laneDirective() in server/lib/prompts.ts. ONLY lane traffic sets it, so
+  // every other funnel's deep-flow prompt stays byte-identical.
+  lane?: string
   // fb-palm COMMITMENT GATE (v1_palm_commitment_gate_2026) — true when this lead
   // bucketed into the gated arm, so the close renders the 3-checkbox commitment
   // card instead of the plain purchase button. Assigned by the EXPERIMENT

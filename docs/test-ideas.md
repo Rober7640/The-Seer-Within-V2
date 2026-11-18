@@ -2492,3 +2492,24 @@ Box on `/fb-read/welcome1`; `GET /api/sms-optin/status`, `POST /api/sms-optin`; 
 - [ ] /fb-read dream, /fb-tarot, /fb, root thank-you pages show no box
 - [ ] `?demo=true` thank-you page shows no box
 - [ ] Terms + Privacy links in the box open in a new tab
+
+## Belief lanes on /fb — `/fb?lane=<id>`, lane 1 `manifest` (2026-11-18, uncommitted in ~/tsw-lanes)
+
+Registry `shared/beliefLanes.ts`; server HTML `server/lib/laneHtml.ts` (static.ts + vite.ts); opener in
+`useConversation.ts`; `laneDirective()` beside `readDirective()`. Covered by `npm run test:lanes`
+(registry + copy rules, server HTML byte-identity, prompt injection) and `tests/belief-lanes.spec.ts`.
+
+- [x] Unknown / empty / prototype lane ids resolve to nothing *(beliefLanes.test.ts)*
+- [x] Every registry string passes the voice rules (banned words, no "!", "free" only beside message/chat) *(beliefLanes.test.ts)*
+- [x] No-lane and unknown-lane /fb server HTML byte-identical, body and headers, prod path *(laneHtml.test.ts)*
+- [x] /fb?lane=manifest rewrites title, og:title, og:description, adds meta description; copy inside #root, escaped, nothing hidden *(laneHtml.test.ts)*
+- [x] laneDirective only in reading1, reading2, futureValidation, crisisReveal, crisisCost; no lane = prompts unchanged *(prompts.lane.test.ts)*
+- [x] JS off: lane title, h1, section heading, "free to message"; plain /fb keeps its title *(belief-lanes.spec.ts)*
+- [x] JS on: card spots filled, sections + FAQ, 3s delay intact, both buttons → /fb/chat?lane=manifest *(belief-lanes.spec.ts)*
+- [x] Chat: beats 1–2 replace the greeting, name → beats 3–5 + unchanged email ask; `noemail=1` → beat 6 as first deepening question *(belief-lanes.spec.ts)*
+- [ ] After the SQL is applied (dev): enter an email on /fb/chat?lane=manifest → `conversations.lane = 'manifest'`, AWeber tag `lane-manifest`
+- [ ] Dev checkout from a lane chat → Stripe session + PaymentIntent metadata `lane=manifest`, `product=energy_clearing_ritual`
+- [ ] PostHog: `lander_view`, `lead_captured`, `checkout_initiated`, bump and upsell events carry `lane`; plain /fb events carry none
+- [ ] Lane survives a reload of /fb/chat (sessionStorage + saved userData.lane); a fresh tab on plain /fb clears it
+- [ ] Meta Sharing Debugger on the deployed /fb?lane=manifest shows the lane title, description and image alt
+- [ ] /, /fb2, /gdn, /fb-tarot, /fb-palm with ?lane=manifest behave exactly as without it

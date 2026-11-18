@@ -150,6 +150,9 @@ import { funnelDefForParam, FUNNELS, type FunnelParam } from "@shared/funnelConf
 // route can never reject a device that is live on the page (the "v1-palm 400
 // bug" that both other bridges guard against by hand).
 import { isReadDevice, isReadHook, isReadOption, deviceProductSuffix } from "@shared/readDevices";
+// Belief lanes (/fb?lane=<id>). Every untrusted lane id is resolved through getLane(),
+// a closed check against the same registry the lander renders from.
+import { getLane, laneAweberTag } from "@shared/beliefLanes";
 import { isReadWritten } from "@shared/readCopy";
 import { moneyLanderListId } from "@shared/moneyLander";
 import { soulmateLanderListId } from "@shared/soulmateLander";
@@ -730,6 +733,16 @@ export async function registerRoutes(
       const { action, userData, input, objectionCount, palmSign, palmHook, palmThumb, tarotDeck, tarotHook, tarotCard, readDevice, readHook, readCard } =
         req.body as ChatRequest;
 
+      // Belief lane — rides on userData exactly as readHook does, and is read by
+      // laneDirective() in the prompt builders. CLOSED CHECK, never a pass-through:
+      // anything the registry does not know is dropped here, so a forged or stale id
+      // can only ever turn into today's plain prompt.
+      if (userData && typeof userData === "object" && "lane" in userData) {
+        const lane = getLane(userData.lane);
+        if (lane) userData.lane = lane.id;
+        else delete userData.lane;
+      }
+
       // V1 price split test — enrich userData with the variant prices
       // server-side so prompts that quote price (objection handling,
       // upsell context) always use the variant the user actually saw.
@@ -1027,6 +1040,11 @@ export async function registerRoutes(
           ? req.body.readDevice
           : undefined;
       const productName = `Energy Clearing Ritual${fbSuffix(funnel, readDevice)}`;
+      // Belief lane (/fb?lane=<id>) — an ADDITIVE Stripe metadata key (decision D4).
+      // Gated on v1-fb and resolved through the registry, never a pass-through. It
+      // changes no price, no product name and no `product`: that stays
+      // energy_clearing_ritual below, for the reasons written there.
+      const lane = funnel === "v1-fb" ? getLane(req.body?.lane) : undefined;
 
       // ── V1 ORDER BUMP ("double reading") ──────────────────────────────────
       // The client asks for the bump; the SERVER decides. `bumpAccepted` is only
@@ -1511,6 +1529,8 @@ export async function registerRoutes(
             // as " - TEA". Both upsell endpoints already retrieve this session and
             // already read metadata.noemail / metadata.src the same way.
             ...(readDevice && { readDevice }),
+            // Belief lane — additive, absent on every non-lane order.
+            ...(lane && { lane: lane.id }),
             ...(gclid && { gclid }),
             ...(noemail && { noemail: "1" }),
             // `src` is 'recovery' | 'retarget' | null — closed set, see normaliseSrc.
@@ -1541,6 +1561,9 @@ export async function registerRoutes(
           ...(funnel && { funnel }),
           // See the note on the PaymentIntent metadata above — same value, same reason.
           ...(readDevice && { readDevice }),
+          // Belief lane — additive, absent on every non-lane order. The paid AWeber
+          // write in /api/upsell/user-data reads it back off this session.
+          ...(lane && { lane: lane.id }),
           ...(trackdeskClickId && { trackdeskClickId }),
           // Which consent wording was shown + her IP — read by the purchase webhook
           // to write the sms_consents record. Absent when the question wasn't shown.
@@ -1775,8 +1798,13 @@ export async function registerRoutes(
       const readHook = funnel === "v1-read" ? str40(req.body?.readHook) : undefined;
       const readLander =
         readDevice || readHook ? { device: readDevice, hook: readHook } : undefined;
+      // Belief lane (/fb?lane=<id>). Lanes live inside funnel v1-fb only (decision D4),
+      // so the funnel gate comes first, then the registry: an unknown id is no lane.
+      // Drives two ADDITIVE records — the `lane-<id>` AWeber tag and conversations.lane
+      // — and selects nothing else: no price, no list, no experiment arm.
+      const lane = funnel === "v1-fb" ? getLane(req.body?.lane) : undefined;
 
-      logger.info("Lead captured:", { email, firstName, bucket, funnel, sign: palmSign ?? null });
+      logger.info("Lead captured:", { email, firstName, bucket, funnel, sign: palmSign ?? null, lane: lane?.id ?? null });
 
       // Server-side fallback if frontend didn't resolve location
       const resolvedLocation = location || await resolveLocationFromIP(req);
@@ -1801,6 +1829,8 @@ export async function registerRoutes(
         location: resolvedLocation || null,
         timeOfDay: timeOfDay || null,
         abVisitorId: readVisitorId(req) ?? undefined,
+        // First non-null write wins (see saveConversation), like abVisitorId.
+        ...(lane ? { lane: lane.id } : {}),
       });
 
       // V1 price split test — assign a variant on first lead capture, idempotent
@@ -1850,6 +1880,9 @@ export async function registerRoutes(
         tags: [
           ...fbifyAweberTags([bucket || "website", "seer-within"], funnel),
           ...(readDevice ? [`read-${readDevice}`] : []),
+          // The belief lane as its own additive tag, same reasoning as the device tag:
+          // the list stays the funnel's, so a new lane needs no AWeber setup.
+          ...(lane ? [laneAweberTag(lane.id)] : []),
         ],
         // Omitted entirely when we have no link — never `custom_fields: {}`,
         // which AWeber reads as "clear every custom field" on an
@@ -2349,6 +2382,12 @@ export async function registerRoutes(
               // the paid list. Read off the session metadata set at checkout.
               if (session.metadata?.noemail === "1") {
                 paidTags.push("noemail");
+              }
+              // Belief-lane buyers keep their lane tag on the paid list too. Read off
+              // the session metadata set at checkout, re-checked against the registry.
+              const paidLane = getLane(session.metadata?.lane);
+              if (paidLane) {
+                paidTags.push(laneAweberTag(paidLane.id));
               }
 
               // Checkout phone (every V1 reading funnel — see checkoutPhone.ts). Also

@@ -5,6 +5,7 @@ import viteConfig from "../vite.config";
 import fs from "fs";
 import path from "path";
 import { nanoid } from "nanoid";
+import { applyLaneHtml } from "./lib/laneHtml";
 
 const viteLogger = createLogger();
 
@@ -48,7 +49,9 @@ export async function setupVite(server: Server, app: Express) {
         `src="/src/main.tsx"`,
         `src="/src/main.tsx?v=${nanoid()}"`,
       );
-      const page = await vite.transformIndexHtml(url, template);
+      // Belief lane (/fb?lane=<id>) — the same pure rewrite the prod path uses
+      // (server/lib/laneHtml.ts). Returns `page` untouched for every other URL.
+      const page = applyLaneHtml(await vite.transformIndexHtml(url, template), url);
       res.status(200).set({ "Content-Type": "text/html" }).end(page);
     } catch (e) {
       vite.ssrFixStacktrace(e as Error);

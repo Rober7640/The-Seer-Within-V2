@@ -11,6 +11,7 @@ import { trackPageView } from "./lib/facebook";
 import { initPostHog, track as trackPH, registerUTMs } from "./lib/posthog";
 import { getPostHogFunnel, getPostHogStep, skipEmail } from "./lib/funnel";
 import { syncTarotAttribution } from "./lib/tarotAttribution";
+import { resolveLane } from "./lib/laneAttribution";
 import { ChatServiceLayout } from "@/components/ChatServiceLayout";
 import NotFound from "@/pages/not-found";
 import LandingPage from "@/pages/LandingPage";
@@ -218,6 +219,11 @@ function Router() {
         funnel === 'tarot'
           ? syncTarotAttribution(location, window.location.search)
           : undefined;
+      // /fb belief lane (/fb?lane=<id>): resolved and remembered for the tab HERE, on the
+      // route the param arrives on, so the upsell steps Stripe redirects to with no query
+      // string still carry it. Undefined on plain /fb and on every other funnel, so their
+      // lander_view is unchanged key for key. See lib/laneAttribution.ts.
+      const lane = funnel === 'fb' ? resolveLane(location, window.location.search) : undefined;
       trackPH('lander_view', {
         funnel,
         step: getPostHogStep(location),
@@ -238,6 +244,7 @@ function Router() {
         // deck / facing / hook / version / card / panel. `facing` is registry-driven,
         // so a face-up deck splits face-up vs face-down with no change here.
         ...(tarot ?? {}),
+        ...(lane ? { lane: lane.id } : {}),
         utm_source: urlParams.get('utm_source') || undefined,
         utm_campaign: urlParams.get('utm_campaign') || undefined,
         utm_medium: urlParams.get('utm_medium') || undefined,
