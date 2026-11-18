@@ -29,6 +29,7 @@ import {
   trackPaymentResult,
   type CheckoutStepContext,
 } from '@/lib/checkoutSteps';
+import { t } from "@/lib/i18n";
 
 const money = (cents: number) => `$${(cents / 100).toFixed(2)}`;
 
@@ -115,9 +116,9 @@ export default function PaiCheckoutPage() {
         }
         clearPending3ds();
         trackPaymentResult(stepCtx, data.declined ? 'declined' : 'error');
-        setError(data.error ?? 'Your payment could not be completed. Please try again.');
+        setError(data.error ?? t("Your payment could not be completed. Please try again."));
       } catch {
-        setError('We could not confirm your payment. Please refresh this page.');
+        setError(t("We could not confirm your payment. Please refresh this page."));
       }
       setConfirming(false);
     };
@@ -145,7 +146,7 @@ export default function PaiCheckoutPage() {
     } catch {
       /* fall through */
     }
-    setError('We could not load the payment form. Please refresh the page and try again.');
+    setError(t("We could not load the payment form. Please refresh the page and try again."));
   }
 
   async function pay(s: PaiCardSubmit) {
@@ -179,7 +180,7 @@ export default function PaiCheckoutPage() {
           smsConsent: s.smsConsent,
         });
         if (!saved) {
-          setError('Your browser blocked a step this card needs. Please try a different card.');
+          setError(t("Your browser blocked a step this card needs. Please try a different card."));
           setBusy(false);
           return;
         }
@@ -187,10 +188,10 @@ export default function PaiCheckoutPage() {
         return;
       }
       trackPaymentResult(stepCtx, data.declined ? 'declined' : 'error', s.payMethod);
-      setError(data.error ?? 'Your payment could not be completed. Please try again.');
+      setError(data.error ?? t("Your payment could not be completed. Please try again."));
     } catch {
       trackPaymentResult(stepCtx, 'error', s.payMethod);
-      setError('Your payment could not be completed. Please check your connection and try again.');
+      setError(t("Your payment could not be completed. Please check your connection and try again."));
     }
     setBusy(false);
   }
@@ -201,13 +202,12 @@ export default function PaiCheckoutPage() {
       <div className="relative z-10 w-full max-w-md rounded-2xl border border-white/10 bg-[#140c24]/95 p-5 text-white shadow-2xl">
         {!order ? (
           <div className="space-y-4 py-4 text-center">
-            <p className="text-white/80">This checkout has expired. Please go back to your reading and try again.</p>
-            <a href={backUrl} className="text-purple-300 underline">Back to the reading</a>
+            <p className="text-white/80">{t("This checkout has expired. Please go back to your reading and try again.")}</p>
+            <a href={backUrl} className="text-purple-300 underline">{t("Back to the reading")}</a>
           </div>
         ) : confirming ? (
           <div className="flex items-center justify-center gap-2 py-10 text-white/70" data-testid="pai-confirming">
-            <Loader2 className="h-5 w-5 animate-spin" /> Confirming your payment…
-          </div>
+            <Loader2 className="h-5 w-5 animate-spin" /> {" "}{t("Confirming your payment…")}</div>
         ) : (
           <>
             <a
@@ -215,9 +215,8 @@ export default function PaiCheckoutPage() {
               className="mb-3 inline-flex items-center gap-1 text-sm text-white/50 hover:text-white/80"
               data-testid="pai-back"
             >
-              <ArrowLeft className="h-4 w-4" /> Back
-            </a>
-            <div className="mb-1 text-lg font-semibold">Complete your order</div>
+              <ArrowLeft className="h-4 w-4" /> {" "}{t("Back")}</a>
+            <div className="mb-1 text-lg font-semibold">{t("Complete your order")}</div>
             {order.email && <div className="mb-4 text-xs text-white/50">{order.email}</div>}
 
             <div className="mb-5 space-y-3 rounded-xl border border-white/10 bg-white/5 p-4 text-sm" data-testid="pai-order-summary">
@@ -233,7 +232,7 @@ export default function PaiCheckoutPage() {
               {order.bumpCents > 0 && (
                 <div className="flex justify-between gap-3">
                   <div>
-                    <div className="font-medium">{order.bumpName ?? 'Second reading'}</div>
+                    <div className="font-medium">{order.bumpName ?? t("Second reading")}</div>
                     {order.bumpDescription && (
                       <div className="text-xs text-white/50">{order.bumpDescription}</div>
                     )}
@@ -242,7 +241,7 @@ export default function PaiCheckoutPage() {
                 </div>
               )}
               <div className="flex justify-between border-t border-white/10 pt-3 text-base font-semibold">
-                <span>Total due today</span>
+                <span>{t("Total due today")}</span>
                 <span data-testid="pai-total">{money(order.totalCents)}</span>
               </div>
             </div>
@@ -251,7 +250,7 @@ export default function PaiCheckoutPage() {
               <PaiCardForm
                 config={config}
                 amountCents={order.totalCents}
-                submitLabel={`Pay ${money(order.totalCents)}`}
+                submitLabel={t("Pay {v0}", { v0: money(order.totalCents) })}
                 askPhone
                 defaultName={order.firstName}
                 busy={busy}
@@ -264,8 +263,7 @@ export default function PaiCheckoutPage() {
               <div className="rounded-lg border border-red-400/30 bg-red-500/10 px-3 py-2 text-sm text-red-200">{error}</div>
             ) : (
               <div className="flex items-center gap-2 py-6 text-sm text-white/60">
-                <Loader2 className="h-4 w-4 animate-spin" /> Loading secure checkout…
-              </div>
+                <Loader2 className="h-4 w-4 animate-spin" /> {" "}{t("Loading secure checkout…")}</div>
             )}
           </>
         )}

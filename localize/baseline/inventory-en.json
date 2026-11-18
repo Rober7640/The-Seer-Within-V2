@@ -1,5 +1,5 @@
 {
- "generatedAt": "2026-11-18T11:43:13.845Z",
+ "generatedAt": "2026-11-18T11:53:15.010Z",
  "files": [
   "client/src/assets/images/citrine-wish-bracelet.jpg",
   "client/src/assets/images/lava-stone.jpg",
@@ -286,12 +286,6 @@
   },
   {
    "file": "client/src/components/PaiCardForm.tsx",
-   "line": 78,
-   "kind": "string",
-   "text": "payment form script did not load"
-  },
-  {
-   "file": "client/src/components/PaiCardForm.tsx",
    "line": 138,
    "kind": "string",
    "text": "United States"
@@ -382,21 +376,9 @@
   },
   {
    "file": "client/src/components/PaiCardForm.tsx",
-   "line": 346,
-   "kind": "string",
-   "text": "payment form timed out"
-  },
-  {
-   "file": "client/src/components/PaiCardForm.tsx",
    "line": 435,
    "kind": "string",
    "text": "Please enter the name on your card."
-  },
-  {
-   "file": "client/src/components/PaiCardForm.tsx",
-   "line": 455,
-   "kind": "string",
-   "text": "no token"
   },
   {
    "file": "client/src/components/PaiCardForm.tsx",
@@ -679,12 +661,6 @@
    "line": 59,
    "kind": "jsx",
    "text": "Thanks — you're signed up for texts from The Seer Within. Reply STOP at any time to opt out."
-  },
-  {
-   "file": "client/src/components/SmsOptInCard.tsx",
-   "line": 78,
-   "kind": "string",
-   "text": "Sorry, that didn't save. Please try again."
   },
   {
    "file": "client/src/components/SmsOptInCard.tsx",
@@ -25612,12 +25588,6 @@
   },
   {
    "file": "client/src/hooks/useConversation.ts",
-   "line": 701,
-   "kind": "template",
-   "text": "reading1 HTTP ${}"
-  },
-  {
-   "file": "client/src/hooks/useConversation.ts",
    "line": 710,
    "kind": "string",
    "text": "Forgive me, dear — the connection wavered for a breath. Tell me once more what's weighing on you?"
@@ -25972,12 +25942,6 @@
   },
   {
    "file": "client/src/hooks/useConversation.ts",
-   "line": 1428,
-   "kind": "template",
-   "text": "reading2 HTTP ${}"
-  },
-  {
-   "file": "client/src/hooks/useConversation.ts",
    "line": 1435,
    "kind": "string",
    "text": "Forgive me, dear — the connection wavered for a breath. Say that once more?"
@@ -25990,12 +25954,6 @@
   },
   {
    "file": "client/src/hooks/useConversation.ts",
-   "line": 1506,
-   "kind": "template",
-   "text": "futureValidation HTTP ${}"
-  },
-  {
-   "file": "client/src/hooks/useConversation.ts",
    "line": 1513,
    "kind": "string",
    "text": "Forgive me, dear — the connection wavered for a breath. Tell me again?"
@@ -26005,12 +25963,6 @@
    "line": 1523,
    "kind": "string",
    "text": "How would that feel..."
-  },
-  {
-   "file": "client/src/hooks/useConversation.ts",
-   "line": 1590,
-   "kind": "template",
-   "text": "crisisReveal HTTP ${}"
   },
   {
    "file": "client/src/hooks/useConversation.ts",
@@ -26689,18 +26641,6 @@
    "line": 661,
    "kind": "string",
    "text": "Address saved. We'll confirm details via email."
-  },
-  {
-   "file": "client/src/lib/backendOffers.ts",
-   "line": 77,
-   "kind": "template",
-   "text": "No upsell pitch configured for ${}"
-  },
-  {
-   "file": "client/src/lib/backendOffers.ts",
-   "line": 83,
-   "kind": "template",
-   "text": "No upsell pitch configured for ${}"
   },
   {
    "file": "client/src/lib/facebook.ts",
@@ -33538,12 +33478,6 @@
   },
   {
    "file": "client/src/pages/ChatPage.tsx",
-   "line": 219,
-   "kind": "template",
-   "text": "${}% center"
-  },
-  {
-   "file": "client/src/pages/ChatPage.tsx",
    "line": 330,
    "kind": "template",
    "text": "Begin My Energy Clearing - $${}"
@@ -34237,12 +34171,6 @@
    "line": 113,
    "kind": "jsx",
    "text": "Cosmo Numerology Pte Ltd. For Entertainment Purposes Only."
-  },
-  {
-   "file": "client/src/pages/PaiCheckoutPage.tsx",
-   "line": 73,
-   "kind": "template",
-   "text": "config ${}"
   },
   {
    "file": "client/src/pages/PaiCheckoutPage.tsx",
@@ -35394,7 +35322,7 @@
    "file": "client/src/pages/RefundPage.tsx",
    "line": 112,
    "kind": "jsx",
-   "text": "4. Physical Products (Protection Stones &amp; Ritual Items)"
+   "text": "4. Physical Products (Protection Stones & Ritual Items)"
   },
   {
    "file": "client/src/pages/RefundPage.tsx",
@@ -35617,18 +35545,6 @@
    "line": 218,
    "kind": "jsx",
    "text": "Cosmo Numerology Pte Ltd. All rights reserved."
-  },
-  {
-   "file": "client/src/pages/SuccessPage.tsx",
-   "line": 191,
-   "kind": "string",
-   "text": "Manifestation Bracelet"
-  },
-  {
-   "file": "client/src/pages/SuccessPage.tsx",
-   "line": 193,
-   "kind": "string",
-   "text": "Manifestation Bracelet"
   },
   {
    "file": "client/src/pages/SuccessPage.tsx",
@@ -36742,18 +36658,6 @@
   },
   {
    "file": "client/src/pages/Upsell2Page.tsx",
-   "line": 149,
-   "kind": "string",
-   "text": "Order not found"
-  },
-  {
-   "file": "client/src/pages/Upsell2Page.tsx",
-   "line": 160,
-   "kind": "string",
-   "text": "Protection Ritual + Volcanic Stone"
-  },
-  {
-   "file": "client/src/pages/Upsell2Page.tsx",
    "line": 179,
    "kind": "string",
    "text": "Could not load your session"
@@ -36811,18 +36715,6 @@
    "line": 79,
    "kind": "string",
    "text": "Missing session"
-  },
-  {
-   "file": "client/src/pages/UpsellPage.tsx",
-   "line": 110,
-   "kind": "string",
-   "text": "Order not found"
-  },
-  {
-   "file": "client/src/pages/UpsellPage.tsx",
-   "line": 126,
-   "kind": "string",
-   "text": "Energy Clearing Ritual"
   },
   {
    "file": "client/src/pages/UpsellPage.tsx",
@@ -40683,18 +40575,6 @@
    "text": "· Text HOME to **741741**"
   },
   {
-   "file": "server/lib/universalSafety.ts",
-   "line": 182,
-   "kind": "string",
-   "text": "\\b(?:not|never)\\s+(?:going\\s+to\\s+|gonna\\s+|about\\s+to\\s+|trying\\s+to\\s+|planning\\s+(?:on\\s+|to\\s+)?)?"
-  },
-  {
-   "file": "server/lib/universalSafety.ts",
-   "line": 183,
-   "kind": "string",
-   "text": "|\\b(?:won[’']?t|wouldn[’']?t|would\\s+never|ain[’']?t)\\s+(?:ever\\s+)?"
-  },
-  {
    "file": "shared/backendOffers.ts",
    "line": 464,
    "kind": "string",
@@ -42607,12 +42487,6 @@
    "line": 390,
    "kind": "string",
    "text": "the deep heart"
-  },
-  {
-   "file": "shared/readDevices.ts",
-   "line": 445,
-   "kind": "template",
-   "text": "no reading for ${}/${}/${}"
   },
   {
    "file": "shared/retargetCheckout.ts",

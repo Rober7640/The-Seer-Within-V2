@@ -1,3 +1,4 @@
+import { t } from "@/lib/i18n";
 // /client/src/lib/geolocation.ts
 
 export interface GeoData {
@@ -33,11 +34,11 @@ export function getTimeOfDay(): string {
 
 export function getTimeMessage(timeOfDay: string): string {
   const messages: Record<string, string> = {
-    morning: "The morning light carries your energy to me clearly...",
-    afternoon: "In the afternoon hours, when the world is busy, you seek stillness...",
-    evening: "As evening falls, the veil between worlds grows thin...",
-    night: "The night hours... when truth reveals itself most easily...",
-    latenight: "In these quiet hours before dawn, only the serious seekers come...",
+    morning: t("The morning light carries your energy to me clearly..."),
+    afternoon: t("In the afternoon hours, when the world is busy, you seek stillness..."),
+    evening: t("As evening falls, the veil between worlds grows thin..."),
+    night: t("The night hours... when truth reveals itself most easily..."),
+    latenight: t("In these quiet hours before dawn, only the serious seekers come..."),
   }
   return messages[timeOfDay] || messages.evening
 }

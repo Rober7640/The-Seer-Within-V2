@@ -49,6 +49,7 @@ import {
 import { trackGAdsLead, trackGAdsCheckout, getGclid } from '@/lib/gtm'
 import { isSlidingCloseVariant } from '@shared/types'
 import { pairedBumpBucket, isBumpCopyVariant, resolveBumpCents, V1_BUMP_CENTS, type BumpTier } from '@shared/orderBump'
+import { t } from "@/lib/i18n";
 
 const STORAGE_KEY = 'seer_conversation'
 const SESSION_EXPIRY_HOURS = 24
@@ -117,7 +118,7 @@ function createInitialState(): ChatState {
     },
     isTyping: false,
     inputEnabled: false,
-    inputPlaceholder: 'Waiting for Evelyn...',
+    inputPlaceholder: t("Waiting for Evelyn..."),
     inputType: 'text',
     showBucketButtons: false,
     showPermissionButton: false,
@@ -388,12 +389,12 @@ export function useConversation() {
 
       if (wasDeclined) {
         // They said "not interested" but came back
-        addMessage('system', `${firstName} has returned`)
+        addMessage('system', t("{firstName} has returned", { firstName }))
         await sleep(500)
         await sendBotMessages([
-          `${firstName}... I sensed you might return.`,
-          "Something is still weighing on you, isn't it?",
-          "The door hasn't closed. I'm still here if you're ready.",
+          t("{firstName}... I sensed you might return.", { firstName }),
+          t("Something is still weighing on you, isn't it?"),
+          t("The door hasn't closed. I'm still here if you're ready."),
         ])
         updateState({
           state: 'PITCH',
@@ -403,16 +404,16 @@ export function useConversation() {
           // right resume point: tapping it replays the bump turn from the top.
           showBumpOffer: false,
           inputEnabled: true,
-          inputPlaceholder: 'Or type a message...',
+          inputPlaceholder: t("Or type a message..."),
         })
       } else if (wasInPitch) {
         // They were in the pitch flow
-        addMessage('system', `${firstName} has returned`)
+        addMessage('system', t("{firstName} has returned", { firstName }))
         await sleep(500)
         await sendBotMessages([
-          `Welcome back, ${firstName}...`,
-          "I've been holding space for you.",
-          "The offer still stands. Are you ready to begin your clearing?",
+          t("Welcome back, {firstName}...", { firstName }),
+          t("I've been holding space for you."),
+          t("The offer still stands. Are you ready to begin your clearing?"),
         ])
         updateState({
           showPurchaseCTA: true,
@@ -423,10 +424,10 @@ export function useConversation() {
         })
       } else {
         // They were mid-conversation
-        addMessage('system', `${firstName} has returned`)
+        addMessage('system', t("{firstName} has returned", { firstName }))
         await sleep(500)
-        await sendBotMessage(`Welcome back, ${firstName}... I've been waiting for you.`)
-        await sendBotMessage("Let's continue where we left off...")
+        await sendBotMessage(t("Welcome back, {firstName}... I've been waiting for you.", { firstName }))
+        await sendBotMessage(t("Let's continue where we left off..."))
         updateState({ inputEnabled: true })
       }
 
@@ -459,7 +460,7 @@ export function useConversation() {
         email_gate: skipEmail() ? 'off' : 'on',
       })
 
-      addMessage('system', 'Evelyn has joined the chat')
+      addMessage('system', t("Evelyn has joined the chat"))
       await sleep(800)
 
       // Palm "quiz bridge" traffic (/fb-palm): replace the standard intro with a
@@ -477,7 +478,7 @@ export function useConversation() {
           updateState({
             state: 'PALM_REFLECT',
             inputEnabled: true,
-            inputPlaceholder: "Share what's on your heart…",
+            inputPlaceholder: t("Share what's on your heart…"),
           })
           return
         }
@@ -489,7 +490,7 @@ export function useConversation() {
         updateState({
           state: 'NAME_CAPTURE',
           inputEnabled: true,
-          inputPlaceholder: 'Your name...',
+          inputPlaceholder: t("Your name..."),
         })
         return
       }
@@ -516,7 +517,7 @@ export function useConversation() {
           updateState({
             state: 'READ_REFLECT',
             inputEnabled: true,
-            inputPlaceholder: "Share what's on your heart…",
+            inputPlaceholder: t("Share what's on your heart…"),
           })
           return
         }
@@ -528,7 +529,7 @@ export function useConversation() {
         updateState({
           state: 'NAME_CAPTURE',
           inputEnabled: true,
-          inputPlaceholder: 'Your name...',
+          inputPlaceholder: t("Your name..."),
         })
         return
       }
@@ -570,7 +571,7 @@ export function useConversation() {
           updateState({
             state: 'TAROT_REFLECT',
             inputEnabled: true,
-            inputPlaceholder: "Share what's on your heart…",
+            inputPlaceholder: t("Share what's on your heart…"),
           })
           return
         }
@@ -582,32 +583,32 @@ export function useConversation() {
         updateState({
           state: 'NAME_CAPTURE',
           inputEnabled: true,
-          inputPlaceholder: 'Your name...',
+          inputPlaceholder: t("Your name..."),
         })
         return
       }
 
       await sendBotMessages([
-        "Greetings, dear friend, and welcome.",
-        "My name is Evelyn Cross.",
-        "I've been expecting you...",
+        t("Greetings, dear friend, and welcome."),
+        t("My name is Evelyn Cross."),
+        t("I've been expecting you..."),
       ])
 
       if (geo.location) {
-        await sendBotMessage(`From ${geo.location}, I can feel your energy reaching me...`)
+        await sendBotMessage(t("From {location}, I can feel your energy reaching me...", { location: geo.location }))
       }
 
       await sendBotMessage(getTimeMessage(geo.timeOfDay))
 
       await sendBotMessages([
-        "To open the connection between us, I need to know who I'm speaking with...",
-        "What's your first name, dear?",
+        t("To open the connection between us, I need to know who I'm speaking with..."),
+        t("What's your first name, dear?"),
       ])
 
       updateState({
         state: 'NAME_CAPTURE',
         inputEnabled: true,
-        inputPlaceholder: 'Your name...',
+        inputPlaceholder: t("Your name..."),
       })
     }
 
@@ -707,8 +708,8 @@ export function useConversation() {
         // Never freeze the seeker mid-reading: recover to DEEPENING_1 so their next
         // message retries this beat instead of a dead input (freeze class, 2026-07-17).
         console.error('reading1 failed — recovering:', e)
-        await sendBotMessages(["Forgive me, dear — the connection wavered for a breath. Tell me once more what's weighing on you?"])
-        updateState({ state: 'DEEPENING_1', inputEnabled: true, inputPlaceholder: "Share what's in your heart...", inputType: 'text' })
+        await sendBotMessages([t("Forgive me, dear — the connection wavered for a breath. Tell me once more what's weighing on you?")])
+        updateState({ state: 'DEEPENING_1', inputEnabled: true, inputPlaceholder: t("Share what's in your heart..."), inputType: 'text' })
         return
       }
 
@@ -728,7 +729,7 @@ export function useConversation() {
         updateState({
           state: 'DEEPENING_2',
           inputEnabled: true,
-          inputPlaceholder: 'Take your time...',
+          inputPlaceholder: t("Take your time..."),
           // The woven arm reaches here straight from EMAIL_CAPTURE, which leaves
           // the input as type="email" — native form validation then rejects any
           // reply that isn't an email address.
@@ -762,38 +763,38 @@ export function useConversation() {
       })
 
       await sendBotMessages([
-        `It's lovely to meet you, ${capitalized}.`,
-        "Everything we discuss stays between us... our secret.",
+        t("It's lovely to meet you, {capitalized}.", { capitalized }),
+        t("Everything we discuss stays between us... our secret."),
       ])
       await sendBotMessages([
-        `I can feel warmth radiating from your heart, ${capitalized}...`,
-        "But there's a flicker of shadow there too...",
+        t("I can feel warmth radiating from your heart, {capitalized}...", { capitalized }),
+        t("But there's a flicker of shadow there too..."),
       ])
       // no-optin variant: skip the email anchor, go straight into the reading.
       if (skipEmail()) {
         await sendBotMessages([
-          "Let's look deeper together...",
-          "Tell me more about what's on your mind...",
+          t("Let's look deeper together..."),
+          t("Tell me more about what's on your mind..."),
         ])
         updateState({
           state: 'DEEPENING_1',
           inputEnabled: true,
-          inputPlaceholder: "Share what's in your heart...",
+          inputPlaceholder: t("Share what's in your heart..."),
           inputType: 'text',
         })
         return
       }
 
       await sendBotMessages([
-        "Before I look deeper, I need to anchor our connection...",
-        "Sometimes the visions continue after we speak...",
-        "Where should I send them if more is revealed?",
+        t("Before I look deeper, I need to anchor our connection..."),
+        t("Sometimes the visions continue after we speak..."),
+        t("Where should I send them if more is revealed?"),
       ])
 
       updateState({
         state: 'EMAIL_CAPTURE',
         inputEnabled: true,
-        inputPlaceholder: 'Your email...',
+        inputPlaceholder: t("Your email..."),
         inputType: 'email',
       })
       return
@@ -808,38 +809,38 @@ export function useConversation() {
       updateUserData({ bucket: tarotHookToBucket(tarot.hook) })
 
       await sendBotMessages([
-        `It's lovely to meet you, ${capitalized}.`,
-        "Everything we discuss stays between us... our secret.",
+        t("It's lovely to meet you, {capitalized}.", { capitalized }),
+        t("Everything we discuss stays between us... our secret."),
       ])
       await sendBotMessages([
-        `I can feel warmth radiating from your heart, ${capitalized}...`,
-        "But there's a flicker of shadow there too...",
+        t("I can feel warmth radiating from your heart, {capitalized}...", { capitalized }),
+        t("But there's a flicker of shadow there too..."),
       ])
       // no-optin variant: skip the email anchor, go straight into the reading.
       if (skipEmail()) {
         await sendBotMessages([
-          "Let's look deeper together...",
-          "Tell me more about what's on your mind...",
+          t("Let's look deeper together..."),
+          t("Tell me more about what's on your mind..."),
         ])
         updateState({
           state: 'DEEPENING_1',
           inputEnabled: true,
-          inputPlaceholder: "Share what's in your heart...",
+          inputPlaceholder: t("Share what's in your heart..."),
           inputType: 'text',
         })
         return
       }
 
       await sendBotMessages([
-        "Before I look deeper, I need to anchor our connection...",
-        "Sometimes the visions continue after we speak...",
-        "Where should I send them if more is revealed?",
+        t("Before I look deeper, I need to anchor our connection..."),
+        t("Sometimes the visions continue after we speak..."),
+        t("Where should I send them if more is revealed?"),
       ])
 
       updateState({
         state: 'EMAIL_CAPTURE',
         inputEnabled: true,
-        inputPlaceholder: 'Your email...',
+        inputPlaceholder: t("Your email..."),
         inputType: 'email',
       })
       return
@@ -874,47 +875,47 @@ export function useConversation() {
       updateUserData({ bucket: readHookToBucket(read.hook), readHook: read.hook })
 
       await sendBotMessages([
-        `It's lovely to meet you, ${capitalized}.`,
-        "Everything we discuss stays between us... our secret.",
+        t("It's lovely to meet you, {capitalized}.", { capitalized }),
+        t("Everything we discuss stays between us... our secret."),
       ])
       await sendBotMessages([
-        `I can feel warmth radiating from your heart, ${capitalized}...`,
-        "But there's a flicker of shadow there too...",
+        t("I can feel warmth radiating from your heart, {capitalized}...", { capitalized }),
+        t("But there's a flicker of shadow there too..."),
       ])
       // no-optin variant: skip the email anchor, go straight into the reading.
       if (skipEmail()) {
         await sendBotMessages([
-          "Let's look deeper together...",
-          "Tell me more about what's on your mind...",
+          t("Let's look deeper together..."),
+          t("Tell me more about what's on your mind..."),
         ])
         updateState({
           state: 'DEEPENING_1',
           inputEnabled: true,
-          inputPlaceholder: "Share what's in your heart...",
+          inputPlaceholder: t("Share what's in your heart..."),
           inputType: 'text',
         })
         return
       }
 
       await sendBotMessages([
-        "Before I look deeper, I need to anchor our connection...",
-        "Sometimes the visions continue after we speak...",
-        "Where should I send them if more is revealed?",
+        t("Before I look deeper, I need to anchor our connection..."),
+        t("Sometimes the visions continue after we speak..."),
+        t("Where should I send them if more is revealed?"),
       ])
 
       updateState({
         state: 'EMAIL_CAPTURE',
         inputEnabled: true,
-        inputPlaceholder: 'Your email...',
+        inputPlaceholder: t("Your email..."),
         inputType: 'email',
       })
       return
     }
 
     await sendBotMessages([
-      `It's lovely to meet you, ${capitalized}.`,
-      "Everything we discuss stays between us... our secret.",
-      "Now, what's weighing on your heart today, dear?",
+      t("It's lovely to meet you, {capitalized}.", { capitalized }),
+      t("Everything we discuss stays between us... our secret."),
+      t("Now, what's weighing on your heart today, dear?"),
     ])
 
     updateState({
@@ -962,11 +963,11 @@ export function useConversation() {
     if (llm) await sendBotMessages(llm)
     else if (palm) await sendBotMessages(palmReflectFallback(palm.sign, palm.hook, palm.thumb))
 
-    await sendBotMessage("Before we go deeper, tell me… what should I call you, dear?")
+    await sendBotMessage(t("Before we go deeper, tell me… what should I call you, dear?"))
     updateState({
       state: 'NAME_CAPTURE',
       inputEnabled: true,
-      inputPlaceholder: 'Your name...',
+      inputPlaceholder: t("Your name..."),
     })
   }, [chat.userData, sendBotMessage, sendBotMessages, updateState, updateUserData])
 
@@ -1007,11 +1008,11 @@ export function useConversation() {
     if (llm) await sendBotMessages(llm)
     else if (tarot) await sendBotMessages(tarotReflectFallback(tarot.deck, tarot.hook, tarot.card))
 
-    await sendBotMessage("Before we go deeper, tell me… what should I call you, dear?")
+    await sendBotMessage(t("Before we go deeper, tell me… what should I call you, dear?"))
     updateState({
       state: 'NAME_CAPTURE',
       inputEnabled: true,
-      inputPlaceholder: 'Your name...',
+      inputPlaceholder: t("Your name..."),
     })
   }, [chat.userData, sendBotMessage, sendBotMessages, updateState, updateUserData])
 
@@ -1051,11 +1052,11 @@ export function useConversation() {
     if (llm) await sendBotMessages(llm)
     else if (read) await sendBotMessages(readReflectFallback(read.device, read.hook, read.option))
 
-    await sendBotMessage("Before we go deeper, tell me… what should I call you, dear?")
+    await sendBotMessage(t("Before we go deeper, tell me… what should I call you, dear?"))
     updateState({
       state: 'NAME_CAPTURE',
       inputEnabled: true,
-      inputPlaceholder: 'Your name...',
+      inputPlaceholder: t("Your name..."),
     })
   }, [chat.userData, sendBotMessage, sendBotMessages, updateState, updateUserData])
 
@@ -1068,13 +1069,13 @@ export function useConversation() {
     if (skipEmail()) {
       await sendBotMessages([
         `${capitalized}...`,
-        "The moment you typed that name, I felt something shift.",
-        "Tell me... what's happening between you?",
+        t("The moment you typed that name, I felt something shift."),
+        t("Tell me... what's happening between you?"),
       ])
       updateState({
         state: 'DEEPENING_1',
         inputEnabled: true,
-        inputPlaceholder: "Share what's in your heart...",
+        inputPlaceholder: t("Share what's in your heart..."),
         inputType: 'text',
       })
       return
@@ -1082,22 +1083,22 @@ export function useConversation() {
 
     await sendBotMessages([
       `${capitalized}...`,
-      "The moment you typed that name, I felt something shift.",
-      "Before I look deeper, I need to anchor our connection...",
-      "Where should I send any visions that come after we speak?",
+      t("The moment you typed that name, I felt something shift."),
+      t("Before I look deeper, I need to anchor our connection..."),
+      t("Where should I send any visions that come after we speak?"),
     ])
 
     updateState({
       state: 'EMAIL_CAPTURE',
       inputEnabled: true,
-      inputPlaceholder: 'Your email...',
+      inputPlaceholder: t("Your email..."),
       inputType: 'email',
     })
   }, [sendBotMessages, updateState, updateUserData])
 
   const handleEmailCapture = useCallback(async (input: string, currentChat: ChatState) => {
     if (!input.includes('@') || !input.includes('.')) {
-      await sendBotMessage("I need a way to reach you, dear... please share your email.")
+      await sendBotMessage(t("I need a way to reach you, dear... please share your email."))
       updateState({ inputEnabled: true })
       return
     }
@@ -1299,23 +1300,23 @@ export function useConversation() {
     // and every other funnel keep the normal DEEPENING_1 re-ask below.
     if (currentChat.userData.promptVariant === 'woven' && currentChat.userData.concern) {
       await sendBotMessages([
-        `Thank you, ${currentChat.userData.firstName}. The link is complete.`,
-        "I've held everything you shared, dear... now let me look deeper.",
+        t("Thank you, {firstName}. The link is complete.", { firstName: currentChat.userData.firstName }),
+        t("I've held everything you shared, dear... now let me look deeper."),
       ])
       await runReading1(currentChat.userData.concern, currentChat)
       return
     }
 
     await sendBotMessages([
-      `Thank you, ${currentChat.userData.firstName}. The link is complete.`,
-      "Now, tell me more about what's on your mind...",
-      "Your thoughts, your feelings... I'm listening.",
+      t("Thank you, {firstName}. The link is complete.", { firstName: currentChat.userData.firstName }),
+      t("Now, tell me more about what's on your mind..."),
+      t("Your thoughts, your feelings... I'm listening."),
     ])
 
     updateState({
       state: 'DEEPENING_1',
       inputEnabled: true,
-      inputPlaceholder: "Share what's in your heart...",
+      inputPlaceholder: t("Share what's in your heart..."),
       inputType: 'text',
     })
   }, [sendBotMessage, sendBotMessages, updateState, updateUserData, runReading1])
@@ -1432,7 +1433,7 @@ export function useConversation() {
       // Never freeze mid-reading: re-enable input in place so the next message
       // retries this beat (freeze class, 2026-07-17).
       console.error('reading2 failed — recovering:', e)
-      await sendBotMessages(["Forgive me, dear — the connection wavered for a breath. Say that once more?"])
+      await sendBotMessages([t("Forgive me, dear — the connection wavered for a breath. Say that once more?")])
       updateState({ inputEnabled: true })
       return
     }
@@ -1442,7 +1443,7 @@ export function useConversation() {
     updateState({
       state: 'FUTURE_PACING',
       inputEnabled: true,
-      inputPlaceholder: 'Paint the picture...',
+      inputPlaceholder: t("Paint the picture..."),
     })
   }, [sendBotMessages, updateState, updateUserData])
 
@@ -1510,7 +1511,7 @@ export function useConversation() {
       // Never freeze mid-reading: re-enable input in place so the next message
       // retries this beat (freeze class, 2026-07-17).
       console.error('futureValidation failed — recovering:', e)
-      await sendBotMessages(["Forgive me, dear — the connection wavered for a breath. Tell me again?"])
+      await sendBotMessages([t("Forgive me, dear — the connection wavered for a breath. Tell me again?")])
       updateState({ inputEnabled: true })
       return
     }
@@ -1520,7 +1521,7 @@ export function useConversation() {
     updateState({
       state: 'FUTURE_VALIDATION',
       inputEnabled: true,
-      inputPlaceholder: 'How would that feel...',
+      inputPlaceholder: t("How would that feel..."),
     })
   }, [sendBotMessages, updateState, updateUserData])
 
@@ -1594,7 +1595,7 @@ export function useConversation() {
       // Never freeze mid-reading: re-enable input in place so the next message
       // retries this beat (freeze class, 2026-07-17).
       console.error('crisisReveal failed — recovering:', e)
-      await sendBotMessages(["Forgive me, dear — the connection wavered for a breath. Tell me again?"])
+      await sendBotMessages([t("Forgive me, dear — the connection wavered for a breath. Tell me again?")])
       updateState({ inputEnabled: true })
       return
     }
@@ -1604,7 +1605,7 @@ export function useConversation() {
     updateState({
       state: 'CRISIS_REVEAL',
       inputEnabled: true,
-      inputPlaceholder: 'Where did this start...',
+      inputPlaceholder: t("Where did this start..."),
     })
   }, [sendBotMessages, updateState, updateUserData])
 
@@ -1676,7 +1677,7 @@ export function useConversation() {
     updateState({
       state: 'CRISIS_COST',
       inputEnabled: true,
-      inputPlaceholder: 'What would it be worth...',
+      inputPlaceholder: t("What would it be worth..."),
     })
   }, [sendBotMessages, updateState, updateUserData])
 
@@ -1734,9 +1735,9 @@ export function useConversation() {
     // If they said yes/positive, skip urgency and go straight to permission
     if (intent === 'positive') {
       await sendBotMessages([
-        `I can feel your readiness, ${currentChat.userData.firstName}...`,
-        "The energy around you is shifting already.",
-        "I know exactly what needs to be cleared. But I need your full permission to begin.",
+        t("I can feel your readiness, {firstName}...", { firstName: currentChat.userData.firstName }),
+        t("The energy around you is shifting already."),
+        t("I know exactly what needs to be cleared. But I need your full permission to begin."),
       ])
 
       updateState({
@@ -1802,7 +1803,7 @@ export function useConversation() {
 
     // Handle positive intent
     if (intent === 'positive') {
-      await sendBotMessage("I'm ready when you are, dear. Click the button to begin your transformation.")
+      await sendBotMessage(t("I'm ready when you are, dear. Click the button to begin your transformation."))
       updateState({ inputEnabled: true })
       return
     }
@@ -1810,10 +1811,10 @@ export function useConversation() {
     // Handle explicit decline
     if (intent === 'explicit_decline') {
       await sendBotMessages([
-        `I respect your decision, ${currentChat.userData.firstName}.`,
-        "The path is yours to walk.",
-        "If you ever feel ready, I'll be here.",
-        "Take care of yourself, dear.",
+        t("I respect your decision, {firstName}.", { firstName: currentChat.userData.firstName }),
+        t("The path is yours to walk."),
+        t("If you ever feel ready, I'll be here."),
+        t("Take care of yourself, dear."),
       ])
       updateState({
         state: 'GRACEFUL_EXIT',
@@ -1826,10 +1827,10 @@ export function useConversation() {
     // Handle wants more free
     if (intent === 'wants_more_free') {
       await sendBotMessages([
-        `I wish I could tell you everything, ${currentChat.userData.firstName}...`,
-        "But what I've shared is all I can give freely.",
-        "To go deeper requires the clearing ritual.",
-        "Without it, anything more I say would be incomplete.",
+        t("I wish I could tell you everything, {firstName}...", { firstName: currentChat.userData.firstName }),
+        t("But what I've shared is all I can give freely."),
+        t("To go deeper requires the clearing ritual."),
+        t("Without it, anything more I say would be incomplete."),
       ])
       updateState({ inputEnabled: true })
       return
@@ -1847,14 +1848,14 @@ export function useConversation() {
       const slidingDown = isSlidingCloseVariant(currentChat.userData.priceVariantId)
       const graceDollars = currentChat.userData.downsellDollars ?? 25
       await sendBotMessages(slidingDown ? [
-        `I sense hesitation, ${currentChat.userData.firstName}... and I won't push you.`,
-        "But remember what I told you — money never closes this door. Not with me.",
-        `Let $${graceDollars} be your offering. The clearing is the same, every step of it.`,
+        t("I sense hesitation, {firstName}... and I won't push you.", { firstName: currentChat.userData.firstName }),
+        t("But remember what I told you — money never closes this door. Not with me."),
+        t("Let ${graceDollars} be your offering. The clearing is the same, every step of it.", { graceDollars }),
       ] : [
-        `I sense hesitation, ${currentChat.userData.firstName}... and I won't push you.`,
-        "Perhaps the full clearing isn't what you need right now.",
-        "Let me offer you this instead...",
-        "A written reading - no ritual, just clarity.",
+        t("I sense hesitation, {firstName}... and I won't push you.", { firstName: currentChat.userData.firstName }),
+        t("Perhaps the full clearing isn't what you need right now."),
+        t("Let me offer you this instead..."),
+        t("A written reading - no ritual, just clarity."),
       ])
       updateState({
         state: 'DOWNSELL',
@@ -1974,16 +1975,16 @@ export function useConversation() {
 
     // If re-clarifying after topic mismatch, ask for a fresh concern matching the bucket
     if (isReClarifying) {
-      await sendBotMessage(`Let's focus on ${BUCKET_LABELS[bucket].toLowerCase()} then, ${firstName}...`)
+      await sendBotMessage(t("Let's focus on {v0} then, {firstName}...", { v0: BUCKET_LABELS[bucket].toLowerCase(), firstName }))
 
       // Clear the old mismatched concern and ask fresh
       updateUserData({ concern: null })
 
       const freshPrompts: Record<Bucket, string> = {
-        love: "Tell me about your heart, dear... what's happening in your love life?",
-        money: "Tell me about your relationship with money... what's weighing on you?",
-        purpose: "Tell me about your path... what feels unclear or unfulfilled?",
-        someone: "Tell me about this person... what's happening between you?",
+        love: t("Tell me about your heart, dear... what's happening in your love life?"),
+        money: t("Tell me about your relationship with money... what's weighing on you?"),
+        purpose: t("Tell me about your path... what feels unclear or unfulfilled?"),
+        someone: t("Tell me about this person... what's happening between you?"),
       }
 
       await sendBotMessage(freshPrompts[bucket])
@@ -1991,28 +1992,28 @@ export function useConversation() {
       updateState({
         state: 'DEEPENING_1',
         inputEnabled: true,
-        inputPlaceholder: "Share what's on your heart...",
+        inputPlaceholder: t("Share what's on your heart..."),
       })
       return
     }
 
     const bucketResponses: Record<Bucket, string[]> = {
       love: [
-        `I can feel warmth radiating from your heart, ${firstName}...`,
-        "But there's a flicker of shadow there too...",
+        t("I can feel warmth radiating from your heart, {firstName}...", { firstName }),
+        t("But there's a flicker of shadow there too..."),
       ],
       money: [
-        `I sense a weight you've been carrying, ${firstName}...`,
-        "The energy around your material world is turbulent.",
+        t("I sense a weight you've been carrying, {firstName}...", { firstName }),
+        t("The energy around your material world is turbulent."),
       ],
       purpose: [
-        `You're at a crossroads, aren't you, ${firstName}...`,
-        "I can feel it - a deep questioning.",
+        t("You're at a crossroads, aren't you, {firstName}...", { firstName }),
+        t("I can feel it - a deep questioning."),
       ],
       someone: [
-        `There's someone on your mind, ${firstName}...`,
-        "I can feel their energy tangled with yours.",
-        "Tell me... what's their first name?",
+        t("There's someone on your mind, {firstName}...", { firstName }),
+        t("I can feel their energy tangled with yours."),
+        t("Tell me... what's their first name?"),
       ],
     }
 
@@ -2022,30 +2023,30 @@ export function useConversation() {
       updateState({
         state: 'PERSON_NAME_CAPTURE',
         inputEnabled: true,
-        inputPlaceholder: "Their first name...",
+        inputPlaceholder: t("Their first name..."),
       })
     } else if (skipEmail()) {
       // no-optin variant: skip the email anchor, go straight into the reading.
       await sendBotMessages([
-        "Let's look deeper together...",
-        "Tell me more about what's weighing on you...",
+        t("Let's look deeper together..."),
+        t("Tell me more about what's weighing on you..."),
       ])
       updateState({
         state: 'DEEPENING_1',
         inputEnabled: true,
-        inputPlaceholder: "Share what's in your heart...",
+        inputPlaceholder: t("Share what's in your heart..."),
         inputType: 'text',
       })
     } else {
       await sendBotMessages([
-        "Before I look deeper, I need to anchor our connection...",
-        "Sometimes the visions continue after we speak...",
-        "Where should I send them if more is revealed?",
+        t("Before I look deeper, I need to anchor our connection..."),
+        t("Sometimes the visions continue after we speak..."),
+        t("Where should I send them if more is revealed?"),
       ])
       updateState({
         state: 'EMAIL_CAPTURE',
         inputEnabled: true,
-        inputPlaceholder: 'Your email...',
+        inputPlaceholder: t("Your email..."),
         inputType: 'email',
       })
     }
@@ -2054,15 +2055,15 @@ export function useConversation() {
   // === PERMISSION HANDLER ===
 
   const handlePermission = useCallback(async () => {
-    addMessage('user', 'Yes, please help me Evelyn!')
+    addMessage('user', t("Yes, please help me Evelyn!"))
     updateState({ showPermissionButton: false, inputEnabled: false })
 
     const firstName = chat.userData.firstName
 
     // Step 1: Acknowledge their yes
     await sendBotMessages([
-      `Thank you, ${firstName}. I'm honored you trust me with this.`,
-      "Now that you've opened this door, I can see it more clearly...",
+      t("Thank you, {firstName}. I'm honored you trust me with this.", { firstName }),
+      t("Now that you've opened this door, I can see it more clearly..."),
     ])
 
     // Step 2: Call Claude API to summarize the SPECIFIC shadow we detected.
@@ -2112,9 +2113,9 @@ export function useConversation() {
     // Missing entirely today — the ritual is asserted, never explained, which is
     // what makes every psychic's ritual sound like every other psychic's ritual.
     if (deep) await sendBotMessages([
-      "What sits on you isn't a mood, dear. It's a pattern. And a pattern holds by staying unnamed.",
-      "That's the whole of it. Nobody has ever said this thing out loud to you, so it kept its grip.",
-      "Naming it precisely is what loosens it. Not wishing. Not hoping. Naming.",
+      t("What sits on you isn't a mood, dear. It's a pattern. And a pattern holds by staying unnamed."),
+      t("That's the whole of it. Nobody has ever said this thing out loud to you, so it kept its grip."),
+      t("Naming it precisely is what loosens it. Not wishing. Not hoping. Naming."),
     ])
 
     // The deep ritual is where the SENSORY detail belongs (see the step label above),
@@ -2131,18 +2132,18 @@ export function useConversation() {
     // runs 2-4am for ~2 hours, so putting an hour on this one invents an arithmetic
     // problem that does not exist today. Two different workings should look different.
     const ritual = deep ? [
-      `Tonight, I'll enter a deep meditative state and focus entirely on your energy field, ${firstName}.`,
-      "I go back to the hour it took hold and find what feeds it. On my table, that's a length of black cord.",
-      "I cut it, then seal both ends with wax — so nothing can travel back along it to you.",
-      "It takes 2-3 hours of concentrated work. It drains me... but for those who are ready, it's worth it.",
-      "A thing named properly doesn't grow back, dear. That's why I do it slowly.",
+      t("Tonight, I'll enter a deep meditative state and focus entirely on your energy field, {firstName}.", { firstName }),
+      t("I go back to the hour it took hold and find what feeds it. On my table, that's a length of black cord."),
+      t("I cut it, then seal both ends with wax — so nothing can travel back along it to you."),
+      t("It takes 2-3 hours of concentrated work. It drains me... but for those who are ready, it's worth it."),
+      t("A thing named properly doesn't grow back, dear. That's why I do it slowly."),
     ] : [
-      `Tonight, I'll enter a deep meditative state and focus entirely on your energy field, ${firstName}.`,
-      "I'll trace the roots of this block, sever its hold, and seal the clearing so it can't return.",
-      "It takes 2-3 hours of concentrated work. It drains me... but for those who are ready, it's worth it.",
+      t("Tonight, I'll enter a deep meditative state and focus entirely on your energy field, {firstName}.", { firstName }),
+      t("I'll trace the roots of this block, sever its hold, and seal the clearing so it can't return."),
+      t("It takes 2-3 hours of concentrated work. It drains me... but for those who are ready, it's worth it."),
     ]
     await sendBotMessages(woven ? [
-      `What you need, ${firstName}, is an Energy Clearing Ritual — I'll focus entirely on removing the shadow that's been blocking your path.`,
+      t("What you need, {firstName}, is an Energy Clearing Ritual — I'll focus entirely on removing the shadow that's been blocking your path.", { firstName }),
       ...ritual,
     ] : ritual)
 
@@ -2150,15 +2151,15 @@ export function useConversation() {
     // Deep arm: Ogilvy's specificity. "5-7 pages" is a SIZE, not a promise — this
     // version says what is actually ON them, page by page.
     await sendBotMessages(deep ? [
-      "Within 24 hours, you'll receive a personalized 5-7 page reading via email.",
-      "Page one is what I found — the exact shape of it, and the hour it first took hold.",
-      "Page two is what I cleared, and what resisted me. I tell you both. I don't tidy it up.",
-      "Then the part most women read twice. Your next thirty days, set out week by week.",
-      "What to expect in week one. What shifts by week three. The one sign that tells you it's working.",
-      "And three steps. Small ones — things you can do on a Tuesday, not a mountain to climb.",
+      t("Within 24 hours, you'll receive a personalized 5-7 page reading via email."),
+      t("Page one is what I found — the exact shape of it, and the hour it first took hold."),
+      t("Page two is what I cleared, and what resisted me. I tell you both. I don't tidy it up."),
+      t("Then the part most women read twice. Your next thirty days, set out week by week."),
+      t("What to expect in week one. What shifts by week three. The one sign that tells you it's working."),
+      t("And three steps. Small ones — things you can do on a Tuesday, not a mountain to climb."),
     ] : [
-      "Within 24 hours, you'll receive a personalized 5-7 page reading via email.",
-      "It will show you exactly what I found, what I cleared, and 3 specific steps for the next 30 days.",
+      t("Within 24 hours, you'll receive a personalized 5-7 page reading via email."),
+      t("It will show you exactly what I found, what I cleared, and 3 specific steps for the next 30 days."),
     ])
 
     // Step 5: Price + guarantee + SOCIAL PROOF
@@ -2197,24 +2198,24 @@ export function useConversation() {
     // got nothing" seconds before the buy button, and it made the block answer its
     // own "where it goes" promise a detour late.
     if (deep) await sendBotMessages([
-      `Now the offering, ${firstName}. It's $${pitchPrice}. Let me tell you plainly where it goes.`,
-      "The cord, the wax, and two to three hours of a night I can't give to anyone else. Spent once, for you.",
-      `$${pitchPrice} covers the whole of it and keeps this honest. It's a sign you're ready. Not a wall.`,
+      t("Now the offering, {firstName}. It's ${pitchPrice}. Let me tell you plainly where it goes.", { firstName, pitchPrice }),
+      t("The cord, the wax, and two to three hours of a night I can't give to anyone else. Spent once, for you."),
+      t("${pitchPrice} covers the whole of it and keeps this honest. It's a sign you're ready. Not a wall.", { pitchPrice }),
     ])
 
     await sendBotMessages(slidingClose ? [
-      `Before I begin, ${firstName}, let me be honest with you about how this works.`,
-      `The full offering for this work is $${pitchPrice}.`,
-      "That carries the whole of it — the hours in ritual tonight, the tracing and sealing, and every page of your reading after. Nothing rushed, nothing skipped.",
-      "It comes with my 30-day guarantee. If you feel nothing has shifted, every penny returned.",
-      `I've done this work for hundreds of seekers, ${firstName}. Most feel a shift within the first week.`,
-      "But I need you to hear this, dear... I never want money to stand between you and your clearing.",
-      `That is exactly why there is a second offering — $${downsellDollars}, for when the full amount would strain you.`,
-      "Choose what's honest for you. The clearing is the same either way — every step, every hour. We do this together. ✨",
+      t("Before I begin, {firstName}, let me be honest with you about how this works.", { firstName }),
+      t("The full offering for this work is ${pitchPrice}.", { pitchPrice }),
+      t("That carries the whole of it — the hours in ritual tonight, the tracing and sealing, and every page of your reading after. Nothing rushed, nothing skipped."),
+      t("It comes with my 30-day guarantee. If you feel nothing has shifted, every penny returned."),
+      t("I've done this work for hundreds of seekers, {firstName}. Most feel a shift within the first week.", { firstName }),
+      t("But I need you to hear this, dear... I never want money to stand between you and your clearing."),
+      t("That is exactly why there is a second offering — ${downsellDollars}, for when the full amount would strain you.", { downsellDollars }),
+      t("Choose what's honest for you. The clearing is the same either way — every step, every hour. We do this together. ✨"),
     ] : [
-      `The sacred offering is $${pitchPrice} — a declaration to the universe that you're ready for this change.`,
-      "It comes with my 30-day guarantee. If you feel nothing has shifted, every penny returned.",
-      `I've done this work for hundreds of seekers, ${firstName}. Most feel a shift within the first week.`,
+      t("The sacred offering is ${pitchPrice} — a declaration to the universe that you're ready for this change.", { pitchPrice }),
+      t("It comes with my 30-day guarantee. If you feel nothing has shifted, every penny returned."),
+      t("I've done this work for hundreds of seekers, {firstName}. Most feel a shift within the first week.", { firstName }),
     ])
 
     // NEW BLOCK — PROOF (deep arm). Believable beats impressive: one line making
@@ -2222,7 +2223,7 @@ export function useConversation() {
     // safe here because this test is fb-tarot-scoped (96.6% love); a funnel-wide
     // rollout would need the neutral rewrite in the spec's §8.
     if (deep) await sendBotMessages([
-      "It rarely arrives how they expect. It's small — sleeping through the night. Not reaching for the phone.",
+      t("It rarely arrives how they expect. It's small — sleeping through the night. Not reaching for the phone."),
     ])
 
     // NEW BLOCK — OBJECTIONS (deep arm). The two she ACTUALLY raises, mined from
@@ -2239,11 +2240,11 @@ export function useConversation() {
     // pre-handling and it is a premise, not a finding. If arm B ever has to
     // shrink, this is the block to cut.
     if (deep) await sendBotMessages([
-      "Two things women say to me here. I'd rather answer them now than have you sitting with them.",
-      `The first is money, dear. I know. $${pitchPrice} is not nothing when the month is already thin.`,
-      "So don't decide by what you can spare. Decide by what another year of this costs you.",
-      `The second is "let me think about it." That's fair. But I read what's live tonight, not what's cooled by Friday.`,
-      "Waiting doesn't keep it safe for you. It just means I'd be reading a fainter thing.",
+      t("Two things women say to me here. I'd rather answer them now than have you sitting with them."),
+      t("The first is money, dear. I know. ${pitchPrice} is not nothing when the month is already thin.", { pitchPrice }),
+      t("So don't decide by what you can spare. Decide by what another year of this costs you."),
+      t("The second is \"let me think about it.\" That's fair. But I read what's live tonight, not what's cooled by Friday."),
+      t("Waiting doesn't keep it safe for you. It just means I'd be reading a fainter thing."),
     ])
 
     // Step 6: Call Claude API for personalized mystical close (references their
@@ -2275,7 +2276,7 @@ export function useConversation() {
       state: 'PITCH',
       showPurchaseCTA: true,
       inputEnabled: true,
-      inputPlaceholder: 'Or type a message...',
+      inputPlaceholder: t("Or type a message..."),
     })
   }, [chat.userData, addMessage, sendBotMessages, updateState])
 
@@ -2407,7 +2408,7 @@ export function useConversation() {
             totalCents: data.totalCents,
             mainCents: data.mainCents,
             bumpCents: data.bumpCents ?? 0,
-            productName: data.productName ?? 'Energy Clearing Ritual',
+            productName: data.productName ?? t("Energy Clearing Ritual"),
             productDescription: data.productDescription,
             bumpName: data.bumpName,
             bumpDescription: data.bumpDescription,
