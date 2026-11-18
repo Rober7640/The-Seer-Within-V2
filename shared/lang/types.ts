@@ -27,6 +27,22 @@ export interface SafetyPack {
   crisis: RegExp[];
   /** Text IMMEDIATELY before a crisis match that negates it ("je ne vais pas "). Anchored with $. */
   crisisDenialTail: RegExp;
+  /**
+   * Someone ELSE's suicide or death ("mon mari s'est suicidé"), global flag. Masked
+   * before both crisis scans, so bereavement is not read as her own intent; a mask
+   * hit on its own gives the soft note (resources shown, reading goes on).
+   */
+  reportedCrisis: RegExp[];
+  /** Someone she loved has died ("mon mari est décédé", "veuve"). Gates followTheDead. */
+  deathContext: RegExp[];
+  /** With a death in the message (reportedCrisis or deathContext): her wish to follow ("je veux le rejoindre") → hard crisis. */
+  followTheDead: RegExp[];
+  /**
+   * Reported speech ("il m'a dit …", "il m'a traitée de …"), global flag, masked to the
+   * end of the sentence before the inappropriate / injection / harassment checks: words
+   * said TO her by someone else are a disclosure, not aimed at Evelyn.
+   */
+  reportedSpeech: RegExp;
   /** Passive ideation / distress → soft note, message still goes through. */
   softCrisis: RegExp[];
   /** 18+ only. A capture group 1 = numeric age (checked < 18). */

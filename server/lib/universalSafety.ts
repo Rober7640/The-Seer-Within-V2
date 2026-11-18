@@ -10,6 +10,7 @@ import { getHotlineForCountry, buildCrisisResponse, buildSoftCrisisNote, buildCr
 import { msg } from '@shared/i18n';
 import { localeDef, type LocaleCode } from '@shared/locales';
 import { foldText } from '@shared/lang/fold';
+import { maskSpans } from '@shared/lang/mask';
 import type { LangPack } from '@shared/lang/types';
 import { requestLangPack, requestLocale, tl } from './locale';
 
@@ -543,15 +544,30 @@ export function checkUniversalSafety(message: string, locale: LocaleCode = reque
   // every check is exactly the English one.
   const pack = requestLangPack(locale);
   const folded = pack ? foldText(trimmed) : '';
-  const packHit = (patterns: RegExp[]) => !!pack && patterns.some((p) => p.test(folded));
+  // Words someone else said TO her ("il m'a dit ferme ta gueule") are blanked
+  // before the directed checks (inappropriate / injection / harassment).
+  const directed = pack ? maskSpans(folded, pack.safety.reportedSpeech).text : '';
+  const packHit = (patterns: RegExp[], text = directed) => !!pack && patterns.some((p) => p.test(text));
 
   // 1. Crisis detection - FIRST and most strict. A crisis phrase inside an explicit
   //    denial ("I'm NOT going to hurt myself") downgrades to the soft note instead of
   //    the hard template (2026-07-14 audit false-positive fix).
-  let crisisScan = scanCrisis(trimmed, CRISIS_PATTERNS, CRISIS_DENIAL_TAIL, pack?.safety.crisisDenialTail);
-  if (pack && crisisScan !== 'hard') {
-    const packScan = scanCrisis(folded, pack.safety.crisis, pack.safety.crisisDenialTail);
-    if (packScan !== 'none') crisisScan = packScan;
+  //    Non-English session: both pattern lists scan the folded text with someone
+  //    else's suicide blanked out ("mon mari s'est suicidé" is bereavement, not
+  //    intent); either language's denial counts.
+  let crisisScan: 'hard' | 'denied' | 'none';
+  let reportedCrisis = false;
+  if (!pack) {
+    crisisScan = scanCrisis(trimmed);
+  } else {
+    const masked = maskSpans(folded, pack.safety.reportedCrisis);
+    reportedCrisis = masked.hit;
+    const tail = pack.safety.crisisDenialTail;
+    const scans = [scanCrisis(masked.text, CRISIS_PATTERNS, CRISIS_DENIAL_TAIL, tail), scanCrisis(masked.text, pack.safety.crisis, tail)];
+    crisisScan = scans.includes('hard') ? 'hard' : scans.includes('denied') ? 'denied' : 'none';
+    // A death in the message + her wish to follow ("je veux le rejoindre") → hard.
+    const death = reportedCrisis || pack.safety.deathContext.some((p) => p.test(folded));
+    if (crisisScan !== 'hard' && death && pack.safety.followTheDead.some((p) => p.test(folded))) crisisScan = 'hard';
   }
   if (crisisScan === 'hard') {
     return {
@@ -584,7 +600,8 @@ export function checkUniversalSafety(message: string, locale: LocaleCode = reque
       };
     }
   }
-  if (pack && packHit(pack.safety.softCrisis)) {
+  // Someone else's suicide on its own: resources shown, the reading goes on.
+  if (pack && (reportedCrisis || packHit(pack.safety.softCrisis, folded))) {
     return {
       safe: true,
       violationType: 'crisis',

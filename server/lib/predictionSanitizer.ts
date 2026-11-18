@@ -70,9 +70,13 @@ export function sanitizePredictions(
     if (pattern.test(cleaned)) {
       flags.push(`${category}: matched ${pattern.source}`);
       pattern.lastIndex = 0;
-      // Pack rules keep a sentence-initial capital ("Je vous garantis…" → "Je sens…").
+      // Pack rules expand $1 per match and keep a sentence-initial capital
+      // ("Je vous garantis…" → "Je sens…", "Il va absolument…" → "Il pourrait…").
       cleaned = pack
-        ? cleaned.replace(pattern, (m) => (m.charAt(0) !== m.charAt(0).toLowerCase() ? replacement.charAt(0).toUpperCase() + replacement.slice(1) : replacement))
+        ? cleaned.replace(pattern, (m) => {
+            const out = m.replace(new RegExp(pattern.source, pattern.flags.replace('g', '')), replacement);
+            return m.charAt(0) !== m.charAt(0).toLowerCase() ? out.charAt(0).toUpperCase() + out.slice(1) : out;
+          })
         : cleaned.replace(pattern, replacement);
     }
   }

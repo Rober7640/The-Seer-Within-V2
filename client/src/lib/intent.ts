@@ -1,5 +1,6 @@
 import { t } from "@/lib/i18n";
 import { foldText } from "@shared/lang/fold";
+import { maskSpans } from "@shared/lang/mask";
 import { activePack } from "./langPack";
 // /client/src/lib/intent.ts
 
@@ -83,7 +84,7 @@ export function detectIntent(message: string): Intent {
   // Check for inappropriate/sexual content DIRECTED AT EVELYN or clearly trolling
   // Allow legitimate relationship discussions (wanting passion/intimacy in marriage is valid)
   const directedAtEvelyn = /\b(i want to |let me |can i |show me |send me ).*(fuck|sex|naked|nude|tits|boobs|pussy|dick|cock)|you'?re (hot|sexy)|horny|cum (on|in|for)|blowjob|handjob|masturbat|porn|slut|whore|bitch/i
-  if (directedAtEvelyn.test(lower) || p((i) => i.inappropriate)) {
+  if (directedAtEvelyn.test(lower) || (!!pack && pack.intent.inappropriate.test(maskSpans(folded, pack.safety.reportedSpeech).text))) {
     return 'inappropriate'
   }
 
