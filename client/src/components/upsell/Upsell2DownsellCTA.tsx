@@ -1,5 +1,6 @@
 import { Sparkles, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { t } from "@/lib/i18n";
 
 interface Upsell2DownsellCTAProps {
   onAccept: () => void
@@ -15,7 +16,7 @@ interface Upsell2DownsellCTAProps {
   priceNote?: string
 }
 
-export function Upsell2DownsellCTA({ onAccept, onDecline, isProcessing = false, declineLabel = 'No thanks, just the clearing', reassurance = 'Same eight stones. Same manifestation energy.', acceptLabel = 'Yes, send it to me for $30', priceNote = '$30 includes bracelet + free shipping' }: Upsell2DownsellCTAProps) {
+export function Upsell2DownsellCTA({ onAccept, onDecline, isProcessing = false, declineLabel = t("No thanks, just the clearing"), reassurance = t("Same eight stones. Same manifestation energy."), acceptLabel = t("Yes, send it to me for $30"), priceNote = t("$30 includes bracelet + free shipping") }: Upsell2DownsellCTAProps) {
   return (
     <div className="p-4 space-y-4" data-testid="container-upsell2-downsell-cta">
       {reassurance && (
@@ -34,7 +35,7 @@ export function Upsell2DownsellCTA({ onAccept, onDecline, isProcessing = false, 
         {isProcessing ? (
           <span className="flex items-center justify-center gap-2">
             <Loader2 className="w-5 h-5 animate-spin" data-testid="spinner-upsell2-downsell" />
-            <span data-testid="text-processing-downsell">Processing...</span>
+            <span data-testid="text-processing-downsell">{t("Processing...")}</span>
           </span>
         ) : (
           <span className="flex items-center justify-center gap-2">

@@ -1,5 +1,6 @@
 import { Sparkles, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { t } from "@/lib/i18n";
 
 interface Upsell2CTAProps {
   onAccept: () => void
@@ -11,7 +12,7 @@ export function Upsell2CTA({ onAccept, onDecline, isProcessing = false }: Upsell
   return (
     <div className="p-4 space-y-4" data-testid="container-upsell2-cta">
       <p className="text-center text-sm text-muted-foreground italic">
-        Eight stones. One intention. Your desire, amplified.
+        {t("Eight stones. One intention. Your desire, amplified.")}
       </p>
       
       <Button
@@ -24,18 +25,18 @@ export function Upsell2CTA({ onAccept, onDecline, isProcessing = false }: Upsell
         {isProcessing ? (
           <span className="flex items-center justify-center gap-2">
             <Loader2 className="w-5 h-5 animate-spin" data-testid="spinner-upsell2" />
-            <span data-testid="text-processing-upsell2">Processing...</span>
+            <span data-testid="text-processing-upsell2">{t("Processing...")}</span>
           </span>
         ) : (
           <span className="flex items-center justify-center gap-2">
             <Sparkles className="w-5 h-5" data-testid="icon-sparkles" />
-            <span data-testid="text-accept-upsell2">Yes, send me the Manifestation Bracelet</span>
+            <span data-testid="text-accept-upsell2">{t("Yes, send me the Manifestation Bracelet")}</span>
           </span>
         )}
       </Button>
 
       <div className="text-center">
-        <span className="text-xs text-muted-foreground">$47 includes attuned bracelet + manifestation guide + free shipping</span>
+        <span className="text-xs text-muted-foreground">{t("$47 includes attuned bracelet + manifestation guide + free shipping")}</span>
       </div>
 
       <Button
@@ -45,7 +46,7 @@ export function Upsell2CTA({ onAccept, onDecline, isProcessing = false }: Upsell
         data-testid="button-upsell2-decline"
         className="w-full text-muted-foreground text-sm"
       >
-        <span data-testid="text-decline-upsell2">Not right now</span>
+        <span data-testid="text-decline-upsell2">{t("Not right now")}</span>
       </Button>
     </div>
   )

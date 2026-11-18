@@ -136,9 +136,11 @@ export default function ChatPage() {
             </div>
             <div>
               <h1 className="font-serif font-bold text-lg leading-none">
-                {t("Evelyn Cross")}</h1>
+                {t("Evelyn Cross")}
+              </h1>
               <span className="text-xs text-green-400 font-medium">
-                {t("Online Now")}</span>
+                {t("Online Now")}
+              </span>
             </div>
           </div>
           <Link href="/">
@@ -146,7 +148,8 @@ export default function ChatPage() {
               className="text-white/70 hover:text-white text-sm"
               data-testid="button-exit"
             >
-              {t("Exit")}</button>
+              {t("Exit")}
+            </button>
           </Link>
         </header>
 
@@ -362,7 +365,8 @@ export default function ChatPage() {
                 <div className="text-center mt-2">
                   <span className="text-[10px] text-gray-400 flex items-center justify-center gap-1">
                     <Sparkles className="w-3 h-3" />
-                    {t("Private & Confidential Reading")}</span>
+                    {t("Private & Confidential Reading")}
+                  </span>
                 </div>
               </div>
             )}

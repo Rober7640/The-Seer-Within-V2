@@ -1,5 +1,6 @@
 import { MapPin, Sparkles } from 'lucide-react'
 import type { ShippingAddress } from './ShippingForm'
+import { t } from "@/lib/i18n";
 
 export interface UpsellCompleteProps {
   address?: ShippingAddress
@@ -24,11 +25,11 @@ export function UpsellComplete({ address, userName }: UpsellCompleteProps) {
       </div>
       
       <h3 className="text-foreground font-semibold text-xl mb-2" data-testid="heading-complete">
-        Protection Complete
+        {t("Protection Complete")}
       </h3>
       
       <p className="text-muted-foreground mb-4" data-testid="text-complete-subtext">
-        {userName ? `${userName}, your` : 'Your'} charged volcanic stone will ship within 48 hours.
+        {userName ? t("{userName}, your", { userName }) : t("Your")}{" "}{t("charged volcanic stone will ship within 48 hours.")}
       </p>
       
       {address && (
@@ -50,7 +51,7 @@ export function UpsellComplete({ address, userName }: UpsellCompleteProps) {
       )}
       
       <p className="text-muted-foreground/60 text-xs" data-testid="text-tracking-notice">
-        Watch your inbox for tracking info.
+        {t("Watch your inbox for tracking info.")}
       </p>
     </div>
   )

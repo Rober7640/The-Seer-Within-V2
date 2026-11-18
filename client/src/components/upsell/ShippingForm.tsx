@@ -17,6 +17,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { t } from "@/lib/i18n";
 
 interface ShippingFormProps {
   defaultName?: string
@@ -75,7 +76,7 @@ export function countryOptions(codes?: readonly string[]) {
     .sort((a, b) => a.label.localeCompare(b.label))
 }
 
-export function ShippingForm({ defaultName = '', productLabel = 'protection stone', countries, onSubmit }: ShippingFormProps) {
+export function ShippingForm({ defaultName = '', productLabel = t("protection stone"), countries, onSubmit }: ShippingFormProps) {
   const countryList = countryOptions(countries)
   const form = useForm<ShippingAddress>({
     resolver: zodResolver(shippingSchema),
@@ -101,7 +102,7 @@ export function ShippingForm({ defaultName = '', productLabel = 'protection ston
       <form onSubmit={form.handleSubmit(handleFormSubmit)} className="p-4" data-testid="form-shipping">
         <h3 className="text-foreground font-semibold text-lg mb-4 flex items-center gap-2" data-testid="heading-shipping">
           <Package className="w-5 h-5 text-purple-400" data-testid="icon-package" />
-          <span data-testid="text-shipping-title">Where should I send your {productLabel}?</span>
+          <span data-testid="text-shipping-title">{t("Where should I send your {productLabel}?", { productLabel })}</span>
         </h3>
 
         <div className="space-y-3">
@@ -112,7 +113,7 @@ export function ShippingForm({ defaultName = '', productLabel = 'protection ston
               <FormItem>
                 <FormControl>
                   <Input
-                    placeholder="Full Name"
+                    placeholder={t("Full Name")}
                     {...field}
                     data-testid="input-shipping-name"
                   />
@@ -128,7 +129,7 @@ export function ShippingForm({ defaultName = '', productLabel = 'protection ston
               <FormItem>
                 <FormControl>
                   <Input
-                    placeholder="Street Address"
+                    placeholder={t("Street Address")}
                     {...field}
                     data-testid="input-shipping-line1"
                   />
@@ -144,7 +145,7 @@ export function ShippingForm({ defaultName = '', productLabel = 'protection ston
               <FormItem>
                 <FormControl>
                   <Input
-                    placeholder="Apt, Suite, etc. (optional)"
+                    placeholder={t("Apt, Suite, etc. (optional)")}
                     {...field}
                     data-testid="input-shipping-line2"
                   />
@@ -161,7 +162,7 @@ export function ShippingForm({ defaultName = '', productLabel = 'protection ston
                 <FormItem>
                   <FormControl>
                     <Input
-                      placeholder="City"
+                      placeholder={t("City")}
                       {...field}
                       data-testid="input-shipping-city"
                     />
@@ -176,7 +177,7 @@ export function ShippingForm({ defaultName = '', productLabel = 'protection ston
                 <FormItem>
                   <FormControl>
                     <Input
-                      placeholder="State / Province"
+                      placeholder={t("State / Province")}
                       {...field}
                       data-testid="input-shipping-state"
                     />
@@ -194,7 +195,7 @@ export function ShippingForm({ defaultName = '', productLabel = 'protection ston
                 <FormItem>
                   <FormControl>
                     <Input
-                      placeholder="Postal Code"
+                      placeholder={t("Postal Code")}
                       {...field}
                       data-testid="input-shipping-postal"
                     />
@@ -210,7 +211,7 @@ export function ShippingForm({ defaultName = '', productLabel = 'protection ston
                   <Select onValueChange={field.onChange} defaultValue={field.value}>
                     <FormControl>
                       <SelectTrigger data-testid="select-shipping-country">
-                        <SelectValue placeholder="Country" />
+                        <SelectValue placeholder={t("Country")} />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent data-testid="select-content-country">
@@ -241,10 +242,10 @@ export function ShippingForm({ defaultName = '', productLabel = 'protection ston
           {isSubmitting ? (
             <span className="flex items-center justify-center gap-2">
               <Loader2 className="w-5 h-5 animate-spin" data-testid="spinner-shipping" />
-              <span data-testid="text-button-saving">Saving...</span>
+              <span data-testid="text-button-saving">{t("Saving...")}</span>
             </span>
           ) : (
-            <span data-testid="text-button-submit">Ship My {productLabel.charAt(0).toUpperCase() + productLabel.slice(1)} →</span>
+            <span data-testid="text-button-submit">{t("Ship My {v0} →", { v0: productLabel.charAt(0).toUpperCase() + productLabel.slice(1) })}</span>
           )}
         </Button>
       </form>

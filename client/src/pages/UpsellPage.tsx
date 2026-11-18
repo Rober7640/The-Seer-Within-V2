@@ -236,7 +236,8 @@ export default function UpsellPage() {
         <CosmicBackground />
         <div className="text-white/60 animate-pulse flex items-center gap-2">
           <Loader2 className="w-5 h-5 animate-spin" />
-          {t("Loading your session...")}</div>
+          {t("Loading your session...")}
+        </div>
       </div>
     );
   }
@@ -252,7 +253,8 @@ export default function UpsellPage() {
             onClick={() => navigate(funnelPath("/"))}
             className="text-purple-400 hover:text-purple-300 transition-colors"
           >
-            {t("Return home")}</button>
+            {t("Return home")}
+          </button>
         </div>
       </div>
     );
@@ -391,7 +393,8 @@ export default function UpsellPage() {
                 size="sm"
                 data-testid="button-send"
               >
-                {t("Send")}</Button>
+                {t("Send")}
+              </Button>
             </div>
           </form>
         )}

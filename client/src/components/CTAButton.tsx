@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'wouter';
 import { funnelPath } from '@/lib/funnel';
+import { t } from "@/lib/i18n";
 
-export function CTAButton({ label = "Yes Evelyn, Please Begin My FREE Reading!" }: { label?: string }) {
+export function CTAButton({ label = t("Yes Evelyn, Please Begin My FREE Reading!") }: { label?: string }) {
   const [enabled, setEnabled] = useState(false);
 
   useEffect(() => {

@@ -15,10 +15,17 @@ export const NON_COPY_KEYS = new Set([
   "mode", "currency", "product", "bumpProduct", "metadata", "color", "icon",
   "fill", "stroke", "viewBox", "d", "transform", "as", "asChild", "accept",
   "media_type", "model", "status", "code", "countryCode", "slug", "deck", "card",
+  // analytics payloads: Meta / PostHog match these exactly, so they stay English
+  "content_name", "content_category", "content_type", "content_ids", "contentName",
+  "event_name", "eventLabel", "offer", "offerKey", "sku", "productKey",
 ]);
 
+// Whole files that are plumbing (analytics, tracking). Nothing in them is shown
+// to the buyer, and their strings are matched by Meta / PostHog / n8n.
+export const NON_COPY_FILES = /(^|\/)client\/src\/lib\/(facebook|posthog|tiktok|analytics|tracking|attribution)\.ts$/;
+
 // Calls whose string arguments are logging / analytics / plumbing, never copy.
-export const NON_COPY_CALLEES = /^(console|logger|log|Sentry|posthog|captureException|track\w*|trackPH|fetch|setLocation|navigate|localStorage|sessionStorage|document|window\.(localStorage|sessionStorage|location|addEventListener|history|open)|new URL|URLSearchParams|JSON|require|import)\b/;
+export const NON_COPY_CALLEES = /^(console|logger|log|Sentry|posthog|captureException|track\w*|trackPH|fbq|window\.fbq|sendServerEvent|gtag|ttq|fetch|setLocation|navigate|localStorage|sessionStorage|document|window\.(localStorage|sessionStorage|location|addEventListener|history|open)|new URL|URLSearchParams|JSON|require|import)\b/;
 
 // String methods whose literal arguments are matching logic, never copy.
 const MATCH_METHODS = new Set([
@@ -62,6 +69,9 @@ export function keyOf(node: ts.Node): string | null {
   if (ts.isJsxAttribute(p)) return p.name.getText();
   if (ts.isJsxExpression(p) && p.parent && ts.isJsxAttribute(p.parent)) return p.parent.name.getText();
   if (ts.isBinaryExpression(p) && p.right === node && ts.isPropertyAccessExpression(p.left)) return p.left.name.text;
+  // default parameter values: function f(contentName = "…")
+  if (ts.isParameter(p) && p.initializer === node && ts.isIdentifier(p.name)) return p.name.text;
+  if (ts.isBindingElement(p) && p.initializer === node && ts.isIdentifier(p.name)) return p.name.text;
   return null;
 }
 
@@ -112,7 +122,7 @@ export function alreadyTranslated(node: ts.Node): boolean {
   const p = node.parent;
   if (!p || !ts.isCallExpression(p)) return false;
   const callee = p.expression.getText();
-  if ((callee === "t" || callee === "tr") && p.arguments[0] === node) return true;
+  if ((callee === "t" || callee === "tr" || callee === "tx") && p.arguments[0] === node) return true;
   if (callee === "tl" && p.arguments[1] === node) return true;
   return false;
 }
@@ -170,4 +180,76 @@ export function cleanJsxText(raw: string): string {
     }
   });
   return str;
+}
+
+/** Text of a string/template literal as the inventory records it (templates use ${} per slot). */
+export function literalText(e: ts.Expression): string | null {
+  if (ts.isStringLiteral(e) || ts.isNoSubstitutionTemplateLiteral(e)) return e.text;
+  if (ts.isTemplateExpression(e)) {
+    let s = e.head.text;
+    for (const span of e.templateSpans) s += "${}" + span.literal.text;
+    return s;
+  }
+  return null;
+}
+
+/** t("…", vars) / tr("…", vars): the key with declared placeholders normalised to ${}. */
+export function translatedText(e: ts.Expression): string | null {
+  if (!ts.isCallExpression(e)) return null;
+  const callee = e.expression.getText();
+  if (callee !== "t" && callee !== "tr" && callee !== "tx") return null;
+  const first = e.arguments[0];
+  if (!first || !(ts.isStringLiteral(first) || ts.isNoSubstitutionTemplateLiteral(first))) return null;
+  return normalizeKey(e, first.text);
+}
+
+export const RICH_TAG = /<([a-z][a-z0-9]*)>([\s\S]*?)<\/\1>/g;
+
+/** Key text as the inventory records it: declared {vars} → ${}, and for tx() each <tag>…</tag> → ${}. */
+export function normalizeKey(call: ts.CallExpression, key: string): string {
+  const callee = call.expression.getText();
+  const names = declaredVars(call, callee === "tx" ? 2 : callee === "tl" ? 2 : 1);
+  let out = key.replace(/\{([A-Za-z_][A-Za-z0-9_]*)\}/g, (w, n: string) => (names.has(n) ? "${}" : w));
+  if (callee === "tx") out = out.replace(RICH_TAG, "${}");
+  return out;
+}
+
+/** For tx(): the text inside each <tag>…</tag> (placeholders normalised), recorded as its own entry. */
+export function richInnerTexts(call: ts.CallExpression): string[] {
+  if (call.expression.getText() !== "tx") return [];
+  const first = call.arguments[0];
+  if (!first || !(ts.isStringLiteral(first) || ts.isNoSubstitutionTemplateLiteral(first))) return [];
+  const names = declaredVars(call, 2);
+  return [...first.text.matchAll(RICH_TAG)].map((m) => m[2].replace(/\{([A-Za-z_][A-Za-z0-9_]*)\}/g, (w, n: string) => (names.has(n) ? "${}" : w)));
+}
+
+/**
+ * The run of children of one JSX element, as React renders it: text children
+ * cleaned the way Babel does, direct literal / t() children inline, any other
+ * child (expression or nested element) as ${}. Comments are skipped.
+ * Both the inventory and the codemod read runs through this, so merging
+ * "Pay " + {price} into t("Pay {price}", …) leaves the recorded run unchanged.
+ */
+export function jsxRunText(el: ts.JsxElement | ts.JsxFragment): { text: string; consumed: Set<ts.Node> } {
+  let text = "";
+  const consumed = new Set<ts.Node>();
+  for (const c of el.children) {
+    if (ts.isJsxText(c)) {
+      const r = cleanJsxText(c.text);
+      text += decodeJsxEntities(r) ?? r;
+      consumed.add(c);
+    } else if (ts.isJsxExpression(c)) {
+      if (!c.expression) continue; // {/* comment */}
+      const lit = literalText(c.expression);
+      const tr = lit === null ? translatedText(c.expression) : null;
+      // a t()/tx() child: only its KEY is consumed; its vars are still visited,
+      // because before the wrap they were ordinary expressions with their own copy
+      if (lit !== null) { text += lit; consumed.add(c.expression); }
+      else if (tr !== null) { text += tr; consumed.add((c.expression as ts.CallExpression).arguments[0]); }
+      else text += "${}";
+    } else {
+      text += "${}";
+    }
+  }
+  return { text, consumed };
 }

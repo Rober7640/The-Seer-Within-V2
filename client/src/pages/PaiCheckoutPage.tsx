@@ -207,7 +207,8 @@ export default function PaiCheckoutPage() {
           </div>
         ) : confirming ? (
           <div className="flex items-center justify-center gap-2 py-10 text-white/70" data-testid="pai-confirming">
-            <Loader2 className="h-5 w-5 animate-spin" /> {" "}{t("Confirming your payment…")}</div>
+            <Loader2 className="h-5 w-5 animate-spin" />{" "}{t("Confirming your payment…")}
+          </div>
         ) : (
           <>
             <a
@@ -215,7 +216,8 @@ export default function PaiCheckoutPage() {
               className="mb-3 inline-flex items-center gap-1 text-sm text-white/50 hover:text-white/80"
               data-testid="pai-back"
             >
-              <ArrowLeft className="h-4 w-4" /> {" "}{t("Back")}</a>
+              <ArrowLeft className="h-4 w-4" />{" "}{t("Back")}
+            </a>
             <div className="mb-1 text-lg font-semibold">{t("Complete your order")}</div>
             {order.email && <div className="mb-4 text-xs text-white/50">{order.email}</div>}
 
@@ -250,7 +252,7 @@ export default function PaiCheckoutPage() {
               <PaiCardForm
                 config={config}
                 amountCents={order.totalCents}
-                submitLabel={t("Pay {v0}", { v0: money(order.totalCents) })}
+                submitLabel={t("Pay {money}", { money: money(order.totalCents) })}
                 askPhone
                 defaultName={order.firstName}
                 busy={busy}
@@ -263,7 +265,8 @@ export default function PaiCheckoutPage() {
               <div className="rounded-lg border border-red-400/30 bg-red-500/10 px-3 py-2 text-sm text-red-200">{error}</div>
             ) : (
               <div className="flex items-center gap-2 py-6 text-sm text-white/60">
-                <Loader2 className="h-4 w-4 animate-spin" /> {" "}{t("Loading secure checkout…")}</div>
+                <Loader2 className="h-4 w-4 animate-spin" />{" "}{t("Loading secure checkout…")}
+              </div>
             )}
           </>
         )}

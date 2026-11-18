@@ -8,6 +8,7 @@
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { t } from "@/lib/i18n";
 
 interface OptInStatus {
   show: boolean;
@@ -56,7 +57,7 @@ export function SmsOptInCard({ sessionId }: { sessionId: string | null }) {
         className="rounded-2xl border border-white/15 bg-black/40 p-4 text-sm text-white/80"
         data-testid="sms-optin-done"
       >
-        Thanks — you're signed up for texts from The Seer Within. Reply STOP at any time to opt out.
+        {t("Thanks — you're signed up for texts from The Seer Within. Reply STOP at any time to opt out.")}
       </div>
     );
   }
@@ -78,7 +79,7 @@ export function SmsOptInCard({ sessionId }: { sessionId: string | null }) {
       if (!r.ok) throw new Error(body.error || "Sorry, that didn't save. Please try again.");
       setDone(true);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Sorry, that didn't save. Please try again.");
+      setError(err instanceof Error ? err.message : t("Sorry, that didn't save. Please try again."));
     } finally {
       setSaving(false);
     }
@@ -94,7 +95,7 @@ export function SmsOptInCard({ sessionId }: { sessionId: string | null }) {
 
       <div className="space-y-1">
         <label htmlFor="sms-optin-phone" className="text-xs text-white/70">
-          Mobile number
+          {t("Mobile number")}
         </label>
         <Input
           id="sms-optin-phone"
@@ -124,11 +125,11 @@ export function SmsOptInCard({ sessionId }: { sessionId: string | null }) {
       <p className="text-xs leading-relaxed text-white/60" data-testid="sms-optin-disclosure">
         {status.disclosure}{" "}
         <a href={status.termsUrl} target="_blank" rel="noopener noreferrer" className="underline">
-          Terms
+          {t("Terms")}
         </a>{" "}
         ·{" "}
         <a href={status.privacyUrl} target="_blank" rel="noopener noreferrer" className="underline">
-          Privacy Policy
+          {t("Privacy Policy")}
         </a>
       </p>
 
@@ -139,7 +140,7 @@ export function SmsOptInCard({ sessionId }: { sessionId: string | null }) {
       )}
 
       <Button type="submit" disabled={!canSubmit} className="w-full" data-testid="sms-optin-submit">
-        {saving ? "Saving…" : status.buttonLabel}
+        {saving ? t("Saving…") : status.buttonLabel}
       </Button>
     </form>
   );
