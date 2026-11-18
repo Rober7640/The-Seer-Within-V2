@@ -38,6 +38,20 @@ export function track(event: string, properties: Record<string, unknown> = {}) {
   }
 }
 
+/**
+ * `track`, for an event fired just before the page navigates away (a redirect to a
+ * checkout or the next page). A normal capture is batched and can be lost when the
+ * page unloads; sendBeacon hands it to the browser to deliver after we've gone.
+ */
+export function trackBeforeLeaving(event: string, properties: Record<string, unknown> = {}) {
+  if (!initialized) return;
+  try {
+    posthog.capture(event, properties, { transport: 'sendBeacon', send_instantly: true });
+  } catch {
+    // silent — analytics must never break the app
+  }
+}
+
 export function identifyUser(distinctId: string, properties: Record<string, unknown> = {}) {
   if (!initialized) return;
   try {

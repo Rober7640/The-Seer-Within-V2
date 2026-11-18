@@ -11,6 +11,13 @@
  */
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { Lock, Loader2 } from 'lucide-react';
+import { normalizePhone, PHONE_ERROR } from '@shared/phone';
+import {
+  trackCardCompleted,
+  trackFieldStarted,
+  trackPayClicked,
+  type CheckoutStepContext,
+} from '@/lib/checkoutSteps';
 
 const FRAMEPAY_SRC = 'https://framepay.payments.ai/framepay.js';
 
@@ -149,10 +156,10 @@ const CARD_TEXT_STYLE = {
 
 const WALLET_LABEL = 'The Seer Within';
 
-/** Card-form rules for the phone box, shared by the card and wallet paths. */
-const cleanPhoneOf = (raw: string) => raw.replace(/[\s\-().]/g, '');
-const isFullPhone = (p: string) => /^\+[1-9]\d{7,14}$/.test(p);
-const PHONE_ERROR = 'Please enter your phone number with the country code, e.g. +1 555 555 0123';
+/** Card-form rules for the phone box, shared by the card and wallet paths — and with
+ *  the server (shared/phone.ts): a plain US number gets its +1, so it is accepted. */
+const cleanPhoneOf = (raw: string) => normalizePhone(raw) ?? raw.replace(/[\s\-().]/g, '');
+const isFullPhone = (p: string) => normalizePhone(p) !== null;
 
 /** The one-time token id, whatever shape FramePay hands it back in. */
 function tokenIdOf(token: any): string | null {
@@ -204,6 +211,8 @@ export function PaiCardForm(props: {
   error?: string | null;
   onSubmit: (s: PaiCardSubmit) => void;
   onBootFailed?: (err: unknown) => void;
+  /** Step tracking (lib/checkoutSteps.ts): which checkout this form is on. */
+  track?: CheckoutStepContext;
 }) {
   const { config, amountCents, askPhone = false, askShipping = false } = props;
   const formRef = useRef<HTMLFormElement>(null);
@@ -226,7 +235,40 @@ export function PaiCardForm(props: {
   const [walletShown, setWalletShown] = useState(false);
   /** A wallet token waiting for a detail she still has to type (phone / address). */
   const [heldWallet, setHeldWallet] = useState<{ token: string; name: string } | null>(null);
+  /**
+   * Pay was pressed and the card is being secured by Payments.AI (createToken) —
+   * 1-3 s on a phone, BEFORE the page's own `busy` starts. Without this the button
+   * looked dead for that time and buyers pressed again (Lewis, 18 Nov). The ref
+   * blocks a second press in the same instant; the state drives what she sees.
+   */
+  const [securing, setSecuring] = useState(false);
+  const securingRef = useRef(false);
+  const working = props.busy || securing;
   const mountId = useRef(`pai-card-${Math.random().toString(36).slice(2, 8)}`).current;
+
+  // ── Step tracking: "first field filled in" and "card details completed", each
+  // once per page. Card-box state comes from FramePay's own change events.
+  const startedRef = useRef(false);
+  const cardDoneRef = useRef(false);
+  const cardPartsRef = useRef<Record<string, boolean>>({});
+  function fieldStarted(field: string) {
+    if (startedRef.current || !props.track) return;
+    startedRef.current = true;
+    trackFieldStarted(props.track, field);
+  }
+  // FramePay's change event (proven in the sandbox, 18 Nov): it fires on every
+  // keystroke as {valid, source, completed}. `valid` is TRUE FROM THE FIRST DIGIT
+  // (it only means "nothing wrong so far"); `completed` turns true once the box is
+  // fully filled. So: any change = she started; completed && valid = that box is done.
+  function cardPartChanged(part: string, ev: any) {
+    fieldStarted(part);
+    cardPartsRef.current[part] = ev?.completed === true && ev?.valid !== false;
+    const parts = cardPartsRef.current;
+    if (!cardDoneRef.current && props.track && parts.cardNumber && parts.cardExpiry && parts.cardCvv) {
+      cardDoneRef.current = true;
+      trackCardCompleted(props.track);
+    }
+  }
 
   /** What she still has to fill in besides the card itself, or null when nothing. */
   function missingDetail(phoneNow: string): string | null {
@@ -252,9 +294,14 @@ export function PaiCardForm(props: {
   // otherwise hold the token and ask only for what's missing (Google Pay gives
   // no phone, and the SMS list needs one).
   function onWalletToken(token: any, extras: WalletExtras | undefined) {
-    if (props.busy) return;
+    if (props.busy || securingRef.current) return;
     const id = tokenIdOf(token);
     if (!id) return setLocalError('That payment did not go through. Please try again or pay by card.');
+    if (props.track) {
+      const kind = String(token?.method ?? token?.paymentInstrument?.method ?? '').toLowerCase();
+      const wallet = kind.includes('apple') ? 'apple_pay' : kind.includes('google') ? 'google_pay' : undefined;
+      trackPayClicked(props.track, 'wallet', wallet);
+    }
     const cardName = walletNameOf(token, extras, name) || 'Friend';
     let phoneNow = cleanPhoneOf(phone);
     if (askPhone && !isFullPhone(phoneNow)) {
@@ -322,6 +369,14 @@ export function PaiCardForm(props: {
           window.Framepay.card.mount(`#${mountId}-exp`, 'cardExpiry'),
           window.Framepay.card.mount(`#${mountId}-cvv`, 'cardCvv'),
         ];
+        // Step tracking only — a failure here must never touch the card form.
+        (['cardNumber', 'cardExpiry', 'cardCvv'] as const).forEach((part, i) => {
+          try {
+            fieldRef.current?.[i]?.on?.('change', (ev: any) => cardPartChanged(part, ev));
+          } catch {
+            /* no change events on this FramePay build — steps 2-3 just won't fire */
+          }
+        });
         setReady(true);
         // Wallet buttons. Each draws only if Payments.AI has it switched on for
         // this site AND the device supports it (Apple Pay: Safari / iPhone). Any
@@ -360,8 +415,9 @@ export function PaiCardForm(props: {
 
   async function submit(e: FormEvent) {
     e.preventDefault();
-    if (props.busy || !ready) return;
+    if (props.busy || !ready || securingRef.current) return;
     setLocalError(null);
+    if (!heldWallet && props.track) trackPayClicked(props.track, 'card');
     const cleanPhone = cleanPhoneOf(phone);
     // Finishing a wallet payment that was waiting on her phone / address.
     if (heldWallet) {
@@ -376,6 +432,9 @@ export function PaiCardForm(props: {
     const parts = fullName.split(/\s+/);
     const firstName = parts[0];
     const lastName = parts.length > 1 ? parts.slice(1).join(' ') : parts[0];
+    // From here until the page takes over (its `busy`), the button shows Processing.
+    securingRef.current = true;
+    setSecuring(true);
     try {
       // Payments.AI's shape (support, 9 Oct): phoneNumbers is an ARRAY on the token.
       const token = await window.Framepay.createToken(formRef.current, {
@@ -393,6 +452,11 @@ export function PaiCardForm(props: {
       setLocalError(err?.message && typeof err.message === 'string'
         ? `Please check your card details. (${err.message})`
         : 'Please check your card details.');
+    } finally {
+      // send() → the page's pay() sets `busy` in this same tick, so the button goes
+      // straight from "securing" to "busy" with no flicker; on a card error it unlocks.
+      securingRef.current = false;
+      setSecuring(false);
     }
   }
 
@@ -420,7 +484,10 @@ export function PaiCardForm(props: {
           placeholder="Name on card"
           autoComplete="cc-name"
           value={name}
-          onChange={(e) => setName(e.target.value)}
+          onChange={(e) => {
+            setName(e.target.value);
+            fieldStarted('name');
+          }}
           data-testid="pai-card-name"
         />
       </div>
@@ -465,15 +532,18 @@ export function PaiCardForm(props: {
 
       {askPhone && (
         <div>
-          <label htmlFor={`${mountId}-phone`} className={labelCls}>Phone number (with country code)</label>
+          <label htmlFor={`${mountId}-phone`} className={labelCls}>Phone number</label>
           <input
             id={`${mountId}-phone`}
             className={inputCls}
-            placeholder="e.g. +1 555 555 0123"
+            placeholder="e.g. 555 555 0123 (outside the US: +country code)"
             type="tel"
             autoComplete="tel"
             value={phone}
-            onChange={(e) => setPhone(e.target.value)}
+            onChange={(e) => {
+              setPhone(e.target.value);
+              fieldStarted('phone');
+            }}
             data-testid="pai-phone"
           />
         </div>
@@ -504,12 +574,12 @@ export function PaiCardForm(props: {
           <div>
             <label htmlFor={`${mountId}-ship-name`} className={labelCls}>Full name</label>
             <input id={`${mountId}-ship-name`} className={inputCls} placeholder="Full name" value={ship.name}
-              onChange={(e) => setShip({ ...ship, name: e.target.value })} data-testid="pai-ship-name" />
+              onChange={(e) => { setShip({ ...ship, name: e.target.value }); fieldStarted('shipping'); }} data-testid="pai-ship-name" />
           </div>
           <div>
             <label htmlFor={`${mountId}-ship-line1`} className={labelCls}>Address line 1</label>
             <input id={`${mountId}-ship-line1`} className={inputCls} placeholder="Street address" value={ship.line1}
-              onChange={(e) => setShip({ ...ship, line1: e.target.value })} data-testid="pai-ship-line1" />
+              onChange={(e) => { setShip({ ...ship, line1: e.target.value }); fieldStarted('shipping'); }} data-testid="pai-ship-line1" />
           </div>
           <div>
             <label htmlFor={`${mountId}-ship-line2`} className={labelCls}>Address line 2 (optional)</label>
@@ -555,12 +625,13 @@ export function PaiCardForm(props: {
 
       <button
         type="submit"
-        disabled={!ready || props.busy}
+        disabled={!ready || working}
+        aria-busy={working}
         className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-purple-600 to-pink-600 px-4 py-3.5 font-semibold text-white shadow-lg transition disabled:opacity-60"
         data-testid="pai-pay"
       >
-        {props.busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Lock className="h-4 w-4" />}
-        {props.busy ? 'Processing…' : heldWallet ? 'Finish payment' : props.submitLabel}
+        {working ? <Loader2 className="h-4 w-4 animate-spin" /> : <Lock className="h-4 w-4" />}
+        {working ? 'Processing…' : heldWallet ? 'Finish payment' : props.submitLabel}
       </button>
       <p className="text-center text-[11px] text-white/40">
         <Lock className="mr-1 inline h-3 w-3" />

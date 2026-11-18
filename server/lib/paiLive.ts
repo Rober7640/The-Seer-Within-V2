@@ -380,11 +380,9 @@ function declineReasonOf(tx: PaiTransaction | null | undefined): string | null {
 // 4. MAIN PURCHASE (customer-initiated)
 // ═══════════════════════════════════════════════════════════════════════════════
 
-/** E.164 with the country code — what Payments.AI support asked for. */
-export function normalizePhone(raw: unknown): string | null {
-  const s = String(raw ?? '').replace(/[\s\-().]/g, '');
-  return /^\+[1-9]\d{7,14}$/.test(s) ? s : null;
-}
+/** E.164 with the country code — what Payments.AI support asked for. A plain US
+ *  number gets its +1 (shared/phone.ts — the SAME rule the card form uses). */
+export { normalizePhone } from '@shared/phone';
 
 /** The provider metadata — the same keys the Stripe session carries. */
 export function mainMetadata(order: PaiOrder): Record<string, string> {
