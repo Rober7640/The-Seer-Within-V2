@@ -2,6 +2,9 @@ import { createRoot } from "react-dom/client";
 import * as Sentry from "@sentry/react";
 import App from "./App";
 import { initPostHog, registerUTMs } from "./lib/posthog";
+import { captureLocale } from "./lib/locale";
+import { loadLocale } from "./lib/i18n";
+import { localeDef } from "@shared/locales";
 import "./index.css";
 
 // FB Pixel init is lazy — handled inside client/src/lib/facebook.ts the first
@@ -30,7 +33,21 @@ if (sentryDsn) {
   });
 }
 
-createRoot(document.getElementById("root")!).render(<App />);
+// Locale: `?lang=` on the entry URL, else the session cookie, else English
+// (client/src/lib/locale.ts). English mounts exactly as before. Any other
+// locale first fetches its own bundle (catalog + data twins) so the very first
+// bubble is already translated; a failed fetch falls back to English copy
+// rather than a blank page.
+const locale = captureLocale();
+const mount = () => createRoot(document.getElementById("root")!).render(<App />);
+if (locale === "en") {
+  mount();
+} else {
+  document.documentElement.lang = localeDef(locale).htmlLang;
+  loadLocale(locale)
+    .catch((err) => console.error("[locale] bundle failed to load", err))
+    .finally(mount);
+}
 
 // Hide the Stripe promotional badge that overlaps the chat send button.
 // Stripe dynamically injects a fixed-position iframe/div badge at the bottom-right
