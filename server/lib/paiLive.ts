@@ -71,6 +71,7 @@ import {
   SMS_CONSENT_VERSION,
   SMS_CONSENT_YES_LABEL,
   showsSmsConsent,
+  smsConsentCheckoutEnabled,
   smsConsentDisclosure,
   smsConsentRecordText,
 } from './smsConsent';
@@ -379,11 +380,9 @@ function declineReasonOf(tx: PaiTransaction | null | undefined): string | null {
 // 4. MAIN PURCHASE (customer-initiated)
 // ═══════════════════════════════════════════════════════════════════════════════
 
-/** E.164 with the country code — what Payments.AI support asked for. */
-export function normalizePhone(raw: unknown): string | null {
-  const s = String(raw ?? '').replace(/[\s\-().]/g, '');
-  return /^\+[1-9]\d{7,14}$/.test(s) ? s : null;
-}
+/** E.164 with the country code — what Payments.AI support asked for. A plain US
+ *  number gets its +1 (shared/phone.ts — the SAME rule the card form uses). */
+export { normalizePhone } from '@shared/phone';
 
 /** The provider metadata — the same keys the Stripe session carries. */
 export function mainMetadata(order: PaiOrder): Record<string, string> {
@@ -681,7 +680,8 @@ async function fulfilMain(order: PaiOrder, settled: PaiTransaction, x: BuyerExtr
   await markMainPaid(txn);
   await savePhoneForSession(txn, x.phone);
 
-  if (showsSmsConsent(funnel)) {
+  // Checkout-time consent retired (Twilio 30446) — see smsConsentCheckoutEnabled.
+  if (smsConsentCheckoutEnabled() && showsSmsConsent(funnel, undefined)) {
     recordSmsConsent({
       stripeSessionId: txn,
       email: order.email,
@@ -1399,7 +1399,7 @@ export async function publishableKey(): Promise<string | null> {
 
 /** The SMS question exactly as the Stripe checkout words it, or null when not shown. */
 export function smsQuestion(funnel: FunnelParam | undefined, policyBase: string) {
-  if (!showsSmsConsent(funnel)) return null;
+  if (!smsConsentCheckoutEnabled() || !showsSmsConsent(funnel, undefined)) return null;
   return {
     label: SMS_CONSENT_LABEL,
     yesLabel: SMS_CONSENT_YES_LABEL,

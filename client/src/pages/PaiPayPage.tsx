@@ -18,6 +18,11 @@ import {
   type PaiFormConfig,
   type ShippingAddress,
 } from '../components/PaiCardForm';
+import {
+  trackCheckoutViewed,
+  trackPaymentResult,
+  type CheckoutStepContext,
+} from '@/lib/checkoutSteps';
 
 interface UpsellInfo {
   step: 'upsell1' | 'upsell2';
@@ -68,6 +73,14 @@ export default function PaiPayPage() {
   const [fatal, setFatal] = useState<string | null>(null);
   const [confirming, setConfirming] = useState(isReturn);
 
+  // Step tracking (lib/checkoutSteps.ts): the backup card page after a refused 1-click.
+  const stepCtx: CheckoutStepContext = {
+    gateway: 'paymentsai',
+    page: 'upsell',
+    upsell_step: step || null,
+    amount_cents: info?.cents,
+  };
+
   useEffect(() => {
     (async () => {
       try {
@@ -81,6 +94,7 @@ export default function PaiPayPage() {
           return;
         }
         if (!isReturn) {
+          trackCheckoutViewed({ ...stepCtx, amount_cents: i.cents });
           const c = await fetch('/api/pai-live/config');
           if (!c.ok) throw new Error('config');
           setConfig(await c.json());
@@ -116,6 +130,7 @@ export default function PaiPayPage() {
       }).catch(() => null);
       const data = res ? await res.json().catch(() => null) : null;
       if (data?.ok && data.redirect) {
+        trackPaymentResult(stepCtx, 'approved');
         try {
           sessionStorage.removeItem(PENDING_KEY);
         } catch {
@@ -129,6 +144,7 @@ export default function PaiPayPage() {
         return;
       }
       setConfirming(false);
+      trackPaymentResult(stepCtx, data?.declined ? 'declined' : 'error');
       setError(data?.error ?? 'Your payment could not be completed. Please try again.');
       // Let her try again with a card.
       const c = await fetch('/api/pai-live/config').catch(() => null);
@@ -149,10 +165,12 @@ export default function PaiPayPage() {
       });
       const data = await res.json();
       if (data.ok && data.redirect) {
+        trackPaymentResult(stepCtx, 'approved', s.payMethod);
         window.location.href = data.redirect;
         return;
       }
       if (data.needs3ds && data.approvalLink && data.transactionId) {
+        trackPaymentResult(stepCtx, 'needs_3ds', s.payMethod);
         try {
           sessionStorage.setItem(
             PENDING_KEY,
@@ -166,8 +184,10 @@ export default function PaiPayPage() {
         window.location.href = data.approvalLink;
         return;
       }
+      trackPaymentResult(stepCtx, data.declined ? 'declined' : 'error', s.payMethod);
       setError(data.error ?? 'Your payment could not be completed. Please try again.');
     } catch {
+      trackPaymentResult(stepCtx, 'error', s.payMethod);
       setError('Your payment could not be completed. Please check your connection and try again.');
     }
     setBusy(false);
@@ -204,6 +224,7 @@ export default function PaiPayPage() {
                 error={error}
                 onSubmit={pay}
                 onBootFailed={() => setError('We could not load the payment form. Please refresh the page.')}
+                track={stepCtx}
               />
             ) : (
               <div className="flex items-center gap-2 py-4 text-sm text-white/60">

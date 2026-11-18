@@ -39,6 +39,7 @@ import { trackLead, trackInitiateCheckout, getTrackdeskClickId } from '@/lib/fac
 import { currentFunnel, funnelPath, getPostHogFunnel, linkParams, skipEmail } from '@/lib/funnel'
 import { goToPaiCheckout } from '@/lib/paiCheckout'
 import { track as trackPH, identifyUser as identifyPH, getDistinctId } from '@/lib/posthog'
+import { trackCheckoutViewed } from '@/lib/checkoutSteps'
 import {
   tarotEventProps,
   fetchAssignedTarotArm,
@@ -2524,10 +2525,18 @@ export function useConversation() {
           body: JSON.stringify({ ...checkoutBody, forceStripe: true }),
         })
         const again = await retry.json()
-        if (again?.url) window.location.href = again.url
+        if (again?.url) {
+          trackCheckoutViewed({ gateway: 'stripe', page: 'main', funnel: currentFunnel() ?? null })
+          window.location.href = again.url
+        }
         return
       }
-      if (data?.url) window.location.href = data.url
+      if (data?.url) {
+        // Step 1 of the checkout step tracking, Stripe side: she is sent to Stripe's
+        // own page (steps 2-4 happen there, out of our sight).
+        trackCheckoutViewed({ gateway: 'stripe', page: 'main', funnel: currentFunnel() ?? null })
+        window.location.href = data.url
+      }
     } catch (error) {
       console.error('Checkout error:', error)
     }
