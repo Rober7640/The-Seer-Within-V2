@@ -1,4 +1,5 @@
 import type { Bucket } from '@shared/types'
+import { packReply } from "./langPack";
 
 // ============================================
 // TYPES
@@ -358,6 +359,8 @@ export function personalizeMessage(
 
 export function detectU2Q1Intent(input: string): string {
   const lower = input.toLowerCase()
+  const inLanguage = packReply('u2q1', input) // session language first; null in English
+  if (inLanguage) return inLanguage
 
   if (lower.match(/yes|feel it|definitely|absolutely|i can|sense it/)) {
     return 'yes'
@@ -374,6 +377,8 @@ export function detectU2Q1Intent(input: string): string {
 
 export function detectU2Q2Intent(input: string): string {
   const lower = input.toLowerCase()
+  const inLanguage = packReply('u2q2', input) // session language first; null in English
+  if (inLanguage) return inLanguage
 
   if (lower.match(/yes|one stood out|one of them|specific|that one/)) {
     return 'yes'
@@ -390,6 +395,8 @@ export function detectU2Q2Intent(input: string): string {
 
 export function detectU2Q3Intent(input: string): string {
   const lower = input.toLowerCase()
+  const inLanguage = packReply('u2q3', input) // session language first; null in English
+  if (inLanguage) return inLanguage
 
   if (lower.match(/yes|ready|i am|let's|please|absolutely|definitely/)) {
     return 'yes'

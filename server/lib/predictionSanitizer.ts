@@ -7,6 +7,8 @@
  */
 
 import logger from './logger';
+import type { LocaleCode } from '@shared/locales';
+import { requestLangPack, requestLocale } from './locale';
 
 interface PredictionFlag {
   pattern: RegExp;
@@ -51,16 +53,27 @@ const PREDICTION_RED_FLAGS: PredictionFlag[] = [
  * Scan an AI response for prediction red flags and rewrite dangerous phrases.
  * Returns the cleaned message and any flags that were triggered.
  */
-export function sanitizePredictions(message: string): { cleaned: string; flags: string[] } {
+export function sanitizePredictions(
+  message: string,
+  locale: LocaleCode = requestLocale(),
+): { cleaned: string; flags: string[] } {
   let cleaned = message;
   const flags: string[] = [];
 
-  for (const { pattern, replacement, category } of PREDICTION_RED_FLAGS) {
+  // Non-English session: the reply is in that language, so its own rewrites run
+  // first; the English list still runs (a reply can slip into English).
+  const pack = requestLangPack(locale);
+  const rules = pack ? [...pack.predictions, ...PREDICTION_RED_FLAGS] : PREDICTION_RED_FLAGS;
+
+  for (const { pattern, replacement, category } of rules) {
     pattern.lastIndex = 0;
     if (pattern.test(cleaned)) {
       flags.push(`${category}: matched ${pattern.source}`);
       pattern.lastIndex = 0;
-      cleaned = cleaned.replace(pattern, replacement);
+      // Pack rules keep a sentence-initial capital ("Je vous garantis…" → "Je sens…").
+      cleaned = pack
+        ? cleaned.replace(pattern, (m) => (m.charAt(0) !== m.charAt(0).toLowerCase() ? replacement.charAt(0).toUpperCase() + replacement.slice(1) : replacement))
+        : cleaned.replace(pattern, replacement);
     }
   }
 

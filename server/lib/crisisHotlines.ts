@@ -6,6 +6,9 @@
  */
 
 import logger from './logger';
+import { msg } from '@shared/i18n';
+import { localeDef, type LocaleCode } from '@shared/locales';
+import { tl } from './locale';
 
 // ============================================================
 // Country Hotline Directory
@@ -395,33 +398,57 @@ export async function getCountryFromIP(ip: string | undefined | null): Promise<s
  * Build a warm, empathetic crisis response with country-specific hotline numbers.
  * Modeled after the ChatGPT crisis response pattern.
  */
-export function buildCrisisResponse(hotline: CrisisHotline): string {
+export function buildCrisisResponse(hotline: CrisisHotline, locale: LocaleCode = 'en'): string {
   const lines = hotline.lines
     .map((l) => `  - **${l.name}:** ${l.number}`)
     .join('\n');
+  const { country, emergency } = localizeHotline(hotline, locale);
 
-  return (
-    `I need to pause our reading here because what you're sharing sounds really serious, and I want to make sure you're safe.\n\n` +
-    `You don't have to go through this alone.\n\n` +
-    `Since you're in ${hotline.country}, you can reach out to:\n` +
-    `${lines}\n\n` +
-    `If you're in immediate danger, please call emergency services (${hotline.emergency}) right now.\n\n` +
-    `If calling feels hard, you can stay here and talk with me. What's happening that led you to feel this way?`
+  return tl(
+    locale,
+    msg(
+      "I need to pause our reading here because what you're sharing sounds really serious, and I want to make sure you're safe.\n\n" +
+      "You don't have to go through this alone.\n\n" +
+      "Since you're in {country}, you can reach out to:\n" +
+      '{lines}\n\n' +
+      "If you're in immediate danger, please call emergency services ({emergency}) right now.\n\n" +
+      "If calling feels hard, you can stay here and talk with me. What's happening that led you to feel this way?",
+    ),
+    { country, lines, emergency },
   );
+}
+
+/**
+ * The directory is written in English ("France", "112 or 15"). In another locale
+ * the country takes its name in that language and the "or" its conjunction, both
+ * from Intl, so no hotline entry needs a translation. Line names and numbers are
+ * the services' own and stay as listed. English: the entry, untouched.
+ */
+function localizeHotline(hotline: CrisisHotline, locale: LocaleCode): { country: string; emergency: string } {
+  if (locale === 'en') return { country: hotline.country, emergency: hotline.emergency };
+  const intl = localeDef(locale).market.intl;
+  let country = hotline.country;
+  let emergency = hotline.emergency;
+  try {
+    country = new Intl.DisplayNames([intl], { type: 'region' }).of(hotline.countryCode) ?? country;
+  } catch { /* keep the English name */ }
+  try {
+    const parts = hotline.emergency.split(/\s+or\s+/);
+    if (parts.length > 1) emergency = new Intl.ListFormat(intl, { type: 'disjunction' }).format(parts);
+  } catch { /* keep as listed */ }
+  return { country, emergency };
 }
 
 /**
  * Build a soft crisis note (prepended to the persona's normal response).
  * Country-specific version of the original SOFT_CRISIS_NOTE.
  */
-export function buildSoftCrisisNote(hotline: CrisisHotline): string {
+export function buildSoftCrisisNote(hotline: CrisisHotline, locale: LocaleCode = 'en'): string {
   const primary = hotline.lines[0];
-  return (
-    '---\n' +
-    `If things ever feel too heavy: **${primary.name}** (${primary.number})` +
-    (hotline.lines[1] ? ` · ${hotline.lines[1].name}: ${hotline.lines[1].number}` : '') +
-    '\n---\n\n'
-  );
+  const line =
+    `**${primary.name}** (${primary.number})` +
+    (hotline.lines[1] ? ` · ${hotline.lines[1].name}: ${hotline.lines[1].number}` : '');
+  return '---\n' + tl(locale, msg('If things ever feel too heavy: {line}'), { line }) + '\n---\n\n';
 }
 
 /**

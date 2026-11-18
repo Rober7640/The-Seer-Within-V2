@@ -18,6 +18,7 @@
 // registers nothing.
 
 import type { LocaleCode } from "./locales";
+import type { LangPack } from "./lang/types";
 
 export type Catalog = Readonly<Record<string, string>>;
 export type Vars = Readonly<Record<string, string | number | null | undefined>>;
@@ -26,6 +27,18 @@ export type Vars = Readonly<Record<string, string | number | null | undefined>>;
 export interface LocaleBundle {
   catalog: Catalog;
   data?: Readonly<Record<string, unknown>>;
+  /** The language pack the CLIENT runs for this locale (intent, upsell replies, name capture). */
+  lang?: LangPack;
+}
+
+/**
+ * Marks a source string as translatable copy where it is DEFINED, for copy that
+ * is translated later where it is USED (a constant passed to tl()/t() by
+ * reference). Returns the text unchanged — the extractor reads the marker.
+ * (gettext's N_ / gettext_noop.)
+ */
+export function msg<T extends string>(text: T): T {
+  return text;
 }
 
 const catalogs = new Map<LocaleCode, Catalog>();

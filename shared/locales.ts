@@ -44,6 +44,8 @@ export interface LocaleDef {
   htmlLang: string;
   /** Human name, for admin/review pages. */
   label: string;
+  /** The language's own name, as said inside a sentence in that language ("English", "français"). */
+  languageName: string;
   /** How Evelyn addresses the buyer, where the language distinguishes. */
   register?: "vous" | "tu" | "usted" | "tú";
   market: LocaleMarket;
@@ -69,6 +71,7 @@ export const LOCALES: Record<LocaleCode, LocaleDef> = {
     param: "en",
     htmlLang: "en",
     label: "English",
+    languageName: "English",
     market: { country: "US", currency: "usd", intl: "en-US", hotlineCountry: "US" },
     suffix: { product: "", aweber: "" },
     serves: null,
@@ -78,6 +81,7 @@ export const LOCALES: Record<LocaleCode, LocaleDef> = {
     param: "fr",
     htmlLang: "fr",
     label: "Français (France)",
+    languageName: "français",
     register: "vous",
     market: { country: "FR", currency: "eur", stripeLocale: "fr", intl: "fr-FR", hotlineCountry: "FR" },
     suffix: { product: " - FR", aweber: "-fr" },

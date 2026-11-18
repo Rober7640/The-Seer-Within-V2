@@ -14,6 +14,10 @@
 
 // Customer-facing support inbox (The Seer Within brand inbox — same address used by
 // the app's follow-up / top-up / session emails).
+import { interpolate, msg } from '@shared/i18n';
+import { foldText } from '@shared/lang/fold';
+import { requestLangPack, requestLocale, tl } from './locale';
+
 export const SUPPORT_EMAIL = 'hi@theseerwithin.com';
 
 // Intent detection. Kept deliberately narrow so ordinary reading chat is never
@@ -39,14 +43,25 @@ export function isRefundRequest(message: string): boolean {
   if (!message) return false;
   const text = message.trim();
   if (!text) return false;
-  return REFUND_PATTERNS.some((re) => re.test(text));
+  if (REFUND_PATTERNS.some((re) => re.test(text))) return true;
+  // Non-English session: the session language's refund phrases too (folded).
+  const pack = requestLangPack();
+  return !!pack && pack.refund.some((re) => re.test(foldText(text)));
 }
 
 // Standard template returned in place of an LLM reading. Warm, stays in the
 // persona's world, but clearly routes billing to the support inbox. Edit freely.
-export const REFUND_TEMPLATE =
+const REFUND_SOURCE = msg(
   "I hear you, and I want to make sure this is handled properly and quickly. " +
   "Anything to do with billing or a refund is taken care of by our support team directly — " +
-  "not through the readings here. Please email " + SUPPORT_EMAIL + " from the address on your " +
+  "not through the readings here. Please email {email} from the address on your " +
   "account, and they'll take care of you right away. You can also see our full refund policy at /refund. " +
-  "I'm still right here whenever you'd like to return.";
+  "I'm still right here whenever you'd like to return.");
+
+/** The English reply (unchanged text; V2's chat engine sends it as is). */
+export const REFUND_TEMPLATE = interpolate(REFUND_SOURCE, { email: SUPPORT_EMAIL });
+
+/** The refund reply in the request's language. English === REFUND_TEMPLATE. */
+export function refundReply(locale = requestLocale()): string {
+  return tl(locale, REFUND_SOURCE, { email: SUPPORT_EMAIL });
+}
