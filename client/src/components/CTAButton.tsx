@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'wouter';
 import { funnelPath } from '@/lib/funnel';
+import { getLane, laneChatPath } from '@shared/beliefLanes';
 
-export function CTAButton({ label = "Yes Evelyn, Please Begin My FREE Reading!" }: { label?: string }) {
+export function CTAButton({ label = "Yes Evelyn, Please Begin My FREE Reading!", lane }: { label?: string; lane?: string }) {
   const [enabled, setEnabled] = useState(false);
 
   useEffect(() => {
@@ -23,9 +24,15 @@ export function CTAButton({ label = "Yes Evelyn, Please Begin My FREE Reading!" 
     );
   }
 
+  // Belief lane (/fb?lane=<id>): the chat needs the lane for its opener, so a valid
+  // lane goes to /fb/chat?lane=<id>. Without one (or with an unknown id) the link is
+  // exactly today's funnelPath('/chat').
+  const laneId = getLane(lane)?.id;
+  const href = laneId ? laneChatPath(laneId) : funnelPath('/chat');
+
   return (
-    <Link href={funnelPath('/chat')}>
-      <button 
+    <Link href={href}>
+      <button
         className="w-full py-4 px-6 rounded-lg bg-gradient-to-r from-purple-600 to-purple-800 text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-300 animate-cta-appear hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
         data-testid="button-cta-enabled"
       >

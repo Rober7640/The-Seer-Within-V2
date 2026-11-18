@@ -1,0 +1,350 @@
+<title>Belief Lane Pages</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&family=Playfair+Display:wght@400&family=Inter:ital,wght@0,400;0,600;1,400&display=swap">
+<style>
+/* Layout: one reading column per lane: card pair → page code → the page copy as she'd read it → counts → chat. */
+:root{
+  --bg:#edf1f0; --paper:#ffffff; --ink:#1c282c; --muted:#56676b; --line:#d2dbd9;
+  --accent:#a95f22; --accent-soft:#f6ebe0; --pick:#2c6a55; --pick-soft:#e3f0ea;
+  --warn:#9c3f2b; --warn-soft:#f7e6e1; --slot:#5a4aa0; --slot-soft:#ece9f7; --bubble:#f1f4f3;
+  --kw-bg:#fbefd9; --kw-line:#c98a3c;
+  --f-display:"Instrument Serif", Georgia, "Times New Roman", serif;
+  --f-copy:"Source Serif 4", Georgia, "Times New Roman", serif;
+  --f-ui:"IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --f-mono:"IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+  /* the live /fb card's own look, fixed in both themes */
+  --fb-night1:#1b1f45; --fb-night2:#24365c; --fb-gold:#d4b25c; --fb-card:#f3f4f6; --fb-ink:#111827;
+  --fb-body:#4b5563; --fb-faint:#9ca3af; --fb-pill:#f9fafb; --fb-rule:#e5e7eb; --fb-p1:#9333ea; --fb-p2:#6b21a8;
+  --fb-green:#22c55e; --fb-green2:#16a34a; --fb-white:#ffffff; --fb-foot:#a7adc4; --fb-av1:#cfc6bf; --fb-av2:#6d5a7d;
+  --fb-kw:#f3e6fb; --fb-kwl:#a855f7; --fb-dash:#c98a3c;
+  --f-fbs:"Playfair Display", Georgia, serif; --f-fbi:"Inter", system-ui, -apple-system, sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#10171a; --paper:#172125; --ink:#e2eae7; --muted:#9db0ac; --line:#2b3b3f;
+  --accent:#e2a565; --accent-soft:#2c2419; --pick:#86c9ad; --pick-soft:#16302a;
+  --warn:#ec9a85; --warn-soft:#35201b; --slot:#b7a9f0; --slot-soft:#251f3d; --bubble:#1e2b2f;
+  --kw-bg:#3a2c18; --kw-line:#d79a4e; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#10171a; --paper:#172125; --ink:#e2eae7; --muted:#9db0ac; --line:#2b3b3f;
+  --accent:#e2a565; --accent-soft:#2c2419; --pick:#86c9ad; --pick-soft:#16302a;
+  --warn:#ec9a85; --warn-soft:#35201b; --slot:#b7a9f0; --slot-soft:#251f3d; --bubble:#1e2b2f;
+  --kw-bg:#3a2c18; --kw-line:#d79a4e; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font:15px/1.6 var(--f-ui);margin:0}
+.wrap{max-width:880px;margin:0 auto;padding-block:28px 80px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+nav.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);border-bottom:1px solid var(--line)}
+nav.top .in{max-width:880px;margin:0 auto;padding-block:10px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;gap:6px 18px;flex-wrap:wrap;font-size:13px}
+nav.top a{color:var(--muted);text-decoration:none}
+nav.top a:hover,nav.top a:focus-visible{color:var(--ink);text-decoration:underline}
+h1{font:400 46px/1.05 var(--f-display);margin:6px 0 12px;text-wrap:balance}
+h2{font:400 38px/1.08 var(--f-display);margin:0 0 6px;text-wrap:balance}
+h3{font:600 12px/1.3 var(--f-ui);letter-spacing:.09em;text-transform:uppercase;color:var(--muted);margin:38px 0 12px}
+p{margin:0 0 10px}
+code{font:500 12.5px var(--f-mono);background:var(--bg);padding:1px 5px;border-radius:3px;overflow-wrap:anywhere}
+a{color:var(--accent)}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.eyebrow{font:500 12px/1.3 var(--f-mono);color:var(--accent);letter-spacing:.04em;margin:0 0 4px}
+.summary{list-style:none;padding:0;margin:0 0 14px;display:grid;gap:8px;max-width:72ch}
+.summary li{padding-left:14px;border-left:2px solid var(--line)}
+.summary b{font-weight:600}
+.legendbar{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:13px;color:var(--muted);margin-top:14px}
+.legendbar .sw{display:inline-block;padding:0 6px;border-radius:2px;margin-right:4px}
+.legendbar .sw.k{background:var(--kw-bg);border-bottom:1.5px solid var(--kw-line);color:var(--ink)}
+.legendbar .sw.d{outline:1.5px dashed var(--accent);outline-offset:1px;color:var(--ink)}
+section.lane{margin-top:60px;padding-top:28px;border-top:2px solid var(--ink)}
+.belief{font:400 19px/1.45 var(--f-copy);max-width:60ch;color:var(--ink)}
+mark.kw{background:var(--kw-bg);color:inherit;border-bottom:1.5px solid var(--kw-line);padding:0 1px;border-radius:2px}
+/* /fb card mock */
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,330px),1fr));gap:18px;align-items:start}
+.cardfig{margin:0;min-width:0}
+.cardfig figcaption{font:600 12px/1.3 var(--f-ui);color:var(--muted);margin-bottom:8px;display:flex;align-items:center;gap:8px}
+.tag{display:inline-block;font:600 10px/1 var(--f-ui);letter-spacing:.08em;text-transform:uppercase;padding:4px 6px;border-radius:3px}
+.tag.pick{background:var(--pick);color:var(--paper)}
+.fbmock{max-width:440px;margin:0 auto;border-radius:14px;padding:22px 16px 16px;background:linear-gradient(180deg,var(--fb-night1),var(--fb-night2))}
+.fbmock p{margin:0}
+.fbmock .logo{text-align:center;color:var(--fb-gold);font:400 25px/1 var(--f-fbs);margin:0 0 52px}
+.fbmock .card{position:relative;background:var(--fb-card);border-radius:16px;padding:58px 18px 18px;text-align:center}
+.fbmock .av{position:absolute;top:-44px;left:50%;transform:translateX(-50%);width:88px;height:88px;border-radius:50%;border:4px solid var(--fb-white);background:radial-gradient(circle at 50% 36%,var(--fb-av1) 0 24%,var(--fb-av2) 25% 100%)}
+.fbmock .status{background:var(--fb-pill);border-radius:999px;padding:8px;font:400 14px var(--f-fbi);color:var(--fb-body)}
+.fbmock .status i{display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--fb-green);margin:0 4px 0 2px}
+.fbmock .status b{color:var(--fb-green2);font-weight:600}
+.fbmock .div{width:56px;height:2px;background:var(--fb-rule);margin:20px auto}
+.fbmock .h{font:400 24px/1.22 var(--f-fbs);color:var(--fb-ink);margin:0 0 12px;text-wrap:balance}
+.fbmock .s{font:400 15px/1.55 var(--f-fbi);color:var(--fb-body);margin:0 0 18px}
+.fbmock .b{background:linear-gradient(90deg,var(--fb-p1),var(--fb-p2));color:var(--fb-white);border-radius:8px;padding:14px 12px;font:600 16px/1.3 var(--f-fbi)}
+.fbmock .sc{font:italic 400 12px/1.4 var(--f-fbi);color:var(--fb-faint);margin-top:10px}
+.fbmock .trust{display:flex;flex-wrap:wrap;justify-content:center;gap:6px 20px;margin-top:16px;font:400 10.5px/1.3 var(--f-fbi);letter-spacing:.06em;text-transform:uppercase;color:var(--fb-faint)}
+.fbmock .foot{text-align:center;color:var(--fb-foot);font:400 11.5px var(--f-fbi);margin-top:16px}
+.fbmock .chg{outline:1.5px dashed var(--fb-dash);outline-offset:4px;border-radius:3px}
+.fbmock mark.kw{background:var(--fb-kw);border-bottom-color:var(--fb-kwl);color:inherit}
+.fbmock .b mark.kw{background:transparent;border-bottom-color:var(--fb-white)}
+.legend{font-size:13px;color:var(--muted);margin:12px 0 0;max-width:72ch}
+/* page code */
+dl.meta{margin:0;display:grid;gap:0;background:var(--paper);border:1px solid var(--line);border-radius:6px}
+dl.meta > div{display:grid;grid-template-columns:150px 1fr;gap:12px;padding:12px 16px;border-bottom:1px solid var(--line);min-width:0}
+dl.meta > div:last-child{border-bottom:0}
+dl.meta dt{font:600 11px/1.6 var(--f-mono);color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+dl.meta dd{margin:0;font:400 16px/1.5 var(--f-copy);min-width:0}
+/* page copy */
+.copy{background:var(--paper);border:1px solid var(--line);border-radius:6px;padding:24px 26px}
+.copy .sub{font:400 25px/1.2 var(--f-display);margin:28px 0 10px;text-wrap:balance}
+.copy .sub:first-child{margin-top:0}
+.copy p{font:400 17px/1.6 var(--f-copy);max-width:62ch}
+.tried{border-left:2px solid var(--line);padding-left:16px;margin:4px 0 14px}
+.tried ul{margin:0 0 10px;padding-left:20px;font:400 17px/1.6 var(--f-copy)}
+.tried li{margin:0 0 4px}
+.faq{display:grid;gap:14px}
+.faq .q{font:600 17px/1.4 var(--f-copy);margin:0 0 2px}
+.faq .a{margin:0}
+.ask{border-top:1px solid var(--line);margin-top:22px;padding-top:18px;display:grid;gap:8px;max-width:390px}
+.ask .btn{background:var(--fb-p2);color:var(--fb-white);border-radius:8px;padding:13px;text-align:center;font:600 16px/1.3 var(--f-ui)}
+.ask .btn mark.kw{background:transparent;color:inherit}
+.ask .free{font:400 15px var(--f-copy);margin:0;color:var(--muted)}
+/* counts */
+.tw{overflow-x:auto;border:1px solid var(--line);border-radius:6px;background:var(--paper)}
+table.m{border-collapse:collapse;width:100%;min-width:520px;font-size:14px}
+table.m th{font:600 11px/1.3 var(--f-ui);text-transform:uppercase;letter-spacing:.06em;color:var(--muted);text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);background:var(--bg)}
+table.m td{padding:9px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+table.m tr:last-child td{border-bottom:0}
+table.m .num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+table.m .dim{color:var(--muted)}
+.st{display:inline-block;font:600 11px/1 var(--f-ui);padding:4px 7px;border-radius:999px;white-space:nowrap}
+.st.ok{background:var(--pick-soft);color:var(--pick)}
+.st.off{background:var(--warn-soft);color:var(--warn)}
+.note{color:var(--muted);font-size:13.5px;margin-top:8px;max-width:72ch}
+/* chat */
+.chat{background:var(--paper);border:1px solid var(--line);border-radius:6px;padding:18px;display:grid;gap:8px;max-width:540px}
+.chat .sys{font:400 12px var(--f-ui);color:var(--muted);text-align:center}
+.bub{background:var(--bubble);border-radius:14px 14px 14px 4px;padding:9px 13px;font:400 16px/1.45 var(--f-copy);max-width:88%;justify-self:start}
+.bub.q{border:1px solid var(--accent);background:var(--accent-soft)}
+.bub.me{justify-self:end;background:var(--accent);color:var(--paper);border-radius:14px 14px 4px 14px;font:400 14px/1.4 var(--f-ui)}
+.bub .nm{color:var(--accent)}
+ul.notes{margin:0;padding-left:20px;max-width:72ch}
+ul.notes li{margin:0 0 6px}
+@media (max-width:560px){h1{font-size:38px}h2{font-size:31px}.copy{padding:18px 16px}dl.meta > div{grid-template-columns:1fr;gap:2px}@media (prefers-reduced-motion: reduce){*{scroll-behavior:auto}}
+.alts{font:400 13px/1.45 var(--f-ui);color:var(--muted);margin-top:10px}
+.alts ul{margin:4px 0 0;padding-left:18px}
+.why{font:400 13px/1.45 var(--f-ui);color:var(--muted);margin:8px 0 0}
+.directive{background:var(--paper);border:1px solid var(--line);border-left:3px solid var(--accent);border-radius:6px;padding:14px 16px;font:400 15px/1.55 var(--f-copy);max-width:72ch}
+</style>
+<nav class="top" aria-label="Sections"><div class="in">
+  <a href="#manifest">Lane 1 · Manifestation</a><a href="#astrology">Lane 4 · Astrology</a>
+</div></nav>
+<main class="wrap">
+  <p class="eyebrow">Evelyn · belief lanes · copy only, nothing built</p>
+  <h1>Belief Lane Pages</h1>
+  <ul class="summary">
+    <li><b>What this is.</b> Complete page copy for two lanes, Manifestation (<code>/fb?lane=manifest</code>) and Astrology (<code>/fb?lane=astrology</code>). Each has the first screen, the page code Meta reads, the copy below the card, keyword counts and Evelyn's first messages.</li>
+    <li><b>Layout.</b> The live /fb card, unchanged. Only the headline, sub-line, button and the line under it change. Everything else sits below the card.</li>
+    <li><b>Still open.</b><br><b>Manifestation:</b> An exception for 'soulmate'? It's left out because 'soul' is banned. 369 method, 'specific person', 'acting as if': one mention each. Too niche?<br><b>Astrology:</b> Ask her sign as its own chat step? Left out of the first test so the test is only the copy. An exception for 'soulmate'? 5,014 love chats use it, and Instagram astrology posts are built around 'soulmate signs'. 'Karmic' once, in the FAQ?</li>
+  </ul>
+  <div class="legendbar"><span><span class="sw k">word</span> a lane keyword</span><span><span class="sw d">text</span> a copy spot that changes on the card</span></div>
+
+<section class="lane" id="manifest">
+  <p class="eyebrow">Lane 1 · <code>/fb?lane=manifest</code></p>
+  <h2>Manifestation</h2>
+  <p class="belief">Manifesting isn&#x27;t broken. It answers what sits under the list, and an old lesson about love answers first.</p>
+  <p class="note"><b>Status.</b> Approved 2026-11-18 (version 2 card); wiring in progress, not live</p>
+
+  <h3>What the words data says</h3>
+  <ul class="notes"><li><b>attract</b>. Of 70 buyer lines pulled, about 4 said "manifest" and most said "attract": "I always attract emotionally unavailable men", "I keep attracting married people"</li></ul>
+
+  <h3>Keywords</h3>
+  <div class="tw"><table class="m"><thead><tr><th>Role</th><th>Words</th></tr></thead><tbody><tr><td>Main</td><td>manifest, manifesting, manifested</td></tr><tr><td>Second</td><td>law of attraction</td></tr><tr><td>Buyer's own word</td><td><b>attract</b>. Of 70 buyer lines pulled, about 4 said "manifest" and most said "attract": "I always attract emotionally unavailable men", "I keep attracting married people"</td></tr><tr><td>Supporting</td><td>vision board, scripting</td></tr><tr><td>Once each (community terms)</td><td>369 method, affirmations, acting as if, specific person</td></tr></tbody></table></div>
+
+  <h3>First screen · the /fb card, four text spots changed</h3>
+  <div class="cards">
+    <figure class="cardfig">
+  <figcaption><span class="vlab">Version 2 · today\'s /fb style</span></figcaption>
+  <div class="fbmock">
+    <div class="logo">✦ The Seer Within</div>
+    <div class="card">
+      <div class="av" aria-hidden="true"></div>
+      <div class="status">Evelyn Cross is <i></i><b>Online</b></div>
+      <div class="div"></div>
+      <p class="h chg lc">Something Is Blocking What You <mark class="kw">Manifest</mark> — I Can See It</p>
+      <p class="s chg lc">Evelyn has sensed an old block beneath your <mark class="kw">manifesting</mark>. It's why the <mark class="kw">law of attraction</mark> keeps bringing the wrong man, or none at all. She can see where it started, from your first name.</p>
+      <div class="b chg lc">Yes Evelyn, Show Me Where It Started</div>
+      <p class="sc chg lc">It's free to message Evelyn. She's online now.</p>
+      <div class="trust"><span>100% Private &amp; Confidential</span><span>Trusted By 2,400+ Clients</span></div>
+    </div>
+    <div class="foot">Privacy Policy · Terms of Service · Refund Policy</div>
+  </div><div class="alts"><b>The other two headlines</b><ul><li>Something Is Standing Between You and the Love You're Manifesting — I Can See It</li><li>It's Not Your Manifesting — Something Older Is Blocking It, and I Can See It</li></ul></div>
+</figure>
+  </div>
+  <p class="legend">Dashed = the four spots that change. Logo, avatar, Busy → Online status, 3-second button delay, trust row and footer stay as they are on /fb. The button opens the chat.</p>
+
+  <h3>What Meta reads in the page code</h3>
+  <dl class="meta">
+    <div><dt>Page title</dt><dd class="lc"><mark class="kw">Manifesting</mark> Love and Still <mark class="kw">Attracting</mark> the Wrong Man · Evelyn Cross</dd></div>
+    <div><dt>Description</dt><dd class="lc"><mark class="kw">Vision boards</mark>, <mark class="kw">scripting</mark>, the <mark class="kw">law of attraction</mark>. If love still comes back wrong, something older is answering first. It's free to message Evelyn.</dd></div>
+    <div><dt>Photo description</dt><dd class="lc">Evelyn Cross, who helps women see why <mark class="kw">manifesting</mark> love keeps bringing the wrong man.</dd></div>
+  </dl>
+
+  <h3>Below the card · 473 words</h3>
+  <article class="copy">
+<h4 class="sub lc">Why the <mark class="kw">law of attraction</mark> keeps bringing the wrong man</h4>
+<p class="lc">Maybe a friend's said it already. "You always <mark class="kw">attract</mark> the same kind of man."</p>
+<p class="lc">Different face. Same ending. He's warm, then he goes quiet. Or he stays close, and never all the way.</p>
+<p class="lc">Or nobody comes at all. And everything else you asked for shows up.</p>
+<p class="lc">It isn't for lack of trying. You've done what the <mark class="kw">law of attraction</mark> asks. More than most women ever will.</p>
+<h4 class="sub lc">What you've already tried</h4>
+<div class="tried"><p class="lc lead">You've done the work.</p><ul><li class="lc">A <mark class="kw">vision board</mark> by the bed.</li><li class="lc"><mark class="kw">Scripting</mark> him in a journal, every night.</li><li class="lc">The <mark class="kw">369 method</mark>.</li><li class="lc"><mark class="kw">Affirmations</mark> on the mirror.</li><li class="lc"><mark class="kw">Acting as if</mark> he's already here.</li><li class="lc">Trying to <mark class="kw">manifest</mark> one <mark class="kw">specific person</mark>.</li></ul><p class="lc">None of it was wrong. It was answering something older.</p></div>
+<h4 class="sub lc">What answers before your <mark class="kw">vision board</mark> does</h4>
+<p class="lc">Here's what nobody in <mark class="kw">manifesting</mark> tells you. You don't only <mark class="kw">manifest</mark> from the list. You <mark class="kw">manifest</mark> from what's sitting under it.</p>
+<p class="lc">Long ago, somebody taught you how little to expect from love. Want nothing. Be no trouble. Don't ask him to stay.</p>
+<p class="lc">That lesson answers first, every time. So you keep <mark class="kw">attracting</mark> the man it's taught you to expect.</p>
+<p class="lc">A better list can't reach it. You can raise your vibration for years. It won't reach a room you don't know you're standing outside of.</p>
+<p class="lc">Evelyn finds where it started, from your first name.</p>
+<h4 class="sub lc">Who Evelyn is</h4>
+<p class="lc">Evelyn Cross is a seer in the west of Ireland. Her teacher could do this. So could her teacher's teacher.</p>
+<p class="lc">She works at night, by candlelight. One first name at a time. She doesn't need your birthday, a photo, or his name.</p>
+<p class="lc">She doesn't look at the man. She looks at where it started.</p>
+<p class="lc">She won't tell you to stop <mark class="kw">manifesting</mark>. She'll show you what you've been <mark class="kw">manifesting</mark> from.</p>
+<h4 class="sub lc">When you send your first name</h4>
+<p class="lc">You send your first name. That's all.</p>
+<p class="lc">Evelyn writes back. Her first message is short. Then she'll ask you one question.</p>
+<p class="lc">Messaging Evelyn is free.</p>
+<p class="lc">If she sees where it started, she'll offer to write it down. A letter, written at night, by candlelight. That part isn't free. She'll tell you so plainly before anything happens.</p>
+<p class="lc">It starts the same way for every woman. One first name.</p>
+<h4 class="sub lc">Questions women ask</h4>
+<div class="faq"><div class="qa"><p class="q lc">Does the <mark class="kw">law of attraction</mark> work for love?</p><p class="a lc">It answers. It's just not always what you wrote down. It answers what you believe underneath.</p></div><div class="qa"><p class="q lc">Why do I keep <mark class="kw">attracting</mark> the wrong man?</p><p class="a lc">The face changes. The ending doesn't. That points back to one old lesson about love.</p></div><div class="qa"><p class="q lc">Can I <mark class="kw">manifest</mark> a <mark class="kw">specific person</mark>?</p><p class="a lc">Many women try. Evelyn doesn't pull anyone toward you. She looks at why the same kind of man keeps arriving.</p></div><div class="qa"><p class="q lc">Is it free to message Evelyn?</p><p class="a lc">Yes. The chat is free.</p></div></div>
+<div class="ask"><div class="btn lc">Yes Evelyn, Show Me Where It Started</div><p class="free lc">It's free to message Evelyn. She's online now.</p></div>
+  </article>
+
+  <h3>Keyword count · below the card</h3>
+  <div class="tw"><table class="m">
+    <thead><tr><th>Keyword</th><th class="num">Target</th><th class="num">Actual</th><th>Status</th><th class="num">Also on card (v2)</th></tr></thead>
+    <tbody><tr><td>manifest / manifesting</td><td class="num">6–8</td><td class="num"><b>7</b></td><td><span class="st ok">in range</span></td><td class="num dim">2</td></tr><tr><td>law of attraction</td><td class="num">~3</td><td class="num"><b>3</b></td><td><span class="st ok">in range</span></td><td class="num dim">1</td></tr><tr><td>attract (buyer word)</td><td class="num">3–4</td><td class="num"><b>3</b></td><td><span class="st ok">in range</span></td><td class="num dim">0</td></tr><tr><td>vision board</td><td class="num">2–3</td><td class="num"><b>2</b></td><td><span class="st ok">in range</span></td><td class="num dim">0</td></tr><tr><td>scripting</td><td class="num">1–2</td><td class="num"><b>1</b></td><td><span class="st ok">in range</span></td><td class="num dim">0</td></tr><tr><td>369 method</td><td class="num">1</td><td class="num"><b>1</b></td><td><span class="st ok">in range</span></td><td class="num dim">0</td></tr><tr><td>affirmations</td><td class="num">1</td><td class="num"><b>1</b></td><td><span class="st ok">in range</span></td><td class="num dim">0</td></tr><tr><td>acting as if</td><td class="num">1</td><td class="num"><b>1</b></td><td><span class="st ok">in range</span></td><td class="num dim">0</td></tr><tr><td>specific person</td><td class="num">1</td><td class="num"><b>2</b></td><td><span class="st off">over</span></td><td class="num dim">0</td></tr></tbody>
+  </table></div>
+  <p class="note">Counted by script from the copy above: headings, list, FAQ and the closing ask. The card, the chat and the page code aren't counted.</p>
+
+  <h3>Evelyn's first messages</h3>
+  <div class="chat">
+<div class="sys">Evelyn has joined the chat</div>
+<div class="bub lc">You've been asking for a long time, haven't you.</div>
+<div class="bub lc">What's your first name, dear?</div>
+<div class="bub me">{her first name}</div>
+<div class="bub lc"><span class="nm">{Name}</span>... you've done the lists. The boards. All of it.</div>
+<div class="bub lc">And something has been answering. Just not what you meant.</div>
+<div class="bub lc">So let's look at who was holding the pen.</div>
+<div class="bub lc q">Tell me what you asked for, dear... and what you never let yourself ask.</div>
+  </div>
+  <p class="note">Her answer is the list. The part she never let herself ask for (pick me, stay, marry me) is the lesson Evelyn names next.</p>
+
+
+  <h3>Directive for later chat</h3>
+  <p class="note">Kept in the chat prompt so the lane stays alive after the first messages.</p>
+  <p class="directive">She came from a page about manifesting love: the law of attraction, vision boards, scripting. Love still comes back wrong, or not at all. Reuse her words: what she asked for, her list, and 'attract', the word women like her use most. Hold the lane's belief: manifesting answers what sits under the list, and an old lesson about what to expect from love answers first. Never tell her manifesting doesn't work, and never promise she will manifest him.</p>
+
+  <h3>Notes</h3>
+  <ul class="notes"><li>The vibration line is the ad's own closing line, kept word for word for message match. At 12 words it's one of the few long sentences.</li><li>"Specific person" shows up twice, once in the list and once as an FAQ question. The FAQ wording is what she'd type into search, so I kept both.</li></ul>
+
+  <h3>Open</h3>
+  <ul class="notes"><li>An exception for 'soulmate'? It's left out because 'soul' is banned.</li><li>369 method, 'specific person', 'acting as if': one mention each. Too niche?</li></ul>
+</section>
+<section class="lane" id="astrology">
+  <p class="eyebrow">Lane 4 · <code>/fb?lane=astrology</code></p>
+  <h2>Astrology</h2>
+  <p class="belief">Astrology isn&#x27;t wrong. Her sign shows how she loves, not where she learned to love this way.</p>
+  <p class="note"><b>Status.</b> Complete copy, awaiting approval</p>
+
+  <h3>What the words data says</h3>
+  <ul class="notes"><li><b>Buyers name signs. They don't use chart jargon.</b> Of 90,321 love and someone chats in the past year, 625 used any astrology word. 367 named a sign ("he is a Scorpian and I am a Gemini", "Interesting that all 3 are born under Gemini") and 162 said "compatible". Chart words barely appear: horoscope 18, birth chart 15, zodiac 15, retrograde 2, Saturn return 0. Signs and "compatible" are this lane's "attract".</li><li>The buyers who name signs skew older (quotes mention 56, 61, 62, 68, 70), so plain words beat Instagram jargon.</li><li><b>"Karmic" stands out.</b> 167 chats used it, and 20% of them bought, against 8–14% for the other spiritual words in the same pull (soulmate 7.8%, twin flame 10.8%, fate or "meant to be" 9.2%, the universe 13.9%).</li><li><b>Instagram</b> astrology-love posts are almost all "zodiac compatibility" and "comment your sign and his". The most-commented one (545k views, 2.2k comments) asks which sign Scorpio "falls in love with over and over again… without even realizing it". That's the pattern belief in astrology clothes.</li></ul>
+
+  <h3>Keywords</h3>
+  <div class="tw"><table class="m"><thead><tr><th>Role</th><th>Words</th></tr></thead><tbody><tr><td>Main</td><td>sign: your sign, his sign, zodiac sign</td></tr><tr><td>Second</td><td>compatible, compatibility</td></tr><tr><td>Buyer's own word</td><td>sign names, used inside real sentences, 3–4 on the page, never all twelve</td></tr><tr><td>Supporting</td><td>astrology, birth chart, horoscope, the stars</td></tr><tr><td>Once each (community terms)</td><td>Venus sign, Moon sign, Mercury retrograde, Saturn return, karmic</td></tr></tbody></table></div>
+
+  <h3>First screen · the /fb card, four text spots changed</h3>
+  <div class="cards">
+    <figure class="cardfig">
+  <figcaption><span class="vlab">Version 2 · today\'s /fb style</span></figcaption>
+  <div class="fbmock">
+    <div class="logo">✦ The Seer Within</div>
+    <div class="card">
+      <div class="av" aria-hidden="true"></div>
+      <div class="status">Evelyn Cross is <i></i><b>Online</b></div>
+      <div class="div"></div>
+      <p class="h chg lc">Something Is Blocking Your Love Life — It's Not Your <mark class="kw">Sign</mark>, and I Can See It</p>
+      <p class="s chg lc">Evelyn has sensed an old block that no <mark class="kw">birth chart</mark> shows. It's why even <mark class="kw">compatible</mark> <mark class="kw">signs</mark> keep going wrong. She can see where it started, from your first name.</p>
+      <div class="b chg lc">Yes Evelyn, Show Me Where It Started</div>
+      <p class="sc chg lc">It's free to message Evelyn. She's online now.</p>
+      <div class="trust"><span>100% Private &amp; Confidential</span><span>Trusted By 2,400+ Clients</span></div>
+    </div>
+    <div class="foot">Privacy Policy · Terms of Service · Refund Policy</div>
+  </div><div class="alts"><b>Headlines 2 and 3, for the operator to choose from</b><ul><li>Your Signs Are Compatible. Something Else Is Blocking Your Love — I Can See It</li><li>Something Older Than Your Birth Chart Is Holding Your Love Life Back — I Can See It</li></ul></div>
+</figure>
+  </div>
+  <p class="legend">Dashed = the four spots that change. Logo, avatar, Busy → Online status, 3-second button delay, trust row and footer stay as they are on /fb. The button opens the chat.</p>
+
+  <h3>What Meta reads in the page code</h3>
+  <dl class="meta">
+    <div><dt>Page title</dt><dd class="lc">Zodiac <mark class="kw">Compatibility</mark>, and Why Love Still Goes Wrong · Evelyn Cross</dd></div>
+    <div><dt>Description</dt><dd class="lc"><mark class="kw">Astrology</mark>, your <mark class="kw">sign</mark>, his <mark class="kw">sign</mark>, your <mark class="kw">birth chart</mark>. If love still keeps going wrong, something older than your stars is answering first. It's free to message Evelyn.</dd></div>
+    <div><dt>Photo description</dt><dd class="lc">Evelyn Cross, who helps women see why love keeps going wrong, whatever their zodiac <mark class="kw">sign</mark>.</dd></div>
+  </dl>
+
+  <h3>Below the card · 482 words</h3>
+  <article class="copy">
+<h4 class="sub lc">Why <mark class="kw">compatible</mark> <mark class="kw">signs</mark> still go wrong</h4>
+<p class="lc">Maybe you've said it yourself. "He's a <mark class="kw">Scorpio</mark>. What did I expect." Or, "Never again with a <mark class="kw">Gemini</mark>."</p>
+<p class="lc">Then the next one comes along. A different <mark class="kw">sign</mark>. The same ending.</p>
+<p class="lc">Your friends have heard it all. One sends you his <mark class="kw">horoscope</mark>. One swears a <mark class="kw">Taurus</mark> would settle you down. One says <mark class="kw">the stars</mark> are on your side.</p>
+<p class="lc">And it's still going the same way. He's warm, then he goes quiet. Or he stays close, and never all the way.</p>
+<h4 class="sub lc">What you've already checked</h4>
+<div class="tried"><p class="lc lead">You've looked everywhere.</p><ul><li class="lc">Your <mark class="kw">horoscope</mark>, first thing every morning.</li><li class="lc">His <mark class="kw">sign</mark> and yours, the night you met.</li><li class="lc">A <mark class="kw">compatibility</mark> chart that said you were a match.</li><li class="lc">Your <mark class="kw">birth chart</mark>, down to your <mark class="kw">Venus sign</mark> and <mark class="kw">Moon sign</mark>.</li><li class="lc">Waiting out <mark class="kw">Mercury retrograde</mark> before you texted him.</li><li class="lc">Hoping your <mark class="kw">Saturn return</mark> would finally change things.</li></ul><p class="lc">None of it was wrong. It just can't show where this started.</p></div>
+<h4 class="sub lc">What your <mark class="kw">birth chart</mark> can't show</h4>
+<p class="lc"><mark class="kw">Astrology</mark> can tell you a lot about how you love. What you need from him. How you show it.</p>
+<p class="lc">It can't show where you learned to love this way.</p>
+<p class="lc">Long ago, somebody taught you what to expect from love. Want nothing. Be no trouble. Don't ask him to stay.</p>
+<p class="lc">That lesson answers first. It picks the same kind of man, whatever his <mark class="kw">sign</mark>.</p>
+<p class="lc">Evelyn finds where it started, from your first name.</p>
+<h4 class="sub lc">Who Evelyn is</h4>
+<p class="lc">Evelyn Cross is a seer in the west of Ireland. Her teacher could do this. So could her teacher's teacher.</p>
+<p class="lc">She works at night, by candlelight. One first name at a time. She doesn't need a photo, or his name.</p>
+<p class="lc">She knows <mark class="kw">astrology</mark> the way you do. She looks past the man, and his <mark class="kw">sign</mark>, to where it started.</p>
+<h4 class="sub lc">When you send your first name</h4>
+<p class="lc">You send your first name. That's all.</p>
+<p class="lc">Evelyn writes back. Her first message is short. Then she'll ask you one question.</p>
+<p class="lc">Messaging Evelyn is free.</p>
+<p class="lc">If she sees where it started, she'll offer to write it down. A letter, written at night, by candlelight. That part isn't free. She'll tell you so plainly before anything happens.</p>
+<p class="lc">It starts the same way for every woman. One first name.</p>
+<h4 class="sub lc">Questions women ask</h4>
+<div class="faq"><div class="qa"><p class="q lc">Are our zodiac <mark class="kw">signs</mark> <mark class="kw">compatible</mark>?</p><p class="a lc">Maybe. Plenty of <mark class="kw">compatible</mark> <mark class="kw">signs</mark> still go wrong. Your <mark class="kw">sign</mark> shows how you love. It doesn't show what you learned to expect from love.</p></div><div class="qa"><p class="q lc">Why do I keep falling for the same <mark class="kw">sign</mark>?</p><p class="a lc">It isn't really the <mark class="kw">sign</mark>. An old lesson about love keeps picking the same kind of man. Evelyn finds where that lesson started.</p></div><div class="qa"><p class="q lc">Is this a <mark class="kw">karmic</mark> relationship?</p><p class="a lc">It can feel like one. The same lesson comes back in a new face. Evelyn looks at where it began.</p></div><div class="qa"><p class="q lc">Is it free to message Evelyn?</p><p class="a lc">Yes. The chat is free.</p></div></div>
+<div class="ask"><div class="btn lc">Yes Evelyn, Show Me Where It Started</div><p class="free lc">It's free to message Evelyn. She's online now.</p></div>
+  </article>
+
+  <h3>Keyword count · below the card</h3>
+  <div class="tw"><table class="m">
+    <thead><tr><th>Keyword</th><th class="num">Target</th><th class="num">Actual</th><th>Status</th><th class="num">Also on card (v2)</th></tr></thead>
+    <tbody><tr><td>sign / signs</td><td class="num">8–10</td><td class="num"><b>10</b></td><td><span class="st ok">in range</span></td><td class="num dim">2</td></tr><tr><td>compatible / compatibility</td><td class="num">4–5</td><td class="num"><b>4</b></td><td><span class="st ok">in range</span></td><td class="num dim">1</td></tr><tr><td>sign names (buyer words)</td><td class="num">3–4</td><td class="num"><b>3</b></td><td><span class="st ok">in range</span></td><td class="num dim">0</td></tr><tr><td>birth chart</td><td class="num">2–3</td><td class="num"><b>2</b></td><td><span class="st ok">in range</span></td><td class="num dim">1</td></tr><tr><td>astrology / astrologer</td><td class="num">2–3</td><td class="num"><b>2</b></td><td><span class="st ok">in range</span></td><td class="num dim">0</td></tr><tr><td>horoscope</td><td class="num">2</td><td class="num"><b>2</b></td><td><span class="st ok">in range</span></td><td class="num dim">0</td></tr><tr><td>the stars</td><td class="num">1–2</td><td class="num"><b>1</b></td><td><span class="st ok">in range</span></td><td class="num dim">0</td></tr><tr><td>Venus sign</td><td class="num">1</td><td class="num"><b>1</b></td><td><span class="st ok">in range</span></td><td class="num dim">0</td></tr><tr><td>Moon sign</td><td class="num">1</td><td class="num"><b>1</b></td><td><span class="st ok">in range</span></td><td class="num dim">0</td></tr><tr><td>Mercury retrograde</td><td class="num">1</td><td class="num"><b>1</b></td><td><span class="st ok">in range</span></td><td class="num dim">0</td></tr><tr><td>Saturn return</td><td class="num">1</td><td class="num"><b>1</b></td><td><span class="st ok">in range</span></td><td class="num dim">0</td></tr><tr><td>karmic</td><td class="num">1</td><td class="num"><b>1</b></td><td><span class="st ok">in range</span></td><td class="num dim">0</td></tr></tbody>
+  </table></div>
+  <p class="note">Counted by script from the copy above: headings, list, FAQ and the closing ask. The card, the chat and the page code aren't counted.</p>
+
+  <h3>Evelyn's first messages</h3>
+  <div class="chat">
+<div class="sys">Evelyn has joined the chat</div>
+<div class="bub lc">You've looked to the stars for this answer, haven't you.</div>
+<div class="bub lc">What's your first name, dear?</div>
+<div class="bub me">{her first name}</div>
+<div class="bub lc"><span class="nm">{Name}</span>... you know your sign. You know his. You've checked how well they match.</div>
+<div class="bub lc">And it still goes the same way.</div>
+<div class="bub lc">The stars can show how you love, dear. Not where you learned it.</div>
+<div class="bub lc q">Tell me his sign, and yours... and what keeps happening between you.</div>
+  </div>
+  <p class="note">Her answer brings in sign names, the words she already uses. Evelyn still asks only her first name, so the chat flow matches /fb. Asking her sign as its own step is an open decision.</p>
+
+
+  <h3>Directive for later chat</h3>
+  <p class="note">Kept in the chat prompt so the lane stays alive after the first messages.</p>
+  <p class="directive">She came from a page about astrology and love: her sign, his sign, compatibility, her horoscope. Love keeps going the same way, whatever his sign. Reuse the sign names she gives you. Hold the lane's belief: her sign shows how she loves, not where she learned to love this way, and an old lesson picks the same kind of man. Talk about signs as someone at home with them. Never call their signs a bad match, and never use a sign to say what's coming.</p>
+
+  <h3>Notes</h3>
+  <ul class="notes"><li>Astrology isn't wrong. It just can't show where this started. Her sign shows <i>how</i> she loves. It doesn't show where she learned to love this way. Evelyn is never set apart from astrology (operator, 2026-11-18: "in the world of spirituality, they are the same"). She sees what the chart can't, from the first name, so the flow stays the same as <code>/fb</code>.</li><li>"Taurus would settle you down" is a friend talking, so the page shows her life from outside rather than guessing her feelings.</li><li>"Karmic" is used once, in the FAQ. That decision is still open.</li></ul>
+
+  <h3>Open</h3>
+  <ul class="notes"><li>Ask her sign as its own chat step? Left out of the first test so the test is only the copy.</li><li>An exception for 'soulmate'? 5,014 love chats use it, and Instagram astrology posts are built around 'soulmate signs'.</li><li>'Karmic' once, in the FAQ?</li></ul>
+</section>
+</main>

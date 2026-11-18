@@ -106,6 +106,14 @@ export const conversations = pgTable("conversations", {
   // does today, and any funnel that does not set it is simply absent from this join.
   abVisitorId: text("ab_visitor_id"),
 
+  // The belief lane (/fb?lane=<id>, shared/beliefLanes.ts) the lead came through.
+  // NULL on every non-lane conversation and on every row before lanes shipped.
+  // Written once at lead capture, first non-null write wins (server/lib/db.ts).
+  // 🔴 Apply improve-v1/add-conversations-lane-column-2026-11-18.sql to a database
+  // BEFORE deploying this code to it: Drizzle names every schema column in its
+  // SELECTs and INSERTs, so without the column every conversations read fails.
+  lane: text("lane"),
+
   // V1 ORDER BUMP ("double reading") — the extra chat turn between the buy CTA
   // and the Stripe redirect. Rides the SAME checkout session as the main offer
   // (one PaymentIntent, two line items), so it has no session/payment id of its
