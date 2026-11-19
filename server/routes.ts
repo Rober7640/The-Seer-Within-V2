@@ -1339,7 +1339,7 @@ export async function registerRoutes(
             hook: tarotHook ?? null,
             deck: tarotDeck ?? null,
             type: type === "downsell" ? "downsell" : "main",
-            // A PAI_TEST_BUYERS email pays 10 cents a step (paiLive.ts); everyone else, the price.
+            // A PAI_TEST_BUYERS email pays TEST_BUYER_CENTS (50 cents) a step (paiLive.ts); everyone else, the price.
             mainCents: testBuyerCents(gatewayEmail, priceAmount),
             bumpOffered: bumpWasOffered,
             bumpApplied,
