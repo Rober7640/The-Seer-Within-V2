@@ -139,7 +139,10 @@ export interface GatewayDecision {
  * Production BEFORE the split starts. Unset or empty ⇒ nobody, and nothing changes.
  * Never enrolled: a test buyer writes no exposure, so the split report stays clean.
  */
-export const TEST_BUYER_CENTS = 10;
+// $0.50, not $0.10: Payments.AI (19 Nov) — at $0.10 their reserve + fee split rounds
+// to whole cents and no longer sums to the total, so they reject it ("Sum of split
+// payments doesn't equal the total amount"). Their stated minimum for tests is $0.50.
+export const TEST_BUYER_CENTS = 50;
 
 export function isPaiTestBuyer(email: unknown): boolean {
   if (typeof email !== 'string' || !email.trim()) return false;

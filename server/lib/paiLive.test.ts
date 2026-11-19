@@ -242,9 +242,9 @@ describe('test buyers — 10 cents a step, nobody else', () => {
 
   it('a listed email (any case, any spacing) pays TEST_BUYER_CENTS; others pay the price', () => {
     process.env.PAI_TEST_BUYERS = 'ph.tester@example.com, b@c.co';
-    assert.equal(live.TEST_BUYER_CENTS, 10);
-    assert.equal(live.testBuyerCents('  PH.Tester@Example.com ', 3500), 10);
-    assert.equal(live.testBuyerCents('b@c.co', 1277), 10);
+    assert.equal(live.TEST_BUYER_CENTS, 50);
+    assert.equal(live.testBuyerCents('  PH.Tester@Example.com ', 3500), 50);
+    assert.equal(live.testBuyerCents('b@c.co', 1277), 50);
     assert.equal(live.testBuyerCents('ph.tester@example.co', 3500), 3500);
     assert.equal(live.testBuyerCents(null, 3500), 3500);
   });
