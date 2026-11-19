@@ -21,20 +21,26 @@ const rd = (d: string, n: string, def: any = {}) => (fs.existsSync(path.join(d, 
 interface Row {
   id: string; scene: string; kind: string; en: string; fr: string; first: string; bt: string;
   note: string; risk: string; uncertain: boolean; decision?: string; reason?: string;
-  flags: { category: string; severity: string; issue: string; fix: string }[]; disputed?: unknown;
+  flags: { category: string; severity: string; issue: string; fix: string; round: number }[]; disputed?: unknown;
 }
 const rows: Row[] = [];
-const runs: { dir: string; segments: number; cost: number; sounds: number[]; flags: number }[] = [];
+const runs: { dir: string; segments: number; cost: number; sounds: number[]; sounds2: number[]; flags: number; flags2: number }[] = [];
 for (const d of dirs) {
   const segs: Segment[] = fs.readFileSync(path.join(d, "segments.jsonl"), "utf8").trim().split("\n").map((l) => JSON.parse(l));
   const tr = rd(d, "translations.json"), bt = rd(d, "bt.json"), adj = rd(d, "adjudication.json"), fin = rd(d, "final.json"), disp = rd(d, "disputed.json");
+  const dec2 = rd(d, "codex2-decisions.json"); // round-2 calls; the rewrites are already in adjudication.json via overrides
+  for (const [id, v] of Object.entries<any>(dec2)) if (v?.keep) adj[id] = { ...(adj[id] ?? { decision: "keep" }), reason: [adj[id]?.reason, `Second Codex read: kept. ${v.why}`].filter(Boolean).join(" · ") };
   const flags: Record<string, Row["flags"]> = {};
-  const sounds: number[] = [];
-  const cdir = path.join(d, "codex");
-  for (const f of fs.existsSync(cdir) ? fs.readdirSync(cdir).filter((n) => n.endsWith(".json")) : []) {
-    const o = JSON.parse(fs.readFileSync(path.join(cdir, f), "utf8"));
-    sounds.push(o.soundsTranslated);
-    for (const x of o.flags) (flags[x.id] ??= []).push(x);
+  const sounds: number[] = [], sounds2: number[] = [];
+  let n1 = 0, n2 = 0;
+  // codex/ = Codex's read of the first translation; codex2/ = its second read of the final French
+  for (const [sub, round] of [["codex", 1], ["codex2", 2]] as const) {
+    const cdir = path.join(d, sub);
+    for (const f of fs.existsSync(cdir) ? fs.readdirSync(cdir).filter((n) => n.endsWith(".json")) : []) {
+      const o = JSON.parse(fs.readFileSync(path.join(cdir, f), "utf8"));
+      (round === 1 ? sounds : sounds2).push(o.soundsTranslated);
+      for (const x of o.flags) { (flags[x.id] ??= []).push({ ...x, round }); round === 1 ? n1++ : n2++; }
+    }
   }
   // what the run cost, from every usage file it wrote (batch prices = half)
   let cost = 0;
@@ -44,7 +50,7 @@ for (const d of dirs) {
       cost += u.batch === false || u.direct ? c : c / 2;
     }
   }
-  runs.push({ dir: path.basename(d), segments: segs.length, cost, sounds, flags: Object.values(flags).flat().length });
+  runs.push({ dir: path.basename(d), segments: segs.length, cost, sounds, sounds2, flags: n1, flags2: n2 });
   for (const s of segs) {
     const t = tr[s.id] ?? {};
     rows.push({
@@ -64,12 +70,15 @@ const RISK: Record<string, { title: string; rule: string }> = {
 };
 
 const totalCost = runs.reduce((n, r) => n + r.cost, 0);
-const allSounds = runs.flatMap((r) => r.sounds);
+const allSounds = runs.flatMap((r) => r.sounds), allSounds2 = runs.flatMap((r) => r.sounds2);
+const avg = (xs: number[]) => (xs.length ? (xs.reduce((a, b) => a + b, 0) / xs.length).toFixed(1) : "");
 const summary = {
   segments: rows.length,
   rewritten: rows.filter((r) => r.decision === "rewrite").length,
   kept: rows.filter((r) => r.decision === "keep").length,
   flags: runs.reduce((n, r) => n + r.flags, 0),
+  flags2: runs.reduce((n, r) => n + r.flags2, 0),
+  sounds2: avg(allSounds2),
   disputed: rows.filter((r) => r.disputed).length,
   risk: rows.filter((r) => r.risk !== "none").length,
   sounds: allSounds.length ? (allSounds.reduce((a, b) => a + b, 0) / allSounds.length).toFixed(1) : "–",
