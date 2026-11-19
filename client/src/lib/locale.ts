@@ -12,7 +12,7 @@
 //
 // Captured once at boot (main.tsx) and cached: a page load has one locale.
 
-import { DEFAULT_LOCALE, LOCALE_COOKIE, isKnownLocale, resolveLocale, type LocaleCode } from "@shared/locales";
+import { DEFAULT_LOCALE, LOCALE_COOKIE, isKnownLocale, localeDef, resolveLocale, type LocaleCode } from "@shared/locales";
 import { linkParams } from "./funnel";
 
 let cached: LocaleCode | null = null;
@@ -64,6 +64,16 @@ export function settleLocale(locale: LocaleCode): void {
 /** The locale captured at boot (English if capture never ran). */
 export function currentLocale(): LocaleCode {
   return cached ?? DEFAULT_LOCALE;
+}
+
+/**
+ * The locale for on-screen dates and times. English returns undefined, i.e. the
+ * browser's own locale, exactly as today; a translated page uses its language,
+ * so a French page never shows "Thursday 3:31 PM" on an English browser.
+ */
+export function dateLocale(): string | undefined {
+  const l = currentLocale();
+  return l === DEFAULT_LOCALE ? undefined : localeDef(l).market.intl;
 }
 
 /** Test helper. */

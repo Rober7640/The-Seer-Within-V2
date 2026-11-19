@@ -79,7 +79,7 @@ async function callClaude(prompt: string): Promise<ClaudeResponse> {
         const sanitized = sanitizePredictionsV1(parsed.messages)
         return {
           // Non-English: the language's typography (FR: espaces insécables). English: untouched.
-          messages: locale === 'en' ? sanitized : sanitized.map((m) => applyLocaleTypography(m, locale)),
+          messages: locale === 'en' ? sanitized : sanitized.map((m) => applyLocaleTypography(requestLangPack()?.cleanReply?.(m) ?? m, locale)),
           needsClarification: parsed.needsClarification || false,
           detectedTopic: parsed.detectedTopic,
           subBucket: parsed.subBucket,

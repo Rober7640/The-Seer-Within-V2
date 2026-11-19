@@ -342,6 +342,13 @@ export const FR_FR: LangPack = {
     "- Tarot cards take their usual French Rider-Waite names (La Tour, L'Impératrice, Le Pendu…).",
     "- Keep every number, date and price exactly as the prompt gives it.",
     "- Use French punctuation: « » for quotes.",
+    "- No English word in a French message. The prompt above calls her \"dear\"; in French that is « ma chère », at most once in a reply, and most messages need none.",
     "- The reply format does not change: the same JSON keys, in English, with the message text in French.",
   ].join("\n"),
+  // The English prompt says "dear" in nearly every example line, and the model
+  // carries it into French ("Ce n'est pas l'absence d'amour, dear."). Drop it.
+  cleanReply: (text) =>
+    text
+      .replace(/\s*,\s*(?:my\s+)?(?:dear|darling|sweetheart|honey)\b(?=\s*(?:[.!?…,;:]|$))/gi, "")
+      .replace(/^(?:my\s+)?(?:dear|darling|sweetheart|honey)\s*,\s*(\S)/i, (_m, c: string) => c.toUpperCase()),
 };

@@ -1,3 +1,4 @@
+import { dateLocale } from "@/lib/locale";
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useSearch, useLocation } from 'wouter';
 import { CosmicBackground } from '../components/CosmicBackground';
@@ -316,7 +317,7 @@ export default function Upsell2Page() {
       >
         <div className="max-w-lg mx-auto space-y-4">
           <div className="text-center text-xs text-gray-400 my-4">
-            {new Date().toLocaleDateString(undefined, { weekday: 'long', hour: 'numeric', minute: 'numeric' })}
+            {new Date().toLocaleDateString(dateLocale(), { weekday: 'long', hour: 'numeric', minute: 'numeric' })}
           </div>
 
           {messages.map((msg) => (
