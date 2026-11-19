@@ -1,3 +1,4 @@
+import { dateLocale } from "@/lib/locale";
 import { useEffect, useRef } from "react";
 import { useSearch, useLocation } from "wouter";
 import { CosmicBackground } from "../components/CosmicBackground";
@@ -168,7 +169,7 @@ export default function ChatPage() {
         >
           {/* Welcome Date */}
           <div className="text-center text-xs text-gray-400 my-4">
-            {new Date().toLocaleDateString(undefined, {
+            {new Date().toLocaleDateString(dateLocale(), {
               weekday: "long",
               hour: "numeric",
               minute: "numeric",

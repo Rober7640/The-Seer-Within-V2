@@ -99,4 +99,9 @@ export interface LangPack {
   otherNameIntro: RegExp;
   /** Appended to every V1 Claude prompt in this locale (server/lib/claude.ts). */
   outputBlock: string;
+  /**
+   * Last-line net on a live reply (server/lib/claude.ts), before typography: takes
+   * out English words the English prompt leaks into this language ("…, dear.").
+   */
+  cleanReply?: (text: string) => string;
 }
