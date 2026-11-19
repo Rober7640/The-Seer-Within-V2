@@ -22,7 +22,9 @@ const t = (s: string) => CATALOG[s] ?? s;
 function derive(english: object, ns: Record<string, unknown>, nsFr: Record<string, unknown>): Record<string, unknown> {
   const out: Record<string, unknown> = {};
   for (const [k, v] of Object.entries(english)) {
-    if (v === null || typeof v !== "object") continue;
+    // arrays/objects AND single-line strings (QUESTION_1, RITUAL_PATH_A_EXTRA): a string
+    // field was skipped before, so it stayed English on French pages.
+    if (v === null || (typeof v !== "object" && typeof v !== "string")) continue;
     const name = Object.keys(ns).find((n) => ns[n] === v);
     if (name && nsFr[name] !== ns[name]) out[k] = nsFr[name];
   }
