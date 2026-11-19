@@ -312,8 +312,8 @@ export default function TermsPage() {
             <p className="mb-3">For questions about these Terms of Service, please contact us:</p>
             <div className="bg-purple-900/50 rounded-lg p-4 border border-purple-700">
               <p className="font-semibold text-white">Cosmo Numerology Pte Ltd</p>
-              <p>45B Temple St S058590</p>
-              <p>Singapore</p>
+              <p>10 Saint Thomas Walk</p>
+              <p>Singapore 238102</p>
               <p className="mt-2">
                 Email:{' '}
                 <a href="mailto:hi@theseerwithin.com" className="text-purple-300 hover:text-white underline">
