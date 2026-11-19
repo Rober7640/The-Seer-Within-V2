@@ -1,0 +1,210 @@
+<title>French Funnel Review</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Literata:opsz,wght@7..72,400;7..72,600&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: one reading column; summary → decisions → changes → every line by scene, three text columns that stack on a phone */
+:root {
+  --bg: #f4f6fa; --surface: #ffffff; --ink: #1a2030; --muted: #5a6478; --line: #dde2ec;
+  --accent: #2c4bb0; --accent-soft: #e6ebfa;
+  --risk: #a5600c; --risk-soft: #fbf0e0; --bad: #b0261d; --bad-soft: #fbe7e5; --good: #1d7544; --good-soft: #e3f3ea;
+  --f-ui: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --f-copy: "Literata", Georgia, "Times New Roman", serif;
+  --f-mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #11141b; --surface: #191e28; --ink: #e5e8ef; --muted: #98a1b3; --line: #2a3140;
+  --accent: #91a8ff; --accent-soft: #1f2840;
+  --risk: #e3a55a; --risk-soft: #2e2416; --bad: #ff8c82; --bad-soft: #321b1a; --good: #72cf98; --good-soft: #16291f; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #11141b; --surface: #191e28; --ink: #e5e8ef; --muted: #98a1b3; --line: #2a3140;
+  --accent: #91a8ff; --accent-soft: #1f2840;
+  --risk: #e3a55a; --risk-soft: #2e2416; --bad: #ff8c82; --bad-soft: #321b1a; --good: #72cf98; --good-soft: #16291f; color-scheme: dark }
+* { box-sizing: border-box }
+body { background: var(--bg); color: var(--ink); font: 15px/1.55 var(--f-ui); }
+.wrap { max-width: 1180px; margin: 0 auto; padding-block: 28px 80px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); display: grid; gap: 40px; }
+h1 { font-size: 28px; line-height: 1.2; margin: 0; text-wrap: balance; letter-spacing: -0.01em }
+h2 { font-size: 19px; margin: 0; text-wrap: balance }
+h3 { font-size: 15px; margin: 0 }
+.sub { color: var(--muted); margin: 6px 0 0; max-width: 70ch }
+.eyebrow { font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--muted) }
+section { display: grid; gap: 14px; min-width: 0 }
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px }
+.stat { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px; display: grid; gap: 2px }
+.stat b { font-size: 22px; font-variant-numeric: tabular-nums; font-weight: 600 }
+.stat span { font-size: 12.5px; color: var(--muted) }
+.group { background: var(--surface); border: 1px solid var(--line); border-left: 3px solid var(--risk); border-radius: 6px; padding: 14px 16px; display: grid; gap: 10px; min-width: 0 }
+.group .rule { font-size: 13px; color: var(--muted); max-width: 80ch }
+.pair { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 18px; padding-top: 10px; border-top: 1px solid var(--line) }
+.pair .note { grid-column: 1 / -1; font-size: 12.5px; color: var(--muted) }
+.copy { font-family: var(--f-copy); font-size: 15.5px; line-height: 1.5; white-space: pre-wrap; overflow-wrap: anywhere; min-width: 0 }
+.copy.fr { color: var(--ink) }
+.copy.en { color: var(--muted) }
+.copy.bt { color: var(--muted); font-style: italic; font-size: 14.5px }
+.id { font: 11.5px var(--f-mono); color: var(--muted); overflow-wrap: anywhere }
+.bar { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--bg); padding-block: 10px; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; border-bottom: 1px solid var(--line) }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--bg) }
+.bar input { flex: 1 1 240px; min-width: 0; font: inherit; padding: 8px 12px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); color: var(--ink) }
+.chip { font: 500 13px var(--f-ui); padding: 7px 12px; border-radius: 999px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); cursor: pointer }
+.chip[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--accent) }
+.chip:focus-visible, .bar input:focus-visible, summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px }
+.count { font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums }
+details.scene { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; min-width: 0 }
+details.scene > summary { cursor: pointer; padding: 11px 14px; display: flex; gap: 10px; align-items: baseline; flex-wrap: wrap; list-style: none }
+details.scene > summary::-webkit-details-marker { display: none }
+details.scene > summary::before { content: "▸"; color: var(--muted); }
+details.scene[open] > summary::before { content: "▾" }
+summary .name { font-weight: 600; overflow-wrap: anywhere; min-width: 0 }
+.cols { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0 18px; padding: 6px 14px 2px }
+.cols.head { font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--muted) }
+.line { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px 18px; padding: 10px 14px; border-top: 1px solid var(--line) }
+.line .meta { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 6px; align-items: center }
+.badge { font: 600 11px var(--f-ui); padding: 2px 7px; border-radius: 4px; letter-spacing: .02em }
+.b-risk { background: var(--risk-soft); color: var(--risk) }
+.b-bad { background: var(--bad-soft); color: var(--bad) }
+.b-good { background: var(--good-soft); color: var(--good) }
+.b-plain { background: var(--accent-soft); color: var(--accent) }
+.flag { grid-column: 1 / -1; font-size: 13px; color: var(--muted); }
+.flag b { color: var(--ink); font-weight: 600 }
+.change { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 12px 14px; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px 18px; min-width: 0 }
+.change .why { grid-column: 1 / -1; font-size: 13px; color: var(--muted) }
+.change .before { text-decoration: line-through; text-decoration-color: var(--bad); text-decoration-thickness: 1px }
+.lbl { font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin-bottom: 2px }
+.more { font: 500 13px var(--f-ui); color: var(--accent); background: none; border: 0; padding: 4px 0; cursor: pointer; justify-self: start }
+.empty { color: var(--muted); font-size: 14px }
+@media (max-width: 760px) {
+  .pair, .cols, .line, .change { grid-template-columns: 1fr }
+  .cols.head { display: none }
+  .copy.en::before, .copy.fr::before, .copy.bt::before { display: block; font: 600 10.5px var(--f-ui); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); font-style: normal; margin-bottom: 2px }
+  .line .copy.en::before { content: "English" } .line .copy.fr::before { content: "French" } .line .copy.bt::before { content: "Back to English" }
+}
+@media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important } }
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="eyebrow">The Seer Within · /fb and /fb-tarot · fr-FR</div>
+    <h1>French funnel review</h1>
+    <p class="sub" id="sub"></p>
+  </header>
+
+  <section aria-labelledby="h-sum">
+    <h2 id="h-sum">Summary</h2>
+    <div class="stats" id="stats"></div>
+  </section>
+
+  <section aria-labelledby="h-dec">
+    <div>
+      <h2 id="h-dec">Needs your decision</h2>
+      <p class="sub">These lines are translated faithfully, but the English itself carries a risk under French law. Translation can't fix them; they need a decision on the offer. Article numbers come from Codex and have not been checked by a lawyer.</p>
+    </div>
+    <div id="risks" style="display:grid;gap:12px"></div>
+  </section>
+
+  <section aria-labelledby="h-disp" id="disp-sec">
+    <h2 id="h-disp">Disputed</h2>
+    <div id="disputed" style="display:grid;gap:10px"></div>
+  </section>
+
+  <section aria-labelledby="h-chg">
+    <div>
+      <h2 id="h-chg">Changed in the final call</h2>
+      <p class="sub">Claude read each line against the English, a back-translation made without seeing the English, the automatic checks and Codex's flags, then kept or rewrote it. These are the rewrites.</p>
+    </div>
+    <div id="changes" style="display:grid;gap:10px"></div>
+  </section>
+
+  <section aria-labelledby="h-all">
+    <h2 id="h-all">Every line, by scene</h2>
+    <div class="bar" role="search">
+      <input id="q" type="search" placeholder="Search English or French…" aria-label="Search the copy">
+      <button class="chip" id="f-all" aria-pressed="true">All</button>
+      <button class="chip" id="f-flag" aria-pressed="false">Flagged by Codex</button>
+      <button class="chip" id="f-rew" aria-pressed="false">Rewritten</button>
+      <button class="chip" id="f-risk" aria-pressed="false">Risk-tagged</button>
+      <span class="count" id="count"></span>
+    </div>
+    <div id="scenes" style="display:grid;gap:8px"></div>
+  </section>
+</div>
+
+<script>
+const DATA = /*__DATA__*/null;
+const { rows, summary, risk } = DATA;
+const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const sceneName = (s) => s.replace(/^client\/src\//, "").replace(/^tarot\.decks › [^›]+ › /, "tarot › ");
+
+document.getElementById("sub").textContent = `${summary.segments.toLocaleString()} lines (${summary.words.toLocaleString()} English words). Claude translated, Codex reviewed, Claude made the final call. Runs ${summary.runs}, generated ${summary.generated} UTC.`;
+
+const stat = (v, l) => `<div class="stat"><b>${esc(v)}</b><span>${esc(l)}</span></div>`;
+document.getElementById("stats").innerHTML = [
+  stat(summary.segments.toLocaleString(), "lines translated"),
+  stat(summary.flags, "Codex flags"),
+  stat(summary.rewritten, "rewritten in the final call"),
+  stat(`${summary.sounds} / 5`, "“sounds translated” (1 = reads as French)"),
+  stat(summary.risk, "lines with a legal risk tag"),
+  stat(summary.disputed, "disputed"),
+  stat(`$${summary.cost}`, "API cost, this run"),
+].join("");
+
+// decisions, grouped by risk
+const order = ["danger", "urgency", "claim", "ai-identity", "consent"];
+document.getElementById("risks").innerHTML = order.map((k) => {
+  const list = rows.filter((r) => r.risk === k);
+  if (!list.length) return "";
+  const shown = list.slice(0, 6), rest = list.slice(6);
+  const pair = (r) => `<div class="pair"><div class="copy en">${esc(r.en)}</div><div class="copy fr">${esc(r.fr)}</div>${r.note ? `<div class="note">${esc(r.note)}</div>` : ""}<div class="note id">${esc(sceneName(r.scene))}</div></div>`;
+  return `<div class="group"><div><h3>${esc(risk[k].title)} · ${list.length} line${list.length > 1 ? "s" : ""}</h3><p class="rule">${esc(risk[k].rule)}</p></div>${shown.map(pair).join("")}${rest.length ? `<div hidden data-rest>${rest.map(pair).join("")}</div><button class="more" data-more>Show ${rest.length} more</button>` : ""}</div>`;
+}).join("");
+document.querySelectorAll("[data-more]").forEach((b) => b.addEventListener("click", () => { b.previousElementSibling.hidden = false; b.remove(); }));
+
+// disputed
+const disp = rows.filter((r) => r.disputed);
+document.getElementById("disputed").innerHTML = disp.length ? disp.map((r) => `<div class="change"><div><div class="lbl">English</div><div class="copy en">${esc(r.en)}</div></div><div><div class="lbl">Shipped for now</div><div class="copy fr">${esc(r.fr)}</div></div><div><div class="lbl">Why disputed</div><div class="copy bt">${esc(JSON.stringify(r.disputed))}</div></div></div>`).join("") : `<p class="empty">Nothing disputed: every rewrite passed the checks again.</p>`;
+
+// changes
+const chg = rows.filter((r) => r.decision === "rewrite");
+const chgHtml = (r) => `<div class="change"><div><div class="lbl">English</div><div class="copy en">${esc(r.en)}</div></div><div><div class="lbl">First translation</div><div class="copy fr before">${esc(r.first)}</div></div><div><div class="lbl">Final</div><div class="copy fr">${esc(r.fr)}</div></div><div class="why"><b>Why:</b> ${esc(r.reason)}${r.flags.length ? ` · Codex: ${esc(r.flags.map((f) => f.issue).join(" / "))}` : ""}</div></div>`;
+document.getElementById("changes").innerHTML = chg.length ? chg.slice(0, 25).map(chgHtml).join("") + (chg.length > 25 ? `<div hidden data-rest>${chg.slice(25).map(chgHtml).join("")}</div><button class="more" data-more2>Show ${chg.length - 25} more</button>` : "") : `<p class="empty">No rewrites yet: the final call has not run on this batch.</p>`;
+document.querySelectorAll("[data-more2]").forEach((b) => b.addEventListener("click", () => { b.previousElementSibling.hidden = false; b.remove(); }));
+
+// every line
+const byScene = new Map();
+for (const r of rows) { const k = sceneName(r.scene); if (!byScene.has(k)) byScene.set(k, []); byScene.get(k).push(r); }
+const lineHtml = (r) => {
+  const b = [];
+  if (r.risk !== "none") b.push(`<span class="badge b-risk">${esc(risk[r.risk]?.title ?? r.risk)}</span>`);
+  if (r.decision === "rewrite") b.push(`<span class="badge b-good">rewritten</span>`);
+  if (r.flags.length) b.push(`<span class="badge b-bad">${r.flags.length} Codex flag${r.flags.length > 1 ? "s" : ""}</span>`);
+  if (r.uncertain) b.push(`<span class="badge b-plain">translator unsure</span>`);
+  const flags = r.flags.map((f) => `<div class="flag"><b>${esc(f.severity)} ${esc(f.category)}:</b> ${esc(f.issue)}</div>`).join("");
+  return `<div class="line" data-id="${esc(r.id)}"><div class="meta"><span class="id">${esc(r.id)}</span>${b.join("")}</div><div class="copy en">${esc(r.en)}</div><div class="copy fr">${esc(r.fr)}</div><div class="copy bt">${esc(r.bt)}</div>${flags}${r.decision === "rewrite" ? `<div class="flag"><b>Final call:</b> ${esc(r.reason)}</div>` : ""}</div>`;
+};
+let filter = "all";
+function render() {
+  const q = document.getElementById("q").value.trim().toLowerCase();
+  const keep = (r) => (filter === "all" || (filter === "flag" && r.flags.length) || (filter === "rew" && r.decision === "rewrite") || (filter === "risk" && r.risk !== "none"))
+    && (!q || r.en.toLowerCase().includes(q) || r.fr.toLowerCase().includes(q) || r.id.toLowerCase().includes(q));
+  let n = 0;
+  const html = [];
+  for (const [name, list] of byScene) {
+    const ls = list.filter(keep);
+    if (!ls.length) continue;
+    n += ls.length;
+    const open = q || filter !== "all" ? " open" : "";
+    html.push(`<details class="scene"${open}><summary><span class="name">${esc(name)}</span><span class="count">${ls.length} line${ls.length > 1 ? "s" : ""}</span></summary><div class="cols head"><div>English</div><div>French</div><div>Back to English</div></div>${ls.map(lineHtml).join("")}</details>`);
+  }
+  document.getElementById("scenes").innerHTML = html.join("") || `<p class="empty">No line matches.</p>`;
+  document.getElementById("count").textContent = `${n.toLocaleString()} line${n === 1 ? "" : "s"}`;
+}
+for (const [id, f] of [["f-all", "all"], ["f-flag", "flag"], ["f-rew", "rew"], ["f-risk", "risk"]]) {
+  document.getElementById(id).addEventListener("click", () => {
+    filter = f;
+    document.querySelectorAll(".bar .chip").forEach((c) => c.setAttribute("aria-pressed", String(c.id === id)));
+    render();
+  });
+}
+let t;
+document.getElementById("q").addEventListener("input", () => { clearTimeout(t); t = setTimeout(render, 150); });
+render();
+</script>

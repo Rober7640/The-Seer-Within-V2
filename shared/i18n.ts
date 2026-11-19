@@ -91,12 +91,21 @@ export function translate(locale: LocaleCode, text: string, vars?: Vars): string
  */
 function isPlainObject(v: unknown): v is Record<string, unknown> {
   if (v === null || typeof v !== "object" || Array.isArray(v)) return false;
+  if ("$$typeof" in v) return false; // a React element is a leaf: replaced whole, never merged
   const proto = Object.getPrototypeOf(v);
   return proto === Object.prototype || proto === null;
 }
 
 export function overlay<T>(english: T, twin: unknown): T {
   if (twin === undefined) return english;
+  // An index patch ({ "0": …, "2": … }) on an English array merges element by
+  // element, so a twin can translate the labels of an array of objects without
+  // copying what is not copy (keys, icons, handlers). A twin ARRAY still replaces whole.
+  if (Array.isArray(english) && isPlainObject(twin) && Object.keys(twin).every((k) => /^\d+$/.test(k))) {
+    const out = english.slice();
+    for (const [k, v] of Object.entries(twin)) out[Number(k)] = overlay(out[Number(k)], v);
+    return out as T;
+  }
   if (!isPlainObject(twin) || !(isPlainObject(english) || isModuleNamespace(english))) return twin as T;
   const out: Record<string, unknown> = { ...(english as Record<string, unknown>) };
   for (const [k, v] of Object.entries(twin)) out[k] = overlay(out[k], v);

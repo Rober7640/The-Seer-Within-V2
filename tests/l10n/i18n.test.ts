@@ -88,6 +88,19 @@ describe("pickData overlay", () => {
     registerData("fr-FR", "msgs", { lines: ["un"] });
     expect(pickData("fr-FR", "msgs", { lines: ["one", "two"] }).lines).toEqual(["un"]);
   });
+  it("an index patch merges into an English array element by element", () => {
+    const icon = () => "icon";
+    registerData("fr-FR", "buckets", { "1": { label: "Argent" } });
+    const v = pickData("fr-FR", "buckets", [{ key: "love", label: "Love", icon }, { key: "money", label: "Money", icon }]);
+    expect(v).toEqual([{ key: "love", label: "Love", icon }, { key: "money", label: "Argent", icon }]);
+    expect(v[1].icon).toBe(icon);
+  });
+  it("a React element in a twin replaces the English element whole", () => {
+    const en = { $$typeof: Symbol.for("react.element"), type: "b", props: { children: "Hi" } };
+    const fr = { $$typeof: Symbol.for("react.element"), type: "b", props: { children: ["Bon", "jour"] } };
+    registerData("fr-FR", "variants", { a: { sub: fr } });
+    expect(pickData("fr-FR", "variants", { a: { sub: en, cta: "Go" } }).a.sub).toBe(fr);
+  });
   it("returns the same merged object on repeat calls (memoised)", () => {
     registerData("fr-FR", "deck", { eyebrow: "x" });
     expect(pickData("fr-FR", "deck", EN)).toBe(pickData("fr-FR", "deck", EN));
