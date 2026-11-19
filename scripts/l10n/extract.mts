@@ -30,7 +30,7 @@ const OUT = outIdx >= 0 ? process.argv[outIdx + 1] : "localize/runs/extract/segm
 
 export interface Segment {
   id: string;
-  source: "catalog" | "data" | "legal";
+  source: "catalog" | "data" | "legal" | "jsx";
   en: string;
   srcHash: string;
   kind: "bubble" | "ui" | "headline" | "cta" | "server" | "legal";
@@ -189,6 +189,34 @@ function kindOfData(twin: string, p: (string | number)[]): Segment["kind"] {
   return "ui";
 }
 
+// ── JSX inside data twins ────────────────────────────────────────────────────
+// A twin path declared `jsx` in localize/twins.json ("*.subheadline") holds JSX in
+// English. Its text is serialized like a legal run ("…<br/><strong>…</strong>",
+// attributes dropped) and translated as one segment; the locale's client bundle
+// renders it back (client/src/l10n/<code>/jsx.tsx).
+function jsxRuns(file: string, name: string, patterns: string[]): Leaf[] {
+  const src = ts.createSourceFile(file, fs.readFileSync(file, "utf8"), ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
+  let init: ts.Expression | undefined;
+  src.forEachChild(function visit(n) {
+    if (ts.isVariableDeclaration(n) && ts.isIdentifier(n.name) && n.name.text === name && n.initializer) init = n.initializer;
+    n.forEachChild(visit);
+  });
+  const out: Leaf[] = [];
+  const pats = patterns.map((p) => p.split("."));
+  const matches = (at: string[]) => pats.some((p) => p.length === at.length && p.every((k, i) => k === "*" || k === at[i]));
+  const walk = (e: ts.Expression, at: string[]) => {
+    while (ts.isAsExpression(e) || ts.isSatisfiesExpression(e) || ts.isParenthesizedExpression(e)) e = e.expression;
+    if ((ts.isJsxFragment(e) || ts.isJsxElement(e)) && matches(at)) {
+      const run = serializeRun(e);
+      if (!run.exprs.length) out.push({ path: at, en: run.text });
+      return;
+    }
+    if (ts.isObjectLiteralExpression(e)) for (const p of e.properties) if (ts.isPropertyAssignment(p)) walk(p.initializer, [...at, p.name.getText().replace(/^['"]|['"]$/g, "")]);
+  };
+  if (init) walk(init, []);
+  return out;
+}
+
 // ── legal pages ──────────────────────────────────────────────────────────────
 // One segment per text block (p, li, h2, td…), with inline markup kept as simple
 // tags ("<strong>Account management</strong> — registering your account…") and
@@ -198,7 +226,7 @@ const INLINE = new Set(["strong", "b", "em", "i", "u", "a", "Link", "span", "cod
 function tagName(el: ts.JsxElement | ts.JsxSelfClosingElement): string {
   return (ts.isJsxElement(el) ? el.openingElement.tagName : el.tagName).getText();
 }
-function serializeRun(el: ts.JsxElement): { text: string; exprs: string[] } {
+function serializeRun(el: ts.JsxElement | ts.JsxFragment): { text: string; exprs: string[] } {
   const exprs: string[] = [];
   const ser = (children: ts.NodeArray<ts.JsxChild>): string => children.map((c) => {
     if (ts.isJsxText(c)) return cleanJsxText(decodeJsxEntities(c.text) ?? c.text);
@@ -289,6 +317,15 @@ async function main() {
       if (opaque.length) report.push(`${key}: ${opaque.length} part(s) not read as literals — ${opaque.slice(0, 4).join("; ")}${def.jsx ? ` (declared jsx: ${def.jsx.join(", ")})` : ""}`);
     }
     report.push(`${key}: ${leaves.length} strings via ${how}`);
+    if (def.jsx) {
+      const runs = jsxRuns(abs, def.export, def.jsx);
+      report.push(`${key}: ${runs.length} JSX run(s) for ${def.jsx.join(", ")}`);
+      for (const l of runs) segments.push({
+        id: `jsx:${key}:${l.path.join(".")}`, source: "jsx", en: l.en, srcHash: hash(l.en), kind: kindOfData(key, l.path),
+        scene: dataSceneOf(key, l.path, def.perHook), file: def.module, line: 0, twin: key, path: l.path,
+        placeholders: placeholdersOf(l.en), tags: tagsOf(l.en),
+      });
+    }
     for (const l of leaves) {
       segments.push({
         id: `data:${key}:${l.path.join(".")}`, source: "data", en: l.en, srcHash: hash(l.en), kind: kindOfData(key, l.path),

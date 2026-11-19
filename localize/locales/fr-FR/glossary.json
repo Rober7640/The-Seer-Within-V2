@@ -1,47 +1,178 @@
 {
-  "_doc": "Renderings for the translator. `fr` = the term to use; `when` = which context; `avoid` = wrong or unnatural here. Inflect freely. v2 after Codex's pack review 2026-11-18: 'reading' is contextual, not one word.",
-  "terms": [
-    { "en": "reading (Evelyn interpreting the cards the buyer chose)", "fr": "tirage / lecture des cartes", "note": "« votre tirage », « ce que disent vos cartes »" },
-    { "en": "reading (the chat session with Evelyn)", "fr": "consultation", "note": "« notre consultation », « pendant cette consultation »" },
-    { "en": "reading (the written 5–7 page deliverable sent by e-mail)", "fr": "étude personnalisée", "note": "ONE name everywhere it appears (chat, checkout, success page, e-mails): « votre étude personnalisée »", "avoid": ["lecture personnalisée", "rapport"] },
-    { "en": "double reading / Double Your Reading (order bump)", "fr": "say what doubles", "note": "the bump adds a second topic and twice the depth: « une seconde étude, pour votre {topic} », « deux fois plus loin »", "avoid": ["double lecture"] },
-    { "en": "Energy Clearing Ritual (the product)", "fr": "rituel de nettoyage énergétique", "note": "lower case in running text; capital only as a title or button" },
-    { "en": "clearing / clear (the act)", "fr": "purifier / libérer / dissiper (by meaning)", "note": "« purifier votre énergie », « vous libérer de ce poids »", "avoid": ["« votre nettoyage » alone (sounds like housework)"] },
-    { "en": "block / blocking your path", "fr": "blocage / ce qui vous empêche d'avancer / ce qui fait obstacle", "avoid": ["ce qui bloque votre chemin (English syntax)"] },
-    { "en": "shadow", "fr": "ombre" },
-    { "en": "energy field", "fr": "champ énergétique" },
-    { "en": "energy signature", "fr": "empreinte énergétique" },
-    { "en": "Protection Ritual", "fr": "rituel de protection" },
-    { "en": "lava stone / volcanic stone", "fr": "pierre de lave / pierre volcanique" },
-    { "en": "charged (stone)", "fr": "chargée (une pierre chargée)" },
-    { "en": "Manifestation Bracelet", "fr": "bracelet de manifestation", "note": "the product name; say on first mention what it is for" },
-    { "en": "manifest (verb)", "fr": "by meaning: attirer … dans votre vie / concrétiser", "note": "keep « manifestation » for the practice; avoid « manifester de l'argent »" },
-    { "en": "altar", "fr": "autel" },
-    { "en": "sage / sage smoke", "fr": "sauge / fumée de sauge" },
-    { "en": "blessed water (blessed by Evelyn)", "fr": "eau bénie", "avoid": ["eau bénite (a priest's holy water)"] },
-    { "en": "the veil between worlds", "fr": "le voile entre les mondes" },
-    { "en": "soulmate", "fr": "âme sœur" },
-    { "en": "twin flame", "fr": "flamme jumelle" },
-    { "en": "karmic", "fr": "karmique" },
-    { "en": "third eye", "fr": "troisième œil" },
-    { "en": "spirit guides", "fr": "guides spirituels" },
-    { "en": "the universe", "fr": "l'Univers" },
-    { "en": "abundance", "fr": "abondance" },
-    { "en": "law of attraction", "fr": "loi de l'attraction" },
-    { "en": "Love / Money / Purpose (topics)", "fr": "Amour / Argent / Mission de vie" },
-    { "en": "minutes (chat credit)", "fr": "minutes" },
-    { "en": "email (noun)", "fr": "e-mail", "note": "house spelling; « adresse e-mail » for the field" }
-  ],
-  "tarot": {
-    "_doc": "Major arcana: the Rider-Waite French names below (the cards shown are Rider-Waite art), never Marseille (Bateleur, Mat, Papesse, Pape, Maison Dieu). Minor arcana: « le Deux de Coupes », « l'As de Deniers ». Reversed: « la carte renversée », « le Pendu renversé ». Article lower case in running text: « vous avez choisi le Magicien ».",
-    "The Fool": "Le Fou", "The Magician": "Le Magicien", "The High Priestess": "La Grande Prêtresse",
-    "The Empress": "L'Impératrice", "The Emperor": "L'Empereur", "The Hierophant": "Le Hiérophante",
-    "The Lovers": "Les Amoureux", "The Chariot": "Le Chariot", "Strength": "La Force",
-    "The Hermit": "L'Ermite", "Wheel of Fortune": "La Roue de Fortune", "Justice": "La Justice",
-    "The Hanged Man": "Le Pendu", "Death": "La Mort", "Temperance": "Tempérance",
-    "The Devil": "Le Diable", "The Tower": "La Tour", "The Star": "L'Étoile",
-    "The Moon": "La Lune", "The Sun": "Le Soleil", "Judgement": "Le Jugement", "The World": "Le Monde",
-    "Ace / Two … Ten": "As / Deux … Dix", "Page / Knight / Queen / King": "Valet / Cavalier / Reine / Roi",
-    "Cups / Pentacles / Swords / Wands": "Coupes / Deniers / Épées / Bâtons"
+ "_doc": "Renderings for the translator. `fr` = the term to use; `when` = which context; `avoid` = wrong or unnatural here. Inflect freely. v2 after Codex's pack review 2026-11-18: 'reading' is contextual, not one word.",
+ "terms": [
+  {
+   "en": "reading (Evelyn interpreting the cards the buyer chose)",
+   "fr": "tirage / lecture des cartes",
+   "note": "« votre tirage », « ce que disent vos cartes ». ONLY on /fb-tarot pages and in card reads. The /fb lander and the pages both funnels share (chat, order bump, checkout, upsells, success page) may be seen by a buyer who never saw a card: there it is « consultation », never « tirage »"
+  },
+  {
+   "en": "reading (the chat session with Evelyn)",
+   "fr": "consultation",
+   "note": "« notre consultation », « pendant cette consultation »"
+  },
+  {
+   "en": "reading (the written 5–7 page deliverable sent by e-mail)",
+   "fr": "étude personnalisée",
+   "note": "ONE name everywhere it appears (chat, checkout, success page, e-mails): « votre étude personnalisée »",
+   "avoid": [
+    "lecture personnalisée",
+    "rapport"
+   ]
+  },
+  {
+   "en": "double reading / Double Your Reading (order bump)",
+   "fr": "say what doubles",
+   "note": "the bump adds a second topic and twice the depth: « une seconde étude, pour votre {topic} », « deux fois plus loin »",
+   "avoid": [
+    "double lecture"
+   ]
+  },
+  {
+   "en": "Energy Clearing Ritual (the product)",
+   "fr": "rituel de nettoyage énergétique",
+   "note": "lower case in running text; capital only as a title or button"
+  },
+  {
+   "en": "clearing / clear (the act)",
+   "fr": "purifier / libérer / dissiper (by meaning)",
+   "note": "« purifier votre énergie », « vous libérer de ce poids »",
+   "avoid": [
+    "« votre nettoyage » alone (sounds like housework)"
+   ]
+  },
+  {
+   "en": "block / blocking your path",
+   "fr": "blocage / ce qui vous empêche d'avancer / ce qui fait obstacle",
+   "avoid": [
+    "ce qui bloque votre chemin (English syntax)"
+   ]
+  },
+  {
+   "en": "shadow",
+   "fr": "ombre"
+  },
+  {
+   "en": "energy field",
+   "fr": "champ énergétique"
+  },
+  {
+   "en": "energy signature",
+   "fr": "empreinte énergétique"
+  },
+  {
+   "en": "Protection Ritual",
+   "fr": "rituel de protection"
+  },
+  {
+   "en": "lava stone / volcanic stone",
+   "fr": "pierre de lave / pierre volcanique"
+  },
+  {
+   "en": "charged (stone)",
+   "fr": "chargée (une pierre chargée)"
+  },
+  {
+   "en": "Manifestation Bracelet",
+   "fr": "bracelet de manifestation",
+   "note": "the product name; say on first mention what it is for"
+  },
+  {
+   "en": "manifest (verb)",
+   "fr": "by meaning: attirer … dans votre vie / concrétiser",
+   "note": "keep « manifestation » for the practice; avoid « manifester de l'argent »"
+  },
+  {
+   "en": "altar",
+   "fr": "autel"
+  },
+  {
+   "en": "sage / sage smoke",
+   "fr": "sauge / fumée de sauge"
+  },
+  {
+   "en": "blessed water (blessed by Evelyn)",
+   "fr": "eau bénie",
+   "avoid": [
+    "eau bénite (a priest's holy water)"
+   ]
+  },
+  {
+   "en": "the veil between worlds",
+   "fr": "le voile entre les mondes"
+  },
+  {
+   "en": "soulmate",
+   "fr": "âme sœur"
+  },
+  {
+   "en": "twin flame",
+   "fr": "flamme jumelle"
+  },
+  {
+   "en": "karmic",
+   "fr": "karmique"
+  },
+  {
+   "en": "third eye",
+   "fr": "troisième œil"
+  },
+  {
+   "en": "spirit guides",
+   "fr": "guides spirituels"
+  },
+  {
+   "en": "the universe",
+   "fr": "l'Univers"
+  },
+  {
+   "en": "abundance",
+   "fr": "abondance"
+  },
+  {
+   "en": "law of attraction",
+   "fr": "loi de l'attraction"
+  },
+  {
+   "en": "Love / Money / Purpose (topics)",
+   "fr": "Amour / Argent / Mission de vie"
+  },
+  {
+   "en": "minutes (chat credit)",
+   "fr": "minutes"
+  },
+  {
+   "en": "email (noun)",
+   "fr": "e-mail",
+   "note": "house spelling; « adresse e-mail » for the field"
   }
+ ],
+ "tarot": {
+  "_doc": "Major arcana: the Rider-Waite French names below (the cards shown are Rider-Waite art), never Marseille (Bateleur, Mat, Papesse, Pape, Maison Dieu). Minor arcana: « le Deux de Coupes », « l'As de Deniers ». Reversed: « la carte renversée », « le Pendu renversé ». Article lower case in running text: « vous avez choisi le Magicien ».",
+  "The Fool": "Le Fou",
+  "The Magician": "Le Magicien",
+  "The High Priestess": "La Grande Prêtresse",
+  "The Empress": "L'Impératrice",
+  "The Emperor": "L'Empereur",
+  "The Hierophant": "Le Hiérophante",
+  "The Lovers": "Les Amoureux",
+  "The Chariot": "Le Chariot",
+  "Strength": "La Force",
+  "The Hermit": "L'Ermite",
+  "Wheel of Fortune": "La Roue de Fortune",
+  "Justice": "La Justice",
+  "The Hanged Man": "Le Pendu",
+  "Death": "La Mort",
+  "Temperance": "Tempérance",
+  "The Devil": "Le Diable",
+  "The Tower": "La Tour",
+  "The Star": "L'Étoile",
+  "The Moon": "La Lune",
+  "The Sun": "Le Soleil",
+  "Judgement": "Le Jugement",
+  "The World": "Le Monde",
+  "Ace / Two … Ten": "As / Deux … Dix",
+  "Page / Knight / Queen / King": "Valet / Cavalier / Reine / Roi",
+  "Cups / Pentacles / Swords / Wands": "Coupes / Deniers / Épées / Bâtons"
+ }
 }

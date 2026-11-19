@@ -63,6 +63,12 @@ export interface LocaleDef {
    * English serves everything (null).
    */
   serves: null | { funnels: readonly string[]; paths: readonly string[] };
+  /**
+   * The go-live switch (gate G3). false = the bundle is served by the dev server
+   * only, so merging a translated locale changes nothing in production until the
+   * operator approves it and this flips to true.
+   */
+  live: boolean;
 }
 
 export const LOCALES: Record<LocaleCode, LocaleDef> = {
@@ -74,6 +80,7 @@ export const LOCALES: Record<LocaleCode, LocaleDef> = {
     languageName: "English",
     market: { country: "US", currency: "usd", intl: "en-US", hotlineCountry: "US" },
     suffix: { product: "", aweber: "" },
+    live: true,
     serves: null,
   },
   "fr-FR": {
@@ -86,6 +93,7 @@ export const LOCALES: Record<LocaleCode, LocaleDef> = {
     market: { country: "FR", currency: "eur", stripeLocale: "fr", intl: "fr-FR", hotlineCountry: "FR" },
     suffix: { product: " - FR", aweber: "-fr" },
     serves: { funnels: ["fb", "tarot"], paths: ["/privacy", "/terms", "/refund"] },
+    live: false,
   },
 };
 

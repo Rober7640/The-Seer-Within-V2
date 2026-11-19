@@ -2530,3 +2530,33 @@ Pure scope logic covered in `server/lib/experiments.test.ts` (landerScopeApplies
 - [ ] Stripe TEST: 1-click + fallback checkout charge the arm amount for B and C
 - [ ] Returning visitor with a stored price keeps her Upsell 1 price (not re-enrolled)
 - [ ] Appending a 4th lander to `scope.landers` on a running test enrols it without moving existing buyers
+
+## French funnel — `?lang=fr` on /fb and /fb-tarot (fr-FR, 2026-11-19)
+
+Locale plumbing (English must not move):
+- [ ] No `?lang` and no `seer_locale` cookie → every /fb and /fb-tarot page is byte-identical to Production (`scripts/l10n/en-snapshot.sh`)
+- [ ] `/fb?lang=fr` sets the `seer_locale` session cookie and `<html lang="fr">`; the next page keeps French without the param
+- [ ] `?lang=fr` on a page outside `serves` (V2 /reading, /login) → English for that visit, cookie rewritten
+- [ ] `/fb-tarot?lang=fr&hook=<batch-1 hook>` → French lander + French card reads
+- [ ] `/fb-tarot?lang=fr&hook=<hook not yet translated>` → the whole visit stays English (no mixed page)
+- [ ] Order bump, upsell 1 and upsell 2 chat lines, buttons and reply chips all French; no English bubble anywhere on the happy path
+
+Copy:
+- [ ] No "$" on any French page; prices read "35 €", "12,77 €", "47 €", "30 €" (comma decimals, no-break space before €)
+- [ ] No "tu"/"toi"/"ton" in any French bubble; buyer reply chips are first person addressing Evelyn as "vous"
+- [ ] Tarot cards use the French Rider-Waite names (Le Magicien, Le Pendu, La Mort…), never Marseille names
+- [ ] Landing subheadline variant `a` keeps its line break and bold second sentence in French
+- [ ] French punctuation: no-break space before ? ! : ; and « » quotes in static copy and in live Claude replies
+
+Chat behaviour in French:
+- [ ] "Je m'appelle Marie" → name captured as "Marie" (not "Je")
+- [ ] A French crisis phrase ("je veux mourir") → the 3114 line, never 988
+- [ ] A French refund request ("je veux être remboursée") → the support template
+- [ ] A French reply is never answered with "My readings are conducted in English"
+- [ ] Gibberish with accented vowels is still treated as gibberish
+
+Checkout (Phase 4):
+- [ ] Stripe Checkout opens in French, in EUR; product name shows the French title, `metadata.product` stays English
+- [ ] The order bump starts unticked; the pay button states the obligation to pay
+- [ ] FR shipping address accepted for upsell 1 and upsell 2
+- [ ] The authentication-required EUR test card goes through the upsell `needs_action` path
