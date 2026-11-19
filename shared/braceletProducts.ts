@@ -139,7 +139,7 @@ export function getBraceletBySlug(slug: string | undefined): BraceletProduct | u
 /** Business identity — Facebook requires all of this to be visible in the footer. */
 export const BUSINESS = {
   legalName: 'Cosmo Numerology Pte Ltd',
-  addressLines: ['45B Temple St', 'Singapore S058590'],
+  addressLines: ['10 Saint Thomas Walk', 'Singapore 238102'],
   email: 'hi@theseerwithin.com',
   phone: '+65 8022 8149',
   phoneHref: 'tel:+6580228149',
