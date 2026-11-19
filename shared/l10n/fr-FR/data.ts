@@ -7,7 +7,7 @@ export const DATA: Readonly<Record<string, unknown>> = {
    "eyebrow": "Les cartes ont quelque chose à vous montrer",
    "instruction": "Prenez une inspiration, puis choisissez la carte qui vous appelle.",
    "beatNoun": "cartes",
-   "continueCta": "Les cartes m'en montrent plus — commencer votre consultation gratuite",
+   "continueCta": "Les cartes m'en disent plus — commencer votre consultation gratuite",
    "chooseMoment": "à l'instant où votre regard s'est posé sur elle",
    "options": {
     "0": "a",
@@ -29,8 +29,8 @@ export const DATA: Readonly<Record<string, unknown>> = {
      "a": {
       "0": "Vous avez choisi le Magicien. Regardez : une coupe, un denier, une épée et un bâton, tous posés sur sa table.",
       "1": "Vous m'avez demandé s'il allait revenir. Votre main est allée tout droit vers l'homme qui a le pouvoir de faire bouger les choses.",
-      "2": "Ce n'est pas le chemin du retour qui lui manque, ma chère. Il l'a.\nAlors la question n'a jamais été de savoir s'il le pouvait.\nEt cette force qui vous attire encore vers lui ? Elle ne vient pas que de vous.\nVous l'avez senti, lui, de l'autre côté. Vous ne vous trompez pas.",
-      "3": "Laissez-moi regarder de plus près ce qui fait obstacle entre vous et son retour…"
+      "2": "Ce n'est pas le chemin du retour qui lui manque, ma chère. Il l'a, ce chemin.\nAlors la question n'a jamais été de savoir s'il le pouvait.\nEt cette force qui vous attire encore vers lui ? Elle ne vient pas que de vous.\nVous l'avez senti à l'autre bout, lui aussi. Vous ne vous trompez pas.",
+      "3": "Laissez-moi regarder de plus près ce qui fait obstacle à son retour vers vous…"
      },
      "b": {
       "0": "Vous avez choisi le Pendu. Regardez : il pend par une cheville à un arbre vert, le visage paisible.",
@@ -55,13 +55,13 @@ export const DATA: Readonly<Record<string, unknown>> = {
      "b": {
       "0": "Vous avez choisi le Pendu. Regardez : il est suspendu la tête en bas, avec un halo de lumière autour de la tête.",
       "1": "Vous m'avez demandé ce qu'il ressent vraiment. Votre main est allée vers l'homme coincé entre deux choses.",
-      "2": "Ce que vous percevez chez lui, ce n'est pas de la froideur. C'est une retenue.\nAlors ces signaux contradictoires, ce n'est pas vous qui l'avez mal compris.\nVous perceviez deux vérités à la fois.\nCet élan que vous sentez est bien réel. Sa retenue aussi.",
+      "2": "Ce que vous percevez chez lui, ce n'est pas de la froideur. C'est une retenue.\nAlors, face à ces signaux contradictoires, ce n'est pas vous qui l'avez mal compris.\nVous perceviez deux vérités à la fois.\nCet élan que vous sentez est bien réel. Sa retenue aussi.",
       "3": "Laissez-moi regarder de plus près ce qui vous retient tous les deux à mi-chemin…"
      },
      "c": {
       "0": "Vous avez choisi le Fou. Regardez : il lève les yeux vers le ciel, pas vers le vide à ses pieds.",
       "1": "Vous m'avez demandé ce qu'il ressent vraiment. Votre main a trouvé l'homme qui vit dans l'instant.",
-      "2": "Ce que vous avez senti était réel, ma chère. Simplement, ça vit dans l'instant.\nMais regardez où se pose son regard. Vers le haut, pas sur la route devant lui.\nAlors il ne sait pas encore où ça vous mène.\nCe n'est pas la même chose que de ne pas tenir à vous. Vous avez senti les deux en même temps.",
+      "2": "Ce que vous avez senti était réel, ma chère. Simplement, il le vit dans l'instant.\nMais regardez où se pose son regard. Vers le haut, pas sur la route devant lui.\nAlors il ne sait pas encore où ça vous mène.\nCe n'est pas la même chose que de ne pas tenir à vous. Vous avez senti les deux en même temps.",
       "3": "Laissez-moi regarder de plus près ce qui empêche les choses de se poser entre vous…"
      }
     },
@@ -81,8 +81,8 @@ export const DATA: Readonly<Record<string, unknown>> = {
      "c": {
       "0": "Vous avez choisi le Fou. Regardez : tout ce qu'il possède tient dans un petit baluchon noué au bout d'un bâton.",
       "1": "Vous m'avez demandé s'il est vraiment celui qu'il dit être. Votre main est allée vers l'homme qui hésite encore.",
-      "2": "Le Fou voyage léger. Rien n'est encore fixé chez lui.\nAlors l'homme que vous avez rencontré et celui d'aujourd'hui peuvent être deux facettes du même homme.\nOu alors, il ne vous a pas montré toute la route. La carte ne tranche pas.\nDans un cas comme dans l'autre, vous avez remarqué le changement. Et ça, vous pouvez vous y fier.",
-      "3": "Laissez-moi regarder de plus près ce qui vous empêche, encore et encore, de le voir tout entier…"
+      "2": "Le Fou voyage léger. Rien n'est encore fixé chez lui.\nAlors l'homme que vous avez rencontré et celui d'aujourd'hui peuvent être deux facettes du même homme.\nOu alors, il ne vous a pas montré tout son chemin. La carte ne tranche pas.\nDans un cas comme dans l'autre, vous avez remarqué le changement. Et ça, vous pouvez vous y fier.",
+      "3": "Laissez-moi regarder de plus près ce qui vous empêche, encore et encore, de connaître toutes ses facettes…"
      }
     },
     "cards-will-commit": {
@@ -115,13 +115,13 @@ export const DATA: Readonly<Record<string, unknown>> = {
      "b": {
       "0": "Vous avez choisi le Pendu, ma chère. Regardez : ses bras sont cachés, et son corps forme un triangle.",
       "1": "Vous m'avez demandé pourquoi il ne s'engage pas avec vous. Votre main s'est arrêtée sur la carte où tout reste en suspens.",
-      "2": "Alors quelque chose le retient. C'est exactement ce que vous ressentez depuis un moment.\nEt ses bras sont cachés. Vous ne voyez pas ce qu'il tient.\nMais ce qui le bloque, c'est à lui de le nommer. Pas à moi, et pas à vous.\nC'est pour ça que chaque raison que vous trouvez finit par vous échapper. Aucune ne tient.",
+      "2": "Alors quelque chose le retient. C'est exactement ce que vous ressentez depuis un moment.\nEt ses bras sont cachés. Vous ne voyez pas ce qu'il tient.\nMais ce qui le bloque, c'est à lui de le nommer. Pas à moi, et pas à vous.\nC'est pour ça que chaque raison que vous trouvez retombe aussitôt. Aucune ne tient.",
       "3": "Laissez-moi regarder de plus près ce qui fige les choses ainsi…"
      },
      "c": {
       "0": "Vous avez choisi le Fou. Regardez : le petit chien a la queue bien dressée.",
       "1": "Vous m'avez demandé pourquoi il ne s'engage pas avec vous. Votre main a trouvé celui qui ne s'attache à rien.",
-      "2": "Alors rien n'est fixé dans sa vie. Vous l'avez vu très tôt.\nEt le petit chien a la queue dressée. Il sent l'ambiance.\nMais sans attache, ça ne veut pas dire parti. Il marche toujours à vos côtés.\nC'est pour ça que quand vous demandez plus, ça ne tourne jamais à la dispute. Ça glisse sur lui, c'est tout.",
+      "2": "Alors rien n'est fixé dans sa vie. Vous l'avez vu très tôt.\nEt le petit chien a la queue dressée. Il sent l'ambiance.\nMais être sans attache, ce n'est pas être parti. Il marche toujours à vos côtés.\nC'est pour ça que quand vous demandez plus, ça ne tourne jamais à la dispute. Ça glisse sur lui, c'est tout.",
       "3": "Laissez-moi regarder de plus près ce qui empêche les choses de se fixer…"
      }
     }
@@ -154,7 +154,7 @@ export const DATA: Readonly<Record<string, unknown>> = {
      "a": {
       "0": "Vous avez choisi l'Empereur. Regardez : un roi à la barbe grise sur un trône de pierre, le regard droit devant lui, immobile.",
       "1": "Vous m'avez demandé s'il allait revenir. Votre main est allée vers l'homme qui avance à son rythme à lui.",
-      "2": "Il ne se décide pas sur un coup de cœur. Il se décide une fois qu'il a bien pesé les choses.\nAlors son silence n'est pas un non. Il y ressemble seulement, vu de là où vous êtes.\nDe son côté, c'est moins fermé qu'il ne vous semble.\nEt vous avez eu raison de continuer à vous poser la question, ma chère. Ce n'était pas de la naïveté.",
+      "2": "Il n'agit pas sous le coup de l'émotion. Il agit une fois qu'il a bien pesé les choses.\nAlors son silence n'est pas un non. Il y ressemble seulement, vu de là où vous êtes.\nDe son côté, c'est moins fermé qu'il ne vous semble.\nEt vous avez eu raison de continuer à vous poser la question, ma chère. Ce n'était pas de la naïveté.",
       "3": "Laissez-moi regarder de plus près ce qui s'interpose entre vous et sa réponse…"
      },
      "b": {
@@ -180,7 +180,7 @@ export const DATA: Readonly<Record<string, unknown>> = {
      "b": {
       "0": "Vous avez choisi l'Impératrice. Regardez : elle repose sur des coussins moelleux, et à ses pieds, un bouclier porte un cœur.",
       "1": "Vous m'avez demandé ce qu'il ressent vraiment. Votre main est allée vers la carte la plus chaleureuse du jeu.",
-      "2": "L'Impératrice penche du côté de la tendresse, ma chère.\nVous avez senti chez lui une attention qui va plus vite que ses mots.\nCette chaleur que vous ressentez n'est pas à sens unique.\nVous le saviez déjà. Vous vouliez simplement l'entendre de la bouche de quelqu'un d'autre.",
+      "2": "L'Impératrice est du côté de la tendresse, ma chère.\nVous avez senti chez lui une attention qui devance ses mots.\nCette chaleur que vous ressentez n'est pas à sens unique.\nVous le saviez déjà. Vous vouliez simplement l'entendre de la bouche de quelqu'un d'autre.",
       "3": "Laissez-moi regarder de plus près ce qui l'empêche encore de vous le dire…"
      },
      "c": {
@@ -245,7 +245,7 @@ export const DATA: Readonly<Record<string, unknown>> = {
      "c": {
       "0": "Rien ne se devinait au dos des cartes. Vous avez retourné le Fou. Regardez comme le soleil est rond et haut derrière lui.",
       "1": "Vous vous demandez si vous vous marierez plus d'une fois. Le Fou se met en route, et sous un soleil aussi haut, rien de ce départ n'est caché.",
-      "2": "Un mariage qui vous semble juste reste possible pour vous. Ça n'a jamais été une chance qui ne passe qu'une fois.\nMais le soleil n'éclaire que le commencement. La carte ne montre pas avec qui, ni comment ça se passe.\nLe Fou est déjà en marche, mais pour vous, le mariage reste une question.\nAlors quand vous demandez « plus d'une fois », vous demandez si ce chemin qui commence peut aussi être le vôtre, ma chère.",
+      "2": "Un mariage qui vous correspond reste possible pour vous. Ça n'a jamais été une chance qui ne passe qu'une fois.\nMais le soleil n'éclaire que le commencement. La carte ne montre pas avec qui, ni comment ça se passe.\nLe Fou est déjà en marche, mais pour vous, le mariage reste une question.\nAlors quand vous demandez « plus d'une fois », vous demandez si ce chemin qui commence peut aussi être le vôtre, ma chère.",
       "3": "Maintenant, regardons ce qui vous sépare encore de ce commencement…"
      }
     },
@@ -258,8 +258,8 @@ export const DATA: Readonly<Record<string, unknown>> = {
      },
      "b": {
       "0": "Vous avez tendu la main sans le voir. Vous avez retourné le Pendu : une seule corde, à une seule cheville, et rien d'autre de lié.",
-      "1": "Vous me dites que quelque chose l'empêche de s'engager. Sur ce personnage, un seul point est retenu.",
-      "2": "C'est une seule chose. Pas lui tout entier, et pas vous.\nIl y a un lien. La main qui l'a noué, la carte ne la montre pas.\nTout le reste de lui est libre, et ce point-là ne bouge pas d'un pouce.\nVous m'avez demandé ce que c'est. Ce que je vois, c'est que ça tient à un point bien précis.",
+      "1": "Vous me dites que quelque chose l'empêche de s'engager. Ce personnage n'est attaché qu'en un seul point.",
+      "2": "C'est une seule chose. Pas lui tout entier, et pas vous.\nIl y a un lien. La main qui l'a noué, la carte ne la montre pas.\nLe reste de son corps est libre, et ce point-là ne bouge pas d'un pouce.\nVous m'avez demandé ce que c'est. Ce que je vois, c'est que ça tient à un point bien précis.",
       "3": "Laissez-moi voir à quoi ce point est attaché…"
      },
      "c": {
@@ -273,8 +273,8 @@ export const DATA: Readonly<Record<string, unknown>> = {
      "a": {
       "0": "Vous avez retourné le Magicien. Regardez : une coupe, un denier, une épée et un bâton, tous posés sur sa table.",
       "1": "Vous m'avez demandé s'il allait revenir. Votre main est allée tout droit vers l'homme qui a le pouvoir de faire bouger les choses.",
-      "2": "Ce n'est pas le chemin du retour qui lui manque, ma chère. Il l'a.\nAlors la question n'a jamais été de savoir s'il le pouvait.\nEt cette force qui vous attire encore vers lui ? Elle ne vient pas que de vous.\nVous l'avez senti, lui, de l'autre côté. Vous ne vous trompez pas.",
-      "3": "Laissez-moi regarder de plus près ce qui fait obstacle entre vous et son retour…"
+      "2": "Ce n'est pas le chemin du retour qui lui manque, ma chère. Il l'a, ce chemin.\nAlors la question n'a jamais été de savoir s'il le pouvait.\nEt cette force qui vous attire encore vers lui ? Elle ne vient pas que de vous.\nVous l'avez senti à l'autre bout, lui aussi. Vous ne vous trompez pas.",
+      "3": "Laissez-moi regarder de plus près ce qui fait obstacle à son retour vers vous…"
      },
      "b": {
       "0": "Vous avez retourné le Pendu. Regardez : il pend par une cheville à un arbre vert, le visage paisible.",
@@ -299,13 +299,13 @@ export const DATA: Readonly<Record<string, unknown>> = {
      "b": {
       "0": "Vous avez retourné le Pendu. Regardez : il est suspendu la tête en bas, avec un halo de lumière autour de la tête.",
       "1": "Vous m'avez demandé ce qu'il ressent vraiment. Votre main est allée vers l'homme coincé entre deux choses.",
-      "2": "Ce que vous percevez chez lui, ce n'est pas de la froideur. C'est une retenue.\nAlors ces signaux contradictoires, ce n'est pas vous qui l'avez mal compris.\nVous perceviez deux vérités à la fois.\nCet élan que vous sentez est bien réel. Sa retenue aussi.",
+      "2": "Ce que vous percevez chez lui, ce n'est pas de la froideur. C'est une retenue.\nAlors, face à ces signaux contradictoires, ce n'est pas vous qui l'avez mal compris.\nVous perceviez deux vérités à la fois.\nCet élan que vous sentez est bien réel. Sa retenue aussi.",
       "3": "Laissez-moi regarder de plus près ce qui vous retient tous les deux à mi-chemin…"
      },
      "c": {
       "0": "Vous avez retourné le Fou. Regardez : il lève les yeux vers le ciel, pas vers le vide à ses pieds.",
       "1": "Vous m'avez demandé ce qu'il ressent vraiment. Votre main a trouvé l'homme qui vit dans l'instant.",
-      "2": "Ce que vous avez senti était réel, ma chère. Simplement, ça vit dans l'instant.\nMais regardez où se pose son regard. Vers le haut, pas sur la route devant lui.\nAlors il ne sait pas encore où ça vous mène.\nCe n'est pas la même chose que de ne pas tenir à vous. Vous avez senti les deux en même temps.",
+      "2": "Ce que vous avez senti était réel, ma chère. Simplement, il le vit dans l'instant.\nMais regardez où se pose son regard. Vers le haut, pas sur la route devant lui.\nAlors il ne sait pas encore où ça vous mène.\nCe n'est pas la même chose que de ne pas tenir à vous. Vous avez senti les deux en même temps.",
       "3": "Laissez-moi regarder de plus près ce qui empêche les choses de se poser entre vous…"
      }
     },
@@ -325,8 +325,8 @@ export const DATA: Readonly<Record<string, unknown>> = {
      "c": {
       "0": "Vous avez retourné le Fou. Regardez : tout ce qu'il possède tient dans un petit baluchon noué au bout d'un bâton.",
       "1": "Vous m'avez demandé s'il est vraiment celui qu'il dit être. Votre main est allée vers l'homme qui hésite encore.",
-      "2": "Le Fou voyage léger. Rien n'est encore fixé chez lui.\nAlors l'homme que vous avez rencontré et celui d'aujourd'hui peuvent être deux facettes du même homme.\nOu alors, il ne vous a pas montré toute la route. La carte ne tranche pas.\nDans un cas comme dans l'autre, vous avez remarqué le changement. Et ça, vous pouvez vous y fier.",
-      "3": "Laissez-moi regarder de plus près ce qui vous empêche, encore et encore, de le voir tout entier…"
+      "2": "Le Fou voyage léger. Rien n'est encore fixé chez lui.\nAlors l'homme que vous avez rencontré et celui d'aujourd'hui peuvent être deux facettes du même homme.\nOu alors, il ne vous a pas montré tout son chemin. La carte ne tranche pas.\nDans un cas comme dans l'autre, vous avez remarqué le changement. Et ça, vous pouvez vous y fier.",
+      "3": "Laissez-moi regarder de plus près ce qui vous empêche, encore et encore, de connaître toutes ses facettes…"
      }
     },
     "cards-will-commit": {
@@ -343,9 +343,9 @@ export const DATA: Readonly<Record<string, unknown>> = {
       "3": "Voyons ce qui le pousse à se retenir ainsi…"
      },
      "c": {
-      "0": "Les cartes étaient face cachée. Vous avez retourné le Fou : voyez le petit baluchon au bout de son bâton, et le ciel ouvert au-dessus de lui.",
+      "0": "Les cartes étaient face cachée. Vous avez retourné le Fou : voyez le petit baluchon au bout de son bâton, et le grand ciel dégagé au-dessus de lui.",
       "1": "Vous êtes venue me demander s'il s'engagerait un jour. Le Fou n'a fait ses bagages que pour le début du chemin.",
-      "2": "Cette carte le montre au tout début, pas dans un engagement.\nJe ne peux pas vous dire ce qu'il choisira plus tard.\nLe Fou est prêt à partir, mais il n'emporte presque rien avec lui.\nVous avez besoin d'un engagement, et la carte vous montre un homme qui voyage léger.",
+      "2": "Cette carte le montre au tout début du chemin, pas dans l'engagement.\nJe ne peux pas vous dire ce qu'il choisira plus tard.\nLe Fou est prêt à partir, mais il n'emporte presque rien avec lui.\nVous avez besoin d'un engagement, et la carte vous montre un homme qui voyage léger.",
       "3": "Je veux regarder ce qui sépare ce commencement d'un véritable engagement…"
      }
     },
@@ -386,7 +386,7 @@ export const DATA: Readonly<Record<string, unknown>> = {
       "0": "Vous avez retourné le Fou. Regardez : sur son bonnet, il y a une plume et un petit brin vert.",
       "1": "Vous m'avez demandé s'il allait revenir. Votre main a choisi celui qui avance toujours.",
       "2": "Alors vous, vous avez continué à vivre. Vous ne vous êtes pas arrêtée.\nEt lui, il est chargé, et il tend encore un pied en avant.\nMais la carte ne dit pas qui marche vers qui.\nC'est pour ça que votre regard revient sans cesse vers la route, ma chère. Le chemin, c'est vous qui l'avez fait.",
-      "3": "Laissez-moi regarder de plus près ce qui ralentit vos pas l'un vers l'autre…"
+      "3": "Laissez-moi regarder de plus près ce qui freine les choses entre vous…"
      }
     },
     "cards-really-over": {
@@ -394,7 +394,7 @@ export const DATA: Readonly<Record<string, unknown>> = {
       "0": "Vous avez retourné le Magicien. Regardez : tout devant, sur sa table, une petite fleur blanche s'est ouverte.",
       "1": "Vous m'avez demandé si c'est vraiment fini entre vous. Votre main s'est posée sur l'homme qui dit les choses tout haut.",
       "2": "Alors je ne vous dirai pas que c'est terminé. Ni que c'est encore vivant.\nEt regardez-le. C'est lui qui fait exister une chose en la disant.\nMais personne ne l'a dit, ma chère. Pas clairement, et pas à vous.\nC'est pour ça que ça ne vous laisse pas en paix. Rien n'a jamais été refermé.",
-      "3": "Laissez-moi regarder de plus près ce qui se tient entre vous et ces mots-là…"
+      "3": "Laissez-moi regarder de plus près ce qui s'est mis entre vous et ces mots-là…"
      },
      "b": {
       "0": "Vous avez retourné le Pendu. Regardez : ni collines ni soleil, rien qu'un fond pâle derrière lui.",
@@ -425,8 +425,8 @@ export const DATA: Readonly<Record<string, unknown>> = {
      "c": {
       "0": "Vous avez retourné le Fou. Regardez : derrière lui, les montagnes ont le sommet enneigé.",
       "1": "Vous êtes venue me demander si vous étiez destinée à rester seule. Votre main a trouvé celui pour qui rien n'est encore décidé.",
-      "2": "Alors aucun destin n'est écrit sur le Fou. Aucun n'est écrit sur vous non plus.\nEt il avance en pleine nature, sans aucun chemin tracé.\nPourtant, une sentence pèse sur vous. Personne ne l'a prononcée.\nC'est pour ça que tout vous semble tranché, ma chère, alors que rien n'a été tranché du tout.",
-      "3": "Laissez-moi regarder de plus près ce qui tient cette sentence suspendue au-dessus de vous…"
+      "2": "Alors le destin du Fou n'est pas écrit. Le vôtre non plus.\nEt il avance en pleine nature, sans aucun chemin tracé.\nPourtant, une sentence pèse sur vous. Personne ne l'a prononcée.\nC'est pour ça que tout vous semble tranché, ma chère, alors que rien n'a été tranché du tout.",
+      "3": "Laissez-moi regarder de plus près ce qui fait peser cette sentence sur vous depuis tout ce temps…"
      }
     },
     "cards-someone-else": {
@@ -437,7 +437,7 @@ export const DATA: Readonly<Record<string, unknown>> = {
       "3": "Laissez-moi regarder de plus près ce qui vous sépare d'une explication franche…"
      },
      "b": {
-      "0": "Vous avez retourné le Pendu. Regardez : c'est la seule carte ici avec un ciel pâle derrière elle.",
+      "0": "Vous avez retourné le Pendu. Regardez : c'est la seule carte ici où le ciel est pâle.",
       "1": "Vous m'avez parlé de quelqu'un d'autre. Et votre main est allée vers la carte de ce qui vous est dû.",
       "2": "Alors on vous devait des explications. On vous les doit toujours.\nEt depuis, vous portez deux poids. Le changement, et le silence qui a suivi.\nMais c'est surtout le silence qui vous fait du mal. N'importe qui aurait pu le rompre.\nC'est pour ça qu'il suffit d'un long silence, ma chère, pour gâcher toute une bonne journée.",
       "3": "Laissez-moi regarder de plus près ce qui fait durer ce silence…"
@@ -459,27 +459,27 @@ export const DATA: Readonly<Record<string, unknown>> = {
      "b": {
       "0": "Vous avez retourné le Pendu. Regardez : sur cette carte, pas une seule ligne n'est à l'horizontale.",
       "1": "Vous m'avez demandé si quelque chose cloche, et si vous avez raison. Votre main est allée vers la carte où tout est de travers.",
-      "2": "Alors votre regard vous dit que quelque chose est de travers. Il fait bien son travail.\nEt sur cette carte, pas une ligne n'est à l'horizontale. Vous l'avez vu tout de suite.\nMais ce que votre regard a trouvé, ma chère, c'est une autre question.\nC'est pour ça que je ne vais pas vous faire changer d'avis, ni trancher à votre place.",
+      "2": "Alors votre regard vous dit que quelque chose est de travers. Il fait bien son travail.\nEt sur cette carte, pas une ligne n'est à l'horizontale. Vous l'avez vu tout de suite.\nMais savoir ce que votre regard a repéré, ma chère, c'est une autre question.\nC'est pour ça que je ne vais pas vous faire changer d'avis, ni trancher à votre place.",
       "3": "Laissez-moi regarder de plus près ce qui n'est plus d'aplomb depuis un moment…"
      },
      "c": {
       "0": "Vous avez retourné le Fou. Regardez : le précipice est juste derrière son talon, et il ne le voit pas.",
       "1": "Vous m'avez demandé si quelque chose cloche, et si vous avez raison. Votre main s'est posée sur celui qui ne regarde pas.",
       "2": "Alors vous, vous avez regardé. C'est une vraie différence entre vous et lui.\nLui ne regarde pas, et le bord est juste derrière son talon.\nMais je ne vais pas me prononcer sur ce que votre regard a découvert, ma chère.\nC'est pour ça que ça compte, d'avoir regardé tôt, quoi que ça veuille dire au bout du compte.",
-      "3": "Laissez-moi regarder de plus près ce qui reste juste hors de votre vue depuis un moment…"
+      "3": "Laissez-moi regarder de plus près ce qui vous échappe depuis quelque temps…"
      }
     },
     "cards-met-already": {
      "a": {
       "0": "Vous avez retourné le Magicien. Regardez : tout ce qui est sur sa table peut encore servir.",
       "1": "Vous m'avez demandé si vous aviez déjà rencontré votre âme sœur. Votre main s'est posée sur l'homme aux mains pleines.",
-      "2": "Alors non, vous n'avez jamais été limitée à un seul essai. Rien ne marche comme ça.\nEt sur sa table, tout peut encore servir. Rien n'a été rayé.\nMais depuis un moment, vous avez peur d'avoir déjà gâché votre seule chance, ma chère.\nC'est pour ça que vous repassez sans cesse les visages d'autrefois, à la recherche de celui qui vous aurait échappé.",
+      "2": "Alors non, vous n'avez jamais été limitée à un seul essai. Rien ne marche comme ça.\nEt sur sa table, tout peut encore servir. Rien n'a été rayé.\nMais depuis un moment, vous avez peur d'avoir déjà gâché votre seule chance, ma chère.\nC'est pour ça que vous repassez sans cesse en revue les visages d'autrefois, à la recherche de celui qui vous aurait échappé.",
       "3": "Laissez-moi regarder de plus près d'où vous vient cette idée d'une seule chance…"
      },
      "b": {
       "0": "Vous avez retourné le Pendu. Regardez : il voit le monde la tête en bas.",
       "1": "Vous m'avez demandé si vous aviez déjà rencontré votre âme sœur. Votre main est allée vers celui qui pose un second regard sur les choses.",
-      "2": "Alors revenir sur les choses, ce n'est pas avoir trouvé une erreur.\nEt c'est le même monde qu'il regarde, vous voyez, simplement par l'autre bout.\nMais depuis un moment, vous fouillez votre passé comme on épluche un dossier.\nC'est pour ça que rien de ce que vous y trouvez ne règle la question. Vous faisiez de votre mieux, ma chère.",
+      "2": "Alors revenir sur les choses, ce n'est pas avoir trouvé une erreur.\nEt c'est le même monde qu'il regarde, vous voyez, simplement la tête en bas.\nMais depuis un moment, vous fouillez votre passé comme on épluche un dossier.\nC'est pour ça que rien de ce que vous y trouvez ne règle la question. Vous faisiez de votre mieux, ma chère.",
       "3": "Laissez-moi regarder de plus près ce qui vous pousse à fouiller ainsi votre passé…"
      },
      "c": {
@@ -499,7 +499,7 @@ export const DATA: Readonly<Record<string, unknown>> = {
      "b": {
       "0": "Vous avez retourné le Pendu sans voir l'image. Regardez la corde autour de sa cheville : rien d'autre n'est attaché.",
       "1": "Vous êtes venue me demander si le blocage vient de votre énergie. Sur cette carte, une seule corde retient tout.",
-      "2": "Ce n'est pas votre énergie qui retient l'argent.\nCette corde ne dit pas ce qui bloque, concrètement, dans votre vie.\nIl y a de la place pour bouger sur cette carte, mais un seul point la tient immobile.\nVous vous demandiez si c'était vous qui reteniez tout. Cette carte situe le blocage ailleurs, ma chère.",
+      "2": "Ce n'est pas votre énergie qui retient l'argent.\nCette corde ne dit pas ce qui bloque, concrètement, dans votre vie.\nSur cette carte, il y a de la place pour bouger, mais un seul point d'attache empêche le mouvement.\nVous vous demandiez si c'était vous qui reteniez tout. Cette carte situe le blocage ailleurs, ma chère.",
       "3": "Laissez-moi regarder de plus près ce qui se cache derrière ce point de pression…"
      },
      "c": {
@@ -520,12 +520,12 @@ export const DATA: Readonly<Record<string, unknown>> = {
       "0": "Les images étaient cachées quand vous avez choisi. Vous avez retourné le Pendu. Tout son corps tient à une seule cheville attachée.",
       "1": "Vous m'avez demandé pourquoi l'argent ne reste pas. Un seul point suffit à tenir toute la carte immobile.",
       "2": "L'argent arrive jusqu'à vous. C'est après son arrivée que ça lâche.\nRien ici ne dit ce qui cède une fois que l'argent est là.\nUn seul point peut retenir tout le personnage, alors que votre argent, lui, continue de vous glisser entre les doigts.\nVous ne demandez pas pourquoi l'argent ne vient jamais. Vous demandez pourquoi il ne reste pas.",
-      "3": "Laissez-moi voir où ça se défait, au moment de le garder…"
+      "3": "Laissez-moi voir ce qui vous empêche de garder cet argent…"
      },
      "c": {
       "0": "Les dos se ressemblaient tous. Vous avez retourné le Fou. Regardez le petit baluchon, bien noué, au bout de son bâton.",
       "1": "Ce que vous voulez savoir, c'est pourquoi l'argent ne reste pas. Le Fou emporte quelque chose avec lui sur la route, dans un baluchon.",
-      "2": "Ce n'est pas à l'arrivée que votre énergie flanche.\nLe baluchon est bien fermé, mais la carte ne montre pas pourquoi votre argent s'en va.\nLe baluchon, lui, avance. L'argent dont vous me parlez, non.\nL'argent s'approche, il arrive bien jusqu'à vous. Ce qui vous inquiète, c'est tout ce qui se passe ensuite.",
+      "2": "Ce n'est pas au moment où l'argent arrive que votre énergie flanche.\nLe baluchon est bien fermé, mais la carte ne montre pas pourquoi votre argent s'en va.\nLe baluchon, lui, avance. L'argent dont vous me parlez, non.\nL'argent s'approche, il arrive bien jusqu'à vous. Ce qui vous inquiète, c'est tout ce qui se passe ensuite.",
       "3": "Regardons de plus près ce qui empêche l'argent d'avancer avec vous…"
      }
     },
@@ -533,7 +533,7 @@ export const DATA: Readonly<Record<string, unknown>> = {
      "a": {
       "0": "Vous avez retourné le Magicien parmi trois cartes face cachée. Regardez les fleurs rouges qui poussent au-dessus de sa table.",
       "1": "Après des années de prière, vous demandez combien de temps encore. Sur la table du Magicien, chaque outil est prêt.",
-      "2": "Ce n'est pas votre prière qui retient tout ça.\nCe que je lis, ce sont des outils prêts, pas un nombre d'années.\nLa table est prête. L'argent, lui, n'a pas suivi.\nVous priez depuis des années, et vous vous demandez encore quand ça va changer, côté argent.",
+      "2": "Ce n'est pas votre prière qui bloque les choses.\nCe que je vois, ce sont des outils prêts à servir, pas un nombre d'années.\nLa table est prête. L'argent, lui, n'a pas suivi.\nVous priez depuis des années, et vous vous demandez encore quand ça va changer, côté argent.",
       "3": "Regardons de plus près ce qui empêche les choses de changer côté argent…"
      },
      "b": {
@@ -554,7 +554,7 @@ export const DATA: Readonly<Record<string, unknown>> = {
       "0": "Vous avez choisi alors que les trois images étaient cachées. Vous avez retourné le Magicien : tous ses outils sont encore étalés sur la table.",
       "1": "Vous êtes venue me demander s'il peut y avoir une âme sœur après la fin de votre mariage. Sur cette table, tout peut encore servir.",
       "2": "Votre mariage est terminé, mais vous pouvez encore aimer.\nQui viendra ensuite, et quand, ça, cette carte ne le dit pas.\nVous pouvez encore aimer, même si cette fin vous a donné l'impression que l'amour, c'était fini.\nVous m'avez demandé ce qu'il reste après ce mariage. La table me dit que vous n'y avez pas laissé tout votre amour.",
-      "3": "Voyons ce qui vous a fait sentir qu'une seule fin mettait un terme à l'amour…"
+      "3": "Voyons ce qui vous a donné l'impression qu'après la fin de ce mariage, vous ne pourriez plus aimer…"
      },
      "b": {
       "0": "Les cartes étaient face cachée. Vous avez retourné le Pendu : il a la tête en bas, mais son visage est calme et le bois est bien vivant.",
@@ -564,7 +564,7 @@ export const DATA: Readonly<Record<string, unknown>> = {
      },
      "c": {
       "0": "Le dos des cartes ne laissait rien voir. Vous avez retourné le Fou : regardez le petit baluchon noué au bout de son bâton.",
-      "1": "Ce que vous voulez savoir, c'est s'il y a de l'amour après le mariage. La carte commence avec un petit baluchon, celui de la vie déjà vécue.",
+      "1": "Ce que vous voulez savoir, c'est s'il y a de l'amour après le mariage. Sur cette carte, tout commence par un petit baluchon, celui de la vie déjà vécue.",
       "2": "Rien ne vous empêche de recommencer, ma chère.\nUn nouveau chemin ne me dit pas qui le partagera avec vous.\nCette carte montre un commencement, alors que votre question fait de ce mariage la dernière porte ouverte à l'amour.\nVotre question met un point final après le mariage. Le chemin du Fou, lui, n'en met pas.",
       "3": "Voyons pourquoi ce nouveau chemin vous semble encore fermé…"
      }
@@ -573,7 +573,7 @@ export const DATA: Readonly<Record<string, unknown>> = {
      "a": {
       "0": "Les cartes étaient face cachée quand vous avez choisi. Vous avez retourné le Magicien : sur sa table, tous ses outils sont étalés, à découvert.",
       "1": "Vous m'avez demandé si quelque chose vous retient dans la solitude, ou si c'est simplement votre vie. Le Magicien a encore tous ses outils devant lui.",
-      "2": "Être seule, ici, ce n'est pas ce que vous êtes pour toujours.\nCes outils ne peuvent pas vous promettre une relation, ni expliquer cette absence.\nSur la table, il y a plusieurs façons d'avancer, alors que votre question ramène toute la vie à ce que vous vivez aujourd'hui.\nVous avez mis un blocage d'un côté et toute votre vie de l'autre. Aucun de ces deux verdicts n'est écrit sur cette carte.",
+      "2": "Être seule aujourd'hui, ça ne vous définit pas pour toujours.\nCes outils ne peuvent pas vous promettre une relation, ni expliquer cette absence.\nSur la table, il y a plusieurs façons d'avancer, alors que votre question ramène toute la vie à ce que vous vivez aujourd'hui.\nVous avez mis un blocage d'un côté et toute votre vie de l'autre. Aucun de ces deux verdicts n'est écrit sur cette carte.",
       "3": "Je vais regarder de plus près pourquoi ce que vous vivez aujourd'hui vous semble être toute votre vie…"
      },
      "b": {
@@ -593,19 +593,19 @@ export const DATA: Readonly<Record<string, unknown>> = {
      "a": {
       "0": "Vous ne pouviez pas voir quelle image vous choisissiez. Vous avez retourné le Magicien : ses quatre outils sont toujours posés sur la table, prêts à servir.",
       "1": "Vous m'avez dit que vous êtes seule depuis dix ans, et vous demandez combien de temps encore. Le Magicien ne donne pas de chiffre. Il montre seulement que tout est prêt.",
-      "2": "Je ne peux pas vous donner un autre chiffre. Rien, sur cette table, ne dit que ces dix ans dureront toujours.\nCes outils ne me donnent aucune date de rencontre.\nLa table est prête, alors que ces dix ans ont fini par vous donner l'impression que l'attente était la seule issue.\nVous avez parlé de ces dix ans en premier parce que tout ce temps vous semble maintenant une preuve. La carte, elle, refuse d'en faire un verdict.",
+      "2": "Je ne peux pas vous donner un autre chiffre. Rien, sur cette table, ne fait de ces dix ans une éternité.\nCes outils ne me donnent aucune date de rencontre.\nLa table est prête, alors que ces dix ans ont fini par vous donner l'impression que l'attente était la seule issue.\nVous avez parlé de ces dix ans en premier parce que tout ce temps vous semble maintenant une preuve. La carte, elle, refuse d'en faire un verdict.",
       "3": "Laissez-moi regarder pourquoi, à côté de ces dix ans, être prête vous semble ne rien changer…"
      },
      "b": {
       "0": "Trois cartes au dos identique, et vous avez retourné le Pendu : une seule cheville est retenue, tout le reste de son corps est libre.",
       "1": "Vous m'avez demandé combien de temps vous devrez encore attendre, après toutes ces années. Sur la carte, cette pause tient à un seul point d'attache.",
-      "2": "Aucune carte ne peut compter ce qui reste. Cette corde n'est pas une condamnation pour le reste de votre vie.\nLa carte ne donne ni date, ni rythme, ni libération promise.\nPresque tout le personnage est libre, même si toute votre question tient désormais dans le temps déjà vécu.\n« Combien de temps encore », ça fait des années déjà vécues une prédiction. La corde, elle, ne peut rien prédire.",
+      "2": "Aucune carte ne peut mesurer le temps qui reste. Cette corde n'est pas une condamnation pour le reste de votre vie.\nLa carte ne donne ni date, ni rythme, ni libération promise.\nPresque tout le personnage est libre, même si les années d'attente prennent désormais toute la place dans votre question.\n« Combien de temps encore », ça fait des années déjà vécues une prédiction. La corde, elle, ne peut rien prédire.",
       "3": "Laissez-moi voir pourquoi ces années pèsent autant quand vous pensez à la suite…"
      },
      "c": {
       "0": "La carte était cachée quand vous avez tendu la main. Vous avez retourné le Fou : un grand soleil brille haut dans le ciel, derrière lui.",
       "1": "Vous demandez combien de temps encore, après dix ans seule. Ce grand soleil ne me donne aucune mesure du temps.",
-      "2": "Je ne vais pas inventer une durée, et nulle part cette route ne porte la mention « terminé ».\nLe mouvement n'annonce ni quelqu'un ni une arrivée.\nLe Fou avance, alors que les dix ans derrière vous donnent l'impression que la route devant vous ne bouge plus.\nCes dix ans sont bien réels. Ils ne donnent pas pour autant au Fou une fin à vous montrer.",
+      "2": "Je ne vais pas inventer une durée. Et rien, sur cette route, n'indique qu'elle est terminée.\nQue le Fou avance, ça ne dit ni avec qui, ni quand vous arriverez.\nLui avance, alors que ces dix ans passés font paraître la route immobile devant vous.\nCes dix ans sont bien réels. Mais ils n'écrivent pas pour autant de fin sur cette carte.",
       "3": "Maintenant, regardons pourquoi, avec les années derrière vous, la route semble arrêtée alors que le Fou avance…"
      }
     },
@@ -625,7 +625,7 @@ export const DATA: Readonly<Record<string, unknown>> = {
      "c": {
       "0": "Le dos des cartes ne laissait rien deviner de l'image. Vous avez retourné le Fou : un petit baluchon repose sur son épaule.",
       "1": "Vous m'avez demandé pourquoi être seule vous pèse plus qu'avant. Le Fou porte peu de chose, et ça fait ressortir le poids qu'il y a dans votre question.",
-      "2": "Cette carte ne vous traite pas de faible parce que vous sentez la différence aujourd'hui.\nLe baluchon ne dit rien de ce qui s'est passé dans votre vie.\nLe Fou porte peu, alors que la solitude, elle, pèse plus aujourd'hui.\nVotre question compare aujourd'hui et avant. Avec ce petit baluchon, c'est ce poids en plus qu'il faut regarder de près.",
+      "2": "Cette carte ne vous traite pas de faible parce que vous sentez la différence aujourd'hui.\nLe baluchon ne dit rien de ce qui s'est passé dans votre vie.\nLe Fou porte peu, alors que la solitude, elle, pèse plus aujourd'hui.\nDans votre question, vous comparez aujourd'hui à avant. Avec ce petit baluchon, c'est ce poids en plus qu'il faut regarder de près.",
       "3": "Alors regardons ce qui rend la solitude plus lourde aujourd'hui…"
      }
     }
@@ -658,8 +658,8 @@ export const DATA: Readonly<Record<string, unknown>> = {
   "cards-return": "Avant de regarder de plus près, dites-moi… qu'est-ce qui est resté en suspens quand il a pris ses distances ?",
   "cards-feels": "Avant de regarder de plus près, dites-moi… qu'est-ce qui, dans son attitude, vous fait douter de ses sentiments ?",
   "cards-who-he-is": "Avant de regarder de plus près, dites-moi… à quel moment avez-vous entrevu pour la première fois quelqu'un d'autre derrière l'image qu'il vous donne ?",
-  "cards-will-commit": "Avant de regarder de plus près, dites-moi… quelles paroles de lui sur l'avenir vous gardez encore précieusement ?",
-  "cards-wont-commit": "Avant de regarder de plus près, dites-moi… quand vous êtes-vous rendu compte, pour la première fois, que vous étiez la seule à construire quelque chose ?",
+  "cards-will-commit": "Avant de regarder de plus près, dites-moi… qu'est-ce qu'il vous a dit sur l'avenir, et que vous gardez encore en tête ?",
+  "cards-wont-commit": "Avant de regarder de plus près, dites-moi… quand est-ce que vous vous êtes rendu compte, pour la première fois, que vous étiez la seule à construire quelque chose ?",
   "cards-come-back": "Avant de regarder de plus près, dites-moi… quelle est la dernière chose qui s'est passée entre vous avant qu'il ne donne plus de nouvelles ?",
   "cards-really-over": "Avant que je regarde de plus près, dites-moi… est-ce qu'à un moment, ça a été dit clairement ? Ou est-ce qu'on a seulement laissé les choses s'éteindre ?",
   "cards-meant-alone": "Avant de regarder de plus près, dites-moi… qui, ou quoi, vous a mis en tête pour la première fois que c'était peut-être voulu ?",
@@ -692,7 +692,7 @@ export const DATA: Readonly<Record<string, unknown>> = {
      "3": "Laissez-moi regarder de plus près ce qui occupe cet espace-là…"
     },
     "c": {
-     "0": "Vous avez retourné le Fou. Le dos des cartes ne vous disait rien, et vous avez tendu la main vers celle qui porte un avertissement.\nRegardez le petit chien blanc, dressé sur ses pattes arrière à ses côtés.",
+     "0": "Vous avez retourné le Fou. Le dos des cartes ne vous disait rien, et vous avez tendu la main vers celui qui reçoit un avertissement.\nRegardez le petit chien blanc, dressé sur ses pattes arrière à ses côtés.",
      "1": "Vous m'avez demandé ce qui le retient. Ce chien ne joue pas : il essaie de lui dire quelque chose.",
      "2": "Mais rien ne l'a atteint. Et vous, vous croyez que la réponse, c'est vous.\nCe qui le retient, quoi que ce soit, est hors de votre portée. Je ne crois pas que ça ait commencé avec vous.",
      "3": "Laissez-moi regarder de plus près ce que c'est…"
@@ -708,7 +708,7 @@ export const DATA: Readonly<Record<string, unknown>> = {
     "b": {
      "0": "Vous avez retourné le Pendu. Vous ne voyiez aucun visage, et votre main a trouvé celle où il ne tient qu'à une seule corde.\nRegardez la corde. Elle est nouée à une cheville, et tout le reste de son corps pend librement.",
      "1": "Vous m'avez demandé s'il y a une âme sœur après le mariage. Ce qui retient mon regard, c'est le peu de chose qui le retient.",
-     "2": "Pourtant, personne n'est venu. Et c'est vous qui portez la question.\nCe qui retient tout ça ne bouge pas. Je ne crois pas que ça ait commencé avec vous.",
+     "2": "Pourtant, personne n'est venu. Et c'est vous qui restez avec cette question.\nCe qui retient tout ça ne bouge pas. Je ne crois pas que ça ait commencé avec vous.",
      "3": "Laissez-moi regarder de plus près de quoi il s'agit…"
     },
     "c": {
@@ -723,7 +723,7 @@ export const DATA: Readonly<Record<string, unknown>> = {
      "0": "Vous avez retourné le Magicien. Vous ne pouviez pas le voir, mais votre main s'est posée sur celui dont la table est encore dressée.\nChaque outil est toujours là, posé, prêt à servir.",
      "1": "Vous m'avez dit que vous êtes seule depuis dix ans, et vous demandez combien de temps encore. Mon regard va vers cette table encore dressée.",
      "2": "Personne n'est venu, et avec ces dix ans, votre question ne porte plus que sur le temps qui reste.\nCe qui tient les rencontres à distance laisse pourtant la table dressée. Je ne crois pas que ça ait commencé avec vous.",
-     "3": "Laissez-moi voir ce qui retient cette rencontre…"
+     "3": "Laissez-moi voir ce qui fait obstacle à cette rencontre…"
     },
     "b": {
      "0": "Vous avez retourné le Pendu. Les dos ne laissaient rien deviner, et pourtant vous avez choisi la carte retenue en un seul point.\nUne seule corde tient une seule cheville. Tout le reste est libre.",
@@ -734,7 +734,7 @@ export const DATA: Readonly<Record<string, unknown>> = {
     "c": {
      "0": "Vous avez retourné le Fou. L'image était cachée, mais votre main est allée vers celui qui voyage léger.\nLe petit baluchon au bout de son bâton, c'est tout ce qu'il emporte.",
      "1": "Vous demandez combien de temps encore, après dix ans seule. C'est ce baluchon si léger qui attire mon attention.",
-     "2": "Mais cette route ne vous a menée vers personne, et vous demandez combien il en reste encore.\nQuelque chose se tient entre la route ouverte et la rencontre. Je ne crois pas que ça ait commencé avec vous.",
+     "2": "Mais cette route ne vous a menée vers personne, et vous vous demandez combien de chemin il reste encore à parcourir.\nLa route est ouverte, mais quelque chose fait obstacle à une rencontre. Je ne crois pas que ça ait commencé avec vous.",
      "3": "Maintenant, regardons ce qui se trouve là…"
     }
    },
@@ -767,8 +767,8 @@ export const DATA: Readonly<Record<string, unknown>> = {
     },
     "b": {
      "0": "Vous avez retourné le Pendu. Vous ne pouviez pas voir la carte, et pourtant votre main a cherché celle où il reste de l'espace autour de l'entrave.\nUne cheville est retenue. Le reste du corps pend librement.",
-     "1": "Vous m'avez demandé si quelque chose vous retient ici. Cette carte me fait regarder combien l'entrave est petite à côté du personnage tout entier.",
-     "2": "Pourtant, le lien avec quelqu'un n'est pas là, et vous vous demandez si cette entrave est pour toujours.\nQuelque chose se tient entre cet espace libre et la relation. Je ne crois pas que ça ait commencé avec vous.",
+     "1": "Vous m'avez demandé si quelque chose vous retient ici. Cette carte me montre à quel point l'entrave est petite à côté du personnage tout entier.",
+     "2": "Pourtant, le lien avec quelqu'un n'est pas là, et vous vous demandez si cette entrave est pour toujours.\nMême avec toute cette liberté, quelque chose fait obstacle à une relation. Je ne crois pas que ça ait commencé avec vous.",
      "3": "Je vais voir ce qui retient tout ça…"
     },
     "c": {
@@ -782,13 +782,13 @@ export const DATA: Readonly<Record<string, unknown>> = {
     "a": {
      "0": "Vous avez retourné le Magicien. Rien ne les distinguait, et vous avez pris celui qui était déjà prêt.\nRegardez sa table. Quatre objets dessus, et tous encore à leur place.",
      "1": "Vous m'avez demandé ce que votre énergie dit de cet argent qui ne reste pas. Ce qui me frappe, c'est que les quatre objets sont tous là, sur cette table.",
-     "2": "Et pourtant, ma chère, l'argent ne reste pas. Il rentre, et puis il repart.\nCe qui est là tient en place, et rien n'y change. Je ne crois pas que tout ça ait commencé avec vous.",
+     "2": "Et pourtant, ma chère, l'argent ne reste pas. Il rentre, et puis il repart.\nCe qui est là ne bouge pas, et rien n'y change. Je ne crois pas que tout ça ait commencé avec vous.",
      "3": "Laissez-moi regarder de plus près ce qui a prise sur cet argent…"
     },
     "b": {
      "0": "Vous avez retourné le Pendu. Les trois étaient face cachée, et sur la vôtre, un homme tenu par une seule corde.\nRegardez la corde. Une seule cheville, et tout le reste pend librement.",
      "1": "Vous m'avez demandé ce que votre énergie dit de cet argent qui ne reste pas. Ce qui retient mon regard, c'est cette corde, une seule ligne tendue.",
-     "2": "Et pourtant, il ne reste pas. Et vous avez mis ça sur le compte de quelque chose en vous.\nQuelque chose se trouve juste là où il pourrait se poser. Je ne crois pas que ça ait commencé avec vous.",
+     "2": "Et pourtant, il ne reste pas. Et vous avez mis ça sur le compte de quelque chose en vous.\nQuelque chose se met en travers juste au moment où il pourrait rester. Je ne crois pas que ça ait commencé avec vous.",
      "3": "Laissez-moi regarder de plus près ce qu'il y a derrière…"
     },
     "c": {
@@ -808,7 +808,7 @@ export const DATA: Readonly<Record<string, unknown>> = {
     "b": {
      "0": "Vous avez retourné le Pendu. Le dos des cartes ne laissait rien voir, et vous êtes tombée sur l'homme le plus calme du jeu.\nIl est suspendu par une cheville, la tête en bas. Mais regardez son visage : il est paisible.",
      "1": "Vous m'avez demandé si votre énergie empêche l'argent de venir. Dans cette image, tant de choses sont retenues… c'est à ça que je reviens sans cesse.",
-     "2": "Et pourtant, l'argent ne passe toujours pas. Et la raison que vous me donnez, c'est vous.\nQuelque chose se présente juste à l'endroit où l'argent devrait entrer. Je ne crois pas que quoi que ce soit dans tout ça vienne de vous.",
+     "2": "Et pourtant, l'argent n'arrive toujours pas. Et la raison que vous me donnez, c'est vous.\nQuelque chose se met en travers juste au moment où l'argent devrait arriver. Je ne crois pas que tout ça ait commencé avec vous.",
      "3": "Laissez-moi regarder de plus près ce que c'est…"
     },
     "c": {
@@ -822,7 +822,7 @@ export const DATA: Readonly<Record<string, unknown>> = {
     "a": {
      "0": "Vous avez retourné le Magicien. Rien ne distinguait les cartes, et vous avez pris celui qui était déjà prêt.\nRegardez sa table. Quatre objets posés, et aucun n'a été rangé.",
      "1": "Vous avez demandé combien de temps encore vos prières resteraient sans réponse. Ce qui me frappe, c'est que les quatre sont à portée de main.",
-     "2": "Et pourtant, rien n'est arrivé. Et ce que vous attendez de moi, c'est un chiffre.\nQuelque chose surgit juste au moment où ça pourrait passer. Je ne crois pas que ça ait commencé avec vous.",
+     "2": "Et pourtant, rien n'est arrivé. Et ce que vous attendez de moi, c'est un chiffre.\nQuelque chose surgit juste au moment où l'argent pourrait arriver. Je ne crois pas que ça ait commencé avec vous.",
      "3": "Laissez-moi regarder de plus près ce qu'il y a derrière tout ça…"
     },
     "b": {
@@ -848,7 +848,7 @@ export const DATA: Readonly<Record<string, unknown>> = {
     "b": {
      "0": "Vous avez retourné le Pendu. Rien ne marquait le dos des cartes, et vous avez trouvé l'homme le plus calme du jeu.\nIl est suspendu la tête en bas par une cheville. Mais regardez son visage : il est calme.",
      "1": "Vous m'avez demandé s'il s'engagerait un jour. Ce qui retient mon regard, c'est la corde, et la poutre au-dessus.",
-     "2": "Pourtant, rien n'est tranché. Et c'est vous qui vous demandez encore pourquoi.\nQuelque chose se tient entre vous et la réponse. Je ne crois pas que tout ça ait commencé avec vous.",
+     "2": "Pourtant, rien n'est tranché. Et c'est vous qui vous demandez encore pourquoi.\nQuelque chose s'est mis entre vous et la réponse. Je ne crois pas que tout ça ait commencé avec vous.",
      "3": "Je vais regarder de plus près ce qui se trouve là…"
     },
     "c": {
@@ -860,7 +860,7 @@ export const DATA: Readonly<Record<string, unknown>> = {
    },
    "cards-wont-commit": {
     "a": {
-     "0": "Vous avez retourné le Magicien. Rien ne distinguait les cartes, et vous avez pris celui qui arrivait prêt.\nRegardez sa table. Une coupe, une pièce, une épée et un bâton… tout est posé là, à découvert.",
+     "0": "Vous avez retourné le Magicien. Rien ne distinguait les cartes, et vous avez pris celui qui avait déjà tout ce qu'il fallait.\nRegardez sa table. Une coupe, une pièce, une épée et un bâton… tout est posé là, à découvert.",
      "1": "Vous m'avez demandé pourquoi il ne s'engage pas avec vous. Je ne peux pas deviner ses raisons, mais sur cette table, rien n'est gardé de côté.",
      "2": "Et pourtant, rien n'est décidé. Et vous commencez à croire que la raison, c'est vous.\nQuelque chose s'interpose, tout près, pas au loin. Je ne crois pas que ça ait commencé avec vous.",
      "3": "Laissez-moi regarder de plus près ce qui se tient là…"
@@ -873,8 +873,8 @@ export const DATA: Readonly<Record<string, unknown>> = {
     },
     "c": {
      "0": "Vous avez retourné le Fou. Rien ne se voyait à travers le dos des cartes, et vous avez choisi celui qui est déjà en route.\nRegardez ses pieds. L'un est levé, et l'autre va suivre.",
-     "1": "Vous m'avez demandé pourquoi il ne s'engage pas avec vous. Ici, il a déjà amorcé son pas.",
-     "2": "Mais rien n'est décidé. Et c'est vous qui vous demandez pourquoi.\nQuelque chose surgit juste au moment où les choses pourraient se poser. Je ne crois pas que tout ça ait commencé avec vous.",
+     "1": "Vous m'avez demandé pourquoi il ne s'engage pas avec vous. Ici, il a déjà commencé à faire un pas.",
+     "2": "Mais rien n'est décidé. Et c'est vous qui vous demandez pourquoi.\nQuelque chose surgit juste au moment où les choses pourraient se stabiliser. Je ne crois pas que tout ça ait commencé avec vous.",
      "3": "Laissez-moi regarder de plus près ce qu'il y a derrière…"
     }
    }
@@ -940,7 +940,7 @@ export const DATA: Readonly<Record<string, unknown>> = {
    "unsure": {
     "0": "C'est subtil. Parfois, on ne le remarque que des mois plus tard.",
     "1": "Dans tous les cas, je veux tout faire pour que ça ne se reproduise pas cette fois.",
-    "2": "Ce que nous libérons ensemble compte trop pour courir ce risque."
+    "2": "Ce que nous libérons ensemble, c'est trop important pour prendre ce risque."
    },
    "default": {
     "0": "Je sens que vous voyez ce que je veux dire.",
@@ -959,7 +959,7 @@ export const DATA: Readonly<Record<string, unknown>> = {
    },
    "more": {
     "0": "Bien sûr. Je vais vous montrer exactement ce que j'en ferai.",
-    "1": "C'est le rituel lui-même qui porte la vraie force."
+    "1": "La vraie force, c'est le rituel lui-même."
    },
    "default": {
     "0": "Entre vous et cette pierre… le lien se crée déjà.",
@@ -1132,7 +1132,7 @@ export const DATA: Readonly<Record<string, unknown>> = {
   "UPSELL2_AFTER_Q1": {
    "yes": {
     "0": "Bien. C'est votre intuition qui parle. Elle sait déjà ce qui manque.",
-    "1": "La purification fait de la place. Mais il faut que quelque chose vienne la remplir… sinon, ce sont les vieux schémas qui la rempliront."
+    "1": "La purification fait de la place. Mais il faut que quelque chose vienne l'occuper… sinon, ce sont les vieux schémas qui reprendront cette place."
    },
    "maybe": {
     "0": "C'est subtil. Mais vous le sentirez nettement une fois la purification terminée.",
@@ -1162,7 +1162,7 @@ export const DATA: Readonly<Record<string, unknown>> = {
    },
    "default": {
     "0": "Un lien se tisse déjà entre vous et ces pierres, {firstName}.",
-    "1": "Je vais vous montrer celle qui parle le plus fort à votre énergie…"
+    "1": "Je vais vous montrer celle qui résonne le plus avec votre énergie…"
    }
   },
   "UPSELL2_AFTER_Q3": {
@@ -1262,7 +1262,7 @@ export const DATA: Readonly<Record<string, unknown>> = {
   },
   "UPSELL2_RITUAL_INSTRUCTION": {
    "0": "Vous le porterez au poignet droit, {firstName}. Toujours le droit.",
-   "1": "Votre côté droit, c'est celui par lequel vous émettez. C'est par là que votre énergie part vers le monde : dans chaque pièce où vous entrez, vers chaque personne que vous rencontrez, dans chaque intention que vous posez.",
+   "1": "Votre côté droit, c'est celui par lequel vous émettez votre énergie. C'est par là qu'elle se diffuse dans le monde : dans chaque pièce où vous entrez, vers chaque personne que vous rencontrez, dans chaque intention que vous posez.",
    "2": "Le bracelet amplifie ce que vous émettez. Il prend la fréquence de votre désir et la porte plus loin, plus fort, plus clairement… pour que l'Univers entende exactement ce que vous demandez.",
    "3": "Pour l'instant, vous murmurez. Avec ce bracelet, vous parlerez à pleine voix."
   },
@@ -1287,7 +1287,7 @@ export const DATA: Readonly<Record<string, unknown>> = {
   },
   "UPSELL2_STONES": {
    "0": "Huit pierres, {firstName}. Chacune attire vers vous une part différente de ce que vous désirez.",
-   "1": "L'aventurine verte, la pierre de la chance. De toutes celles que j'ai eues entre les mains, c'est elle qui attire le plus fort. Elle ouvre des portes. De nouvelles rencontres. Des occasions inattendues. Ce que vous demandez à l'Univers depuis un moment… cette pierre l'aide à venir jusqu'à vous.",
+   "1": "L'aventurine verte, la pierre de la chance. De toutes celles que j'ai eues entre les mains, c'est celle qui a le plus grand pouvoir d'attraction. Elle ouvre des portes. De nouvelles rencontres. Des occasions inattendues. Ce que vous demandez à l'Univers depuis un moment… cette pierre l'aide à venir jusqu'à vous.",
    "2": "La citrine, la pierre des marchands. Depuis des siècles, les commerçants et ceux qui cherchent l'abondance la portent sur eux. Elle n'attire pas seulement la richesse… elle attire aussi la confiance nécessaire pour l'accueillir. Le sentiment de mériter ce qui vient vers vous.",
    "3": "L'améthyste, pour amplifier votre intuition. Une fois le blocage dissipé, des signes et des synchronicités vont commencer à se montrer. Cette pierre vous aide à les VOIR. L'Univers vous parle sans cesse, {firstName}. L'améthyste vous aide à l'écouter.",
    "4": "L'œil-de-tigre, la pierre de l'audace. Elle attire les occasions qui demandent du courage. Celles devant lesquelles vous hésiteriez d'habitude. Et puis elle vous donne le cran de dire oui.",
@@ -1314,7 +1314,7 @@ export const DATA: Readonly<Record<string, unknown>> = {
    "4": "J'ai juste besoin de savoir où vous l'envoyer."
   },
   "UPSELL2_URGENCY": {
-   "0": "Je ne peux accorder les pierres que pendant que je suis dans votre champ énergétique, cette nuit, {firstName}. Une fois le rituel terminé et la séance refermée… le moment de les charger à votre fréquence à vous sera passé.",
+   "0": "Je ne peux accorder les pierres que pendant que je suis dans votre champ énergétique, cette nuit, {firstName}. Une fois le rituel accompli et la séance terminée… le moment de les charger à votre fréquence à vous sera passé.",
    "1": "Votre rituel gardera toute sa force, de toute façon. Ça, je tiens à vous le dire.",
    "2": "Mais si vous voulez aller au-delà de la purification et commencer à attirer dans votre vie ce qui vous revient… c'est le moment."
   },

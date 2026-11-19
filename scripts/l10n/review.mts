@@ -160,7 +160,7 @@ function codexPrompt(rows: unknown[]): string {
     `- voice: breaks Evelyn's voice (stiff, literary, salesy, preachy, a proverb added)`,
     `- legal: a promise of an outcome or a health claim the English does not make`,
     `For each flag give a "fix": the complete corrected French segment (keep every {placeholder}, <tag> and \\n), and "issue": why, in one short English sentence.`,
-    `Intended, do NOT flag: prices in euros ("35 €") where the English has dollars; "dear" left out on most lines (« ma chère » only at warm moments, at most once a message); "vous" everywhere; the house terms below; English names (Evelyn Cross, The Seer Within) kept.`,
+    `Intended, do NOT flag: prices in euros ("35 €") where the English has dollars; "dear" left out on most lines (« ma chère » only at warm moments, at most once a message); "vous" everywhere; the house terms below; English names (Evelyn Cross, The Seer Within) kept; an English promise of an outcome ("That I promise you", "it ends now") softened on purpose for French consumer law; a short label in lower case where it completes a sentence the page builds (« Evelyn Cross est » + « en ligne »).`,
     `Also give "soundsTranslated" for the whole packet (1 = reads as written in French, 5 = obviously translated) and "overall": two sentences.`,
     `## House style (summary)\n${fs.readFileSync(path.join(dir, "style.md"), "utf8")}`,
     `## Glossary\n${glossary.terms.map((t: any) => `- ${t.en} → ${t.fr}${t.note ? ` (${t.note})` : ""}`).join("\n")}\nTarot: ${Object.entries(glossary.tarot).filter(([k]) => k !== "_doc").map(([en, fr]) => `${en} → ${fr}`).join("; ")}`,
@@ -177,8 +177,11 @@ function codexRun(packetDir: string): Promise<number> {
   });
 }
 
+// --fr final.json --out codex2: a later review round of the edited French, blind to earlier flags
+const CODEX_OUT = arg("--out", "codex")!;
+const CODEX_FR: Record<string, string> | null = arg("--fr") ? readJson(arg("--fr")!) : null;
 async function codex() {
-  fs.mkdirSync(f("codex"), { recursive: true });
+  fs.mkdirSync(f(CODEX_OUT), { recursive: true });
   // packets of whole call groups, ~70 segments each
   const packets: string[][] = [];
   let cur: string[] = [];
@@ -187,12 +190,12 @@ async function codex() {
     cur.push(...g.ids);
   }
   if (cur.length) packets.push(cur);
-  const todo = packets.map((ids, i) => ({ name: `p${String(i + 1).padStart(2, "0")}`, ids })).filter((p) => !fs.existsSync(f(`codex/${p.name}.json`)));
+  const todo = packets.map((ids, i) => ({ name: `p${String(i + 1).padStart(2, "0")}`, ids })).filter((p) => !fs.existsSync(f(`${CODEX_OUT}/${p.name}.json`)));
   console.log(`codex: ${packets.length} packets, ${todo.length} to run, 2 at a time`);
   const one = async (p: { name: string; ids: string[] }) => {
-    const pd = path.resolve(f(`codex/${p.name}`));
+    const pd = path.resolve(f(`${CODEX_OUT}/${p.name}`));
     fs.mkdirSync(pd, { recursive: true });
-    const rows = p.ids.map((id) => { const s = segs.get(id)!; return { id, kind: s.kind, scene: s.scene, en: s.en, fr: tr[id]?.fr ?? "" }; });
+    const rows = p.ids.map((id) => { const s = segs.get(id)!; return { id, kind: s.kind, scene: s.scene, en: s.en, fr: (CODEX_FR ? CODEX_FR[id] : tr[id]?.fr) ?? "" }; });
     fs.writeFileSync(path.join(pd, "prompt.txt"), codexPrompt(rows));
     fs.writeFileSync(path.join(pd, "schema.json"), JSON.stringify(CODEX_SCHEMA));
     const t0 = Date.now();
@@ -202,7 +205,7 @@ async function codex() {
         const out = JSON.parse(fs.readFileSync(path.join(pd, "out.json"), "utf8"));
         const known = new Set(p.ids);
         out.flags = out.flags.filter((x: any) => known.has(x.id));
-        fs.writeFileSync(f(`codex/${p.name}.json`), JSON.stringify({ ...out, ids: p.ids, seconds: Math.round((Date.now() - t0) / 1000) }, null, 1));
+        fs.writeFileSync(f(`${CODEX_OUT}/${p.name}.json`), JSON.stringify({ ...out, ids: p.ids, seconds: Math.round((Date.now() - t0) / 1000) }, null, 1));
         console.log(`  ${p.name}: ${out.flags.length} flags, sounds translated ${out.soundsTranslated}/5 (${Math.round((Date.now() - t0) / 1000)}s)`);
         return;
       } catch { console.log(`  ${p.name}: attempt ${attempt} gave no usable out.json (exit ${code})`); }
