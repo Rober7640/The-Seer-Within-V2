@@ -19,6 +19,7 @@ import {
   payUpsellWithCard,
   completeUpsellWithCard,
   upsell2Cents,
+  testBuyerCents,
   afterUpsellPath,
   funnelForPaiPayment,
   type ShippingInput,
@@ -59,9 +60,16 @@ function braceletTypeOf(raw: unknown): 'full' | 'downsell' {
   return raw === 'downsell' ? 'downsell' : 'full';
 }
 
-/** The price of this order's upsell — the same sources the Stripe routes use. */
+/**
+ * The price of this order's upsell — the same sources the Stripe routes use.
+ * A PAI_TEST_BUYERS email gets TEST_BUYER_CENTS here too, so the card page, the
+ * Google Pay / Apple Pay sheet and the charge all carry ONE amount (the charge was
+ * already switched in payUpsellWithCard; the page and the wallet sheet used to show
+ * the full price). Every other email: unchanged.
+ */
 async function upsellCents(email: string, step: UpsellStep, type: 'full' | 'downsell'): Promise<number> {
-  return step === 'upsell1' ? (await getVariantForEmail(email)).upsell1Cents : upsell2Cents(type);
+  const cents = step === 'upsell1' ? (await getVariantForEmail(email)).upsell1Cents : upsell2Cents(type);
+  return testBuyerCents(email, cents);
 }
 
 const UPSELL_NAMES: Record<UpsellStep, Record<'full' | 'downsell', string>> = {
