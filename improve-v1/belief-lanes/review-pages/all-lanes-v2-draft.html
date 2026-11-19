@@ -1,0 +1,629 @@
+<title>Belief Lane Landers</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&family=Playfair+Display:wght@400&family=Inter:ital,wght@0,400;0,600;1,400&display=swap">
+<style>
+/* Layout: one reading column; each lane = headline picks → a phone-width first-screen mock → the page copy as it would read → Evelyn's bubbles → match table. */
+:root{
+  --bg:#edf1f0; --paper:#ffffff; --ink:#1c282c; --muted:#56676b; --line:#d2dbd9;
+  --accent:#a95f22; --accent-soft:#f6ebe0; --pick:#2c6a55; --pick-soft:#e3f0ea;
+  --warn:#9c3f2b; --warn-soft:#f7e6e1; --slot:#5a4aa0; --slot-soft:#ece9f7;
+  --bubble:#f1f4f3;
+  --f-display:"Instrument Serif", Georgia, "Times New Roman", serif;
+  --f-copy:"Source Serif 4", Georgia, "Times New Roman", serif;
+  --f-ui:"IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --f-mono:"IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+  /* the live /fb template's own look, fixed in both themes */
+  --fb-night1:#1b1f45; --fb-night2:#24365c; --fb-gold:#d4b25c; --fb-card:#f3f4f6; --fb-ink:#111827;
+  --fb-body:#4b5563; --fb-faint:#9ca3af; --fb-pill:#f9fafb; --fb-rule:#e5e7eb; --fb-p1:#9333ea; --fb-p2:#6b21a8;
+  --fb-green:#22c55e; --fb-green2:#16a34a; --fb-white:#ffffff; --fb-foot:#a7adc4; --fb-av1:#cfc6bf; --fb-av2:#6d5a7d;
+  --f-fbs:"Playfair Display", Georgia, serif; --f-fbi:"Inter", system-ui, -apple-system, sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#10171a; --paper:#172125; --ink:#e2eae7; --muted:#9db0ac; --line:#2b3b3f;
+  --accent:#e2a565; --accent-soft:#2c2419; --pick:#86c9ad; --pick-soft:#16302a;
+  --warn:#ec9a85; --warn-soft:#35201b; --slot:#b7a9f0; --slot-soft:#251f3d; --bubble:#1e2b2f;
+  color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#10171a; --paper:#172125; --ink:#e2eae7; --muted:#9db0ac; --line:#2b3b3f;
+  --accent:#e2a565; --accent-soft:#2c2419; --pick:#86c9ad; --pick-soft:#16302a;
+  --warn:#ec9a85; --warn-soft:#35201b; --slot:#b7a9f0; --slot-soft:#251f3d; --bubble:#1e2b2f;
+  color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font:15px/1.6 var(--f-ui);margin:0}
+.wrap{max-width:860px;margin:0 auto;padding-block:28px 80px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+nav.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);border-bottom:1px solid var(--line)}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+nav.top .in{max-width:860px;margin:0 auto;padding-block:10px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;gap:6px 18px;flex-wrap:wrap;font-size:13px}
+nav.top a{color:var(--muted);text-decoration:none}
+nav.top a:hover,nav.top a:focus-visible{color:var(--ink);text-decoration:underline}
+h1{font:400 44px/1.05 var(--f-display);margin:8px 0 6px;text-wrap:balance}
+h2{font:400 34px/1.1 var(--f-display);margin:0 0 4px;text-wrap:balance}
+h3{font:600 12px/1.3 var(--f-ui);letter-spacing:.09em;text-transform:uppercase;color:var(--muted);margin:34px 0 10px}
+h4{font:600 15px/1.35 var(--f-ui);margin:18px 0 6px}
+p{margin:0 0 10px}
+.lede{color:var(--muted);max-width:66ch}
+.eyebrow{font:500 12px/1.3 var(--f-mono);color:var(--accent);letter-spacing:.04em}
+section.block{margin-top:56px;padding-top:28px;border-top:2px solid var(--ink)}
+.sum{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;margin:22px 0}
+.sum > div{background:var(--paper);border:1px solid var(--line);border-radius:6px;padding:14px 16px;min-width:0}
+.sum .k{font:500 11px/1.3 var(--f-mono);color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.sum .v{font:400 21px/1.2 var(--f-display);margin:6px 0 0}
+.dec{background:var(--warn-soft);border-left:3px solid var(--warn);padding:14px 16px;border-radius:0 6px 6px 0;margin:10px 0}
+.dec b{color:var(--warn)}
+.dec p:last-child{margin-bottom:0}
+ol.heads{list-style:none;padding:0;margin:0;display:grid;gap:8px}
+ol.heads li{background:var(--paper);border:1px solid var(--line);border-radius:6px;padding:12px 14px;display:grid;grid-template-columns:auto 1fr;gap:10px;align-items:start}
+ol.heads li .n{font:500 12px/1.9 var(--f-mono);color:var(--muted)}
+ol.heads li .h{font:400 21px/1.25 var(--f-display)}
+ol.heads li.pick{border-color:var(--pick);background:var(--pick-soft)}
+.tag{display:inline-block;font:600 10px/1 var(--f-ui);letter-spacing:.08em;text-transform:uppercase;padding:4px 6px;border-radius:3px;vertical-align:middle;margin-left:6px}
+.tag.pick{background:var(--pick);color:var(--paper)}
+.why{margin-top:10px;color:var(--ink)}
+.why b{color:var(--pick)}
+/* first-screen mock */
+.phone{max-width:390px;margin:6px auto 0;background:var(--paper);border:1px solid var(--line);border-radius:22px;padding:30px 22px 26px;box-shadow:0 1px 0 var(--line),0 18px 40px -28px rgba(0,0,0,.35)}
+.phone .who{font:500 11px/1.3 var(--f-mono);color:var(--muted);text-align:center;letter-spacing:.05em;margin-bottom:14px}
+.phone .mh1{font:400 30px/1.12 var(--f-display);text-align:center;margin:0 0 12px;text-wrap:balance}
+.phone .ml{font:400 16px/1.5 var(--f-copy);text-align:center;color:var(--ink);margin:0 0 18px}
+.phone .field{border:1px solid var(--line);border-radius:8px;padding:13px 14px;color:var(--muted);font:400 16px/1 var(--f-ui);background:var(--bg)}
+.phone .btn{margin-top:10px;background:var(--accent);color:var(--paper);border-radius:8px;padding:14px;text-align:center;font:600 16px/1.2 var(--f-ui)}
+.phone .free{text-align:center;font:400 14px/1.4 var(--f-copy);margin:10px 0 0}
+.phone .opt{text-align:center;font:400 12px/1.4 var(--f-ui);color:var(--muted);margin:6px 0 0}
+.spec{font:400 12.5px/1.5 var(--f-mono);color:var(--muted);margin-top:12px;overflow-x:auto}
+.spec td{padding:2px 12px 2px 0;vertical-align:top}
+/* mock of the live /fb card */
+.fbmock{max-width:440px;margin:6px auto 0;border-radius:14px;padding:22px 18px 16px;background:linear-gradient(180deg,var(--fb-night1),var(--fb-night2))}
+.fbmock p{margin:0}
+.fbmock .logo{text-align:center;color:var(--fb-gold);font:400 27px/1 var(--f-fbs);margin:0 0 52px}
+.fbmock .card{position:relative;background:var(--fb-card);border-radius:16px;padding:60px 20px 18px;text-align:center}
+.fbmock .av{position:absolute;top:-44px;left:50%;transform:translateX(-50%);width:88px;height:88px;border-radius:50%;border:4px solid var(--fb-white);background:radial-gradient(circle at 50% 36%,var(--fb-av1) 0 24%,var(--fb-av2) 25% 100%)}
+.fbmock .status{background:var(--fb-pill);border-radius:999px;padding:8px;font:400 14px var(--f-fbi);color:var(--fb-body)}
+.fbmock .status i{display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--fb-green);margin:0 4px 0 2px}
+.fbmock .status b{color:var(--fb-green2);font-weight:600}
+.fbmock .div{width:56px;height:2px;background:var(--fb-rule);margin:22px auto}
+.fbmock .h{font:400 27px/1.2 var(--f-fbs);color:var(--fb-ink);margin:0 0 12px;text-wrap:balance}
+.fbmock .s{font:400 15px/1.55 var(--f-fbi);color:var(--fb-body);margin:0 0 18px}
+.fbmock .b{background:linear-gradient(90deg,var(--fb-p1),var(--fb-p2));color:var(--fb-white);border-radius:8px;padding:14px 12px;font:600 16px/1.3 var(--f-fbi)}
+.fbmock .sc{font:italic 400 12px/1.4 var(--f-fbi);color:var(--fb-faint);margin-top:10px}
+.fbmock .trust{display:flex;flex-wrap:wrap;justify-content:center;gap:6px 22px;margin-top:16px;font:400 10.5px/1.3 var(--f-fbi);letter-spacing:.06em;text-transform:uppercase;color:var(--fb-faint)}
+.fbmock .foot{text-align:center;color:var(--fb-foot);font:400 11.5px var(--f-fbi);margin-top:16px}
+.fbmock .chg{outline:1.5px dashed var(--accent);outline-offset:4px;border-radius:3px}
+.legend{font-size:13px;color:var(--muted);max-width:440px;margin:10px auto 0}
+.bub.me{justify-self:end;background:var(--accent);color:var(--paper);border-radius:14px 14px 4px 14px;font:400 14px/1.4 var(--f-ui)}
+/* page copy */
+.copy{background:var(--paper);border:1px solid var(--line);border-radius:6px;padding:22px 24px}
+.copy .sub{font:400 23px/1.2 var(--f-display);margin:22px 0 10px}
+.copy .sub:first-child{margin-top:0}
+.copy p{font:400 17px/1.6 var(--f-copy);max-width:62ch}
+.slot{background:var(--slot-soft);border:1px dashed var(--slot);border-radius:6px;padding:12px 14px;margin:16px 0}
+.slot .lab{font:600 11px/1.3 var(--f-mono);color:var(--slot);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px}
+.slot p{margin:0 0 4px;font:400 16px/1.5 var(--f-copy)}
+.slot .k{font:500 12px var(--f-mono);color:var(--muted)}
+.ask{border-top:1px solid var(--line);margin-top:18px;padding-top:16px;display:grid;gap:8px;max-width:390px}
+.ask .field{border:1px solid var(--line);border-radius:8px;padding:12px 14px;color:var(--muted);background:var(--bg)}
+.ask .btn{background:var(--accent);color:var(--paper);border-radius:8px;padding:13px;text-align:center;font-weight:600}
+.ask .free{font:400 14px var(--f-copy);margin:0}
+.pending{font:500 11px/1 var(--f-mono);color:var(--warn);background:var(--warn-soft);padding:2px 5px;border-radius:3px;white-space:nowrap}
+/* chat */
+.chat{background:var(--paper);border:1px solid var(--line);border-radius:6px;padding:18px;display:grid;gap:8px;max-width:520px}
+.chat .sys{font:400 12px var(--f-ui);color:var(--muted);text-align:center}
+.bub{background:var(--bubble);border-radius:14px 14px 14px 4px;padding:9px 13px;font:400 16px/1.45 var(--f-copy);max-width:88%;justify-self:start}
+.bub.q{border:1px solid var(--accent);background:var(--accent-soft)}
+.bub .nm{color:var(--accent)}
+/* tables */
+.tw{overflow-x:auto;border:1px solid var(--line);border-radius:6px;background:var(--paper)}
+table.m{border-collapse:collapse;width:100%;min-width:620px;font-size:14px}
+table.m th{font:600 11px/1.3 var(--f-ui);text-transform:uppercase;letter-spacing:.06em;color:var(--muted);text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);background:var(--bg)}
+table.m td{padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+table.m tr:last-child td{border-bottom:0}
+table.m td:first-child{width:46%}
+table.m .src{font:500 11px/1.3 var(--f-mono);color:var(--muted);display:block;margin-bottom:3px}
+q,.qt{font-family:var(--f-copy)}
+ul.tight{margin:0;padding-left:20px}
+ul.tight li{margin:0 0 6px}
+.voc{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:10px}
+.voc > div{background:var(--paper);border:1px solid var(--line);border-radius:6px;padding:12px 14px;min-width:0}
+.voc .src{font:500 11px/1.3 var(--f-mono);color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px}
+.voc p{font:400 15px/1.5 var(--f-copy);margin:0 0 8px}
+.today{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:12px}
+.today > div{background:var(--paper);border:1px solid var(--line);border-radius:6px;padding:14px 16px;min-width:0}
+.today .lab{font:600 11px/1.3 var(--f-mono);color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px}
+.today .ln{font:400 15px/1.5 var(--f-copy);border-left:2px solid var(--line);padding-left:10px;margin:0 0 8px}
+code{font:500 12.5px var(--f-mono);background:var(--bg);padding:1px 5px;border-radius:3px;overflow-wrap:anywhere}
+.breaks{counter-reset:b;list-style:none;padding:0;margin:0;display:grid;gap:8px}
+.breaks li{background:var(--paper);border:1px solid var(--line);border-radius:6px;padding:12px 14px 12px 46px;position:relative}
+.breaks li::before{counter-increment:b;content:counter(b);position:absolute;left:14px;top:12px;font:600 13px var(--f-mono);color:var(--warn)}
+.note{color:var(--muted);font-size:13.5px}
+a{color:var(--accent)}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+@media (max-width:520px){h1{font-size:36px}h2{font-size:29px}.copy{padding:18px 16px}.phone{padding:26px 16px 22px}.phone .mh1{font-size:27px}}
+</style>
+
+<nav class="top"><div class="in">
+  <a href="#summary">Summary</a>
+  <a href="#manifest">1 · Manifestation</a>
+  <a href="#pattern">2 · Pattern</a>
+  <a href="#family">3 · Family</a>
+  <a href="#later">Later chat</a>
+  <a href="#today">Today's /fb</a>
+  <a href="#morning">By morning</a>
+  <a href="#build">Build notes</a>
+</div></nav>
+
+<div class="wrap">
+
+<header id="summary">
+  <div class="eyebrow">SeerWithin · belief-lane landers · copy for approval · 17 Nov 2026</div>
+  <h1>Belief Lane Landers</h1>
+  <p class="lede">One page per lane, written as the next beat after the ad. Each page keeps /fb's layout and flow: the same card, one button into the chat, and Evelyn asks her first name there as her second message. Only the copy changes, so each lane tests the message against /fb and nothing else. Code facts below were checked on Production (<code>67f3a08</code>). Nothing is built yet.</p>
+
+  <div class="sum">
+    <div><div class="k">Lane 1 · /fb-manifest</div><div class="v">You manifested him. That part worked. Now find what you were manifesting from.</div></div>
+    <div><div class="k">Lane 2 · /fb-pattern</div><div class="v">It was never about him. Your pattern has a start date.</div></div>
+    <div><div class="k">Lane 3 · /fb-family</div><div class="v">The women in your family keep loving the same man. It can stop with you.</div></div>
+  </div>
+
+  <h3>Four decisions before anything is built</h3>
+  <div class="dec"><p><b>D1 · "By morning."</b> The ad says "by morning there's a letter. Five pages." The chat promises "Within 24 hours, you'll receive a personalized 5-7 page reading via email." Five pages fits inside 5-7, so page count is fine. Timing is the real gap. Delivery runs on Mike's n8n flow, and I couldn't see how long it takes. <b>Recommendation:</b> ask Mike for the usual and the slowest time from purchase to email. If nearly every letter lands within about 12 hours, change the lane pitch to "By morning, my letter will be with you" and keep "by morning" on the pages. If not, the pages say "she writes at night" and promise no delivery time. <a href="#morning">Details</a></p></div>
+  <div class="dec"><p><b>D2 · The ad implies the letter is free.</b> "It's free to message Evelyn. She asks your first name, and by morning, there's a letter." Read together, that sounds like a free letter, and the $35 offer comes about 15 messages later. The pages fix this with one plain line: "Messaging Evelyn is free. If she offers to write your letter, she'll tell you plainly what it involves before you say yes." <b>Recommendation:</b> keep it. It's the only place the page can keep the "never imply the letter is free" rule without saying "price."</p></div>
+  <div class="dec"><p><b>D3 · How Evelyn asks for the email.</b> The brief says to frame it as where her letter will be sent. Said flatly, that promises a letter before she has paid. <b>Recommendation:</b> make it conditional: "If I sit down to write to you tonight, dear... where should the letter go?"</p></div>
+  <div class="dec"><p><b>D4 · Lane identity (for the build).</b> <b>Recommendation:</b> keep the lanes inside the existing <code>/fb</code> funnel (same pixel, same "- FB" Stripe products, same reports) and add one new <code>lane</code> tag. Registering three new funnels would change product names and split every report. <a href="#build">Build notes</a></p></div>
+</header>
+
+<!-- ===================== LANE 1 ===================== -->
+<section class="block" id="manifest">
+  <div class="eyebrow">Lane 1 · /fb-manifest</div>
+  <h2>Manifestation</h2>
+  <p class="lede">Belief: you manifested him, and that part worked. But you manifested from an old lesson: want nothing. So you keep getting a man who stays and never picks you.</p>
+
+  <h3>Headlines</h3>
+  <ol class="heads">
+    <li class="pick"><span class="n">A</span><span class="h lc">You manifested him. That part worked. Now find what you were manifesting from.<span class="tag pick">Pick</span></span></li>
+    <li><span class="n">B</span><span class="h lc">He matched every line on your list. He just never picked you.</span></li>
+    <li><span class="n">C</span><span class="h lc">When the same man keeps arriving, the list was never the problem.</span></li>
+  </ol>
+  <p class="why"><b>Why A.</b> Both overlays open with "I manifested him," so A greets her with her own words. It agrees with her instead of arguing, which matters because she believes in manifesting. And it opens the one question the name field answers: manifesting from <i>what</i>? B hits harder but only fits the Laurel cut, since Jules's story has no list. C makes her work out the claim. A also puts "manifested" and "manifesting" in the headline, so Meta can see who the page is for.</p>
+
+  <h3>First screen</h3>
+  <div class="fbmock">
+    <div class="logo">✦ The Seer Within</div>
+    <div class="card">
+      <div class="av" aria-hidden="true"></div>
+      <div class="status">Evelyn Cross is <i></i><b>Online</b></div>
+      <div class="div"></div>
+      <p class="h chg lc">You manifested him. That part worked.</p>
+      <p class="s chg lc">Now find what you were manifesting from. Somebody taught you, long ago, to want nothing. Evelyn finds where it started, from your first name.</p>
+      <div class="b chg lc">Send your first name to Evelyn</div>
+      <p class="sc chg lc">It's free to message Evelyn.</p>
+      <div class="trust"><span>100% Private &amp; Confidential</span><span>Trusted By 2,400+ Clients</span></div>
+    </div>
+    <div class="foot">Privacy Policy · Terms of Service · Refund Policy</div>
+  </div>
+  <p class="legend">Dashed = the four copy slots that change: <code>headline</code>, <code>subheadline</code>, <code>cta</code>, and <code>scarcity</code>, which now carries the free line. The logo, avatar, Busy → Online status, 3-second button delay, trust row and footer stay exactly as they are on /fb. The button still opens the chat, and Evelyn asks her first name there.</p>
+
+  <h3>Below the card (new, for scrollers and for Meta)</h3>
+  <div class="copy">
+    <p class="sub lc">The part that worked</p>
+    <p class="lc">You did the work. The list. The vision board. The scripting before bed.</p>
+    <p class="lc">And he came. He matched almost every line.</p>
+    <p class="lc">He just never picked you. He stays close. But he introduces you as his friend. Or he loves you, and still won't marry you.</p>
+    <p class="lc">Here's what nobody in manifesting tells you. You don't only manifest from the list. You manifest from whatever sits under it. Somebody taught you, long ago, to want nothing. To be no trouble at all. That lesson answers first, before the list is even read.</p>
+    <p class="lc">So you got exactly what it asked for. A man who stays, and never chooses you.</p>
+    <p class="lc">That's why asking him never fixed it. Leaving didn't either. The next one came wearing a different face. And a better list can't reach it. You can raise your vibration for years. It won't reach a room you don't know you're standing outside of.</p>
+
+    <p class="sub lc">Who Evelyn is</p>
+    <p class="lc">Evelyn Cross is a seer in the west of Ireland. Her teacher could do this. So could her teacher's teacher.</p>
+    <p class="lc">She works at night, by candlelight. One first name at a time. She doesn't need your birthday, a photo, or his name.</p>
+    <p class="lc">She doesn't tell you what's coming. She finds where it started. She won't tell you to stop manifesting. She'll show you what you've been manifesting from.</p>
+
+    <p class="sub lc">When you send your name</p>
+    <p class="lc">You send your first name. That's all.</p>
+    <p class="lc">Evelyn writes back. Her first message is short. Usually one line, and it lands.</p>
+    <p class="lc">Then she asks you one question.</p>
+    <p class="lc">If she sees where it started, she'll offer to write it down for you. A letter, by candlelight. By morning, it's with you. <span class="pending">D1</span></p>
+    <p class="lc">Messaging Evelyn is free. If she offers to write your letter, she'll tell you plainly what it involves before you say yes. <span class="pending">D2</span></p>
+
+    <div class="slot">
+      <div class="lab">Story callback slot · swaps per source story · URL parameter</div>
+      <p class="lc"><span class="k">default · </span>It starts the same way for every woman. One first name.</p>
+      <p class="lc"><span class="k">story=friend · </span>Jules sent hers the night he called her his friend.</p>
+      <p class="lc"><span class="k">story=wall · </span>Laurel sent hers the night she heard him through the wall.</p>
+    </div>
+
+    <div class="ask">
+      <div class="btn lc">Send your first name to Evelyn</div>
+      <p class="free lc">It's free to message Evelyn.</p>
+    </div>
+  </div>
+
+  <h3>Evelyn's first messages</h3>
+  <div class="chat">
+    <div class="sys">Evelyn has joined the chat</div>
+    <div class="bub lc">You've been asking for a long time, haven't you.</div>
+    <div class="bub lc">What's your first name, dear?</div>
+    <div class="bub me">{her first name}</div>
+    <div class="bub lc"><span class="nm">{Name}</span>... you've done the lists. The boards. All of it.</div>
+    <div class="bub lc">And it worked. That's the part nobody tells you.</div>
+    <div class="bub lc">So let's look at who was holding the pen.</div>
+    <div class="bub q lc">Tell me what was on your list, dear... and what you never let yourself write.</div>
+  </div>
+  <p class="note">The question opens the lane. She answers with the list, and the part she left off ("pick me", "marry me", "stay") is the lesson Evelyn names next.</p>
+
+  <h3>Message match</h3>
+  <div class="tw"><table class="m">
+    <tr><th>The ad said</th><th>The page continues</th></tr>
+    <tr><td><span class="src">Overlay (both cuts)</span>"I manifested him. He introduced me as his friend." / "I manifested him. I heard why he won't marry me."</td><td>H1 "You manifested him. That part worked." Below: "he introduces you as his friend. Or he loves you, and still won't marry you."</td></tr>
+    <tr><td><span class="src">Spoken, Laurel cut</span>"I manifested this man. Six years ago. He matched every line on my list."</td><td>"And he came. He matched almost every line." (No years on the page, so it fits either story.)</td></tr>
+    <tr><td><span class="src">Mentor, Laurel cut</span>"That part worked. But somebody taught you to be no trouble at all... It sits under every list you write, and it answers first... A man who stays and never picks."</td><td>"That part worked." / "Somebody taught you, long ago, to want nothing. It sits under every list you write." / "That lesson answers first." / "A man who stays, and never chooses you."</td></tr>
+    <tr><td><span class="src">Story-text headline + subhead</span>"I manifested the same man three times. Each one called me his friend." / "The vision board worked. He came. He just never came all the way... found the thing I kept manifesting from..."</td><td>"The vision board." / "And he came." / "The next one came wearing a different face." / H1 "what you were manifesting from"</td></tr>
+    <tr><td><span class="src">Lane close</span>"You can raise your vibration for years. It won't reach a room you don't know you're standing outside of."</td><td>Used word for word as the last line of the belief section.</td></tr>
+    <tr><td><span class="src">Last spoken lines (both videos)</span>"It's free to message Evelyn. She asks your first name, and by morning, there's a letter. Send your first name to Evelyn."</td><td>Button "Send your first name to Evelyn." / "It's free to message Evelyn." / below: "By morning, it's with you." (D1), with the letter separated from "free" (D2).</td></tr>
+  </table></div>
+
+  <h3>Rules I worked around</h3>
+  <ul class="tight">
+    <li><b>"reading"</b> → "letter" everywhere. <b>"price"</b> → "she'll tell you plainly what it involves."</li>
+    <li><b>"free"</b> appears only beside "message Evelyn." The letter never shares a sentence with it.</li>
+    <li><b>"vibration"</b> and <b>"universe"</b> stay in the narrator's voice (the close line). Evelyn uses neither.</li>
+    <li>Our buyers often pair "manifesting" with "praying." I left praying out (religious rule).</li>
+    <li>The mentor's "girl" is dropped. The narrator talks to a woman of 45+, not a friend on a porch.</li>
+    <li>Instagram's newer terms ("specific person", "SP", "law of assumption", "self-concept") are skipped. They skew young. "The list", "vision board" and "scripting" are the words her age group and our buyers use.</li>
+  </ul>
+
+  <h3>Words borrowed</h3>
+  <div class="voc">
+    <div><div class="src">Our buyers (paid)</div><p>"Talking, waiting, manifesting, praying. I've tried it all, he's warm one moment and [cold] the next."</p><p>"Thinking I have a block or negative something keeping me from manifesting what is meant for me"</p></div>
+    <div><div class="src">Our buyers (paid)</div><p>"I can't understand why I attract men who aren't committed... can I change this pattern?"</p></div>
+    <div><div class="src">Instagram · 148k views</div><p>"Sometimes the person you are trying so hard to manifest is not your destiny. They are a mirror... If someone is unavailable, inconsistent, or unable to fully choose you..."</p></div>
+    <div><div class="src">Instagram · manifestation coach</div><p>"What if your biggest block… isn't even yours? You're doing everything. Affirmations... Manifestation techniques... Yet somehow… You keep attracting emotionally unavailable partners."</p></div>
+  </div>
+</section>
+
+<!-- ===================== LANE 2 ===================== -->
+<section class="block" id="pattern">
+  <div class="eyebrow">Lane 2 · /fb-pattern</div>
+  <h2>The pattern</h2>
+  <p class="lede">Belief: your love pattern has a start date in childhood. It sits under everything and answers first. This is the largest and least "spiritual" lane, so the page reads plainest here.</p>
+
+  <h3>Headlines</h3>
+  <ol class="heads">
+    <li class="pick"><span class="n">A</span><span class="h lc">It was never about him. Your pattern has a start date.<span class="tag pick">Pick</span></span></li>
+    <li><span class="n">B</span><span class="h lc">Same man, different faces. The pattern started before any of them.</span></li>
+    <li><span class="n">C</span><span class="h lc">The pattern has a start date. Evelyn finds it from your first name.</span></li>
+  </ol>
+  <p class="why"><b>Why A.</b> It follows all three hooks: "I used to think it was him", the same man in different faces (answered in the first lines below the headline), and "my pattern had a start date". It takes the blame off him without putting it on her. It puts it on a date. B only answers the "same man" hook. C states the belief most literally but spends the headline on Evelyn, so it reads like an offer rather than the next beat of her story.</p>
+
+  <h3>First screen</h3>
+  <div class="fbmock">
+    <div class="logo">✦ The Seer Within</div>
+    <div class="card">
+      <div class="av" aria-hidden="true"></div>
+      <div class="status">Evelyn Cross is <i></i><b>Online</b></div>
+      <div class="div"></div>
+      <p class="h chg lc">It was never about him. Your pattern has a start date.</p>
+      <p class="s chg lc">It started when you were small. It sits under everything, and it answers first. Evelyn finds where it started, from your first name.</p>
+      <div class="b chg lc">Send your first name to Evelyn</div>
+      <p class="sc chg lc">It's free to message Evelyn.</p>
+      <div class="trust"><span>100% Private &amp; Confidential</span><span>Trusted By 2,400+ Clients</span></div>
+    </div>
+    <div class="foot">Privacy Policy · Terms of Service · Refund Policy</div>
+  </div>
+  <p class="legend">Same /fb template. Dashed = changed copy.</p>
+
+  <h3>Below the card (new, for scrollers and for Meta)</h3>
+  <div class="copy">
+    <p class="sub lc">Same man, different faces</p>
+    <p class="lc">Think about the men. Not the details. The shape.</p>
+    <p class="lc">The loving one who never quite picks you. The one who stays close, but never all the way. Different faces. The same man.</p>
+    <p class="lc">Maybe a friend has already said it out loud. "You always pick the same one." And you laughed it off.</p>
+    <p class="lc">Here's what she couldn't tell you. You aren't picking him. Something older is. Somebody taught you, when you were small, how to be loved. Keep quiet. Want nothing. Make it easy to stay. You learned it so well you stopped seeing it.</p>
+    <p class="lc">It sits under everything now, and it answers first. Before you've thought a thing, you go quiet. You make it easy. And the man who stays but never picks you feels like home.</p>
+    <p class="lc">That's why asking him never changed it. Leaving didn't either. The next one walked in with a different face. You may have talked it through for years, with friends or with a professional. That work is real. It explains the pattern. It rarely finds the day it started.</p>
+
+    <p class="sub lc">Who Evelyn is</p>
+    <p class="lc">Evelyn Cross is a seer in the west of Ireland. Her teacher could do this. So could her teacher's teacher.</p>
+    <p class="lc">She works at night, by candlelight. One first name at a time. She doesn't need your birthday, a photo, or his name.</p>
+    <p class="lc">She isn't a counselor, and she doesn't replace one. She doesn't tell you what's coming either. She looks back to the day it began, and tells you what she sees.</p>
+
+    <p class="sub lc">When you send your name</p>
+    <p class="lc">You send your first name. That's all.</p>
+    <p class="lc">Evelyn writes back. Her first message is short. Usually one line, and it lands.</p>
+    <p class="lc">Then she asks you one question.</p>
+    <p class="lc">If she sees where it started, she'll offer to write it down for you. A letter, by candlelight. By morning, it's with you. <span class="pending">D1</span></p>
+    <p class="lc">Messaging Evelyn is free. If she offers to write your letter, she'll tell you plainly what it involves before you say yes. <span class="pending">D2</span></p>
+
+    <div class="slot">
+      <div class="lab">Story callback slot · swaps per source story · URL parameter</div>
+      <p class="lc"><span class="k">default · </span>It starts the same way for every woman. One first name.</p>
+      <p class="lc"><span class="k">story=friend · </span>Jules sent hers the night he called her his friend.</p>
+      <p class="lc"><span class="k">story=wall · </span>Laurel sent hers the night she heard him through the wall.</p>
+    </div>
+
+    <div class="ask">
+      <div class="btn lc">Send your first name to Evelyn</div>
+      <p class="free lc">It's free to message Evelyn.</p>
+    </div>
+  </div>
+
+  <h3>Evelyn's first messages</h3>
+  <div class="chat">
+    <div class="sys">Evelyn has joined the chat</div>
+    <div class="bub lc">There you are.</div>
+    <div class="bub lc">What's your first name, dear?</div>
+    <div class="bub me">{her first name}</div>
+    <div class="bub lc"><span class="nm">{Name}</span>... people have always said you're easy to be with, haven't they.</div>
+    <div class="bub lc">Easy to love. Easy to leave out of the picture.</div>
+    <div class="bub lc">That started long before him, dear. I can see the edge of it already.</div>
+    <div class="bub q lc">How old were you the first time you went quiet so someone would stay?</div>
+  </div>
+  <p class="note">The line after her name describes her through what other people say, so it's something she can check against her own life rather than a guess about her feelings. The next line echoes Jules standing outside the photo without naming it.</p>
+
+  <h3>Message match</h3>
+  <div class="tw"><table class="m">
+    <tr><th>The ad said</th><th>The page continues</th></tr>
+    <tr><td><span class="src">Hook</span>"I used to think it was him. Every time. Then I counted, and it was always me going quiet."</td><td>H1 "It was never about him." / "Before you've thought a thing, you go quiet."</td></tr>
+    <tr><td><span class="src">Hook</span>"I keep meeting the same man in different faces. The loving one who never quite picks me."</td><td>"The loving one who never quite picks you... Different faces. The same man."</td></tr>
+    <tr><td><span class="src">Hook</span>"My pattern had a start date. I just never looked that far back."</td><td>H1 "Your pattern has a start date." / "She looks back to the day it began."</td></tr>
+    <tr><td><span class="src">Laurel story, Tina</span>"It sits under everything and it answers first. Keep quiet, want nothing, make it easy to stay."</td><td>"It sits under everything, and it answers first." / "Keep quiet. Want nothing. Make it easy to stay."</td></tr>
+    <tr><td><span class="src">Jules story, Odette</span>"You don't look at the man. You look at where it started."</td><td>"It was never about him." / "Evelyn finds where it started."</td></tr>
+    <tr><td><span class="src">Jules's letter</span>"I've been standing just outside the photo ever since."</td><td>Evelyn: "Easy to leave out of the picture."</td></tr>
+    <tr><td><span class="src">Last spoken lines</span>"It's free to message Evelyn... Send your first name to Evelyn."</td><td>Button + "It's free to message Evelyn." The lane's story-text headline isn't written yet. Match it to the H1 when it is.</td></tr>
+  </table></div>
+
+  <h3>Rules I worked around</h3>
+  <ul class="tight">
+    <li><b>Therapy:</b> "talked it through for years, with friends or with a professional. That work is real." Respectful, and it makes no claim that Evelyn fixes what therapy didn't. She looks at a different thing: the day it began.</li>
+    <li>"Trauma", "heal", "anxious" and "avoidant" are left out. They read as health claims, and health is one of Meta's prohibited personal attributes. The lane's own words carry it instead: pattern, started, small, going quiet.</li>
+    <li>"The little girl" from her word list goes into Evelyn's question ("How old were you...") rather than the narrator's copy, where it could sound like a therapist talking.</li>
+    <li>"reading" → "letter"; "free" only beside "message".</li>
+  </ul>
+
+  <h3>Words borrowed</h3>
+  <div class="voc">
+    <div><div class="src">Our buyers (paid)</div><p>"Just the fact the the same patterns kept repeating themselves"</p><p>"A pattern is an understatement"</p></div>
+    <div><div class="src">Our buyers (paid)</div><p>"Looking back, childhood was crap, learnt to survive without connection."</p><p>"Always the giver, never the r[eceiver]"</p></div>
+    <div><div class="src">Instagram · inner-child reel</div><p>"The quiet one. The girl who learned to read the room, keep the peace, and sometimes make herself smaller so everything around her could stay okay."</p></div>
+    <div><div class="src">Instagram · 129k views</div><p>"A child who had to earn love often becomes an adult who's terrified of losing it."</p></div>
+  </div>
+</section>
+
+<!-- ===================== LANE 3 ===================== -->
+<section class="block" id="family">
+  <div class="eyebrow">Lane 3 · /fb-family</div>
+  <h2>Generational</h2>
+  <p class="lede">Belief: the women in your family repeat the same love pattern. It was handed down, and it can stop with you. Nobody is to blame. They carried it, and she gets to put it down.</p>
+
+  <h3>Headlines</h3>
+  <ol class="heads">
+    <li class="pick"><span class="n">A</span><span class="h lc">The women in your family keep loving the same man. It can stop with you.<span class="tag pick">Pick</span></span></li>
+    <li><span class="n">B</span><span class="h lc">Your mother loved him. So did hers. Find where it started.</span></li>
+    <li><span class="n">C</span><span class="h lc">Your grandmother's pattern doesn't have to be yours.</span></li>
+  </ol>
+  <p class="why"><b>Why A.</b> It's in her own words ("the women in my family", "it stops with me") and holds both halves of the belief: handed down, and it can end. It fits whether her story runs through a grandmother ("a friend of the family") or a mother. B is vivid but assumes both women. C names one woman and reads like a slogan.</p>
+
+  <h3>First screen</h3>
+  <div class="fbmock">
+    <div class="logo">✦ The Seer Within</div>
+    <div class="card">
+      <div class="av" aria-hidden="true"></div>
+      <div class="status">Evelyn Cross is <i></i><b>Online</b></div>
+      <div class="div"></div>
+      <p class="h chg lc">The women in your family keep loving the same man. It can stop with you.</p>
+      <p class="s chg lc">It was handed down quietly, mother to daughter. Nobody chose it. Evelyn finds where it started, from your first name.</p>
+      <div class="b chg lc">Send your first name to Evelyn</div>
+      <p class="sc chg lc">It's free to message Evelyn.</p>
+      <div class="trust"><span>100% Private &amp; Confidential</span><span>Trusted By 2,400+ Clients</span></div>
+    </div>
+    <div class="foot">Privacy Policy · Terms of Service · Refund Policy</div>
+  </div>
+  <p class="legend">Same /fb template. Dashed = changed copy.</p>
+
+  <h3>Below the card (new, for scrollers and for Meta)</h3>
+  <div class="copy">
+    <p class="sub lc">Handed down</p>
+    <p class="lc">Look at the women before you. Your mother. Her mother.</p>
+    <p class="lc">Maybe it was a man who never married her. Maybe one who stayed for years and gave it a smaller name. "A friend of the family." A woman who made herself easy to keep, and was never quite kept.</p>
+    <p class="lc">Now look at your own life.</p>
+    <p class="lc">It isn't bad luck. Patterns pass down quietly. Nobody sits a daughter down and teaches her. She watches. She learns what love is allowed to ask for. Then she grows up and calls it her own choice.</p>
+    <p class="lc">Your mother didn't do this to you. She carried it. So did her mother. Nobody ever showed them where it started.</p>
+    <p class="lc">That's why asking him doesn't change it. Neither does leaving, or swearing you'll never be like her. The pattern doesn't live in him. It came down the line. It can stop with you.</p>
+
+    <p class="sub lc">Who Evelyn is</p>
+    <p class="lc">Evelyn Cross is a seer in the west of Ireland. Her teacher could do this. So could her teacher's teacher.</p>
+    <p class="lc">She works at night, by candlelight. One first name at a time. She doesn't need your birthday, a photo, or his name.</p>
+    <p class="lc">She doesn't tell you what's coming. She finds where it started. Some patterns are older than the woman carrying them. Evelyn looks back past you, to where yours came into the family.</p>
+
+    <p class="sub lc">When you send your name</p>
+    <p class="lc">You send your first name. That's all.</p>
+    <p class="lc">Evelyn writes back. Her first message is short. Usually one line, and it lands.</p>
+    <p class="lc">Then she asks you one question.</p>
+    <p class="lc">If she sees where it started, she'll offer to write it down for you. A letter, by candlelight. By morning, it's with you. <span class="pending">D1</span></p>
+    <p class="lc">Messaging Evelyn is free. If she offers to write your letter, she'll tell you plainly what it involves before you say yes. <span class="pending">D2</span></p>
+
+    <div class="slot">
+      <div class="lab">Story callback slot · swaps per source story · URL parameter</div>
+      <p class="lc"><span class="k">default · </span>It starts the same way for every woman. One first name.</p>
+      <p class="lc"><span class="k">story=friend · </span>Jules sent hers the night he called her his friend.</p>
+      <p class="lc"><span class="k">story=wall · </span>Laurel sent hers the night she heard him through the wall.</p>
+    </div>
+
+    <div class="ask">
+      <div class="btn lc">Send your first name to Evelyn</div>
+      <p class="free lc">It's free to message Evelyn.</p>
+    </div>
+  </div>
+
+  <h3>Evelyn's first messages</h3>
+  <div class="chat">
+    <div class="sys">Evelyn has joined the chat</div>
+    <div class="bub lc">You didn't come alone, did you.</div>
+    <div class="bub lc">What's your first name, dear?</div>
+    <div class="bub me">{her first name}</div>
+    <div class="bub lc"><span class="nm">{Name}</span>... there's a line of women behind you. Your mother. Her mother.</div>
+    <div class="bub lc">Some patterns are older than you are.</div>
+    <div class="bub lc">It didn't start with you. It can stop with you.</div>
+    <div class="bub q lc">Tell me about the women before you... how did love go for them?</div>
+  </div>
+  <p class="note">The question stays open on purpose. Some buyers answer "No, my mother has been married to the same man for 65 years," and Evelyn shouldn't have assumed otherwise.</p>
+
+  <h3>Message match</h3>
+  <div class="tw"><table class="m">
+    <tr><th>The ad said</th><th>The page continues</th></tr>
+    <tr><td><span class="src">Hook</span>"My grandmother spent eleven years as 'a friend of the family.' I was two years into the same thing."</td><td>"...stayed for years and gave it a smaller name. 'A friend of the family.'" / "Now look at your own life." (No numbers on the page, so any woman's years fit.)</td></tr>
+    <tr><td><span class="src">Hook</span>"The women in my family love men who never quite marry them. I was about to make it four."</td><td>H1 "The women in your family keep loving the same man." / "a man who never married her"</td></tr>
+    <tr><td><span class="src">Hook</span>"I thought I chose him. My grandmother chose the same man. So did her mother."</td><td>"Then she grows up and calls it her own choice." / "She carried it. So did her mother."</td></tr>
+    <tr><td><span class="src">Jules story, Odette</span>"You don't look at the man. You look at where it started."</td><td>"The pattern doesn't live in him." / "Evelyn finds where it started."</td></tr>
+    <tr><td><span class="src">Last spoken lines</span>"It's free to message Evelyn... Send your first name to Evelyn."</td><td>Button + "It's free to message Evelyn." The lane's story-text headline isn't written yet. Match it to the H1 when it is.</td></tr>
+  </table></div>
+
+  <h3>Rules I worked around</h3>
+  <ul class="tight">
+    <li>Instagram's term is "generational trauma." That's a mental-health word, so the page says "handed down" and "came down the line."</li>
+    <li>"Family curse" comes up in our own buyers' answers. I left it out because it sits close to spell territory and fear-selling.</li>
+    <li>No blame: "Your mother didn't do this to you. She carried it."</li>
+    <li>A grandmother may have passed. "A line of women behind you" stays a picture, with no spirits and no "passed on."</li>
+    <li>"reading" → "letter"; "free" only beside "message".</li>
+  </ul>
+
+  <h3>Words borrowed</h3>
+  <div class="voc">
+    <div><div class="src">Our buyers (paid)</div><p>"It definitely started with my mother, and I'm sure my grandmother felt the same, so I have witnessed this behavior for my entire life."</p></div>
+    <div><div class="src">Our buyers (paid)</div><p>"Many women in my family line have relationship issues... maybe very possible it goes back generations"</p><p>"Mother has had a string of poor letdown men, the pattern of which I desperately tried to avoid"</p></div>
+    <div><div class="src">Instagram · 1.5M views</div><p>"Patterns that get passed down so quietly, we don't even realize we've done it. So much of what we carry can feel normal simply because it is what we grew up around."</p></div>
+  </div>
+  <p class="note">Last 12 months, love and Someone Specific chats, matched on her stored answers: pattern words in 3,107 chats (455 paid), family in 811 (118), manifesting in 234 (31). Manifesting is rare among today's buyers. That fits the plan for this lane, which is to reach women we don't have yet. It's also why lane 1 borrows more from Instagram.</p>
+</section>
+
+<!-- ===================== LATER CHAT ===================== -->
+<section class="block" id="later">
+  <div class="eyebrow">For whoever edits the chat prompts · suggestions only</div>
+  <h2>Later chat moments</h2>
+
+  <h4>All three lanes, at the opening</h4>
+  <ul class="tight">
+    <li>Evelyn asks the first name in her second message (today it's the sixth), then carries on with the lane messages above. Drop "Greetings, dear friend, and welcome," the city line ("I can feel your energy reaching me") and the time-of-day line ("the veil between worlds grows thin") for lane traffic.</li>
+    <li>Set the topic to Love and skip the four buttons. Never send lane traffic down "Someone Specific": that branch asks for his name, which breaks the ad's "not his name."</li>
+    <li>Ask for the email after her first answer, and make it conditional (D3): "If I sit down to write to you tonight, dear... where should the letter go?"</li>
+    <li>In the pitch, call it "my letter" or "your letter," not "reading."</li>
+  </ul>
+
+  <h4>Manifestation</h4>
+  <ul class="tight">
+    <li>At the "where did this start" step: "When did you first learn to ask for less, dear?"</li>
+    <li>Ritual line: "Tonight I go back to where that lesson took hold, and I cut it. So the next thing you ask for is asked by the right part of you."</li>
+    <li>Manifestation Bracelet upsell: "The clearing takes away what you were manifesting from. The bracelet holds what you manifest next." This makes no outcome promise.</li>
+  </ul>
+
+  <h4>Pattern</h4>
+  <ul class="tight">
+    <li>At "where did this start": "Go back with me, dear. Before him. Before the first one. Where were you standing?" This echoes the photo without saying it.</li>
+    <li>The chat's deep pitch arm already says "Page one is what I found — the exact shape of it, and the hour it first took hold." That is this lane's promise. If the deep arm is still an A/B arm, give pattern traffic the deep version.</li>
+  </ul>
+
+  <h4>Generational</h4>
+  <ul class="tight">
+    <li>At "has anyone in your family struggled with this": "Did your mother carry this too, dear? And her mother?" Buyers already answer this step in the lane's own words.</li>
+    <li>The deep arm's cord line is "...seal both ends with wax — so nothing can travel back along it to you." For this lane: "...so nothing travels on from it. Not to you, and not to anyone after you."</li>
+  </ul>
+</section>
+
+<!-- ===================== TODAY ===================== -->
+<section class="block" id="today">
+  <div class="eyebrow">Checked on Production 67f3a08 · LandingPage.tsx, useConversation.ts, index.html, server/static.ts</div>
+  <h2>What /fb and the chat say today</h2>
+  <p class="lede">The old note says /fb "ignores URL parameters." It nearly does: it reads only <code>?v=</code> (default, a, b). The ads link to bare /fb, so every click gets the <code>default</code> copy below.</p>
+
+  <div class="today">
+    <div>
+      <div class="lab">What a crawler gets without JavaScript</div>
+      <p class="ln">&lt;title&gt;The Seer Within - Psychic Chat&lt;/title&gt;</p>
+      <p class="ln">og:description: "Discover what the universe has in store for you. Evelyn Cross is waiting to reveal your destiny."</p>
+      <p class="note">That is the whole of it. Production sends the same <code>index.html</code> for every route (<code>server/static.ts</code>), and all page copy is drawn later by React.</p>
+    </div>
+    <div>
+      <div class="lab">/fb as she sees it</div>
+      <p class="ln">"Evelyn Cross is Busy → Connecting... → Online" (3 seconds)</p>
+      <p class="ln">"Something Is Holding You Back — I Can See It"</p>
+      <p class="ln">"Evelyn has detected a disturbance in your energy field. A free reading will reveal what's standing in your way."</p>
+      <p class="ln">Button, greyed out for 3 seconds: "Yes Evelyn, Show Me What's Blocking My Path!"</p>
+      <p class="ln">"Evelyn can only hold a limited number of connections each day. Your spot is open now."</p>
+      <p class="ln">"100% Private & Confidential · Trusted By 2,400+ Clients"</p>
+      <p class="note">No name field. The button opens /fb/chat.</p>
+    </div>
+    <div>
+      <div class="lab">The chat's first minute (/fb/chat)</div>
+      <p class="ln">"Greetings, dear friend, and welcome." / "My name is Evelyn Cross." / "I've been expecting you..."</p>
+      <p class="ln">"From {city}, I can feel your energy reaching me..."</p>
+      <p class="ln">Time line, e.g. "As evening falls, the veil between worlds grows thin..."</p>
+      <p class="ln">"To open the connection between us, I need to know who I'm speaking with..." / "What's your first name, dear?"</p>
+      <p class="ln">"It's lovely to meet you, {Name}." / "Everything we discuss stays between us... our secret." / "Now, what's weighing on your heart today, dear?" + Love & Relationships · Money & Abundance · My Life Purpose · Someone Specific</p>
+      <p class="ln">Love → "I can feel warmth radiating from your heart..." / "But there's a flicker of shadow there too..." / "Before I look deeper, I need to anchor our connection..." / "Sometimes the visions continue after we speak..." / "Where should I send them if more is revealed?" (one A/B arm skips the email)</p>
+    </div>
+    <div>
+      <div class="lab">The pitch</div>
+      <p class="ln">"Tonight, I'll enter a deep meditative state and focus entirely on your energy field, {Name}."</p>
+      <p class="ln">"It takes 2-3 hours of concentrated work."</p>
+      <p class="ln">"Within 24 hours, you'll receive a personalized 5-7 page reading via email."</p>
+      <p class="ln">Offer card: "Your personalized 5-7 page reading, within 24 hours"</p>
+    </div>
+  </div>
+
+  <h3>Every break between the ads and that experience</h3>
+  <ol class="breaks">
+    <li><b>Meta may be reading "psychic chat, reveal your destiny."</b> If its crawler doesn't run JavaScript, that title and description are all it gets for every ad. They use a banned word, sell prediction, and say nothing about manifesting, the pattern or family. Even with JavaScript, the page talks about an "energy field."</li>
+    <li><b>"A free reading."</b> The page says the reading is free. The ad only says messaging is free. The chat later sells that reading for $35. This breaks the "never imply the letter is free" rule outright.</li>
+    <li><b>Her name comes late.</b> The ad said "Send your first name." Today's button says "Show Me What's Blocking My Path," and Evelyn asks for her name six bubbles in, after the city and "veil" lines. The lane pages keep the button and the flow. The button now says "Send your first name to Evelyn," and the name is Evelyn's second message.</li>
+    <li><b>A different Evelyn.</b> The ad's Evelyn writes letters by candlelight and finds where it started. The page's Evelyn "detected a disturbance in your energy field."</li>
+    <li><b>"Dear friend."</b> This is the first thing a woman hears straight after a story about being introduced as "my friend."</li>
+    <li><b>The opener runs long and generic.</b> City, "veil between worlds," "open the connection." The ad's Evelyn opens with one short line that lands.</li>
+    <li><b>Topic buttons</b> ask what the ad already told us: it's love.</li>
+    <li><b>Email ask.</b> "Where should I send them if more is revealed?" talks about visions rather than the letter, and comes right after an ad that said first name and nothing else.</li>
+    <li><b>Scarcity and proof lines</b> ("limited number of connections", "Trusted By 2,400+ Clients") aren't in the ad. Variant <code>a</code> says 1,111+ instead, so the number isn't something we can stand behind. The lane pages leave both out.</li>
+    <li><b>Word and timing</b>: "reading" vs "letter", "within 24 hours" vs "by morning", "5-7 page" vs "five pages". Only the timing is a real conflict (D1).</li>
+  </ol>
+</section>
+
+<!-- ===================== BY MORNING ===================== -->
+<section class="block" id="morning">
+  <div class="eyebrow">D1 in detail</div>
+  <h2>"By morning, five pages" vs the pitch</h2>
+  <ul class="tight">
+    <li><b>The chat (both pitch arms):</b> "Within 24 hours, you'll receive a personalized 5-7 page reading via email." The offer card: "Your personalized 5-7 page reading, within 24 hours."</li>
+    <li><b>The house rule elsewhere:</b> the 04 tea-reading copy says outright: 'Never "by morning", "tomorrow" or "tonight" about the reading', because its delivery is "within 24 hours."</li>
+    <li><b>Who delivers:</b> Mike's n8n flow, triggered by Stripe metadata <code>product = energy_clearing_ritual</code>. The repo doesn't hold its timing, and the n8n connector in this session lists no workflows, so I couldn't measure how fast the letter actually arrives.</li>
+    <li><b>Page count:</b> "Five pages" sits inside "5-7." That's no conflict.</li>
+  </ul>
+  <div class="dec"><p><b>Recommendation.</b> Get the real purchase-to-email time from Mike, both the usual and the slowest.<br>If almost all letters land within about 12 hours: change the lane pitch line to "By morning, my letter will be with you. Five pages, sometimes more." The pages keep "By morning, it's with you."<br>If not: the pages swap that line for "She writes at night, by candlelight," the chat keeps "within 24 hours," and nothing promises morning delivery.</p></div>
+</section>
+
+<!-- ===================== BUILD ===================== -->
+<section class="block" id="build">
+  <div class="eyebrow">After the copy is approved · brief</div>
+  <h2>Build notes I found while checking</h2>
+  <ul class="tight">
+    <li><b>Server-rendered copy needs a small server change.</b> Production sends one <code>index.html</code> for every route. For Meta to read lane copy without JavaScript, <code>/fb-manifest</code>, <code>/fb-pattern</code> and <code>/fb-family</code> need a server route that writes the lane's title, description and page copy into the HTML before React loads. The story-callback line can stay on a URL parameter.</li>
+    <li><b>Stripe:</b> <code>product</code> must stay <code>energy_clearing_ritual</code>. Mike's n8n exact-matches it, and so do five places in our code. The lane goes in as a new key (for example <code>lane = manifest | pattern | family</code>) that is absent on non-lane orders, the same way <code>bumpProduct</code> was added.</li>
+    <li><b>Funnel identity (D4):</b> /fb runs as funnel <code>v1-fb</code>, with the "- FB" Stripe suffix and its own Pixel checks. Keeping the lanes inside it means one new tag rather than a new funnel.</li>
+    <li><b>Lead record, email tag, PostHog, chat-coin purchases:</b> I'll report the exact fields and values once this is approved. Nothing is built and nothing has changed.</li>
+    <li><b>/fb stays exactly as it is.</b> It's the control.</li>
+  </ul>
+</section>
+
+<section class="block" id="checked">
+  <div class="eyebrow">Audit</div>
+  <h2>Checked, and not checked</h2>
+  <div class="tw"><table class="m">
+    <tr><th>Claim</th><th>How it was checked</th></tr>
+    <tr><td>Every /fb line, chat line and pitch line quoted above</td><td>Read from <code>origin/Production</code> at <code>67f3a08</code>: LandingPage.tsx, CTAButton, StatusIndicator, TrustBadges, useConversation.ts, geolocation.ts, ClearingChoiceCard.tsx</td></tr>
+    <tr><td>The crawler gets only the title and og tags</td><td><code>client/index.html</code> + <code>server/static.ts</code> sends index.html for every path. Whether Meta runs JavaScript is not checked.</td></tr>
+    <tr><td>Buyer counts and quotes</td><td>Read-only query on the live DB (read-only check confirmed). Keyword match on stored answers, so these are rough counts, not a clean classification.</td></tr>
+    <tr><td>Instagram lines</td><td>Virlo library, Instagram only, English. Three searches, $0.15.</td></tr>
+    <tr><td>How fast the letter really arrives</td><td><b>Not checked.</b> It lives in Mike's n8n, which isn't visible from here.</td></tr>
+    <tr><td>Story-slot facts (Jules, Laurel)</td><td>Taken only from the ad lines in the brief. Check each against the final cut.</td></tr>
+    <tr><td>No banned words, no "!" in lane copy</td><td>Script check over every piece of lane copy on this page. Result is in the reply.</td></tr>
+  </table></div>
+</section>
+
+</div>

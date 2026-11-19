@@ -9,6 +9,9 @@ import { isSlidingCloseVariant } from '../../shared/types'
 // palmReads.ts is pure data + pure functions whose only import is `import type`,
 // which is erased at compile time — nothing browser-specific enters the bundle.
 import { SIGNS } from '../../client/src/content/palmReads'
+// Belief lanes (/fb?lane=<id>). The same registry the lander renders from, so the
+// directive here is the approved lane copy and never a second hand-kept list.
+import { getLane } from '../../shared/beliefLanes'
 
 // ============================================
 // BASE EVELYN PROMPT
@@ -431,6 +434,27 @@ She came to you from a reading that asked: "${guard.question}"
 ${guard.rule}`
 }
 
+// Returns '' unless the seeker arrived through a belief lane (/fb?lane=<id>) — so
+// every other funnel's prompt (root / fb / fb2 / gdn / palm / tarot / read) stays
+// BYTE-IDENTICAL. Injected wherever readDirective() is, for the reason
+// improve-v1/04-fb-palm-derail-PROVEN.md proved on fb-palm: an identity the page and
+// opener build vanishes the moment the shared deepening resumes unless every later
+// step is told about it.
+//
+// The directive itself is the lane's approved copy (shared/beliefLanes.ts). It
+// follows the voice rules like everything else the model sees, because the model
+// echoes what it is given. Validated against the registry here as well as at the
+// route, so an unknown id can only ever produce ''.
+function laneDirective(userData: UserData): string {
+  const lane = getLane(userData.lane)
+  if (!lane) return ''
+  return `
+
+## The page she came from — HONOR THIS
+${lane.directive}
+Let it show in at least one message of this step, in plain words. Deepen it, never restate it mechanically.`
+}
+
 // Deep-flow guards, keyed by /fb-read hook. Deliberately SHORTER than the reflect
 // guards in shared/readDevices.ts: this rides on top of a long base prompt, and the
 // job here is to disarm the specific stock lines that contradict the hook, not to
@@ -462,7 +486,7 @@ export function buildReading1Prompt(userData: UserData, concern: string): string
 
   return `
 ${EVELYN_BASE_PROMPT}
-${bucketPrompt}${palmDirective(userData)}${readDirective(userData)}
+${bucketPrompt}${palmDirective(userData)}${readDirective(userData)}${laneDirective(userData)}
 
 ## Current Session
 - User's name: ${userData.firstName}
@@ -521,7 +545,7 @@ export function buildReading2Prompt(userData: UserData, deeperResponse: string):
 
   return `
 ${EVELYN_BASE_PROMPT}
-${bucketPrompt}${palmDirective(userData)}${readDirective(userData)}
+${bucketPrompt}${palmDirective(userData)}${readDirective(userData)}${laneDirective(userData)}
 
 ## Current Session
 - User's name: ${userData.firstName}
@@ -556,7 +580,7 @@ ${userData.personName ? `Continue using ${userData.personName}'s name where rele
 
 export function buildFutureValidationPrompt(userData: UserData, vision: string): string {
   return `
-${EVELYN_BASE_PROMPT}${palmDirective(userData)}${readDirective(userData)}
+${EVELYN_BASE_PROMPT}${palmDirective(userData)}${readDirective(userData)}${laneDirective(userData)}
 
 ## Current Session
 - User's name: ${userData.firstName}
@@ -601,7 +625,7 @@ export function buildCrisisRevealPrompt(userData: UserData, emotionalResponse: s
 
   return `
 ${EVELYN_BASE_PROMPT}
-${bucketPrompt}${palmDirective(userData)}${readDirective(userData)}
+${bucketPrompt}${palmDirective(userData)}${readDirective(userData)}${laneDirective(userData)}
 
 ## Current Session
 - User's name: ${userData.firstName}
@@ -665,7 +689,7 @@ ${userData.personName ? `Reference the interference between them and ${userData.
 
 export function buildCrisisCostPrompt(userData: UserData, sourceResponse: string): string {
   return `
-${EVELYN_BASE_PROMPT}${palmDirective(userData)}${readDirective(userData)}
+${EVELYN_BASE_PROMPT}${palmDirective(userData)}${readDirective(userData)}${laneDirective(userData)}
 
 ## Current Session
 - User's name: ${userData.firstName}

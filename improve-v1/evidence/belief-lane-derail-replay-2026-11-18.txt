@@ -1,0 +1,65 @@
+BELIEF-LANE DERAIL REPLAY — lane=manifest vs plain /fb, same answers
+date 2026-11-18T01:32:44.604Z · model claude-sonnet-5-5 · runs 2 · no server, no DB
+her name: Maureen
+answer 1 (reading1 input): "A man who calls when he says he will, and stays. I never let myself say I want to be someone's first choice. The last one went quiet after eight months, like they all do."
+answer 2 (reading2 input): "About ten years now. My sister says I always pick the same kind of man."
+
+── run 1 · LANE    /fb?lane=manifest · reading1 (subBucket=LOST_LOVE) · lane words: {"attract":1,"list":1,"asked for":1} · ok
+   Evelyn: Maureen, you asked for a man who calls when he says he will, and stays. That's not a long list, dear.
+   Evelyn: And yet it's the one thing you've never let yourself say out loud: that you want to be someone's first choice.
+   Evelyn: Eight months, then quiet. I sense you've replayed how it faded more than once, looking for the moment it turned.
+   Evelyn: When you try to attract love, I feel an older lesson answering first, one about how much to expect from it.
+   Evelyn: Something was learned long before him. How long have you been carrying this weight, Maureen?
+
+── run 1 · LANE    /fb?lane=manifest · reading2 · lane words: {"list":1,"asked for":1} · ok
+   Evelyn: Ten years, Maureen. That's a long time to keep hoping and keep starting over. I don't take that lightly.
+   Evelyn: Your sister sees the pattern. I think part of you has seen it too, quietly, for a while.
+   Evelyn: That ending wasn't clean, was it? Threads are still attached, and you've replayed those eight months more than you'd admit.
+   Evelyn: I'm starting to see something. It sits beneath your list of what you asked for, older than any of these men.
+   Evelyn: There's a reason it keeps going quiet. If this could all shift, what would you want love to feel like, Maureen?
+
+── run 1 · CONTROL plain /fb        · reading1 (subBucket=SEEKING_LOVE) · lane words: NONE · ok
+   Evelyn: Maureen, you want a man who calls when he says he will, and stays. That's not a small wish, dear.
+   Evelyn: I sense you've never let yourself say it out loud... that you want to be someone's first choice.
+   Evelyn: Your heart has walls. Built for protection, not isolation. They've kept out more than the ones who leave.
+   Evelyn: Eight months, and then the quiet. I feel how that settles in you... like a door closing softly, again.
+   Evelyn: There's more beneath this, Maureen. How long have you been carrying this weight?
+
+── run 1 · CONTROL plain /fb        · reading2 · lane words: NONE · ok
+   Evelyn: Ten years, Maureen. That's a long time to keep hoping and keep getting hurt. I feel the weight of it.
+   Evelyn: Your heart has walls... built for protection, not isolation. You've kept them standing so long you've forgotten they were meant to be doors.
+   Evelyn: I'm starting to see something. Your sister is noticing a pattern, dear. I think some part of you has noticed it too.
+   Evelyn: There's a reason this keeps happening. It isn't bad luck, and it isn't a flaw in you. It runs deeper.
+   Evelyn: If this could all shift... what would that look like for you, Maureen? Paint me a picture of what you truly desire.
+
+── run 2 · LANE    /fb?lane=manifest · reading1 (subBucket=LOST_LOVE) · lane words: {"list":1,"asked for":2} · ok
+   Evelyn: Maureen, I hear it. A man who calls when he says he will, and stays. That's not too much to ask, dear.
+   Evelyn: I notice the line about never letting yourself say you want to be someone's first choice. That's a heavy thing to carry quietly.
+   Evelyn: When you ask for love on a list, something older answers first. A lesson about what to expect from it.
+   Evelyn: Eight months, and then the silence. I sense that ending left threads still attached. You've replayed it more than you'd admit.
+   Evelyn: There's more beneath this, Maureen. Where did you first learn that being chosen was something to wait for rather than ask for?
+
+── run 2 · LANE    /fb?lane=manifest · reading2 · lane words: {"list":1} · ok
+   Evelyn: Ten years, Maureen. That's a long time to hope and be left holding the quiet afterward.
+   Evelyn: Your sister sees the pattern from outside. I think you've felt it from inside for a while, haven't you?
+   Evelyn: There's an old lesson underneath your list, about what love is allowed to give you. It speaks first.
+   Evelyn: I'm starting to see something. The ones who go quiet aren't the whole story, dear. Something older is choosing them.
+   Evelyn: If this could all shift... what would that look like for you, Maureen? Tell me what you truly want.
+
+── run 2 · CONTROL plain /fb        · reading1 (subBucket=SEEKING_LOVE) · lane words: NONE · ok
+   Evelyn: Maureen, you want a man who calls when he says he will, and stays. That's not a small wish, dear.
+   Evelyn: I sense you've never let yourself say it out loud... that you want to be someone's first choice.
+   Evelyn: Your heart has walls. Built for protection, not isolation. You've almost stopped believing anyone will stay.
+   Evelyn: Eight months, and then the quiet. You've replayed it, haven't you? Wondering what you could have said differently.
+   Evelyn: There's something beneath this, older than the last man. How long have you been carrying this weight, Maureen?
+
+── run 2 · CONTROL plain /fb        · reading2 · lane words: NONE · ok
+   Evelyn: Ten years, Maureen. That's a long time to keep hoping, and keep starting over. I feel the weight of it.
+   Evelyn: Your sister sees something, doesn't she? And part of you has wondered the same thing, quietly.
+   Evelyn: You've replayed those endings, searching for what you missed. I don't think the answer was ever in what you did.
+   Evelyn: I'm starting to see something... a thread running through every one of them. It's why they go quiet.
+   Evelyn: There's a reason this keeps happening, dear. It isn't luck, and it isn't you being unlovable.
+   Evelyn: If this could all shift... what would that look like for you, Maureen?
+
+Anthropic calls used: 9 of 11 · keys, in call order: ANTHROPIC_API_KEY failed over (400), ANTHROPIC_API_KEY_BACKUP_1, ANTHROPIC_API_KEY_BACKUP_1, ANTHROPIC_API_KEY_BACKUP_1, ANTHROPIC_API_KEY_BACKUP_1, ANTHROPIC_API_KEY_BACKUP_1, ANTHROPIC_API_KEY_BACKUP_1, ANTHROPIC_API_KEY_BACKUP_1, ANTHROPIC_API_KEY_BACKUP_1
+VERDICT: PASS — the lane's words appear in reading1 AND reading2 with the lane, and in neither without it, in every run

@@ -38,6 +38,7 @@ import { backendOfferFunnel, currentFunnel, getPostHogFunnel, isTwinFlameOffer }
 import type { BackendOfferKey } from "@shared/backendOffers";
 import { track as trackPH } from "@/lib/posthog";
 import { tarotEventProps } from "@/lib/tarotAttribution";
+import { laneEventProps } from "@/lib/laneAttribution";
 
 // ============================================
 // TYPES
@@ -454,6 +455,8 @@ export function useUpsellChat({
 
     trackPH("upsell_accepted", {
       funnel: offer ? backendOfferFunnel(offer) : (getPostHogFunnel() ?? "unknown"),
+      // Belief lane for the tab (/fb?lane=<id>); empty for every other funnel.
+      ...laneEventProps(),
       step: "upsell1",
       product: phProduct,
       ...(isDownsell ? { tier: "downsell" } : {}),
@@ -519,6 +522,8 @@ export function useUpsellChat({
         // of V1's fallback (A7). The webhook records the sale + fires PostHog on success.
         trackPH("upsell_fallback_redirect", {
           funnel: offer ? backendOfferFunnel(offer) : (getPostHogFunnel() ?? "unknown"),
+          // Belief lane for the tab (/fb?lane=<id>); empty for every other funnel.
+          ...laneEventProps(),
           step: "upsell1",
           product: userData.upsell1Product ?? "be_protection_ritual",
         });
@@ -548,6 +553,8 @@ export function useUpsellChat({
         // failure apart from an abandoned page. This is the drop-off point.
         trackPH("upsell_fallback_redirect", {
           funnel: offer ? backendOfferFunnel(offer) : (getPostHogFunnel() ?? "unknown"),
+          // Belief lane for the tab (/fb?lane=<id>); empty for every other funnel.
+          ...laneEventProps(),
           step: "upsell1",
           product: "protection_ritual",
           sign: tarot?.deck,
@@ -606,6 +613,8 @@ export function useUpsellChat({
     const tarot = getPostHogFunnel() === "tarot" ? tarotEventProps() : undefined;
     trackPH("upsell_declined", {
       funnel: offer ? backendOfferFunnel(offer) : (getPostHogFunnel() ?? "unknown"),
+      // Belief lane for the tab (/fb?lane=<id>); empty for every other funnel.
+      ...laneEventProps(),
       step: "upsell1",
       product: phProduct,
       sign: tarot?.deck,
@@ -621,6 +630,8 @@ export function useUpsellChat({
     addUserMessage(copy.downsellDeclineLabel ?? "Not right now");
     trackPH("upsell_declined", {
       funnel: offer ? backendOfferFunnel(offer) : (getPostHogFunnel() ?? "unknown"),
+      // Belief lane for the tab (/fb?lane=<id>); empty for every other funnel.
+      ...laneEventProps(),
       step: "upsell1",
       product: phProduct,
       tier: "downsell",

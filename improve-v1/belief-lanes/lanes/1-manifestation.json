@@ -1,0 +1,315 @@
+{
+  "id": "manifest",
+  "num": 1,
+  "name": "Manifestation",
+  "link": "/fb?lane=manifest",
+  "status": "Approved 2026-11-18 (version 2 card); wiring in progress, not live",
+  "belief": "Manifesting isn't broken. It answers what sits under the list, and an old lesson about love answers first.",
+  "words": [
+    "**attract**. Of 70 buyer lines pulled, about 4 said \"manifest\" and most said \"attract\": \"I always attract emotionally unavailable men\", \"I keep attracting married people\""
+  ],
+  "keywords": [
+    {
+      "role": "Main",
+      "words": "manifest, manifesting, manifested"
+    },
+    {
+      "role": "Second",
+      "words": "law of attraction"
+    },
+    {
+      "role": "Buyer's own word",
+      "words": "**attract**. Of 70 buyer lines pulled, about 4 said \"manifest\" and most said \"attract\": \"I always attract emotionally unavailable men\", \"I keep attracting married people\""
+    },
+    {
+      "role": "Supporting",
+      "words": "vision board, scripting"
+    },
+    {
+      "role": "Once each (community terms)",
+      "words": "369 method, affirmations, acting as if, specific person"
+    }
+  ],
+  "kw": [
+    {
+      "key": "loa",
+      "label": "law of attraction",
+      "regex": "\\blaw of attraction\\b",
+      "target": "~3",
+      "lo": 2,
+      "hi": 4
+    },
+    {
+      "key": "manifest",
+      "label": "manifest / manifesting",
+      "regex": "\\bmanifest\\w*",
+      "target": "6–8",
+      "lo": 6,
+      "hi": 8
+    },
+    {
+      "key": "attract",
+      "label": "attract (buyer word)",
+      "regex": "\\battract(?!ion)\\w*",
+      "target": "3–4",
+      "lo": 3,
+      "hi": 4
+    },
+    {
+      "key": "vision",
+      "label": "vision board",
+      "regex": "\\bvision boards?\\b",
+      "target": "2–3",
+      "lo": 2,
+      "hi": 3
+    },
+    {
+      "key": "scripting",
+      "label": "scripting",
+      "regex": "\\bscripting\\b",
+      "target": "1–2",
+      "lo": 1,
+      "hi": 2
+    },
+    {
+      "key": "369",
+      "label": "369 method",
+      "regex": "\\b369 method\\b",
+      "target": "1",
+      "lo": 1,
+      "hi": 1
+    },
+    {
+      "key": "affirm",
+      "label": "affirmations",
+      "regex": "\\baffirmations?\\b",
+      "target": "1",
+      "lo": 1,
+      "hi": 1
+    },
+    {
+      "key": "actas",
+      "label": "acting as if",
+      "regex": "\\bacting as if\\b",
+      "target": "1",
+      "lo": 1,
+      "hi": 1
+    },
+    {
+      "key": "sp",
+      "label": "specific person",
+      "regex": "\\bspecific person\\b",
+      "target": "1",
+      "lo": 1,
+      "hi": 1
+    }
+  ],
+  "card": {
+    "v2": {
+      "h": "Something Is Blocking What You Manifest — I Can See It",
+      "s": "Evelyn has sensed an old block beneath your manifesting. It's why the law of attraction keeps bringing the wrong man, or none at all. She can see where it started, from your first name.",
+      "b": "Yes Evelyn, Show Me Where It Started",
+      "sc": "It's free to message Evelyn. She's online now.",
+      "alts": [
+        "Something Is Standing Between You and the Love You're Manifesting — I Can See It",
+        "It's Not Your Manifesting — Something Older Is Blocking It, and I Can See It"
+      ],
+      "why": "",
+      "chosen": "2026-11-18"
+    }
+  },
+  "meta": {
+    "title": "Manifesting Love and Still Attracting the Wrong Man · Evelyn Cross",
+    "desc": "Vision boards, scripting, the law of attraction. If love still comes back wrong, something older is answering first. It's free to message Evelyn.",
+    "alt": "Evelyn Cross, who helps women see why manifesting love keeps bringing the wrong man."
+  },
+  "body": [
+    {
+      "t": "h",
+      "text": "Why the law of attraction keeps bringing the wrong man"
+    },
+    {
+      "t": "p",
+      "text": "Maybe a friend's said it already. \"You always attract the same kind of man.\""
+    },
+    {
+      "t": "p",
+      "text": "Different face. Same ending. He's warm, then he goes quiet. Or he stays close, and never all the way."
+    },
+    {
+      "t": "p",
+      "text": "Or nobody comes at all. And everything else you asked for shows up."
+    },
+    {
+      "t": "p",
+      "text": "It isn't for lack of trying. You've done what the law of attraction asks. More than most women ever will."
+    },
+    {
+      "t": "h",
+      "text": "What you've already tried"
+    },
+    {
+      "t": "list",
+      "lead": "You've done the work.",
+      "items": [
+        "A vision board by the bed.",
+        "Scripting him in a journal, every night.",
+        "The 369 method.",
+        "Affirmations on the mirror.",
+        "Acting as if he's already here.",
+        "Trying to manifest one specific person."
+      ],
+      "closer": "None of it was wrong. It was answering something older."
+    },
+    {
+      "t": "h",
+      "text": "What answers before your vision board does"
+    },
+    {
+      "t": "p",
+      "text": "Here's what nobody in manifesting tells you. You don't only manifest from the list. You manifest from what's sitting under it."
+    },
+    {
+      "t": "p",
+      "text": "Long ago, somebody taught you how little to expect from love. Want nothing. Be no trouble. Don't ask him to stay."
+    },
+    {
+      "t": "p",
+      "text": "That lesson answers first, every time. So you keep attracting the man it's taught you to expect."
+    },
+    {
+      "t": "p",
+      "text": "A better list can't reach it. You can raise your vibration for years. It won't reach a room you don't know you're standing outside of."
+    },
+    {
+      "t": "p",
+      "text": "Evelyn finds where it started, from your first name."
+    },
+    {
+      "t": "h",
+      "text": "Who Evelyn is"
+    },
+    {
+      "t": "p",
+      "text": "Evelyn Cross is a seer in the west of Ireland. Her teacher could do this. So could her teacher's teacher."
+    },
+    {
+      "t": "p",
+      "text": "She works at night, by candlelight. One first name at a time. She doesn't need your birthday, a photo, or his name."
+    },
+    {
+      "t": "p",
+      "text": "She doesn't look at the man. She looks at where it started."
+    },
+    {
+      "t": "p",
+      "text": "She won't tell you to stop manifesting. She'll show you what you've been manifesting from."
+    },
+    {
+      "t": "h",
+      "text": "When you send your first name"
+    },
+    {
+      "t": "p",
+      "text": "You send your first name. That's all."
+    },
+    {
+      "t": "p",
+      "text": "Evelyn writes back. Her first message is short. Then she'll ask you one question."
+    },
+    {
+      "t": "p",
+      "text": "Messaging Evelyn is free."
+    },
+    {
+      "t": "p",
+      "text": "If she sees where it started, she'll offer to write it down. A letter, written at night, by candlelight. That part isn't free. She'll tell you so plainly before anything happens."
+    },
+    {
+      "t": "p",
+      "text": "It starts the same way for every woman. One first name."
+    },
+    {
+      "t": "h",
+      "text": "Questions women ask"
+    },
+    {
+      "t": "faq",
+      "items": [
+        {
+          "q": "Does the law of attraction work for love?",
+          "a": "It answers. It's just not always what you wrote down. It answers what you believe underneath."
+        },
+        {
+          "q": "Why do I keep attracting the wrong man?",
+          "a": "The face changes. The ending doesn't. That points back to one old lesson about love."
+        },
+        {
+          "q": "Can I manifest a specific person?",
+          "a": "Many women try. Evelyn doesn't pull anyone toward you. She looks at why the same kind of man keeps arriving."
+        },
+        {
+          "q": "Is it free to message Evelyn?",
+          "a": "Yes. The chat is free."
+        }
+      ]
+    },
+    {
+      "t": "ask"
+    }
+  ],
+  "chat": [
+    {
+      "who": "e",
+      "text": "You've been asking for a long time, haven't you."
+    },
+    {
+      "who": "e",
+      "text": "What's your first name, dear?"
+    },
+    {
+      "who": "me",
+      "text": "{her first name}"
+    },
+    {
+      "who": "e",
+      "text": "{Name}... you've done the lists. The boards. All of it."
+    },
+    {
+      "who": "e",
+      "text": "And something has been answering. Just not what you meant."
+    },
+    {
+      "who": "e",
+      "text": "So let's look at who was holding the pen."
+    },
+    {
+      "who": "q",
+      "text": "Tell me what you asked for, dear... and what you never let yourself ask."
+    }
+  ],
+  "chatnote": "Her answer is the list. The part she never let herself ask for (pick me, stay, marry me) is the lesson Evelyn names next.",
+  "directive": "She came from a page about manifesting love: the law of attraction, vision boards, scripting. Love still comes back wrong, or not at all. Reuse her words: what she asked for, her list, and 'attract', the word women like her use most. Hold the lane's belief: manifesting answers what sits under the list, and an old lesson about what to expect from love answers first. Never tell her manifesting doesn't work, and never promise she will manifest him.",
+  "notes": [
+    "The vibration line is the ad's own closing line, kept word for word for message match. At 12 words it's one of the few long sentences.",
+    "\"Specific person\" shows up twice, once in the list and once as an FAQ question. The FAQ wording is what she'd type into search, so I kept both."
+  ],
+  "open": [
+    "An exception for 'soulmate'? It's left out because 'soul' is banned.",
+    "369 method, 'specific person', 'acting as if': one mention each. Too niche?"
+  ],
+  "parked": {
+    "note": "Card version 1 (her words) parked 2026-11-18: operator chose version 2 only for now.",
+    "card_v1": {
+      "h": "I've used the law of attraction for years. I can manifest almost anything, except a man who chooses me.",
+      "s": "Evelyn knows why. Something older sits under every vision board you make, and it answers first. She can see where it started, from your first name.",
+      "b": "Send your first name to Evelyn",
+      "sc": "It's free to message Evelyn.",
+      "alts": [
+        "Vision boards. Scripting. The law of attraction. I still keep manifesting the wrong man.",
+        "I did everything the law of attraction says. Love still came back wrong."
+      ],
+      "why": "No quote marks and no name under the headline, so it doesn't read as a customer testimonial."
+    }
+  }
+}
