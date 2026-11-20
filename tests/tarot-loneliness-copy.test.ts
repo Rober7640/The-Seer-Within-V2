@@ -143,8 +143,10 @@ describe('loneliness hooks are wired end to end', () => {
   it('the openers do not manufacture despair', () => {
     for (const h of LONELINESS_HOOKS) {
       const q = openerCStart(DECK, h, 'a')[1];
-      expect(q, `${h} opener form`).toMatch(/^Before I look closer, tell me… /);
+      // May restate her question first ("You asked …. ") — operator rule 2026-11-05.
+      expect(q, `${h} opener form`).toMatch(/^(You asked [^?]+\. )?Before I look closer, tell me… /);
       expect(q, `${h} opener must be a question`).toMatch(/\?$/);
+      expect((q.match(/\?/g) ?? []).length, `${h} opener must ask exactly one question`).toBe(1);
       expect(q, `${h} opener digs at the pain directly`).not.toMatch(/how (lonely|alone|bad) (do|does)|what does (the|it) (loneliness|emptiness)|how much does it hurt|tell me about the lonel/i);
       expect(q, `${h} opener invites a despair narrative`).not.toMatch(/what do you tell yourself (at night|when)|how do you cope|worst part|darkest/i);
       // Audience-agnostic: must not sort never-partnered from post-breakup, and must not
@@ -152,6 +154,15 @@ describe('loneliness hooks are wired end to end', () => {
       expect(q, `${h} opener presumes her history`).not.toMatch(/have you ever been|your last relationship|since (he|your ex)|after (he|your)/i);
       expect(q, `${h} opener asks her to justify the duration`).not.toMatch(/how long have you been (alone|single)|why do you think you are still/i);
     }
+  });
+
+  // Operator 2026-11-20: the old meant-alone opener ("…the idea that this might be
+  // deliberate?") left 44% of real first answers at "I don't know". Pin the rewrite: it
+  // restates her headline, and the internal words that confused her stay out.
+  it('cards-meant-alone opener restates her question in plain words', () => {
+    const q = openerCStart(DECK, 'cards-meant-alone', 'a')[1];
+    expect(q).toMatch(/^You asked if you're meant to be alone\. Before I look closer, tell me… /);
+    expect(q).not.toMatch(/deliberate|designat|\bthis might\b/i);
   });
 
   it('is FACE-DOWN ONLY — not ported to the face-up decks', () => {

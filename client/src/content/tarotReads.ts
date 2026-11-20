@@ -2094,9 +2094,13 @@ const TAROT_QUESTION: Record<TarotHook, string> = {
   // ⚠ None asks how long it has been, whether she has ever had it, or what went wrong.
   // The family is audience-agnostic and the openers must not sort her either way.
   'cards-alone-forever': "Before I look closer, tell me… when did 'not yet' start sounding like 'never' to you?",
-  // Externalises it deliberately — she is asking whether something DECIDED this, so the
-  // opener asks where that idea came from rather than whether it is true.
-  'cards-meant-alone': "Before I look closer, tell me… who or what first gave you the idea that this might be deliberate?",
+  // Rewritten 2026-11-20 (operator). The old opener — "who or what first gave you the idea
+  // that this might be deliberate?" — failed on live traffic: 109 of 247 real first answers
+  // (44%) were "I don't know" / "I don't understand the question". Version C shows only the
+  // card line before this, so "this" pointed at nothing, and "deliberate" was our word, not
+  // hers. Now it restates her question (operator rule 2026-11-05) and asks about HOPE, tied
+  // to the card she just turned. It still asks her to think, never to describe the pain.
+  'cards-meant-alone': "You asked if you're meant to be alone. Before I look closer, tell me… what were you hoping this card would tell you?",
   // Goes straight at the finding: she has been handed comfort where she asked for an answer.
   // Answering it usually produces exasperation rather than despair, which is the point.
   'cards-someone-for-me': "Before I look closer, tell me… what do people tend to say to you about it, and has any of it ever helped?",
