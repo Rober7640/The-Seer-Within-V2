@@ -176,6 +176,10 @@ export interface UserData {
   // line item or the CTA. Only ever set to 'deep'; absent ⇒ today's 8-message
   // close, byte-identical.
   closeDepth?: 'deep'
+  // /fb chat-flow A/B (v1_fb_chat_flow_2026). 'b' ⇒ the reading flow (name reading,
+  // three reading steps, diagnosis). Assigned on the visitor cookie at CHAT START,
+  // before the name, because B changes the name step. Absent ⇒ today's flow.
+  chatFlow?: 'b'
 }
 
 export interface ShippingAddress {

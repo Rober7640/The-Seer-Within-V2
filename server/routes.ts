@@ -85,6 +85,10 @@ import {
   generatePalmReflect,
   generateTarotReflect,
   generateReadReflect,
+  generateFbB1,
+  generateFbB2,
+  generateFbB3,
+  generateFbBDiagnosis,
 } from "./lib/claude";
 import {
   saveConversation,
@@ -108,6 +112,8 @@ import {
   resolveV1DownsellBumpPrice,
   resolveTarotVersion,
   resolveTarotMethod,
+  resolveFbChatFlow,
+  V1_FB_CHAT_FLOW_EXPERIMENT_KEY,
   logExposure,
   exposureSign,
   hashEmail,
@@ -121,6 +127,7 @@ import {
 } from "./lib/experiments";
 import { TAROT_C_PATH, shouldRedirectTarotC, tarotBTarget } from "./lib/tarotRedirect";
 import { ensureVisitorId, readVisitorId } from "./lib/visitorCookie";
+import { cleanEarlier } from "./lib/fbChatFlowPrompts";
 import {
   V1_BUMP_CENTS,
   resolveBumpCents,
@@ -727,7 +734,7 @@ export async function registerRoutes(
   // Chat API - Claude integration
   app.post("/api/chat", async (req: Request, res: Response) => {
     try {
-      const { action, userData, input, objectionCount, palmSign, palmHook, palmThumb, tarotDeck, tarotHook, tarotCard, readDevice, readHook, readCard } =
+      const { action, userData, input, objectionCount, palmSign, palmHook, palmThumb, tarotDeck, tarotHook, tarotCard, readDevice, readHook, readCard, earlier } =
         req.body as ChatRequest;
 
       // Belief lane — rides on userData exactly as readHook does, and is read by
@@ -808,6 +815,19 @@ export async function registerRoutes(
           break;
         case "shadowSummary":
           result = await generateShadowSummary(userData);
+          break;
+        // /fb chat-flow B (v1_fb_chat_flow_2026). Only a B session ever sends these.
+        case "fbB1":
+          result = await generateFbB1(userData, cleanEarlier(earlier), input);
+          break;
+        case "fbB2":
+          result = await generateFbB2(userData, cleanEarlier(earlier), input);
+          break;
+        case "fbB3":
+          result = await generateFbB3(userData, cleanEarlier(earlier), input);
+          break;
+        case "fbBDiagnosis":
+          result = await generateFbBDiagnosis(userData, cleanEarlier(earlier));
           break;
         case "palmOpener": {
           // Validate against fixed enums before injecting into the prompt.
@@ -1739,6 +1759,26 @@ export async function registerRoutes(
         version: raw === "b" ? "b" : raw === "c" ? "c" : "a",
         method: "natural",
       });
+    }
+  });
+
+  // /fb CHAT FLOW A vs B (v1_fb_chat_flow_2026) — which chat this /fb visitor gets.
+  // Asked by the client at chat start, BEFORE the greeting, because B changes the step
+  // right after her name. Same shape as /api/tarot/version: the exposure is logged in
+  // the same call that hands back the arm, so "assigned" and "shown" are one instant.
+  // Every failure path answers flow 'a', today's chat. The client only calls this on
+  // plain /fb (no lane), and the experiment is also funnel-scoped to v1-fb.
+  app.get("/api/fb/chat-flow", async (req: Request, res: Response) => {
+    try {
+      const visitorId = ensureVisitorId(req, res);
+      const a = await resolveFbChatFlow(visitorId);
+      if (a.enrolled && a.variant) {
+        await logExposure(V1_FB_CHAT_FLOW_EXPERIMENT_KEY, visitorId, a.variant, "fb_chat_opener", { funnel: "v1-fb" });
+      }
+      return res.json({ flow: a.b ? "b" : "a" });
+    } catch (error) {
+      logger.warn("fb chat-flow assign failed (falling back to flow a):", error);
+      return res.json({ flow: "a" });
     }
   });
 
