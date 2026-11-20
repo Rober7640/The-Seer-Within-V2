@@ -1960,6 +1960,39 @@ export async function resolveV1CloseDepth(
   };
 }
 
+// ── /fb CHAT FLOW A vs B — interview vs reading ──────────────────────────────
+// A (control) is today's /fb chat: seven questions after the email before the offer.
+// B is the reading flow: a name reading (candle + name number) before the topic, then
+// three reading steps that each TELL her something before asking, and a diagnosis that
+// closes the candle-smoke loop, then today's pitch unchanged. Spec + copy:
+// docs/superpowers/specs/2026-11-21-v1-fb-chat-flow-2026.md.
+//
+// 🔴 ASSIGNED AT CHAT START ON THE VISITOR COOKIE, like v1_tarot_version_bc_2026, and
+// for the same reason: B changes the step right after her NAME, before any email
+// exists. So the denominator is chats started, not leads, and the tally reaches the
+// purchase through conversations.ab_visitor_id (tallyV1MainByVisitor).
+//
+// /fb ONLY (scope.funnel ['v1-fb']), and never a belief-lane visit: the caller does not
+// ask for lane traffic, whose opener and deep-flow directive are their own.
+export const V1_FB_CHAT_FLOW_EXPERIMENT_KEY = 'v1_fb_chat_flow_2026';
+
+/**
+ * Which chat flow should this /fb visitor get?
+ *
+ * `b` is true only when the assigned arm is applied AND its payload says
+ * `{flow: 'b'}`, so a draft / paused / out-of-scope test, a missing cookie or a
+ * malformed payload all yield today's flow — deploying this changes nothing until
+ * the experiment is started. `enrolled` tells the caller to log the exposure.
+ */
+export async function resolveFbChatFlow(
+  visitorId: string | null | undefined,
+  key: string = V1_FB_CHAT_FLOW_EXPERIMENT_KEY, // overridable so tests never touch the live experiment
+): Promise<{ b: boolean; variant: string | null; enrolled: boolean }> {
+  const a = await assign(key, visitorId, { funnel: 'v1-fb' });
+  if (!a) return { b: false, variant: null, enrolled: false };
+  return { b: a.applied && a.payload?.flow === 'b', variant: a.variant, enrolled: a.enrolled };
+}
+
 // ── /fb-tarot VERSION B vs C — which OPENER she gets ─────────────────────────
 // Version B ("smart template"): the full pre-written read is delivered as chat
 // messages, then straight to name capture. Deterministic, no model call.

@@ -25,6 +25,7 @@ import {
   buildTarotReflectPrompt,
   buildReadReflectPrompt,
 } from './prompts'
+import { buildFbB1Prompt, buildFbB2Prompt, buildFbB3Prompt, buildFbBDiagnosisPrompt } from './fbChatFlowPrompts'
 import type { ReadDevice, ReadHook, ReadOption } from '../../shared/readDevices'
 import { remainingBubbles } from '../../shared/readDevices'
 import { readReplyHarms } from '../../shared/readGuards'
@@ -96,6 +97,21 @@ function getFallbackMessages(): string[] {
     "Let me focus more deeply...",
     "There's more here than meets the eye...",
   ]
+}
+
+// /fb chat-flow B (v1_fb_chat_flow_2026) — the three reading steps and the diagnosis.
+// `earlier` = Evelyn's own earlier messages, already capped by cleanEarlier().
+export async function generateFbB1(userData: UserData, earlier: string[], said: string): Promise<ClaudeResponse> {
+  return callClaude(buildFbB1Prompt(userData, earlier, said))
+}
+export async function generateFbB2(userData: UserData, earlier: string[], said: string): Promise<ClaudeResponse> {
+  return callClaude(buildFbB2Prompt(userData, earlier, said))
+}
+export async function generateFbB3(userData: UserData, earlier: string[], said: string): Promise<ClaudeResponse> {
+  return callClaude(buildFbB3Prompt(userData, earlier, said))
+}
+export async function generateFbBDiagnosis(userData: UserData, earlier: string[]): Promise<ClaudeResponse> {
+  return callClaude(buildFbBDiagnosisPrompt(userData, earlier))
 }
 
 // New expanded flow functions

@@ -37,6 +37,8 @@ import {
 } from '@/lib/intent'
 import { trackLead, trackInitiateCheckout, getTrackdeskClickId } from '@/lib/facebook'
 import { currentFunnel, funnelPath, getPostHogFunnel, linkParams, skipEmail } from '@/lib/funnel'
+import { fetchAssignedFbChatFlow, fbBEarlier } from '@/lib/fbChatFlow'
+import { fbBNameLines, fbBTopicLines } from '@/content/fbChatFlowB'
 import { goToPaiCheckout } from '@/lib/paiCheckout'
 import { track as trackPH, identifyUser as identifyPH, getDistinctId } from '@/lib/posthog'
 import { trackCheckoutViewed } from '@/lib/checkoutSteps'
@@ -438,6 +440,16 @@ export function useConversation() {
     showWelcomeBack()
   }, [isRestored, resumeSettled, addMessage, sendBotMessage, sendBotMessages, updateState])
 
+  // === /fb CHAT FLOW A/B (v1_fb_chat_flow_2026) ===
+  // 'b' ⇒ the reading flow. Assigned in startGreeting (before her name, because B
+  // changes the step right after it) and stored on userData so a restored session and
+  // every later handler see it. The ref exists for handleNameCapture, which has no
+  // chat snapshot; the effect keeps it right after a restore.
+  const chatFlowRef = useRef<'b' | undefined>(undefined)
+  useEffect(() => {
+    chatFlowRef.current = chat.userData.chatFlow
+  }, [chat.userData.chatFlow])
+
   // === GREETING SEQUENCE (for new sessions) ===
 
   useEffect(() => {
@@ -607,6 +619,17 @@ export function useConversation() {
         return
       }
 
+      // /fb chat-flow test: plain /fb only (lanes returned above). Awaited BEFORE the
+      // greeting because the server logs the exposure as it answers, so assigned and
+      // shown are the same instant. Any failure, or a draft test, answers 'a'.
+      if (currentFunnel() === 'v1-fb') {
+        const flow = await fetchAssignedFbChatFlow()
+        if (flow === 'b') {
+          chatFlowRef.current = 'b'
+          updateUserData({ chatFlow: 'b' })
+        }
+      }
+
       await sendBotMessages([
         "Greetings, dear friend, and welcome.",
         "My name is Evelyn Cross.",
@@ -712,11 +735,12 @@ export function useConversation() {
         const response = await fetch('/api/chat', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            action: 'reading1',
-            userData: { ...currentChat.userData, concern },
-            input: concern,
-          }),
+          body: JSON.stringify(
+            // /fb chat-flow B: step 1 of the reading (what's happening).
+            currentChat.userData.chatFlow === 'b'
+              ? { action: 'fbB1', userData: { ...currentChat.userData, concern }, input: concern, earlier: fbBEarlier(currentChat) }
+              : { action: 'reading1', userData: { ...currentChat.userData, concern }, input: concern },
+          ),
         })
         if (!response.ok) throw new Error(`reading1 HTTP ${response.status}`)
         const data = await response.json()
@@ -743,6 +767,15 @@ export function useConversation() {
           state: 'BUCKET_CLARIFICATION',
           inputEnabled: false,
           showBucketButtons: true,
+        })
+      } else if (currentChat.userData.chatFlow === 'b') {
+        // B skips DEEPENING_2 ("how long?") — step 1 already asked what she wants,
+        // and FUTURE_PACING is the handler that stores that answer.
+        updateState({
+          state: 'FUTURE_PACING',
+          inputEnabled: true,
+          inputPlaceholder: 'Tell me what you want...',
+          inputType: 'text',
         })
       } else {
         updateState({
@@ -976,11 +1009,17 @@ export function useConversation() {
       return
     }
 
-    await sendBotMessages([
-      `It's lovely to meet you, ${capitalized}.`,
-      "Everything we discuss stays between us... our secret.",
-      "Now, what's weighing on your heart today, dear?",
-    ])
+    // /fb chat-flow B: the name gets a reading (candle + name number) instead of
+    // "It's lovely to meet you". Same topic buttons after it.
+    await sendBotMessages(
+      chatFlowRef.current === 'b'
+        ? fbBNameLines(capitalized)
+        : [
+            `It's lovely to meet you, ${capitalized}.`,
+            "Everything we discuss stays between us... our secret.",
+            "Now, what's weighing on your heart today, dear?",
+          ],
+    )
 
     updateState({
       state: 'BUCKET_SELECTION',
@@ -1400,7 +1439,10 @@ export function useConversation() {
     }
 
     await sendBotMessages([
-      `Thank you, ${currentChat.userData.firstName}. The link is complete.`,
+      // /fb chat-flow B drops "The link is complete." (it leads nowhere).
+      currentChat.userData.chatFlow === 'b'
+        ? `Thank you, ${currentChat.userData.firstName}.`
+        : `Thank you, ${currentChat.userData.firstName}. The link is complete.`,
       "Now, tell me more about what's on your mind...",
       "Your thoughts, your feelings... I'm listening.",
     ])
@@ -1416,6 +1458,44 @@ export function useConversation() {
   // === EXPANDED FLOW HANDLERS ===
 
   // DEEPENING_1: Initial concern - leads to READING_1
+  // /fb chat-flow B: one reading step (fbB2 / fbB3). Sends the step, shows the
+  // messages, then moves to `next`. On failure it re-enables input in place so her
+  // next message retries the step, the same never-freeze rule as A's handlers.
+  const runFbBStep = useCallback(
+    async (
+      action: 'fbB2' | 'fbB3',
+      userData: UserData,
+      input: string,
+      currentChat: ChatState,
+      next: { state: ChatState['state']; inputPlaceholder: string },
+    ) => {
+      let messages: string[] = []
+      try {
+        const response = await fetch('/api/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action, userData, input, earlier: fbBEarlier(currentChat) }),
+        })
+        if (!response.ok) throw new Error(`${action} HTTP ${response.status}`)
+        const data = await response.json()
+        messages = Array.isArray(data?.messages) ? data.messages : []
+      } catch (e) {
+        console.error(`${action} failed — recovering:`, e)
+        await sendBotMessages(["Forgive me, dear — the connection wavered for a breath. Tell me again?"])
+        updateState({ inputEnabled: true })
+        return
+      }
+      await sendBotMessages(messages)
+      updateState({ state: next.state, inputEnabled: true, inputPlaceholder: next.inputPlaceholder, inputType: 'text' })
+    },
+    [sendBotMessages, updateState],
+  )
+
+  // /fb chat-flow B reaches the offer from CRISIS_COST without the permission button
+  // (one yes, not two). runPermission is declared further down, so the call goes
+  // through this ref, set right after it.
+  const runPermissionRef = useRef<((ud: UserData, echo: boolean, earlier?: string[]) => Promise<void>) | null>(null)
+
   const handleDeepening1 = useCallback(async (input: string, currentChat: ChatState) => {
     const intent = detectIntent(input)
     const firstName = currentChat.userData.firstName || 'dear'
@@ -1439,7 +1519,7 @@ export function useConversation() {
       return
     }
 
-    if (intent === 'too_short') {
+    if (intent === 'too_short' && currentChat.userData.chatFlow !== 'b') { // B: no pushback, the reading takes what she gave
       await sendBotMessages(getTooShortResponse(firstName))
       updateState({ inputEnabled: true })
       return
@@ -1562,7 +1642,7 @@ export function useConversation() {
       return
     }
 
-    if (intent === 'too_short') {
+    if (intent === 'too_short' && currentChat.userData.chatFlow !== 'b') { // B: no pushback, the reading takes what she gave
       await sendBotMessages(getTooShortResponse(firstName, 'vision'))
       updateState({ inputEnabled: true })
       return
@@ -1583,6 +1663,16 @@ export function useConversation() {
     const sanitized = sanitizeInput(input)
     updateUserData({ desires: sanitized })
     updateState({ inputEnabled: false })
+
+    // /fb chat-flow B: step 2 (what's in the way), then straight to "where did it
+    // start?" — B has no "how would that FEEL?" turn (FUTURE_VALIDATION).
+    if (currentChat.userData.chatFlow === 'b') {
+      await runFbBStep('fbB2', { ...currentChat.userData, desires: sanitized }, sanitized, currentChat, {
+        state: 'CRISIS_REVEAL',
+        inputPlaceholder: 'Where did this start...',
+      })
+      return
+    }
 
     // Call Claude API for future validation
     let messages: string[] = []
@@ -1615,7 +1705,7 @@ export function useConversation() {
       inputEnabled: true,
       inputPlaceholder: 'How would that feel...',
     })
-  }, [sendBotMessages, updateState, updateUserData])
+  }, [sendBotMessages, updateState, updateUserData, runFbBStep])
 
   // FUTURE_VALIDATION: Emotional response - leads to CRISIS_REVEAL
   const handleFutureValidation = useCallback(async (input: string, currentChat: ChatState) => {
@@ -1724,7 +1814,7 @@ export function useConversation() {
       return
     }
 
-    if (intent === 'too_short') {
+    if (intent === 'too_short' && currentChat.userData.chatFlow !== 'b') { // B: no pushback, the reading takes what she gave
       await sendBotMessages(getTooShortResponse(firstName))
       updateState({ inputEnabled: true })
       return
@@ -1742,7 +1832,7 @@ export function useConversation() {
       return
     }
 
-    if (intent === 'clarification') {
+    if (intent === 'clarification' && currentChat.userData.chatFlow !== 'b') { // B: no pushback, the reading takes what she gave
       await sendBotMessages(getClarificationResponse(firstName, 'crisis_reveal'))
       updateState({ inputEnabled: true })
       return
@@ -1751,6 +1841,16 @@ export function useConversation() {
     const sanitized = sanitizeInput(input)
     updateUserData({ blockSource: sanitized })
     updateState({ inputEnabled: false })
+
+    // /fb chat-flow B: step 3 (where it comes from, what it cost her), ending on
+    // "are you ready to let it go?".
+    if (currentChat.userData.chatFlow === 'b') {
+      await runFbBStep('fbB3', { ...currentChat.userData, blockSource: sanitized }, sanitized, currentChat, {
+        state: 'CRISIS_COST',
+        inputPlaceholder: 'Type your answer...',
+      })
+      return
+    }
 
     // Call Claude API for crisis cost
     const response = await fetch('/api/chat', {
@@ -1771,7 +1871,7 @@ export function useConversation() {
       inputEnabled: true,
       inputPlaceholder: 'What would it be worth...',
     })
-  }, [sendBotMessages, updateState, updateUserData])
+  }, [sendBotMessages, updateState, updateUserData, runFbBStep])
 
   // CRISIS_COST response - if positive, skip urgency and go to permission
   const handleCrisisCost = useCallback(async (input: string, currentChat: ChatState) => {
@@ -1796,7 +1896,7 @@ export function useConversation() {
       return
     }
 
-    if (intent === 'too_short') {
+    if (intent === 'too_short' && currentChat.userData.chatFlow !== 'b') { // B: no pushback, the reading takes what she gave
       await sendBotMessages(getTooShortResponse(firstName))
       updateState({ inputEnabled: true })
       return
@@ -1814,7 +1914,7 @@ export function useConversation() {
       return
     }
 
-    if (intent === 'clarification') {
+    if (intent === 'clarification' && currentChat.userData.chatFlow !== 'b') { // B: no pushback, the reading takes what she gave
       await sendBotMessages(getClarificationResponse(firstName, 'crisis_cost'))
       updateState({ inputEnabled: true })
       return
@@ -1823,6 +1923,14 @@ export function useConversation() {
     const sanitized = sanitizeInput(input)
     updateUserData({ commitmentResponse: sanitized })
     updateState({ inputEnabled: false })
+
+    // /fb chat-flow B: her yes goes straight to the diagnosis and the offer. A asks a
+    // second time ("I need your full permission"). Anything short of a clear yes
+    // falls through to A's urgency turn and the permission button below.
+    if (currentChat.userData.chatFlow === 'b' && intent === 'positive' && runPermissionRef.current) {
+      await runPermissionRef.current({ ...currentChat.userData, commitmentResponse: sanitized }, false, fbBEarlier(currentChat))
+      return
+    }
 
     // If they said yes/positive, skip urgency and go straight to permission
     if (intent === 'positive') {
@@ -2109,7 +2217,10 @@ export function useConversation() {
       ],
     }
 
-    await sendBotMessages(bucketResponses[bucket])
+    // /fb chat-flow B: the topic lines pick up the candle smoke instead.
+    await sendBotMessages(
+      chat.userData.chatFlow === 'b' ? fbBTopicLines(bucket, firstName || 'dear') : bucketResponses[bucket],
+    )
 
     if (bucket === 'someone') {
       updateState({
@@ -2146,11 +2257,14 @@ export function useConversation() {
 
   // === PERMISSION HANDLER ===
 
-  const handlePermission = useCallback(async () => {
-    addMessage('user', 'Yes, please help me Evelyn!')
+  // `ud` is the chat's userData (passed in so /fb chat-flow B can call this from
+  // CRISIS_COST with the answer it just stored). `echo` adds her button tap as a
+  // message; B passes false because she has already typed her yes.
+  const runPermission = useCallback(async (ud: UserData, echo: boolean, earlier: string[] = []) => {
+    if (echo) addMessage('user', 'Yes, please help me Evelyn!')
     updateState({ showPermissionButton: false, inputEnabled: false })
 
-    const firstName = chat.userData.firstName
+    const firstName = ud.firstName
 
     // Step 1: Acknowledge their yes
     await sendBotMessages([
@@ -2165,11 +2279,12 @@ export function useConversation() {
       const shadowResponse = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          action: 'shadowSummary',
-          userData: chat.userData,
-          input: '',
-        }),
+        body: JSON.stringify(
+          // /fb chat-flow B: the diagnosis closes the candle-smoke loop and never asks.
+          ud.chatFlow === 'b'
+            ? { action: 'fbBDiagnosis', userData: ud, input: '', earlier }
+            : { action: 'shadowSummary', userData: ud, input: '' },
+        ),
       })
       if (shadowResponse.ok) {
         const shadowResult = await shadowResponse.json()
@@ -2198,8 +2313,8 @@ export function useConversation() {
     // The two arms COMPOSE (woven prefixes its naming line, deep swaps the body)
     // rather than one winning, because the preview overrides can set both. They
     // never co-occur in live traffic: woven is fb-palm-scoped, deep is fb-tarot.
-    const woven = chat.userData.promptVariant === 'woven'
-    const deep = chat.userData.closeDepth === 'deep'
+    const woven = ud.promptVariant === 'woven'
+    const deep = ud.closeDepth === 'deep'
 
     // NEW BLOCK — MECHANISM (deep arm). Hopkins' reason-why: WHY the ritual works.
     // Missing entirely today — the ritual is asserted, never explained, which is
@@ -2260,9 +2375,9 @@ export function useConversation() {
     // guarantee → proof → grace doctrine → the causal bridge (the $35 exists
     // BECAUSE money must never be in the way) → equality + unity. Classic
     // variants keep today's copy byte-identical.
-    const pitchPrice = chat.userData.priceDollars ?? 35
-    const downsellDollars = chat.userData.downsellDollars ?? 25
-    const slidingClose = isSlidingCloseVariant(chat.userData.priceVariantId)
+    const pitchPrice = ud.priceDollars ?? 35
+    const downsellDollars = ud.downsellDollars ?? 25
+    const slidingClose = isSlidingCloseVariant(ud.priceVariantId)
 
     // NEW BLOCK — PRICE JUSTIFICATION (deep arm). Placed BEFORE the existing three
     // so the plain reason-why lands first and "the sacred offering is $35" closes
@@ -2349,7 +2464,7 @@ export function useConversation() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           action: 'valueExplain',
-          userData: chat.userData,
+          userData: ud,
           input: '',
         }),
       })
@@ -2370,7 +2485,12 @@ export function useConversation() {
       inputEnabled: true,
       inputPlaceholder: 'Or type a message...',
     })
-  }, [chat.userData, addMessage, sendBotMessages, updateState])
+  }, [addMessage, sendBotMessages, updateState])
+  runPermissionRef.current = runPermission
+
+  // The permission button (A, and B when her answer wasn't a clear yes).
+  const handlePermission = useCallback(() => runPermission(chat.userData, true), [chat.userData, runPermission])
+
 
   // === PURCHASE HANDLER ===
 
