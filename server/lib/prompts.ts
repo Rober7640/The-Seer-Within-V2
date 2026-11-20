@@ -1182,7 +1182,10 @@ const TAROT_HOOK_CONTEXT: Record<string, string> = {
   // subject is her own life and whether it stays as it is. 🔴 Audience-agnostic by design:
   // the ad does not sort never-partnered from post-breakup, so the context must not either.
   'cards-alone-forever': "She is asking whether she will be alone for the rest of her life, and has reached the point where 'not yet' has begun to sound like 'never' — which is exhaustion talking rather than a conclusion she reasoned her way to.",
-  'cards-meant-alone': "She is asking whether her being alone is DELIBERATE — whether she has been singled out or designated for it. Underneath is a question about her own worth, not about any man.",
+  // Reworded 2026-11-20 (operator): the old "DELIBERATE … designated" framing came back in
+  // replies as courtroom talk ("not a verdict", "nothing entered against you") that answered
+  // a fear she never raised. Her own words now; the worth point underneath is unchanged.
+  'cards-meant-alone': "She asked whether she is meant to be alone. Underneath is a question about her own worth, not about any man.",
   'cards-someone-for-me': "She is asking whether anyone exists for her at all, and the weight is on 'really' — she has been reassured so often by people who love her that reassurance has stopped landing, and she came for something she could actually believe.",
   // Soulmate-where hooks — the SEEKING half of the topic. She has never found it, nobody
   // has died, and no specific man is in the picture. 🔴 Note none of these says where she
@@ -1522,8 +1525,13 @@ const TAROT_HOOK_TENDENCY: Record<string, string> = {
   // ⚠ The sharpest hook built to date. It asks for a ruling on her NATURE, not on a man or
   // a relationship. "Some people are meant to be alone" would be the single most harmful
   // sentence this funnel could produce, aimed at the audience least able to discount it.
+  //
+  // 2026-11-20 (operator): the opening clause and the closing "CIRCUMSTANCE and a
+  // DESIGNATION" line were rewritten in plain words, because their legal phrasing ("no
+  // ruling… none was ever entered") was echoed back to her almost verbatim on live traffic.
+  // Every NEVER clause between them is unchanged, word for word.
   'cards-meant-alone':
-    'that "meant" requires somebody to have decided, and nothing is assigning anyone anything — so there is no ruling on her to appeal, because none was ever entered. NEVER say she is meant to be alone and NEVER say she is meant for someone; NEVER speak of fate, destiny, a plan, a purpose or a reason for this, in either direction. NEVER imply she has been singled out, tested, or is being taught something. NEVER let any part of the answer touch her worth as a person or suggest she is lacking. NEVER give a timeframe and NEVER presume whether she has had love before. Read the card as the difference between a CIRCUMSTANCE and a DESIGNATION, and refuse the premise that anything about her has been decided',
+    'that nothing and nobody has decided anything about her love life. Say it the way a warm friend would, in plain everyday words, and answer what she actually told you. NEVER say she is meant to be alone and NEVER say she is meant for someone; NEVER speak of fate, destiny, a plan, a purpose or a reason for this, in either direction. NEVER imply she has been singled out, tested, or is being taught something. NEVER let any part of the answer touch her worth as a person or suggest she is lacking. NEVER give a timeframe and NEVER presume whether she has had love before. NEVER use legal or courtroom language. Read the card for where her love life stands now, and refuse the premise that anything about her has been decided',
   // ⚠ Nearest neighbours are 'cards-soulmate-out-there' (the one-chance premise) and
   // 'cards-still-a-chance' (hope is not a failure of realism). This one must read neither —
   // its subject is the EPISTEMICS of her question, not her hope.
