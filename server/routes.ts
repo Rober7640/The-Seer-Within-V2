@@ -174,7 +174,7 @@ import {
 } from "./lib/aweber";
 import { collectsPhoneAtCheckout } from "./lib/checkoutPhone";
 import { smsConsentSessionParams, smsConsentSessionMetadata } from "./lib/smsConsent";
-import { requestLocale } from "./lib/locale";
+import { localeMetadata, requestLocale } from "./lib/locale";
 import { addLeadToKit } from "./lib/kit";
 import { resolveLunaTyHandoff } from "./lib/lunaThankyouGift";
 import { evelynTyPersonaFor, isEvelynTyConversation, resolveEvelynTyHandoff } from "./lib/evelynThankyouGift";
@@ -1541,6 +1541,8 @@ export async function registerRoutes(
             // Offer-page orders only: `rtfmt: 'offer'` — see retargetOfferMeta.
             ...retargetOfferMeta,
             ...bumpMetadata,
+            // `locale: 'fr-FR'` on a French order; absent on English (localeMetadata).
+            ...localeMetadata(),
           },
         },
         success_url: `${getBaseUrl(req)}${funnelPath("/welcome1", funnel)}?session_id={CHECKOUT_SESSION_ID}`,
@@ -1598,6 +1600,10 @@ export async function registerRoutes(
           // them. (They're mirrored onto the PaymentIntent above for parity, but
           // that copy is not what his flow reads.)
           ...bumpMetadata,
+          // The order's language, for n8n's Stripe router: `locale: 'fr-FR'` sends a French
+          // order to the French reading flow. ABSENT on English orders (localeMetadata), so
+          // they route exactly as today.
+          ...localeMetadata(),
         },
       });
 

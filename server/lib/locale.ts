@@ -10,7 +10,7 @@
 
 import { AsyncLocalStorage } from "node:async_hooks";
 import type { NextFunction, Request, Response } from "express";
-import { LOCALE_COOKIE, resolveLocale, type LocaleCode } from "@shared/locales";
+import { DEFAULT_LOCALE, LOCALE_COOKIE, resolveLocale, type LocaleCode } from "@shared/locales";
 import { pickData, registerCatalog, registerData, translate, type Vars } from "@shared/i18n";
 import { SERVER_BUNDLES } from "@shared/l10n/serverBundles";
 import { LANG_PACKS } from "@shared/lang/packs";
@@ -33,6 +33,16 @@ export function localeMiddleware(req: Request, _res: Response, next: NextFunctio
 
 export function requestLocale(): LocaleCode {
   return store.getStore() ?? "en";
+}
+
+/**
+ * Stripe metadata for the order's language: `{ locale: "fr-FR" }` on a non-English order and
+ * NOTHING on an English one, so English orders keep exactly the keys they have today. n8n's
+ * Stripe router reads it to send a French order to the French reading flow (the English flow
+ * matches on `product`, which never changes).
+ */
+export function localeMetadata(locale: LocaleCode = requestLocale()): { locale?: LocaleCode } {
+  return locale === DEFAULT_LOCALE ? {} : { locale };
 }
 
 /** Run `fn` with an explicit locale (webhooks that read metadata.locale, tests). */
