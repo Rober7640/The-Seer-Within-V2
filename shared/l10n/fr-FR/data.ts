@@ -1010,7 +1010,7 @@ export const DATA: Readonly<Record<string, unknown>> = {
   },
   "UPSELL_CONFIRMATION": {
    "0": "C'est fait, {firstName}. Votre rituel de nettoyage énergétique est programmé.",
-   "1": "Je commence le travail ce soir, et votre étude personnalisée vous arrivera sous 24 heures.",
+   "1": "Je commence le travail ce soir, et votre étude vous arrivera sous 24 heures.",
    "2": "Mais avant de vous laisser partir… il faut que je vous dise quelque chose."
   },
   "UPSELL_DELIVERY": {
@@ -1103,7 +1103,7 @@ export const DATA: Readonly<Record<string, unknown>> = {
    "1": "N'oubliez pas : quand elle arrivera, prenez-la dans la main et dites : « Je suis protégée. Je me transforme. »",
    "2": "Ça scelle le lien.",
    "3": "Cette nuit, pendant que je travaille pour vous, vous sentirez peut-être de la chaleur, ou vous ferez des rêves très vifs. C'est normal. C'est moi.",
-   "4": "Surveillez vos e-mails : votre étude personnalisée pour le rituel de nettoyage énergétique arrive sous 24 heures.",
+   "4": "Surveillez vos e-mails : votre étude pour le rituel de nettoyage énergétique arrive sous 24 heures.",
    "5": "Merci de me confier ce travail sacré, {firstName}.",
    "6": "L'Univers répond déjà à votre choix. Je sens que ça commence à bouger."
   },
@@ -1112,7 +1112,7 @@ export const DATA: Readonly<Record<string, unknown>> = {
    "1": "Simplement… soyez attentive pendant les 30 prochains jours.",
    "2": "Si vous sentez revenir ce poids d'avant, ou les vieux schémas se réinstaller peu à peu, sachez que je suis là.",
    "3": "Le rituel de protection reste toujours disponible si vous changez d'avis.",
-   "4": "En attendant, surveillez votre boîte de réception. Votre étude personnalisée arrivera d'ici 24 heures.",
+   "4": "En attendant, surveillez votre boîte de réception. Votre étude arrivera d'ici 24 heures.",
    "5": "Prenez soin de vous, ma chère. Je penserai à vous cette nuit, pendant le rituel."
   },
   "UPSELL_SOLUTION": {
@@ -1271,7 +1271,7 @@ export const DATA: Readonly<Record<string, unknown>> = {
    "0": "Parfait. Votre bracelet de manifestation est en route, {firstName}.",
    "1": "N'oubliez pas : portez-le au poignet droit. Toujours le droit.",
    "2": "Chaque matin, prenez-le dans la main et posez votre intention pour la journée. Trois minutes. Il n'en faut pas plus.",
-   "3": "Surveillez vos e-mails : votre étude personnalisée sur la purification de votre énergie arrive dans les 24 heures.",
+   "3": "Surveillez vos e-mails : votre étude sur la purification de votre énergie arrive dans les 24 heures.",
    "4": "Merci de m'avoir confié ce travail sacré, {firstName}.",
    "5": "L'Univers répond déjà. Je le ressens."
   },
@@ -1282,7 +1282,7 @@ export const DATA: Readonly<Record<string, unknown>> = {
   "UPSELL2_SOFT_DECLINE": {
    "0": "Je comprends, {firstName}. Le rituel, à lui seul, aura déjà beaucoup de force.",
    "1": "Sachez seulement… les pierres savent attendre. Si un jour vous vous sentez prête à attirer à vous ce qui vous revient, je serai là.",
-   "2": "Surveillez votre boîte de réception : votre étude personnalisée arrive sous 24 heures.",
+   "2": "Surveillez votre boîte de réception : votre étude arrive sous 24 heures.",
    "3": "Prenez soin de vous, ma chère. Le travail de cette nuit commence bientôt."
   },
   "UPSELL2_STONES": {

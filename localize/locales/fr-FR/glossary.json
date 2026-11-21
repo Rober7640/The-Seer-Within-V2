@@ -13,8 +13,8 @@
   },
   {
    "en": "reading (the written 5–7 page deliverable sent by e-mail)",
-   "fr": "étude personnalisée",
-   "note": "ONE name everywhere it appears (chat, checkout, success page, e-mails): « votre étude personnalisée »",
+   "fr": "étude",
+   "note": "ONE noun everywhere it appears (chat, checkout, success page, e-mails): « votre étude ». Add « personnalisée » only where the English says personalized (operator, 2026-11-20)",
    "avoid": [
     "lecture personnalisée",
     "rapport"

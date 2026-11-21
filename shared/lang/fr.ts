@@ -344,6 +344,7 @@ export const FR_FR: LangPack = {
     "- Use French punctuation: « » for quotes.",
     "- No English word in a French message. The prompt above calls her \"dear\"; in French that is « ma chère », at most once in a reply, and most messages need none.",
     "- The reply format does not change: the same JSON keys, in English, with the message text in French.",
+    "- SAFETY OVERRIDE above, in France: the US lines it names do not work here. Give her the French ones: le 3114 (Numéro national de prévention du suicide, 24 h/24), SOS Amitié au 09 72 39 40 50, and in an emergency le 15 or le 112.",
   ].join("\n"),
   // The English prompt says "dear" in nearly every example line, and the model
   // carries it into French ("Ce n'est pas l'absence d'amour, dear."). Drop it.
