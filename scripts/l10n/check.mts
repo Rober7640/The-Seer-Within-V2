@@ -1,6 +1,6 @@
 // Stage 4 of funnel-localize: deterministic checks on translated segments.
 //
-//   npx tsx scripts/l10n/check.mts <segments.jsonl> <translations.json> [--locale fr-FR]
+//   npx tsx scripts/l10n/check.mts <segments.jsonl> <translations.json> --locale <code>
 //
 // translations.json = { "<segment id>": "<translated text>", … }
 // Prints one line per issue and a summary; exits 1 when any segment fails.
@@ -33,7 +33,7 @@ function multiset(xs: string[]) {
 export function checkSegment(
   seg: { id: string; en: string; kind: string; placeholders: string[] },
   fr: string,
-  pack: { lengthBands: Record<string, number>; doNotTranslate: string[] },
+  pack: { lengthBands: Record<string, number>; doNotTranslate: string[]; checks?: { currencyLeft?: { pattern: string; detail: string } | null; openingMarks?: boolean; quotedSpan?: string | null; samePrices?: boolean } },
   banned: any,
   locale: LocaleCode,
 ): Issue[] {
@@ -48,18 +48,37 @@ export function checkSegment(
   const band = pack.lengthBands[seg.kind] ?? 1.35;
   if (seg.en.length >= 12 && fr.length > seg.en.length * band) add("length", `${fr.length} chars vs ${seg.en.length} (band ×${band})`, seg.kind === "cta" ? "fail" : "info");
   if (!fr.trim()) add("empty", "no text");
-  if (/\$/.test(fr.replace(/\$\{[^}]*\}/g, ""))) add("price", "a '$' is left in the French (see pack.json priceRule)");
+  // a currency sign the market does not use (pack.json checks.currencyLeft; French: "$")
+  const cur = pack.checks?.currencyLeft;
+  if (cur && new RegExp(cur.pattern).test(fr.replace(/\$\{[^}]*\}/g, ""))) add("price", cur.detail);
+  // same market as the English (es-US): every "$35" and "${x}" in the English stays, unchanged
+  if (pack.checks?.samePrices) {
+    const prices = (s: string) => (s.match(/\$\{[^}]+\}|\$\s?\d[\d,]*(?:\.\d+)?/g) ?? []).map((x) => x.replace(/\s/g, ""));
+    if (multiset(prices(seg.en)) !== multiset(prices(fr))) add("price", `en ${multiset(prices(seg.en)) || "no price"} ≠ ${multiset(prices(fr)) || "no price"}`);
+  }
+  // Spanish: a question or exclamation needs its opening mark (¿…? ¡…!) in the same sentence
+  if (pack.checks?.openingMarks) {
+    const plain = fr.replace(/\{[^}]+\}|<[^>]+>|https?:\/\/\S+/g, " ");
+    for (const [open, close] of [["¿", "?"], ["¡", "!"]] as const) {
+      // a pause ("…" or "...") stays inside its sentence: "¿Entre estar a salvo… y tener lo que quieres?"
+      const sentences = plain.split(/(?:(?<=[?!\n])|(?<=(?<!\.)\.))\s+/);
+      const bad = sentences.filter((x) => x.includes(close) && !x.includes(open));
+      if (bad.length) add("punctuation", `"${close}" without "${open}": ${bad.map((b) => b.trim().slice(0, 50)).join(" / ")}`);
+    }
+  }
   // English left in: 3+ English function words that are not French words
   const words = foldText(fr).replace(/\{[^}]+\}/g, " ").split(/[^a-z']+/).filter(Boolean);
   const dnt = new Set(pack.doNotTranslate.flatMap((n) => foldText(n).split(/\s+/)));
   const eng = words.filter((w) => EN_STOP.has(w) && !dnt.has(w) && !FR_OK.has(w));
   if (eng.length >= 2) add("english", `English words left: ${[...new Set(eng)].join(", ")}`);
   const folded = foldText(fr);
+  // a buyer's own quoted words (pack.json checks.quotedSpan; French default « … ») are exempt from the register check
+  const qs = pack.checks?.quotedSpan === undefined ? "«[^»]*»" : pack.checks.quotedSpan; // null = no exemption
+  const quoted = qs ? new RegExp(qs, "g") : null;
   for (const r of bannedRules(banned)) {
     if (r.scope === "voice" && !VOICE_KINDS.has(seg.kind)) continue;
     const re = new RegExp(r.pattern, "m");
-    // a buyer's own words inside « » are exempt from the register check
-    const text = r.group === "register" ? folded.replace(/«[^»]*»/g, " ") : folded;
+    const text = r.group === "register" && quoted ? folded.replace(quoted, " ") : folded;
     if (re.test(text)) add(`banned:${r.group}`, `${r.fix}`, r.level === "review" ? "review" : "fail");
   }
   const typo = applyLocaleTypography(fr, locale);
@@ -79,7 +98,8 @@ const isMain = process.argv[1] && path.resolve(process.argv[1]) === new URL(impo
 if (isMain) {
   const [segFile, trFile] = process.argv.slice(2).filter((a) => !a.startsWith("--"));
   const li = process.argv.indexOf("--locale");
-  const locale = (li >= 0 ? process.argv[li + 1] : "fr-FR") as LocaleCode;
+  if (li < 0) throw new Error("--locale <code> is required (fr-FR, es-US, …)");
+  const locale = process.argv[li + 1] as LocaleCode;
   const segs = new Map(fs.readFileSync(segFile, "utf8").trim().split("\n").map((l) => JSON.parse(l)).map((s) => [s.id, s]));
   const tr: Record<string, string> = JSON.parse(fs.readFileSync(trFile, "utf8"));
   const { pack, banned } = loadPack(locale);

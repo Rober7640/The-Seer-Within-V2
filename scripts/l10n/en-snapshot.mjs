@@ -14,7 +14,7 @@ const PAGES = [
   "/fb-tarot", "/fb-tarot/b", "/fb-tarot/c", "/fb-tarot?hook=cards-come-back",
   "/fb-tarot?hook=cards-honest&deck=arcana-mfh", "/fb-tarot/chat", "/fb-tarot/checkout",
   `/fb-tarot/welcome1?session_id=${SID}`, `/fb-tarot/success?session_id=${SID}`,
-  "/success", "/faq", "/privacy", "/terms", "/refund",
+  "/success", "/faq", "/privacy", "/terms", "/refund", "/fb?lane=manifest", "/fb?lane=astrology", "/fb/chat?lane=manifest",
 ];
 
 // Plausible API answers, so paid steps render their real copy instead of an

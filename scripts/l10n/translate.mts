@@ -2,7 +2,7 @@
 //
 //   Pilot (stage 2, calibration): several arms on the same segments, same model
 //     npx tsx scripts/l10n/translate.mts --pilot [--set pilot|holdout] --locale fr-FR \
-//       --env <path/to/.env> [--key-var NAME] [--arm A=localize/locales/fr-FR] [--arm C=control]
+//       --env <path/to/.env> [--key-var NAME] [--arm A=localize/locales/fr-FR] [--arm C=control] [--scope fb]
 //   --arm NAME=<pack dir> = translate with that locale pack (style, glossary, banned, legal, market)
 //   --arm NAME=control    = a plain "translate into French", with only the technical
 //                           rules every arm needs (placeholders, tags, line breaks, JSON)
@@ -15,9 +15,12 @@ import fs from "node:fs";
 import path from "node:path";
 import Anthropic from "@anthropic-ai/sdk";
 import type { Segment } from "./extract.mts";
+import { controlSystem, packDir, textKey, translationSchema, translatorSystem } from "./prompts.mts";
 
 const arg = (k: string, d?: string) => { const i = process.argv.indexOf(k); return i >= 0 ? process.argv[i + 1] : d; };
+// --locale picks the pack. Required for a pilot or a run, so a new language never runs on French by default.
 const LOCALE = arg("--locale", "fr-FR")!;
+const requireLocale = () => { if (!arg("--locale")) throw new Error("--locale <code> is required (fr-FR, es-US, …)"); };
 const MODEL = arg("--model", "claude-opus-5-5")!;
 const EFFORT = arg("--effort", "high")!;
 const ENV = arg("--env");
@@ -32,59 +35,15 @@ export function apiKey(): string {
   return line.slice(KEY_VAR.length + 1).trim().replace(/^["']|["']$/g, "");
 }
 
-export function packSystem(dir = path.join("localize/locales", LOCALE)): string {
-  const read = (f: string) => fs.readFileSync(path.join(dir, f), "utf8");
-  const pack = JSON.parse(read("pack.json"));
-  const glossary = JSON.parse(read("glossary.json"));
-  const banned = JSON.parse(read("banned.json"));
-  const gl = glossary.terms.map((t: any) => `- ${t.en} → ${t.fr}${t.note ? ` (${t.note})` : ""}${t.avoid ? `; not: ${t.avoid.join(", ")}` : ""}`).join("\n");
-  const cards = Object.entries(glossary.tarot).map(([en, fr]) => en === "_doc" ? String(fr) : `${en} → ${fr}`).join("; ");
-  // banned.json v1 = { group: [rules] }; v2 = { rules: [{group, level, fix, …}] }
-  const ruleList: any[] = Array.isArray(banned.rules) ? banned.rules
-    : Object.entries(banned).filter(([k]) => !k.startsWith("_")).flatMap(([g, rules]: any) => rules.map((r: any) => ({ group: g, level: "fail", ...r })));
-  const bans = ruleList.map((r) => `- [${r.group}${r.level === "review" ? ", check the meaning" : ""}] ${r.fix}`).join("\n");
-  const riskNote = /`risk`/.test(read("legal.md")) ? `\n\nSet "risk" on each segment as legal.md describes ("none" when it carries none).` : "";
-  return [
-    `You translate the copy of a spiritual-reading sales funnel from English into ${pack.language}, for buyers in ${pack.market.country}. You write it as a native French copywriter would write it from scratch: natural, spoken, warm French that does not read as translated.`,
-    `## Market facts\n- Register: "${pack.register}" always.\n- The buyer is a woman: ${pack.buyerGender.value} agreement.\n- Prices: ${pack.priceRule}\n- Never translate: ${pack.doNotTranslate.join(", ")}.`,
-    `## Evelyn's voice\n${read("style.md")}`,
-    `## Glossary (required renderings)\n${gl}\nTarot cards (French Rider-Waite names): ${cards}`,
-    `## Never write\n${bans}`,
-    `## Legal limits in ${pack.market.country}\n${read("legal.md")}${riskNote}`,
-    TECH_RULES,
-  ].join("\n\n");
+/** The translator's system prompt for a locale pack (a pilot arm may pass another pack folder). */
+export function packSystem(dir = packDir(LOCALE)): string {
+  return translatorSystem(dir);
 }
 
-const TECH_RULES = `## Format (both mandatory)
-- Return every segment you are given, by id, exactly once.
-- Keep every {placeholder} exactly as written (same name, same braces); its position may move.
-- Keep every <tag>…</tag> pair, around the words that carry the same emphasis.
-- Keep the same number of line breaks (\\n): each line is shown on its own.
-- "note": one short line, in English, on any choice a reviewer should know about (empty if none).
-- "uncertain": true when you are unsure the French is right (meaning, tone or a term).
-- "risk": "none" unless the instructions above tell you to tag one.`;
-
-const CONTROL_SYSTEM = `You translate English text from a website and chat into French.\n\n${TECH_RULES}`;
-
-const SCHEMA = {
-  type: "object",
-  properties: {
-    items: {
-      type: "array",
-      items: {
-        type: "object",
-        properties: {
-          id: { type: "string" }, fr: { type: "string" }, note: { type: "string" }, uncertain: { type: "boolean" },
-          risk: { type: "string", enum: ["none", "urgency", "danger", "claim", "ai-identity", "consent"] },
-        },
-        required: ["id", "fr", "note", "uncertain", "risk"],
-        additionalProperties: false,
-      },
-    },
-  },
-  required: ["items"],
-  additionalProperties: false,
-};
+const CONTROL_SYSTEM = controlSystem(LOCALE);
+const SCHEMA = translationSchema(LOCALE);
+/** The model's JSON field for the translated text ("fr", "es"); stored on disk as `fr` (see prompts.mts). */
+const K = textKey(LOCALE);
 
 export function sceneMessage(scene: string, segs: Segment[], context: { before?: string; after?: string; perRowScene?: boolean }): string {
   // A call that pools several short moments names each row's own scene.
@@ -120,7 +79,7 @@ export function parseReply(msg: any, scene: string, segs: Segment[]): Out[] {
   const text = msg.content.filter((b: any) => b.type === "text").map((b: any) => b.text).join("");
   if (msg.stop_reason !== "end_turn") throw new Error(`${scene}: stop_reason ${msg.stop_reason}`);
   const want = new Set(segs.map((s) => s.id));
-  const items: Out[] = JSON.parse(text).items.filter((i: Out) => want.has(i.id));
+  const items: Out[] = JSON.parse(text).items.filter((i: any) => want.has(i.id)).map(({ [K]: t, ...rest }: any) => ({ ...rest, fr: t }));
   const got = new Set(items.map((i) => i.id));
   const missing = segs.filter((s) => !got.has(s.id)).map((s) => s.id);
   if (missing.length) throw new Error(`${scene}: missing ${missing.join(", ")}`);
@@ -167,9 +126,12 @@ function armsFromArgs(): [string, string][] {
 }
 
 async function pilot() {
+  requireLocale();
   const all: Segment[] = fs.readFileSync("localize/runs/extract/segments.jsonl", "utf8").trim().split("\n").map((l) => JSON.parse(l));
   const set = arg("--set", "pilot")!;
-  const segs = set === "holdout" ? holdoutSegments(all) : pilotSegments(all);
+  // --scope fb: leave out the tarot lander rows (a language that launches /fb first)
+  const fbOnly = arg("--scope") === "fb";
+  const segs = (set === "holdout" ? holdoutSegments(all) : pilotSegments(all)).filter((s) => !fbOnly || hookOf(s) === null);
   const stamp = new Date().toISOString().replace(/[:.]/g, "-").slice(0, 19);
   const out = path.join("localize/runs", LOCALE, `${set}-${stamp}`);
   fs.mkdirSync(out, { recursive: true });
@@ -279,6 +241,7 @@ export function callGroups(segs: Segment[]): Group[] {
 export const readJsonl = <T,>(f: string): T[] => fs.readFileSync(f, "utf8").trim().split("\n").map((l) => JSON.parse(l));
 
 async function run() {
+  requireLocale();
   const dir = arg("--run")!;
   fs.mkdirSync(dir, { recursive: true });
   const f = (n: string) => path.join(dir, n);

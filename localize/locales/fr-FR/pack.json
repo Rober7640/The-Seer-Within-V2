@@ -63,5 +63,52 @@
     "Apple Pay",
     "Google Pay",
     "PayPal"
-  ]
+  ],
+  "prompts": {
+    "_doc": "The wording the pipeline's prompts need in THIS language (scripts/l10n/prompts.mts reads it). Everything else in the prompts is shared by every language. The model-facing JSON field for the translation is the language code before the dash (fr).",
+    "languageWord": "French",
+    "writer": "You write it as a native French copywriter would write it from scratch: natural, spoken, warm French that does not read as translated.",
+    "cardNames": "French Rider-Waite names",
+    "editor": "a native French (France) copy editor",
+    "buyer": "The buyer is a woman in France, usually 45+.",
+    "registerFlag": "\"tu\" anywhere (Evelyn always says \"vous\")",
+    "localeFlag": "not France French (Québec, Belgian), US formats, a \"$\" sign",
+    "nativePerson": "French person",
+    "intended": "prices in euros (\"35 €\") where the English has dollars; \"dear\" left out on most lines (« ma chère » only at warm moments, at most once a message); \"vous\" everywhere; the house terms below; English names (Evelyn Cross, The Seer Within) kept; an English promise of an outcome (\"That I promise you\", \"it ends now\") softened on purpose for French consumer law; a short label in lower case where it completes a sentence the page builds (« Evelyn Cross est » + « en ligne »).",
+    "rejectExamples": "\"tu\", a proverb, a dollar sign, a literal \"dear\" on every line, or it undoes the glossary"
+  },
+  "checks": {
+    "_doc": "Mechanical checks that depend on the language or market (scripts/l10n/check.mts).",
+    "currencyLeft": {
+      "pattern": "\\$",
+      "detail": "a '$' is left in the French (see pack.json priceRule)"
+    },
+    "openingMarks": false
+  },
+  "review": {
+    "_doc": "Labels for the operator's review page (scripts/l10n/review-page.mts). risk = the market's rule behind each risk tag the translator sets (legal.md).",
+    "lawName": "French law",
+    "risk": {
+      "danger": {
+        "title": "Danger if she doesn't buy",
+        "rule": "Banned outright when inaccurate (Code de la consommation L121-4 12°); exploiting distress can make it an aggressive practice (L121-6, L121-7). Needs rewriting, not just a label."
+      },
+      "urgency": {
+        "title": "Time or places limited",
+        "rule": "False scarcity is banned outright (L121-4 7°). Keep only limits that are true."
+      },
+      "claim": {
+        "title": "Claims that need proof",
+        "rule": "Customer counts, testimonials (fake reviews: L121-4 28°), Evelyn's lineage, promised results (L121-2)."
+      },
+      "ai-identity": {
+        "title": "Evelyn presented as a person",
+        "rule": "EU AI Act Art. 50(1): a person chatting with an AI must be told, unless it is obvious."
+      },
+      "consent": {
+        "title": "Consent, refunds, withdrawal",
+        "rule": "E-mail and pixel consent (CNIL); the 14-day withdrawal right and the refund promise must be described separately."
+      }
+    }
+  }
 }

@@ -1,6 +1,6 @@
 // Stage 8 of funnel-localize: write the final translations into the locale bundle.
 //
-//   npx tsx scripts/l10n/assemble.mts <run dir> [--locale fr-FR] [--final final.json]
+//   npx tsx scripts/l10n/assemble.mts <run dir> --locale <code> [--final final.json]
 //
 // Reads <run dir>/segments.jsonl and <run dir>/final.json ({ id: text }, after
 // adjudication) and MERGES them into what the locale already ships, so batches add
@@ -27,8 +27,9 @@ const args = process.argv.slice(2);
 const arg = (k: string, d?: string) => { const i = args.indexOf(k); return i >= 0 ? args[i + 1] : d; };
 const VALUE_FLAGS = new Set(["--locale", "--final"]);
 const dir = args.find((a, i) => !a.startsWith("--") && !VALUE_FLAGS.has(args[i - 1]));
-if (!dir) throw new Error("usage: assemble.mts <run dir> [--locale fr-FR] [--final final.json]");
-const LOCALE = arg("--locale", "fr-FR")! as LocaleCode;
+if (!dir) throw new Error("usage: assemble.mts <run dir> --locale <code> [--final final.json]");
+if (!arg("--locale")) throw new Error("--locale <code> is required (fr-FR, es-US, …)");
+const LOCALE = arg("--locale")! as LocaleCode;
 const OUT = path.join("shared/l10n", LOCALE);
 
 const readJson = (f: string, d: any) => (fs.existsSync(f) ? JSON.parse(fs.readFileSync(f, "utf8")) : d);

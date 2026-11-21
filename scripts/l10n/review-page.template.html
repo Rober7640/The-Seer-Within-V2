@@ -1,4 +1,4 @@
-<title>French Funnel Review</title>
+<title>__LANG__ Funnel Review</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Literata:opsz,wght@7..72,400;7..72,600&family=JetBrains+Mono:wght@400;500&display=swap">
@@ -76,15 +76,15 @@ summary .name { font-weight: 600; overflow-wrap: anywhere; min-width: 0 }
   .pair, .cols, .line, .change { grid-template-columns: 1fr }
   .cols.head { display: none }
   .copy.en::before, .copy.fr::before, .copy.bt::before { display: block; font: 600 10.5px var(--f-ui); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); font-style: normal; margin-bottom: 2px }
-  .line .copy.en::before { content: "English" } .line .copy.fr::before { content: "French" } .line .copy.bt::before { content: "Back to English" }
+  .line .copy.en::before { content: "English" } .line .copy.fr::before { content: "__LANG__" } .line .copy.bt::before { content: "Back to English" }
 }
 @media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important } }
 </style>
 
 <div class="wrap">
   <header>
-    <div class="eyebrow">The Seer Within · /fb and /fb-tarot · fr-FR</div>
-    <h1>French funnel review</h1>
+    <div class="eyebrow">The Seer Within · /fb and /fb-tarot · __LOCALE__</div>
+    <h1>__LANG__ funnel review</h1>
     <p class="sub" id="sub"></p>
   </header>
 
@@ -96,7 +96,7 @@ summary .name { font-weight: 600; overflow-wrap: anywhere; min-width: 0 }
   <section aria-labelledby="h-dec">
     <div>
       <h2 id="h-dec">Needs your decision</h2>
-      <p class="sub">These lines are translated faithfully, but the English itself carries a risk under French law. Translation can't fix them; they need a decision on the offer. Article numbers come from Codex and have not been checked by a lawyer.</p>
+      <p class="sub">These lines are translated faithfully, but the English itself carries a risk under __LAW__. Translation can't fix them; they need a decision on the offer. Article numbers come from Codex and have not been checked by a lawyer.</p>
     </div>
     <div id="risks" style="display:grid;gap:12px"></div>
   </section>
@@ -109,7 +109,7 @@ summary .name { font-weight: 600; overflow-wrap: anywhere; min-width: 0 }
   <section aria-labelledby="h-chg">
     <div>
       <h2 id="h-chg">Changed in the final call</h2>
-      <p class="sub">Claude read each line against the English, a back-translation made without seeing the English, the automatic checks and Codex's flags, then kept or rewrote it. Codex then read the final French a second time, and Claude ruled on those flags too. These are the rewrites.</p>
+      <p class="sub">Claude read each line against the English, a back-translation made without seeing the English, the automatic checks and Codex's flags, then kept or rewrote it. Codex then read the final __LANG__ a second time, and Claude ruled on those flags too. These are the rewrites.</p>
     </div>
     <div id="changes" style="display:grid;gap:10px"></div>
   </section>
@@ -117,7 +117,7 @@ summary .name { font-weight: 600; overflow-wrap: anywhere; min-width: 0 }
   <section aria-labelledby="h-all">
     <h2 id="h-all">Every line, by scene</h2>
     <div class="bar" role="search">
-      <input id="q" type="search" placeholder="Search English or French…" aria-label="Search the copy">
+      <input id="q" type="search" placeholder="Search English or __LANG__…" aria-label="Search the copy">
       <button class="chip" id="f-all" aria-pressed="true">All</button>
       <button class="chip" id="f-flag" aria-pressed="false">Flagged by Codex</button>
       <button class="chip" id="f-rew" aria-pressed="false">Rewritten</button>
@@ -141,7 +141,7 @@ document.getElementById("stats").innerHTML = [
   stat(summary.segments.toLocaleString(), "lines translated"),
   stat(summary.flags2 ? `${summary.flags} → ${summary.flags2}` : summary.flags, summary.flags2 ? "Codex flags, first read → second read of the final" : "Codex flags"),
   stat(summary.rewritten, "rewritten in the final call"),
-  stat(summary.sounds2 ? `${summary.sounds} → ${summary.sounds2}` : `${summary.sounds} / 5`, "“sounds translated” out of 5 (1 = reads as French)"),
+  stat(summary.sounds2 ? `${summary.sounds} → ${summary.sounds2}` : `${summary.sounds} / 5`, "“sounds translated” out of 5 (1 = reads as __LANG__)"),
   stat(summary.risk, "lines with a legal risk tag"),
   stat(summary.disputed, "disputed"),
   stat(`$${summary.cost}`, "API cost, this run"),
@@ -192,7 +192,7 @@ function render() {
     if (!ls.length) continue;
     n += ls.length;
     const open = q || filter !== "all" ? " open" : "";
-    html.push(`<details class="scene"${open}><summary><span class="name">${esc(name)}</span><span class="count">${ls.length} line${ls.length > 1 ? "s" : ""}</span></summary><div class="cols head"><div>English</div><div>French</div><div>Back to English</div></div>${ls.map(lineHtml).join("")}</details>`);
+    html.push(`<details class="scene"${open}><summary><span class="name">${esc(name)}</span><span class="count">${ls.length} line${ls.length > 1 ? "s" : ""}</span></summary><div class="cols head"><div>English</div><div>__LANG__</div><div>Back to English</div></div>${ls.map(lineHtml).join("")}</details>`);
   }
   document.getElementById("scenes").innerHTML = html.join("") || `<p class="empty">No line matches.</p>`;
   document.getElementById("count").textContent = `${n.toLocaleString()} line${n === 1 ? "" : "s"}`;

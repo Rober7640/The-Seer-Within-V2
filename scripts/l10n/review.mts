@@ -1,6 +1,6 @@
 // Stages 4–7 of funnel-localize, on a run folder that stage 3 (translate.mts --run) filled.
 //
-//   npx tsx scripts/l10n/review.mts <stage> <run dir> --env <.env> --key-var NAME [--locale fr-FR]
+//   npx tsx scripts/l10n/review.mts <stage> <run dir> --locale <code> --env <.env> --key-var NAME
 //
 //   checks      stage 4: deterministic checks (check.mts) on translations.json → checks.json
 //   bt          stage 5: back-translation, French → English, by a call that never sees the
@@ -21,12 +21,16 @@ import Anthropic from "@anthropic-ai/sdk";
 import type { Segment } from "./extract.mts";
 import { apiKey, packSystem, readJsonl, type Group } from "./translate.mts";
 import { checkSegment, loadPack, type Issue } from "./check.mts";
+import { adjudicateTask, btSystem, codexPrompt as buildCodexPrompt, textKey } from "./prompts.mts";
 import type { LocaleCode } from "../../shared/locales";
 
 const args = process.argv.slice(2);
 const arg = (k: string, d?: string) => { const i = args.indexOf(k); return i >= 0 ? args[i + 1] : d; };
 const [STAGE, DIR] = args.filter((a, i) => !a.startsWith("--") && !(args[i - 1] ?? "").startsWith("--"));
-const LOCALE = arg("--locale", "fr-FR")! as LocaleCode;
+if (!arg("--locale")) throw new Error("--locale <code> is required (fr-FR, es-US, …)");
+const LOCALE = arg("--locale")! as LocaleCode;
+/** The model's JSON field for the translated text ("fr", "es"); run files keep `fr` (see prompts.mts). */
+const K = textKey(LOCALE);
 const MODEL = arg("--model", "claude-opus-5-5")!;
 const f = (n: string) => path.join(DIR, n);
 const readJson = (n: string, d?: any) => (fs.existsSync(f(n)) ? JSON.parse(fs.readFileSync(f(n), "utf8")) : d);
@@ -104,14 +108,14 @@ function runChecks(texts: Record<string, string>): Record<string, Issue[]> {
 }
 
 // ── stage 5: back-translation ────────────────────────────────────────────────────────────
-const BT_SYSTEM = `You translate French copy (a website and a chat with a spiritual reader) into English. Translate what the French says, faithfully and plainly: keep its meaning, tone, tense and who does what; don't improve it, don't guess what an original might have said. Keep every {placeholder}, <tag> and line break (\\n) as it is. Return every segment by id.`;
+const BT_SYSTEM = btSystem(LOCALE);
 async function backTranslate() {
   const requests = groups.map((g) => ({
     custom_id: g.custom_id,
     params: {
       model: MODEL, max_tokens: 16000,
       system: [{ type: "text", text: BT_SYSTEM, cache_control: { type: "ephemeral" } }],
-      messages: [{ role: "user", content: "```json\n" + JSON.stringify(g.ids.map((id) => ({ id, fr: tr[id]?.fr ?? "" })), null, 1) + "\n```" }],
+      messages: [{ role: "user", content: "```json\n" + JSON.stringify(g.ids.map((id) => ({ id, [K]: tr[id]?.fr ?? "" })), null, 1) + "\n```" }],
       output_config: { effort: "low", format: { type: "json_schema", schema: schema({ id: { type: "string" }, en: { type: "string" } }) } },
     },
   }));
@@ -144,31 +148,7 @@ const CODEX_SCHEMA = {
   },
 };
 
-function codexPrompt(rows: unknown[]): string {
-  const dir = path.join("localize/locales", LOCALE);
-  const pack = JSON.parse(fs.readFileSync(path.join(dir, "pack.json"), "utf8"));
-  const glossary = JSON.parse(fs.readFileSync(path.join(dir, "glossary.json"), "utf8"));
-  return [
-    `You are a native French (France) copy editor. Below is a translation from English into French of part of a sales funnel for spiritual readings: a landing page, a chat with "Evelyn" (an older, warm reader), card readings, checkout and upsell pages. The buyer is a woman in France, usually 45+.`,
-    `Review the French. Flag only real problems, each with the segment id:`,
-    `- accuracy: meaning changed, added or dropped compared with the English (not mere rewording)`,
-    `- fluency: grammar, agreement, wrong preposition, typos`,
-    `- register: "tu" anywhere (Evelyn always says "vous")`,
-    `- terminology: the glossary below not followed`,
-    `- locale: not France French (Québec, Belgian), US formats, a "$" sign`,
-    `- naturalness: correct but no French person would say it this way ("sounds translated")`,
-    `- voice: breaks Evelyn's voice (stiff, literary, salesy, preachy, a proverb added)`,
-    `- legal: a promise of an outcome or a health claim the English does not make`,
-    `For each flag give a "fix": the complete corrected French segment (keep every {placeholder}, <tag> and \\n), and "issue": why, in one short English sentence.`,
-    `Intended, do NOT flag: prices in euros ("35 €") where the English has dollars; "dear" left out on most lines (« ma chère » only at warm moments, at most once a message); "vous" everywhere; the house terms below; English names (Evelyn Cross, The Seer Within) kept; an English promise of an outcome ("That I promise you", "it ends now") softened on purpose for French consumer law; a short label in lower case where it completes a sentence the page builds (« Evelyn Cross est » + « en ligne »).`,
-    `Also give "soundsTranslated" for the whole packet (1 = reads as written in French, 5 = obviously translated) and "overall": two sentences.`,
-    `## House style (summary)\n${fs.readFileSync(path.join(dir, "style.md"), "utf8")}`,
-    `## Glossary\n${glossary.terms.map((t: any) => `- ${t.en} → ${t.fr}${t.note ? ` (${t.note})` : ""}`).join("\n")}\nTarot: ${Object.entries(glossary.tarot).filter(([k]) => k !== "_doc").map(([en, fr]) => `${en} → ${fr}`).join("; ")}`,
-    `## Price rule\n${pack.priceRule}`,
-    `## Segments (in the order the buyer sees them; "scene" groups them)`,
-    "```json", JSON.stringify(rows, null, 1), "```",
-  ].join("\n\n");
-}
+const codexPrompt = (rows: unknown[]) => buildCodexPrompt(LOCALE, rows);
 
 function codexRun(packetDir: string): Promise<number> {
   return new Promise((resolve) => {
@@ -195,7 +175,7 @@ async function codex() {
   const one = async (p: { name: string; ids: string[] }) => {
     const pd = path.resolve(f(`${CODEX_OUT}/${p.name}`));
     fs.mkdirSync(pd, { recursive: true });
-    const rows = p.ids.map((id) => { const s = segs.get(id)!; return { id, kind: s.kind, scene: s.scene, en: s.en, fr: (CODEX_FR ? CODEX_FR[id] : tr[id]?.fr) ?? "" }; });
+    const rows = p.ids.map((id) => { const s = segs.get(id)!; return { id, kind: s.kind, scene: s.scene, en: s.en, [K]: (CODEX_FR ? CODEX_FR[id] : tr[id]?.fr) ?? "" }; });
     fs.writeFileSync(path.join(pd, "prompt.txt"), codexPrompt(rows));
     fs.writeFileSync(path.join(pd, "schema.json"), JSON.stringify(CODEX_SCHEMA));
     const t0 = Date.now();
@@ -216,13 +196,7 @@ async function codex() {
 }
 
 // ── stage 7: adjudication ────────────────────────────────────────────────────────────────
-const ADJ_TASK = `## Your task in this call (it replaces the "Format" section above)
-You are now the final editor. For each segment you get the English source, the French translation, a back-translation of the French into English made WITHOUT seeing the source, the automatic check issues, and a second reviewer's flags (Codex), each with a suggested fix.
-- Compare the back-translation with the English: a difference in meaning (a claim added, a condition turned into a promise, who acts, tense, a detail dropped) is a real problem even when nobody flagged it.
-- A reviewer's flag is a claim, not a verdict. Accept it when it is right by the rules above; reject it when it conflicts with them (for example it asks for "tu", a proverb, a dollar sign, a literal "dear" on every line, or it undoes the glossary).
-- A check issue marked "fail" must be fixed. One marked "review" must be looked at: keep the text when the word is fine in that context.
-- Return one item for every segment that has a flag, a check issue, or a back-translation that differs in meaning; return nothing for the others. "decision" = "keep" (text unchanged) or "rewrite"; "fr" = the final French (the same text when kept); "reason" = one short English sentence.
-- A rewrite keeps every {placeholder}, <tag> and line break (\\n), and stays as short as the original.`;
+const ADJ_TASK = adjudicateTask(LOCALE);
 
 async function adjudicate() {
   const bt: Record<string, string> = readJson("bt.json", {});
@@ -240,12 +214,12 @@ async function adjudicate() {
       messages: [{
         role: "user",
         content: `Scene: ${g.label}\n\`\`\`json\n` + JSON.stringify(g.ids.map((id) => ({
-          id, kind: segs.get(id)!.kind, en: segs.get(id)!.en, fr: tr[id]?.fr ?? "", backTranslation: bt[id] ?? "",
+          id, kind: segs.get(id)!.kind, en: segs.get(id)!.en, [K]: tr[id]?.fr ?? "", backTranslation: bt[id] ?? "",
           translatorNote: tr[id]?.note || undefined, uncertain: tr[id]?.uncertain || undefined,
           checks: checks[id]?.map((i) => `${i.severity}: ${i.kind} — ${i.detail}`), reviewer: flags[id],
         })), null, 1) + "\n```",
       }],
-      output_config: { effort: "high", format: { type: "json_schema", schema: schema({ id: { type: "string" }, decision: { type: "string", enum: ["keep", "rewrite"] }, fr: { type: "string" }, reason: { type: "string" } }) } },
+      output_config: { effort: "high", format: { type: "json_schema", schema: schema({ id: { type: "string" }, decision: { type: "string", enum: ["keep", "rewrite"] }, [K]: { type: "string" }, reason: { type: "string" } }) } },
     },
   }));
   const res = await runBatch("adjudicate", requests, (cid, msg) => {
@@ -253,7 +227,7 @@ async function adjudicate() {
     return (JSON.parse(textOf(msg)).items as any[]).filter((it) => want.has(it.id));
   });
   const decisions: Record<string, { decision: string; fr: string; reason: string; was: string }> = {};
-  for (const items of res.values()) for (const it of items) decisions[it.id] = { decision: it.decision, fr: it.fr, reason: it.reason, was: tr[it.id]?.fr };
+  for (const items of res.values()) for (const it of items) decisions[it.id] = { decision: it.decision, fr: it[K], reason: it.reason, was: tr[it.id]?.fr };
   // Editor overrides (overrides.json: { id: { fr, reason } }): a human or main-thread call made
   // after reading the run, applied last and logged like any other decision.
   const overrides: Record<string, { fr: string; reason: string }> = readJson("overrides.json", {});

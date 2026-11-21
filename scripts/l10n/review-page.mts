@@ -1,7 +1,7 @@
 // Stage 10 of funnel-localize: the operator's review page, rendered from run data only
 // (never hand-edited), so a re-run regenerates it.
 //
-//   npx tsx scripts/l10n/review-page.mts --out <page.html> <run dir> [<run dir>…] [--locale fr-FR]
+//   npx tsx scripts/l10n/review-page.mts --out <page.html> <run dir> [<run dir>…] --locale <code>
 //
 // Order on the page: the summary, the lines that need the operator's decision (risk tags,
 // grouped by the French rule they touch), disputed lines, what the final call changed,
@@ -14,7 +14,8 @@ const args = process.argv.slice(2);
 const outIdx = args.indexOf("--out");
 const OUT = args[outIdx + 1];
 const locIdx = args.indexOf("--locale");
-const LOCALE = locIdx >= 0 ? args[locIdx + 1] : "fr-FR";
+if (locIdx < 0) throw new Error("--locale <code> is required (fr-FR, es-US, …)");
+const LOCALE = args[locIdx + 1];
 const dirs = args.filter((a, i) => !a.startsWith("--") && i !== outIdx + 1 && i !== locIdx + 1);
 const rd = (d: string, n: string, def: any = {}) => (fs.existsSync(path.join(d, n)) ? JSON.parse(fs.readFileSync(path.join(d, n), "utf8")) : def);
 
@@ -61,13 +62,8 @@ for (const d of dirs) {
   }
 }
 
-const RISK: Record<string, { title: string; rule: string }> = {
-  danger: { title: "Danger if she doesn't buy", rule: "Banned outright when inaccurate (Code de la consommation L121-4 12°); exploiting distress can make it an aggressive practice (L121-6, L121-7). Needs rewriting, not just a label." },
-  urgency: { title: "Time or places limited", rule: "False scarcity is banned outright (L121-4 7°). Keep only limits that are true." },
-  claim: { title: "Claims that need proof", rule: "Customer counts, testimonials (fake reviews: L121-4 28°), Evelyn's lineage, promised results (L121-2)." },
-  "ai-identity": { title: "Evelyn presented as a person", rule: "EU AI Act Art. 50(1): a person chatting with an AI must be told, unless it is obvious." },
-  consent: { title: "Consent, refunds, withdrawal", rule: "E-mail and pixel consent (CNIL); the 14-day withdrawal right and the refund promise must be described separately." },
-};
+const PACK = JSON.parse(fs.readFileSync(path.join("localize/locales", LOCALE, "pack.json"), "utf8"));
+const RISK: Record<string, { title: string; rule: string }> = PACK.review?.risk ?? {};
 
 const totalCost = runs.reduce((n, r) => n + r.cost, 0);
 const allSounds = runs.flatMap((r) => r.sounds), allSounds2 = runs.flatMap((r) => r.sounds2);
@@ -89,7 +85,9 @@ const summary = {
 };
 
 const payload = JSON.stringify({ rows, summary, risk: RISK, locale: LOCALE }).replace(/</g, "\\u003c");
-const html = fs.readFileSync(new URL("./review-page.template.html", import.meta.url), "utf8").replace("/*__DATA__*/null", payload);
+const html = fs.readFileSync(new URL("./review-page.template.html", import.meta.url), "utf8")
+  .replaceAll("__LANG__", PACK.prompts.languageWord).replaceAll("__LOCALE__", LOCALE).replaceAll("__LAW__", PACK.review?.lawName ?? "local law")
+  .replace("/*__DATA__*/null", payload);
 fs.mkdirSync(path.dirname(OUT), { recursive: true });
 fs.writeFileSync(OUT, html);
 console.log(`${OUT}: ${rows.length} rows, ${summary.rewritten} rewritten, ${summary.risk} risk-tagged, ${summary.disputed} disputed · ${(html.length / 1024).toFixed(0)} KB`);
