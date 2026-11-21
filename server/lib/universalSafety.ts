@@ -560,14 +560,22 @@ export function checkUniversalSafety(message: string, locale: LocaleCode = reque
   if (!pack) {
     crisisScan = scanCrisis(trimmed);
   } else {
-    const masked = maskSpans(folded, pack.safety.reportedCrisis);
+    // Everyday idioms that hold a crisis phrase ("me quiero morir de la vergüenza")
+    // are blanked first, with no note (a pack without `figurative`: unchanged).
+    const plain = pack.safety.figurative ? maskSpans(folded, pack.safety.figurative).text : folded;
+    const masked = maskSpans(plain, pack.safety.reportedCrisis);
     reportedCrisis = masked.hit;
     const tail = pack.safety.crisisDenialTail;
     const scans = [scanCrisis(masked.text, CRISIS_PATTERNS, CRISIS_DENIAL_TAIL, tail), scanCrisis(masked.text, pack.safety.crisis, tail)];
     crisisScan = scans.includes('hard') ? 'hard' : scans.includes('denied') ? 'denied' : 'none';
-    // A death in the message + her wish to follow ("je veux le rejoindre") → hard.
+    // A death in the message + her wish to follow ("je veux le rejoindre") → hard;
+    // denied ("pero no me quiero ir con él") → the soft note, like any denied match.
     const death = reportedCrisis || pack.safety.deathContext.some((p) => p.test(folded));
-    if (crisisScan !== 'hard' && death && pack.safety.followTheDead.some((p) => p.test(folded))) crisisScan = 'hard';
+    if (crisisScan !== 'hard' && death) {
+      const follow = scanCrisis(folded, pack.safety.followTheDead, CRISIS_DENIAL_TAIL, tail);
+      if (follow === 'hard') crisisScan = 'hard';
+      else if (follow === 'denied') crisisScan = 'denied';
+    }
   }
   if (crisisScan === 'hard') {
     return {
@@ -611,8 +619,11 @@ export function checkUniversalSafety(message: string, locale: LocaleCode = reque
     };
   }
 
-  // 2. Minor/underage detection — service is 18+ only
-  if (indicatesMinor(trimmed) || (pack && indicatesMinor(folded, pack.safety.minor))) {
+  // 2. Minor/underage detection — service is 18+ only. A pack's `notMinor` blanks
+  //    someone else's school or her own past ("mi hija está en high school") for
+  //    both lists, on the folded text (a pack without it: unchanged).
+  const notMinor = pack?.safety.notMinor ? maskSpans(folded, pack.safety.notMinor).text : null;
+  if (indicatesMinor(notMinor ?? trimmed) || (pack && indicatesMinor(notMinor ?? folded, pack.safety.minor))) {
     return {
       safe: false,
       violationType: 'minor',

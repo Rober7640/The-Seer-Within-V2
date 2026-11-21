@@ -75,16 +75,19 @@ export function detectIntent(message: string): Intent {
   const pack = activePack()
   const folded = pack ? foldText(message).trim() : ''
   const p = (pick: (i: NonNullable<typeof pack>['intent']) => RegExp) => !!pack && pick(pack.intent).test(folded)
+  // What the ENGLISH branches read. A pack's englishMask blanks its own words that
+  // hold an English trigger ("porno" holds `porn`); without one, exactly `lower`.
+  const en = pack?.intent.englishMask ? maskSpans(folded, pack.intent.englishMask).text : lower
 
   // CRITICAL: Check for self-harm/crisis signals FIRST
-  if (lower.match(/kill (myself|me)|want to die|suicide|\bend (my life|it all)\b|hurt myself|self.?harm|don'?t want to (live|be alive)|better off dead/) || p((i) => i.crisis)) {
+  if (en.match(/kill (myself|me)|want to die|suicide|\bend (my life|it all)\b|hurt myself|self.?harm|don'?t want to (live|be alive)|better off dead/) || p((i) => i.crisis)) {
     return 'crisis_safety'
   }
 
   // Check for inappropriate/sexual content DIRECTED AT EVELYN or clearly trolling
   // Allow legitimate relationship discussions (wanting passion/intimacy in marriage is valid)
   const directedAtEvelyn = /\b(i want to |let me |can i |show me |send me ).*(fuck|sex|naked|nude|tits|boobs|pussy|dick|cock)|you'?re (hot|sexy)|horny|cum (on|in|for)|blowjob|handjob|masturbat|porn|slut|whore|bitch/i
-  if (directedAtEvelyn.test(lower) || (!!pack && pack.intent.inappropriate.test(maskSpans(folded, pack.safety.reportedSpeech).text))) {
+  if (directedAtEvelyn.test(en) || (!!pack && pack.intent.inappropriate.test(maskSpans(folded, pack.safety.reportedSpeech).text))) {
     return 'inappropriate'
   }
 
@@ -100,7 +103,7 @@ export function detectIntent(message: string): Intent {
   // Allow time-based responses (answers to "how long" questions)
   const timeBasedResponse = /^(\d+\s*(years?|months?|weeks?|days?|forever|always|never|a while|long time|my (whole |entire )?life|since|recently|lately|ages|eternity))|\d+$/i
 
-  if (!(validShortResponses.test(lower) || p((i) => i.validShort)) && !(timeBasedResponse.test(lower) || p((i) => i.timeBased))) {
+  if (!(validShortResponses.test(en) || p((i) => i.validShort)) && !(timeBasedResponse.test(en) || p((i) => i.timeBased))) {
     // Single word responses that aren't valid need more detail
     if (lower.length < 15 && !lower.includes(' ')) {
       return 'too_short'
@@ -112,47 +115,54 @@ export function detectIntent(message: string): Intent {
   }
 
   // Positive intent
-  if (lower.match(/^(yes|ok|okay|sure|let'?s do it|i'?m ready|help me|ready|please|absolutely)/) || p((i) => i.positive)) {
+  if (en.match(/^(yes|ok|okay|sure|let'?s do it|i'?m ready|help me|ready|please|absolutely)/) || p((i) => i.positive)) {
     return 'positive'
   }
 
+  // A pack whose language closes every question with "?" tries its own AI and price
+  // questions first ("¿cuánto cuesta?"); English order is unchanged.
+  if (pack?.intent.questionsFirst) {
+    if (p((i) => i.aiQuestion)) return 'ai_question'
+    if (p((i) => i.priceQuestion)) return 'price_question'
+  }
+
   // Clarification request
-  if (lower.match(/what do (you|u) mean|i don'?t (understand|get it)|huh\??|what\??$|\?\s*$|explain|confused|clarify|not sure what/) || p((i) => i.clarification)) {
+  if (en.match(/what do (you|u) mean|i don'?t (understand|get it)|huh\??|what\??$|\?\s*$|explain|confused|clarify|not sure what/) || p((i) => i.clarification)) {
     return 'clarification'
   }
 
   // AI question - check before other intents
-  if (lower.match(/are you (a |an )?(ai|bot|robot|machine|computer|program|real)|chatgpt|artificial|gpt|language model/) || p((i) => i.aiQuestion)) {
+  if (en.match(/are you (a |an )?(ai|bot|robot|machine|computer|program|real)|chatgpt|artificial|gpt|language model/) || p((i) => i.aiQuestion)) {
     return 'ai_question'
   }
 
   // Price question - specific handling
-  if (lower.match(/how much|what('?s| is) the (price|cost)|pricing|what do(es)? (it|this) cost|expensive/) || p((i) => i.priceQuestion)) {
+  if (en.match(/how much|what('?s| is) the (price|cost)|pricing|what do(es)? (it|this) cost|expensive/) || p((i) => i.priceQuestion)) {
     return 'price_question'
   }
 
   // Explicit decline
-  if (lower.match(/^no$|^no thanks|^not interested|^don'?t want|^goodbye|^no way|^pass$|^nope$/) || p((i) => i.explicitDecline)) {
+  if (en.match(/^no$|^no thanks|^not interested|^don'?t want|^goodbye|^no way|^pass$|^nope$/) || p((i) => i.explicitDecline)) {
     return 'explicit_decline'
   }
 
   // Price objection
-  if (lower.match(/can'?t afford|too expensive|too much|no money|broke|expensive|cost/) || p((i) => i.objectionPrice)) {
+  if (en.match(/can'?t afford|too expensive|too much|no money|broke|expensive|cost/) || p((i) => i.objectionPrice)) {
     return 'objection_price'
   }
 
   // Skepticism
-  if (lower.match(/scam|fake|don'?t believe|bullshit|bs|fraud|trick/) || p((i) => i.objectionSkepticism)) {
+  if (en.match(/scam|fake|don'?t believe|bullshit|bs|fraud|trick/) || p((i) => i.objectionSkepticism)) {
     return 'objection_skepticism'
   }
 
   // Wants more info
-  if (lower.match(/tell me more|what happens|how does it work|explain|what do i get|more info/) || p((i) => i.objectionInfo)) {
+  if (en.match(/tell me more|what happens|how does it work|explain|what do i get|more info/) || p((i) => i.objectionInfo)) {
     return 'objection_info'
   }
 
   // Wants more free reading
-  if (lower.match(/what else|tell me about|when will|who is|can you see|more about|keep going/) || p((i) => i.wantsMoreFree)) {
+  if (en.match(/what else|tell me about|when will|who is|can you see|more about|keep going/) || p((i) => i.wantsMoreFree)) {
     return 'wants_more_free'
   }
 

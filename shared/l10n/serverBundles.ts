@@ -10,8 +10,10 @@
 import type { LocaleBundle } from "../i18n";
 import type { LocaleCode } from "../locales";
 import { CATALOG as FR_FR_CATALOG } from "./fr-FR/catalog";
+import { CATALOG as ES_US_CATALOG } from "./es-US/catalog";
 
 // The server needs only the catalog: every data twin is client copy.
 export const SERVER_BUNDLES: Partial<Record<Exclude<LocaleCode, "en">, LocaleBundle>> = {
   "fr-FR": { catalog: FR_FR_CATALOG },
+  "es-US": { catalog: ES_US_CATALOG },
 };

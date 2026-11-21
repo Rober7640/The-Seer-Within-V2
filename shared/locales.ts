@@ -16,7 +16,7 @@
 // To add a language: one entry below + its catalog/data under
 // shared/l10n/<code>/ (produced by the funnel-localize skill).
 
-export type LocaleCode = "en" | "fr-FR";
+export type LocaleCode = "en" | "fr-FR" | "es-US";
 
 export const DEFAULT_LOCALE: LocaleCode = "en";
 
@@ -28,8 +28,8 @@ export interface LocaleMarket {
   country: string;
   /** Stripe currency code. */
   currency: "usd" | "eur";
-  /** Stripe Checkout `locale`; undefined = leave unset (today's behaviour). */
-  stripeLocale?: "fr" | "es" | "en";
+  /** Stripe Checkout `locale`; undefined = leave unset (today's behaviour). "es-419" = Latin American Spanish. */
+  stripeLocale?: "fr" | "es" | "es-419" | "en";
   /** BCP-47 tag for Intl number/date formatting. */
   intl: string;
   /** Country code used to look up the crisis line in server/lib/crisisHotlines.ts. */
@@ -93,6 +93,21 @@ export const LOCALES: Record<LocaleCode, LocaleDef> = {
     market: { country: "FR", currency: "eur", stripeLocale: "fr", intl: "fr-FR", hotlineCountry: "FR" },
     suffix: { product: " - FR", aweber: "-fr" },
     serves: { funnels: ["fb", "tarot"], paths: ["/privacy", "/terms", "/refund"] },
+    live: false,
+  },
+  // Mexican Spanish for Mexican and Mexican-American women living in the US: the
+  // English funnel's market (dollars, same prices, US law, 988), Spanish copy.
+  // Only /fb at first; the legal pages are not translated yet, so they stay English.
+  "es-US": {
+    code: "es-US",
+    param: "es",
+    htmlLang: "es",
+    label: "Español (EE. UU.)",
+    languageName: "español",
+    register: "tú",
+    market: { country: "US", currency: "usd", stripeLocale: "es-419", intl: "es-US", hotlineCountry: "US" },
+    suffix: { product: " - ES", aweber: "-es" },
+    serves: { funnels: ["fb"], paths: [] },
     live: false,
   },
 };

@@ -1,0 +1,115 @@
+{
+  "_doc": "Locale pack for funnel-localize. Language facts drive translation; market facts drive code (shared/locales.ts mirrors the market half). es-US = Mexican Spanish copy for Mexican and Mexican-American women living in the US, sold in the US market: the same dollars, shipping and law as the English funnel. Decisions marked `decide` are proposals for the operator at Gate G2. Operator decisions 2026-11-20: tú, /fb only first, same dollar prices.",
+  "code": "es-US",
+  "language": "Mexican Spanish (for Mexican and Mexican-American women living in the US)",
+  "register": "tú",
+  "registerBothWays": {
+    "value": "tú",
+    "decided": "Operator, 2026-11-20: Evelyn says tú to the buyer, and the buyer's reply buttons also say tú to Evelyn (« Sí, dime más »)."
+  },
+  "buyerGender": {
+    "value": "feminine",
+    "decide": "The funnel's buyers are women (VOC). Spanish agrees adjectives with her: « lista », « segura », « bienvenida ». Proposed: feminine by default, as in French."
+  },
+  "market": {
+    "country": "US",
+    "currency": "USD",
+    "stripeLocale": "es-419",
+    "intl": "es-US",
+    "hotline": "US (988: press 2 for Spanish, or text AYUDA to 988; Crisis Text Line: AYUDA to 741741; emergency 911)",
+    "shipping": [
+      "US",
+      "CA",
+      "GB",
+      "AU",
+      "NZ",
+      "SG"
+    ],
+    "legal": "US federal + state consumer law, the same regime as the English funnel; see legal.md"
+  },
+  "prices": {
+    "_note": "The US prices, unchanged, in dollars (operator, 2026-11-20). Intl es-US writes them exactly like English: « $35 », « $12.77 » (period decimals, comma thousands).",
+    "main": 35,
+    "downsell": 25,
+    "bump": 12.77,
+    "downsellBump": 9.77,
+    "upsell1": 47,
+    "upsell2": 47,
+    "upsell2Downsell": 30
+  },
+  "priceRule": "Prices stay exactly as in the English: the same numbers, in dollars, written the same way. (1) '${x}': the $ is a literal sign and {x} is a bare number → keep '${x}' as it is. (2) '{price}', '{priceLabel}': the placeholder already holds the full amount with its currency → never add $ or 'dólares' next to it. (3) a written amount like '$30' → '$30' (never '30 dólares', 'USD', pesos or euros). Period decimals ($12.77), comma thousands (2,400), as in Mexico and the US.",
+  "suffix": {
+    "product": " - ES",
+    "aweber": "-es"
+  },
+  "lengthBands": {
+    "cta": 1.2,
+    "ui": 1.3,
+    "headline": 1.3,
+    "bubble": 1.35,
+    "server": 1.4,
+    "legal": 1.5
+  },
+  "doNotTranslate": [
+    "Evelyn Cross",
+    "Evelyn",
+    "The Seer Within",
+    "Luna Voss",
+    "Marcus Stone",
+    "Stripe",
+    "Apple Pay",
+    "Google Pay",
+    "PayPal",
+    "STOP",
+    "HELP"
+  ],
+  "prompts": {
+    "_doc": "The wording the pipeline's prompts need in THIS language (scripts/l10n/prompts.mts reads it). Everything else in the prompts is shared by every language. The model-facing JSON field for the translation is the language code before the dash (es).",
+    "languageWord": "Spanish",
+    "writer": "You write it as a native Mexican copywriter would write it from scratch for Mexican women living in the US: natural, spoken, warm Mexican Spanish that does not read as translated.",
+    "cardNames": "Spanish Rider-Waite names",
+    "editor": "a native Mexican Spanish copy editor who writes for Mexican and Mexican-American women in the US",
+    "buyer": "The buyer is a Mexican or Mexican-American woman living in the US, usually 45+.",
+    "registerFlag": "\"usted\" or an usted verb form or possessive used for the buyer or for Evelyn (both always say \"tú\"), or Spain's \"vosotros\"",
+    "localeFlag": "Spain Spanish (vosotros, coger, vale, ordenador, móvil, enfadada), Argentine voseo, Spanglish calques (aplicar para un trabajo, hacer sentido, llamar para atrás), a price in pesos or euros or not in dollars, a missing opening ¿ or ¡, a missing accent or ñ",
+    "nativePerson": "Mexican woman",
+    "intended": "prices in dollars exactly as in the English (\"$35\"); \"tú\" everywhere, including the buyer's reply buttons to Evelyn; \"querida\" only at warm moments, not on every line where the English says \"dear\"; the house terms below; English names (Evelyn Cross, The Seer Within) kept; STOP and HELP kept in English in text-message wording; an English promise or claim translated at the same strength and tagged with a risk (the operator decides at review whether it ships, for both languages); infinitive labels on functional buttons (\"Continuar\", \"Pagar ahora\"); a short label in lower case where it completes a sentence the page builds (\"Evelyn Cross está\" + \"en línea\").",
+    "rejectExamples": "\"usted\", vosotros, a dicho or proverb, a price not in dollars, \"querida\" on every line, a Spain-only word, a promise made weaker or stronger than the English, or it undoes the glossary"
+  },
+  "checks": {
+    "_doc": "Mechanical checks that depend on the language or market (scripts/l10n/check.mts). currencyLeft runs on the raw text. samePrices = every '$'+number and '${…}' in the English line appears, unchanged, in the Spanish. quotedSpan null = no quote exemption: register rules run on quoted text too (in Spanish, quotes hold UI labels as often as a buyer's words).",
+    "currencyLeft": {
+      "pattern": "€|\\b(?:EUR|MXN|USD|eur|mxn|usd)\\b|\\b[Ee]uros?\\b|\\d\\s*(?:pesos|d[oó]lares)\\b|\\}\\s*(?:pesos|d[oó]lares)\\b",
+      "detail": "a price not written as in the English: keep '$35' (see pack.json priceRule)"
+    },
+    "samePrices": true,
+    "openingMarks": true,
+    "quotedSpan": null
+  },
+  "review": {
+    "_doc": "Labels for the operator's review page (scripts/l10n/review-page.mts). risk = the market's rule behind each risk tag the translator sets (legal.md). The English funnel runs under the same law, so each rule applies to the English line too: a faithful translation is not an approval. Citations are Claude's and Codex's, not a lawyer's.",
+    "lawName": "US law",
+    "risk": {
+      "danger": {
+        "title": "Danger if she doesn't buy",
+        "rule": "FTC Act §5: an unsupported claim that harm will come to her or her family unless she buys is deceptive, and can be unfair where it plays on fear or grief. Translated faithfully for review; it ships only if the operator approves it for both languages."
+      },
+      "urgency": {
+        "title": "Time or places limited",
+        "rule": "False deadlines and false scarcity are deceptive under FTC Act §5 (FTC dark-patterns report, 2022). Keep only limits that are true; the Spanish may not add one."
+      },
+      "claim": {
+        "title": "Claims that need proof",
+        "rule": "Customer counts and promised results need proof (FTC Act §5); health claims need scientific evidence. Testimonials must reflect real experiences, with a clear note of what buyers can generally expect when results are exceptional, and any material connection disclosed (Endorsement Guides, 16 CFR 255). Fake reviews and testimonials are banned (16 CFR 465, since 21 Oct 2024)."
+      },
+      "ai-identity": {
+        "title": "Evelyn presented as a person",
+        "rule": "California's BOT Act (Bus. & Prof. Code §17941): a bot may not talk to a person in California online with intent to mislead about its artificial identity, knowingly deceiving her, to sell, unless it clearly discloses that it is a bot. Where it applies, the disclosure must be in Spanish, in the chat. Utah requires an answer when she asks whether she is talking to AI."
+      },
+      "consent": {
+        "title": "Consent, refunds, text messages",
+        "rule": "Disclosures that a rule or order requires must be in the language of the ad (FTC policy, 16 CFR 14.9). Text-message opt-in (TCPA): she must see in Spanish who is texting, what she agrees to, and how to stop; a request to stop in her own words must be honoured."
+      }
+    }
+  }
+}

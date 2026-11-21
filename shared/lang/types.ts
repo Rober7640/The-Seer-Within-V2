@@ -33,6 +33,13 @@ export interface SafetyPack {
    * hit on its own gives the soft note (resources shown, reading goes on).
    */
   reportedCrisis: RegExp[];
+  /**
+   * Optional, global flag. Everyday idioms that CONTAIN a crisis phrase ("me quiero morir
+   * de la vergüenza" holds the English list's own `quiero morir`; "sería un suicidio"
+   * holds `suicidio`). Masked before both crisis scans with no note at all, because the
+   * English list (server/lib/universalSafety.ts) cannot be narrowed from a pack.
+   */
+  figurative?: RegExp[];
   /** Someone she loved has died ("mon mari est décédé", "veuve"). Gates followTheDead. */
   deathContext: RegExp[];
   /** With a death in the message (reportedCrisis or deathContext): her wish to follow ("je veux le rejoindre") → hard crisis. */
@@ -47,6 +54,13 @@ export interface SafetyPack {
   softCrisis: RegExp[];
   /** 18+ only. A capture group 1 = numeric age (checked < 18). */
   minor: RegExp[];
+  /**
+   * Optional, global flag. Someone ELSE's age or school, or her own past ("mi hija está
+   * en high school", "cuando cumplí 15 me casé"), masked before both minor scans with no
+   * note, because the English list's bare `high school` (server/lib/universalSafety.ts)
+   * cannot be narrowed from a pack. A pack without it: unchanged.
+   */
+  notMinor?: RegExp[];
   /** Sexual content DIRECTED at the persona (never a disclosure about someone else). */
   inappropriate: RegExp[];
   /** Prompt injection + AI-identity probing / assertions. */
@@ -80,6 +94,19 @@ export interface IntentPack {
   objectionSkepticism: RegExp;
   objectionInfo: RegExp;
   wantsMoreFree: RegExp;
+  /**
+   * Optional, global flag. Words of this language that HOLD an English trigger ("porno"
+   * holds `porn`, "obsesionada" `bs`, "acostumbrada" `cost`), blanked before the English
+   * branches of detectIntent only; this pack's own classes still read the whole text.
+   * The English regexes cannot be narrowed from a pack. A pack without it: unchanged.
+   */
+  englishMask?: RegExp;
+  /**
+   * Optional. Try this pack's aiQuestion and priceQuestion BEFORE clarification: a
+   * language that closes every question with "?" ("¿cuánto cuesta?") would otherwise
+   * land every clear question on clarification. English order is unchanged.
+   */
+  questionsFirst?: boolean;
 }
 
 /** FOLDED. Free-text answers to the upsell questions: class → pattern, tried in order. */

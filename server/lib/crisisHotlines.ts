@@ -322,6 +322,25 @@ const HOTLINE_DIRECTORY: CrisisHotline[] = [
   },
 ];
 
+/**
+ * A country's lines as said in another LANGUAGE, where the service itself works
+ * differently in that language (not a translation of the note): 988 answers in
+ * Spanish when you press 2 or text AYUDA, Crisis Text Line answers AYUDA at
+ * 741741. Used in place of the English entry's lines for that locale only; the
+ * English entry above is never changed. Checked 2026-11-20 (localize/locales/es-US/legal.md).
+ */
+const LOCALE_LINES: Partial<Record<LocaleCode, Record<string, CrisisHotline['lines']>>> = {
+  'es-US': {
+    US: [
+      {
+        name: '988 Línea de Prevención del Suicidio y Crisis',
+        number: 'llama al 988 y marca 2 para español, o envía AYUDA por mensaje de texto al 988; también por chat en 988lifeline.org/es',
+      },
+      { name: 'Crisis Text Line', number: 'envía AYUDA por mensaje de texto al 741741' },
+    ],
+  },
+};
+
 // Lookup index by country code
 const HOTLINE_BY_CODE = new Map<string, CrisisHotline>(
   HOTLINE_DIRECTORY.map((h) => [h.countryCode, h]),
@@ -427,7 +446,10 @@ export function buildCrisisResponse(hotline: CrisisHotline, locale: LocaleCode =
 function localizeHotline(hotline: CrisisHotline, locale: LocaleCode): { country: string; emergency: string; lines: CrisisHotline['lines'] } {
   if (locale === 'en') return { country: hotline.country, emergency: hotline.emergency, lines: hotline.lines };
   // Line names are the services' own names (kept); the number notes are copy.
-  const lines = hotline.lines.map((l) => ({ name: l.name, number: tl(locale, l.number) }));
+  // A service that works differently in this language has its own lines (LOCALE_LINES).
+  const lines =
+    LOCALE_LINES[locale]?.[hotline.countryCode] ??
+    hotline.lines.map((l) => ({ name: l.name, number: tl(locale, l.number) }));
   const intl = localeDef(locale).market.intl;
   let country = hotline.country;
   let emergency = hotline.emergency;
