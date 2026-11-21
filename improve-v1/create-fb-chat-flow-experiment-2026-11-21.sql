@@ -31,7 +31,8 @@
 -- arm. /fb gives ~100 leads/day ≈ 300 chat starts/day, so ~5 weeks. 🔴 RE-CHECK on
 -- day 3 with the arm read (~/tsw-convo-flow/scripts/fb-flow-stats.mjs): set
 -- targetN = 1,600 ÷ /fb's real email rate (per arm). The live row was first created with
--- 9600 (a total, by mistake) and must be edited to 4800 in /admin/experiments.
+-- 9600 (a total, by mistake). A started test's conversion is locked, so it stays 9600;
+-- the real stopping point is 4,800 per arm, declared via the API with force:true.
 --
 -- 🔴 ORDER OF OPERATIONS:
 --      1. merge + deploy the code (inert without this row: /api/fb/chat-flow answers

@@ -95,8 +95,8 @@ chat start (/fb only)
 | subject | visitor (`ab_vid` cookie) |
 | arms | A 50 `{}` (control, listed first) · B 50 `{"flow":"b"}` |
 | scope | funnel `v1-fb` |
-| conversion | `v1_main_funnel`, 7-day window, targetN 9,600 → **to be changed to 4,800** |
-| ⚠ targetN | The dashboard counts targetN **per arm** (smallest arm vs targetN). 9,600 was set as the total by mistake; the intended size is 4,800 chats per arm (≈1,600 leads per arm at a 33% email rate). Re-checked on day 3 against /fb's real email rate. |
+| conversion | `v1_main_funnel`, 7-day window, targetN 9,600 (locked; see the next row) |
+| ⚠ targetN | The dashboard counts targetN **per arm** (smallest arm vs targetN). 9,600 was set as the total by mistake, and a started test's settings are locked, so it stays. **The real stopping point is ≈4,800 chats per arm** (≈1,600 leads per arm at a 33% email rate), re-checked on day 3 against /fb's real email rate. At that look the winner is declared through the API with `force: true` (the dashboard has no force button; the server allows it and logs a warning). The dashboard's progress bar will read about 50% at that point. Ignore it. |
 | keep-arm (`freezeAssignment`) | Off. This is fine as long as the weights stay 50/50. |
 
 ### Checked on the live site (21 Nov)
@@ -249,7 +249,6 @@ End the test and keep B:
 | When | Who | What |
 |---|---|---|
 | Now | Operator | Declare B the winner on close-depth (decided 21 Nov) |
-| Now | Operator | Change the /fb test's targetN from 9,600 to 4,800 (it counts per arm) |
 | ~23 Nov | Operator | Re-read tarot first answers against the 44% baseline |
 | ~24 Nov (day 3) | Operator | Re-check the /fb targetN against the real email rate |
 | ~2.5 and ~5 weeks | Operator | The two looks at the /fb test |
