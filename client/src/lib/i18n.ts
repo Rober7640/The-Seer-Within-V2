@@ -7,7 +7,7 @@
 // them cannot change what an English visitor sees.
 
 import { pickData, registerCatalog, registerData, translate, type LocaleBundle, type Vars } from "@shared/i18n";
-import { localeDef, type LocaleCode } from "@shared/locales";
+import { localeServable, type LocaleCode } from "@shared/locales";
 import { registerLangPack } from "@shared/lang/registry";
 import { currentLocale } from "./locale";
 
@@ -35,8 +35,10 @@ function loaders(): Record<string, () => Promise<{ default: LocaleBundle }>> {
  */
 export async function loadLocale(locale: LocaleCode): Promise<boolean> {
   if (locale === "en") return true;
-  // Not yet approved for go-live: only the dev server serves it (shared/locales.ts `live`).
-  if (!localeDef(locale).live && !import.meta.env.DEV) return false;
+  // Not yet approved for go-live: only the dev server and the development site
+  // serve it (shared/locales.ts `live`, PREVIEW_HOSTS).
+  const hostname = typeof window === "undefined" ? undefined : window.location.hostname;
+  if (!localeServable(locale, { dev: !!import.meta.env.DEV, hostname })) return false;
   const loader = loaders()[`../l10n/${locale}/index.ts`];
   if (!loader) return false;
   const { default: bundle } = await loader();

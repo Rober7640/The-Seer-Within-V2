@@ -65,8 +65,9 @@ export interface LocaleDef {
   serves: null | { funnels: readonly string[]; paths: readonly string[] };
   /**
    * The go-live switch (gate G3). false = the bundle is served by the dev server
-   * only, so merging a translated locale changes nothing in production until the
-   * operator approves it and this flips to true.
+   * and the PREVIEW_HOSTS (the Railway development site) only, so merging a
+   * translated locale changes nothing in production until the operator approves
+   * it and this flips to true.
    */
   live: boolean;
 }
@@ -134,4 +135,18 @@ export function isKnownLocale(value: unknown): boolean {
 
 export function localeDef(code: LocaleCode): LocaleDef {
   return LOCALES[code];
+}
+
+/**
+ * Deployments that preview the locales not yet live (gate G3): the Railway
+ * development site. Matched exactly on the page's hostname, so Production, a
+ * custom domain or any other host can never serve a locale before it flips to
+ * `live: true`. Nothing to configure: the address IS the switch.
+ */
+export const PREVIEW_HOSTS: readonly string[] = ["the-seer-within-v2-development.up.railway.app"];
+
+/** Whether a page may serve `code`: English, a live locale, the local dev server, or a preview host. */
+export function localeServable(code: LocaleCode, where: { dev: boolean; hostname?: string }): boolean {
+  if (code === DEFAULT_LOCALE || LOCALES[code].live || where.dev) return true;
+  return !!where.hostname && PREVIEW_HOSTS.includes(where.hostname.toLowerCase());
 }
