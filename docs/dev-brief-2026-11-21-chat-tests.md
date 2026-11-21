@@ -6,7 +6,7 @@ Three items: one change is live, one test has just started, and one test is bein
 |---|---|---|---|---|
 | 1 | New opener question + plainer first reply on the "meant to be alone" lander (PR #169) | /fb-tarot | Live for everyone since 20 Nov 14:13 UTC. Not a split test. | Nothing |
 | 2 | Chat-flow A/B test `v1_fb_chat_flow_2026` (PR #170) | /fb only | Running since 20 Nov 23:28 UTC. B was checked on the live site before the start. | Leave the /fb chat alone while it runs (rules in §2) |
-| 3 | Close-depth test `v1_close_depth_2026` | /fb-tarot | Running since 20 Aug, at 230% of its planned size. No proven winner. | Nothing to deploy if the operator declares B. Optional cleanup later. |
+| 3 | Close-depth test `v1_close_depth_2026` | /fb-tarot | Running since 20 Aug. Both arms are past their planned size (smallest 8,277 vs 7,200 per arm). No proven winner. | Nothing to deploy if the operator declares B. Optional cleanup later. |
 
 ---
 
@@ -95,7 +95,8 @@ chat start (/fb only)
 | subject | visitor (`ab_vid` cookie) |
 | arms | A 50 `{}` (control, listed first) · B 50 `{"flow":"b"}` |
 | scope | funnel `v1-fb` |
-| conversion | `v1_main_funnel`, 7-day window, targetN 9,600 |
+| conversion | `v1_main_funnel`, 7-day window, targetN 9,600 → **to be changed to 4,800** |
+| ⚠ targetN | The dashboard counts targetN **per arm** (smallest arm vs targetN). 9,600 was set as the total by mistake; the intended size is 4,800 chats per arm (≈1,600 leads per arm at a 33% email rate). Re-checked on day 3 against /fb's real email rate. |
 | keep-arm (`freezeAssignment`) | Off. This is fine as long as the weights stay 50/50. |
 
 ### Checked on the live site (21 Nov)
@@ -205,7 +206,7 @@ It's copy only: the price and checkout are the same in both arms.
 | Who's in it | Leads, split on the hashed email, with keep-arm on |
 | Scope | `v1-tarot` |
 | Started | 20 Aug |
-| Planned size | 7,200 |
+| Planned size | 7,200 per arm |
 
 **Code:**
 - `resolveV1CloseDepth()` in `server/lib/experiments.ts`
@@ -224,7 +225,7 @@ Revenue here is main + bump + both upsells, counting only purchases made after t
 - **No proven winner.** B is ahead by $273 per 1,000 leads (+5.6%), but that's within noise: p = 0.39 on revenue and p = 0.31 on buy rate.
 - **The true difference is small either way.** It's likely between −$0.35 and +$0.89 per lead, about −7% to +18%.
 - **Late purchases don't change it.** Counting only leads older than 7 days, so every purchase is in, shows the same picture: A $4,859 and B $5,094 per 1,000.
-- **More time won't settle it.** At 230% of plan, the gap is too small to ever prove.
+- **More time won't settle it.** Each arm is already past its planned 7,200, and the gap is too small to prove at any size the funnel can reach soon.
 
 ### Recommendation
 End the test and keep B:
@@ -247,7 +248,8 @@ End the test and keep B:
 ## 4. Next steps
 | When | Who | What |
 |---|---|---|
-| Now | Operator | Decide on close-depth: declare B, or keep it running |
+| Now | Operator | Declare B the winner on close-depth (decided 21 Nov) |
+| Now | Operator | Change the /fb test's targetN from 9,600 to 4,800 (it counts per arm) |
 | ~23 Nov | Operator | Re-read tarot first answers against the 44% baseline |
 | ~24 Nov (day 3) | Operator | Re-check the /fb targetN against the real email rate |
 | ~2.5 and ~5 weeks | Operator | The two looks at the /fb test |

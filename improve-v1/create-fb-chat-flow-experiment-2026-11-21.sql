@@ -6,7 +6,7 @@
 --   variants       A w50 (CONTROL, {}) / B w50 ({"flow":"b"})
 --   subject_type   visitor   ← the ab_vid cookie, assigned at CHAT START
 --   scope          funnel ["v1-fb"]   (/fb only; lanes never ask, see the client)
---   conversion     v1_main_funnel, windowDays 7, targetN 9600
+--   conversion     v1_main_funnel, windowDays 7, targetN 4800 (PER ARM, see below)
 --   status         DRAFT  ← inert. Nobody is enrolled; every woman gets today's chat.
 --
 -- WHAT B CHANGES (chat only, never a price, line item or CTA):
@@ -24,12 +24,14 @@
 -- leads, and the tally reaches the purchase through conversations.ab_visitor_id
 -- (tallyV1MainByVisitor). It is NOT arm-for-arm comparable with email-keyed tests.
 --
--- WHY targetN 9600. ~1,600 leads per arm detects a ~30% lift in buyers at today's
+-- WHY targetN 4800. targetN is the PER-ARM exposure count (the gate compares the SMALLEST
+-- arm to it). ~1,600 leads per arm detects a ~30% lift in buyers at today's
 -- ~11% buy rate. Counted in chat starts, at the ~33% chat-start → email rate measured
 -- on the tarot chat-start test (v1_tarot_version_bc_2026), that is ~4,800 chats per
 -- arm. /fb gives ~100 leads/day ≈ 300 chat starts/day, so ~5 weeks. 🔴 RE-CHECK on
 -- day 3 with the arm read (~/tsw-convo-flow/scripts/fb-flow-stats.mjs): set
--- targetN = 2 × 1,600 ÷ /fb's real email rate.
+-- targetN = 1,600 ÷ /fb's real email rate (per arm). The live row was first created with
+-- 9600 (a total, by mistake) and must be edited to 4800 in /admin/experiments.
 --
 -- 🔴 ORDER OF OPERATIONS:
 --      1. merge + deploy the code (inert without this row: /api/fb/chat-flow answers
@@ -73,7 +75,7 @@ VALUES (
      {"key": "B", "weight": 50, "payload": {"flow": "b"}}
    ]'::jsonb,
   '{"funnel": ["v1-fb"]}'::jsonb,
-  '{"type": "v1_main_funnel", "windowDays": 7, "targetN": 9600}'::jsonb
+  '{"type": "v1_main_funnel", "windowDays": 7, "targetN": 4800}'::jsonb
 );
 COMMIT;
 
