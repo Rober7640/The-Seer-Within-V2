@@ -1,0 +1,25 @@
+{
+  "v": 3,
+  "createdOnFiles": {"v": 1, "at": "2026-11-22T07:40:00Z"},
+  "title": "/fb Sales Page Mockup",
+  "launch": {"view": "canvas"},
+  "pages": [],
+  "boards": {
+    "Main.dc.html": {"x": 0, "y": 0, "w": 390, "h": 844, "title": "1 · In the ad: the last frame"},
+    "Hero.dc.html": {"x": 470, "y": 0, "w": 390, "h": 844, "title": "2 · She taps, and lands here", "is_interactive": true},
+    "Step2.dc.html": {"x": 940, "y": 0, "w": 390, "h": 844, "title": "3 · Her words", "is_interactive": true},
+    "Email.dc.html": {"x": 1410, "y": 0, "w": 390, "h": 844, "title": "4 · Where to write back", "is_interactive": true},
+    "Step3.dc.html": {"x": 1880, "y": 0, "w": 390, "h": 1290, "title": "5 · The offer, then pay", "is_interactive": true},
+    "Page.dc.html": {"x": 2350, "y": 0, "w": 390, "h": 3480, "title": "6 · Below the fold"}
+  },
+  "order": ["Main.dc.html", "Hero.dc.html", "Step2.dc.html", "Email.dc.html", "Step3.dc.html", "Page.dc.html"],
+  "notes": {
+    "rowTitle": {"x": 0, "y": -300, "text": "/fb sales page: from the ad's last frame to payment", "kind": "title1", "maxW": 2740},
+    "notOnPage": {"x": 2820, "y": 0, "w": 320, "text": "Taken from the competitor: cream page, deep purple serif headings, pink check marks and labels, mint button, the fact strip, the comparison table, the FAQ.\n\nLeft out on purpose: countdowns, \"last 4 slots\", review counts, struck-through prices, testimonials, \"free reading\".", "fill": "purple"},
+    "byMorning": {"x": 2820, "y": 480, "w": 320, "text": "Open: \"by morning\" is in the ad and the headline. It has to be true before this goes live. The chat today says \"within 24 hours\".", "fill": "orange"},
+    "noQuestion": {"x": 2820, "y": 860, "w": 320, "text": "Removed: the optional \"one question answered\" box on screen 3 (my recommendation). Today's letter doesn't answer a question. Say if you want it back.", "fill": "pink"},
+    "cta": {"x": 2820, "y": 1240, "w": 320, "text": "Tweak: screens 2-6 have a button-colour switch (mint like the competitor, pink, or purple).", "fill": "gray"},
+    "emailFirst": {"x": 2820, "y": 1560, "w": 320, "text": "Order (chosen 22 Nov): name, her words, then email. She writes to Evelyn, and the email is where Evelyn writes back.\n\nRisk: anyone who quits at her words leaves no email, so that step is kept light: tap-to-start lines, one sentence is enough.\n\nLater test: email before vs after her words.", "fill": "teal"}
+  },
+  "designSystems": []
+}
