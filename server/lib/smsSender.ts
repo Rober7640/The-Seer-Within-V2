@@ -17,12 +17,16 @@
 // Neither set ⇒ the tick does nothing and logs why.
 //
 // RULES (the plan + what we told Twilio in the TFV form, 9 Oct):
-//   - only consented, not opted out, US/Canada (+1) numbers, /fb-read + root funnels;
+//   - only consented, not opted out, US/Canada (+1) numbers, /fb-read + /fb-tarot + root funnels;
 //   - text 1 carries the opt-in confirmation (brand, up to 3 msgs/week, rates, HELP, STOP);
-//   - texts go out 1pm-7pm New York time = 10am-4pm Pacific, so every US/Canada
-//     time zone is inside 10am-8pm (allow-listed test numbers skip this);
+//   - texts go out 1pm-8pm New York time = 10am-5pm Pacific, so every US/Canada
+//     time zone gets them between 10am and 8pm local (Joel OK'd "10am-8pm US time",
+//     23 Nov 2026; allow-listed test numbers skip this);
 //   - a text more than 48h overdue is skipped, never sent late;
-//   - texts 2 and 3 are skipped if she already has a V2 account (same email);
+//   - texts 2 and 3 are skipped if she has already USED the V2 chat (spent coins).
+//     Not "has a V2 account": every V1 buyer gets one auto-created on purchase
+//     (funnelMigrationEmail.ts) — 119 of 119 tarot buyers, 23 Nov 2026 — so that
+//     rule would have stopped texts 2 and 3 for everyone;
 //   - STOP is handled by Twilio Advanced Opt-Out; if Twilio says she is
 //     unsubscribed (error 21610) we mark her consent opted out.
 //   - plain GSM-7 characters only (no curly quotes / emoji / accents), or a text
@@ -44,7 +48,7 @@ export const SMS_LATE_LIMIT_MS = 48 * 60 * 60 * 1000;
 
 // Only consents from funnels whose main product is the Energy Clearing Ritual
 // (text 1 names it).
-export const SMS_SEQUENCE_FUNNELS = new Set(["v1-read", "root"]);
+export const SMS_SEQUENCE_FUNNELS = new Set(["v1-read", "v1-tarot", "root"]);
 
 // Hard cap per tick, so a mistake can never blast the whole list in one go.
 export const SMS_MAX_SENDS_PER_TICK = 50;
@@ -66,12 +70,12 @@ export function isUsOrCanada(phone: string): boolean {
   return /^\+1\d{10}$/.test(normalizePhone(phone));
 }
 
-// 1pm-7pm New York time (see RULES above).
+// 1pm-8pm New York time (see RULES above).
 export function isInSendWindow(now: Date): boolean {
   const hour = Number(
     new Intl.DateTimeFormat("en-US", { timeZone: "America/New_York", hour: "numeric", hourCycle: "h23" }).format(now),
   );
-  return hour >= 13 && hour < 19;
+  return hour >= 13 && hour < 20;
 }
 
 // "  sarah jane " → "Sarah". Anything that isn't plain A-Z letters (or a hyphen)
@@ -105,7 +109,7 @@ export function buildSmsBody(step: SmsStep, ctx: { firstName: string | null; buc
   if (step === 1) {
     return (
       `The Seer Within: Thank you${name ? `, ${name}` : ""}. Evelyn here. ` +
-      `I've begun your Energy Clearing Ritual. Your reading arrives by email within 24 hours. ` +
+      `I've begun your Energy Clearing Ritual. Your ritual arrives by email in about 24 hours. ` +
       `Up to 3 msgs/week. Msg & data rates may apply. Reply HELP for help, STOP to opt out.`
     );
   }
@@ -244,8 +248,8 @@ export async function processSmsQueue(now = new Date()): Promise<SmsTickStats> {
     if (!testNumber && !isUsOrCanada(phone)) { await skip("not a US/Canada number"); continue; }
     if (step > 1 && c.email) {
       const [v2] = await db.select({ id: users.id }).from(users)
-        .where(sql`lower(${users.email}) = lower(${c.email})`).limit(1);
-      if (v2) { await skip("has a V2 account"); continue; }
+        .where(sql`lower(${users.email}) = lower(${c.email}) AND ${users.totalCoinsUsed} > 0`).limit(1);
+      if (v2) { await skip("already uses the V2 chat"); continue; }
     }
     if (!testNumber && !isInSendWindow(now)) continue; // wait for the window
 

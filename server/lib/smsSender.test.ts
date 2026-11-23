@@ -15,6 +15,7 @@ import {
   smsLink,
   topicFor,
   SMS_STEP_DELAY_MS,
+  SMS_SEQUENCE_FUNNELS,
 } from './smsSender';
 
 const BASE = 'https://www.theseerwithin.com';
@@ -67,6 +68,34 @@ describe('SMS texts — what we told Twilio in the TFV form (9 Oct 2026)', () =>
   });
 });
 
+describe('SMS texts — EXACTLY as Joel approved them (23 Nov 2026)', () => {
+  const ctx = { firstName: 'Sarah', bucket: 'love', linkBase: BASE };
+  it('text 1, right after purchase', () => {
+    expect(buildSmsBody(1, ctx)).toBe(
+      "The Seer Within: Thank you, Sarah. Evelyn here. I've begun your Energy Clearing Ritual. " +
+      'Your ritual arrives by email in about 24 hours. Up to 3 msgs/week. Msg & data rates may apply. ' +
+      'Reply HELP for help, STOP to opt out.',
+    );
+  });
+  it('text 2, day 4', () => {
+    expect(buildSmsBody(2, ctx)).toBe(
+      "The Seer Within: Sarah, it's Evelyn. I hope your reading spoke to you. If it stirred questions about love, " +
+      `I'm here to talk: ${BASE}/evelyn?utm_source=sms&utm_campaign=v1-buyers&utm_content=t2 Reply STOP to opt out`,
+    );
+  });
+  it('text 3, day 7', () => {
+    expect(buildSmsBody(3, ctx)).toBe(
+      "The Seer Within: Sarah, it's Evelyn. Your reading holds guidance for the weeks ahead. " +
+      'Want me with you as it unfolds? First minutes are on me: ' +
+      `${BASE}/evelyn?utm_source=sms&utm_campaign=v1-buyers&utm_content=t3 Reply STOP to opt out`,
+    );
+  });
+  it('/fb-tarot buyers are in the sequence (their main product is the Energy Clearing Ritual too)', () => {
+    expect(SMS_SEQUENCE_FUNNELS.has('v1-tarot')).toBe(true);
+    expect(SMS_SEQUENCE_FUNNELS.has('v1-read')).toBe(true);
+  });
+});
+
 describe('SMS helpers', () => {
   it('cleanFirstName keeps plain first names only', () => {
     expect(cleanFirstName('  sarah jane ')).toBe('Sarah');
@@ -95,8 +124,13 @@ describe('SMS helpers', () => {
     // 9 Oct 2026 is EDT (UTC-4).
     expect(isInSendWindow(new Date('2026-10-09T16:59:00Z'))).toBe(false); // 12:59 ET
     expect(isInSendWindow(new Date('2026-10-09T17:00:00Z'))).toBe(true);  // 1pm ET = 10am PT
-    expect(isInSendWindow(new Date('2026-10-09T22:59:00Z'))).toBe(true);  // 6:59pm ET
-    expect(isInSendWindow(new Date('2026-10-09T23:00:00Z'))).toBe(false); // 7pm ET
+    expect(isInSendWindow(new Date('2026-10-09T23:59:00Z'))).toBe(true);  // 7:59pm ET
+    expect(isInSendWindow(new Date('2026-10-10T00:00:00Z'))).toBe(false); // 8pm ET
+    // Winter (EST, UTC-5): 1pm ET = 18:00Z, 8pm ET = 01:00Z next day.
+    expect(isInSendWindow(new Date('2026-11-24T17:59:00Z'))).toBe(false); // 12:59pm ET
+    expect(isInSendWindow(new Date('2026-11-24T18:00:00Z'))).toBe(true);  // 1pm ET = 10am PT
+    expect(isInSendWindow(new Date('2026-11-25T00:59:00Z'))).toBe(true);  // 7:59pm ET
+    expect(isInSendWindow(new Date('2026-11-25T01:00:00Z'))).toBe(false); // 8pm ET
   });
 
   it('steps go in order, purchase / day 4 / day 7', () => {
