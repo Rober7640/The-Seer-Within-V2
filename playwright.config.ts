@@ -13,6 +13,9 @@ const BASE_URL = `http://localhost:${PORT}`;
 
 export default defineConfig({
   testDir: './tests',
+  // *.staging.spec.ts drive the live Railway dev host (real /api/chat + Anthropic turns).
+  // They must never run against the localhost webServer — only via playwright.staging.config.ts.
+  testIgnore: '**/*.staging.spec.ts',
 
   /* Run tests in files in parallel */
   fullyParallel: false,
