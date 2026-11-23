@@ -15,6 +15,15 @@ import { getLane, laneOpenerAfterName, laneQuestion } from '../shared/beliefLane
 const LANE = getLane('astrology')!
 const BEAT1 = LANE.chat[0].text
 
+// Never let a smoke pollute live analytics when pointed at production: abort FB pixel,
+// PostHog, GTM, Clarity and Trackdesk at the browser. The app's own bundle is matched by
+// hostname only, so it still loads. (chatflow=b/a overrides already avoid logging a live
+// experiment exposure; the email-path test — the only /api/lead caller — is skipped on prod.)
+const ANALYTICS_HOST = /(^|\.)(facebook\.net|facebook\.com|fbcdn\.net|posthog\.com|googletagmanager\.com|google-analytics\.com|clarity\.ms|trackdesk\.com)$/i
+test.beforeEach(async ({ context }) => {
+  await context.route((url) => ANALYTICS_HOST.test(url.hostname), (route) => route.abort())
+})
+
 // The whole visible transcript, for invariant assertions over everything shown so far.
 async function transcript(page: Page): Promise<string> {
   return (await page.locator('body').innerText()).toLowerCase()
