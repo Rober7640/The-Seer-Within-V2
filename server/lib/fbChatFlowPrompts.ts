@@ -20,7 +20,8 @@
 // 🔴 THE CANDLE IS SCRIPTED CLIENT-SIDE (client/src/content/fbChatFlowB.ts). These
 // prompts only know it happened, so the diagnosis can close the loop it opened.
 import type { UserData } from '../../shared/types'
-import { EVELYN_BASE_PROMPT } from './prompts'
+import { EVELYN_BASE_PROMPT, laneDirective } from './prompts'
+import { getLane } from '../../shared/beliefLanes'
 
 const CUT = EVELYN_BASE_PROMPT.indexOf('## Cold Reading Techniques')
 const END = EVELYN_BASE_PROMPT.indexOf('## Response Format')
@@ -80,7 +81,13 @@ function session(u: UserData, earlier: string[]): string {
     `- Her first name: ${u.firstName || 'dear'}`,
     `- Topic: ${bucket}${u.subBucket ? ` / ${u.subBucket}` : ''}`,
     `- Person of interest: ${u.personName || 'none'}`,
-    `- At the start, when you said her name, your candle bent and gave off a thin line of black smoke. You told her you know what that means, but you have NOT told her what it means yet. You also told her something is sitting over her ${OVER[bucket]} that was never hers to carry. Do not explain the smoke until the diagnosis.`,
+    // The open loop the diagnosis later closes. Plain /fb uses the scripted candle/smoke
+    // (client/src/content/fbChatFlowB.ts). A belief-lane visitor never saw a candle — she
+    // came in on the lane's own opener — so the loop is the block she already sensed from
+    // that page. No candle/smoke words may reach a lane prompt.
+    getLane(u.lane)
+      ? `- At the start, from the page she came on, you already sensed something sitting over her ${OVER[bucket]} that was never hers to carry. You told her you can see it, but you have NOT yet named what it is. Do not name it until the diagnosis.`
+      : `- At the start, when you said her name, your candle bent and gave off a thin line of black smoke. You told her you know what that means, but you have NOT told her what it means yet. You also told her something is sitting over her ${OVER[bucket]} that was never hers to carry. Do not explain the smoke until the diagnosis.`,
   ]
   if (u.concern) lines.push(`- Her concern, in her words: "${u.concern}"`)
   if (u.desires) lines.push(`- What she wants, in her words: "${u.desires}"`)
@@ -91,7 +98,9 @@ function session(u: UserData, earlier: string[]): string {
 }
 
 const wrap = (u: UserData, earlier: string[], task: string) =>
-  `${BASE_B}\n${TOPIC[u.bucket ?? 'love']}\n\n${session(u, earlier)}\n\n${task}\n\nEach message max 25 words.`
+  // laneDirective(u) is '' for non-lane traffic, so plain /fb arm B is byte-identical;
+  // for a lane it carries the belief through every reading step (the fb-palm-derail fix).
+  `${BASE_B}\n${TOPIC[u.bucket ?? 'love']}\n\n${session(u, earlier)}${laneDirective(u)}\n\n${task}\n\nEach message max 25 words.`
 
 export function buildFbB1Prompt(u: UserData, earlier: string[], said: string): string {
   return wrap(u, earlier, `## Task: step 1 of the reading, WHAT'S HAPPENING
@@ -128,10 +137,15 @@ Return JSON: {"messages": [...]}`)
 
 export function buildFbBDiagnosisPrompt(u: UserData, earlier: string[]): string {
   const name = u.firstName || 'dear'
+  // Close the open loop set at the start. Plain /fb closes the candle/smoke; a belief-lane
+  // visitor never saw a candle, so she closes the block she arrived sensing (no candle/smoke).
+  const closeLoop = getLane(u.lane)
+    ? `1. Name what you sensed from the start: the block that has been sitting over her ${OVER[u.bucket ?? 'love']}. It was this. Name it in one clear picture taken from her own words or life (not a coat, chair, ledger or contract), and where it came from, using what she told you about where it started.`
+    : `1. Close the loop on the smoke: tell her what the black smoke was when you said her name. It was this block. Name the block in one clear picture taken from her own words or life (not a coat, chair, ledger or contract), and where it came from, using what she told you about where it started.`
   return wrap(u, earlier, `## Task: the DIAGNOSIS
 She just said yes. Before this you have already said: "Thank you, ${name}. I'm honored you trust me with this." and "Now that you've opened this door, I can see it more clearly..."
 Write exactly 3 messages. NONE of them is a question, and none ends with a question mark.
-1. Close the loop on the smoke: tell her what the black smoke was when you said her name. It was this block. Name the block in one clear picture taken from her own words or life (not a coat, chair, ledger or contract), and where it came from, using what she told you about where it started.
+${closeLoop}
 2. Why it explains her situation: connect it to her concern, in her words.
 3. Why it found her: what about her made her the one carrying it. Then say it has not lifted on its own in all this time, and it will not lift by itself. Never make it sound small or simple. End on a statement.
 Do NOT mention price, ritual, clearing or the offer.
