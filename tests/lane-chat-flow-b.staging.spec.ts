@@ -22,7 +22,7 @@ async function transcript(page: Page): Promise<string> {
 
 async function answer(page: Page, text: string) {
   const input = page.getByTestId('input-chat-message')
-  await expect(input).toBeEnabled({ timeout: 30000 })
+  await expect(input).toBeEnabled({ timeout: 90000 })
   await input.fill(text)
   await page.getByTestId('button-send-message').click()
 }
@@ -60,6 +60,42 @@ test('astrology lane, reading arm: lane opener kept, arm B runs, no candle/smoke
   await expect(page.getByTestId('input-chat-message')).toBeEnabled({ timeout: 60000 })
 
   // Invariant across the whole transcript so far: the candle/smoke device never surfaced.
+  const all = await transcript(page)
+  expect(all).not.toContain('candle')
+  expect(all).not.toContain('smoke')
+})
+
+test('astrology lane, reading arm THROUGH the real email step: lands in arm B', async ({ page, context }) => {
+  test.setTimeout(300_000) // dev host: typing-simulated beats + real /api/lead + Anthropic
+  await context.addInitScript(() => {
+    window.localStorage.clear()
+    window.sessionStorage.clear()
+  })
+
+  // No noemail=1 this time — go through the actual email capture. The lane opener plays
+  // several typing-simulated beats, so give each wait generous headroom on the dev host.
+  await page.goto('/fb/chat?lane=astrology&chatflow=b')
+  await expect(page.getByText(BEAT1)).toBeVisible({ timeout: 60000 })
+
+  // Name → lane after-name beats → the real email ask.
+  await answer(page, 'Maureen')
+  await expect(page.getByText('Where should I send them if more is revealed?')).toBeVisible({ timeout: 90000 })
+
+  // Enter a disposable test email. /api/lead is non-blocking, so the flow proceeds even
+  // if AWeber rejects the address.
+  // NB: this address must contain neither "candle" nor "smoke" — the invariant below
+  // scans the whole page, which includes her typed email bubble.
+  await answer(page, 'lane-qa@example.com')
+
+  // Post-email, a lane asks its own question and opens the deepening.
+  await expect(page.getByText('The link is complete.', { exact: false })).toBeVisible({ timeout: 90000 })
+  await expect(page.getByText(laneQuestion(LANE, 'Maureen'))).toBeVisible({ timeout: 90000 })
+
+  // Her concern → reading step 1 (fbB1). Arm B then shows FUTURE_PACING's unique
+  // placeholder — the proof the EMAIL path also routes into the reading arm.
+  await answer(page, 'I keep ending up with the same kind of man and it falls apart the same way.')
+  await expect(page.getByTestId('input-chat-message')).toHaveAttribute('placeholder', 'Tell me what you want...', { timeout: 90000 })
+
   const all = await transcript(page)
   expect(all).not.toContain('candle')
   expect(all).not.toContain('smoke')
