@@ -445,7 +445,7 @@ ${guard.rule}`
 // follows the voice rules like everything else the model sees, because the model
 // echoes what it is given. Validated against the registry here as well as at the
 // route, so an unknown id can only ever produce ''.
-function laneDirective(userData: UserData): string {
+export function laneDirective(userData: UserData): string {
   const lane = getLane(userData.lane)
   if (!lane) return ''
   return `
