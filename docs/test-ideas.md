@@ -2514,6 +2514,18 @@ Registry `shared/beliefLanes.ts`; server HTML `server/lib/laneHtml.ts` (static.t
 - [ ] Meta Sharing Debugger on the deployed /fb?lane=manifest shows the lane title, description and image alt
 - [ ] /, /fb2, /gdn, /fb-tarot, /fb-palm with ?lane=manifest behave exactly as without it
 
+#### Lanes in the /fb chat-flow A/B test — `v1_fb_chat_flow_2026` (2026-11-23)
+Lane traffic now enrols in the interview(A)/reading(B) test (was excluded). Lane keeps its own
+opener; only the deepening forks on `chatFlow`. Belief carried into arm B by `laneDirective()`;
+the candle/smoke device steps aside for lanes.
+- [x] arm-B builders (fbB1/2/3, diagnosis) carry the lane directive for a known lane; byte-identical for no/unknown/junk lane *(fbChatFlowPrompts.lane.test.ts)*
+- [x] no candle/smoke words reach a lane arm-B prompt; plain /fb keeps the candle device *(fbChatFlowPrompts.lane.test.ts)*
+- [x] plain /fb arm-B prompts/copy unchanged by the lane threading *(tests/fb-chat-flow-b.test.ts, 19/19)*
+- [ ] Playwright (dev): `/fb/chat?lane=astrology&chatflow=b` walks lane opener → name → lane question → 3 reading steps → diagnosis (no candle mention) → offer, belief present each step
+- [ ] Playwright (dev): `/fb/chat?lane=astrology&chatflow=a` unchanged from today's lane flow
+- [ ] Dev: a real lane visitor is assigned A/B and logs ONE exposure `surface=fb_chat_opener`, `context.funnel=v1-fb` (not double-logged)
+- [ ] Preview `?chatflow=b` on a lane forces B without logging an exposure
+
 ### Upsell 1 price 3-way test — $47 / $39 / $35 on FE landers (2026-11-18)
 
 Experiment `u1_price_2026`, scope `funnel: ['v1-fb','v1-tarot']` + `landers` (cards-will-commit,
