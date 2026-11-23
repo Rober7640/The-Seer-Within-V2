@@ -88,6 +88,14 @@ export interface UserData {
   // object to /api/chat; NO server prompt builder reads it, so an absent value is
   // byte-identical to today. Client-side counterpart: client/src/types/chat.ts.
   closeDepth?: 'deep'
+  // /fb chat-flow A/B (v1_fb_chat_flow_2026) — 'b' ⇒ the reading flow: the name
+  // reading, three reading steps and a diagnosis instead of today's seven questions.
+  // Set client-side at chat start (GET /api/fb/chat-flow, or the ?flow=b preview).
+  // Absent ⇒ today's flow, byte-identical. Client-side counterpart: client/src/types/chat.ts.
+  chatFlow?: 'b'
+  // Her answer to "where did this start?" — the client has always posted it (it is on
+  // client UserData), but only /fb chat-flow B's diagnosis reads it server-side.
+  blockSource?: string | null
 }
 
 // Sliding-scale close ("$55 anchor / $35 grace") — price variants whose id
@@ -119,7 +127,7 @@ export interface ShippingAddress {
 }
 
 export interface ChatRequest {
-  action: 'reading' | 'reading1' | 'reading2' | 'futureValidation' | 'crisisReveal' | 'crisisCost' | 'crisisUrgency' | 'shadowSummary' | 'valueExplain' | 'crisis' | 'objection' | 'palmOpener' | 'palmReflect' | 'tarotReflect' | 'readReflect'
+  action: 'reading' | 'reading1' | 'reading2' | 'futureValidation' | 'crisisReveal' | 'crisisCost' | 'crisisUrgency' | 'shadowSummary' | 'valueExplain' | 'crisis' | 'objection' | 'palmOpener' | 'palmReflect' | 'tarotReflect' | 'readReflect' | 'fbB1' | 'fbB2' | 'fbB3' | 'fbBDiagnosis'
   userData: UserData
   input: string
   objectionCount?: number
@@ -140,6 +148,9 @@ export interface ChatRequest {
   readDevice?: string
   readHook?: string
   readCard?: string
+  // /fb chat-flow B only: Evelyn's own earlier messages in this chat, so each B step can
+  // be told never to repeat a line. Capped and sanitised server-side.
+  earlier?: string[]
 }
 
 export interface ChatResponse {
