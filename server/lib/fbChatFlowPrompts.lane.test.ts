@@ -33,7 +33,9 @@ const base: UserData = {
   objectionCount: 0,
 }
 
-const EARLIER = ['I said your name and the candle bent.', 'Now, what is weighing on your heart?']
+// A lane visitor's prior bot messages are the lane opener — never the plain-/fb candle
+// script — so the fixture carries no candle/smoke of its own.
+const EARLIER = ['You came in on the page about manifesting love.', 'Now, tell me what is weighing on your heart.']
 
 // Every arm-B builder carries laneDirective (it is the whole reading flow).
 const BUILDERS: Array<[string, (u: UserData) => string]> = [
@@ -56,16 +58,12 @@ describe('arm-B laneDirective — no lane / unknown lane changes nothing', () =>
 
 describe('arm-B laneDirective — /fb?lane=manifest', () => {
   for (const [name, build] of BUILDERS) {
-    it(`${name}: carries the lane's directive, additively`, () => {
+    it(`${name}: carries the lane's directive`, () => {
       const plain = build(base)
       const lane = build({ ...base, lane: 'manifest' })
       assert.notEqual(lane, plain)
       assert.ok(lane.includes(LANE.directive), 'the approved directive, verbatim')
       assert.ok(lane.includes('## The page she came from'), 'its heading')
-      // Additive: removing the injected block gives back the plain prompt exactly.
-      const start = lane.indexOf('\n\n## The page she came from')
-      const block = lane.slice(start, lane.indexOf('mechanically.') + 'mechanically.'.length)
-      assert.equal(lane.replace(block, ''), plain)
     })
   }
 
@@ -73,5 +71,20 @@ describe('arm-B laneDirective — /fb?lane=manifest', () => {
     const lane = buildFbB1Prompt({ ...base, lane: 'manifest' }, EARLIER, 'x')
     const block = lane.slice(lane.indexOf('## The page she came from'), lane.indexOf('mechanically.') + 'mechanically.'.length)
     assert.deepEqual(copyRuleFails(block, { freeRule: false }), [])
+  })
+})
+
+describe('arm-B candle/smoke device steps aside for lanes', () => {
+  it('no arm-B prompt mentions a candle or smoke when a lane is set', () => {
+    for (const [name, build] of BUILDERS) {
+      const lane = build({ ...base, lane: 'manifest' })
+      assert.ok(!/candle|smoke/i.test(lane), `${name}: candle/smoke must not reach a lane prompt`)
+    }
+  })
+
+  it('plain /fb (no lane) still runs the candle/smoke device', () => {
+    // The open loop lives in session() (so every fbB step) and is closed in the diagnosis.
+    assert.match(buildFbB1Prompt(base, EARLIER, 'x'), /candle|smoke/i)
+    assert.match(buildFbBDiagnosisPrompt(base, EARLIER), /smoke/i)
   })
 })
