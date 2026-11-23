@@ -610,6 +610,17 @@ export function useConversation() {
       // is undefined on every non-lane visit, so they fall through to the greeting as before.
       const lane = resolveLane()
       if (lane) {
+        // Lanes enrol in the /fb chat-flow test too (v1_fb_chat_flow_2026): same visitor-
+        // cookie assignment and exposure as plain /fb. The lane KEEPS its own opener; only
+        // the deepening forks on chatFlow (arm B ⇒ fbB1/2/3 + diagnosis), with the belief
+        // carried through by laneDirective and the candle device stepped aside server-side.
+        // Awaited before the opener so assigned and shown are the same instant; any failure
+        // or a draft test answers 'a'.
+        const flow = await fetchAssignedFbChatFlow()
+        if (flow === 'b') {
+          chatFlowRef.current = 'b'
+          updateUserData({ chatFlow: 'b' })
+        }
         await sendBotMessages(laneOpenerBeforeName(lane))
         updateState({
           state: 'NAME_CAPTURE',
@@ -619,9 +630,9 @@ export function useConversation() {
         return
       }
 
-      // /fb chat-flow test: plain /fb only (lanes returned above). Awaited BEFORE the
-      // greeting because the server logs the exposure as it answers, so assigned and
-      // shown are the same instant. Any failure, or a draft test, answers 'a'.
+      // /fb chat-flow test: plain /fb (lanes enrol in their own branch above). Awaited
+      // BEFORE the greeting because the server logs the exposure as it answers, so assigned
+      // and shown are the same instant. Any failure, or a draft test, answers 'a'.
       if (currentFunnel() === 'v1-fb') {
         const flow = await fetchAssignedFbChatFlow()
         if (flow === 'b') {
