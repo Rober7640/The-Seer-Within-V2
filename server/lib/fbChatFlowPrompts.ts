@@ -20,7 +20,7 @@
 // 🔴 THE CANDLE IS SCRIPTED CLIENT-SIDE (client/src/content/fbChatFlowB.ts). These
 // prompts only know it happened, so the diagnosis can close the loop it opened.
 import type { UserData } from '../../shared/types'
-import { EVELYN_BASE_PROMPT } from './prompts'
+import { EVELYN_BASE_PROMPT, laneDirective } from './prompts'
 
 const CUT = EVELYN_BASE_PROMPT.indexOf('## Cold Reading Techniques')
 const END = EVELYN_BASE_PROMPT.indexOf('## Response Format')
@@ -91,7 +91,9 @@ function session(u: UserData, earlier: string[]): string {
 }
 
 const wrap = (u: UserData, earlier: string[], task: string) =>
-  `${BASE_B}\n${TOPIC[u.bucket ?? 'love']}\n\n${session(u, earlier)}\n\n${task}\n\nEach message max 25 words.`
+  // laneDirective(u) is '' for non-lane traffic, so plain /fb arm B is byte-identical;
+  // for a lane it carries the belief through every reading step (the fb-palm-derail fix).
+  `${BASE_B}\n${TOPIC[u.bucket ?? 'love']}\n\n${session(u, earlier)}${laneDirective(u)}\n\n${task}\n\nEach message max 25 words.`
 
 export function buildFbB1Prompt(u: UserData, earlier: string[], said: string): string {
   return wrap(u, earlier, `## Task: step 1 of the reading, WHAT'S HAPPENING
