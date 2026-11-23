@@ -12,11 +12,13 @@ import type { ChatState } from '@/types/chat'
  * Preview: `?chatflow=b` (or `=a`) forces the arm for a walk-through WITHOUT calling
  * the server, so a preview is never counted in the test.
  */
-export async function fetchAssignedFbChatFlow(): Promise<'a' | 'b'> {
+export async function fetchAssignedFbChatFlow(lane?: string): Promise<'a' | 'b'> {
   const override = new URLSearchParams(window.location.search).get('chatflow')
   if (override === 'a' || override === 'b') return override
   try {
-    const r = await fetch('/api/fb/chat-flow')
+    // Pass the belief lane so the server tags the exposure with it (results can then
+    // split plain /fb vs each lane). The server re-validates against the registry.
+    const r = await fetch(lane ? `/api/fb/chat-flow?lane=${encodeURIComponent(lane)}` : '/api/fb/chat-flow')
     if (!r.ok) return 'a'
     const data = await r.json()
     return data?.flow === 'b' ? 'b' : 'a'
