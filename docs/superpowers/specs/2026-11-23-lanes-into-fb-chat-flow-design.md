@@ -47,18 +47,19 @@ Keep the lane opener (ad → lander → chat continuity), then branch into arm A
 - *Pro:* most lane-faithful; preserves the belief-specific opening copy.
 - *Con:* guts arm B's strongest beat (the smoke-loop diagnosis payoff) for lane traffic; more surface area in `fbChatFlowPrompts.ts`; arm B for lanes diverges from arm B for plain `/fb`, muddying the comparison. Joel named only the *lander text* to keep, not the lane chat opener.
 
-**Decision: Approach 1.** It's the literal reading of "run the same A/B test … keep each lane's own lander text," it's the smaller/safer change, and it keeps arm B coherent. Reversible toward Approach 2 if Joel later wants the bespoke opener retained.
+**Decision: Approach 2 (operator-confirmed 2026-11-23).** After reading the client code the trade-offs flipped: the deepening already auto-forks on `chatFlow`, so enrolling lanes is a tiny client change, and keeping each lane's own belief intro (a) preserves the lane's best-converting copy, (b) gives a *cleaner* test that isolates the one variable (interview vs reading deepening, same opener), and (c) is lower-risk on the live funnel hook. The one cost — arm B's scripted candle/smoke device assumes the standard opener — is handled server-side: for lane traffic that device steps aside so the reading builds on the lane's belief and the diagnosis closes the lane's loop (not the smoke loop).
 
-## The how (decided)
+## The how (decided — Approach 2)
 
-1. **Client — enroll lanes, preset topic, retire the bespoke opener** (`client/src/hooks/useConversation.ts`):
-   - In the lane block (~605–620): capture `lane` + `bucket` into `userData`, call `fetchAssignedFbChatFlow()`, store `chatFlow`, then fall through into the standard per-arm opener instead of `return`ing. Reuse the existing "preset bucket → skip topic step" path (the palm/tarot/read quiz-bridge machinery) so the known topic isn't re-asked.
-   - Ensure `userData.lane` persists across the EMAIL_CAPTURE path (the map flagged it currently only persists on the no-optin branch).
-2. **Server — thread the belief into arm B** (`server/lib/fbChatFlowPrompts.ts`):
-   - `import { laneDirective } from './prompts'` and export `laneDirective` from `prompts.ts`.
-   - In `wrap()`, append `${laneDirective(u)}` after the `session(u, earlier)` block. `laneDirective` returns `''` for non-lane traffic, so plain `/fb` arm B is byte-identical. This single point covers `fbB1/2/3` + diagnosis.
-3. **No change** to the assignment logic (`resolveFbChatFlow`, the `/api/fb/chat-flow` endpoint, exposure logging) or the lane registry.
-4. **Server lane validation** (`routes.ts` ~739): unchanged — the closed `getLane()` check already trusts/drops the id before the arm-B builders run.
+1. **Client — enroll lanes in the arm, keep the lane opener** (`client/src/hooks/useConversation.ts`):
+   - In the chat-start lane block (~611–620): before sending `laneOpenerBeforeName` and returning, run the same arm fetch plain `/fb` uses (`fetchAssignedFbChatFlow()` → set `chatFlowRef` + `updateUserData({ chatFlow })`). Lanes are funnel `v1-fb`, so they enrol and log an exposure exactly like plain `/fb`.
+   - **No other client change.** The name-capture lane branch already keeps the lane opener, presets `bucket`, skips the topic buttons, and sets `userData.lane` for both paths. The shared DEEPENING_1/FUTURE_PACING/CRISIS chain already forks to `fbB1/2/3` + diagnosis whenever `chatFlow === 'b'` — so the lane's deepening follows the assigned arm automatically.
+2. **Server — thread the belief into arm B** (`server/lib/fbChatFlowPrompts.ts`) — DONE:
+   - Export `laneDirective` from `prompts.ts`; append `${laneDirective(u)}` in `wrap()`. `''` for non-lanes ⇒ plain `/fb` arm B byte-identical. Covers `fbB1/2/3` + diagnosis.
+3. **Server — the candle/smoke device steps aside for lanes** (`server/lib/fbChatFlowPrompts.ts`):
+   - `session()`: the "your candle bent / black smoke" bullet is swapped, when `u.lane` is set, for a lane-appropriate open loop ("from the page she came on you already sensed a block over her … but have not named it yet"). No candle/smoke words reach a lane prompt.
+   - `buildFbBDiagnosisPrompt()`: task 1 closes the lane's loop (names the block she arrived sensing) instead of "what the black smoke was," when `u.lane` is set.
+4. **No change** to assignment (`resolveFbChatFlow`, `/api/fb/chat-flow`, exposure logging), the lane registry, or the server lane validation (`routes.ts` ~739 closed `getLane()` check).
 
 ## Tests
 
