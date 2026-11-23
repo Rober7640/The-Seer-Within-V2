@@ -616,7 +616,7 @@ export function useConversation() {
         // carried through by laneDirective and the candle device stepped aside server-side.
         // Awaited before the opener so assigned and shown are the same instant; any failure
         // or a draft test answers 'a'.
-        const flow = await fetchAssignedFbChatFlow()
+        const flow = await fetchAssignedFbChatFlow(lane.id)
         if (flow === 'b') {
           chatFlowRef.current = 'b'
           updateUserData({ chatFlow: 'b' })
