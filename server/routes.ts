@@ -1776,7 +1776,16 @@ export async function registerRoutes(
       const visitorId = ensureVisitorId(req, res);
       const a = await resolveFbChatFlow(visitorId);
       if (a.enrolled && a.variant) {
-        await logExposure(V1_FB_CHAT_FLOW_EXPERIMENT_KEY, visitorId, a.variant, "fb_chat_opener", { funnel: "v1-fb" });
+        // Tag the exposure with the belief lane (if any) so the results can split plain
+        // /fb vs each lane (manifest / astrology / …). CLOSED CHECK via getLane: an
+        // absent, unknown or forged ?lane= records no lane, so plain /fb stays `undefined`
+        // and only a registered lane is ever written.
+        const laneId = typeof req.query.lane === "string" ? req.query.lane : undefined;
+        const lane = getLane(laneId);
+        await logExposure(V1_FB_CHAT_FLOW_EXPERIMENT_KEY, visitorId, a.variant, "fb_chat_opener", {
+          funnel: "v1-fb",
+          ...(lane && { lane: lane.id }),
+        });
       }
       return res.json({ flow: a.b ? "b" : "a" });
     } catch (error) {
