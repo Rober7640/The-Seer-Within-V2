@@ -19,7 +19,11 @@
 // RULES (the plan + what we told Twilio in the TFV form, 9 Oct):
 //   - only consented, not opted out, US/Canada (+1) numbers, /fb-read + /fb-tarot + root funnels;
 //   - text 1 carries the opt-in confirmation (brand, up to 3 msgs/week, rates, HELP, STOP);
-//   - texts go out 1pm-8pm New York time = 10am-5pm Pacific, so every US/Canada
+//   - text 1 goes out STRAIGHT AWAY, at any hour, the moment she taps "Text me"
+//     (Joel, 24 Nov 2026: "always send straight away — see the first sms as a
+//     transaction sms"). The opt-in route calls processSmsQueue for her number;
+//     the cron tick is only the backup if that instant send didn't happen;
+//   - texts 2 and 3 go out 1pm-8pm New York time = 10am-5pm Pacific, so every US/Canada
 //     time zone gets them between 10am and 8pm local (Joel OK'd "10am-8pm US time",
 //     23 Nov 2026; allow-listed test numbers skip this);
 //   - a text more than 48h overdue is skipped, never sent late;
@@ -37,10 +41,15 @@
 //     funnelMigrationEmail.ts), minted at send time, valid 30 days, re-clickable.
 //     Only if she has no active V2 account do we fall back to the public /evelyn
 //     lander. (Lewis caught 24 Nov 2026 that /evelyn is the cold-visitor lander.)
+//   - links are SHORT (Joel, 24 Nov 2026): <site>/s/<step>/<14-char token>, which the
+//     server redirects to /magic-auth?t=…&utm_… (server/routes/smsShortLink.ts);
+//     the fallback is <site>/s/<step> → /evelyn?utm_…. Same tracking tags as before.
+//   - texts 2 and 3 say "ritual", not "reading" — the product is the Energy
+//     Clearing Ritual (Joel, 24 Nov 2026).
 import { and, eq, gt, inArray, isNull, sql } from "drizzle-orm";
 import { db } from "./db";
 import { conversations, personas, smsConsents, smsSends, users } from "@shared/schema";
-import { generateMagicLinkToken } from "./magicLink";
+import { generateShortMagicLinkToken } from "./magicLink";
 import logger from "./logger";
 
 export type SmsStep = 1 | 2 | 3;
@@ -115,15 +124,22 @@ export function topicFor(bucket: string | null | undefined): string | null {
 }
 
 // Fallback link (no active V2 account): the public Evelyn lander.
-export function smsLink(step: SmsStep, base = process.env.SMS_LINK_BASE || DEFAULT_LINK_BASE): string {
-  return `${base.replace(/\/+$/, "")}/evelyn?utm_source=sms&utm_campaign=v1-buyers&utm_content=t${step}`;
+// The tracking tags every SMS link lands with (PostHog counts clicks per text).
+export function smsUtm(step: SmsStep): string {
+  return `utm_source=sms&utm_campaign=v1-buyers&utm_content=t${step}`;
 }
 
-// Main link: her personal one-tap login straight into the V2 Evelyn chat
-// (MagicAuthPage → /reading?persona=evelyn-cross; first visit asks her to set a
-// password once, exactly like the welcome email's link).
+// Fallback link (no active V2 account): short /s/<step>, which the server
+// redirects to the public Evelyn lander /evelyn?<utm>.
+export function smsLink(step: SmsStep, base = process.env.SMS_LINK_BASE || DEFAULT_LINK_BASE): string {
+  return `${base.replace(/\/+$/, "")}/s/${step}`;
+}
+
+// Main link: short /s/<step>/<token>, which the server redirects to her personal
+// one-tap login /magic-auth?t=<token>&<utm> → straight into the V2 Evelyn chat
+// (SMS links skip the set-password page — client/src/pages/MagicAuthPage.tsx).
 export function smsMagicLink(step: SmsStep, token: string, base = process.env.SMS_LINK_BASE || DEFAULT_LINK_BASE): string {
-  return `${base.replace(/\/+$/, "")}/magic-auth?t=${encodeURIComponent(token)}&utm_source=sms&utm_campaign=v1-buyers&utm_content=t${step}`;
+  return `${base.replace(/\/+$/, "")}/s/${step}/${encodeURIComponent(token)}`;
 }
 
 export function buildSmsBody(
@@ -143,12 +159,12 @@ export function buildSmsBody(
   if (step === 2) {
     const topic = topicFor(ctx.bucket);
     return (
-      `The Seer Within: ${opener} I hope your reading spoke to you. ` +
+      `The Seer Within: ${opener} I hope your ritual spoke to you. ` +
       `If it stirred questions${topic ? ` about ${topic}` : ""}, I'm here to talk: ${link} Reply STOP to opt out`
     );
   }
   return (
-    `The Seer Within: ${opener} Your reading holds guidance for the weeks ahead. ` +
+    `The Seer Within: ${opener} Your ritual holds guidance for the weeks ahead. ` +
     `Want me with you as it unfolds? First minutes are on me: ${link} Reply STOP to opt out`
   );
 }
@@ -208,7 +224,11 @@ async function sendViaTwilio(to: string, body: string): Promise<{ sid?: string; 
 
 export interface SmsTickStats { mode: string; checked: number; sent: number; failed: number; skipped: number; }
 
-export async function processSmsQueue(now = new Date()): Promise<SmsTickStats> {
+// opts.onlyPhone: look at this one number only — the instant text 1 right after
+// she taps "Text me" (server/routes/smsOptIn.ts). Same rules, same claim, so it can
+// never double up with the cron tick: (phone, step) is unique in sms_sends.
+export async function processSmsQueue(now = new Date(), opts: { onlyPhone?: string } = {}): Promise<SmsTickStats> {
+  const onlyPhone = opts.onlyPhone ? normalizePhone(opts.onlyPhone) : null;
   const mode = sendingMode();
   const stats: SmsTickStats = { mode: mode.kind, checked: 0, sent: 0, failed: 0, skipped: 0 };
   if (mode.kind === "off") {
@@ -237,6 +257,7 @@ export async function processSmsQueue(now = new Date()): Promise<SmsTickStats> {
   const byPhone = new Map<string, (typeof rows)[number]>();
   for (const r of rows) {
     const phone = normalizePhone(r.phone);
+    if (onlyPhone && phone !== onlyPhone) continue;
     if (mode.kind === "allowList" && !mode.numbers.has(phone)) continue;
     if (!SMS_SEQUENCE_FUNNELS.has(r.funnel ?? "root")) continue;
     if (!byPhone.has(phone)) byPhone.set(phone, r);
@@ -280,7 +301,8 @@ export async function processSmsQueue(now = new Date()): Promise<SmsTickStats> {
       if (v2 && (v2.totalCoinsUsed ?? 0) > 0) { await skip("already uses the V2 chat"); continue; }
       if (v2 && v2.accountStatus === "active") v2UserId = v2.id;
     }
-    if (!testNumber && !isInSendWindow(now)) continue; // wait for the window
+    // Texts 2/3 wait for the daytime window. Text 1 = her confirmation: any hour (Joel, 24 Nov).
+    if (step > 1 && !testNumber && !isInSendWindow(now)) continue;
 
     // Texts 2/3: her personal one-tap link into the V2 Evelyn chat. Any problem
     // minting it ⇒ the public /evelyn link, never a failed or delayed text.
@@ -288,7 +310,7 @@ export async function processSmsQueue(now = new Date()): Promise<SmsTickStats> {
     if (v2UserId) {
       try {
         const evelynId = await getEvelynPersonaId();
-        if (evelynId) magicToken = await generateMagicLinkToken(v2UserId, evelynId, EVELYN_SLUG);
+        if (evelynId) magicToken = await generateShortMagicLinkToken(v2UserId, evelynId, EVELYN_SLUG);
       } catch (error) {
         logger.warn("SMS: magic link mint failed, using /evelyn link", { consentId: c.id, error: (error as Error).message });
       }

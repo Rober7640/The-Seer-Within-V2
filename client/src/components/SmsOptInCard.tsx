@@ -1,10 +1,18 @@
 // Standalone post-purchase SMS opt-in (Twilio 30446 fix — see server/lib/smsConsent.ts).
 //
-// A SEPARATE step after payment: its own empty phone box, an UNTICKED checkbox, the
+// A SEPARATE step after payment: its own phone box, an UNTICKED checkbox, the
 // full disclosure with Terms + Privacy links, and its own "Text me" button. It has
 // nothing to do with the purchase or the upsell: it never charges, never moves the
 // chat on, and ignoring it changes nothing. Renders nothing unless the server says
 // this paid order is on a switched-on funnel/lander.
+//
+// Joel, 24 Nov 2026:
+//  - the phone box is PRE-FILLED with the number she gave at checkout (she can edit
+//    it). The checkbox still starts UNTICKED — consent is still her own choice.
+//  - the box STAYS ON SCREEN (sticky at the top of the chat) until she signs up or
+//    taps "No thanks"; the chat scrolls underneath it. The upsell buttons live in
+//    the page footer, outside the chat, so they are never covered.
+//  The approved wording (heading, checkbox, disclosure, button) is unchanged.
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,6 +26,16 @@ interface OptInStatus {
   termsUrl?: string;
   privacyUrl?: string;
   alreadyOptedIn?: boolean;
+  prefillPhone?: string | null;
+}
+
+const DISMISS_KEY = "sms_optin_dismissed";
+function readDismissed(sessionId: string | null): boolean {
+  try {
+    return !!sessionId && sessionStorage.getItem(DISMISS_KEY) === sessionId;
+  } catch {
+    return false;
+  }
 }
 
 // Loose client check only (enables the button); the server does the real one.
@@ -33,6 +51,7 @@ export function SmsOptInCard({ sessionId }: { sessionId: string | null }) {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState(false);
+  const [dismissed, setDismissed] = useState(() => readDismissed(sessionId));
 
   useEffect(() => {
     if (!sessionId || !sessionId.startsWith("cs_")) return;
@@ -40,7 +59,10 @@ export function SmsOptInCard({ sessionId }: { sessionId: string | null }) {
     fetch(`/api/sms-optin/status?session_id=${encodeURIComponent(sessionId)}`)
       .then((r) => (r.ok ? r.json() : { show: false }))
       .then((s: OptInStatus) => {
-        if (!cancelled) setStatus(s);
+        if (cancelled) return;
+        setStatus(s);
+        // Pre-fill only an empty box — never overwrite what she has typed.
+        if (s.prefillPhone) setPhone((cur) => cur || s.prefillPhone || "");
       })
       .catch(() => {});
     return () => {
@@ -49,6 +71,16 @@ export function SmsOptInCard({ sessionId }: { sessionId: string | null }) {
   }, [sessionId]);
 
   if (!status?.show) return null;
+  if (dismissed && !done && !status.alreadyOptedIn) return null;
+
+  function dismiss() {
+    try {
+      if (sessionId) sessionStorage.setItem(DISMISS_KEY, sessionId);
+    } catch {
+      /* storage blocked: it just hides for this page view */
+    }
+    setDismissed(true);
+  }
 
   if (done || status.alreadyOptedIn) {
     return (
@@ -87,7 +119,7 @@ export function SmsOptInCard({ sessionId }: { sessionId: string | null }) {
   return (
     <form
       onSubmit={submit}
-      className="rounded-2xl border border-white/15 bg-black/40 p-4 space-y-3 text-white"
+      className="sticky top-0 z-20 rounded-2xl border border-white/15 bg-[#151330]/95 backdrop-blur-md shadow-lg shadow-black/40 p-3 md:p-4 space-y-2.5 text-white"
       data-testid="sms-optin-card"
     >
       <p className="font-medium text-sm md:text-base">{status.heading}</p>
@@ -138,9 +170,21 @@ export function SmsOptInCard({ sessionId }: { sessionId: string | null }) {
         </p>
       )}
 
-      <Button type="submit" disabled={!canSubmit} className="w-full" data-testid="sms-optin-submit">
-        {saving ? "Saving…" : status.buttonLabel}
-      </Button>
+      <div className="flex gap-2">
+        <Button type="submit" disabled={!canSubmit} className="flex-1" data-testid="sms-optin-submit">
+          {saving ? "Saving…" : status.buttonLabel}
+        </Button>
+        <Button
+          type="button"
+          variant="ghost"
+          onClick={dismiss}
+          disabled={saving}
+          className="text-white/70 hover:text-white hover:bg-white/10"
+          data-testid="sms-optin-dismiss"
+        >
+          No thanks
+        </Button>
+      </div>
     </form>
   );
 }

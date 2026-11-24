@@ -37,6 +37,8 @@ export interface SmsOptInDeps {
   /** Feature switch override for tests; default = SMS_CONSENT_FUNNELS env. */
   enabled?: () => Set<string> | undefined;
   now?: () => Date;
+  /** Called after a NEW yes is saved — sends text 1 straight away (Joel, 24 Nov 2026). Must not throw. */
+  onOptedIn?: (phoneE164: string) => void;
 }
 
 const SESSION_ID_RE = /^cs_(test|live)_[A-Za-z0-9]{10,200}$/;
@@ -90,6 +92,10 @@ export function createSmsOptInRouter(deps: SmsOptInDeps): Router {
         termsUrl: `${base}/terms`,
         privacyUrl: `${base}/privacy`,
         alreadyOptedIn: !!(existing?.consented && !existing.optedOutAt),
+        // The number she typed at checkout, to PRE-FILL the box (Joel, 24 Nov 2026).
+        // The checkbox stays unticked: she still has to choose. Only for this paid
+        // order's own session id, which only she has (it's in her thank-you URL).
+        prefillPhone: s.customer_details?.phone ?? null,
       });
     } catch (err) {
       logger.error("sms-optin status error:", err);
@@ -121,6 +127,11 @@ export function createSmsOptInRouter(deps: SmsOptInDeps): Router {
       });
       if (result === "conflict") return res.status(409).json({ error: "We already have your answer for this order." });
       res.json({ ok: true });
+      try {
+        deps.onOptedIn?.(e164);
+      } catch (err) {
+        logger.error("sms-optin onOptedIn error:", err);
+      }
     } catch (err) {
       logger.error("sms-optin save error:", err);
       res.status(500).json({ error: "Sorry, that didn't save. Please try again." });

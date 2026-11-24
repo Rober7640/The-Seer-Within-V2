@@ -41,27 +41,32 @@ describe('SMS texts — what we told Twilio in the TFV form (9 Oct 2026)', () =>
     expect(t1).toContain('Reply HELP for help, STOP to opt out.');
   });
 
-  it('texts 2 and 3 link to the Evelyn chat, tagged for PostHog', () => {
-    expect(buildSmsBody(2, ctx)).toContain(`${BASE}/evelyn?utm_source=sms&utm_campaign=v1-buyers&utm_content=t2`);
-    expect(buildSmsBody(3, ctx)).toContain(`${BASE}/evelyn?utm_source=sms&utm_campaign=v1-buyers&utm_content=t3`);
+  it('texts 2 and 3 carry a SHORT link (Joel, 24 Nov); text 1 has none', () => {
+    expect(buildSmsBody(2, ctx)).toContain(`${BASE}/s/2 Reply STOP`);
+    expect(buildSmsBody(3, ctx)).toContain(`${BASE}/s/3 Reply STOP`);
     expect(buildSmsBody(1, ctx)).not.toContain('http');
   });
 
   it('with a login token, texts 2 and 3 link STRAIGHT into her V2 Evelyn chat (magic-auth), still tagged', () => {
-    const tok = 'a'.repeat(64);
+    const tok = 'Ab3dEf6hIj9kLm';
     const t2 = buildSmsBody(2, { ...ctx, magicToken: tok });
     const t3 = buildSmsBody(3, { ...ctx, magicToken: tok });
-    expect(t2).toContain(`${BASE}/magic-auth?t=${tok}&utm_source=sms&utm_campaign=v1-buyers&utm_content=t2 Reply STOP to opt out`);
-    expect(t3).toContain(`${BASE}/magic-auth?t=${tok}&utm_source=sms&utm_campaign=v1-buyers&utm_content=t3 Reply STOP to opt out`);
-    expect(t2).not.toContain('/evelyn?');
+    expect(t2).toContain(`${BASE}/s/2/${tok} Reply STOP to opt out`);
+    expect(t3).toContain(`${BASE}/s/3/${tok} Reply STOP to opt out`);
+    expect(t2).not.toContain('/evelyn');
     expect(isGsm7(t2) && isGsm7(t3)).toBe(true);
     // text 1 never carries a link, token or not
     expect(buildSmsBody(1, { ...ctx, magicToken: tok })).not.toContain('http');
-    expect(smsMagicLink(2, tok, `${BASE}/`)).toBe(`${BASE}/magic-auth?t=${tok}&utm_source=sms&utm_campaign=v1-buyers&utm_content=t2`);
+    expect(smsMagicLink(2, tok, `${BASE}/`)).toBe(`${BASE}/s/2/${tok}`);
+    // short link keeps texts 2/3 at 2 segments (was 3 with the long link): <= 306 GSM chars
+    for (const bucket of ['love', 'money', 'purpose', 'specific', null]) {
+      expect(buildSmsBody(2, { ...ctx, bucket, firstName: 'Christina', magicToken: tok }).length).toBeLessThanOrEqual(306);
+      expect(buildSmsBody(3, { ...ctx, bucket, firstName: 'Christina', magicToken: tok }).length).toBeLessThanOrEqual(306);
+    }
   });
 
   it('no token (no active V2 account) ⇒ falls back to the public /evelyn lander', () => {
-    expect(buildSmsBody(2, { ...ctx, magicToken: null })).toContain(`${BASE}/evelyn?utm_source=sms`);
+    expect(buildSmsBody(2, { ...ctx, magicToken: null })).toContain(`${BASE}/s/2 `);
   });
 
   it('text 2 names her topic, and reads fine without one', () => {
@@ -86,7 +91,7 @@ describe('SMS texts — what we told Twilio in the TFV form (9 Oct 2026)', () =>
   });
 });
 
-describe('SMS texts — EXACTLY as Joel approved them (23 Nov 2026)', () => {
+describe('SMS texts — EXACTLY as Joel approved them (23 Nov 2026; "ritual" + short link 24 Nov)', () => {
   const ctx = { firstName: 'Sarah', bucket: 'love', linkBase: BASE };
   it('text 1, right after purchase', () => {
     expect(buildSmsBody(1, ctx)).toBe(
@@ -97,15 +102,15 @@ describe('SMS texts — EXACTLY as Joel approved them (23 Nov 2026)', () => {
   });
   it('text 2, day 4', () => {
     expect(buildSmsBody(2, ctx)).toBe(
-      "The Seer Within: Sarah, it's Evelyn. I hope your reading spoke to you. If it stirred questions about love, " +
-      `I'm here to talk: ${BASE}/evelyn?utm_source=sms&utm_campaign=v1-buyers&utm_content=t2 Reply STOP to opt out`,
+      "The Seer Within: Sarah, it's Evelyn. I hope your ritual spoke to you. If it stirred questions about love, " +
+      `I'm here to talk: ${BASE}/s/2 Reply STOP to opt out`,
     );
   });
   it('text 3, day 7', () => {
     expect(buildSmsBody(3, ctx)).toBe(
-      "The Seer Within: Sarah, it's Evelyn. Your reading holds guidance for the weeks ahead. " +
+      "The Seer Within: Sarah, it's Evelyn. Your ritual holds guidance for the weeks ahead. " +
       'Want me with you as it unfolds? First minutes are on me: ' +
-      `${BASE}/evelyn?utm_source=sms&utm_campaign=v1-buyers&utm_content=t3 Reply STOP to opt out`,
+      `${BASE}/s/3 Reply STOP to opt out`,
     );
   });
   it('/fb-tarot buyers are in the sequence (their main product is the Energy Clearing Ritual too)', () => {
@@ -161,7 +166,7 @@ describe('SMS helpers', () => {
   });
 
   it('smsLink trims a trailing slash', () => {
-    expect(smsLink(2, 'https://x.test/')).toBe('https://x.test/evelyn?utm_source=sms&utm_campaign=v1-buyers&utm_content=t2');
+    expect(smsLink(2, 'https://x.test/')).toBe('https://x.test/s/2');
   });
 });
 

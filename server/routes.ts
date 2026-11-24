@@ -170,6 +170,8 @@ import { bumpProductKeyFor } from "@shared/landerBumpRouting";
 import Stripe from "stripe";
 import { getStripe, getStripeForRow } from "./lib/stripeAccount";
 import { createSmsOptInRouter } from "./routes/smsOptIn";
+import { registerSmsShortLinks } from "./routes/smsShortLink";
+import { processSmsQueue } from "./lib/smsSender";
 import { upsertSmsOptIn, getSmsConsentForSession } from "./lib/db";
 import type { ChatRequest, CheckoutRequest } from "../shared/types";
 import {
@@ -665,8 +667,17 @@ export async function registerRoutes(
       upsertOptIn: upsertSmsOptIn,
       getConsent: getSmsConsentForSession,
       policyBase: (req) => process.env.BASE_URL || getBaseUrl(req),
+      // Text 1 straight away (Joel, 24 Nov 2026). Fire-and-forget: her "Text me"
+      // answer never waits on Twilio, and the cron tick is the backup.
+      onOptedIn: (phone) => {
+        processSmsQueue(new Date(), { onlyPhone: phone }).catch((err) =>
+          logger.error("SMS instant text 1 failed", { error: (err as Error).message }),
+        );
+      },
     }),
   );
+  // Short links in the SMS texts: /s/<step>/<token> → her Evelyn chat login.
+  registerSmsShortLinks(app);
   // Generalized lander for the additional personas (Marcus, Luna, Nova, Maren).
   app.use("/api/persona-lander/:persona", personaLanderRouter);
   // Stripe Checkout for the Facebook-compliance product pages (/products/:slug).
