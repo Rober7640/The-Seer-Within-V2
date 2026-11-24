@@ -115,6 +115,9 @@ import {
   resolveTarotMethod,
   resolveFbChatFlow,
   V1_FB_CHAT_FLOW_EXPERIMENT_KEY,
+  resolveHomeChatFlow,
+  V1_HOME_CHAT_FLOW_EXPERIMENT_KEY,
+  V1_HOME_FUNNEL_SCOPE,
   logExposure,
   exposureSign,
   hashEmail,
@@ -1790,6 +1793,28 @@ export async function registerRoutes(
       return res.json({ flow: a.b ? "b" : "a" });
     } catch (error) {
       logger.warn("fb chat-flow assign failed (falling back to flow a):", error);
+      return res.json({ flow: "a" });
+    }
+  });
+
+  // HOME (base V1) chat-flow A/B (v1_home_chat_flow_2026). Same shape as /api/fb/chat-flow
+  // but its OWN experiment key, so the two tests never share an exposure row. No lane
+  // handling — the base funnel has no belief lanes. The exposure is logged in the same call
+  // that hands back the arm, so "assigned" and "shown" are one instant. Every failure path
+  // answers flow 'a', today's chat. The client only calls this from the base V1 funnel
+  // (getPostHogFunnel() === 'v1'), and the experiment is also funnel-scoped to 'v1-home'.
+  app.get("/api/home/chat-flow", async (req: Request, res: Response) => {
+    try {
+      const visitorId = ensureVisitorId(req, res);
+      const a = await resolveHomeChatFlow(visitorId);
+      if (a.enrolled && a.variant) {
+        await logExposure(V1_HOME_CHAT_FLOW_EXPERIMENT_KEY, visitorId, a.variant, "home_chat_opener", {
+          funnel: V1_HOME_FUNNEL_SCOPE,
+        });
+      }
+      return res.json({ flow: a.b ? "b" : "a" });
+    } catch (error) {
+      logger.warn("home chat-flow assign failed (falling back to flow a):", error);
       return res.json({ flow: "a" });
     }
   });
