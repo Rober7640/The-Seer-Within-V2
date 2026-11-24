@@ -49,6 +49,42 @@ export async function generateMagicLinkToken(
   return token;
 }
 
+// Letters + digits only, so the token survives in a text message and in a URL path.
+const SHORT_TOKEN_ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+export const SHORT_TOKEN_LENGTH = 14; // 62^14 ≈ 2^83 — still unguessable
+
+/** A random short token (letters + digits). Exported for tests. */
+export function makeShortToken(length = SHORT_TOKEN_LENGTH): string {
+  // Rejection sampling: bytes ≥ 248 are dropped so every character is equally likely.
+  let out = '';
+  while (out.length < length) {
+    const bytes = randomBytes(length * 2);
+    for (let i = 0; i < bytes.length; i++) {
+      const b = bytes[i];
+      if (b < 248 && out.length < length) out += SHORT_TOKEN_ALPHABET[b % 62];
+    }
+  }
+  return out;
+}
+
+/**
+ * Same as generateMagicLinkToken, but a SHORT token (14 letters/digits) for text
+ * messages, where every character costs money (server/lib/smsSender.ts).
+ * Verified by the same verifyMagicLinkToken — nothing else changes.
+ */
+export async function generateShortMagicLinkToken(
+  userId: string,
+  personaId: string,
+  personaSlug: string,
+): Promise<string> {
+  const token = makeShortToken();
+  const expiresAt = new Date();
+  expiresAt.setDate(expiresAt.getDate() + MAGIC_LINK_EXPIRY_DAYS);
+  await db.insert(magicLinkTokens).values({ token, userId, personaId, personaSlug, expiresAt });
+  logger.info('Magic link token generated (short, SMS)', { userId, personaSlug });
+  return token;
+}
+
 /**
  * Verify a magic link token.
  * Returns the userId and personaSlug if valid; null otherwise.

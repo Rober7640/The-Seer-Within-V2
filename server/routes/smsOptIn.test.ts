@@ -80,7 +80,7 @@ describe('normalizeOptInPhone', () => {
 // ── the endpoint ─────────────────────────────────────────────────────────────
 
 const SESSIONS: Record<string, any> = {
-  cs_test_teaPaidAAAAAAAAAA: { id: 'cs_test_teaPaidAAAAAAAAAA', payment_status: 'paid', metadata: { funnel: 'v1-read', readDevice: 'tea' }, customer_details: { email: 'buyer@example.com' } },
+  cs_test_teaPaidAAAAAAAAAA: { id: 'cs_test_teaPaidAAAAAAAAAA', payment_status: 'paid', metadata: { funnel: 'v1-read', readDevice: 'tea' }, customer_details: { email: 'buyer@example.com', phone: '+15551234567' } },
   cs_test_coffeePaidAAAAAAA: { id: 'cs_test_coffeePaidAAAAAAA', payment_status: 'paid', metadata: { funnel: 'v1-read', readDevice: 'coffee' }, customer_details: { email: 'c@example.com' } },
   cs_test_teaUnpaidAAAAAAAA: { id: 'cs_test_teaUnpaidAAAAAAAA', payment_status: 'unpaid', metadata: { funnel: 'v1-read', readDevice: 'tea' }, customer_details: {} },
   cs_test_dreamPaidAAAAAAAA: { id: 'cs_test_dreamPaidAAAAAAAA', payment_status: 'paid', metadata: { funnel: 'v1-read', readDevice: 'dream' }, customer_details: {} },
@@ -91,6 +91,7 @@ const saved: any[] = [];
 let upsertResult: 'saved' | 'conflict' = 'saved';
 const FIXED_NOW = new Date('2026-11-02T10:00:00Z');
 
+const optedInPhones: string[] = [];
 const deps: SmsOptInDeps = {
   retrieveSession: async (id) => {
     if (!SESSIONS[id]) throw new Error('No such checkout.session');
@@ -104,6 +105,7 @@ const deps: SmsOptInDeps = {
   policyBase: () => `${BASE}/`,
   enabled: () => READ_ONLY,
   now: () => FIXED_NOW,
+  onOptedIn: (p) => { optedInPhones.push(p); },
 };
 
 let server: Server;
@@ -133,7 +135,13 @@ describe('GET /api/sms-optin/status', () => {
       termsUrl: `${BASE}/terms`,
       privacyUrl: `${BASE}/privacy`,
       alreadyOptedIn: false,
+      prefillPhone: '+15551234567',
     });
+  });
+
+  it('pre-fill: the number from her checkout, or null if Stripe has none (Joel 24 Nov)', async () => {
+    expect((await status('cs_test_coffeePaidAAAAAAA')).prefillPhone).toBeNull();
+    expect((await status('cs_test_teaUnpaidAAAAAAAA')).prefillPhone).toBeUndefined(); // box not shown at all
   });
 
   it('already opted in ⇒ alreadyOptedIn', async () => {
@@ -197,6 +205,21 @@ describe('POST /api/sms-optin', () => {
       expect(saved).toHaveLength(0);
     },
   );
+
+  it('a NEW yes triggers text 1 straight away (Joel 24 Nov); a refused one does not', async () => {
+    optedInPhones.length = 0;
+    await post({ sessionId: 'cs_test_teaPaidAAAAAAAAAA', phone: '(555) 123-4567', agree: true });
+    expect(optedInPhones).toEqual(['+15551234567']);
+    await post({ sessionId: 'cs_test_teaPaidAAAAAAAAAA', phone: '5551234567', agree: false });
+    await post({ sessionId: 'cs_test_dreamPaidAAAAAAAA', phone: '5551234567', agree: true });
+    upsertResult = 'conflict';
+    try {
+      await post({ sessionId: 'cs_test_teaPaidAAAAAAAAAA', phone: '5551234567', agree: true });
+    } finally {
+      upsertResult = 'saved';
+    }
+    expect(optedInPhones).toEqual(['+15551234567']);
+  });
 
   it('an old checkout-question record for the same order ⇒ 409, not overwritten', async () => {
     upsertResult = 'conflict';
