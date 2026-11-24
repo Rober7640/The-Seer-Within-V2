@@ -29,7 +29,7 @@ const PLAIN_URLS = [
   '/fb?',
   '/fb?lane=',
   '/fb?lane=nope',
-  '/fb?lane=pattern', // drafted, not approved — not in the registry
+  '/fb?lane=soulmate', // blocked (soul ban) — never in the registry
   '/fb?lane=MANIFEST',
   '/fb?lane=__proto__',
   '/fb?lane=toString',
