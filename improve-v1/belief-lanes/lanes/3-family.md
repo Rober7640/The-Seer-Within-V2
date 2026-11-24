@@ -1,39 +1,171 @@
-# Lane 3 · Family, generational (`/fb-family`)
+<!-- generated from 3-family.json by render_lanes.py — edit the JSON, not this file -->
 
-**Status:** first draft only (v2 review page, written before the keyword rule). Next up, after lane 2.
+# Lane 3 · Family (`/fb?lane=family`)
 
-## Size
+Status: approved
 
-811 love and someone chats in the past year used this lane's words, and 118 of those bought (`scripts/lane-voc.mjs`).
+It didn't start with her. A lesson about how much love can ask for came down through the women in her family. None of them chose it. They carried it, and she gets to put it down.
 
-## First draft (v2, before the keyword rule)
+## What the words data says
 
-- Headline: The women in your family keep loving the same man. It can stop with you.
-- Sub-line: It was handed down quietly, mother to daughter. Nobody chose it. Evelyn finds where it started, from your first name.
-- Full first draft: `../review-pages/all-lanes-v2-draft.html`
+- **Source: our buyer chats, her first message only.** Our chat asks every woman "Has anyone in your family struggled with this same pattern?" (the crisis step), and her answer is stored in `block_source`. So family words were counted in `concern`, her first message, before Evelyn asks anything. Base: 80,782 love and someone chats with a first message in the past year, 6,639 bought (8.2%). These are astrology-audience women, the only traffic we've run at scale.
+- **Unasked, she almost never brings up the women in her family.** First message: "the women in my family" 0, "my mother's side" 0, "it stops with me" 0, "break the cycle" 3 (0 bought), generational 6, "family pattern" or "runs in my family" 0, cycle breaker 0, family tree 1. Once we ask, the same words appear: in her answer to our family question alone, "women in my family" 82, mother 2,952, family 3,109, generational 100. Counts over all her answers measure our question, not her.
+- **When she does raise it herself, she says "like my mother", as a fear.** About 11 first messages: "Will I be alone forever like my mother?", "Or am I going to be alone like my grandmother", "I'm afraid I'll end up like my mom", "it feels like I'm repeating my mother's first marriage". That's the page's FAQ question, and why mother is the buyer's word.
+- **Mother, then mom; grandmother, then grandma.** First message: mother 409 chats (13.7% bought), mom 378 (15.1%), mum 85, mama 15 (6.7%). Grandmother 22 (27.3%, small), grandma 18, nan or granny 10. The hooks say grandmother and mother, so the page does too.
+- **The ads' wound words are ones she does bring herself.** First message: "choose me" or "pick me" 256 chats (12.1% bought), called a friend or "just friends" 183 (14.8%), "won't marry" or "won't commit" 91 (12.1%), "same man" or "same type" 119, "never chosen" 41. Being chosen is the thread through all three hooks and both stories, so the page leans on it.
+- **When we ask about her family, half say no.** Answers to our family question: 9,003 start with yes (9.2% bought), 9,569 with no (8.1%), often "my parents were married 65 years". So every line about her mother and grandmother is hedged with "maybe", and Evelyn's first question stays open.
+- **Keep-out words are in the data, and none is needed.** First message (all answers in brackets): trauma 202 (708), curse 39 (187; "generational" or "family curse" 31, 1 bought), ancestors 15 (49).
+- **Community sources not pulled this run** (no paid calls): Instagram and TikTok (Virlo `find_videos`, `raw_comments`), the Meta Ad Library (Virlo `raw_ad_search`) and Reddit. The only community note is the saved 11-17 pull: Instagram's own term is "generational trauma" (a health word, kept out), and a 1.5M-view post on "patterns that get passed down so quietly". So "cycle breaker" and "generational patterns" in the list are unconfirmed community terms.
 
-Keyword-led headlines proposed since (not yet chosen):
-- My grandmother. My mother. Now me. This cycle stops with me.
-- I swore I'd never end up like my mother. Then I saw the generational pattern in my own life.
-
-## Expected keywords (to confirm with a word count + Instagram search)
+## Keywords
 
 | Role | Words |
 |---|---|
-| Main | generational |
-| Buyer's own words (sample) | "It definitely started with my mother, and I'm sure my grandmother felt the same", "the pattern of which I desperately tried to avoid" |
-| Supporting | family pattern, mother, grandmother, cycle, handed down, break the cycle |
-| Keep out | "generational trauma" and "heal" (read as health claims) |
+| Main | family: the women in your family, in a family. Every hook uses it ("a friend of the family", "the women in my family"), and it's the word she answers our question with |
+| Second | generational, generations. The lane's own name and the community's word. Buyers rarely type it (6 first messages), so it's for Meta, not for her |
+| Buyer's own word | **mother**, and her phrase "like my mother" (409 first messages say mother; about 11 say "like my mother" or "alone like my grandmother"). Never mom, mum or mama on the page |
+| Supporting | grandmother, break the cycle, handed down / came down, pattern (two uses at most: lane 2 owns it) |
+| Once each (community terms) | family tree, generational patterns, cycle breaker |
+| Keep out | trauma, generational trauma, heal, curse, generational curse, family curse, bloodline, ancestors as spirits, inheritance, attachment style, karmic (its own lane), soulmate, "a friend of the family" (hook 1's own words, so it stays in that ad), and any line that blames a mother or grandmother |
 
-Note: in the July replay, the standard chat's "crisis" step already asked "did your mother/grandmother carry this fear?" (`../04-fb-palm-derail-PROVEN.md`). This lane's belief is already in the chat, so the opener and the page only need to arrive at it earlier.
+## First screen, version 2 (today's `/fb` style)
 
-## Lines that only fit one ad (fix in the every-ad pass)
+- **Headline:** Something Handed Down Through Your Family Is Blocking Your Love Life — I Can See It
+- **Sub-line:** Evelyn has sensed an old block, older than you are. It's why love keeps stopping short, for you and the women before you. It's nobody's fault. She can see where it started, from your first name.
+- **Button:** Yes Evelyn, Show Me Where It Started
+- **Under the button:** It's free to message Evelyn. She's online now.
+- Other headlines: *Something Is Blocking the Women in Your Family From Being Chosen — I Can See It* / *Something Is Blocking You From Breaking the Family Cycle — I Can See It*
 
-- "A friend of the family" comes from one hook. Move it into that ad's story line (`?ad=`).
-- Make one line under the card fit every ad in the lane.
+1 (handed down) bets on absolution: the block came down to her, so it's nobody's fault, hers or her mother's, and she stays the subject. 2 (never chosen) bets on recognition: the hooks' own "the women in my family" plus the wound every story shares. 3 (the cycle) bets on identity: the woman who swore it stops with her. It carries "break the cycle" for Meta, but that phrase also lives in abuse-recovery talk.
 
-## To do
+## Page title and description
 
-1. Count the lane's words in buyer chats and search Instagram, as was done for lane 4.
-2. Card versions 1 and 2, title and description, below-card copy, FAQ and the six-beat opener (`../02-chat-openers.md`).
-3. Check it with `scripts/check_lanes.py`, then add it to a review page.
+- Title: When Love Repeats Through the Women in Your Family · Evelyn Cross
+- Description: Your mother, your grandmother, now you. A generational pattern in love isn't chosen. It's handed down, and nobody's to blame. It's free to message Evelyn.
+- Photo description: Evelyn Cross, who helps women see why love keeps going the same way in their family.
+
+## Below the card
+
+In order. The card itself is the first screen above.
+
+
+**Why love keeps stopping short for the women in your family**
+
+Maybe your grandmother said it once, over the dishes. "The women in this family always end up waiting."
+
+She laughed a little when she said it. You didn't ask what she meant.
+
+Look at the women before you. Your mother. Her mother. Maybe one waited years for a man to say the word. Maybe one was kept close, and never quite chosen.
+
+Now look at your own life. A different man, a different decade. The same ending. Or nobody's come close enough to start.
+
+It isn't bad luck. It isn't your fault, or hers. It's come down to you.
+
+
+**What you've done to break the cycle**
+
+You've worked hard not to repeat it.
+- Swore, as a girl, that your story would go differently.
+- Picked men nothing like the ones you grew up around.
+- Asked your grandmother what really happened. She told you half.
+- Drew the family tree, looking for where it started.
+- Saved every post about generational patterns.
+- Called yourself the cycle breaker, and meant it.
+
+None of it was wrong. It just couldn't reach where this started.
+
+
+**What gets handed down in a family**
+
+Nobody teaches a daughter this out loud. She watches. She learns how much love is allowed to ask for.
+
+Wait. Be easy to keep. Don't ask him for the word.
+
+Your grandmother learned it from somebody. She never knew she'd passed it on. Your mother didn't either.
+
+Generations of women, and not one of them chose it. So when you chose him, the choosing had already started.
+
+They carried it as far as they could. You're the one who gets to put it down.
+
+Evelyn finds where it started, from your first name.
+
+
+**Who Evelyn is**
+
+Evelyn Cross is a seer in the west of Ireland. Her teacher could do this. So could her teacher's teacher.
+
+She works at night, by candlelight. One first name at a time. She doesn't need your birthday, a photo, or his name.
+
+She doesn't stop at you. She looks at what came down to you, and finds where it started.
+
+She won't blame your mother, or hers. She'll show you what they were carrying.
+
+
+**When you send your first name**
+
+You send your first name. That's all.
+
+Evelyn writes back. Her first message is short. Then she'll ask you one question.
+
+Messaging Evelyn is free.
+
+If she sees where it started, she'll offer to write it down. A letter, written at night, by candlelight. That part isn't free. She'll tell you so plainly before anything happens.
+
+It starts the same way for every woman. One first name.
+
+
+**Questions women ask**
+
+- **Are relationship patterns generational?** Many women find they are. A family passes it on without a word.
+- **How do I break the cycle in my family?** Promising to be different is a start. But a promise can't reach where it began. That's where Evelyn looks.
+- **Why does my love life look like my mother's?** Not because you're like her. You watched her, and learned what love could ask for. She learned it the same way.
+- **Is it free to message Evelyn?** Yes. The chat is free.
+
+Button: "Yes Evelyn, Show Me Where It Started". Under it: "It's free to message Evelyn. She's online now."
+
+## Keyword count, below the card
+
+| Keyword | Target | Actual | Status | Also on card (v2) |
+|---|---|---|---|---|
+| family (main) | 6–8 | 6 | in range | 1 |
+| mother (buyer word) | 3–5 | 5 | in range | 0 |
+| generational / generations | ~3 | 3 | in range | 0 |
+| grandmother | 2–4 | 3 | in range | 0 |
+| break the cycle | 2–3 | 2 | in range | 0 |
+| handed down / came down | 2–3 | 3 | in range | 1 |
+| pattern (lane 2 owns it) | 1–2 | 2 | in range | 0 |
+| cycle breaker | 1 | 1 | in range | 0 |
+
+## Evelyn's first messages
+
+- This started long before you, didn't it.
+- What's your first name, dear?
+- *(she types {her first name})*
+- {Name}... you've watched the women before you. You promised yours would go differently.
+- And it found you anyway.
+- Nobody chose it, dear. Not you, and not them.
+- Tell me how love went for the women before you... and how it's going for you now.  ← her first question
+
+Her answer names the women before her in her own words, and her own story, so the later chat has both. The question stays open on purpose: about as many women answer our family question no as yes, often with parents married for decades, so Evelyn mustn't assume.
+
+## Directive for later chat
+
+She came from a page about love going the same way for the women in her family: her mother, her grandmother, men who never quite chose them. Reuse the words she uses for those women, and if she says their love went well, believe her and stay with her own story. Hold the lane's belief: a lesson about how much love can ask for came down to her, nobody chose it, and she gets to put it down. She has already told you about the women before her, so build on that instead of asking about her family as if for the first time. Never blame her mother, her grandmother or any woman before her, never speak for a woman who has passed, and never say what's coming.
+
+## Notes
+
+- **Every-ad fit.** The card and the copy hold for all three hooks on both stories (table in review-notes.md). No hook's own words are on the page: no "friend of the family", no eleven years, no "make it four". Every line about the women before her is hedged ("Maybe one waited years"), so a hook that names only a grandmother still fits.
+- **No blame**, the same move as manifestation ("None of it was wrong") and astrology. Five lines carry it: "It isn't your fault, or hers."; "not one of them chose it"; "They carried it as far as they could. You're the one who gets to put it down." (the operator's own words); "She won't blame your mother, or hers."; and on the card, "It's nobody's fault." The grandmother's line over the dishes includes herself, so it reads as hers to say, not as a charge against her.
+- "She doesn't stop at you. She looks at what came down to you, and finds where it started." is #199's own ad copy, kept word for word for message match. The second sentence runs 13 words.
+- "So when you chose him, the choosing had already started." answers hook 3 ("I thought I chose him") and fits both stories. It doesn't fit a woman with no man yet, such as Deja in #201.
+- "Break the cycle" is in one heading and one FAQ question for Meta and search, though buyers barely type it (3 first messages, 0 bought). The rest of the page uses the hooks' words and hers: the women in your family, your mother, her mother.
+- "Pattern" is held to two uses so the page doesn't compete with lane 2. Both come from search-style wording ("generational patterns", "Are relationship patterns generational?").
+- The grandmother's line over the dishes is a composite. No buyer's words are on the page.
+- The FAQ on breaking the cycle gives no advice about staying or leaving, because some women in our chats describe violent homes.
+
+## Open
+
+- Which two stories? I read "both stories" as This Is My Friend (Jules, #199) and He Still Doesn't Know (Laurel), the two the README names. #201 The Invisible Friend (Deja) is also built for this lane. If it links here too, the card fits her, but two body lines lean on a woman who has a man ("Don't ask him for the word" and "So when you chose him").
+- The chat would ask about her family twice: once in the lane opener, and again at the later step that asks "Has anyone in your family struggled with this same pattern?". The directive tells the later steps to build on her first answer. Should lane traffic also skip or reword that step at wiring?
+- "Cycle breaker" and "generational patterns" are in the list once each, unconfirmed this run (0 and 1 first messages; no Instagram pull). Keep them, or run a Virlo pull first, which costs a few cents?
+- "Karmic" is kept off this page because it's its own future lane. OK?
