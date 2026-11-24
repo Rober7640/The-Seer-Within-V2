@@ -13,6 +13,7 @@ import {
   normalizePhone,
   sendingMode,
   smsLink,
+  smsMagicLink,
   topicFor,
   SMS_STEP_DELAY_MS,
   SMS_SEQUENCE_FUNNELS,
@@ -44,6 +45,23 @@ describe('SMS texts — what we told Twilio in the TFV form (9 Oct 2026)', () =>
     expect(buildSmsBody(2, ctx)).toContain(`${BASE}/evelyn?utm_source=sms&utm_campaign=v1-buyers&utm_content=t2`);
     expect(buildSmsBody(3, ctx)).toContain(`${BASE}/evelyn?utm_source=sms&utm_campaign=v1-buyers&utm_content=t3`);
     expect(buildSmsBody(1, ctx)).not.toContain('http');
+  });
+
+  it('with a login token, texts 2 and 3 link STRAIGHT into her V2 Evelyn chat (magic-auth), still tagged', () => {
+    const tok = 'a'.repeat(64);
+    const t2 = buildSmsBody(2, { ...ctx, magicToken: tok });
+    const t3 = buildSmsBody(3, { ...ctx, magicToken: tok });
+    expect(t2).toContain(`${BASE}/magic-auth?t=${tok}&utm_source=sms&utm_campaign=v1-buyers&utm_content=t2 Reply STOP to opt out`);
+    expect(t3).toContain(`${BASE}/magic-auth?t=${tok}&utm_source=sms&utm_campaign=v1-buyers&utm_content=t3 Reply STOP to opt out`);
+    expect(t2).not.toContain('/evelyn?');
+    expect(isGsm7(t2) && isGsm7(t3)).toBe(true);
+    // text 1 never carries a link, token or not
+    expect(buildSmsBody(1, { ...ctx, magicToken: tok })).not.toContain('http');
+    expect(smsMagicLink(2, tok, `${BASE}/`)).toBe(`${BASE}/magic-auth?t=${tok}&utm_source=sms&utm_campaign=v1-buyers&utm_content=t2`);
+  });
+
+  it('no token (no active V2 account) ⇒ falls back to the public /evelyn lander', () => {
+    expect(buildSmsBody(2, { ...ctx, magicToken: null })).toContain(`${BASE}/evelyn?utm_source=sms`);
   });
 
   it('text 2 names her topic, and reads fine without one', () => {

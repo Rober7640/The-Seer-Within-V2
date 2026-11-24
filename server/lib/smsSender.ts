@@ -31,9 +31,16 @@
 //     unsubscribed (error 21610) we mark her consent opted out.
 //   - plain GSM-7 characters only (no curly quotes / emoji / accents), or a text
 //     costs 2-3x as many segments.
+//   - texts 2 and 3 link her STRAIGHT into her own V2 chat with Evelyn (the plan,
+//     2 Oct: "The link opens Evelyn's V2 chat page"): a personal one-tap login
+//     link (/magic-auth, the same one the V1-buyer welcome email uses —
+//     funnelMigrationEmail.ts), minted at send time, valid 30 days, re-clickable.
+//     Only if she has no active V2 account do we fall back to the public /evelyn
+//     lander. (Lewis caught 24 Nov 2026 that /evelyn is the cold-visitor lander.)
 import { and, eq, gt, inArray, isNull, sql } from "drizzle-orm";
 import { db } from "./db";
-import { conversations, smsConsents, smsSends, users } from "@shared/schema";
+import { conversations, personas, smsConsents, smsSends, users } from "@shared/schema";
+import { generateMagicLinkToken } from "./magicLink";
 import logger from "./logger";
 
 export type SmsStep = 1 | 2 | 3;
@@ -57,6 +64,15 @@ export const SMS_MAX_SENDS_PER_TICK = 50;
 const TWILIO_UNSUBSCRIBED = "21610";
 
 const DEFAULT_LINK_BASE = "https://www.theseerwithin.com";
+
+const EVELYN_SLUG = "evelyn-cross";
+let evelynPersonaId: string | null = null;
+async function getEvelynPersonaId(): Promise<string | null> {
+  if (evelynPersonaId) return evelynPersonaId;
+  const [row] = await db.select({ id: personas.id }).from(personas).where(eq(personas.slug, EVELYN_SLUG)).limit(1);
+  evelynPersonaId = row?.id ?? null;
+  return evelynPersonaId;
+}
 
 // ── Pure helpers (tested in smsSender.test.ts) ─────────────────────────────────
 
@@ -98,13 +114,24 @@ export function topicFor(bucket: string | null | undefined): string | null {
   }
 }
 
+// Fallback link (no active V2 account): the public Evelyn lander.
 export function smsLink(step: SmsStep, base = process.env.SMS_LINK_BASE || DEFAULT_LINK_BASE): string {
   return `${base.replace(/\/+$/, "")}/evelyn?utm_source=sms&utm_campaign=v1-buyers&utm_content=t${step}`;
 }
 
-export function buildSmsBody(step: SmsStep, ctx: { firstName: string | null; bucket: string | null; linkBase?: string }): string {
+// Main link: her personal one-tap login straight into the V2 Evelyn chat
+// (MagicAuthPage → /reading?persona=evelyn-cross; first visit asks her to set a
+// password once, exactly like the welcome email's link).
+export function smsMagicLink(step: SmsStep, token: string, base = process.env.SMS_LINK_BASE || DEFAULT_LINK_BASE): string {
+  return `${base.replace(/\/+$/, "")}/magic-auth?t=${encodeURIComponent(token)}&utm_source=sms&utm_campaign=v1-buyers&utm_content=t${step}`;
+}
+
+export function buildSmsBody(
+  step: SmsStep,
+  ctx: { firstName: string | null; bucket: string | null; linkBase?: string; magicToken?: string | null },
+): string {
   const name = cleanFirstName(ctx.firstName);
-  const link = smsLink(step, ctx.linkBase);
+  const link = ctx.magicToken ? smsMagicLink(step, ctx.magicToken, ctx.linkBase) : smsLink(step, ctx.linkBase);
   const opener = name ? `${name}, it's Evelyn.` : "It's Evelyn.";
   if (step === 1) {
     return (
@@ -246,17 +273,34 @@ export async function processSmsQueue(now = new Date()): Promise<SmsTickStats> {
     };
     if (now.getTime() - due > SMS_LATE_LIMIT_MS) { await skip("late"); continue; }
     if (!testNumber && !isUsOrCanada(phone)) { await skip("not a US/Canada number"); continue; }
+    let v2UserId: string | null = null;
     if (step > 1 && c.email) {
-      const [v2] = await db.select({ id: users.id }).from(users)
-        .where(sql`lower(${users.email}) = lower(${c.email}) AND ${users.totalCoinsUsed} > 0`).limit(1);
-      if (v2) { await skip("already uses the V2 chat"); continue; }
+      const [v2] = await db.select({ id: users.id, totalCoinsUsed: users.totalCoinsUsed, accountStatus: users.accountStatus })
+        .from(users).where(sql`lower(${users.email}) = lower(${c.email})`).limit(1);
+      if (v2 && (v2.totalCoinsUsed ?? 0) > 0) { await skip("already uses the V2 chat"); continue; }
+      if (v2 && v2.accountStatus === "active") v2UserId = v2.id;
     }
     if (!testNumber && !isInSendWindow(now)) continue; // wait for the window
 
-    const body = buildSmsBody(step, { firstName: c.firstName, bucket: c.bucket });
+    // Texts 2/3: her personal one-tap link into the V2 Evelyn chat. Any problem
+    // minting it ⇒ the public /evelyn link, never a failed or delayed text.
+    let magicToken: string | null = null;
+    if (v2UserId) {
+      try {
+        const evelynId = await getEvelynPersonaId();
+        if (evelynId) magicToken = await generateMagicLinkToken(v2UserId, evelynId, EVELYN_SLUG);
+      } catch (error) {
+        logger.warn("SMS: magic link mint failed, using /evelyn link", { consentId: c.id, error: (error as Error).message });
+      }
+    }
+
+    const body = buildSmsBody(step, { firstName: c.firstName, bucket: c.bucket, magicToken });
     if (!isGsm7(body)) { await skip("body not GSM-7"); continue; }
-    const claimedId = await claim(c.id, phone, step, "sending", body, null);
-    if (!claimedId) continue; // another tick got there first
+    // The stored copy never holds the login token (it would let anyone who can
+    // read sms_sends log in as her).
+    const storedBody = magicToken ? body.split(magicToken).join("<login-token>") : body;
+    const claimedId = await claim(c.id, phone, step, "sending", storedBody, null);
+    if (!claimedId) continue; // another tick got there first (its own token is simply never used)
 
     let result: { sid?: string; errorCode?: string };
     try {
