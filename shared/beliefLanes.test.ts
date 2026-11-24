@@ -28,8 +28,8 @@ function lanes(): BeliefLane[] {
 }
 
 describe('belief lane registry — lookups', () => {
-  it('holds only approved lanes (manifest, astrology)', () => {
-    assert.deepEqual([...LANE_IDS], ['manifest', 'astrology'])
+  it('holds only approved lanes (manifest, astrology, pattern, family)', () => {
+    assert.deepEqual([...LANE_IDS], ['manifest', 'astrology', 'pattern', 'family'])
   })
 
   it('resolves a known id to its own entry', () => {
@@ -40,7 +40,7 @@ describe('belief lane registry — lookups', () => {
   })
 
   it('returns undefined for unknown, junk and prototype ids', () => {
-    for (const bad of [undefined, null, '', 'pattern', 'family', 'MANIFEST', 'manifest ', ' manifest', 'ASTROLOGY', 'astrology ', 'toString', '__proto__', 'constructor', 'hasOwnProperty', 42, {}, ['manifest']]) {
+    for (const bad of [undefined, null, '', 'twinflame', 'soulmate', 'MANIFEST', 'manifest ', ' manifest', 'ASTROLOGY', 'astrology ', 'toString', '__proto__', 'constructor', 'hasOwnProperty', 42, {}, ['manifest']]) {
       assert.equal(getLane(bad), undefined, `getLane(${JSON.stringify(bad)})`)
       assert.equal(isLaneId(bad), false)
     }
