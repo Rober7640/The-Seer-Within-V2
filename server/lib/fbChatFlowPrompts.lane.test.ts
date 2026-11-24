@@ -49,7 +49,7 @@ describe('arm-B laneDirective — no lane / unknown lane changes nothing', () =>
   for (const [name, build] of BUILDERS) {
     it(`${name}: identical for no lane, an unknown lane and a junk value`, () => {
       const plain = build(base)
-      for (const lane of [undefined, '', 'pattern', 'MANIFEST', '__proto__']) {
+      for (const lane of [undefined, '', 'soulmate', 'MANIFEST', '__proto__']) {
         assert.equal(build({ ...base, lane }), plain, `lane=${JSON.stringify(lane)}`)
       }
     })

@@ -229,6 +229,419 @@ const LANES = {
     ],
     directive: "She came from a page about astrology and love: his sign, her sign, how compatible they are, and a man who keeps her close but never chooses her all the way. Reuse her words: the signs she names, 'compatible', and the thing he still won't say. Hold the lane's belief: her sign is how she was born to love, and a lesson somebody taught her later, about how long to wait, answers first. Take the signs she gives as how she sees him and herself, then turn to where the waiting started. Talk about signs as someone at home with them. Never tell her astrology is wrong, and never say what a sign means he'll do next.",
   },
+  pattern: {
+    "id": "pattern",
+    "num": 2,
+    "name": "Pattern",
+    "bucket": "love",
+    "card": {
+      "h": "Your Pattern Started Long Before Him, and It's Still Blocking Love — I Can See It",
+      "s": "Evelyn has sensed an old lesson from your childhood. It's why the same kind of man never quite chooses you. She can see where it started, from your first name.",
+      "b": "Yes Evelyn, Show Me Where It Started",
+      "sc": "It's free to message Evelyn. She's online now."
+    },
+    "meta": {
+      "title": "Why the Same Pattern Keeps Repeating With Men · Evelyn Cross",
+      "desc": "Your inner child learned what to expect from love. If the same kind of man still finds you, your pattern started there. It's free to message Evelyn.",
+      "alt": "Evelyn Cross, who helps women find where their pattern with men started, back in childhood.",
+      "keywords": [
+        "pattern",
+        "the same pattern",
+        "same kind of man",
+        "childhood",
+        "inner child",
+        "the little girl",
+        "started",
+        "red flags",
+        "your type",
+        "boundaries",
+        "self-love",
+        "a break from dating"
+      ]
+    },
+    "body": [
+      {
+        "t": "h",
+        "text": "Why the same pattern keeps repeating with men"
+      },
+      {
+        "t": "p",
+        "text": "Your friends saw it before you did."
+      },
+      {
+        "t": "p",
+        "text": "One says, \"He's just like the last one.\""
+      },
+      {
+        "t": "p",
+        "text": "Another asks, \"Why do you go so quiet when you like someone?\""
+      },
+      {
+        "t": "p",
+        "text": "Different face. Same ending. He's warm, and he keeps you close. He just won't choose you all the way."
+      },
+      {
+        "t": "p",
+        "text": "So you go quiet. You make yourself easy to be with. Then it happens again, with him or the next one."
+      },
+      {
+        "t": "p",
+        "text": "It isn't bad luck. It's a pattern, and yours started long before him."
+      },
+      {
+        "t": "h",
+        "text": "What you've tried to break the pattern"
+      },
+      {
+        "t": "list",
+        "lead": "You've worked hard at this.",
+        "items": [
+          "Learning every red flag, so you'd spot him sooner.",
+          "Swearing off your type, then meeting him again.",
+          "A long break from dating, to reset.",
+          "Setting boundaries early this time.",
+          "Self-love first, before anyone else.",
+          "Asking a friend to look him over first."
+        ],
+        "closer": "None of it was wrong. It just didn't look that far back."
+      },
+      {
+        "t": "h",
+        "text": "Where your pattern started"
+      },
+      {
+        "t": "p",
+        "text": "Long ago, somebody taught you how to be loved. Keep quiet. Want nothing. Make it easy to stay."
+      },
+      {
+        "t": "p",
+        "text": "You were small. You'd learned it so well, you stopped seeing it."
+      },
+      {
+        "t": "p",
+        "text": "Some call that little girl your inner child. She learned to be no trouble."
+      },
+      {
+        "t": "p",
+        "text": "She still answers first, before you've thought a thing. And a man who's never all the way there feels like home."
+      },
+      {
+        "t": "p",
+        "text": "That's why it's the same man in a different face. One old lesson keeps picking him."
+      },
+      {
+        "t": "p",
+        "text": "There's a start date, somewhere back in your childhood."
+      },
+      {
+        "t": "p",
+        "text": "Evelyn finds where it started, from your first name."
+      },
+      {
+        "t": "h",
+        "text": "Who Evelyn is"
+      },
+      {
+        "t": "p",
+        "text": "Evelyn Cross is a seer in the west of Ireland. Her teacher could do this. So could her teacher's teacher."
+      },
+      {
+        "t": "p",
+        "text": "She works at night, by candlelight. One first name at a time. She doesn't need your birthday, a photo, or his name."
+      },
+      {
+        "t": "p",
+        "text": "She knows the inner child the way you do. She doesn't look at the man. She looks for the little girl who learned it."
+      },
+      {
+        "t": "h",
+        "text": "When you send your first name"
+      },
+      {
+        "t": "p",
+        "text": "You send your first name. That's all."
+      },
+      {
+        "t": "p",
+        "text": "Evelyn writes back. Her first message is short. Then she'll ask you one question."
+      },
+      {
+        "t": "p",
+        "text": "Messaging Evelyn is free."
+      },
+      {
+        "t": "p",
+        "text": "If she sees where it started, she'll offer to write it down. A letter, written at night, by candlelight. That part isn't free. She'll tell you so plainly before anything happens."
+      },
+      {
+        "t": "p",
+        "text": "It starts the same way for every woman. One first name."
+      },
+      {
+        "t": "h",
+        "text": "Questions women ask about patterns in love"
+      },
+      {
+        "t": "faq",
+        "items": [
+          {
+            "q": "Why do I keep falling for the wrong men?",
+            "a": "It isn't bad luck. A pattern from childhood answers first. It picks the man it's used to."
+          },
+          {
+            "q": "What does my inner child have to do with love?",
+            "a": "More than you'd think. She learned what love looks like. She's still the one picking."
+          },
+          {
+            "q": "Why do I go quiet with men I like?",
+            "a": "Somebody taught you, long ago, that it kept people close. It worked then, so you're still doing it."
+          },
+          {
+            "q": "Is it free to message Evelyn?",
+            "a": "Yes. The chat is free."
+          }
+        ]
+      },
+      {
+        "t": "ask"
+      }
+    ],
+    "chat": [
+      {
+        "who": "e",
+        "text": "You've seen this pattern before, haven't you."
+      },
+      {
+        "who": "e",
+        "text": "What's your first name, dear?"
+      },
+      {
+        "who": "me",
+        "text": "{her first name}"
+      },
+      {
+        "who": "e",
+        "text": "{Name}... you've learned every red flag. You've sworn off your type."
+      },
+      {
+        "who": "e",
+        "text": "And still, you end up in the same place. Kept close, and never chosen."
+      },
+      {
+        "who": "e",
+        "text": "That started long before him, dear. I can see the edge of it already."
+      },
+      {
+        "who": "q",
+        "text": "Tell me how it usually goes with men, dear... and how far back you can remember it."
+      }
+    ],
+    "directive": "She came from a page about her pattern with men: the same kind of man in a different face, kept close and never chosen, going quiet so he'll stay. Reuse her own words for it, especially 'the same' and 'always', and the page's words: pattern, childhood, inner child, the little girl. Hold the lane's belief: it isn't bad luck and it isn't her fault, because a lesson she learned as a little girl answers first and picks the same man. Use plain words for her pattern, never a clinical label, and never say what's coming. If she mentions anyone who has helped her with this, speak of that help with respect."
+  },
+  family: {
+    "id": "family",
+    "num": 3,
+    "name": "Family",
+    "bucket": "love",
+    "card": {
+      "h": "Something Handed Down Through Your Family Is Blocking Your Love Life — I Can See It",
+      "s": "Evelyn has sensed an old block, older than you are. It's why love keeps stopping short, for you and the women before you. It's nobody's fault. She can see where it started, from your first name.",
+      "b": "Yes Evelyn, Show Me Where It Started",
+      "sc": "It's free to message Evelyn. She's online now."
+    },
+    "meta": {
+      "title": "When Love Repeats Through the Women in Your Family · Evelyn Cross",
+      "desc": "Your mother, your grandmother, now you. A generational pattern in love isn't chosen. It's handed down, and nobody's to blame. It's free to message Evelyn.",
+      "alt": "Evelyn Cross, who helps women see why love keeps going the same way in their family.",
+      "keywords": [
+        "family",
+        "the women in my family",
+        "generational",
+        "generations",
+        "mother",
+        "grandmother",
+        "break the cycle",
+        "handed down",
+        "family tree",
+        "generational patterns",
+        "cycle breaker"
+      ]
+    },
+    "body": [
+      {
+        "t": "h",
+        "text": "Why love keeps stopping short for the women in your family"
+      },
+      {
+        "t": "p",
+        "text": "Maybe your grandmother said it once, over the dishes. \"The women in this family always end up waiting.\""
+      },
+      {
+        "t": "p",
+        "text": "She laughed a little when she said it. You didn't ask what she meant."
+      },
+      {
+        "t": "p",
+        "text": "Look at the women before you. Your mother. Her mother. Maybe one waited years for a man to say the word. Maybe one was kept close, and never quite chosen."
+      },
+      {
+        "t": "p",
+        "text": "Now look at your own life. A different man, a different decade. The same ending. Or nobody's come close enough to start."
+      },
+      {
+        "t": "p",
+        "text": "It isn't bad luck. It isn't your fault, or hers. It's come down to you."
+      },
+      {
+        "t": "h",
+        "text": "What you've done to break the cycle"
+      },
+      {
+        "t": "list",
+        "lead": "You've worked hard not to repeat it.",
+        "items": [
+          "Swore, as a girl, that your story would go differently.",
+          "Picked men nothing like the ones you grew up around.",
+          "Asked your grandmother what really happened. She told you half.",
+          "Drew the family tree, looking for where it started.",
+          "Saved every post about generational patterns.",
+          "Called yourself the cycle breaker, and meant it."
+        ],
+        "closer": "None of it was wrong. It just couldn't reach where this started."
+      },
+      {
+        "t": "h",
+        "text": "What gets handed down in a family"
+      },
+      {
+        "t": "p",
+        "text": "Nobody teaches a daughter this out loud. She watches. She learns how much love is allowed to ask for."
+      },
+      {
+        "t": "p",
+        "text": "Wait. Be easy to keep. Don't ask him for the word."
+      },
+      {
+        "t": "p",
+        "text": "Your grandmother learned it from somebody. She never knew she'd passed it on. Your mother didn't either."
+      },
+      {
+        "t": "p",
+        "text": "Generations of women, and not one of them chose it. So when you chose him, the choosing had already started."
+      },
+      {
+        "t": "p",
+        "text": "They carried it as far as they could. You're the one who gets to put it down."
+      },
+      {
+        "t": "p",
+        "text": "Evelyn finds where it started, from your first name."
+      },
+      {
+        "t": "h",
+        "text": "Who Evelyn is"
+      },
+      {
+        "t": "p",
+        "text": "Evelyn Cross is a seer in the west of Ireland. Her teacher could do this. So could her teacher's teacher."
+      },
+      {
+        "t": "p",
+        "text": "She works at night, by candlelight. One first name at a time. She doesn't need your birthday, a photo, or his name."
+      },
+      {
+        "t": "p",
+        "text": "She doesn't stop at you. She looks at what came down to you, and finds where it started."
+      },
+      {
+        "t": "p",
+        "text": "She won't blame your mother, or hers. She'll show you what they were carrying."
+      },
+      {
+        "t": "h",
+        "text": "When you send your first name"
+      },
+      {
+        "t": "p",
+        "text": "You send your first name. That's all."
+      },
+      {
+        "t": "p",
+        "text": "Evelyn writes back. Her first message is short. Then she'll ask you one question."
+      },
+      {
+        "t": "p",
+        "text": "Messaging Evelyn is free."
+      },
+      {
+        "t": "p",
+        "text": "If she sees where it started, she'll offer to write it down. A letter, written at night, by candlelight. That part isn't free. She'll tell you so plainly before anything happens."
+      },
+      {
+        "t": "p",
+        "text": "It starts the same way for every woman. One first name."
+      },
+      {
+        "t": "h",
+        "text": "Questions women ask"
+      },
+      {
+        "t": "faq",
+        "items": [
+          {
+            "q": "Are relationship patterns generational?",
+            "a": "Many women find they are. A family passes it on without a word."
+          },
+          {
+            "q": "How do I break the cycle in my family?",
+            "a": "Promising to be different is a start. But a promise can't reach where it began. That's where Evelyn looks."
+          },
+          {
+            "q": "Why does my love life look like my mother's?",
+            "a": "Not because you're like her. You watched her, and learned what love could ask for. She learned it the same way."
+          },
+          {
+            "q": "Is it free to message Evelyn?",
+            "a": "Yes. The chat is free."
+          }
+        ]
+      },
+      {
+        "t": "ask"
+      }
+    ],
+    "chat": [
+      {
+        "who": "e",
+        "text": "This started long before you, didn't it."
+      },
+      {
+        "who": "e",
+        "text": "What's your first name, dear?"
+      },
+      {
+        "who": "me",
+        "text": "{her first name}"
+      },
+      {
+        "who": "e",
+        "text": "{Name}... you've watched the women before you. You promised yours would go differently."
+      },
+      {
+        "who": "e",
+        "text": "And it found you anyway."
+      },
+      {
+        "who": "e",
+        "text": "Nobody chose it, dear. Not you, and not them."
+      },
+      {
+        "who": "q",
+        "text": "Tell me how love went for the women before you... and how it's going for you now."
+      }
+    ],
+    "directive": "She came from a page about love going the same way for the women in her family: her mother, her grandmother, men who never quite chose them. Reuse the words she uses for those women, and if she says their love went well, believe her and stay with her own story. Hold the lane's belief: a lesson about how much love can ask for came down to her, nobody chose it, and she gets to put it down. She has already told you about the women before her, so build on that instead of asking about her family as if for the first time. Never blame her mother, her grandmother or any woman before her, never speak for a woman who has passed, and never say what's coming."
+  },
 } as const satisfies Record<string, BeliefLane>
 
 export type LaneId = keyof typeof LANES

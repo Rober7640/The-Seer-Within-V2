@@ -3,7 +3,7 @@
   "num": 2,
   "name": "Pattern",
   "link": "/fb?lane=pattern",
-  "status": "Complete copy, awaiting approval",
+  "status": "approved",
   "belief": "It isn't bad luck, and it isn't him. A lesson she learned as a little girl answers first: it picks the same kind of man, and it makes her go quiet. The pattern has a start date in childhood, and Evelyn finds where it started, from her first name.",
   "words": [
     "**Source and method.** Live DB, read only (`LIVE_AUDIT_CONFIRM=1`). Love and someone chats from the past year: 90,529 chats, 6,653 paid (7.3%). 80,782 of them have a first message, 6,639 paid (8.2%). Our chat asks for this lane's words (\"Where did this start...\" and \"Has anyone in your family struggled with this same pattern?\"), so every number below is from **her first message only**, before Evelyn asks anything. Compare words with each other, never with the base rate.",
@@ -174,7 +174,8 @@
       "why": "**1 · Start date (recommended).** Bets on the third ad and the button. \"Long before him\" takes the blame off him without putting it on her, \"pattern\" is the second word, and \"still blocking love\" names the problem. **2 · Stuck in the same pattern.** Bets that she sees the repeat before she sees the cause. It's the plainest, and the closest to today's \"Something Is Holding You Back\". \"Pattern\" sits mid-line. **3 · It isn't him.** Bets on the first ad's turn. Strongest for a woman who has blamed the men; riskiest for one still angry at him.",
       "s": "Evelyn has sensed an old lesson from your childhood. It's why the same kind of man never quite chooses you. She can see where it started, from your first name.",
       "b": "Yes Evelyn, Show Me Where It Started",
-      "sc": "It's free to message Evelyn. She's online now."
+      "sc": "It's free to message Evelyn. She's online now.",
+      "chosen": "2026-11-24"
     }
   },
   "meta": {

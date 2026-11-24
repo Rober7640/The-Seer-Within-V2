@@ -15,12 +15,12 @@ Each headline has to fit **every** ad in its lane, not one cut. Every ad in a la
 
 | # | Lane | Link | Status | Copy source |
 |---|---|---|---|---|
-| 1 | Manifestation | `/fb?lane=manifest` | **Approved 2026-11-18.** Wiring in progress, not live | [`lanes/1-manifestation.json`](./lanes/1-manifestation.json) (doc: [`.md`](./lanes/1-manifestation.md)) |
-| 2 | Pattern (inner child) | `/fb?lane=pattern` | First draft, needs keyword pass | [`lanes/2-pattern.md`](./lanes/2-pattern.md) (hand-written stub, no JSON yet) |
-| 3 | Family (generational) | `/fb?lane=family` | First draft, needs keyword pass | [`lanes/3-family.md`](./lanes/3-family.md) (hand-written stub, no JSON yet) |
-| 4 | Astrology | `/fb?lane=astrology` | Complete copy, awaiting approval | [`lanes/4-astrology.json`](./lanes/4-astrology.json) (doc: [`.md`](./lanes/4-astrology.md)) |
+| 1 | Manifestation | `/fb?lane=manifest` | **LIVE on Production** | [`lanes/1-manifestation.json`](./lanes/1-manifestation.json) (doc: [`.md`](./lanes/1-manifestation.md)) |
+| 2 | Pattern (inner child) | `/fb?lane=pattern` | **Approved + wired 2026-11-24** (headline 1, recommended). Dev first, then Production on go | [`lanes/2-pattern.json`](./lanes/2-pattern.json) (doc: [`.md`](./lanes/2-pattern.md)) |
+| 3 | Family (generational) | `/fb?lane=family` | **Approved + wired 2026-11-24** (headline 1, recommended). Dev first, then Production on go | [`lanes/3-family.json`](./lanes/3-family.json) (doc: [`.md`](./lanes/3-family.md)) |
+| 4 | Astrology | `/fb?lane=astrology` | **LIVE on Production** | [`lanes/4-astrology.json`](./lanes/4-astrology.json) (doc: [`.md`](./lanes/4-astrology.md)) |
 
-**Next:** lanes 2 and 3. Both are in the original brief, their ad cuts exist, and they hold the most buyers. Love chats in the past year that used each lane's words: pattern 3,107 (455 bought), family 811 (118), astrology 625 (75), manifestation 234 (31). Each lane was counted with its own word list, so read these as sizes, not a ranking. After those: twin flame (528 chats, 11% bought) and karmic (167 chats, 20% bought, the highest rate seen; ties to offer 11). A soulmate lane would be the biggest (5,014 chats) but is blocked by the ban on "soul".
+**Next:** twin flame + karmic (no drafts yet — awaiting Joel's ad cuts). Lanes 2 and 3 are now wired. Both are in the original brief, their ad cuts exist, and they hold the most buyers. Love chats in the past year that used each lane's words: pattern 3,107 (455 bought), family 811 (118), astrology 625 (75), manifestation 234 (31). Each lane was counted with its own word list, so read these as sizes, not a ranking. After those: twin flame (528 chats, 11% bought) and karmic (167 chats, 20% bought, the highest rate seen; ties to offer 11). A soulmate lane would be the biggest (5,014 chats) but is blocked by the ban on "soul".
 
 ## Files
 
