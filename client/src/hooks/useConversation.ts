@@ -37,7 +37,7 @@ import {
 } from '@/lib/intent'
 import { trackLead, trackInitiateCheckout, getTrackdeskClickId } from '@/lib/facebook'
 import { currentFunnel, funnelPath, getPostHogFunnel, linkParams, skipEmail } from '@/lib/funnel'
-import { fetchAssignedFbChatFlow, fbBEarlier } from '@/lib/fbChatFlow'
+import { fetchAssignedFbChatFlow, fetchAssignedHomeChatFlow, fbBEarlier } from '@/lib/fbChatFlow'
 import { fbBNameLines, fbBTopicLines } from '@/content/fbChatFlowB'
 import { goToPaiCheckout } from '@/lib/paiCheckout'
 import { track as trackPH, identifyUser as identifyPH, getDistinctId } from '@/lib/posthog'
@@ -635,6 +635,22 @@ export function useConversation() {
       // and shown are the same instant. Any failure, or a draft test, answers 'a'.
       if (currentFunnel() === 'v1-fb') {
         const flow = await fetchAssignedFbChatFlow()
+        if (flow === 'b') {
+          chatFlowRef.current = 'b'
+          updateUserData({ chatFlow: 'b' })
+        }
+      }
+
+      // Home (base V1) chat-flow test: v1_home_chat_flow_2026 — the SAME reading as /fb,
+      // run as its own test on the base storefront. The base funnel has no URL prefix, so
+      // currentFunnel() is undefined for it; gate POSITIVELY on getPostHogFunnel() === 'v1'
+      // (true only for "/", "/chat", … — NOT /fb2 or /gdn, which have their own names) so
+      // only base V1 enrols. Awaited BEFORE the greeting because the server logs the
+      // exposure as it answers, so assigned and shown are the same instant. Any failure, or
+      // a draft test, answers 'a'. The greeting below is identical in both arms; only the
+      // post-name step forks (on chatFlow, already funnel-agnostic).
+      else if (getPostHogFunnel() === 'v1') {
+        const flow = await fetchAssignedHomeChatFlow()
         if (flow === 'b') {
           chatFlowRef.current = 'b'
           updateUserData({ chatFlow: 'b' })
