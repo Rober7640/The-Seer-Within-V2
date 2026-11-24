@@ -1993,6 +1993,47 @@ export async function resolveFbChatFlow(
   return { b: a.applied && a.payload?.flow === 'b', variant: a.variant, enrolled: a.enrolled };
 }
 
+// ── HOME (base V1) CHAT FLOW A vs B — interview vs reading ────────────────────
+// The same reading as /fb, run as its OWN test on the base V1 funnel (the "/" / "/chat"
+// storefront, no URL prefix). Arm A is today's home chat; arm B reuses /fb's reading
+// VERBATIM — the candle + name-number opener, the fbB1/2/3 reading steps and the
+// diagnosis are all funnel-agnostic (they fork purely on userData.chatFlow === 'b'), so
+// B needs no new copy. The opening greeting is identical in both arms and untouched.
+// Spec: docs/superpowers/specs/2026-11-24-v1-home-chat-flow-2026.md.
+//
+// 🔴 SEPARATE KEY from /fb, so the two tests never share an exposure row and read
+// independently (exposures are unique(experiment_key, subject_id)). Assigned at chat
+// start on the SAME ab_vid visitor cookie as /fb, and for the same reason — B changes the
+// step right after her NAME, before any email exists — so the denominator is chats
+// started, not leads, and the tally reaches the purchase through conversations.ab_visitor_id
+// (tallyV1MainByVisitor).
+//
+// Base V1 ONLY (scope.funnel ['v1-home']). The base funnel has no FunnelParam of its own
+// (currentFunnel() is undefined for it), so the server tags the context with 'v1-home' — a
+// label used ONLY by this experiment's scope, never a Stripe/AWeber funnel id. The client
+// gates the call on getPostHogFunnel() === 'v1', so /fb2 and /gdn (their own PostHog names)
+// never reach here.
+export const V1_HOME_CHAT_FLOW_EXPERIMENT_KEY = 'v1_home_chat_flow_2026';
+
+/** The funnel label this experiment scopes to. Not a FunnelParam — scope-only. */
+export const V1_HOME_FUNNEL_SCOPE = 'v1-home';
+
+/**
+ * Which chat flow should this home (base V1) visitor get? Mirrors resolveFbChatFlow:
+ * `b` is true only when the assigned arm is applied AND its payload says `{flow: 'b'}`,
+ * so a draft / paused / out-of-scope test, a missing cookie or a malformed payload all
+ * yield today's flow — deploying this changes nothing until the experiment is started.
+ * `enrolled` tells the caller to log the exposure.
+ */
+export async function resolveHomeChatFlow(
+  visitorId: string | null | undefined,
+  key: string = V1_HOME_CHAT_FLOW_EXPERIMENT_KEY, // overridable so tests never touch the live experiment
+): Promise<{ b: boolean; variant: string | null; enrolled: boolean }> {
+  const a = await assign(key, visitorId, { funnel: V1_HOME_FUNNEL_SCOPE });
+  if (!a) return { b: false, variant: null, enrolled: false };
+  return { b: a.applied && a.payload?.flow === 'b', variant: a.variant, enrolled: a.enrolled };
+}
+
 // ── /fb-tarot VERSION B vs C — which OPENER she gets ─────────────────────────
 // Version B ("smart template"): the full pre-written read is delivered as chat
 // messages, then straight to name capture. Deterministic, no model call.
