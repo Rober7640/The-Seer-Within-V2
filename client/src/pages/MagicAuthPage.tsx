@@ -40,8 +40,12 @@ export default function MagicAuthPage() {
         // Store the JWT exactly as the normal login flow does
         localStorage.setItem(AUTH_TOKEN_KEY, data.token);
 
-        // Migrated V1 users need to set a password on first login
-        if (data.needsPasswordSetup) {
+        // Migrated V1 users need to set a password on first login — EXCEPT from a
+        // text message (utm_source=sms, server/lib/smsSender.ts): those land straight
+        // in the chat (Lewis, 24 Nov 2026). The password page was skippable anyway;
+        // every text carries a fresh one-tap link, and the email links still ask.
+        const fromSms = params.get("utm_source") === "sms";
+        if (data.needsPasswordSetup && !fromSms) {
           // Store intended destination so SetPasswordPage can redirect after
           const redirectTo = params.get("redirect");
           const postTarget = redirectTo || (data.personaSlug
