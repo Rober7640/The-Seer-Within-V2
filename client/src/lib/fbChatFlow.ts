@@ -12,19 +12,32 @@ import type { ChatState } from '@/types/chat'
  * Preview: `?chatflow=b` (or `=a`) forces the arm for a walk-through WITHOUT calling
  * the server, so a preview is never counted in the test.
  */
-export async function fetchAssignedFbChatFlow(lane?: string): Promise<'a' | 'b'> {
+async function fetchChatFlow(url: string): Promise<'a' | 'b'> {
   const override = new URLSearchParams(window.location.search).get('chatflow')
   if (override === 'a' || override === 'b') return override
   try {
-    // Pass the belief lane so the server tags the exposure with it (results can then
-    // split plain /fb vs each lane). The server re-validates against the registry.
-    const r = await fetch(lane ? `/api/fb/chat-flow?lane=${encodeURIComponent(lane)}` : '/api/fb/chat-flow')
+    const r = await fetch(url)
     if (!r.ok) return 'a'
     const data = await r.json()
     return data?.flow === 'b' ? 'b' : 'a'
   } catch {
     return 'a'
   }
+}
+
+export async function fetchAssignedFbChatFlow(lane?: string): Promise<'a' | 'b'> {
+  // Pass the belief lane so the server tags the exposure with it (results can then
+  // split plain /fb vs each lane). The server re-validates against the registry.
+  return fetchChatFlow(lane ? `/api/fb/chat-flow?lane=${encodeURIComponent(lane)}` : '/api/fb/chat-flow')
+}
+
+/**
+ * Same as fetchAssignedFbChatFlow but for the base V1 (home) funnel's own test
+ * (v1_home_chat_flow_2026). No lane — the base funnel has no belief lanes. Honors the
+ * same `?chatflow=b|a` preview override (never logged, never counted).
+ */
+export async function fetchAssignedHomeChatFlow(): Promise<'a' | 'b'> {
+  return fetchChatFlow('/api/home/chat-flow')
 }
 
 /** Evelyn's own messages so far, so each B step can be told never to repeat a line. */
