@@ -29,6 +29,9 @@ import ChatPage from "@/pages/ChatPage";
 import SuccessPage from "@/pages/SuccessPage";
 import UpsellTestPage from "@/pages/UpsellTestPage";
 import UpsellPage from "@/pages/UpsellPage";
+// SMS in-between page (after payment, before Upsell 1) — only reached via the
+// server's Stripe success_url on a funnel where the SMS opt-in is switched on.
+import SmsOptInStepPage from "@/pages/SmsOptInStepPage";
 import Upsell2Page from "@/pages/Upsell2Page";
 import PrivacyPage from "@/pages/PrivacyPage";
 import HomePage from "@/pages/HomePage";
@@ -174,6 +177,7 @@ function Router() {
     const isTrackedFunnel =
       location === '/' ||
       location === '/chat' ||
+      location === '/preparing' ||
       location === '/welcome1' ||
       location === '/welcome2' ||
       location === '/success' ||
@@ -269,6 +273,7 @@ function Router() {
             TO RE-SWAP: change this one line back to `component={HomePage}`. */}
         <Route path="/" component={LandingPage} />
         <Route path="/chat" component={ChatPage} />
+        <Route path="/preparing" component={SmsOptInStepPage} />
         <Route path="/welcome1" component={UpsellPage} />
         <Route path="/welcome2" component={Upsell2Page} />
         <Route path="/success" component={SuccessPage} />
@@ -280,6 +285,7 @@ function Router() {
         <Route path="/fb" component={LandingPage} />
         <Route path="/fb/chat" component={ChatPage} />
         <Route path="/fb/checkout" component={PaiCheckoutPage} />
+        <Route path="/fb/preparing" component={SmsOptInStepPage} />
         <Route path="/fb/welcome1" component={UpsellPage} />
         <Route path="/fb/welcome2" component={Upsell2Page} />
         <Route path="/fb/success" component={SuccessPage} />
@@ -288,6 +294,7 @@ function Router() {
             Stripe suffix. Same components, new URLs. */}
         <Route path="/fb2" component={LandingPage} />
         <Route path="/fb2/chat" component={ChatPage} />
+        <Route path="/fb2/preparing" component={SmsOptInStepPage} />
         <Route path="/fb2/welcome1" component={UpsellPage} />
         <Route path="/fb2/welcome2" component={Upsell2Page} />
         <Route path="/fb2/success" component={SuccessPage} />
@@ -299,6 +306,7 @@ function Router() {
         <Route path="/fb-palm/b" component={PalmBridge} />
         <Route path="/fb-palm/c" component={PalmBridge} />
         <Route path="/fb-palm/chat" component={ChatPage} />
+        <Route path="/fb-palm/preparing" component={SmsOptInStepPage} />
         <Route path="/fb-palm/welcome1" component={UpsellPage} />
         <Route path="/fb-palm/welcome2" component={Upsell2Page} />
         <Route path="/fb-palm/success" component={SuccessPage} />
@@ -315,6 +323,7 @@ function Router() {
         <Route path="/fb-read/b" component={ReadBridge} />
         <Route path="/fb-read/c" component={ReadBridge} />
         <Route path="/fb-read/chat" component={ChatPage} />
+        <Route path="/fb-read/preparing" component={SmsOptInStepPage} />
         <Route path="/fb-read/welcome1" component={UpsellPage} />
         <Route path="/fb-read/welcome2" component={Upsell2Page} />
         <Route path="/fb-read/success" component={SuccessPage} />
@@ -328,6 +337,7 @@ function Router() {
         <Route path="/pai/pay" component={PaiPayPage} />
         <Route path="/fb-tarot/chat" component={ChatPage} />
         <Route path="/fb-tarot/checkout" component={PaiCheckoutPage} />
+        <Route path="/fb-tarot/preparing" component={SmsOptInStepPage} />
         <Route path="/fb-tarot/welcome1" component={UpsellPage} />
         <Route path="/fb-tarot/welcome2" component={Upsell2Page} />
         <Route path="/fb-tarot/success" component={SuccessPage} />
@@ -337,6 +347,7 @@ function Router() {
             products carry the "- GDN" suffix. */}
         <Route path="/gdn" component={LandingPage} />
         <Route path="/gdn/chat" component={ChatPage} />
+        <Route path="/gdn/preparing" component={SmsOptInStepPage} />
         <Route path="/gdn/welcome1" component={UpsellPage} />
         <Route path="/gdn/welcome2" component={Upsell2Page} />
         <Route path="/gdn/success" component={SuccessPage} />

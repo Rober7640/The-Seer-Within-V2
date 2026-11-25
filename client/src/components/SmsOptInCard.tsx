@@ -13,7 +13,14 @@
 //    taps "No thanks"; the chat scrolls underneath it. The upsell buttons live in
 //    the page footer, outside the chat, so they are never covered.
 //  The approved wording (heading, checkbox, disclosure, button) is unchanged.
-import { useEffect, useState } from "react";
+//
+// Joel, 25 Nov 2026 call: the box must NOT sit on top of Upsell 1 ("very awkward").
+// It now lives on its OWN in-between page after payment (SmsOptInStepPage,
+// <funnel>/preparing), so it is a normal card, no longer sticky. The page passes
+// onFinished (go on to Upsell 1) — called after "No thanks", after a successful
+// sign-up (once the thank-you line has shown), or straight away when the box
+// isn't available / she already answered for this order. It is never a dead end.
+import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
@@ -44,7 +51,17 @@ function looksLikePhone(v: string): boolean {
   return digits.length >= 10 && digits.length <= 15;
 }
 
-export function SmsOptInCard({ sessionId }: { sessionId: string | null }) {
+// How long the "Thanks — you're signed up" line stays before moving on.
+const DONE_PAUSE_MS = 1500;
+
+export function SmsOptInCard({
+  sessionId,
+  onFinished,
+}: {
+  sessionId: string | null;
+  /** Called exactly once when she is finished with the box (any outcome). */
+  onFinished?: () => void;
+}) {
   const [status, setStatus] = useState<OptInStatus | null>(null);
   const [phone, setPhone] = useState("");
   const [agree, setAgree] = useState(false);
@@ -53,22 +70,49 @@ export function SmsOptInCard({ sessionId }: { sessionId: string | null }) {
   const [done, setDone] = useState(false);
   const [dismissed, setDismissed] = useState(() => readDismissed(sessionId));
 
+  // onFinished fires at most once, whatever path gets there first.
+  const finishedRef = useRef(false);
+  const onFinishedRef = useRef(onFinished);
+  onFinishedRef.current = onFinished;
+  function finish() {
+    if (finishedRef.current) return;
+    finishedRef.current = true;
+    onFinishedRef.current?.();
+  }
+
   useEffect(() => {
-    if (!sessionId || !sessionId.startsWith("cs_")) return;
+    if (!sessionId || !sessionId.startsWith("cs_")) {
+      finish();
+      return;
+    }
     let cancelled = false;
     fetch(`/api/sms-optin/status?session_id=${encodeURIComponent(sessionId)}`)
       .then((r) => (r.ok ? r.json() : { show: false }))
       .then((s: OptInStatus) => {
         if (cancelled) return;
         setStatus(s);
+        // Not available, or she already answered for this order ⇒ move straight on.
+        if (!s.show || s.alreadyOptedIn || readDismissed(sessionId)) {
+          finish();
+          return;
+        }
         // Pre-fill only an empty box — never overwrite what she has typed.
         if (s.prefillPhone) setPhone((cur) => cur || s.prefillPhone || "");
       })
-      .catch(() => {});
+      .catch(() => {
+        if (!cancelled) finish();
+      });
     return () => {
       cancelled = true;
     };
   }, [sessionId]);
+
+  // After a successful sign-up: show the thank-you line briefly, then move on.
+  useEffect(() => {
+    if (!done) return;
+    const t = setTimeout(finish, DONE_PAUSE_MS);
+    return () => clearTimeout(t);
+  }, [done]);
 
   if (!status?.show) return null;
   if (dismissed && !done && !status.alreadyOptedIn) return null;
@@ -80,6 +124,7 @@ export function SmsOptInCard({ sessionId }: { sessionId: string | null }) {
       /* storage blocked: it just hides for this page view */
     }
     setDismissed(true);
+    finish();
   }
 
   if (done || status.alreadyOptedIn) {
@@ -119,7 +164,7 @@ export function SmsOptInCard({ sessionId }: { sessionId: string | null }) {
   return (
     <form
       onSubmit={submit}
-      className="sticky top-0 z-20 rounded-2xl border border-white/15 bg-[#151330]/95 backdrop-blur-md shadow-lg shadow-black/40 p-3 md:p-4 space-y-2.5 text-white"
+      className="rounded-2xl border border-white/15 bg-[#151330]/95 backdrop-blur-md shadow-lg shadow-black/40 p-4 md:p-5 space-y-3 text-white"
       data-testid="sms-optin-card"
     >
       <p className="font-medium text-sm md:text-base">{status.heading}</p>

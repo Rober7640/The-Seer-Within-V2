@@ -296,7 +296,7 @@ export function getPostHogFunnel(pathname?: string): PostHogFunnel | null {
   // with the URL's utm_source/campaign/medium attached.
   if (p === "/7-7") return "seven-seven";
   if (PERSONA_LANDER_FUNNELS[p]) return PERSONA_LANDER_FUNNELS[p];
-  if (p === "/" || p === "/chat" || p === "/welcome1" || p === "/welcome2" || p === "/success") {
+  if (p === "/" || p === "/chat" || p === "/preparing" || p === "/welcome1" || p === "/welcome2" || p === "/success") {
     return "v1";
   }
   return null;
@@ -338,6 +338,8 @@ export function getPostHogStep(pathname?: string): string {
     case "v1":
       if (p === "/") return "landing";
       if (p === "/chat") return "chat";
+      // SMS in-between page after payment, before Upsell 1 (Joel, 25 Nov 2026).
+      if (p === "/preparing") return "sms_optin";
       if (p === "/welcome1") return "upsell1";
       if (p === "/welcome2") return "upsell2";
       if (p === "/success") return "thank_you";
@@ -411,6 +413,8 @@ export function getPostHogStep(pathname?: string): string {
       // "" = the funnel landing; "/b" & "/c" = the bridge Version-B/C landings.
       if (sub === "" || sub === "/b" || sub === "/c") return "landing";
       if (sub === "/chat") return "chat";
+      // SMS in-between page after payment, before Upsell 1 (Joel, 25 Nov 2026).
+      if (sub === "/preparing") return "sms_optin";
       if (sub === "/welcome1") return "upsell1";
       if (sub === "/welcome2") return "upsell2";
       if (sub === "/success") return "thank_you";
