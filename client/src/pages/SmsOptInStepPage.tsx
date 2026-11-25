@@ -8,8 +8,10 @@
 //
 // "Your ritual is being prepared" + the SAME approved opt-in box (pre-filled
 // number, UNTICKED checkbox, unchanged wording). "Text me" saves her yes and moves
-// on; "No thanks" moves on; anything unavailable/failed moves on at once. It is
-// never a dead end, and it hands Upsell 1 the exact same query string.
+// on; "No thanks" moves on; anything unavailable/failed moves on at once. Only
+// Yes / No are shown (Lewis, 25 Nov: no extra "Continue" link — it confused). It is
+// never a dead end: a box that never loads moves her on after 8s (SmsOptInCard),
+// and it hands Upsell 1 the exact same query string. NO timer on her decision.
 //
 // Main purchase events ($35 + order bump) fire HERE, read-only data from
 // /api/upsell/prep, so a buyer who stops on this page is still counted. Upsell 1
@@ -19,7 +21,6 @@ import { useEffect, useRef } from "react";
 import { useLocation, useSearch } from "wouter";
 import { CosmicBackground } from "../components/CosmicBackground";
 import { SmsOptInCard } from "../components/SmsOptInCard";
-import { Button } from "@/components/ui/button";
 import { funnelPath } from "../lib/funnel";
 import { claimMainPurchaseSlot, fireMainPurchaseEvents } from "../lib/mainPurchaseEvents";
 
@@ -73,18 +74,6 @@ export default function SmsOptInStepPage() {
           </div>
 
           <SmsOptInCard sessionId={sessionId} onFinished={goToUpsell1} />
-
-          <div className="text-center">
-            <Button
-              type="button"
-              variant="ghost"
-              onClick={goToUpsell1}
-              className="text-white/60 hover:text-white hover:bg-white/10 text-sm"
-              data-testid="button-preparing-continue"
-            >
-              Continue →
-            </Button>
-          </div>
         </div>
       </div>
     </div>

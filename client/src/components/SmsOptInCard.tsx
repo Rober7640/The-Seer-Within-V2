@@ -53,6 +53,8 @@ function looksLikePhone(v: string): boolean {
 
 // How long the "Thanks — you're signed up" line stays before moving on.
 const DONE_PAUSE_MS = 1500;
+// If the box hasn't loaded at all by then, move her on rather than strand her (Lewis, 25 Nov).
+const BOX_LOAD_FAILSAFE_MS = 8000;
 
 export function SmsOptInCard({
   sessionId,
@@ -86,10 +88,19 @@ export function SmsOptInCard({
       return;
     }
     let cancelled = false;
+    // Safety net ONLY for a box that never loads (slow network / server hiccup), so
+    // she is never left on a page with no buttons. Once the box has loaded this is
+    // cleared: there is NO timer on her decision — the box waits for her tap.
+    let settled = false;
+    const failsafe = setTimeout(() => {
+      if (!cancelled && !settled) finish();
+    }, BOX_LOAD_FAILSAFE_MS);
     fetch(`/api/sms-optin/status?session_id=${encodeURIComponent(sessionId)}`)
       .then((r) => (r.ok ? r.json() : { show: false }))
       .then((s: OptInStatus) => {
-        if (cancelled) return;
+        if (cancelled || finishedRef.current) return;
+        settled = true;
+        clearTimeout(failsafe);
         setStatus(s);
         // Not available, or she already answered for this order ⇒ move straight on.
         if (!s.show || s.alreadyOptedIn || readDismissed(sessionId)) {
@@ -100,10 +111,13 @@ export function SmsOptInCard({
         if (s.prefillPhone) setPhone((cur) => cur || s.prefillPhone || "");
       })
       .catch(() => {
+        settled = true;
+        clearTimeout(failsafe);
         if (!cancelled) finish();
       });
     return () => {
       cancelled = true;
+      clearTimeout(failsafe);
     };
   }, [sessionId]);
 
