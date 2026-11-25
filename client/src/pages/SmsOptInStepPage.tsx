@@ -6,7 +6,8 @@
 //
 //   Stripe paid → <funnel>/preparing?session_id=cs_… → <funnel>/welcome1?session_id=cs_…
 //
-// "Your ritual is being prepared" + the SAME approved opt-in box (pre-filled
+// A loading spinner + "Preparing your Energy Clearing Ritual… Please don't close this
+// page" (Joel 25 Nov: must not look finished) + the SAME approved opt-in box (pre-filled
 // number, UNTICKED checkbox, unchanged wording). "Text me" saves her yes and moves
 // on; "No thanks" moves on; anything unavailable/failed moves on at once. Only
 // Yes / No are shown (Lewis, 25 Nov: no extra "Continue" link — it confused). It is
@@ -19,6 +20,7 @@
 // This page makes no database writes of its own (see /api/upsell/prep).
 import { useEffect, useRef } from "react";
 import { useLocation, useSearch } from "wouter";
+import { Loader2 } from "lucide-react";
 import { CosmicBackground } from "../components/CosmicBackground";
 import { SmsOptInCard } from "../components/SmsOptInCard";
 import { funnelPath } from "../lib/funnel";
@@ -64,12 +66,21 @@ export default function SmsOptInStepPage() {
       <CosmicBackground />
       <div className="relative z-10 flex-1 flex flex-col items-center justify-center px-4 py-10">
         <div className="w-full max-w-lg space-y-6">
-          <div className="text-center space-y-2">
+          {/* Joel, 25 Nov: "transition page should have a loading — don't give people
+              the impression it's done". A loading spinner + "don't close this page"
+              (the "arrives by email in 24 hours" line read as finished, so it's gone).
+              The spinner is only a visual: it never moves her on by itself. */}
+          <div className="text-center space-y-3" role="status" data-testid="preparing-loading">
+            <Loader2
+              className="mx-auto h-10 w-10 text-purple-300 motion-safe:animate-spin"
+              aria-hidden="true"
+              data-testid="preparing-spinner"
+            />
             <h1 className="font-serif text-2xl md:text-3xl text-white" data-testid="text-preparing-heading">
-              Your Energy Clearing Ritual is being prepared
+              Preparing your Energy Clearing Ritual…
             </h1>
             <p className="text-white/70 text-sm md:text-base">
-              It will arrive by email in about 24 hours.
+              Please don't close this page.
             </p>
           </div>
 
