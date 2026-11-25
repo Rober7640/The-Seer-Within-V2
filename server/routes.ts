@@ -184,7 +184,7 @@ import {
   tagSoulmateDeclinedUpsell,
 } from "./lib/aweber";
 import { collectsPhoneAtCheckout } from "./lib/checkoutPhone";
-import { smsConsentSessionParams, smsConsentSessionMetadata } from "./lib/smsConsent";
+import { smsConsentSessionParams, smsConsentSessionMetadata, showsPostPurchaseSmsOptIn } from "./lib/smsConsent";
 import { addLeadToKit } from "./lib/kit";
 import { resolveLunaTyHandoff } from "./lib/lunaThankyouGift";
 import { evelynTyPersonaFor, isEvelynTyConversation, resolveEvelynTyHandoff } from "./lib/evelynThankyouGift";
@@ -1571,7 +1571,14 @@ export async function registerRoutes(
             ...bumpMetadata,
           },
         },
-        success_url: `${getBaseUrl(req)}${funnelPath("/welcome1", funnel)}?session_id={CHECKOUT_SESSION_ID}`,
+        // SMS in-between page (Joel, 25 Nov 2026): on a funnel where the SMS opt-in
+        // is switched on, she lands on <funnel>/preparing first, which hands her on
+        // to <funnel>/welcome1 with the SAME session_id. Every other funnel keeps
+        // the exact welcome1 URL it has always had.
+        success_url: `${getBaseUrl(req)}${funnelPath(
+          showsPostPurchaseSmsOptIn(funnel, readDevice) ? "/preparing" : "/welcome1",
+          funnel,
+        )}?session_id={CHECKOUT_SESSION_ID}`,
         // The retargeting PAGE (not the chat) asks to come back to itself: she backed
         // out of Stripe, so she lands on her three cards face up with the offer again.
         // Needs both the marker and the page's own flag, so a chat checkout that
@@ -2333,6 +2340,104 @@ export async function registerRoutes(
   // ============================================
 
   // Get user data for upsell page by session ID (marks upsell offered)
+  // Add a paid Stripe buyer to the AWeber paid list (non-blocking, never throws).
+  // Moved here UNCHANGED from /api/upsell/user-data so the SMS in-between page
+  // (/api/upsell/prep, below) can run the very same write for a buyer who stops
+  // there and never opens Upsell 1. Running it twice for one order is harmless:
+  // the AWeber write is update_existing:true with the same email + tags, exactly
+  // what already happens every time a buyer refreshes Upsell 1.
+  //
+  // savePhone: Upsell 1 also saves the checkout phone onto the order row. The
+  // in-between page passes false — it makes NO database writes of its own.
+  function addStripeBuyerToPaidList(
+    sessionId: string,
+    person: { email: string; firstName?: string | null; bucket?: string | null },
+    opts: { savePhone: boolean },
+  ): void {
+    if (!stripe) return;
+    stripe.checkout.sessions
+      .retrieve(sessionId, { expand: ["payment_intent"] })
+      .then((session) => {
+        // Same cache warm as the user-data fallback (retarget orders, 2026-10-16).
+        // Never throws, so the AWeber write below runs exactly as before.
+        rememberRetargetSession(session);
+        if (
+          session.payment_status === "paid" &&
+          session.payment_intent
+        ) {
+          const paymentIntentId =
+            typeof session.payment_intent === "string"
+              ? session.payment_intent
+              : session.payment_intent.id;
+
+          const purchaseType = session.metadata?.type || "main";
+          const sessionFunnel: FunnelId =
+            parseFunnel(session.metadata?.funnel);
+
+          const purchaseTypeTag =
+            purchaseType === "downsell" ? "downsell" : "initial-purchase";
+          const paidTags = [
+            person.bucket || "seer-within",
+            "paid",
+            purchaseTypeTag,
+          ];
+          // Append (not replace) a funnel-suffixed marker for ad-funnel
+          // buyers so existing AWeber automations matching the unsuffixed
+          // tag keep firing while we gain a separate count per ad funnel.
+          if (isFbFunnel(sessionFunnel)) {
+            paidTags.push(`${purchaseTypeTag}${fbTagSuffix(sessionFunnel)}`);
+          }
+          // No-optin buyers get a `noemail` tag so they're identifiable on
+          // the paid list. Read off the session metadata set at checkout.
+          if (session.metadata?.noemail === "1") {
+            paidTags.push("noemail");
+          }
+          // Belief-lane buyers keep their lane tag on the paid list too. Read off
+          // the session metadata set at checkout, re-checked against the registry.
+          const paidLane = getLane(session.metadata?.lane);
+          if (paidLane) {
+            paidTags.push(laneAweberTag(paidLane.id));
+          }
+
+          // Checkout phone (every V1 reading funnel — see checkoutPhone.ts). Also
+          // saved to the row here, not only by the webhook, because the
+          // no-email fallback in user-data creates the row AFTER the webhook ran.
+          const phone = session.customer_details?.phone || undefined;
+          if (phone && opts.savePhone) {
+            savePhoneForSession(sessionId, phone).catch((err) =>
+              logger.warn("savePhoneForSession error (non-blocking):", err),
+            );
+          }
+
+          addPaidSubscriber({
+            email: person.email,
+            name: person.firstName || undefined,
+            stripeOrderId: paymentIntentId,
+            tags: fbifyAweberTags(paidTags, sessionFunnel),
+            phone,
+          })
+            .then((result) => {
+              if (result.success) {
+                logger.info(
+                  `AWeber Paid: Added ${person.email} to paid list (${purchaseType})`,
+                );
+              } else {
+                logger.warn(
+                  `AWeber Paid: Failed to add ${person.email}:`,
+                  result.error,
+                );
+              }
+            })
+            .catch((err) => {
+              logger.warn("AWeber paid list error (non-blocking):", err);
+            });
+        }
+      })
+      .catch((err) => {
+        logger.warn("Stripe session retrieve error (non-blocking):", err);
+      });
+  }
+
   app.get("/api/upsell/user-data", async (req: Request, res: Response) => {
     try {
       const sessionId = req.query.session_id as string;
@@ -2428,87 +2533,15 @@ export async function registerRoutes(
       // A Payments.AI order was put on the paid list when its charge was approved
       // (server/lib/paiLive.ts) — there is no Stripe session to read here.
       if (stripe && conversation.email && !isPaiOrderId(sessionId)) {
-        stripe.checkout.sessions
-          .retrieve(sessionId, { expand: ["payment_intent"] })
-          .then((session) => {
-            // Same cache warm as the fallback above (retarget orders, 2026-10-16).
-            // Never throws, so the AWeber write below runs exactly as before.
-            rememberRetargetSession(session);
-            if (
-              session.payment_status === "paid" &&
-              session.payment_intent
-            ) {
-              const paymentIntentId =
-                typeof session.payment_intent === "string"
-                  ? session.payment_intent
-                  : session.payment_intent.id;
-
-              const purchaseType = session.metadata?.type || "main";
-              const sessionFunnel: FunnelId =
-                parseFunnel(session.metadata?.funnel);
-
-              const purchaseTypeTag =
-                purchaseType === "downsell" ? "downsell" : "initial-purchase";
-              const paidTags = [
-                conversation!.bucket || "seer-within",
-                "paid",
-                purchaseTypeTag,
-              ];
-              // Append (not replace) a funnel-suffixed marker for ad-funnel
-              // buyers so existing AWeber automations matching the unsuffixed
-              // tag keep firing while we gain a separate count per ad funnel.
-              if (isFbFunnel(sessionFunnel)) {
-                paidTags.push(`${purchaseTypeTag}${fbTagSuffix(sessionFunnel)}`);
-              }
-              // No-optin buyers get a `noemail` tag so they're identifiable on
-              // the paid list. Read off the session metadata set at checkout.
-              if (session.metadata?.noemail === "1") {
-                paidTags.push("noemail");
-              }
-              // Belief-lane buyers keep their lane tag on the paid list too. Read off
-              // the session metadata set at checkout, re-checked against the registry.
-              const paidLane = getLane(session.metadata?.lane);
-              if (paidLane) {
-                paidTags.push(laneAweberTag(paidLane.id));
-              }
-
-              // Checkout phone (every V1 reading funnel — see checkoutPhone.ts). Also
-              // saved to the row here, not only by the webhook, because the
-              // no-email fallback above creates the row AFTER the webhook ran.
-              const phone = session.customer_details?.phone || undefined;
-              if (phone) {
-                savePhoneForSession(sessionId, phone).catch((err) =>
-                  logger.warn("savePhoneForSession error (non-blocking):", err),
-                );
-              }
-
-              addPaidSubscriber({
-                email: conversation!.email!,
-                name: conversation!.firstName || undefined,
-                stripeOrderId: paymentIntentId,
-                tags: fbifyAweberTags(paidTags, sessionFunnel),
-                phone,
-              })
-                .then((result) => {
-                  if (result.success) {
-                    logger.info(
-                      `AWeber Paid: Added ${conversation!.email} to paid list (${purchaseType})`,
-                    );
-                  } else {
-                    logger.warn(
-                      `AWeber Paid: Failed to add ${conversation!.email}:`,
-                      result.error,
-                    );
-                  }
-                })
-                .catch((err) => {
-                  logger.warn("AWeber paid list error (non-blocking):", err);
-                });
-            }
-          })
-          .catch((err) => {
-            logger.warn("Stripe session retrieve error (non-blocking):", err);
-          });
+        addStripeBuyerToPaidList(
+          sessionId,
+          {
+            email: conversation.email,
+            firstName: conversation.firstName,
+            bucket: conversation.bucket,
+          },
+          { savePhone: true },
+        );
       }
 
       return res.json({
@@ -2531,6 +2564,79 @@ export async function registerRoutes(
     } catch (error) {
       logger.error("Get upsell user data error:", error);
       return res.status(500).json({ error: "Failed to get user data" });
+    }
+  });
+
+  // SMS in-between page (Joel, 25 Nov 2026 call): after a paid Stripe checkout on a
+  // funnel where the SMS opt-in is switched on, the buyer lands on
+  // <funnel>/preparing BEFORE Upsell 1, instead of seeing the box on top of the
+  // upsell chat. This is that page's ONE data call.
+  //
+  // What it does — and deliberately does NOT do:
+  //  - READS the Stripe session + her order row (never writes the DB: no order-row
+  //    creation, no "upsell offered" stamp, no phone save — those stay on Upsell 1,
+  //    so the Upsell 1 price test still counts only women who really saw it).
+  //  - Returns her email + main amount + bump amount, so the page can fire the
+  //    main Purchase events (same values Upsell 1 would use; same once-only guards).
+  //  - Puts her on the AWeber paid list (the same write Upsell 1 makes), so a
+  //    buyer who stops here still lands on it.
+  // Anything not eligible ⇒ { ok: false } and the page goes straight to Upsell 1.
+  const PREP_SESSION_ID_RE = /^cs_(test|live)_[A-Za-z0-9]{10,200}$/;
+  app.get("/api/upsell/prep", async (req: Request, res: Response) => {
+    try {
+      const sessionId = req.query.session_id;
+      if (typeof sessionId !== "string" || !PREP_SESSION_ID_RE.test(sessionId) || !stripe) {
+        return res.json({ ok: false });
+      }
+      const session = await stripe.checkout.sessions.retrieve(sessionId);
+      if (session.payment_status !== "paid") return res.json({ ok: false });
+      const metaFunnel = funnelDefForParam(session.metadata?.funnel)?.param;
+      const metaDevice = isReadDevice(session.metadata?.readDevice)
+        ? session.metadata?.readDevice
+        : undefined;
+      if (!showsPostPurchaseSmsOptIn(metaFunnel, metaDevice)) return res.json({ ok: false });
+
+      // Read-only. Missing when the payment webhook hasn't written the row yet
+      // (or a no-email buyer) — then the Stripe session is the source.
+      const conversation = await getConversationByStripeSession(sessionId);
+
+      const email =
+        conversation?.email ||
+        session.customer_details?.email ||
+        session.customer_email ||
+        session.metadata?.email ||
+        null;
+
+      let mainPurchaseAmount: number;
+      let bumpAmountCents: number;
+      if (conversation) {
+        // Exactly what /api/upsell/user-data returns for the same order.
+        mainPurchaseAmount = conversation.mainPurchaseAmount || 3500;
+        bumpAmountCents = conversation.bumpAmountCents ?? 0;
+      } else {
+        const bump = Number(session.metadata?.bumpAmount);
+        bumpAmountCents = Number.isFinite(bump) && bump > 0 ? bump : 0;
+        // amount_total = main + bump on the one checkout session.
+        const total = session.amount_total ?? 0;
+        mainPurchaseAmount = total > bumpAmountCents ? total - bumpAmountCents : 3500;
+      }
+
+      if (email) {
+        addStripeBuyerToPaidList(
+          sessionId,
+          {
+            email,
+            firstName: conversation?.firstName ?? session.metadata?.firstName ?? null,
+            bucket: conversation?.bucket ?? session.metadata?.bucket ?? null,
+          },
+          { savePhone: false },
+        );
+      }
+
+      return res.json({ ok: true, email, mainPurchaseAmount, bumpAmountCents });
+    } catch (error) {
+      logger.error("Upsell prep error:", error);
+      return res.json({ ok: false });
     }
   });
 

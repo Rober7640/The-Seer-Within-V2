@@ -4,16 +4,13 @@ import { CosmicBackground } from "../components/CosmicBackground";
 import { BackgroundMusic } from "../components/BackgroundMusic";
 import { UpsellCTA, ShippingForm, QuickReplies } from "../components/upsell";
 import { useUpsellChat, Message } from "../hooks/useUpsellChat";
-import { trackPurchase } from "../lib/facebook";
-import { trackGAdsPurchase } from "../lib/gtm";
 import { Volume2, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import type { Bucket } from "@shared/types";
 import lavaStoneImage from "../assets/images/lava-stone.jpg";
 import { funnelPath, isTwinFlameOffer } from "../lib/funnel";
-import { trackABConversion } from "../hooks/useABTest";
-import { SmsOptInCard } from "../components/SmsOptInCard";
+import { claimMainPurchaseSlot, releaseMainPurchaseSlot, fireMainPurchaseEvents } from "../lib/mainPurchaseEvents";
 
 interface UserData {
   firstName: string;
@@ -25,8 +22,6 @@ interface UserData {
   // Order-bump amount in cents; 0/absent on every non-bump order.
   bumpAmountCents?: number;
 }
-
-const PURCHASE_TRACKED_KEY = "seer_purchase_tracked";
 
 export default function UpsellPage() {
   const searchString = useSearch();
@@ -82,15 +77,14 @@ export default function UpsellPage() {
     }
 
     setSessionId(sid);
+    const orderId: string = sid;
 
     // Claim the dedup slot synchronously before any async work, so a parallel
     // re-mount can't fire trackPurchase twice with the same event_id. Mirrors
-    // SoulmateUpsellPage.tsx pattern.
-    const purchaseKey = `${PURCHASE_TRACKED_KEY}_${sid}`;
-    const shouldTrack = !sessionStorage.getItem(purchaseKey);
-    if (shouldTrack) {
-      sessionStorage.setItem(purchaseKey, "true");
-    }
+    // SoulmateUpsellPage.tsx pattern. On a funnel with the SMS in-between page
+    // (<funnel>/preparing) that page normally claims + fires first, so this is
+    // then the BACKUP and does nothing (same key — see lib/mainPurchaseEvents).
+    const shouldTrack = claimMainPurchaseSlot(orderId);
 
     // Fetch user data from database
     async function fetchUserData() {
@@ -114,41 +108,9 @@ export default function UpsellPage() {
         setUserData(data);
 
         if (shouldTrack && !beFunnel) {
-          const purchaseAmount = (data.mainPurchaseAmount || 3500) / 100;
-          // Ad platforms get the TRUE order total (main + order bump). The
-          // server-side CAPI fire already reports Stripe's amount_total, and both
-          // sides share one deterministic event_id — so if this stayed on the
-          // main-only amount, the same deduped Purchase event would carry $35
-          // from the browser and $47.77 from the server, and which one survived
-          // would be down to whichever arrived first. Identical to purchaseAmount
-          // whenever there is no bump.
-          const orderTotal = purchaseAmount + (data.bumpAmountCents || 0) / 100;
-          trackPurchase(orderTotal, "USD", data.email, "Energy Clearing Ritual", sid ?? undefined, { skipServerRelay: true });
-          trackGAdsPurchase("main", orderTotal, sid);
-
-          // V1 prompt A/B (v1_clearing_theme_palm_2026) — primary metric =
-          // purchase_completed. Same-session, so the ab_vid cookie is present;
-          // /api/ab/convert self-gates (no-op unless this visitor was enrolled in a
-          // running test scoped to this page), so firing it here is safe for ALL
-          // funnels. Inside the dedup guard ⇒ counts once per purchase.
-          trackABConversion("v1_chat_palm");
-
-          // Trackdesk affiliate conversion tracking - main purchase.
-          //
-          // ⚠ DELIBERATELY still the MAIN amount, not orderTotal: this figure
-          // drives affiliate commission, so including the order bump would change
-          // what partners are paid. That is a commercial decision, not a tracking
-          // one — left unchanged pending Lewis/Joel. Ad platforms above correctly
-          // use the full order total.
-          if (typeof window.trackdesk === "function") {
-            window.trackdesk("the-seer-within", "conversion", {
-              conversionType: "sale",
-              amount: { value: String(purchaseAmount) },
-              externalId: sid,
-              customerId: data.email,
-              currencyCode: "USD",
-            });
-          }
+          // Main purchase events ($35 + order bump) — unchanged, moved to a shared
+          // helper so the SMS in-between page can fire them first.
+          fireMainPurchaseEvents(orderId, data);
         }
 
         // If coming back from declined fallback
@@ -158,7 +120,7 @@ export default function UpsellPage() {
       } catch (err) {
         // Release the dedup slot so a retry on remount can fire.
         if (shouldTrack) {
-          sessionStorage.removeItem(purchaseKey);
+          releaseMainPurchaseSlot(orderId);
         }
         setError("Could not load your session");
         console.error(err);
@@ -291,9 +253,9 @@ export default function UpsellPage() {
         data-testid="container-chat"
       >
         <div className="max-w-lg mx-auto space-y-4">
-          {/* Standalone SMS opt-in — separate from the purchase and the upsell below.
-              Renders nothing unless the server switches it on for this order. */}
-          <SmsOptInCard sessionId={sessionId} />
+          {/* SMS opt-in moved OFF this page (Joel, 25 Nov 2026: "we can never put it
+              there") — it now has its own in-between page, <funnel>/preparing,
+              shown after payment and before Upsell 1 (SmsOptInStepPage). */}
 
           {/* Date */}
           <div className="text-center text-xs text-gray-400 my-4">
