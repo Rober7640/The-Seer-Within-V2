@@ -1,4 +1,7 @@
-# /fb sales page: copy draft 1
+# Salespage 1: copy draft 1
+
+> **Superseded for wording, 25 Nov.** The product is the **Energy Clearing Ritual**, never "a letter": Evelyn finds where it started, cuts the black cord and seals both ends with wax (2–3 hours), and by morning her **reading** (5–7 pages) is in the email. The final words are in the mockup files (`fb-salespage-mockup/`): the offer, its button "Begin my Energy Clearing · $35", the first screen's check lines, How it works step 3, the comparison table, the questions and the closing box. Only the headline's "By morning, there's a letter." stays, because it is the ads' own line. Bump: "Yes, go twice as deep tonight" ($12.77, six hours instead of three), not a second letter. The "Messaging Evelyn is free" bar is on the first screen only. "Messaging me was free, and it still is." is cut from the offer, and the question "Is messaging really free?" is replaced by "Do I need to do anything during the ritual?" **Email (25 Nov):** her email is collected on Stripe's checkout page, on both /fb pages. The email step is gone: name, her words, then the offer. Where this document describes an email step, a lead written at the email step, or `/api/lead` before checkout, that no longer applies. **The close (25 Nov):** the offer screen has no ticks, bump or pay button. They're kept for the close at the bottom of the page: the chat's gate line and three ticks (CommitmentGateCard.tsx), then, only once all three are ticked, the optional "twice as deep" box and "Begin my Energy Clearing · $35". The close is laid out like Salespage 2's tick screen (C3). The offer screen shows no price; $35 first appears on the close's button. **Names (25 Nov):** this page (name → her words → offer → close) is **Salespage 1**. The candle letter (C1 → C2b → C3, canvas https://claude.ai/artifact/9D1ghRbagUJarSy4JmE21H) is **Salespage 2**.
+
 
 22 Nov 2026. This draft is copy only; nothing is built. It replaces the "Ask Evelyn 3 questions" offer in `plan-2026-11-22-fb-salespage-test.md`.
 
@@ -108,9 +111,13 @@ Under the button: *One letter, one payment. No subscription.*
 - *When does the letter come?* By morning. If you don't see it, check your spam folder.
 - *Is it private?* Only you and I read it.
 - *What if it doesn't feel true?* Write within 30 days for a full refund.
-- *Is this a subscription?* No. One letter, one payment.
+- *Is this a subscription?* No. One clearing, one payment.
 
-The name box again, at the bottom.
+The close. It sits after the comparison table and before the questions (25 Nov: the button comes before the questions). It sits under every step, so it follows her step and never asks for something she's already given:
+
+- **Before her name:** the name box again. "Send me your first name." / "Messaging me is free. By morning, there's a letter." `[ Send to Evelyn ]` *Free · no card needed*
+- **After her name (her words, her email):** "Thank you, **{name}**." / "I'm still here, just up the page." `[ Back to Evelyn ]` scrolls up to her step.
+- **Under the offer:** "{name}, before I prepare this for you, I need to know you're truly ready." Three ticks: "I understand belief is required for this to work" / "I'm ready to receive this tonight" / "I'll read it with an open heart". *Tick all three to continue.* Once all three are ticked: the optional box "Yes, go twice as deep tonight · +$12.77" and `[ Begin my Energy Clearing · $35 ]` *I'll begin tonight* ($47.77 with the box). Under it: "30-day guarantee · Secure checkout with Stripe" and "You'll add your email at checkout. That's where your reading goes."
 
 ## Not on the page
 

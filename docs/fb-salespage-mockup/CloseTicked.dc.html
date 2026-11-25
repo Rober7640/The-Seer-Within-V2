@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Sales page, the close after the three ticks</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&amp;family=Fraunces:opsz,wght@9..144,300;9..144,600;9..144,700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+.sr{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+input::placeholder{color:#857C8E}
+a{color:#5B146F}a:hover{color:#2D0458}
+summary{list-style:none;cursor:pointer}
+summary::-webkit-details-marker{display:none}
+details[open] .plus{transform:rotate(45deg)}
+.tick{display:flex;align-items:flex-start;gap:14px;padding:16px;border:1.5px solid #D9D0E2;background:#FFFFFF;cursor:pointer;font-family:Fraunces,Georgia,serif;font-size:18px;line-height:1.4;color:#2A2230}
+.tick input{width:24px;height:24px;margin:1px 0 0;flex-shrink:0;accent-color:#D1007B;cursor:pointer}
+.tick:has(input:checked){border-color:#D1007B;background:#FFF7FB}
+.go{display:none}
+.wait{display:block}
+.endC:has(#g1:checked):has(#g2:checked):has(#g3:checked) .go{display:flex}
+.endC:has(#g1:checked):has(#g2:checked):has(#g3:checked) .wait{display:none}
+.endC .bump{display:none}
+.endC:has(#g1:checked):has(#g2:checked):has(#g3:checked) .bump{display:flex}
+.bump{display:flex;flex-direction:column;gap:8px;padding:14px 16px 16px;border:2px dashed #D1007B;background:#FFF7FB;cursor:pointer}
+.bump input{width:24px;height:24px;margin:0;flex-shrink:0;accent-color:#D1007B;cursor:pointer}
+.bump:has(input:checked){border-style:solid;background:#FFEEF7}
+.p47,.s47{display:none}
+.endC:has(#bump:checked) .p35,.endC:has(#bump:checked) .s35{display:none}
+.endC:has(#bump:checked) .p47,.endC:has(#bump:checked) .s47{display:inline}
+</style>
+</helmet>
+<div style="width: 390px; height: 860px; box-sizing: border-box; display: flex; flex-direction: column; background: #FCFBF4; font-family: Archivo, Helvetica, Arial, sans-serif; color: #373737; overflow: hidden">
+  <!-- The same close as on Page.dc.html, shown after she has ticked all three: the bump box and the button are now showing. The close. It sits before the questions, so the button comes first and the questions answer whoever is still unsure. It is laid out like Salespage 2's tick screen (C3-Ready): the chat's gate line and three ticks (CommitmentGateCard.tsx), then, only once all three are ticked, the optional 'twice as deep' box and the button. Then Stripe, where her email is taken. -->
+  <section class="endC" style="display: flex; flex-direction: column; gap: 12px; padding: 34px 22px 40px; border-top: 1px solid #E8E4D8; background: #FCFBF4">
+    <p style="margin: 0 0 4px; font-family: Fraunces, Georgia, serif; font-style: italic; font-size: 21px; line-height: 1.35; color: #2D0458">Jules, before I prepare this for you, I need to know you're truly ready.</p>
+    <label class="tick" for="g1"><input id="g1" type="checkbox" checked><span>I understand belief is required for this to work</span></label>
+    <label class="tick" for="g2"><input id="g2" type="checkbox" checked><span>I'm ready to receive this tonight</span></label>
+    <label class="tick" for="g3"><input id="g3" type="checkbox" checked><span>I'll read it with an open heart</span></label>
+
+    <label class="bump" for="bump">
+      <span style="display: flex; align-items: center; gap: 12px">
+        <input id="bump" type="checkbox">
+        <span style="flex-grow: 1; font-size: 16px; font-weight: 700; color: #2D0458">Yes, go twice as deep tonight</span>
+        <span style="font-size: 15px; font-weight: 700; color: #D1007B">+$12.77</span>
+      </span>
+      <span style="font-family: Fraunces, Georgia, serif; font-size: 16px; line-height: 1.45; color: #2A2230">A rule this old has roots. Three hours gets its hold. It doesn't always get the root. I'll give yours six. It drains me more, but nothing gets left in you.</span>
+      <span style="font-size: 11px; font-weight: 700; letter-spacing: 0.8px; text-transform: uppercase; color: #857C8E">Optional</span>
+    </label>
+
+    <p class="wait" style="margin: 6px 0 0; text-align: center; font-size: 13px; font-style: italic; color: #857C8E">Tick all three to continue</p>
+    <a class="go" href="#" style="margin-top: 6px; height: 62px; flex-direction: column; align-items: center; justify-content: center; gap: 3px; background: {{cta}}; color: {{ctaInk}}; text-decoration: none">
+      <span style="font-size: 16px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase">Begin my Energy Clearing · <span class="p35">$35</span><span class="p47">$47.77</span></span>
+      <span style="font-size: 11px; font-weight: 600; letter-spacing: 0.6px; text-transform: uppercase"><span class="s35">I'll begin tonight</span><span class="s47">I'll go twice as deep tonight</span></span>
+    </a>
+    <p style="margin: 4px 0 0; display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 12px; color: #6B6475">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#6B6475" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="1"></rect><path d="M8 11V8a4 4 0 0 1 8 0v3"></path></svg>
+      30-day guarantee · Secure checkout with Stripe
+    </p>
+    <p style="margin: 0; text-align: center; font-size: 12px; line-height: 1.45; color: #6B6475">You'll add your email at checkout. That's where your reading goes.</p>
+  </section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"cta":{"editor":"color","default":"#63D39A","options":["#63D39A","#D1007B","#2D0458"]},"$preview":{"width":390,"height":860}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const cta = this.props.cta ?? '#63D39A';
+    let h = String(cta).replace('#', '');
+    if (h.length === 3) h = h.split('').map((c) => c + c).join('');
+    const n = parseInt(h, 16) || 0;
+    const lin = (c) => { c /= 255; return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4); };
+    const L = 0.2126 * lin((n >> 16) & 255) + 0.7152 * lin((n >> 8) & 255) + 0.0722 * lin(n & 255);
+    return { cta: cta, ctaInk: L > 0.3 ? '#1F0340' : '#FFFFFF' };
+  }
+}
+</script>
+</body>
+</html>

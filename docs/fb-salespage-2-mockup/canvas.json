@@ -1,0 +1,81 @@
+{
+  "v": 3,
+  "createdOnFiles": {
+    "v": 1,
+    "at": "2026-11-22T10:30:00Z"
+  },
+  "title": "Salespage 2",
+  "launch": {
+    "view": "focused",
+    "file": "C3-Ready.dc.html"
+  },
+  "pages": [],
+  "designSystems": [],
+  "boards": {
+    "C1-Name.dc.html": {
+      "x": 0,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "title": "Salespage 2 · 1 · Her name (C1)",
+      "is_interactive": true
+    },
+    "C2b-Reorg.dc.html": {
+      "x": 470,
+      "y": 0,
+      "w": 390,
+      "h": 8160,
+      "title": "Salespage 2 · 2 · The candle letter (C2b, the approved version)",
+      "is_interactive": true
+    },
+    "C3-Ready.dc.html": {
+      "x": 940,
+      "y": 0,
+      "w": 390,
+      "h": 960,
+      "title": "Salespage 2 · 3 · After she taps Yes: three ticks; once all three are ticked, the optional 'twice as deep' box and the button ($35 or $47.77) (C3)",
+      "is_interactive": true
+    }
+  },
+  "order": [
+    "C1-Name.dc.html",
+    "C2b-Reorg.dc.html",
+    "C3-Ready.dc.html"
+  ],
+  "notes": {
+    "titleC": {
+      "x": 0,
+      "y": -300,
+      "text": "Salespage 2 · BUILD THIS: 1 her name (C1) → 2 the candle letter (C2b) → 3 the ticks and the button (C3)",
+      "kind": "title1",
+      "maxW": 1800
+    },
+    "build": {
+      "x": 1410,
+      "y": 0,
+      "w": 380,
+      "text": "What to build: these three screens, in this order. Old drafts are parked on the shared canvas, not here.\n\n1 · C1, her name. 'Send to Evelyn' opens the letter with her first name in it ('Jules' is a sample).\n2 · C2b, the candle letter. Tapping A, B or C shows one line answering her pick. It ends on one button, 'Yes, begin my clearing'.\n3 · C3 opens in place under the letter when she taps Yes: the three ticks. Once all three are ticked, the optional 'twice as deep' box and the $35 button appear together. Then Stripe.\n\nProposed routes: /fb/clearing (C1) → /fb/clearing/letter (C2b, with C3 opening in place).\n\nTap through it: C1's button goes to C2b, and C2b's Yes goes to C3."
+    },
+    "cGate": {
+      "x": 1410,
+      "y": 550,
+      "w": 380,
+      "fill": "teal",
+      "text": "The close (C3):\n· The letter ends on one button, 'Yes, begin my clearing'. No email box anywhere on the page.\n· Tapping it opens the same 3-tick gate as the live chat (CommitmentGateCard.tsx), word for word, in place on the same page.\n· Until all three are ticked, only 'Tick all three to continue' shows. Then the 'twice as deep' box and the $35 button appear together ($47.77 if she ticks the box), and the button goes straight to Stripe.\n· Stripe collects her email.\n· 'I'll ask you one thing back' comes after she pays."
+    },
+    "cBump": {
+      "x": 1410,
+      "y": 932,
+      "w": 380,
+      "fill": "gray",
+      "text": "The bump, /fb-tarot's 'Double-Strength Clearing' ($12.77, the winning copy in shared/orderBump.ts, product key double_reading), on the tick screen. It's an optional dashed box under the three ticks. It stays hidden until all three are ticked, then appears with the button. Ticking it changes the button from $35 to $47.77. No extra screen.\n\nWhy not tarot's separate card: /fb tested it 12–27 Oct (v1_fb_order_bump_2026). No bump: 12.17% bought, $7,018 per 1k leads all-in. Bump card: 10.69% bought, 58% took it, $6,575 per 1k. The extra screen cost about 1 in 8 buyers.\n\nBuild note: today /api/checkout only adds a bump when it has her email (resolveV1Bump), and this page sends none. So this page needs its own rule: add the bump whenever she ticked the box. Stripe gets main + bump in one session. The morning reading must deliver the six hours she paid for."
+    },
+    "cOpen": {
+      "x": 1410,
+      "y": 1503,
+      "w": 380,
+      "text": "Open (decide before launch):\n· The Energy Clearing reading (n8n) must close the page's loop: which way the flame bent (door, window or floor), the afternoon it took hold, and the cord and wax. Check today's prompt for each.\n· 'By morning' (the ads and this page) vs 'within 24 hours' (the chat). Pick the one that's true.\n· The Christmas lines are seasonal: swap them after 24 Dec.\n· The cord photo on C2b still shows red wax.\n· A woman who doesn't pay leaves only her first name. Stripe takes the email, so we can only reach women who start checkout, not the 77% the chat captures.\n\nNo reviews, no invented numbers.",
+      "fill": "gray"
+    }
+  }
+}

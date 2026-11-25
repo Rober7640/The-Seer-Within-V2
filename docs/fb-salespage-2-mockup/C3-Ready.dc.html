@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Two pages, after her yes</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&amp;family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,600;0,9..144,700;1,9..144,400&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+.tick{display:flex;align-items:flex-start;gap:14px;padding:16px;border:1.5px solid #D9D0E2;background:#FFFFFF;cursor:pointer;font-family:Fraunces,Georgia,serif;font-size:18px;line-height:1.4;color:#2A2230}
+.tick input{width:24px;height:24px;margin:1px 0 0;flex-shrink:0;accent-color:#D1007B;cursor:pointer}
+.tick:has(input:checked){border-color:#D1007B;background:#FFF7FB}
+.go{display:none}
+.wait{display:block}
+.gate:has(#g1:checked):has(#g2:checked):has(#g3:checked) .go{display:flex}
+.gate:has(#g1:checked):has(#g2:checked):has(#g3:checked) .wait{display:none}
+.gate .bump{display:none}
+.gate:has(#g1:checked):has(#g2:checked):has(#g3:checked) .bump{display:flex}
+a{color:#5B146F}
+.bump{display:flex;flex-direction:column;gap:8px;padding:14px 16px 16px;border:2px dashed #D1007B;background:#FFF7FB;cursor:pointer}
+.bump input{width:24px;height:24px;margin:0;flex-shrink:0;accent-color:#D1007B;cursor:pointer}
+.bump:has(input:checked){border-style:solid;background:#FFEEF7}
+.p47,.s47{display:none}
+.gate:has(#bump:checked) .p35,.gate:has(#bump:checked) .s35{display:none}
+.gate:has(#bump:checked) .p47,.gate:has(#bump:checked) .s47{display:inline}
+</style>
+</helmet>
+<div style="width: 390px; height: 960px; box-sizing: border-box; display: flex; flex-direction: column; background: #FCFBF4; font-family: Archivo, Helvetica, Arial, sans-serif; color: #373737; overflow: hidden">
+  <div style="height: 52px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; border-bottom: 1px solid #E8E4D8">
+    <span style="font-family: Fraunces, Georgia, serif; font-weight: 300; font-size: 23px; letter-spacing: 0.5px; color: #2D0458">the seer within</span>
+  </div>
+
+  <!-- the end of the letter, for context -->
+  <div style="position: relative; padding: 18px 22px 6px; font-family: Fraunces, Georgia, serif; font-size: 18px; line-height: 1.55; color: #2A2230; opacity: 0.55">
+    <p style="margin: 0"><b style="font-weight: 600; color: #2D0458">P.S.</b> The candle's on my windowsill, and the cord is cut to length. If your name reaches me tonight, it's the next one I'll say.</p>
+  </div>
+
+  <!-- her yes, now pressed -->
+  <div style="padding: 12px 22px 0">
+    <div style="height: 50px; display: flex; align-items: center; justify-content: center; gap: 8px; border: 1.5px solid #2D0458; color: #2D0458; font-size: 14px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase">
+      <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8.5l3.2 3.2L13 5" fill="none" stroke="#2D0458" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+      Yes, begin my clearing
+    </div>
+  </div>
+
+  <!-- the same three ticks as the live gate (CommitmentGateCard.tsx) -->
+  <section class="gate" style="display: flex; flex-direction: column; gap: 12px; padding: 26px 22px 0">
+    <p style="margin: 0 0 4px; font-family: Fraunces, Georgia, serif; font-style: italic; font-size: 21px; line-height: 1.35; color: #2D0458">Jules, before I prepare this for you, I need to know you're truly ready.</p>
+    <label class="tick" for="g1"><input id="g1" type="checkbox"><span>I understand belief is required for this to work</span></label>
+    <label class="tick" for="g2"><input id="g2" type="checkbox"><span>I'm ready to receive this tonight</span></label>
+    <label class="tick" for="g3"><input id="g3" type="checkbox"><span>I'll read it with an open heart</span></label>
+
+    <!-- the tarot double-strength bump: an optional box on this same screen (no extra step), shown only once all three are ticked, together with the button -->
+    <label class="bump" for="bump">
+      <span style="display: flex; align-items: center; gap: 12px">
+        <input id="bump" type="checkbox">
+        <span style="flex-grow: 1; font-size: 16px; font-weight: 700; color: #2D0458">Yes, go twice as deep tonight</span>
+        <span style="font-size: 15px; font-weight: 700; color: #D1007B">+$12.77</span>
+      </span>
+      <span style="font-family: Fraunces, Georgia, serif; font-size: 16px; line-height: 1.45; color: #2A2230">A shadow this old has roots. Three hours gets its hold. It doesn't always get the root. I'll give yours six. It drains me more, but nothing gets left in you.</span>
+      <span style="font-size: 11px; font-weight: 700; letter-spacing: 0.8px; text-transform: uppercase; color: #857C8E">Optional</span>
+    </label>
+
+    <p class="wait" style="margin: 6px 0 0; text-align: center; font-size: 13px; font-style: italic; color: #857C8E">Tick all three to continue</p>
+    <a class="go" href="#" style="margin-top: 6px; height: 62px; flex-direction: column; align-items: center; justify-content: center; gap: 3px; background: {{cta}}; color: {{ctaInk}}; text-decoration: none">
+      <span style="font-size: 16px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase">Begin my Energy Clearing · <span class="p35">$35</span><span class="p47">$47.77</span></span>
+      <span style="font-size: 11px; font-weight: 600; letter-spacing: 0.6px; text-transform: uppercase"><span class="s35">I'll light your candle tonight</span><span class="s47">I'll go twice as deep tonight</span></span>
+    </a>
+    <p style="margin: 4px 0 0; display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 12px; color: #6B6475">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#6B6475" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="1"></rect><path d="M8 11V8a4 4 0 0 1 8 0v3"></path></svg>
+      30-day guarantee · Secure checkout with Stripe
+    </p>
+  </section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"cta":{"editor":"color","default":"#63D39A","options":["#63D39A","#D1007B","#2D0458"]},"$preview":{"width":390,"height":960}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const cta = this.props.cta ?? '#63D39A';
+    let h = String(cta).replace('#', '');
+    if (h.length === 3) h = h.split('').map((c) => c + c).join('');
+    const n = parseInt(h, 16) || 0;
+    const lin = (c) => { c /= 255; return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4); };
+    const L = 0.2126 * lin((n >> 16) & 255) + 0.7152 * lin((n >> 8) & 255) + 0.0722 * lin(n & 255);
+    return { cta: cta, ctaInk: L > 0.3 ? '#1F0340' : '#FFFFFF' };
+  }
+}
+</script>
+</body>
+</html>

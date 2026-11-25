@@ -1,25 +1,128 @@
 {
   "v": 3,
-  "createdOnFiles": {"v": 1, "at": "2026-11-22T07:40:00Z"},
-  "title": "/fb Sales Page Mockup",
-  "launch": {"view": "canvas"},
+  "createdOnFiles": {
+    "v": 1,
+    "at": "2026-11-22T07:40:00Z"
+  },
+  "title": "Salespage 1",
+  "launch": {
+    "view": "canvas"
+  },
   "pages": [],
   "boards": {
-    "Main.dc.html": {"x": 0, "y": 0, "w": 390, "h": 844, "title": "1 · In the ad: the last frame"},
-    "Hero.dc.html": {"x": 470, "y": 0, "w": 390, "h": 844, "title": "2 · She taps, and lands here", "is_interactive": true},
-    "Step2.dc.html": {"x": 940, "y": 0, "w": 390, "h": 844, "title": "3 · Her words", "is_interactive": true},
-    "Email.dc.html": {"x": 1410, "y": 0, "w": 390, "h": 844, "title": "4 · Where to write back", "is_interactive": true},
-    "Step3.dc.html": {"x": 1880, "y": 0, "w": 390, "h": 1290, "title": "5 · The offer, then pay", "is_interactive": true},
-    "Page.dc.html": {"x": 2350, "y": 0, "w": 390, "h": 3480, "title": "6 · Below the fold"}
+    "Main.dc.html": {
+      "x": 0,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "title": "1 · In the ad: the last frame"
+    },
+    "Hero.dc.html": {
+      "x": 470,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "title": "2 · She taps, and lands here",
+      "is_interactive": true
+    },
+    "Step2.dc.html": {
+      "x": 940,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "title": "3 · Her words",
+      "is_interactive": true
+    },
+    "Step3.dc.html": {
+      "x": 1410,
+      "y": 0,
+      "w": 390,
+      "h": 1020,
+      "title": "4 · The offer (the ticks and the button are in the close, at the bottom)",
+      "is_interactive": true
+    },
+    "Page.dc.html": {
+      "x": 1880,
+      "y": 0,
+      "w": 390,
+      "h": 4160,
+      "title": "5 · Below the offer: how it works, the close (ticks, then the button), then the questions",
+      "is_interactive": true
+    },
+    "CloseTicked.dc.html": {
+      "x": 2350,
+      "y": 0,
+      "w": 390,
+      "h": 860,
+      "is_interactive": true,
+      "title": "5b · The close, after all three are ticked: the 'twice as deep' box and the button appear"
+    }
   },
-  "order": ["Main.dc.html", "Hero.dc.html", "Step2.dc.html", "Email.dc.html", "Step3.dc.html", "Page.dc.html"],
+  "order": [
+    "Main.dc.html",
+    "Hero.dc.html",
+    "Step2.dc.html",
+    "Step3.dc.html",
+    "Page.dc.html",
+    "CloseTicked.dc.html"
+  ],
   "notes": {
-    "rowTitle": {"x": 0, "y": -300, "text": "/fb sales page: from the ad's last frame to payment", "kind": "title1", "maxW": 2740},
-    "notOnPage": {"x": 2820, "y": 0, "w": 320, "text": "Taken from the competitor: cream page, deep purple serif headings, pink check marks and labels, mint button, the fact strip, the comparison table, the FAQ.\n\nLeft out on purpose: countdowns, \"last 4 slots\", review counts, struck-through prices, testimonials, \"free reading\".", "fill": "purple"},
-    "byMorning": {"x": 2820, "y": 480, "w": 320, "text": "Open: \"by morning\" is in the ad and the headline. It has to be true before this goes live. The chat today says \"within 24 hours\".", "fill": "orange"},
-    "noQuestion": {"x": 2820, "y": 860, "w": 320, "text": "Removed: the optional \"one question answered\" box on screen 3 (my recommendation). Today's letter doesn't answer a question. Say if you want it back.", "fill": "pink"},
-    "cta": {"x": 2820, "y": 1240, "w": 320, "text": "Tweak: screens 2-6 have a button-colour switch (mint like the competitor, pink, or purple).", "fill": "gray"},
-    "emailFirst": {"x": 2820, "y": 1560, "w": 320, "text": "Order (chosen 22 Nov): name, her words, then email. She writes to Evelyn, and the email is where Evelyn writes back.\n\nRisk: anyone who quits at her words leaves no email, so that step is kept light: tap-to-start lines, one sentence is enough.\n\nLater test: email before vs after her words.", "fill": "teal"}
+    "rowTitle": {
+      "x": 0,
+      "y": -300,
+      "text": "Salespage 1: from the ad's last frame to payment",
+      "kind": "title1",
+      "maxW": 2270
+    },
+    "notOnPage": {
+      "x": 2820,
+      "y": 0,
+      "w": 320,
+      "text": "Taken from the competitor: cream page, deep purple serif headings, pink check marks and labels, mint button, the fact strip, the comparison table, the FAQ.\n\nLeft out on purpose: countdowns, \"last 4 slots\", review counts, struck-through prices, testimonials, \"free reading\".",
+      "fill": "purple"
+    },
+    "byMorning": {
+      "x": 2820,
+      "y": 480,
+      "w": 320,
+      "text": "Open: \"by morning\" is in the ad and the headline. It has to be true before this goes live. The chat today says \"within 24 hours\".",
+      "fill": "orange"
+    },
+    "noQuestion": {
+      "x": 2820,
+      "y": 860,
+      "w": 320,
+      "text": "Removed: the optional \"one question answered\" box on screen 3 (my recommendation). Today's letter doesn't answer a question. Say if you want it back.",
+      "fill": "pink"
+    },
+    "cta": {
+      "x": 2820,
+      "y": 1240,
+      "w": 320,
+      "text": "Tweak: screens 2-6 have a button-colour switch (mint like the competitor, pink, or purple).",
+      "fill": "gray"
+    },
+    "emailFirst": {
+      "x": 2820,
+      "y": 1560,
+      "w": 320,
+      "text": "25 Nov: her email is collected on Stripe's checkout page, on both /fb pages. There's no email step here any more: name, her words, then the offer.\n\nThe close says \"You'll add your email at checkout. That's where your reading goes.\" under the button.\n\nTrade-off, accepted: women who don't buy leave no email.",
+      "fill": "teal"
+    },
+    "endBox": {
+      "x": 2820,
+      "y": 1960,
+      "w": 320,
+      "fill": "pink",
+      "text": "The close sits before the questions, so the button comes first and the questions answer whoever is still unsure.\n\nUnder the offer: the chat's own gate line and three ticks (CommitmentGateCard.tsx), with 'Tick all three to continue'. Once all three are ticked, the optional 'twice as deep' box (+$12.77) and Begin my Energy Clearing · $35 appear together ($47.77 with the box ticked). Then Stripe, where her email is taken.\n\nFor the developer: this page also sits under screens 2 and 3, before she has seen the offer. There, the close's spot shows what her step needs instead, never the ticks: on screen 2 the name box ('Send me your first name.' · Send to Evelyn), on screen 3 'Thank you, Jules. I'm still here, just up the page.' · Back to Evelyn, which scrolls up. Wording is in docs/fb-salespage-copy-draft-2026-11-22.md."
+    },
+    "ritual": {
+      "x": 2820,
+      "y": 2420,
+      "w": 320,
+      "fill": "orange",
+      "text": "Fixed 25 Nov: the product is the Energy Clearing Ritual, never 'a letter'. Evelyn finds where it started, cuts the black cord and seals both ends with wax (2–3 hours); by morning her reading (5–7 pages) is in the email.\n\nChanged: the offer (screen 4), the close's button 'Begin my Energy Clearing · $35', the first screen's check lines, How it works step 3, the comparison table (new row 'Clears what it finds'), the questions and the closing box.\n\nKept on purpose: 'By morning, there's a letter.' under the headline. It's the ads' own end-card line.\n\n'Messaging Evelyn is free' (the chat-era bar) now shows on the first screen only, where she sends her name. Cut from her words, email and offer screens, along with 'Messaging me was free, and it still is.' on the offer. The FAQ 'Is messaging really free?' is now 'Do I need to do anything during the ritual?'\n\nBump now matches the candle page: 'Yes, go twice as deep tonight' (six hours instead of three), the Double-Strength Clearing. The old 'second letter about money, family or work' was also wrong: a love buyer's second reading is the money path only."
+    }
   },
   "designSystems": []
 }

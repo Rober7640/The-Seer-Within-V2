@@ -18,9 +18,24 @@ a{color:#5B146F}a:hover{color:#2D0458}
 summary{list-style:none;cursor:pointer}
 summary::-webkit-details-marker{display:none}
 details[open] .plus{transform:rotate(45deg)}
+.tick{display:flex;align-items:flex-start;gap:14px;padding:16px;border:1.5px solid #D9D0E2;background:#FFFFFF;cursor:pointer;font-family:Fraunces,Georgia,serif;font-size:18px;line-height:1.4;color:#2A2230}
+.tick input{width:24px;height:24px;margin:1px 0 0;flex-shrink:0;accent-color:#D1007B;cursor:pointer}
+.tick:has(input:checked){border-color:#D1007B;background:#FFF7FB}
+.go{display:none}
+.wait{display:block}
+.endC:has(#g1:checked):has(#g2:checked):has(#g3:checked) .go{display:flex}
+.endC:has(#g1:checked):has(#g2:checked):has(#g3:checked) .wait{display:none}
+.endC .bump{display:none}
+.endC:has(#g1:checked):has(#g2:checked):has(#g3:checked) .bump{display:flex}
+.bump{display:flex;flex-direction:column;gap:8px;padding:14px 16px 16px;border:2px dashed #D1007B;background:#FFF7FB;cursor:pointer}
+.bump input{width:24px;height:24px;margin:0;flex-shrink:0;accent-color:#D1007B;cursor:pointer}
+.bump:has(input:checked){border-style:solid;background:#FFEEF7}
+.p47,.s47{display:none}
+.endC:has(#bump:checked) .p35,.endC:has(#bump:checked) .s35{display:none}
+.endC:has(#bump:checked) .p47,.endC:has(#bump:checked) .s47{display:inline}
 </style>
 </helmet>
-<div style="width: 390px; height: 3480px; box-sizing: border-box; display: flex; flex-direction: column; background: #FCFBF4; font-family: Archivo, Helvetica, Arial, sans-serif; color: #373737; overflow: hidden">
+<div style="width: 390px; height: 4160px; box-sizing: border-box; display: flex; flex-direction: column; background: #FCFBF4; font-family: Archivo, Helvetica, Arial, sans-serif; color: #373737; overflow: hidden">
 
   <section style="display: flex; flex-direction: column; gap: 28px; padding: 48px 20px">
     <div style="display: flex; flex-direction: column; align-items: flex-start; gap: 12px">
@@ -39,14 +54,14 @@ details[open] .plus{transform:rotate(45deg)}
         <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#5B146F" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4L19 9a2.8 2.8 0 0 0-4-4L4 16v4z"></path><path d="M13.5 6.5l4 4"></path></svg>
       </div>
       <h3 style="margin: 0; font-family: Fraunces, Georgia, serif; font-weight: 600; font-size: 22px; color: #2D0458">2. Tell her what keeps happening</h3>
-      <p style="margin: 0; font-size: 16px; line-height: 1.5">A sentence is enough. Then tell her where to write back.</p>
+      <p style="margin: 0; font-size: 16px; line-height: 1.5">A sentence is enough.</p>
     </div>
     <div style="display: flex; flex-direction: column; gap: 10px">
       <div style="width: 56px; height: 56px; display: flex; align-items: center; justify-content: center; background: #FFFFFF; border: 1px solid #E8E4D8">
         <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#5B146F" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="1"></rect><path d="M3 7l9 6 9-6"></path></svg>
       </div>
-      <h3 style="margin: 0; font-family: Fraunces, Georgia, serif; font-weight: 600; font-size: 22px; color: #2D0458">3. Her letter arrives by morning</h3>
-      <p style="margin: 0; font-size: 16px; line-height: 1.5">Five to seven pages in your email, written for you.</p>
+      <h3 style="margin: 0; font-family: Fraunces, Georgia, serif; font-weight: 600; font-size: 22px; color: #2D0458">3. Tonight, her Energy Clearing Ritual</h3>
+      <p style="margin: 0; font-size: 16px; line-height: 1.5">She finds where it started and clears it. By morning, your reading is in your email, five to seven pages.</p>
     </div>
   </section>
 
@@ -58,7 +73,7 @@ details[open] .plus{transform:rotate(45deg)}
       <footer style="font-size: 14px; font-weight: 600; color: #5B146F">Evelyn</footer>
     </blockquote>
     <ul style="list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 12px">
-      <li style="display: flex; align-items: flex-start; gap: 10px; font-size: 16px; font-weight: 600; color: #2D0458; line-height: 1.4"><svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true" style="flex-shrink: 0; margin-top: 1px"><circle cx="10" cy="10" r="10" fill="#FB0797"></circle><path d="M6 10.5l2.6 2.6L14 7.6" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg>A letter written from your own words</li>
+      <li style="display: flex; align-items: flex-start; gap: 10px; font-size: 16px; font-weight: 600; color: #2D0458; line-height: 1.4"><svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true" style="flex-shrink: 0; margin-top: 1px"><circle cx="10" cy="10" r="10" fill="#FB0797"></circle><path d="M6 10.5l2.6 2.6L14 7.6" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg>A reading written from your own words</li>
       <li style="display: flex; align-items: flex-start; gap: 10px; font-size: 16px; font-weight: 600; color: #2D0458; line-height: 1.4"><svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true" style="flex-shrink: 0; margin-top: 1px"><circle cx="10" cy="10" r="10" fill="#FB0797"></circle><path d="M6 10.5l2.6 2.6L14 7.6" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg>Where it started, not just what's happening now</li>
       <li style="display: flex; align-items: flex-start; gap: 10px; font-size: 16px; font-weight: 600; color: #2D0458; line-height: 1.4"><svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true" style="flex-shrink: 0; margin-top: 1px"><circle cx="10" cy="10" r="10" fill="#FB0797"></circle><path d="M6 10.5l2.6 2.6L14 7.6" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg>Your next 30 days, week by week</li>
     </ul>
@@ -88,7 +103,7 @@ details[open] .plus{transform:rotate(45deg)}
 
   <section style="display: flex; flex-direction: column; gap: 22px; padding: 52px 16px">
     <div style="display: flex; flex-direction: column; gap: 8px; align-items: center; text-align: center">
-      <h2 style="margin: 0; font-family: Fraunces, Georgia, serif; font-weight: 600; font-size: 30px; line-height: 1.12; letter-spacing: -0.5px; color: #2D0458">Evelyn's letter vs a quick reading</h2>
+      <h2 style="margin: 0; font-family: Fraunces, Georgia, serif; font-weight: 600; font-size: 30px; line-height: 1.12; letter-spacing: -0.5px; color: #2D0458">Evelyn's clearing vs a quick reading</h2>
       <p style="margin: 0; font-size: 15px; line-height: 1.45; color: #5B146F">What you get from Evelyn, next to a typical quick reading.</p>
     </div>
     <table style="width: 100%; border-collapse: collapse; font-size: 15px">
@@ -97,7 +112,7 @@ details[open] .plus{transform:rotate(45deg)}
           <th scope="col" style="width: 44%"><span class="sr">What you get</span></th>
           <th scope="col" style="width: 28%; padding: 16px 6px 14px; background: #5B146F; color: #FFFFFF; font-weight: 600; font-size: 14px; vertical-align: bottom">
             <img src="/_blob/0b429c4882873637dd28ffd94cb4896b" alt="" style="width: 56px; height: 56px; border-radius: 50%; object-fit: cover; object-position: 50% 30%; display: block; margin: 0 auto 8px; border: 2px solid #FFFFFF">
-            Evelyn's letter
+            Energy Clearing
           </th>
           <th scope="col" style="width: 28%; padding: 16px 6px 14px; color: #2D0458; font-weight: 600; font-size: 14px; vertical-align: bottom">
             <svg width="56" height="56" viewBox="0 0 56 56" aria-hidden="true" style="display: block; margin: 0 auto 8px"><circle cx="28" cy="28" r="27" fill="#EFEAF2"></circle><rect x="19" y="16" width="14" height="22" rx="2" fill="none" stroke="#8B7F96" stroke-width="1.6" transform="rotate(-10 26 27)"></rect><rect x="24" y="18" width="14" height="22" rx="2" fill="#EFEAF2" stroke="#8B7F96" stroke-width="1.6" transform="rotate(8 31 29)"></rect></svg>
@@ -117,6 +132,11 @@ details[open] .plus{transform:rotate(45deg)}
           <td style="text-align: center"><svg width="22" height="22" viewBox="0 0 20 20" role="img" aria-label="No"><circle cx="10" cy="10" r="10" fill="#E6E1EA"></circle><path d="M7 7l6 6M13 7l-6 6" stroke="#6B6475" stroke-width="1.8" stroke-linecap="round"></path></svg></td>
         </tr>
         <tr style="border-top: 1px solid #E8E4D8">
+          <th scope="row" style="padding: 16px 8px 16px 4px; text-align: left; font-weight: 500; color: #2D0458">Clears what it finds</th>
+          <td style="background: #5B146F; text-align: center"><svg width="24" height="24" viewBox="0 0 20 20" role="img" aria-label="Yes"><circle cx="10" cy="10" r="10" fill="#FB0797"></circle><path d="M6 10.5l2.6 2.6L14 7.6" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg></td>
+          <td style="text-align: center"><svg width="22" height="22" viewBox="0 0 20 20" role="img" aria-label="No"><circle cx="10" cy="10" r="10" fill="#E6E1EA"></circle><path d="M7 7l6 6M13 7l-6 6" stroke="#6B6475" stroke-width="1.8" stroke-linecap="round"></path></svg></td>
+        </tr>
+        <tr style="border-top: 1px solid #E8E4D8">
           <th scope="row" style="padding: 16px 8px 16px 4px; text-align: left; font-weight: 500; color: #2D0458">Your next 30 days, week by week</th>
           <td style="background: #5B146F; text-align: center"><svg width="24" height="24" viewBox="0 0 20 20" role="img" aria-label="Yes"><circle cx="10" cy="10" r="10" fill="#FB0797"></circle><path d="M6 10.5l2.6 2.6L14 7.6" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg></td>
           <td style="text-align: center"><svg width="22" height="22" viewBox="0 0 20 20" role="img" aria-label="No"><circle cx="10" cy="10" r="10" fill="#E6E1EA"></circle><path d="M7 7l6 6M13 7l-6 6" stroke="#6B6475" stroke-width="1.8" stroke-linecap="round"></path></svg></td>
@@ -130,15 +150,44 @@ details[open] .plus{transform:rotate(45deg)}
     </table>
   </section>
 
+  <!-- The close. It sits before the questions, so the button comes first and the questions answer whoever is still unsure. It is laid out like Salespage 2's tick screen (C3-Ready): the chat's gate line and three ticks (CommitmentGateCard.tsx), then, only once all three are ticked, the optional 'twice as deep' box and the button. Then Stripe, where her email is taken. -->
+  <section class="endC" style="display: flex; flex-direction: column; gap: 12px; padding: 34px 22px 40px; border-top: 1px solid #E8E4D8; background: #FCFBF4">
+    <p style="margin: 0 0 4px; font-family: Fraunces, Georgia, serif; font-style: italic; font-size: 21px; line-height: 1.35; color: #2D0458">Jules, before I prepare this for you, I need to know you're truly ready.</p>
+    <label class="tick" for="g1"><input id="g1" type="checkbox"><span>I understand belief is required for this to work</span></label>
+    <label class="tick" for="g2"><input id="g2" type="checkbox"><span>I'm ready to receive this tonight</span></label>
+    <label class="tick" for="g3"><input id="g3" type="checkbox"><span>I'll read it with an open heart</span></label>
+
+    <label class="bump" for="bump">
+      <span style="display: flex; align-items: center; gap: 12px">
+        <input id="bump" type="checkbox">
+        <span style="flex-grow: 1; font-size: 16px; font-weight: 700; color: #2D0458">Yes, go twice as deep tonight</span>
+        <span style="font-size: 15px; font-weight: 700; color: #D1007B">+$12.77</span>
+      </span>
+      <span style="font-family: Fraunces, Georgia, serif; font-size: 16px; line-height: 1.45; color: #2A2230">A rule this old has roots. Three hours gets its hold. It doesn't always get the root. I'll give yours six. It drains me more, but nothing gets left in you.</span>
+      <span style="font-size: 11px; font-weight: 700; letter-spacing: 0.8px; text-transform: uppercase; color: #857C8E">Optional</span>
+    </label>
+
+    <p class="wait" style="margin: 6px 0 0; text-align: center; font-size: 13px; font-style: italic; color: #857C8E">Tick all three to continue</p>
+    <a class="go" href="#" style="margin-top: 6px; height: 62px; flex-direction: column; align-items: center; justify-content: center; gap: 3px; background: {{cta}}; color: {{ctaInk}}; text-decoration: none">
+      <span style="font-size: 16px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase">Begin my Energy Clearing · <span class="p35">$35</span><span class="p47">$47.77</span></span>
+      <span style="font-size: 11px; font-weight: 600; letter-spacing: 0.6px; text-transform: uppercase"><span class="s35">I'll begin tonight</span><span class="s47">I'll go twice as deep tonight</span></span>
+    </a>
+    <p style="margin: 4px 0 0; display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 12px; color: #6B6475">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#6B6475" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="1"></rect><path d="M8 11V8a4 4 0 0 1 8 0v3"></path></svg>
+      30-day guarantee · Secure checkout with Stripe
+    </p>
+    <p style="margin: 0; text-align: center; font-size: 12px; line-height: 1.45; color: #6B6475">You'll add your email at checkout. That's where your reading goes.</p>
+  </section>
+
   <section style="display: flex; flex-direction: column; gap: 16px; padding: 44px 20px 52px; background: #F4F3EE">
     <h2 style="margin: 0 0 6px; font-family: Fraunces, Georgia, serif; font-weight: 600; font-size: 30px; line-height: 1.1; letter-spacing: -0.5px; color: #2D0458">Questions</h2>
     <div style="display: flex; flex-direction: column; border-top: 1px solid #D9D3C6">
       <details open style="border-bottom: 1px solid #D9D3C6">
-        <summary style="display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 16px 2px; font-size: 16px; font-weight: 600; color: #2D0458">Is messaging really free?<svg class="plus" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2D0458" stroke-width="2.2" stroke-linecap="round" aria-hidden="true" style="flex-shrink: 0"><path d="M12 5v14M5 12h14"></path></svg></summary>
-        <p style="margin: 0; padding: 0 2px 16px; font-size: 15px; line-height: 1.5">Yes. Your name and your words cost nothing. The letter is $35, and you'll see that before you pay anything.</p>
+        <summary style="display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 16px 2px; font-size: 16px; font-weight: 600; color: #2D0458">Do I need to do anything during the ritual?<svg class="plus" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2D0458" stroke-width="2.2" stroke-linecap="round" aria-hidden="true" style="flex-shrink: 0"><path d="M12 5v14M5 12h14"></path></svg></summary>
+        <p style="margin: 0; padding: 0 2px 16px; font-size: 15px; line-height: 1.5">No. I do it tonight, on my own, and you don't need to be awake for it. In the morning, read what I found.</p>
       </details>
       <details style="border-bottom: 1px solid #D9D3C6">
-        <summary style="display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 16px 2px; font-size: 16px; font-weight: 600; color: #2D0458">When does the letter come?<svg class="plus" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2D0458" stroke-width="2.2" stroke-linecap="round" aria-hidden="true" style="flex-shrink: 0"><path d="M12 5v14M5 12h14"></path></svg></summary>
+        <summary style="display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 16px 2px; font-size: 16px; font-weight: 600; color: #2D0458">When does my reading come?<svg class="plus" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2D0458" stroke-width="2.2" stroke-linecap="round" aria-hidden="true" style="flex-shrink: 0"><path d="M12 5v14M5 12h14"></path></svg></summary>
         <p style="margin: 0; padding: 0 2px 16px; font-size: 15px; line-height: 1.5">By morning. If you don't see it, check your spam folder.</p>
       </details>
       <details style="border-bottom: 1px solid #D9D3C6">
@@ -151,22 +200,9 @@ details[open] .plus{transform:rotate(45deg)}
       </details>
       <details style="border-bottom: 1px solid #D9D3C6">
         <summary style="display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 16px 2px; font-size: 16px; font-weight: 600; color: #2D0458">Is this a subscription?<svg class="plus" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2D0458" stroke-width="2.2" stroke-linecap="round" aria-hidden="true" style="flex-shrink: 0"><path d="M12 5v14M5 12h14"></path></svg></summary>
-        <p style="margin: 0; padding: 0 2px 16px; font-size: 15px; line-height: 1.5">No. One letter, one payment.</p>
+        <p style="margin: 0; padding: 0 2px 16px; font-size: 15px; line-height: 1.5">No. One clearing, one payment.</p>
       </details>
     </div>
-  </section>
-
-  <section style="display: flex; flex-direction: column; gap: 16px; padding: 52px 20px; background: #2D0458">
-    <div style="display: flex; flex-direction: column; gap: 8px">
-      <h2 style="margin: 0; font-family: Fraunces, Georgia, serif; font-weight: 600; font-size: 32px; line-height: 1.1; letter-spacing: -0.5px; color: #FFFFFF">Send me your first name.</h2>
-      <p style="margin: 0; font-size: 17px; line-height: 1.45; color: #EDE6F2">Messaging me is free. By morning, there's a letter.</p>
-    </div>
-    <label for="footName" class="sr">Your first name</label>
-    <input id="footName" type="text" autocomplete="given-name" placeholder="Your first name" style="height: 52px; box-sizing: border-box; padding: 0 16px; border: 0; background: #FFFFFF; font-family: inherit; font-size: 17px; color: #2D0458">
-    <a href="#" style="height: 58px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; background: {{cta}}; color: {{ctaInk}}; text-decoration: none">
-      <span style="font-size: 15px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase">Send to Evelyn</span>
-      <span style="font-size: 11px; font-weight: 600; letter-spacing: 0.6px; text-transform: uppercase">Free · no card needed</span>
-    </a>
   </section>
 
   <footer style="flex-grow: 1; display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 28px 20px; font-size: 13px; color: #6B6475">
@@ -179,7 +215,7 @@ details[open] .plus{transform:rotate(45deg)}
   </footer>
 </div>
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props='{"cta":{"editor":"color","default":"#63D39A","options":["#63D39A","#D1007B","#2D0458"]},"$preview":{"width":390,"height":3480}}'>
+<script type="text/x-dc" data-dc-script data-props='{"cta":{"editor":"color","default":"#63D39A","options":["#63D39A","#D1007B","#2D0458"]},"$preview":{"width":390,"height":4160}}'>
 class Component extends DCLogic {
   renderVals() {
     const cta = this.props.cta ?? '#63D39A';

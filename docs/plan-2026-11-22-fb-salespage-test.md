@@ -1,4 +1,7 @@
-# /fb sales page test: plan
+# Salespage 1 test: plan
+
+> **25 Nov:** the product on this page is the **Energy Clearing Ritual** (Evelyn finds where it started, cuts the black cord and seals both ends with wax; 2–3 hours). What arrives by morning is her **reading** (5–7 pages). Where this plan says "the letter" for the product, read Energy Clearing Ritual. The final words are in the mockup files in `fb-salespage-mockup/`. The bump is now the Double-Strength Clearing ("Yes, go twice as deep tonight", six hours instead of three), the same as on the candle page. The dev brief is `dev-brief-2026-11-25-fb-entry-pages.md`. **Email (25 Nov):** her email is collected on Stripe's checkout page, on both /fb pages. The email step is gone: name, her words, then the offer. Where this document describes an email step, a lead written at the email step, or `/api/lead` before checkout, that no longer applies. **The close (25 Nov):** the offer screen has no ticks, bump or pay button. They're kept for the close at the bottom of the page: the chat's gate line and three ticks (CommitmentGateCard.tsx), then, only once all three are ticked, the optional "twice as deep" box and "Begin my Energy Clearing · $35". The close is laid out like Salespage 2's tick screen (C3). The offer screen shows no price; $35 first appears on the close's button. **Names (25 Nov):** this page (name → her words → offer → close) is **Salespage 1**. The candle letter (C1 → C2b → C3, canvas https://claude.ai/artifact/9D1ghRbagUJarSy4JmE21H) is **Salespage 2**.
+
 
 22 Nov 2026. This is a plan only; nothing is built yet. The copy is in `docs/fb-salespage-copy-draft-2026-11-22.md` and the mockup is described in `docs/fb-salespage-mockup/` (see the end of this file).
 
@@ -78,11 +81,11 @@ These leads include belief-lane visitors, because the tag doesn't separate them.
 
 All four steps are on one route, `/fb/reading`, with no page reload between them. The words are final in the copy draft; the look is in the mockup.
 
-1. **First screen:** plum strip "Messaging Evelyn is free", Evelyn's photo tagged "Evelyn · Ireland", the headline "Send me your first name." / "Messaging me is free. By morning, there's a letter.", the name box, and **Send to Evelyn** ("Free · no card needed"). Three pink check lines under it.
+1. **First screen:** plum strip "Messaging Evelyn is free" (first screen only), Evelyn's photo tagged "Evelyn · Ireland", the headline "Send me your first name." / "Messaging me is free. By morning, there's a letter.", the name box, and **Send to Evelyn** ("Free · no card needed"). Three pink check lines under it.
 2. **Her words:** "Thank you, {name}. Now tell me what keeps happening. One sentence is enough, in your own words." Three tap-to-start lines drop into the box and can be edited. Before launch, swap them for the three most common openings from real /fb chats.
 3. **Her email:** "Thank you for telling me, {name}. Where should I write back to you?" This is where she becomes a lead (see the build table).
 4. **The offer:** what the letter holds (what keeps happening, where it started, what Evelyn cleared overnight, her next 30 days), "$35 for your letter · one payment", the 30-day refund, "Your letter goes to {email}" with a Change link, the $12.77 second-letter tick box, and **Send me my letter · $35**. Then Stripe's own checkout.
-5. **Below the fold:** how it works, "Why only your first name?", a facts strip (By morning · 5–7 pages · 1:1 · 30 days), a comparison table, the questions, and the name box again.
+5. **Below the fold:** how it works, "Why only your first name?", a facts strip (By morning · 5–7 pages · 1:1 · 30 days), a comparison table, **the close**, then the questions (the button comes before the questions). This section sits under every step, so the close's spot follows her step and never asks for something she's already given: before her name, the name box again; after her name, "Thank you, {name}. I'm still here, just up the page." with **Back to Evelyn** (scrolls up to her step); under the offer, the close: the chat's gate line and three ticks, then, once all three are ticked, the optional "twice as deep" box and **Begin my Energy Clearing · $35** (Stripe, $47.77 with the bump).
 
 **Look:** cream page `#FCFBF4`, deep purple serif headings `#2D0458` (Fraunces), body text `#373737` (Archivo), plum `#5B146F` / `#59166C`, pink `#D1007B` for labels with white text and `#FB0797` for check marks, and a mint button `#63D39A` with dark text `#1F0340` (white on mint fails contrast).
 
