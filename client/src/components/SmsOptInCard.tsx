@@ -83,7 +83,9 @@ export function SmsOptInCard({
   }
 
   useEffect(() => {
-    if (!sessionId || !sessionId.startsWith("cs_")) {
+    // Stripe orders (cs_…) and Payments.AI orders (txn_…, Lewis 26 Nov 2026). The
+    // server decides whether the box shows for either; anything else moves on.
+    if (!sessionId || !(sessionId.startsWith("cs_") || sessionId.startsWith("txn_"))) {
       finish();
       return;
     }

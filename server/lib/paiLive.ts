@@ -70,6 +70,7 @@ import {
   SMS_CONSENT_NO_LABEL,
   SMS_CONSENT_VERSION,
   SMS_CONSENT_YES_LABEL,
+  showsPostPurchaseSmsOptIn,
   showsSmsConsent,
   smsConsentCheckoutEnabled,
   smsConsentDisclosure,
@@ -544,6 +545,70 @@ interface BuyerExtras {
   policyBase: string;
 }
 
+/**
+ * Where an APPROVED main payment goes next — the same rule as Stripe's success_url
+ * (server/routes.ts): on a funnel where the SMS opt-in is switched on
+ * (SMS_CONSENT_FUNNELS), she lands on <funnel>/preparing first, which hands her on
+ * to <funnel>/welcome1 with the SAME session_id. Every other funnel keeps the exact
+ * welcome1 URL it has always had. (Lewis, 26 Nov 2026: Payments.AI buyers on
+ * /fb-tarot must see the SMS in-between page too.)
+ */
+export function afterMainRedirect(
+  funnel: FunnelParam | undefined,
+  transactionId: string,
+  deps: Pick<PaiLiveDeps, 'funnelPath'>,
+): string {
+  const next = showsPostPurchaseSmsOptIn(funnel, undefined) ? '/preparing' : '/welcome1';
+  return `${deps.funnelPath(next, funnel)}?session_id=${encodeURIComponent(transactionId)}`;
+}
+
+/**
+ * A PAID Payments.AI main order, for the SMS in-between page (<funnel>/preparing):
+ * the box, the "Text me" save and the page's purchase events. READ-ONLY.
+ *
+ * The Stripe path reads all of this from the Stripe session; a Payments.AI order has
+ * no Stripe session, so it is read from OUR records instead, written server-side by
+ * fulfilMain before she was ever redirected — never from the browser:
+ *   - the order row (stripe_session_id = the txn id) must be on Payments.AI and paid;
+ *   - the funnel comes from that payment's attempt row (as the shipping saves do).
+ * Anything missing ⇒ null, and the page simply moves her on to Upsell 1.
+ */
+export interface PaiSmsOrder {
+  id: string;
+  funnel: FunnelParam | undefined;
+  email: string | null;
+  phone: string | null;
+  firstName: string | null;
+  mainPurchaseAmount: number;
+  bumpAmountCents: number;
+}
+
+export async function paiPaidOrderForSmsPage(transactionId: unknown): Promise<PaiSmsOrder | null> {
+  if (!isPaiOrderId(transactionId)) return null;
+  const id = transactionId as string;
+  if (!/^txn_[A-Za-z0-9_-]{4,200}$/.test(id)) return null;
+  try {
+    const row = await getConversationByStripeSession(id);
+    if (!row || row.paymentGateway !== GATEWAY_ARM_PAI || !row.mainPaidAt) return null;
+    const funnel = await funnelForPaiPayment(id);
+    if (!funnel) return null;
+    return {
+      id,
+      funnel,
+      email: row.email || null,
+      phone: row.phone || null,
+      firstName: row.firstName || null,
+      // Exactly what /api/upsell/user-data returns for the same order, so the
+      // page and Upsell 1's backup fire identical purchase values.
+      mainPurchaseAmount: row.mainPurchaseAmount || 3500,
+      bumpAmountCents: row.bumpAmountCents ?? 0,
+    };
+  } catch (err) {
+    logger.warn('[pai-live] sms-page order lookup failed', { err: String(err) });
+    return null;
+  }
+}
+
 /** Decided either way: record the attempt and, only on approved, fulfil. */
 async function settleMain(
   order: PaiOrder,
@@ -574,7 +639,7 @@ async function settleMain(
     kind: 'approved',
     transactionId: settled.id,
     totalCents: total,
-    redirect: `${deps.funnelPath('/welcome1', order.funnel ?? undefined)}?session_id=${encodeURIComponent(settled.id)}`,
+    redirect: afterMainRedirect(order.funnel ?? undefined, settled.id, deps),
   };
 }
 
@@ -598,7 +663,7 @@ export async function completeMain(
         kind: 'approved' as const,
         transactionId: args.transactionId,
         totalCents: orderTotalCents(args.order),
-        redirect: `${deps.funnelPath('/welcome1', args.order.funnel ?? undefined)}?session_id=${encodeURIComponent(args.transactionId)}`,
+        redirect: afterMainRedirect(args.order.funnel ?? undefined, args.transactionId, deps),
       };
     }
     const cfg = liveConfig();

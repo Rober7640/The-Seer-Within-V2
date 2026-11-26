@@ -231,3 +231,117 @@ describe('POST /api/sms-optin', () => {
     }
   });
 });
+
+// ── Payments.AI orders (txn_…) — Lewis 26 Nov 2026 ───────────────────────────
+// The same box after a PAID Payments.AI main order. The router reads the order via
+// deps.retrievePaiOrder (our own records), never the browser, and the SAME
+// SMS_CONSENT_FUNNELS switch decides. Switched on for /fb-tarot only here.
+
+describe('Payments.AI orders on the SMS in-between page', () => {
+  const TAROT_ONLY = parseSmsConsentFunnels('v1-tarot');
+  const PAI_ORDERS: Record<string, any> = {
+    txn_tarotPaidAAAAAAAAAAAAAAAAAA: { id: 'txn_tarotPaidAAAAAAAAAAAAAAAAAA', funnel: 'v1-tarot', email: 'pai@example.com', phone: '+15559876543' },
+    txn_fbPaidAAAAAAAAAAAAAAAAAAAAA: { id: 'txn_fbPaidAAAAAAAAAAAAAAAAAAAAA', funnel: 'v1-fb', email: 'fb@example.com', phone: '+15550000000' },
+    txn_noFunnelAAAAAAAAAAAAAAAAAAA: { id: 'txn_noFunnelAAAAAAAAAAAAAAAAAAA', funnel: undefined, email: 'x@example.com', phone: null },
+    // A lookup that hands back a DIFFERENT order must never be trusted.
+    txn_mismatchAAAAAAAAAAAAAAAAAAA: { id: 'txn_somethingElseAAAAAAAAAAAAAAA', funnel: 'v1-tarot', email: 'y@example.com', phone: null },
+  };
+  const paiSaved: any[] = [];
+  const paiTexted: string[] = [];
+  const paiDeps: SmsOptInDeps = {
+    // A Stripe lookup must never be attempted for a txn id.
+    retrieveSession: async (id) => {
+      if (id.startsWith('txn_')) throw new Error('Stripe asked about a Payments.AI order');
+      if (!SESSIONS[id]) throw new Error('No such checkout.session');
+      return SESSIONS[id];
+    },
+    retrievePaiOrder: async (id) => {
+      if (id === 'txn_throwsAAAAAAAAAAAAAAAAAAAAA') throw new Error('db down');
+      return PAI_ORDERS[id] ?? null; // unknown / unpaid / Stripe-arm ⇒ null
+    },
+    upsertOptIn: async (rec) => {
+      paiSaved.push(rec);
+      return 'saved';
+    },
+    getConsent: async () => null,
+    policyBase: () => `${BASE}/`,
+    enabled: () => TAROT_ONLY,
+    now: () => FIXED_NOW,
+    onOptedIn: (p) => { paiTexted.push(p); },
+  };
+
+  let paiServer: Server;
+  let paiUrl: string;
+  beforeAll(async () => {
+    const app = express();
+    app.use(express.json());
+    app.use('/api/sms-optin', createSmsOptInRouter(paiDeps));
+    paiServer = app.listen(0);
+    await new Promise((r) => paiServer.once('listening', r));
+    paiUrl = `http://127.0.0.1:${(paiServer.address() as AddressInfo).port}/api/sms-optin`;
+  });
+  afterAll(() => new Promise((r) => paiServer.close(r)));
+
+  const paiStatus = (sid: string) => fetch(`${paiUrl}/status?session_id=${sid}`).then((r) => r.json());
+  const paiPost = (body: unknown) =>
+    fetch(paiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+
+  it('a paid /fb-tarot Payments.AI order shows the box, pre-filled with her checkout phone', async () => {
+    const s = await paiStatus('txn_tarotPaidAAAAAAAAAAAAAAAAAA');
+    expect(s.show).toBe(true);
+    expect(s.prefillPhone).toBe('+15559876543');
+    expect(s.disclosure).toBe(SMS_OPTIN_DISCLOSURE_BODY);
+    expect(s.checkboxLabel).toBe(SMS_OPTIN_CHECKBOX_LABEL);
+    expect(s.alreadyOptedIn).toBe(false);
+  });
+
+  it.each([
+    ['/fb is not switched on', 'txn_fbPaidAAAAAAAAAAAAAAAAAAAAA'],
+    ['no funnel on record', 'txn_noFunnelAAAAAAAAAAAAAAAAAAA'],
+    ['unknown / unpaid order', 'txn_unknownAAAAAAAAAAAAAAAAAAAA'],
+    ['lookup returned another order', 'txn_mismatchAAAAAAAAAAAAAAAAAAA'],
+    ['lookup failed', 'txn_throwsAAAAAAAAAAAAAAAAAAAAA'],
+    ['malformed id', 'txn_'],
+    ['injection-shaped id', 'txn_abc%27%3B--'],
+  ])('%s ⇒ no box', async (_label, sid) => {
+    expect((await paiStatus(sid)).show).toBe(false);
+  });
+
+  it('"Text me" saves against the Payments.AI order (funnel + email from OUR records) and sends text 1', async () => {
+    paiSaved.length = 0;
+    paiTexted.length = 0;
+    const r = await paiPost({ sessionId: 'txn_tarotPaidAAAAAAAAAAAAAAAAAA', phone: '(555) 987-6543', agree: true });
+    expect(r.status).toBe(200);
+    expect(paiSaved).toHaveLength(1);
+    expect(paiSaved[0]).toMatchObject({
+      stripeSessionId: 'txn_tarotPaidAAAAAAAAAAAAAAAAAA',
+      email: 'pai@example.com',
+      phone: '+15559876543',
+      funnel: 'v1-tarot',
+      source: SMS_OPTIN_SOURCE,
+      consentVersion: SMS_OPTIN_VERSION,
+    });
+    expect(paiTexted).toEqual(['+15559876543']);
+  });
+
+  it('a Payments.AI order that is not eligible cannot be saved (404), and nothing is texted', async () => {
+    paiSaved.length = 0;
+    paiTexted.length = 0;
+    for (const sid of ['txn_fbPaidAAAAAAAAAAAAAAAAAAAAA', 'txn_unknownAAAAAAAAAAAAAAAAAAAA', 'txn_mismatchAAAAAAAAAAAAAAAAAAA']) {
+      const r = await paiPost({ sessionId: sid, phone: '5551234567', agree: true });
+      expect(r.status).toBe(404);
+    }
+    expect(paiSaved).toHaveLength(0);
+    expect(paiTexted).toHaveLength(0);
+  });
+
+  it('Stripe orders are unchanged on the same router', async () => {
+    const s = await paiStatus('cs_test_tarotPaidAAAAAAAA');
+    expect(s.show).toBe(true);
+  });
+
+  it('a router built WITHOUT retrievePaiOrder (the old wiring) refuses txn ids', async () => {
+    // The main `deps` above has no retrievePaiOrder.
+    expect((await status('txn_tarotPaidAAAAAAAAAAAAAAAAAA')).show).toBe(false);
+  });
+});
