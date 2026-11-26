@@ -49,6 +49,7 @@ import {
   chargeUpsell2Pai,
   recordPaymentAttempt,
   funnelForPaiPayment,
+  paiPaidOrderForSmsPage,
   attachShippingToPaiPayment,
   PAI_TAG,
   type PaiLiveDeps,
@@ -661,6 +662,9 @@ export async function registerRoutes(
         if (!stripe) throw new Error("Stripe not configured");
         return stripe.checkout.sessions.retrieve(id);
       },
+      // Payments.AI orders (txn_…) on the SMS in-between page — read from our own
+      // order records, never the browser (Lewis, 26 Nov 2026).
+      retrievePaiOrder: paiPaidOrderForSmsPage,
       upsertOptIn: upsertSmsOptIn,
       getConsent: getSmsConsentForSession,
       policyBase: (req) => process.env.BASE_URL || getBaseUrl(req),
@@ -2585,6 +2589,19 @@ export async function registerRoutes(
   app.get("/api/upsell/prep", async (req: Request, res: Response) => {
     try {
       const sessionId = req.query.session_id;
+      // Payments.AI order (txn_…, Lewis 26 Nov 2026): read-only from our own order
+      // records. NO AWeber call here — fulfilMain already put her on the paid list
+      // at payment time, before she was redirected to this page.
+      if (isPaiOrderId(sessionId)) {
+        const order = await paiPaidOrderForSmsPage(sessionId);
+        if (!order || !showsPostPurchaseSmsOptIn(order.funnel, undefined)) return res.json({ ok: false });
+        return res.json({
+          ok: true,
+          email: order.email,
+          mainPurchaseAmount: order.mainPurchaseAmount,
+          bumpAmountCents: order.bumpAmountCents,
+        });
+      }
       if (typeof sessionId !== "string" || !PREP_SESSION_ID_RE.test(sessionId) || !stripe) {
         return res.json({ ok: false });
       }

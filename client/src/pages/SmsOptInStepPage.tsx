@@ -5,6 +5,8 @@
 // switched on, the server's success_url sends her HERE first:
 //
 //   Stripe paid → <funnel>/preparing?session_id=cs_… → <funnel>/welcome1?session_id=cs_…
+//   Payments.AI approved → <funnel>/preparing?session_id=txn_… → <funnel>/welcome1?session_id=txn_…
+//   (Lewis 26 Nov 2026 — server/lib/paiLive.ts afterMainRedirect, same switch.)
 //
 // A progress bar with status lines + "Preparing your Energy Clearing Ritual… Please
 // don't close this page" (Joel 25 Nov: must not look finished) + the SAME approved opt-in box (pre-filled

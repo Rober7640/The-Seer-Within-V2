@@ -331,6 +331,39 @@ describe('chargeMain against a stubbed Payments.AI', () => {
       assert.equal(out.totalCents, 4777);
     }
   });
+
+  // SMS in-between page for Payments.AI buyers (Lewis, 26 Nov 2026).
+  let prevSwitch: string | undefined;
+  const restoreSwitch = () => {
+    if (prevSwitch === undefined) delete process.env.SMS_CONSENT_FUNNELS;
+    else process.env.SMS_CONSENT_FUNNELS = prevSwitch;
+  };
+
+  it('a real approval on /fb-tarot lands on /fb-tarot/preparing', async () => {
+    prevSwitch = process.env.SMS_CONSENT_FUNNELS;
+    process.env.SMS_CONSENT_FUNNELS = 'v1-tarot';
+    txnResult = 'approved';
+    const out = await live.chargeMain(
+      { order: order({ firstName: 'Bea', funnel: 'v1-tarot', hook: 'cards-meant-alone' }), cardToken: 'tok_3', phone: '+15555550123', smsAnswer: 'no', returnUrl: 'https://x/fb-tarot/chat?paiReturn=1', policyBase: 'https://x' },
+      deps,
+    );
+    restoreSwitch();
+    assert.equal(out.kind, 'approved');
+    if (out.kind === 'approved') assert.equal(out.redirect, '/fb-tarot/preparing?session_id=txn_TEST1');
+  });
+
+  it('a real approval on /fb (switch = v1-tarot) still lands on /fb/welcome1', async () => {
+    prevSwitch = process.env.SMS_CONSENT_FUNNELS;
+    process.env.SMS_CONSENT_FUNNELS = 'v1-tarot';
+    txnResult = 'approved';
+    const out = await live.chargeMain(
+      { order: order({ firstName: 'Bea' }), cardToken: 'tok_4', phone: '+15555550123', smsAnswer: 'no', returnUrl: 'https://x/fb/chat?paiReturn=1', policyBase: 'https://x' },
+      deps,
+    );
+    restoreSwitch();
+    assert.equal(out.kind, 'approved');
+    if (out.kind === 'approved') assert.equal(out.redirect, '/fb/welcome1?session_id=txn_TEST1');
+  });
 });
 
 describe('the Payments.AI customer name (support, 5 Nov: needs firstName AND lastName)', () => {
@@ -422,5 +455,53 @@ describe('shipping on the Payments.AI upsell payment', () => {
     await live.attachShippingToPaiPayment('txn_SHIP', undefined);
     await live.attachShippingToPaiPayment('txn_SHIP', { ...addr, line1: '' });
     assert.equal(patches.length, 0);
+  });
+});
+
+// ── SMS in-between page for Payments.AI buyers (Lewis, 26 Nov 2026) ──────────
+// An approved main payment goes to <funnel>/preparing exactly when the Stripe
+// success_url would (same SMS_CONSENT_FUNNELS switch); every other funnel keeps
+// its exact /welcome1 URL.
+describe('after an approved main payment — /preparing vs /welcome1', () => {
+  let saved: string | undefined;
+  before(() => { saved = process.env.SMS_CONSENT_FUNNELS; });
+  after(() => {
+    if (saved === undefined) delete process.env.SMS_CONSENT_FUNNELS;
+    else process.env.SMS_CONSENT_FUNNELS = saved;
+  });
+
+  it('switch = v1-tarot ⇒ /fb-tarot goes to /preparing, /fb stays on /welcome1', () => {
+    process.env.SMS_CONSENT_FUNNELS = 'v1-tarot';
+    assert.equal(live.afterMainRedirect('v1-tarot', 'txn_A', deps), '/fb-tarot/preparing?session_id=txn_A');
+    assert.equal(live.afterMainRedirect('v1-fb', 'txn_A', deps), '/fb/welcome1?session_id=txn_A');
+    assert.equal(live.afterMainRedirect(undefined, 'txn_A', deps), '/welcome1?session_id=txn_A');
+  });
+
+  it('switch off ⇒ every funnel keeps /welcome1 (exactly the old URL)', () => {
+    delete process.env.SMS_CONSENT_FUNNELS;
+    assert.equal(live.afterMainRedirect('v1-tarot', 'txn_A', deps), '/fb-tarot/welcome1?session_id=txn_A');
+    assert.equal(live.afterMainRedirect('v1-fb', 'txn_A', deps), '/fb/welcome1?session_id=txn_A');
+  });
+
+  it('switch = v1-tarot,v1-fb ⇒ both go to /preparing (the switch alone decides)', () => {
+    process.env.SMS_CONSENT_FUNNELS = 'v1-tarot,v1-fb';
+    assert.equal(live.afterMainRedirect('v1-fb', 'txn_A', deps), '/fb/preparing?session_id=txn_A');
+  });
+
+  it('the session id is URL-encoded', () => {
+    process.env.SMS_CONSENT_FUNNELS = 'v1-tarot';
+    assert.equal(live.afterMainRedirect('v1-tarot', 'txn_a&b', deps), '/fb-tarot/preparing?session_id=txn_a%26b');
+  });
+
+});
+
+describe('paiPaidOrderForSmsPage — only real txn ids, never throws', () => {
+  it('non-txn / malformed ids ⇒ null without touching the DB', async () => {
+    for (const id of [undefined, null, 42, '', 'cs_live_abcdefghijklmnop', 'txn_', "txn_a';--"]) {
+      assert.equal(await live.paiPaidOrderForSmsPage(id), null);
+    }
+  });
+  it('DB unreachable ⇒ null (the page just moves her on to Upsell 1)', async () => {
+    assert.equal(await live.paiPaidOrderForSmsPage('txn_abcdefghijklmnopqrstuvwxyz'), null);
   });
 });

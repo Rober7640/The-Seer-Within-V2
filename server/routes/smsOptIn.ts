@@ -1,11 +1,16 @@
 // Standalone post-purchase SMS opt-in — the Twilio 30446 fix (see server/lib/smsConsent.ts).
 //
-//   GET  /api/sms-optin/status?session_id=cs_…  → should the thank-you page show the box?
+//   GET  /api/sms-optin/status?session_id=cs_…|txn_…  → should the page show the box?
 //   POST /api/sms-optin  { sessionId, phone, agree: true } → record her YES.
 //
 // Shown ONLY after a PAID Stripe checkout on a switched-on funnel/lander (same
 // SMS_CONSENT_FUNNELS switch + tea/coffee lock as the old checkout question). The
 // funnel and lander are read from the Stripe session itself, never from the browser.
+//
+// Payments.AI orders (`txn_…`, Lewis 26 Nov 2026): the same box after a PAID
+// Payments.AI main order. There is no Stripe session, so the order is read from our
+// own records (paiPaidOrderForSmsPage — written server-side before she was
+// redirected) and put into the same shape. Same switch, same wording, same save.
 // Nothing here touches the purchase: no charge, no order row, no upsell.
 
 import { Router, type Request, type Response, type RequestHandler } from "express";
@@ -28,8 +33,18 @@ import logger from "../lib/logger";
 
 type PaidSession = Pick<Stripe.Checkout.Session, "id" | "payment_status" | "metadata" | "customer_details">;
 
+/** What the router needs from a paid Payments.AI order (see paiPaidOrderForSmsPage). */
+export interface PaiOrderForSms {
+  id: string;
+  funnel: FunnelParam | undefined;
+  email: string | null;
+  phone: string | null;
+}
+
 export interface SmsOptInDeps {
   retrieveSession(sessionId: string): Promise<PaidSession>;
+  /** A PAID Payments.AI order by txn id, or null. Omitted ⇒ txn ids are refused. */
+  retrievePaiOrder?(transactionId: string): Promise<PaiOrderForSms | null>;
   upsertOptIn: typeof import("../lib/db").upsertSmsOptIn;
   getConsent: typeof import("../lib/db").getSmsConsentForSession;
   /** Public site address for the Terms / Privacy links. */
@@ -42,6 +57,7 @@ export interface SmsOptInDeps {
 }
 
 const SESSION_ID_RE = /^cs_(test|live)_[A-Za-z0-9]{10,200}$/;
+const PAI_TXN_ID_RE = /^txn_[A-Za-z0-9_-]{4,200}$/;
 
 function sessionFunnel(s: PaidSession): FunnelParam | undefined {
   return funnelDefForParam(s.metadata?.funnel)?.param;
@@ -65,6 +81,7 @@ export function createSmsOptInRouter(deps: SmsOptInDeps): Router {
 
   // Eligible = real paid session on a switched-on funnel/lander. Anything else ⇒ null.
   async function eligibleSession(sessionId: unknown): Promise<PaidSession | null> {
+    if (typeof sessionId === "string" && PAI_TXN_ID_RE.test(sessionId)) return eligiblePaiOrder(sessionId);
     if (typeof sessionId !== "string" || !SESSION_ID_RE.test(sessionId)) return null;
     let s: PaidSession;
     try {
@@ -75,6 +92,26 @@ export function createSmsOptInRouter(deps: SmsOptInDeps): Router {
     if (s.payment_status !== "paid") return null;
     if (!showsPostPurchaseSmsOptIn(sessionFunnel(s), sessionDevice(s), deps.enabled?.())) return null;
     return s;
+  }
+
+  // A paid Payments.AI order, put into the Stripe session's shape so everything
+  // below (switch check, pre-fill, save) is the SAME code for both processors.
+  async function eligiblePaiOrder(transactionId: string): Promise<PaidSession | null> {
+    if (!deps.retrievePaiOrder) return null;
+    let o: PaiOrderForSms | null;
+    try {
+      o = await deps.retrievePaiOrder(transactionId);
+    } catch {
+      return null;
+    }
+    if (!o || o.id !== transactionId || !o.funnel) return null;
+    if (!showsPostPurchaseSmsOptIn(o.funnel, undefined, deps.enabled?.())) return null;
+    return {
+      id: o.id,
+      payment_status: "paid",
+      metadata: { funnel: o.funnel },
+      customer_details: { email: o.email, phone: o.phone } as Stripe.Checkout.Session.CustomerDetails,
+    };
   }
 
   router.get("/status", async (req: Request, res: Response) => {
