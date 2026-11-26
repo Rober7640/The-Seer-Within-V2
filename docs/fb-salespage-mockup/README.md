@@ -1,6 +1,6 @@
 # Salespage 1 mockup (source)
 
-The files of the Design canvas at https://claude.ai/artifact/Kqff47fe9zWevAoJETW2Sm (shared with anyone with the link). Kept here as a spec for the exact copy, colours and spacing. They don't run on their own: the images point at the canvas's storage, and `support.js` is the canvas runtime.
+The files of the Design canvas at https://claude.ai/artifact/Kqff47fe9zWevAoJETW2Sm (shared with anyone with the link). Kept here as a spec for the exact copy, colours and spacing. They don't run on their own (`support.js` is the canvas runtime). The only picture is Evelyn's photo, already in the repo at `uploads/avatars/hi-def/evelyn.png`; the files point at it.
 
 | File | Screen |
 |---|---|

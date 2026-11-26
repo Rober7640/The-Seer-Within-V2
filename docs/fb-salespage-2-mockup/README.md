@@ -9,6 +9,19 @@ The candle letter: her name, then Evelyn's letter, then the ticks and the button
 | `C3-Ready.dc.html` | 3. Opens in place under the letter when she taps Yes: the chat's three ticks (CommitmentGateCard.tsx), "Tick all three to continue", then, once all three are ticked, the optional "twice as deep" box (+$12.77) and "Begin my Energy Clearing · $35" ($47.77 with the box). Then Stripe, which takes her email |
 | `canvas.json` | the board layout and the four developer notes (what to build, the close, the bump, open items) |
 
-"Jules" is a sample name. The pictures are stored in the canvas (`/_blob/...`), so take them from the shared link.
+"Jules" is a sample name.
+
+## Pictures
+
+Made with Codex (image_gen), 1536×1024. Each comes as the full-size PNG and a web-size JPG (1170 px wide, about 100–190 KB). The mockup files point at the JPGs.
+
+| File | Where it goes on C2b |
+|---|---|
+| `images/candles-door-window-low` | the three-way guess (A door, B window, C floor): one candle, three panels, charcoal look |
+| `images/window-candle` | the Christmas Eve candle in the cottage window, in the rain |
+| `images/afternoon-stairs` | the small afternoon: the little girl on the stairs watching the front door |
+| `images/cord` | the black cord cut in two, both ends sealed. ⚠ The wax is red; whether it should be black is still open |
+
+Evelyn's photo (C1) is already in the repo: `uploads/avatars/hi-def/evelyn.png`.
 
 The build spec for both pages is `../dev-brief-2026-11-25-fb-entry-pages.md`.

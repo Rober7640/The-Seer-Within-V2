@@ -7,7 +7,7 @@ Build both pages and split-test them against today's /fb chat. Where this brief 
 | **Salespage 1** | `docs/fb-salespage-mockup/` | https://claude.ai/artifact/Kqff47fe9zWevAoJETW2Sm |
 | **Salespage 2** | `docs/fb-salespage-2-mockup/` | https://claude.ai/artifact/9D1ghRbagUJarSy4JmE21H (build the top row only; the drafts below it are parked) |
 
-The mockup files are the spec for copy, colours and spacing. Pictures live in each canvas's storage, so take them from the shared links. "Jules" is a sample name throughout.
+The mockup files are the spec for copy, colours and spacing. Pictures: Salespage 2's four Codex pictures are in `docs/fb-salespage-2-mockup/images/` (full-size PNG + web JPG; the README says which goes where). Evelyn's photo, on both pages, is `uploads/avatars/hi-def/evelyn.png`. "Jules" is a sample name throughout.
 
 ## What changed since the 22 Nov plan
 
