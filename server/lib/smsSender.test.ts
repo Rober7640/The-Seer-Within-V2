@@ -117,6 +117,12 @@ describe('SMS texts — EXACTLY as Joel approved them (23 Nov 2026; "ritual" + s
     expect(SMS_SEQUENCE_FUNNELS.has('v1-tarot')).toBe(true);
     expect(SMS_SEQUENCE_FUNNELS.has('v1-read')).toBe(true);
   });
+  it('/fb buyers (incl. belief lanes) are in the sequence; /fb2, /gdn, /fb-palm are not', () => {
+    expect(SMS_SEQUENCE_FUNNELS.has('v1-fb')).toBe(true);
+    expect(SMS_SEQUENCE_FUNNELS.has('v1-fb2')).toBe(false);
+    expect(SMS_SEQUENCE_FUNNELS.has('v1-gdn')).toBe(false);
+    expect(SMS_SEQUENCE_FUNNELS.has('v1-palm')).toBe(false);
+  });
 });
 
 describe('SMS helpers', () => {
