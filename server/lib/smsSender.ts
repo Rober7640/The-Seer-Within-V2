@@ -17,7 +17,7 @@
 // Neither set ⇒ the tick does nothing and logs why.
 //
 // RULES (the plan + what we told Twilio in the TFV form, 9 Oct):
-//   - only consented, not opted out, US/Canada (+1) numbers, /fb-read + /fb-tarot + root funnels;
+//   - only consented, not opted out, US/Canada (+1) numbers, /fb-read + /fb-tarot + /fb + root funnels;
 //   - text 1 carries the opt-in confirmation (brand, up to 3 msgs/week, rates, HELP, STOP);
 //   - text 1 goes out STRAIGHT AWAY, at any hour, the moment she taps "Text me"
 //     (Joel, 24 Nov 2026: "always send straight away — see the first sms as a
@@ -63,8 +63,10 @@ export const SMS_STEP_DELAY_MS: Record<SmsStep, number> = { 1: 0, 2: 4 * DAY_MS,
 export const SMS_LATE_LIMIT_MS = 48 * 60 * 60 * 1000;
 
 // Only consents from funnels whose main product is the Energy Clearing Ritual
-// (text 1 names it).
-export const SMS_SEQUENCE_FUNNELS = new Set(["v1-read", "v1-tarot", "root"]);
+// (text 1 names it). /fb added 26 Nov 2026 (Lewis) — same $35 Energy Clearing
+// Ritual; its belief lanes (/fb?lane=…) are funnel v1-fb too. The SMS page itself is
+// still switched per funnel by SMS_CONSENT_FUNNELS, so this alone shows nothing new.
+export const SMS_SEQUENCE_FUNNELS = new Set(["v1-read", "v1-tarot", "v1-fb", "root"]);
 
 // Hard cap per tick, so a mistake can never blast the whole list in one go.
 export const SMS_MAX_SENDS_PER_TICK = 50;
