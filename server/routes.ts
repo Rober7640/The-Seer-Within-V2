@@ -3610,7 +3610,9 @@ export async function registerRoutes(
       upsell2AttemptFunnel = funnel ?? null;
       const upsell2Payment = await stripe.paymentIntents.create({
         amount,
-        currency: "usd",
+        // Off-session charge in the ORIGINAL order's currency, never the request
+        // locale (stale-cookie safe) — see the upsell-1 note.
+        currency: session.currency ?? "usd",
         customer: customerId,
         payment_method: paymentMethodId,
         off_session: true,
@@ -3632,6 +3634,8 @@ export async function registerRoutes(
           ...srcMetadata(session.metadata?.src),
           // …and the offer-page marker, same inheritance (empty unless an offer-page order).
           ...retargetOfferMetadata(session.metadata?.src, session.metadata?.rtfmt),
+          // Inherit the order's language from the ORIGINAL session for n8n routing.
+          ...localeMetadata(resolveLocale(session.metadata?.locale)),
         },
       });
 
@@ -3926,12 +3930,18 @@ export async function registerRoutes(
         // The /fb-read instrument rides the SAME retrieve and fails the same way: on a
         // lookup error it stays undefined and fbSuffix() falls back to " - TEA".
         let inheritReadDevice: string | undefined;
+        // Order currency + language ride the SAME retrieve; default to today's
+        // behaviour (USD / English) on a lookup error.
+        let inheritCurrency: string = "usd";
+        let inheritLocale: LocaleCode = "en";
         try {
           const orig = await stripe.checkout.sessions.retrieve(originalSessionId);
           inheritNoemail = orig.metadata?.noemail === "1";
           inheritSrc = normaliseSrc(orig.metadata?.src);
           inheritRtfmt = retargetOfferMetadata(orig.metadata?.src, orig.metadata?.rtfmt);
           inheritReadDevice = readDeviceFromSession(orig);
+          inheritCurrency = orig.currency ?? "usd";
+          inheritLocale = resolveLocale(orig.metadata?.locale);
         } catch (e) {
           logger.warn("Upsell2 fallback: noemail/src/device lookup failed (non-fatal)", e);
         }
@@ -3941,10 +3951,12 @@ export async function registerRoutes(
         const session = await stripe.checkout.sessions.create({
           customer_email: email,
           payment_method_types: ["card"],
+          // Match the ORIGINAL order's language on the hosted page.
+          locale: requestStripeLocale(inheritLocale),
           line_items: [
             {
               price_data: {
-                currency: "usd",
+                currency: inheritCurrency,
                 product_data: {
                   name: productName,
                   description:
@@ -3968,10 +3980,11 @@ export async function registerRoutes(
               ...(inheritNoemail && { noemail: "1" }),
               ...(inheritSrc && { src: inheritSrc }),
               ...inheritRtfmt,
+              ...localeMetadata(inheritLocale),
             },
           },
           shipping_address_collection: {
-            allowed_countries: ["US", "CA", "GB", "AU", "NZ", "SG"],
+            allowed_countries: shippingCountries(["US", "CA", "GB", "AU", "NZ", "SG"], inheritLocale) as Stripe.Checkout.SessionCreateParams.ShippingAddressCollection.AllowedCountry[],
           },
           success_url: `${getBaseUrl(req)}${funnelPath("/success", funnel)}?upsell2=true&session_id=${encodeURIComponent(originalSessionId)}&fallback_session_id={CHECKOUT_SESSION_ID}`,
           cancel_url: `${getBaseUrl(req)}${funnelPath("/welcome2", funnel)}?session_id=${encodeURIComponent(originalSessionId)}&declined=true`,
@@ -3988,6 +4001,7 @@ export async function registerRoutes(
             ...(inheritNoemail && { noemail: "1" }),
             ...(inheritSrc && { src: inheritSrc }),
             ...inheritRtfmt,
+            ...localeMetadata(inheritLocale),
           },
         });
 
