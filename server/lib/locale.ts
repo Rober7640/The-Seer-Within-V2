@@ -10,7 +10,7 @@
 
 import { AsyncLocalStorage } from "node:async_hooks";
 import type { NextFunction, Request, Response } from "express";
-import { DEFAULT_LOCALE, LOCALE_COOKIE, resolveLocale, type LocaleCode } from "@shared/locales";
+import { DEFAULT_LOCALE, LOCALE_COOKIE, localeDef, resolveLocale, type LocaleCode } from "@shared/locales";
 import { pickData, registerCatalog, registerData, translate, type Vars } from "@shared/i18n";
 import { SERVER_BUNDLES } from "@shared/l10n/serverBundles";
 import { LANG_PACKS } from "@shared/lang/packs";
@@ -33,6 +33,36 @@ export function localeMiddleware(req: Request, _res: Response, next: NextFunctio
 
 export function requestLocale(): LocaleCode {
   return store.getStore() ?? "en";
+}
+
+/**
+ * The charge currency for a locale's market. English = "usd", byte-identical to
+ * today; a French order = "eur". For NEW orders (main line, bump, a fresh PAI
+ * order) read from the visitor's locale; for an off-session upsell charge read
+ * the ORIGINAL order's currency instead (the cookie may be stale).
+ */
+export function requestCurrency(locale: LocaleCode = requestLocale()): "usd" | "eur" {
+  return localeDef(locale).market.currency;
+}
+
+/**
+ * The Stripe Checkout `locale` for this order. undefined for English leaves
+ * Stripe's own auto-detection exactly as today; a French order renders in French.
+ */
+export function requestStripeLocale(locale: LocaleCode = requestLocale()): "fr" | "es" | "en" | undefined {
+  return localeDef(locale).market.stripeLocale;
+}
+
+/**
+ * The shipping countries a checkout accepts: the funnel's base list plus the
+ * locale's own market country when that market is not the US (so a French buyer
+ * can enter a French address). English (US market) returns the base list
+ * unchanged; a country already present is never duplicated.
+ */
+export function shippingCountries(base: readonly string[], locale: LocaleCode = requestLocale()): string[] {
+  const country = localeDef(locale).market.country;
+  if (country === "US" || base.includes(country)) return [...base];
+  return [...base, country];
 }
 
 /**
