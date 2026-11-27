@@ -49,7 +49,9 @@ export function requestCurrency(locale: LocaleCode = requestLocale()): "usd" | "
  * The Stripe Checkout `locale` for this order. undefined for English leaves
  * Stripe's own auto-detection exactly as today; a French order renders in French.
  */
-export function requestStripeLocale(locale: LocaleCode = requestLocale()): "fr" | "es" | "en" | undefined {
+export function requestStripeLocale(locale: LocaleCode = requestLocale()) {
+  // Return type is inferred from LocaleMarket.stripeLocale so a new locale (e.g.
+  // es-US's "es-419") widens it automatically instead of breaking this signature.
   return localeDef(locale).market.stripeLocale;
 }
 
