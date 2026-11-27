@@ -1,0 +1,159 @@
+{
+ "_doc": "Every pick(key, english) data twin in the client. The extractor reads the English value from `module` (`export` = the binding; \"*\" = every exported ALL_CAPS constant of the module). kind: object = a literal object/array to translate in place; module = a namespace of constants; derived = built inside the locale bundle from other twins (no own segments). jsx = paths holding JSX that need a hand-written twin. scope = which funnels need it.",
+ "tarot.decks": {
+  "module": "client/src/content/tarotReads.ts",
+  "export": "DECKS",
+  "kind": "object",
+  "scope": [
+   "fb-tarot"
+  ],
+  "perHook": "reads"
+ },
+ "tarot.headlines": {
+  "module": "client/src/content/tarotReads.ts",
+  "export": "HEADLINES",
+  "kind": "object",
+  "scope": [
+   "fb-tarot"
+  ],
+  "perHook": ""
+ },
+ "tarot.questions": {
+  "module": "client/src/content/tarotReads.ts",
+  "export": "TAROT_QUESTION",
+  "kind": "object",
+  "scope": [
+   "fb-tarot"
+  ],
+  "perHook": ""
+ },
+ "tarot.shadow": {
+  "module": "client/src/content/tarotReadsShadow.ts",
+  "export": "SHADOW_READS",
+  "kind": "object",
+  "scope": [
+   "fb-tarot"
+  ],
+  "perHook": "*"
+ },
+ "landing.variants": {
+  "module": "client/src/pages/LandingPage.tsx",
+  "export": "variants",
+  "kind": "object",
+  "scope": [
+   "fb"
+  ],
+  "jsx": [
+   "*.subheadline"
+  ]
+ },
+ "chat.bucketButtons": {
+  "module": "client/src/components/QuickReplyButtons.tsx",
+  "export": "BUCKETS",
+  "kind": "object",
+  "scope": [
+   "fb",
+   "fb-tarot"
+  ]
+ },
+ "chat.bucketLabels": {
+  "module": "client/src/types/chat.ts",
+  "export": "BUCKET_LABELS",
+  "kind": "object",
+  "scope": [
+   "fb",
+   "fb-tarot"
+  ]
+ },
+ "commitmentGate.lines": {
+  "module": "client/src/components/CommitmentGateCard.tsx",
+  "export": "COMMITMENTS",
+  "kind": "object",
+  "scope": [
+   "fb",
+   "fb-tarot"
+  ]
+ },
+ "upsell1.messages": {
+  "module": "client/src/lib/upsellMessages.ts",
+  "export": "*",
+  "kind": "module",
+  "scope": [
+   "fb",
+   "fb-tarot"
+  ]
+ },
+ "upsell2.messages": {
+  "module": "client/src/lib/upsell2Messages.ts",
+  "export": "*",
+  "kind": "module",
+  "scope": [
+   "fb",
+   "fb-tarot"
+  ]
+ },
+ "upsell1.v1": {
+  "module": "client/src/lib/upsellCopy/v1.ts",
+  "export": "V1_UPSELL1",
+  "kind": "derived",
+  "from": [
+   "upsell1.messages"
+  ],
+  "scope": [
+   "fb",
+   "fb-tarot"
+  ]
+ },
+ "upsell2.v1": {
+  "module": "client/src/lib/upsellCopy/v1.ts",
+  "export": "V1_UPSELL2",
+  "kind": "derived",
+  "from": [
+   "upsell2.messages"
+  ],
+  "scope": [
+   "fb",
+   "fb-tarot"
+  ]
+ },
+ "faq.sections": {
+  "module": "client/src/pages/FAQPage.tsx",
+  "export": "faqSections",
+  "kind": "object",
+  "scope": [],
+  "jsx": [
+   "*.items.*.answer"
+  ],
+  "note": "V2 account FAQ, not linked from /fb or /fb-tarot; out of the first French run"
+ },
+ "legal.privacy": {
+  "module": "client/src/pages/PrivacyPage.tsx",
+  "export": "PrivacyPage",
+  "kind": "component",
+  "scope": [
+   "fb",
+   "fb-tarot"
+  ],
+  "note": "whole page per locale: translated from the English page through the pipeline (kind legal), then the market rules in localize/locales/<code>/legal.md applied by hand"
+ },
+ "legal.terms": {
+  "module": "client/src/pages/TermsPage.tsx",
+  "export": "TermsPage",
+  "kind": "component",
+  "scope": [
+   "fb",
+   "fb-tarot"
+  ],
+  "note": "whole page per locale: translated from the English page through the pipeline (kind legal), then the market rules in localize/locales/<code>/legal.md applied by hand"
+ },
+ "legal.refund": {
+  "module": "client/src/pages/RefundPage.tsx",
+  "export": "RefundPage",
+  "kind": "component",
+  "scope": [
+   "fb",
+   "fb-tarot"
+  ],
+  "note": "whole page per locale: translated from the English page through the pipeline (kind legal), then the market rules in localize/locales/<code>/legal.md applied by hand"
+ }
+}

@@ -1,3 +1,7 @@
+import { t } from "@/lib/i18n";
+import { foldText } from "@shared/lang/fold";
+import { maskSpans } from "@shared/lang/mask";
+import { activePack } from "./langPack";
 // /client/src/lib/intent.ts
 
 // Sanitize user input to prevent prompt injection
@@ -65,21 +69,30 @@ function isGibberish(text: string): boolean {
 
 export function detectIntent(message: string): Intent {
   const lower = message.toLowerCase().trim()
+  // Non-English session: each class also tries the session language's pattern
+  // (on folded text), in the same order. English: pack is null, `p(x)` is false,
+  // and every branch is the English one.
+  const pack = activePack()
+  const folded = pack ? foldText(message).trim() : ''
+  const p = (pick: (i: NonNullable<typeof pack>['intent']) => RegExp) => !!pack && pick(pack.intent).test(folded)
+  // What the ENGLISH branches read. A pack's englishMask blanks its own words that
+  // hold an English trigger ("porno" holds `porn`); without one, exactly `lower`.
+  const en = pack?.intent.englishMask ? maskSpans(folded, pack.intent.englishMask).text : lower
 
   // CRITICAL: Check for self-harm/crisis signals FIRST
-  if (lower.match(/kill (myself|me)|want to die|suicide|\bend (my life|it all)\b|hurt myself|self.?harm|don'?t want to (live|be alive)|better off dead/)) {
+  if (en.match(/kill (myself|me)|want to die|suicide|\bend (my life|it all)\b|hurt myself|self.?harm|don'?t want to (live|be alive)|better off dead/) || p((i) => i.crisis)) {
     return 'crisis_safety'
   }
 
   // Check for inappropriate/sexual content DIRECTED AT EVELYN or clearly trolling
   // Allow legitimate relationship discussions (wanting passion/intimacy in marriage is valid)
   const directedAtEvelyn = /\b(i want to |let me |can i |show me |send me ).*(fuck|sex|naked|nude|tits|boobs|pussy|dick|cock)|you'?re (hot|sexy)|horny|cum (on|in|for)|blowjob|handjob|masturbat|porn|slut|whore|bitch/i
-  if (directedAtEvelyn.test(lower)) {
+  if (directedAtEvelyn.test(en) || (!!pack && pack.intent.inappropriate.test(maskSpans(folded, pack.safety.reportedSpeech).text))) {
     return 'inappropriate'
   }
 
   // Check for gibberish
-  if (isGibberish(lower)) {
+  if (isGibberish(pack ? folded : lower)) {
     return 'gibberish'
   }
 
@@ -90,7 +103,7 @@ export function detectIntent(message: string): Intent {
   // Allow time-based responses (answers to "how long" questions)
   const timeBasedResponse = /^(\d+\s*(years?|months?|weeks?|days?|forever|always|never|a while|long time|my (whole |entire )?life|since|recently|lately|ages|eternity))|\d+$/i
 
-  if (!validShortResponses.test(lower) && !timeBasedResponse.test(lower)) {
+  if (!(validShortResponses.test(en) || p((i) => i.validShort)) && !(timeBasedResponse.test(en) || p((i) => i.timeBased))) {
     // Single word responses that aren't valid need more detail
     if (lower.length < 15 && !lower.includes(' ')) {
       return 'too_short'
@@ -102,47 +115,54 @@ export function detectIntent(message: string): Intent {
   }
 
   // Positive intent
-  if (lower.match(/^(yes|ok|okay|sure|let'?s do it|i'?m ready|help me|ready|please|absolutely)/)) {
+  if (en.match(/^(yes|ok|okay|sure|let'?s do it|i'?m ready|help me|ready|please|absolutely)/) || p((i) => i.positive)) {
     return 'positive'
   }
 
+  // A pack whose language closes every question with "?" tries its own AI and price
+  // questions first ("¿cuánto cuesta?"); English order is unchanged.
+  if (pack?.intent.questionsFirst) {
+    if (p((i) => i.aiQuestion)) return 'ai_question'
+    if (p((i) => i.priceQuestion)) return 'price_question'
+  }
+
   // Clarification request
-  if (lower.match(/what do (you|u) mean|i don'?t (understand|get it)|huh\??|what\??$|\?\s*$|explain|confused|clarify|not sure what/)) {
+  if (en.match(/what do (you|u) mean|i don'?t (understand|get it)|huh\??|what\??$|\?\s*$|explain|confused|clarify|not sure what/) || p((i) => i.clarification)) {
     return 'clarification'
   }
 
   // AI question - check before other intents
-  if (lower.match(/are you (a |an )?(ai|bot|robot|machine|computer|program|real)|chatgpt|artificial|gpt|language model/)) {
+  if (en.match(/are you (a |an )?(ai|bot|robot|machine|computer|program|real)|chatgpt|artificial|gpt|language model/) || p((i) => i.aiQuestion)) {
     return 'ai_question'
   }
 
   // Price question - specific handling
-  if (lower.match(/how much|what('?s| is) the (price|cost)|pricing|what do(es)? (it|this) cost|expensive/)) {
+  if (en.match(/how much|what('?s| is) the (price|cost)|pricing|what do(es)? (it|this) cost|expensive/) || p((i) => i.priceQuestion)) {
     return 'price_question'
   }
 
   // Explicit decline
-  if (lower.match(/^no$|^no thanks|^not interested|^don'?t want|^goodbye|^no way|^pass$|^nope$/)) {
+  if (en.match(/^no$|^no thanks|^not interested|^don'?t want|^goodbye|^no way|^pass$|^nope$/) || p((i) => i.explicitDecline)) {
     return 'explicit_decline'
   }
 
   // Price objection
-  if (lower.match(/can'?t afford|too expensive|too much|no money|broke|expensive|cost/)) {
+  if (en.match(/can'?t afford|too expensive|too much|no money|broke|expensive|cost/) || p((i) => i.objectionPrice)) {
     return 'objection_price'
   }
 
   // Skepticism
-  if (lower.match(/scam|fake|don'?t believe|bullshit|bs|fraud|trick/)) {
+  if (en.match(/scam|fake|don'?t believe|bullshit|bs|fraud|trick/) || p((i) => i.objectionSkepticism)) {
     return 'objection_skepticism'
   }
 
   // Wants more info
-  if (lower.match(/tell me more|what happens|how does it work|explain|what do i get|more info/)) {
+  if (en.match(/tell me more|what happens|how does it work|explain|what do i get|more info/) || p((i) => i.objectionInfo)) {
     return 'objection_info'
   }
 
   // Wants more free reading
-  if (lower.match(/what else|tell me about|when will|who is|can you see|more about|keep going/)) {
+  if (en.match(/what else|tell me about|when will|who is|can you see|more about|keep going/) || p((i) => i.wantsMoreFree)) {
     return 'wants_more_free'
   }
 
@@ -152,14 +172,14 @@ export function detectIntent(message: string): Intent {
 export function getGibberishResponse(firstName: string): string[] {
   const responses = [
     [
-      "I sense confusion in your energy, dear...",
-      "Take a breath. Center yourself.",
-      `Tell me clearly, ${firstName}... what's truly on your mind?`
+      t("I sense confusion in your energy, dear..."),
+      t("Take a breath. Center yourself."),
+      t("Tell me clearly, {firstName}... what's truly on your mind?", { firstName })
     ],
     [
-      "The connection is unclear...",
-      "Your thoughts seem scattered right now.",
-      `Focus, ${firstName}. What do you truly want to share with me?`
+      t("The connection is unclear..."),
+      t("Your thoughts seem scattered right now."),
+      t("Focus, {firstName}. What do you truly want to share with me?", { firstName })
     ],
   ]
   return responses[Math.floor(Math.random() * responses.length)]
@@ -168,16 +188,16 @@ export function getGibberishResponse(firstName: string): string[] {
 export function getAIDeflectionResponse(firstName: string): string[] {
   const responses = [
     [
-      "I understand your doubt, dear...",
-      "In this digital age, it's natural to question what's real.",
-      `But tell me, ${firstName}... would a machine have sensed your location? Your hesitation?`,
-      "The question isn't whether I'm real. The question is whether you're ready to hear the truth."
+      t("I understand your doubt, dear..."),
+      t("In this digital age, it's natural to question what's real."),
+      t("But tell me, {firstName}... would a machine have sensed your location? Your hesitation?", { firstName }),
+      t("The question isn't whether I'm real. The question is whether you're ready to hear the truth.")
     ],
     [
-      `${firstName}, I've been asked that before...`,
-      "What I can tell you is this - I see what others cannot.",
-      "I felt your presence before you even typed a word.",
-      "Whether you believe is up to you... but your being here is not a coincidence."
+      t("{firstName}, I've been asked that before...", { firstName }),
+      t("What I can tell you is this - I see what others cannot."),
+      t("I felt your presence before you even typed a word."),
+      t("Whether you believe is up to you... but your being here is not a coincidence.")
     ],
   ]
   return responses[Math.floor(Math.random() * responses.length)]
@@ -185,34 +205,34 @@ export function getAIDeflectionResponse(firstName: string): string[] {
 
 export function getInappropriateResponse(): string[] {
   return [
-    "I'm going to stop you right there.",
-    "This is a sacred space for spiritual guidance, not that kind of conversation.",
-    "If you're not here for genuine help, I'll have to end our session.",
-    "Take a moment to reflect on what you truly need... then we can continue."
+    t("I'm going to stop you right there."),
+    t("This is a sacred space for spiritual guidance, not that kind of conversation."),
+    t("If you're not here for genuine help, I'll have to end our session."),
+    t("Take a moment to reflect on what you truly need... then we can continue.")
   ]
 }
 
 export function getClarificationResponse(firstName: string, context: string): string[] {
   const responses: Record<string, string[]> = {
     future_validation: [
-      `Let me put it another way, ${firstName}...`,
-      "When you imagine having exactly what you desire... close your eyes for a moment.",
-      "What EMOTION fills your chest? Joy? Peace? Relief? Tell me what you feel."
+      t("Let me put it another way, {firstName}...", { firstName }),
+      t("When you imagine having exactly what you desire... close your eyes for a moment."),
+      t("What EMOTION fills your chest? Joy? Peace? Relief? Tell me what you feel.")
     ],
     crisis_reveal: [
-      `I'm asking about the root, ${firstName}...`,
-      "This pattern didn't start with you. Think back to your family, your upbringing.",
-      "Where do you sense this limitation first took hold?"
+      t("I'm asking about the root, {firstName}...", { firstName }),
+      t("This pattern didn't start with you. Think back to your family, your upbringing."),
+      t("Where do you sense this limitation first took hold?")
     ],
     crisis_cost: [
-      `It's a simple question, dear...`,
-      "Are you ready to let go of what's been holding you back?",
-      "Yes or no - trust your gut."
+      t("It's a simple question, dear..."),
+      t("Are you ready to let go of what's been holding you back?"),
+      t("Yes or no - trust your gut.")
     ],
     default: [
-      `Let me rephrase, ${firstName}...`,
-      "Just speak from the heart. There's no wrong answer here.",
-      "What comes to mind when you sit with that question?"
+      t("Let me rephrase, {firstName}...", { firstName }),
+      t("Just speak from the heart. There's no wrong answer here."),
+      t("What comes to mind when you sit with that question?")
     ]
   }
   return responses[context] || responses.default
@@ -220,44 +240,44 @@ export function getClarificationResponse(firstName: string, context: string): st
 
 export function getCrisisSafetyResponse(): string[] {
   return [
-    "I need to pause our session here.",
-    "What you're sharing sounds very serious, and I'm concerned about you.",
-    "Please reach out to someone who can truly help right now:",
-    "National Suicide Prevention Lifeline: 988 (call or text)",
-    "Crisis Text Line: Text HOME to 741741",
-    "You matter. Please reach out to them."
+    t("I need to pause our session here."),
+    t("What you're sharing sounds very serious, and I'm concerned about you."),
+    t("Please reach out to someone who can truly help right now:"),
+    t("National Suicide Prevention Lifeline: 988 (call or text)"),
+    t("Crisis Text Line: Text HOME to 741741"),
+    t("You matter. Please reach out to them.")
   ]
 }
 
 export function getTooShortResponse(firstName: string, context?: string): string[] {
   if (context === 'emotional') {
     return [
-      `${firstName}... I can feel that emotion, but I need you to go deeper.`,
-      "Don't just name the feeling. Let yourself FEEL it.",
-      "What changes in your body? Your breath? Your heart? Tell me more..."
+      t("{firstName}... I can feel that emotion, but I need you to go deeper.", { firstName }),
+      t("Don't just name the feeling. Let yourself FEEL it."),
+      t("What changes in your body? Your breath? Your heart? Tell me more...")
     ]
   }
 
   if (context === 'vision') {
     return [
-      `${firstName}, paint me a fuller picture, dear...`,
-      "I need details to see your vision clearly.",
-      "What does this future look like? Who's there with you? What's different?"
+      t("{firstName}, paint me a fuller picture, dear...", { firstName }),
+      t("I need details to see your vision clearly."),
+      t("What does this future look like? Who's there with you? What's different?")
     ]
   }
 
   return [
-    `${firstName}, I need a bit more to work with, dear...`,
-    "The spirits require clear intention.",
-    "Open your heart and tell me more..."
+    t("{firstName}, I need a bit more to work with, dear...", { firstName }),
+    t("The spirits require clear intention."),
+    t("Open your heart and tell me more...")
   ]
 }
 
 export function getPriceQuestionResponse(firstName: string): string[] {
   return [
-    `${firstName}, let's not get ahead of ourselves...`,
-    "We haven't even uncovered what's blocking you yet.",
-    "First, let me understand your situation fully.",
-    "The investment means nothing if we don't address the root cause."
+    t("{firstName}, let's not get ahead of ourselves...", { firstName }),
+    t("We haven't even uncovered what's blocking you yet."),
+    t("First, let me understand your situation fully."),
+    t("The investment means nothing if we don't address the root cause.")
   ]
 }

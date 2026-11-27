@@ -1,5 +1,7 @@
 import { MapPin, Sparkles } from 'lucide-react'
 import type { ShippingAddress } from './ShippingForm'
+import { t } from "@/lib/i18n";
+import { countryLabel } from "@/lib/countryName";
 
 export interface UpsellCompleteProps {
   address?: ShippingAddress
@@ -24,18 +26,18 @@ export function UpsellComplete({ address, userName }: UpsellCompleteProps) {
       </div>
       
       <h3 className="text-foreground font-semibold text-xl mb-2" data-testid="heading-complete">
-        Protection Complete
+        {t("Protection Complete")}
       </h3>
       
       <p className="text-muted-foreground mb-4" data-testid="text-complete-subtext">
-        {userName ? `${userName}, your` : 'Your'} charged volcanic stone will ship within 48 hours.
+        {userName ? t("{userName}, your", { userName }) : t("Your")}{" "}{t("charged volcanic stone will ship within 48 hours.")}
       </p>
       
       {address && (
         <div className="bg-muted/30 rounded-lg p-4 text-left text-sm text-muted-foreground mb-4" data-testid="card-shipping-address">
           <div className="text-muted-foreground/60 text-xs mb-2 flex items-center gap-1" data-testid="label-shipping-to">
             <MapPin className="w-3 h-3" data-testid="icon-map-pin" />
-            <span data-testid="text-shipping-to-label">Shipping to:</span>
+            <span data-testid="text-shipping-to-label">{t("Shipping to:")}</span>
           </div>
           <div className="text-foreground" data-testid="text-shipping-name">{address.name}</div>
           <div data-testid="text-shipping-line1">{address.line1}</div>
@@ -44,13 +46,13 @@ export function UpsellComplete({ address, userName }: UpsellCompleteProps) {
             {address.city}, {address.state} {address.postal}
           </div>
           <div data-testid="text-shipping-country">
-            {countryNames[address.country] || address.country}
+            {countryNames[address.country] ? countryLabel(address.country, countryNames[address.country]) : address.country}
           </div>
         </div>
       )}
       
       <p className="text-muted-foreground/60 text-xs" data-testid="text-tracking-notice">
-        Watch your inbox for tracking info.
+        {t("Watch your inbox for tracking info.")}
       </p>
     </div>
   )

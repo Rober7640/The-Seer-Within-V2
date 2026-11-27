@@ -1,3 +1,4 @@
+import { t } from "@/lib/i18n";
 interface PurchaseCTAProps {
   onClick: () => void
   priceDollars?: number
@@ -10,11 +11,11 @@ export function PurchaseCTA({ onClick, priceDollars = 35 }: PurchaseCTAProps) {
         onClick={onClick}
         className="w-full py-4 px-6 rounded-lg bg-gradient-to-r from-amber-500 to-orange-600 text-white font-bold text-lg shadow-lg hover:shadow-xl transition-all duration-300 animate-pulse hover:animate-none"
       >
-        Begin My Energy Clearing - ${priceDollars}
+        {t("Begin My Energy Clearing - ${priceDollars}", { priceDollars })}
       </button>
       <div className="flex justify-center gap-4 text-xs text-gray-400">
-        <span>🔒 30-Day Guarantee</span>
-        <span>100% Secure</span>
+        <span>{t("🔒 30-Day Guarantee")}</span>
+        <span>{t("100% Secure")}</span>
       </div>
     </div>
   )

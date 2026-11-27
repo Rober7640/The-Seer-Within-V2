@@ -25,6 +25,8 @@
 // shown the question (yes OR no), with the exact wording shown, its version, the
 // buyer's IP at checkout and the conversation id — Joel's consent table. Stripe
 // also keeps the answer on the session itself (Dashboard → payment → custom fields).
+import { localeDef } from "@shared/locales";
+import { requestLocale } from "./locale";
 import type Stripe from "stripe";
 import type { FunnelParam } from "@shared/funnelConfig";
 import type { ReadDevice } from "@shared/readDevices";
@@ -91,6 +93,9 @@ export function showsSmsConsent(
   readDevice: ReadDevice | undefined,
   enabled: Set<string> = parseSmsConsentFunnels(process.env.SMS_CONSENT_FUNNELS),
 ): boolean {
+  // The SMS program is a US number under US rules (TCPA wording, carrier rates).
+  // A session in another market never sees it. English sessions are US: unchanged.
+  if (localeDef(requestLocale()).market.country !== "US") return false;
   if (!collectsPhoneAtCheckout(funnel)) return false;
   if (funnel === "v1-read" && !(readDevice && SMS_CONSENT_READ_DEVICES.has(readDevice))) return false;
   return enabled.has(funnel ?? "root");

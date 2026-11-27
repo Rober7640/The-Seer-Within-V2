@@ -39,9 +39,14 @@ import ProductPage from "@/pages/ProductPage";
 import OrderSuccessPage from "@/pages/OrderSuccessPage";
 import TermsPage from "@/pages/TermsPage";
 import RefundPage from "@/pages/RefundPage";
+import { localizedPage } from "@/l10n/localizedPage";
 import FAQPage from "@/pages/FAQPage";
 
 // Chat service pages (lazy loaded)
+// Legal pages are replaced whole per locale (French law changes their content).
+const LocalizedPrivacyPage = localizedPage("legal.privacy", PrivacyPage);
+const LocalizedTermsPage = localizedPage("legal.terms", TermsPage);
+const LocalizedRefundPage = localizedPage("legal.refund", RefundPage);
 const LoginPage = lazyWithRetry(() => import("@/pages/LoginPage"));
 const ChatServicePage = lazyWithRetry(() => import("@/pages/ChatServicePage"));
 const CreditsPage = lazyWithRetry(() => import("@/pages/CreditsPage"));
@@ -351,9 +356,9 @@ function Router() {
         <Route path="/gdn/welcome1" component={UpsellPage} />
         <Route path="/gdn/welcome2" component={Upsell2Page} />
         <Route path="/gdn/success" component={SuccessPage} />
-        <Route path="/privacy" component={PrivacyPage} />
-        <Route path="/terms" component={TermsPage} />
-        <Route path="/refund" component={RefundPage} />
+        <Route path="/privacy" component={LocalizedPrivacyPage} />
+        <Route path="/terms" component={LocalizedTermsPage} />
+        <Route path="/refund" component={LocalizedRefundPage} />
         <Route path="/faq" component={FAQPage} />
 
         {/* Facebook-compliance storefront. ADDITIVE — separate pages at separate URLs;

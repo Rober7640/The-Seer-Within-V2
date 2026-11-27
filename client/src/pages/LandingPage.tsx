@@ -6,6 +6,7 @@ import { LaneSections } from '../components/LaneSections';
 import { resolveLane } from '@/lib/laneAttribution';
 import { Link } from 'wouter';
 import { Sparkles } from 'lucide-react';
+import { t, pick } from "@/lib/i18n";
 
 const variants: Record<string, {
   headline: string;
@@ -40,7 +41,8 @@ const variants: Record<string, {
 export default function LandingPage() {
   const params = new URLSearchParams(window.location.search);
   const v = params.get('v') || 'default';
-  const base = variants[v] || variants.default;
+  const vs = pick('landing.variants', variants)
+  const base = vs[v] || vs.default;
   // Belief lane (/fb?lane=<id>, shared/beliefLanes.ts). /fb only — resolveLane returns
   // undefined on /, /fb2, /gdn and for any id the registry does not know, so those pages
   // render exactly as before. A lane fills the four card spots (headline, sub-line,
@@ -65,7 +67,7 @@ export default function LandingPage() {
       <div className="mb-8 flex items-center gap-3 animate-fade-in text-center">
         <Sparkles className="w-10 h-10 text-purple-300 filter drop-shadow-lg" />
         <h1 className="font-serif text-3xl md:text-4xl text-secondary drop-shadow-md">
-          The Seer Within
+          {t("The Seer Within")}
         </h1>
       </div>
 
@@ -76,7 +78,7 @@ export default function LandingPage() {
           <div className="w-28 h-28 rounded-full overflow-hidden border-4 border-white shadow-xl bg-purple-100">
             <img
               src="/evelyn-avatar.png"
-              alt="Evelyn Cross"
+              alt={t("Evelyn Cross")}
               className="w-full h-full object-cover"
               data-testid="img-avatar-landing"
             />
@@ -120,18 +122,18 @@ export default function LandingPage() {
       <footer className="mt-8 text-white/40 text-xs text-center space-y-2">
         <div className="flex items-center justify-center gap-3 flex-wrap">
           <Link href="/privacy">
-            <span className="hover:text-white/70 cursor-pointer transition-colors" data-testid="link-privacy">Privacy Policy</span>
+            <span className="hover:text-white/70 cursor-pointer transition-colors" data-testid="link-privacy">{t("Privacy Policy")}</span>
           </Link>
           <span>·</span>
           <Link href="/terms">
-            <span className="hover:text-white/70 cursor-pointer transition-colors" data-testid="link-terms">Terms of Service</span>
+            <span className="hover:text-white/70 cursor-pointer transition-colors" data-testid="link-terms">{t("Terms of Service")}</span>
           </Link>
           <span>·</span>
           <Link href="/refund">
-            <span className="hover:text-white/70 cursor-pointer transition-colors" data-testid="link-refund">Refund Policy</span>
+            <span className="hover:text-white/70 cursor-pointer transition-colors" data-testid="link-refund">{t("Refund Policy")}</span>
           </Link>
         </div>
-        <p>&copy; {new Date().getFullYear()} Cosmo Numerology Pte Ltd. For Entertainment Purposes Only.</p>
+        <p>{t("© {getFullYear} Cosmo Numerology Pte Ltd. For Entertainment Purposes Only.", { getFullYear: new Date().getFullYear() })}</p>
       </footer>
     </div>
   );

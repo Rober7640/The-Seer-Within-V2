@@ -1,0 +1,222 @@
+{
+ "_doc": "Renderings for the translator. `es` = the term to use; `note` = which context or how; `avoid` = a less suitable house choice here (not always wrong Spanish). Inflect freely. v2 2026-11-20 after Codex's review of the pack.",
+ "terms": [
+  {
+   "en": "reading (Evelyn interpreting the cards the buyer chose)",
+   "es": "lectura de cartas / tirada",
+   "note": "*tu tirada*, *lo que dicen tus cartas*. ONLY on /fb-tarot pages and in card reads. Pages both funnels share (chat, order bump, checkout, upsells, success page) may be seen by a buyer who never saw a card: there it is *consulta*"
+  },
+  {
+   "en": "reading (the chat session with Evelyn)",
+   "es": "consulta",
+   "note": "*nuestra consulta*, *durante esta consulta*"
+  },
+  {
+   "en": "reading (the written 5–7 page deliverable sent by email)",
+   "es": "tu lectura / tu lectura por escrito",
+   "note": "the same noun everywhere (chat, checkout, success page, emails). Add *personalizada* only where the English says personalized or personal; never add it as a product claim the line doesn't make",
+   "avoid": [
+    "informe",
+    "reporte",
+    "estudio"
+   ]
+  },
+  {
+   "en": "double reading / Double Your Reading (order bump)",
+   "es": "una segunda lectura (on the second topic)",
+   "note": "the bump is a second written reading on a second topic ({topic}): say that, e.g. *una segunda lectura, sobre tu {topic}*. Never add a claim the line doesn't make (more depth, more detail, twice as far)",
+   "avoid": [
+    "doble lectura (ambiguous: it can mean a double meaning)"
+   ]
+  },
+  {
+   "en": "Energy Clearing Ritual (the product)",
+   "es": "ritual de limpieza energética",
+   "note": "lower case in running text; as a title or button, capital on the first word only"
+  },
+  {
+   "en": "clearing / clear (the act)",
+   "es": "limpiar / liberar / despejar (by meaning)",
+   "note": "*limpiar tu energía*, *liberarte de ese peso*. *Una limpia* (the everyday Mexican word for a spiritual cleansing) only where the English names an actual cleansing, never for any release or letting go; never add how one is done (egg, herbs, copal)",
+   "avoid": [
+    "*tu limpieza* alone (sounds like housecleaning)"
+   ]
+  },
+  {
+   "en": "block / blocked / blocking your path",
+   "es": "bloqueo / lo que te frena / los obstáculos (by meaning)",
+   "note": "*tener los caminos cerrados* / *abrir caminos* only where the English already describes a spiritual obstruction; for an ordinary difficulty use *lo que te frena*"
+  },
+  {
+   "en": "shadow",
+   "es": "sombra"
+  },
+  {
+   "en": "energy field",
+   "es": "campo energético"
+  },
+  {
+   "en": "energy signature",
+   "es": "huella energética"
+  },
+  {
+   "en": "Protection Ritual",
+   "es": "ritual de protección"
+  },
+  {
+   "en": "lava stone / volcanic stone",
+   "es": "piedra volcánica / piedra de lava",
+   "note": "*piedra volcánica* is the usual word in Mexico"
+  },
+  {
+   "en": "charged (stone)",
+   "es": "cargada (una piedra cargada de energía)",
+   "note": "say with what on first mention; *cargada* alone can read as heavy or loaded"
+  },
+  {
+   "en": "Manifestation Bracelet",
+   "es": "pulsera de manifestación",
+   "note": "the product name; say on first mention what it is for",
+   "avoid": [
+    "brazalete (a less suitable house choice for a beaded stone bracelet)"
+   ]
+  },
+  {
+   "en": "manifest (verb)",
+   "es": "manifestar / atraer … a tu vida",
+   "note": "*manifestar* is normal in Spanish law-of-attraction speech; *atraer* where it reads more natural"
+  },
+  {
+   "en": "altar",
+   "es": "altar"
+  },
+  {
+   "en": "sage / sage smoke",
+   "es": "salvia / humo de salvia",
+   "note": "*salvia blanca* when the English says white sage"
+  },
+  {
+   "en": "blessed water (blessed by Evelyn)",
+   "es": "agua bendecida",
+   "avoid": [
+    "agua bendita for water Evelyn blessed"
+   ],
+   "note": "say who blessed it where it matters; keep *agua bendita* only where the English means church holy water"
+  },
+  {
+   "en": "the veil between worlds",
+   "es": "el velo entre los mundos"
+  },
+  {
+   "en": "soulmate",
+   "es": "alma gemela"
+  },
+  {
+   "en": "twin flame",
+   "es": "llama gemela"
+  },
+  {
+   "en": "karmic",
+   "es": "kármico / kármica"
+  },
+  {
+   "en": "third eye",
+   "es": "tercer ojo"
+  },
+  {
+   "en": "spirit guides",
+   "es": "guías espirituales"
+  },
+  {
+   "en": "the universe",
+   "es": "el universo"
+  },
+  {
+   "en": "abundance",
+   "es": "abundancia"
+  },
+  {
+   "en": "law of attraction",
+   "es": "ley de la atracción"
+  },
+  {
+   "en": "Love / Money / Purpose (topics)",
+   "es": "Amor / Dinero / Propósito de vida"
+  },
+  {
+   "en": "minutes (chat credit)",
+   "es": "minutos"
+  },
+  {
+   "en": "seer / reader / psychic (Evelyn's role)",
+   "es": "vidente",
+   "note": "*una vidente*; her ability is *su don* (*tu don* for the buyer's)",
+   "avoid": [
+    "regalo for a gift that means an ability"
+   ]
+  },
+  {
+   "en": "card (tarot) / card (payment)",
+   "es": "carta (tarot) / tarjeta (payment)",
+   "note": "never mix them: *tus cartas* on the table, *tu tarjeta* at checkout"
+  },
+  {
+   "en": "email (noun)",
+   "es": "correo electrónico / correo",
+   "note": "*correo electrónico* on the form field and wherever delivery is first explained, confirmed or missing (plain *correo* can mean postal mail, and the funnel also ships physical items); *correo* only once the channel is clear",
+   "avoid": [
+    "e-mail",
+    "mail",
+    "emilio"
+   ]
+  },
+  {
+   "en": "text message / texts",
+   "es": "mensaje de texto / mensajes",
+   "note": "STOP and HELP stay in English as the commands to type (*Responde STOP para cancelar*); never claim they are the only way to stop"
+  },
+  {
+   "en": "988 Suicide & Crisis Lifeline (call or text 988)",
+   "es": "Línea 988 de Prevención del Suicidio y Crisis",
+   "note": "the Spanish service: *llama al 988 y marca 2 para español, o envía AYUDA por mensaje de texto al 988* (988lifeline.org/es, checked 2026-11-20)"
+  },
+  {
+   "en": "Text HOME to 741741 (Crisis Text Line)",
+   "es": "envía AYUDA al 741741",
+   "note": "Crisis Text Line's Spanish keyword is AYUDA, not a translation of HOME (crisistextline.org/es, checked 2026-11-20)"
+  },
+  {
+   "en": "money-back guarantee / refund guarantee",
+   "es": "garantía de reembolso",
+   "note": "*te devolvemos tu dinero* where a verb reads better"
+  }
+ ],
+ "tarot": {
+  "_doc": "Spanish tarot names for the Rider-Waite cards shown. House choice: Oros and Sota (the names most Mexican readers know); Pentáculos and Paje are valid alternatives, never corrected as errors. Card names are proper names, capitalized as below even in running text, but the article is lower case and contracts there: *te salió el Mago*, *la carta del Mago*. Minor cards: *el Dos de Oros*, *la Sota de Copas*, *el As de Espadas*. Reversed: *invertida* / *invertido*, agreeing with the card: *la Sota de Oros invertida*, *el Colgado invertido*.",
+  "The Fool": "El Loco",
+  "The Magician": "El Mago",
+  "The High Priestess": "La Sacerdotisa",
+  "The Empress": "La Emperatriz",
+  "The Emperor": "El Emperador",
+  "The Hierophant": "El Hierofante",
+  "The Lovers": "Los Enamorados",
+  "The Chariot": "El Carro",
+  "Strength": "La Fuerza",
+  "The Hermit": "El Ermitaño",
+  "Wheel of Fortune": "La Rueda de la Fortuna",
+  "Justice": "La Justicia",
+  "The Hanged Man": "El Colgado",
+  "Death": "La Muerte",
+  "Temperance": "La Templanza",
+  "The Devil": "El Diablo",
+  "The Tower": "La Torre",
+  "The Star": "La Estrella",
+  "The Moon": "La Luna",
+  "The Sun": "El Sol",
+  "Judgement": "El Juicio",
+  "The World": "El Mundo",
+  "Ace / Two … Ten": "As / Dos … Diez",
+  "Page / Knight / Queen / King": "Sota / Caballero / Reina / Rey",
+  "Cups / Pentacles / Swords / Wands": "Copas / Oros / Espadas / Bastos"
+ }
+}

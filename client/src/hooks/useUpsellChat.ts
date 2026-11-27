@@ -9,17 +9,12 @@ import {
   detectQ1Intent,
   detectQ2Intent,
   detectQ3Intent,
-  // Questions 2 and 3 are still V1-only constants: offer 02 asks nothing, so its
-  // chain never routes into these stages. Everything else now comes from the
-  // resolved copy (lib/backendOffers.ts).
-  UPSELL_QUESTION_2,
-  UPSELL_QUESTION_2_REPLIES,
-  UPSELL_AFTER_Q2,
-  UPSELL_QUESTION_3,
-  UPSELL_QUESTION_3_REPLIES,
-  UPSELL_AFTER_Q3,
   formatUpsellPrice,
 } from "@/lib/upsellMessages";
+// Questions 2 and 3 are still V1-only constants: offer 02 asks nothing, so its
+// chain never routes into these stages. Everything else now comes from the
+// resolved copy (lib/backendOffers.ts).
+import * as UPSELL1_MESSAGES from "@/lib/upsellMessages";
 import { getTrackdeskClickId } from "@/lib/facebook";
 import {
   upsell1Copy,
@@ -39,6 +34,10 @@ import type { BackendOfferKey } from "@shared/backendOffers";
 import { track as trackPH } from "@/lib/posthog";
 import { tarotEventProps } from "@/lib/tarotAttribution";
 import { laneEventProps } from "@/lib/laneAttribution";
+import { t, pick } from "@/lib/i18n";
+
+// l10n: the copy constants above are read through the locale's data twin (English = the module itself).
+const upsell1Msgs = () => pick("upsell1.messages", UPSELL1_MESSAGES);
 
 // ============================================
 // TYPES
@@ -305,8 +304,8 @@ export function useUpsellChat({
           break;
 
         case "QUESTION_2":
-          await sendBotMessage(pMsg(UPSELL_QUESTION_2));
-          setQuickReplies(UPSELL_QUESTION_2_REPLIES);
+          await sendBotMessage(pMsg(upsell1Msgs().UPSELL_QUESTION_2));
+          setQuickReplies(upsell1Msgs().UPSELL_QUESTION_2_REPLIES);
           setShowQuickReplies(true);
           setInputEnabled(true);
           setStage("WAITING_Q2");
@@ -314,8 +313,8 @@ export function useUpsellChat({
 
         case "AFTER_Q2":
           const q2Response =
-            UPSELL_AFTER_Q2[responseKey || "default"] ||
-            UPSELL_AFTER_Q2.default;
+            upsell1Msgs().UPSELL_AFTER_Q2[responseKey || "default"] ||
+            upsell1Msgs().UPSELL_AFTER_Q2.default;
           await sendBotMessages(p(q2Response));
           advance("AFTER_Q2");
           break;
@@ -331,8 +330,8 @@ export function useUpsellChat({
           break;
 
         case "QUESTION_3":
-          await sendBotMessage(pMsg(UPSELL_QUESTION_3));
-          setQuickReplies(UPSELL_QUESTION_3_REPLIES);
+          await sendBotMessage(pMsg(upsell1Msgs().UPSELL_QUESTION_3));
+          setQuickReplies(upsell1Msgs().UPSELL_QUESTION_3_REPLIES);
           setShowQuickReplies(true);
           setInputEnabled(true);
           setStage("WAITING_Q3");
@@ -340,8 +339,8 @@ export function useUpsellChat({
 
         case "AFTER_Q3":
           const q3Response =
-            UPSELL_AFTER_Q3[responseKey || "default"] ||
-            UPSELL_AFTER_Q3.default;
+            upsell1Msgs().UPSELL_AFTER_Q3[responseKey || "default"] ||
+            upsell1Msgs().UPSELL_AFTER_Q3.default;
           await sendBotMessages(p(q3Response));
           advance("AFTER_Q3");
           break;
@@ -527,7 +526,7 @@ export function useUpsellChat({
           step: "upsell1",
           product: userData.upsell1Product ?? "be_protection_ritual",
         });
-        await sendBotMessage("Let me set up a secure payment page for you...");
+        await sendBotMessage(t("Let me set up a secure payment page for you..."));
         const fallbackResponse = await fetch("/api/backend/upsell/fallback-checkout", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -539,7 +538,7 @@ export function useUpsellChat({
         } else {
           // Even the hosted page could not be created — let her retry rather than strand her.
           await sendBotMessage(
-            "That didn't go through, dear. Give it another moment and try once more.",
+            t("That didn't go through, dear. Give it another moment and try once more."),
           );
           setIsProcessing(false);
           if (isDownsell) setShowDownsellCTA(true);
@@ -561,7 +560,7 @@ export function useUpsellChat({
           ...(tarot ?? {}),
         });
 
-        await sendBotMessage("Let me set up a secure payment page for you...");
+        await sendBotMessage(t("Let me set up a secure payment page for you..."));
 
         const fallbackResponse = await fetch("/api/upsell/fallback-checkout", {
           method: "POST",
@@ -583,7 +582,7 @@ export function useUpsellChat({
       }
     } catch (error) {
       console.error("Upsell error:", error);
-      await sendBotMessage("Something went wrong. Let me try another way...");
+      await sendBotMessage(t("Something went wrong. Let me try another way..."));
       setIsProcessing(false);
       if (isDownsell) setShowDownsellCTA(true);
       else setShowCTA(true);
@@ -609,7 +608,7 @@ export function useUpsellChat({
   // Handle CTA Decline
   const handleDecline = useCallback(async () => {
     setShowCTA(false);
-    addUserMessage("Not right now");
+    addUserMessage(t("Not right now"));
     const tarot = getPostHogFunnel() === "tarot" ? tarotEventProps() : undefined;
     trackPH("upsell_declined", {
       funnel: offer ? backendOfferFunnel(offer) : (getPostHogFunnel() ?? "unknown"),
@@ -627,7 +626,7 @@ export function useUpsellChat({
   // The downsell's own decline (12). Her reply bubble is the button's label.
   const handleDownsellDecline = useCallback(async () => {
     setShowDownsellCTA(false);
-    addUserMessage(copy.downsellDeclineLabel ?? "Not right now");
+    addUserMessage(copy.downsellDeclineLabel ?? t("Not right now"));
     trackPH("upsell_declined", {
       funnel: offer ? backendOfferFunnel(offer) : (getPostHogFunnel() ?? "unknown"),
       // Belief lane for the tab (/fb?lane=<id>); empty for every other funnel.
@@ -669,7 +668,7 @@ export function useUpsellChat({
         await processStage("COMPLETE");
       } catch (error) {
         console.error("Shipping error:", error);
-        await sendBotMessage("Address saved. We'll confirm details via email.");
+        await sendBotMessage(t("Address saved. We'll confirm details via email."));
         setIsComplete(true);
       }
     },

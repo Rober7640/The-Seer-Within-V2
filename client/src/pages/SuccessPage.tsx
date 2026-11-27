@@ -4,8 +4,11 @@ import { CosmicBackground } from "../components/CosmicBackground";
 import { Link } from "wouter";
 import { CheckCircle, Package, Mail, Sparkles, Gem, MessageCircle } from "lucide-react";
 import { trackPurchase, trackUpsellPurchase, trackUpsell2Purchase } from "../lib/facebook";
+import { purchaseCurrency } from "../lib/locale";
 import { trackGAdsPurchase } from "../lib/gtm";
 import { currentFunnel } from "../lib/funnel";
+import { t } from "@/lib/i18n";
+import { tx } from "@/lib/rich";
 
 // Functional tag is campaign=v1-ty-luna (the server keys the 1,800-coin grant off it);
 // utm_* are analytics-only. Module-scoped so the effect can reference it without
@@ -188,9 +191,9 @@ export default function SuccessPage() {
           if (boughtUpsell2 && sessionId) {
             const amount = (data.upsell2Amount || 4700) / 100;
             if (currentFunnel()) {
-              trackUpsell2Purchase(amount, "USD", data.email, "Manifestation Bracelet", sessionId, { skipServerRelay: true });
+              trackUpsell2Purchase(amount, purchaseCurrency(), data.email, "Manifestation Bracelet", sessionId, { skipServerRelay: true });
             } else {
-              trackUpsellPurchase(amount, "USD", data.email, "Manifestation Bracelet", sessionId, 'u2', { skipServerRelay: true });
+              trackUpsellPurchase(amount, purchaseCurrency(), data.email, "Manifestation Bracelet", sessionId, 'u2', { skipServerRelay: true });
             }
             trackGAdsPurchase("upsell2", amount, sessionId);
           }
@@ -249,7 +252,7 @@ export default function SuccessPage() {
     loadOrderData();
   }, [searchString]);
 
-  const firstName = orderData?.firstName || "dear one";
+  const firstName = orderData?.firstName || t("dear one");
 
   return (
     <div className="min-h-screen relative flex flex-col items-center justify-center p-4">
@@ -262,21 +265,20 @@ export default function SuccessPage() {
 
         <div className="bg-slate-900/80 backdrop-blur-sm border border-purple-500/30 rounded-2xl shadow-2xl p-8 w-full text-center">
           <h2 className="font-serif text-2xl text-white mb-2">
-            Thank You, {firstName}
+            {t("Thank You, {firstName}", { firstName })}
           </h2>
-          <p className="text-purple-200/70 mb-4">Your order is confirmed</p>
+          <p className="text-purple-200/70 mb-4">{t("Your order is confirmed")}</p>
           <p className="text-purple-200/60 text-sm mb-6">
-            The moment you took action, something shifted. Most people stay
-            curious. You chose to look.
+            {t("The moment you took action, something shifted. Most people stay curious. You chose to look.")}
           </p>
 
           <div className="space-y-4 text-left mb-6">
             <div className="flex items-start gap-3 p-4 bg-white/5 rounded-lg">
               <Sparkles className="w-5 h-5 text-purple-400 mt-0.5 flex-shrink-0" />
               <div>
-                <p className="text-white font-medium">Energy Clearing Ritual</p>
+                <p className="text-white font-medium">{t("Energy Clearing Ritual")}</p>
                 <p className="text-purple-200/70 text-sm">
-                  Your personalized clearing begins tonight
+                  {t("Your personalized clearing begins tonight")}
                 </p>
               </div>
             </div>
@@ -286,10 +288,10 @@ export default function SuccessPage() {
                 <Package className="w-5 h-5 text-amber-400 mt-0.5 flex-shrink-0" />
                 <div>
                   <p className="text-white font-medium">
-                    Protection Ritual + Volcanic Stone
+                    {t("Protection Ritual + Volcanic Stone")}
                   </p>
                   <p className="text-purple-200/70 text-sm">
-                    Your charged talisman ships within 48 hours
+                    {t("Your charged talisman ships within 48 hours")}
                   </p>
                 </div>
               </div>
@@ -300,10 +302,10 @@ export default function SuccessPage() {
                 <Gem className="w-5 h-5 text-yellow-400 mt-0.5 flex-shrink-0" />
                 <div>
                   <p className="text-white font-medium">
-                    Manifestation Bracelet
+                    {t("Manifestation Bracelet")}
                   </p>
                   <p className="text-purple-200/70 text-sm">
-                    Your 8-stone bracelet ships within 48 hours
+                    {t("Your 8-stone bracelet ships within 48 hours")}
                   </p>
                 </div>
               </div>
@@ -312,9 +314,9 @@ export default function SuccessPage() {
             <div className="flex items-start gap-3 p-4 bg-white/5 rounded-lg">
               <Mail className="w-5 h-5 text-blue-400 mt-0.5 flex-shrink-0" />
               <div>
-                <p className="text-white font-medium">Your Reading</p>
+                <p className="text-white font-medium">{t("Your Reading")}</p>
                 <p className="text-purple-200/70 text-sm">
-                  Arrives in your inbox within 24 hours
+                  {t("Arrives in your inbox within 24 hours")}
                 </p>
               </div>
             </div>
@@ -327,53 +329,42 @@ export default function SuccessPage() {
           <div className="mt-2 mb-6 p-5 rounded-xl bg-gradient-to-br from-purple-600/20 to-indigo-600/20 border border-purple-400/40 text-left">
             <p className="text-purple-100/80 text-sm mb-3">
               {tyPersona === "evelyn"
-                ? "But before you go — your reading doesn't have to end here."
-                : "But before you go — there's something the stars want you to know."}
+                ? t("But before you go — your reading doesn't have to end here.")
+                : t("But before you go — there's something the stars want you to know.")}
             </p>
             {tyPersona === "evelyn" ? (
               <p className="text-purple-200/70 text-sm mb-4">
-                Your reading showed you the <em>what</em>. A conversation with
-                Evelyn tells you the <em>why</em>, the <em>when</em>, and the{" "}
-                <em>what now</em>.
+                {tx("Your reading showed you the <em>what</em>. A conversation with Evelyn tells you the <em>why</em>, the <em>when</em>, and the <em>what now</em>.", { em: (c) => <em>{c}</em> })}
               </p>
             ) : (
               <p className="text-purple-200/70 text-sm mb-4">
-                A general reading tells you the <em>what</em>. A conversation
-                tells you the <em>why</em>, the <em>when</em>, and the{" "}
-                <em>what now</em>.
+                {tx("A general reading tells you the <em>what</em>. A conversation tells you the <em>why</em>, the <em>when</em>, and the <em>what now</em>.", { em: (c) => <em>{c}</em> })}
               </p>
             )}
             <div className="flex items-start gap-3 mb-4">
               <MessageCircle className="w-5 h-5 text-purple-300 mt-0.5 flex-shrink-0" />
               {tyPersona === "evelyn" ? (
                 <p className="text-white text-sm">
-                  As a welcome gift, we've reserved{" "}
-                  <span className="font-semibold text-purple-200">
-                    15 minutes of free chat
-                  </span>{" "}
-                  for you to speak directly with{" "}
-                  <span className="font-semibold">Evelyn Cross</span> — the
-                  reader who just read for you.
+                  {tx("As a welcome gift, we've reserved <gift>15 minutes of free chat</gift> for you to speak directly with <name>Evelyn Cross</name> — the reader who just read for you.", {
+                    gift: (c) => <span className="font-semibold text-purple-200">{c}</span>,
+                    name: (c) => <span className="font-semibold">{c}</span>,
+                  })}
                 </p>
               ) : (
                 <p className="text-white text-sm">
-                  As a welcome gift, we've reserved{" "}
-                  <span className="font-semibold text-purple-200">
-                    30 minutes of free chat (a $50 value)
-                  </span>{" "}
-                  for you to speak directly with{" "}
-                  <span className="font-semibold">Astrologer Luna Voss</span> —
-                  one of our most sought-after readers, known for cutting straight
-                  to the truth others tip-toe around.
+                  {tx("As a welcome gift, we've reserved <gift>30 minutes of free chat (a $50 value)</gift> for you to speak directly with <name>Astrologer Luna Voss</name> — one of our most sought-after readers, known for cutting straight to the truth others tip-toe around.", {
+                    gift: (c) => <span className="font-semibold text-purple-200">{c}</span>,
+                    name: (c) => <span className="font-semibold">{c}</span>,
+                  })}
                 </p>
               )}
             </div>
             <p className="text-purple-200/70 text-sm mb-4">
               {tyPersona === "evelyn"
                 ? tyRetarget
-                  ? "She knows what you came back for, so you won't have to start from the beginning."
-                  : "She already knows your reading, so you can pick up right where you left off."
-                : "Bring her your real question. The one you didn't put into a form."}
+                  ? t("She knows what you came back for, so you won't have to start from the beginning.")
+                  : t("She already knows your reading, so you can pick up right where you left off.")
+                : t("Bring her your real question. The one you didn't put into a form.")}
             </p>
 
             {/* $50 gift-voucher visual (pure CSS ticket — no image asset). */}
@@ -381,10 +372,10 @@ export default function SuccessPage() {
               {/* Amount stub */}
               <div className="flex flex-col items-center justify-center px-5 py-4 bg-gradient-to-br from-amber-400/25 to-yellow-500/15">
                 <span className="text-[10px] uppercase tracking-[0.2em] text-amber-200/80">
-                  {tyPersona === "evelyn" ? "Free" : "Value"}
+                  {tyPersona === "evelyn" ? t("Free") : t("Value")}
                 </span>
                 <span className="font-serif text-4xl font-bold text-amber-100 leading-none drop-shadow-sm">
-                  {tyPersona === "evelyn" ? "15 min" : "$50"}
+                  {tyPersona === "evelyn" ? t("15 min") : "$50"}
                 </span>
               </div>
               {/* Perforated divider */}
@@ -398,14 +389,14 @@ export default function SuccessPage() {
                 <div className="flex items-center gap-1.5 mb-1">
                   <Sparkles className="w-3.5 h-3.5 text-amber-300" />
                   <span className="text-[10px] uppercase tracking-[0.2em] text-amber-200/80">
-                    Gift Voucher
+                    {t("Gift Voucher")}
                   </span>
                 </div>
                 <p className="text-white font-semibold text-sm leading-tight">
-                  {tyPersona === "evelyn" ? "15 Minutes of Free Chat" : "30 Minutes of Free Chat"}
+                  {tyPersona === "evelyn" ? t("15 Minutes of Free Chat") : t("30 Minutes of Free Chat")}
                 </p>
                 <p className="text-amber-100/70 text-xs mt-0.5">
-                  {tyPersona === "evelyn" ? "with Evelyn Cross" : "with Astrologer Luna Voss"}
+                  {tyPersona === "evelyn" ? t("with Evelyn Cross") : t("with Astrologer Luna Voss")}
                 </p>
               </div>
             </div>
@@ -416,18 +407,18 @@ export default function SuccessPage() {
               className="block w-full text-center bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-400 hover:to-indigo-400 text-white font-medium py-3 px-4 rounded-lg transition-colors"
             >
               {tyPersona === "evelyn"
-                ? "Continue My Conversation with Evelyn →"
-                : "Start My Conversation with Luna →"}
+                ? t("Continue My Conversation with Evelyn →")
+                : t("Start My Conversation with Luna →")}
             </a>
             <p className="text-purple-200/50 text-xs text-center mt-3">
               {tyPersona === "evelyn"
-                ? "Your 15 free minutes with Evelyn are ready whenever you are."
-                : "Your 30 free minutes with Luna are reserved for the next 24 hours. Verify your email to lock them in."}
+                ? t("Your 15 free minutes with Evelyn are ready whenever you are.")
+                : t("Your 30 free minutes with Luna are reserved for the next 24 hours. Verify your email to lock them in.")}
             </p>
           </div>
 
           <p className="text-purple-200/60 text-sm mb-4">
-            The universe is already responding to your commitment.
+            {t("The universe is already responding to your commitment.")}
           </p>
 
           <Link href="/">
@@ -435,15 +426,14 @@ export default function SuccessPage() {
               className="text-purple-400 hover:text-purple-300 font-medium transition-colors"
               data-testid="button-return-home"
             >
-              Return Home
+              {t("Return Home")}
             </button>
           </Link>
         </div>
       </div>
 
       <footer className="mt-8 text-white/30 text-xs text-center relative z-10">
-        &copy; {new Date().getFullYear()} The Seer Within. For Entertainment
-        Purposes Only.
+        {t("© {getFullYear} The Seer Within. For Entertainment Purposes Only.", { getFullYear: new Date().getFullYear() })}
       </footer>
     </div>
   );

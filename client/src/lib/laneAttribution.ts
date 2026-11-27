@@ -12,7 +12,9 @@
 
 import { getLane, LANE_LANDER_PATH, type BeliefLane, type LaneId } from '@shared/beliefLanes'
 import { funnelDefForPath } from '@shared/funnelConfig'
+import { DEFAULT_LOCALE } from '@shared/locales'
 import { linkParams } from './funnel'
+import { currentLocale } from './locale'
 
 const STORAGE_KEY = 'seer_lane'
 
@@ -51,10 +53,13 @@ function writeStored(id: string | null): void {
  *   - a valid ?lane= wins and is remembered;
  *   - on the lander (/fb) an absent or unknown ?lane= means NO lane, and clears it;
  *   - on a later /fb step with no usable param, the remembered lane (re-validated).
+ * English visitors only: lane copy (card, chat openers, lane question) is English, so a
+ * visitor in another language (?lang=fr) gets the plain /fb in her language instead.
  */
 export function resolveLane(path?: string, search?: string): BeliefLane | undefined {
   const p = path ?? (typeof window === 'undefined' ? '' : window.location.pathname)
   if (funnelDefForPath(p)?.param !== 'v1-fb') return undefined
+  if (currentLocale() !== DEFAULT_LOCALE) return undefined
   const fromUrl = getLane(linkParams(search).get('lane'))
   if (fromUrl) {
     writeStored(fromUrl.id)

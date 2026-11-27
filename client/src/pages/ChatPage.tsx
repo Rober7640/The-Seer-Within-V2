@@ -1,3 +1,4 @@
+import { dateLocale } from "@/lib/locale";
 import { useEffect, useRef } from "react";
 import { useSearch, useLocation } from "wouter";
 import { CosmicBackground } from "../components/CosmicBackground";
@@ -15,6 +16,7 @@ import { resolveBumpCents, V1_BUMP_CENTS, pairedBumpBucket } from "@shared/order
 import { Volume2, Send, Sparkles } from "lucide-react";
 import { Link } from "wouter";
 import { funnelPath } from "../lib/funnel";
+import { t } from "@/lib/i18n";
 
 export default function ChatPage() {
   const {
@@ -127,7 +129,7 @@ export default function ChatPage() {
               <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-secondary">
                 <img
                   src="/evelyn-avatar.png"
-                  alt="Evelyn"
+                  alt={t("Evelyn")}
                   className="w-full h-full object-cover"
                 />
               </div>
@@ -135,10 +137,10 @@ export default function ChatPage() {
             </div>
             <div>
               <h1 className="font-serif font-bold text-lg leading-none">
-                Evelyn Cross
+                {t("Evelyn Cross")}
               </h1>
               <span className="text-xs text-green-400 font-medium">
-                Online Now
+                {t("Online Now")}
               </span>
             </div>
           </div>
@@ -147,7 +149,7 @@ export default function ChatPage() {
               className="text-white/70 hover:text-white text-sm"
               data-testid="button-exit"
             >
-              Exit
+              {t("Exit")}
             </button>
           </Link>
         </header>
@@ -155,7 +157,7 @@ export default function ChatPage() {
         {/* Volume Notice */}
         <div className="bg-purple-100 text-purple-900 px-4 py-2 text-xs flex items-center justify-center gap-2 font-medium shrink-0">
           <Volume2 className="w-3 h-3" />
-          <span>Turn up your volume for the best experience.</span>
+          <span>{t("Turn up your volume for the best experience.")}</span>
         </div>
 
         {/* Chat Area */}
@@ -167,7 +169,7 @@ export default function ChatPage() {
         >
           {/* Welcome Date */}
           <div className="text-center text-xs text-gray-400 my-4">
-            {new Date().toLocaleDateString(undefined, {
+            {new Date().toLocaleDateString(dateLocale(), {
               weekday: "long",
               hour: "numeric",
               minute: "numeric",
@@ -327,7 +329,7 @@ export default function ChatPage() {
               priceDollars={chat.userData.downsellDollars ?? 25}
               label={
                 isSlidingCloseVariant(chat.userData.priceVariantId)
-                  ? `Begin My Energy Clearing - $${chat.userData.downsellDollars ?? 35}`
+                  ? t("Begin My Energy Clearing - ${v0}", { v0: chat.userData.downsellDollars ?? 35 })
                   : undefined
               }
             />
@@ -364,7 +366,7 @@ export default function ChatPage() {
                 <div className="text-center mt-2">
                   <span className="text-[10px] text-gray-400 flex items-center justify-center gap-1">
                     <Sparkles className="w-3 h-3" />
-                    Private & Confidential Reading
+                    {t("Private & Confidential Reading")}
                   </span>
                 </div>
               </div>

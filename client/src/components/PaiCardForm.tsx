@@ -18,6 +18,9 @@ import {
   trackPayClicked,
   type CheckoutStepContext,
 } from '@/lib/checkoutSteps';
+import { t } from "@/lib/i18n";
+import { countryLabel } from "@/lib/countryName";
+import { tx } from "@/lib/rich";
 
 const FRAMEPAY_SRC = 'https://framepay.payments.ai/framepay.js';
 
@@ -272,9 +275,9 @@ export function PaiCardForm(props: {
 
   /** What she still has to fill in besides the card itself, or null when nothing. */
   function missingDetail(phoneNow: string): string | null {
-    if (askPhone && !isFullPhone(phoneNow)) return PHONE_ERROR;
+    if (askPhone && !isFullPhone(phoneNow)) return t(PHONE_ERROR);
     if (askShipping && (!ship.name.trim() || !ship.line1.trim() || !ship.city.trim() || !ship.postal.trim())) {
-      return 'Please enter your full shipping address.';
+      return t("Please enter your full shipping address.");
     }
     return null;
   }
@@ -296,11 +299,11 @@ export function PaiCardForm(props: {
   function onWalletToken(token: any, extras: WalletExtras | undefined) {
     if (props.busy || securingRef.current) return;
     const id = tokenIdOf(token);
-    if (!id) return setLocalError('That payment did not go through. Please try again or pay by card.');
+    if (!id) return setLocalError(t("That payment did not go through. Please try again or pay by card."));
     const kind = String(token?.method ?? token?.paymentInstrument?.method ?? '').toLowerCase();
     const wallet = kind.includes('apple') ? 'apple_pay' : kind.includes('google') ? 'google_pay' : undefined;
     if (props.track) trackPayClicked(props.track, 'wallet', wallet);
-    const cardName = walletNameOf(token, extras, name) || 'Friend';
+    const cardName = walletNameOf(token, extras, name) || t("Friend");
     let phoneNow = cleanPhoneOf(phone);
     if (askPhone && !isFullPhone(phoneNow)) {
       const fromWallet = walletPhoneOf(token, extras);
@@ -318,7 +321,7 @@ export function PaiCardForm(props: {
       setHeldWallet({
         token: id,
         name: cardName,
-        wallet: wallet === 'apple_pay' ? 'Apple Pay' : wallet === 'google_pay' ? 'Google Pay' : 'Your wallet',
+        wallet: wallet === 'apple_pay' ? t("Apple Pay") : wallet === 'google_pay' ? t("Google Pay") : t("Your wallet"),
       });
       return setLocalError(null);
     }
@@ -432,7 +435,7 @@ export function PaiCardForm(props: {
       return send(heldWallet.token, heldWallet.name, cleanPhone, 'wallet');
     }
     const fullName = name.trim();
-    if (!fullName) return setLocalError('Please enter the name on your card.');
+    if (!fullName) return setLocalError(t("Please enter the name on your card."));
     const missing = missingDetail(cleanPhone);
     if (missing) return setLocalError(missing);
     const parts = fullName.split(/\s+/);
@@ -456,8 +459,8 @@ export function PaiCardForm(props: {
       send(cardToken, fullName, cleanPhone, 'card');
     } catch (err: any) {
       setLocalError(err?.message && typeof err.message === 'string'
-        ? `Please check your card details. (${err.message})`
-        : 'Please check your card details.');
+        ? t("Please check your card details. ({message})", { message: err.message })
+        : t("Please check your card details."));
     } finally {
       // send() → the page's pay() sets `busy` in this same tick, so the button goes
       // straight from "securing" to "busy" with no flicker; on a card error it unlocks.
@@ -481,12 +484,14 @@ export function PaiCardForm(props: {
     <form ref={formRef} onSubmit={submit} className="space-y-3" data-testid="pai-card-form">
       {heldWallet && (
         <div className="rounded-lg border border-emerald-400/40 bg-emerald-500/10 px-3 py-3 text-sm text-emerald-100" data-testid="pai-wallet-held">
-          <div className="font-semibold">✓ {heldWallet.wallet} approved</div>
+          <div className="font-semibold">{t("✓ {wallet} approved", { wallet: heldWallet.wallet })}</div>
           <div className="mt-1 text-emerald-100/85">
-            Just {askPhone && askShipping ? 'add your phone number and shipping address' : askShipping ? 'add your shipping address' : 'add your phone number'} below, then press <strong>Finish payment</strong>.
+            {tx("Just {action} below, then press <b>Finish payment</b>.", { b: (c) => <strong>{c}</strong> }, {
+              action: askPhone && askShipping ? t("add your phone number and shipping address") : askShipping ? t("add your shipping address") : t("add your phone number"),
+            })}
           </div>
           <button type="button" onClick={switchToCard} className="mt-2 text-xs text-white/60 underline" data-testid="pai-wallet-change">
-            Use a different card instead
+            {t("Use a different card instead")}
           </button>
         </div>
       )}
@@ -503,16 +508,16 @@ export function PaiCardForm(props: {
       {walletShown && (
         <div className="flex items-center gap-3 text-xs text-white/55" data-testid="pai-wallet-divider">
           <span className="h-px flex-1 bg-white/15" />
-          or pay by card
+          {t("or pay by card")}
           <span className="h-px flex-1 bg-white/15" />
         </div>
       )}
       <div>
-        <label htmlFor={`${mountId}-name`} className={labelCls}>Name on card</label>
+        <label htmlFor={`${mountId}-name`} className={labelCls}>{t("Name on card")}</label>
         <input
           id={`${mountId}-name`}
           className={inputCls}
-          placeholder="Name on card"
+          placeholder={t("Name on card")}
           autoComplete="cc-name"
           value={name}
           onChange={(e) => {
@@ -523,7 +528,7 @@ export function PaiCardForm(props: {
         />
       </div>
       <div>
-        <div id={`${mountId}-label`} className={labelCls}>Card number</div>
+        <div id={`${mountId}-label`} className={labelCls}>{t("Card number")}</div>
         <div
           id={mountId}
           role="group"
@@ -531,10 +536,10 @@ export function PaiCardForm(props: {
           className={cardBoxCls}
           data-testid="pai-card-field"
         />
-        <p className="mt-1 text-xs leading-snug text-white/60">The long number on the front of your card.</p>
+        <p className="mt-1 text-xs leading-snug text-white/60">{t("The long number on the front of your card.")}</p>
       </div>
       <div>
-        <div id={`${mountId}-exp-label`} className={labelCls}>Expiry date</div>
+        <div id={`${mountId}-exp-label`} className={labelCls}>{t("Expiry date")}</div>
         <div
           id={`${mountId}-exp`}
           role="group"
@@ -542,7 +547,7 @@ export function PaiCardForm(props: {
           className={cardBoxCls}
           data-testid="pai-card-exp"
         />
-        <p className="mt-1 text-xs leading-snug text-white/60">Month and year, as shown on your card (MM / YY).</p>
+        <p className="mt-1 text-xs leading-snug text-white/60">{t("Month and year, as shown on your card (MM / YY).")}</p>
       </div>
       <div>
         <div id={`${mountId}-cvv-label`} className={labelCls}>CVV</div>
@@ -553,22 +558,22 @@ export function PaiCardForm(props: {
           className={cardBoxCls}
           data-testid="pai-card-cvv"
         />
-        <p className="mt-1 text-xs leading-snug text-white/60">The 3 digits on the back of your card (Amex: 4 digits on the front).</p>
+        <p className="mt-1 text-xs leading-snug text-white/60">{t("The 3 digits on the back of your card (Amex: 4 digits on the front).")}</p>
       </div>
       {!ready && (
         <div className="flex items-center gap-2 text-xs text-white/50">
-          <Loader2 className="h-3 w-3 animate-spin" /> Loading secure card form…
+          <Loader2 className="h-3 w-3 animate-spin" />{" "}{t("Loading secure card form…")}
         </div>
       )}
       </div>
 
       {askPhone && (
         <div>
-          <label htmlFor={`${mountId}-phone`} className={labelCls}>Phone number</label>
+          <label htmlFor={`${mountId}-phone`} className={labelCls}>{t("Phone number")}</label>
           <input
             id={`${mountId}-phone`}
             className={inputCls}
-            placeholder="e.g. 555 555 0123 (outside the US: +country code)"
+            placeholder={t("e.g. 555 555 0123 (outside the US: +country code)")}
             type="tel"
             autoComplete="tel"
             value={phone}
@@ -590,7 +595,7 @@ export function PaiCardForm(props: {
             onChange={(e) => setSms(e.target.value as '' | 'yes' | 'no')}
             data-testid="pai-sms"
           >
-            <option value="">Choose…</option>
+            <option value="">{t("Choose…")}</option>
             <option value="yes">{config.sms.yesLabel}</option>
             <option value="no">{config.sms.noLabel}</option>
           </select>
@@ -602,46 +607,46 @@ export function PaiCardForm(props: {
 
       {askShipping && (
         <div className="space-y-2 pt-1">
-          <div className="text-base font-semibold text-white">Shipping address</div>
+          <div className="text-base font-semibold text-white">{t("Shipping address")}</div>
           <div>
-            <label htmlFor={`${mountId}-ship-name`} className={labelCls}>Full name</label>
-            <input id={`${mountId}-ship-name`} className={inputCls} placeholder="Full name" value={ship.name}
+            <label htmlFor={`${mountId}-ship-name`} className={labelCls}>{t("Full name")}</label>
+            <input id={`${mountId}-ship-name`} className={inputCls} placeholder={t("Full name")} value={ship.name}
               onChange={(e) => { setShip({ ...ship, name: e.target.value }); fieldStarted('shipping'); }} data-testid="pai-ship-name" />
           </div>
           <div>
-            <label htmlFor={`${mountId}-ship-line1`} className={labelCls}>Address line 1</label>
-            <input id={`${mountId}-ship-line1`} className={inputCls} placeholder="Street address" value={ship.line1}
+            <label htmlFor={`${mountId}-ship-line1`} className={labelCls}>{t("Address line 1")}</label>
+            <input id={`${mountId}-ship-line1`} className={inputCls} placeholder={t("Street address")} value={ship.line1}
               onChange={(e) => { setShip({ ...ship, line1: e.target.value }); fieldStarted('shipping'); }} data-testid="pai-ship-line1" />
           </div>
           <div>
-            <label htmlFor={`${mountId}-ship-line2`} className={labelCls}>Address line 2 (optional)</label>
-            <input id={`${mountId}-ship-line2`} className={inputCls} placeholder="Apartment, suite, etc." value={ship.line2}
+            <label htmlFor={`${mountId}-ship-line2`} className={labelCls}>{t("Address line 2 (optional)")}</label>
+            <input id={`${mountId}-ship-line2`} className={inputCls} placeholder={t("Apartment, suite, etc.")} value={ship.line2}
               onChange={(e) => setShip({ ...ship, line2: e.target.value })} />
           </div>
           <div className="grid grid-cols-2 gap-2">
             <div>
-              <label htmlFor={`${mountId}-ship-city`} className={labelCls}>City</label>
-              <input id={`${mountId}-ship-city`} className={inputCls} placeholder="City" value={ship.city}
+              <label htmlFor={`${mountId}-ship-city`} className={labelCls}>{t("City")}</label>
+              <input id={`${mountId}-ship-city`} className={inputCls} placeholder={t("City")} value={ship.city}
                 onChange={(e) => setShip({ ...ship, city: e.target.value })} data-testid="pai-ship-city" />
             </div>
             <div>
-              <label htmlFor={`${mountId}-ship-state`} className={labelCls}>State / County</label>
-              <input id={`${mountId}-ship-state`} className={inputCls} placeholder="State / County" value={ship.state}
+              <label htmlFor={`${mountId}-ship-state`} className={labelCls}>{t("State / County")}</label>
+              <input id={`${mountId}-ship-state`} className={inputCls} placeholder={t("State / County")} value={ship.state}
                 onChange={(e) => setShip({ ...ship, state: e.target.value })} />
             </div>
           </div>
           <div className="grid grid-cols-2 gap-2">
             <div>
-              <label htmlFor={`${mountId}-ship-postal`} className={labelCls}>ZIP / Postcode</label>
-              <input id={`${mountId}-ship-postal`} className={inputCls} placeholder="ZIP / Postcode" value={ship.postal}
+              <label htmlFor={`${mountId}-ship-postal`} className={labelCls}>{t("ZIP / Postcode")}</label>
+              <input id={`${mountId}-ship-postal`} className={inputCls} placeholder={t("ZIP / Postcode")} value={ship.postal}
                 onChange={(e) => setShip({ ...ship, postal: e.target.value })} data-testid="pai-ship-postal" />
             </div>
             <div>
-              <label htmlFor={`${mountId}-ship-country`} className={labelCls}>Country</label>
+              <label htmlFor={`${mountId}-ship-country`} className={labelCls}>{t("Country")}</label>
               <select id={`${mountId}-ship-country`} className={inputCls} value={ship.country}
                 onChange={(e) => setShip({ ...ship, country: e.target.value })}>
                 {COUNTRIES.map(([code, label]) => (
-                  <option key={code} value={code}>{label}</option>
+                  <option key={code} value={code}>{countryLabel(code, label)}</option>
                 ))}
               </select>
             </div>
@@ -663,11 +668,11 @@ export function PaiCardForm(props: {
         data-testid="pai-pay"
       >
         {working ? <Loader2 className="h-4 w-4 animate-spin" /> : <Lock className="h-4 w-4" />}
-        {working ? 'Processing…' : heldWallet ? 'Finish payment' : props.submitLabel}
+        {working ? t("Processing…") : heldWallet ? t("Finish payment") : props.submitLabel}
       </button>
       <p className="text-center text-[11px] text-white/40">
         <Lock className="mr-1 inline h-3 w-3" />
-        Secure payment — your card details are encrypted and never stored on our servers.
+        {t("Secure payment — your card details are encrypted and never stored on our servers.")}
       </p>
     </form>
   );

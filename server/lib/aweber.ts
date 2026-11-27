@@ -1,4 +1,7 @@
 import logger from './logger';
+import { localizedAweberList } from './aweberLocale';
+import { requestLocale } from './locale';
+import type { LocaleCode } from '@shared/locales';
 import {
   BACKEND_OFFERS,
   backendUpsellFor,
@@ -28,6 +31,8 @@ interface AddSubscriberParams {
   // non-empty — see the wipe guard in addSubscriberToList. The field must
   // already exist ON THAT LIST; custom fields are per-list, not per-account.
   customFields?: Record<string, string>;
+  /** The ORDER's locale — routes a French lead to the French free list (when its env var is set). */
+  locale?: LocaleCode;
 }
 
 interface ShippingAddress {
@@ -48,6 +53,8 @@ interface AddPaidSubscriberParams {
   shipping?: ShippingAddress;
   /** Buyer's phone from any V1 reading funnel's checkout (Stripe Checkout, E.164). Paid list only. */
   phone?: string;
+  /** The ORDER's locale — routes a French buyer to the French list (when its env var is set). Default = English list. */
+  locale?: LocaleCode;
 }
 
 let cachedTokens: AWeberTokens | null = null;
@@ -137,7 +144,7 @@ async function makeAWeberRequest(
 
 export async function addSubscriberToList(params: AddSubscriberParams): Promise<{ success: boolean; error?: string }> {
   const accountId = process.env.AWEBER_ACCOUNT_ID;
-  const listId = params.listId || process.env.AWEBER_LIST_ID;
+  const listId = params.listId || localizedAweberList(process.env.AWEBER_LIST_ID || '', 'AWEBER_LIST_ID', params.locale ?? requestLocale());
 
   if (!accountId || !listId) {
     logger.warn('AWeber account/list not configured');
@@ -248,7 +255,7 @@ export async function addSubscriberToList(params: AddSubscriberParams): Promise<
 
 export async function addUpsellSubscriber(params: AddPaidSubscriberParams): Promise<{ success: boolean; error?: string }> {
   const accountId = process.env.AWEBER_ACCOUNT_ID;
-  const upsellListId = '6937139';
+  const upsellListId = localizedAweberList('6937139', 'AWEBER_UPSELL1_LIST_ID', params.locale ?? requestLocale());
   
   if (!accountId) {
     logger.warn('AWeber account not configured');
@@ -327,7 +334,7 @@ export async function addUpsellSubscriber(params: AddPaidSubscriberParams): Prom
 
 export async function addUpsell2Subscriber(params: AddPaidSubscriberParams): Promise<{ success: boolean; error?: string }> {
   const accountId = process.env.AWEBER_ACCOUNT_ID;
-  const upsell2ListId = '6939683';
+  const upsell2ListId = localizedAweberList('6939683', 'AWEBER_UPSELL2_LIST_ID', params.locale ?? requestLocale());
   
   if (!accountId) {
     logger.warn('AWeber account not configured');
@@ -636,7 +643,7 @@ export async function tagSoulmateDeclinedUpsell(params: SoulmateDeclinedParams) 
 
 export async function addPaidSubscriber(params: AddPaidSubscriberParams): Promise<{ success: boolean; error?: string }> {
   const accountId = process.env.AWEBER_ACCOUNT_ID;
-  const paidListId = process.env.AWEBER_PAID_LIST_ID || '6936955';
+  const paidListId = localizedAweberList(process.env.AWEBER_PAID_LIST_ID || '6936955', 'AWEBER_PAID_LIST_ID', params.locale ?? requestLocale());
   
   if (!accountId) {
     logger.warn('AWeber account not configured');
@@ -732,6 +739,8 @@ interface AddBumpSubscriberParams {
   /** The Stripe CHECKOUT SESSION id (`cs_…`), not the PaymentIntent. See below. */
   stripeOrderId: string;
   tags?: string[];
+  /** The ORDER's locale — routes a French buyer to the French bump list (when its env var is set). */
+  locale?: LocaleCode;
 }
 
 /**
@@ -762,7 +771,7 @@ export async function addBumpPaidSubscriber(
   params: AddBumpSubscriberParams,
 ): Promise<{ success: boolean; error?: string }> {
   const accountId = process.env.AWEBER_ACCOUNT_ID;
-  const bumpListId = process.env.AWEBER_BUMP_PAID_LIST_ID || '6969209';
+  const bumpListId = localizedAweberList(process.env.AWEBER_BUMP_PAID_LIST_ID || '6969209', 'AWEBER_BUMP_PAID_LIST_ID', params.locale ?? requestLocale());
 
   if (!accountId) {
     logger.warn('AWeber account not configured');

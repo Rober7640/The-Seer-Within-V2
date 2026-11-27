@@ -47,6 +47,7 @@ import {
   addUpsellSubscriber,
   addUpsell2Subscriber,
 } from './aweber';
+import { requestCurrency, localeMetadata } from './locale';
 import {
   db,
   updateStripeData,
@@ -411,6 +412,9 @@ export function mainMetadata(order: PaiOrder): Record<string, string> {
           bumpAmount: String(order.bumpCents),
         }
       : {}),
+    // The order's language for n8n's router. Empty for an English order
+    // (localeMetadata), captured from the request at charge time.
+    ...localeMetadata(),
   };
 }
 
@@ -508,6 +512,9 @@ async function chargeMainOnce(input: MainChargeInput, deps: PaiLiveDeps): Promis
     {
       customerId: cust.data.id,
       amountCents: total,
+      // New order → charge in the visitor's market currency (EUR for France).
+      // English = "USD", the same value charge() already defaults to (byte-identical).
+      currency: requestCurrency().toUpperCase(),
       metadata: mainMetadata(order),
       idempotencyKey: idemKey('main'),
       token: input.cardToken,
@@ -790,6 +797,7 @@ async function fulfilMain(order: PaiOrder, settled: PaiTransaction, x: BuyerExtr
     type: order.type,
     funnel: funnel,
     amountCents: total,
+    currency: requestCurrency().toUpperCase(),
     email: order.email,
     firstName: order.firstName,
   }).catch(() => { /* logged inside */ });
@@ -810,6 +818,7 @@ async function fulfilMain(order: PaiOrder, settled: PaiTransaction, x: BuyerExtr
       clickId: order.trackdeskClickId,
       conversionType: 'sale',
       amount: total / 100,
+      currency: requestCurrency().toUpperCase(),
       externalId: txn,
       customerId: order.email,
     });
@@ -1018,6 +1027,7 @@ async function fulfilUpsell(f: Fulfil, deps: PaiLiveDeps): Promise<void> {
       clickId: f.trackdeskClickId,
       conversionType: spec.step,
       amount: spec.cents / 100,
+      currency: requestCurrency().toUpperCase(),
       externalId: `${f.orderId}_${spec.step}`,
       customerId: f.email || '',
     });
@@ -1047,6 +1057,7 @@ async function fulfilUpsell(f: Fulfil, deps: PaiLiveDeps): Promise<void> {
     product: spec.product,
     funnel: f.funnel,
     amountCents: spec.cents,
+    currency: requestCurrency().toUpperCase(),
     email: f.email,
     firstName: f.firstName,
   }).catch(() => { /* logged inside */ });
@@ -1146,6 +1157,9 @@ function upsellMetadata(
     ...(mainMd.gclid ? { gclid: mainMd.gclid } : {}),
     ...srcMetadata(mainMd.src),
     ...(mainMd.noemail === '1' ? { noemail: '1' } : {}),
+    // Inherit the order's language from the main order so the upsell reading
+    // routes to the French flow too. Absent on English orders.
+    ...(mainMd.locale ? { locale: mainMd.locale } : {}),
   };
 }
 
@@ -1192,6 +1206,9 @@ async function chargeUpsellMit(body: UpsellBody, spec: UpsellSpec, deps: PaiLive
       {
         customerId: convo.stripeCustomerId,
         amountCents: spec.cents,
+        // Off-session: charge in the ORIGINAL order's currency (from the retrieved
+        // transaction), never the request locale — stale-cookie safe.
+        currency: guard.tx?.currency ?? 'USD',
         idempotencyKey: idemKey(spec.step),
         paymentInstrumentId: convo.stripePaymentMethodId,
         isMerchantInitiated: true,
@@ -1323,6 +1340,8 @@ export async function payUpsellWithCard(
       {
         customerId: convo.stripeCustomerId!,
         amountCents: spec.cents,
+        // Charge in the ORIGINAL order's currency (from the retrieved transaction).
+        currency: guard.tx?.currency ?? 'USD',
         idempotencyKey: idemKey(`${args.step}-card`),
         token: args.cardToken,
         isMerchantInitiated: false,

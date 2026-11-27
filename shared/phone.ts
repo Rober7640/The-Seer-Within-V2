@@ -1,3 +1,5 @@
+import { msg } from './i18n';
+
 /**
  * The phone box on the Payments.AI checkout — one rule for the page AND the server,
  * so the page can never accept a number the server then refuses.
@@ -12,8 +14,9 @@
  * Anything else (e.g. a local "07700 900123" or "0917 123 4567") is refused, with a
  * message asking for the country code — we can't guess which country it is.
  */
-export const PHONE_ERROR =
-  'Please enter your phone number. If you are outside the US, start with your country code, e.g. +44 7700 900123';
+export const PHONE_ERROR = msg(
+  'Please enter your phone number. If you are outside the US, start with your country code, e.g. +44 7700 900123',
+);
 
 export function normalizePhone(raw: unknown): string | null {
   let s = String(raw ?? '').replace(/[\s\-().]/g, '');

@@ -1,3 +1,4 @@
+import { dateLocale } from "@/lib/locale";
 import { useEffect, useRef, useState } from "react";
 import { useSearch, useLocation } from "wouter";
 import { CosmicBackground } from "../components/CosmicBackground";
@@ -11,6 +12,9 @@ import type { Bucket } from "@shared/types";
 import lavaStoneImage from "../assets/images/lava-stone.jpg";
 import { funnelPath, isTwinFlameOffer } from "../lib/funnel";
 import { claimMainPurchaseSlot, releaseMainPurchaseSlot, fireMainPurchaseEvents } from "../lib/mainPurchaseEvents";
+import { trackABConversion } from "../hooks/useABTest";
+import { SmsOptInCard } from "../components/SmsOptInCard";
+import { t } from "@/lib/i18n";
 
 interface UserData {
   firstName: string;
@@ -60,7 +64,7 @@ export default function UpsellPage() {
     if (demo === "true" || sid === "demo") {
       setSessionId("demo_session");
       setUserData({
-        firstName: "Sarah",
+        firstName: t("Sarah"),
         email: "demo@example.com",
         bucket: "love",
         personName: null,
@@ -71,7 +75,7 @@ export default function UpsellPage() {
     }
 
     if (!sid) {
-      setError("Missing session");
+      setError(t("Missing session"));
       setIsLoading(false);
       return;
     }
@@ -122,7 +126,7 @@ export default function UpsellPage() {
         if (shouldTrack) {
           releaseMainPurchaseSlot(orderId);
         }
-        setError("Could not load your session");
+        setError(t("Could not load your session"));
         console.error(err);
       } finally {
         setIsLoading(false);
@@ -197,7 +201,7 @@ export default function UpsellPage() {
         <CosmicBackground />
         <div className="text-white/60 animate-pulse flex items-center gap-2">
           <Loader2 className="w-5 h-5 animate-spin" />
-          Loading your session...
+          {t("Loading your session...")}
         </div>
       </div>
     );
@@ -214,7 +218,7 @@ export default function UpsellPage() {
             onClick={() => navigate(funnelPath("/"))}
             className="text-purple-400 hover:text-purple-300 transition-colors"
           >
-            Return home
+            {t("Return home")}
           </button>
         </div>
       </div>
@@ -242,7 +246,7 @@ export default function UpsellPage() {
       <div className="relative z-10 p-4 text-center border-b border-white/10 bg-black/20 backdrop-blur-sm">
         <div className="flex items-center justify-center gap-2 text-sm text-white/60">
           <Volume2 className="w-4 h-4" data-testid="icon-volume" />
-          <span>Sound on for best experience</span>
+          <span>{t("Sound on for best experience")}</span>
         </div>
       </div>
 
@@ -259,7 +263,7 @@ export default function UpsellPage() {
 
           {/* Date */}
           <div className="text-center text-xs text-gray-400 my-4">
-            {new Date().toLocaleDateString(undefined, {
+            {new Date().toLocaleDateString(dateLocale(), {
               weekday: "long",
               hour: "numeric",
               minute: "numeric",
@@ -277,7 +281,7 @@ export default function UpsellPage() {
                 <div className="max-w-[70%] rounded-2xl overflow-hidden shadow-lg border border-purple-200/30">
                   <img
                     src={msg.content}
-                    alt="Volcanic lava stone bracelet"
+                    alt={t("Volcanic lava stone bracelet")}
                     className="w-full h-auto"
                   />
                 </div>
@@ -343,7 +347,7 @@ export default function UpsellPage() {
               <Input
                 value={inputValue}
                 onChange={(e) => setInputValue(e.target.value)}
-                placeholder="Or type your response..."
+                placeholder={t("Or type your response...")}
                 disabled={isTyping}
                 className="flex-1 bg-white/10 border-white/20 text-white placeholder:text-white/40"
                 data-testid="input-chat"
@@ -354,7 +358,7 @@ export default function UpsellPage() {
                 size="sm"
                 data-testid="button-send"
               >
-                Send
+                {t("Send")}
               </Button>
             </div>
           </form>

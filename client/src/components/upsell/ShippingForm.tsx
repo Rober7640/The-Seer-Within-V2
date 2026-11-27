@@ -17,6 +17,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { t } from "@/lib/i18n";
+import { countryLabel, countryIntl } from "@/lib/countryName";
+import { useMemo } from "react";
 
 interface ShippingFormProps {
   defaultName?: string
@@ -40,14 +43,15 @@ export interface ShippingAddress {
   country: string
 }
 
-const shippingSchema = z.object({
-  name: z.string().min(1, 'Name is required'),
-  line1: z.string().min(1, 'Address is required'),
+// Built at render time so its messages are in the visitor's locale.
+const makeShippingSchema = () => z.object({
+  name: z.string().min(1, t("Name is required")),
+  line1: z.string().min(1, t("Address is required")),
   line2: z.string(),
-  city: z.string().min(1, 'City is required'),
-  state: z.string().min(1, 'State is required'),
-  postal: z.string().min(1, 'Postal code is required'),
-  country: z.string().min(1, 'Country is required'),
+  city: z.string().min(1, t("City is required")),
+  state: z.string().min(1, t("State is required")),
+  postal: z.string().min(1, t("Postal code is required")),
+  country: z.string().min(1, t("Country is required")),
 })
 
 const DEFAULT_COUNTRY_OPTIONS = [
@@ -63,20 +67,21 @@ const DEFAULT_COUNTRY_OPTIONS = [
 /** Codes → {value,label}, alphabetical. Country names come from the browser (Intl), so no list
  *  of 200 names lives in this repo; a browser without Intl.DisplayNames shows the code. */
 export function countryOptions(codes?: readonly string[]) {
-  if (!codes) return DEFAULT_COUNTRY_OPTIONS
+  if (!codes) return countryIntl() === 'en' ? DEFAULT_COUNTRY_OPTIONS : DEFAULT_COUNTRY_OPTIONS.map((o) => ({ ...o, label: countryLabel(o.value, o.label) }))
   let names: Intl.DisplayNames | null = null
   try {
-    names = new Intl.DisplayNames(['en'], { type: 'region' })
+    names = new Intl.DisplayNames([countryIntl()], { type: 'region' })
   } catch {
     names = null
   }
   return [...codes]
     .map((value) => ({ value, label: names?.of(value) ?? value }))
-    .sort((a, b) => a.label.localeCompare(b.label))
+    .sort((a, b) => a.label.localeCompare(b.label, countryIntl() === 'en' ? undefined : countryIntl()))
 }
 
-export function ShippingForm({ defaultName = '', productLabel = 'protection stone', countries, onSubmit }: ShippingFormProps) {
+export function ShippingForm({ defaultName = '', productLabel = t("protection stone"), countries, onSubmit }: ShippingFormProps) {
   const countryList = countryOptions(countries)
+  const shippingSchema = useMemo(makeShippingSchema, [])
   const form = useForm<ShippingAddress>({
     resolver: zodResolver(shippingSchema),
     defaultValues: {
@@ -101,7 +106,7 @@ export function ShippingForm({ defaultName = '', productLabel = 'protection ston
       <form onSubmit={form.handleSubmit(handleFormSubmit)} className="p-4" data-testid="form-shipping">
         <h3 className="text-foreground font-semibold text-lg mb-4 flex items-center gap-2" data-testid="heading-shipping">
           <Package className="w-5 h-5 text-purple-400" data-testid="icon-package" />
-          <span data-testid="text-shipping-title">Where should I send your {productLabel}?</span>
+          <span data-testid="text-shipping-title">{t("Where should I send your {productLabel}?", { productLabel })}</span>
         </h3>
 
         <div className="space-y-3">
@@ -112,7 +117,7 @@ export function ShippingForm({ defaultName = '', productLabel = 'protection ston
               <FormItem>
                 <FormControl>
                   <Input
-                    placeholder="Full Name"
+                    placeholder={t("Full Name")}
                     {...field}
                     data-testid="input-shipping-name"
                   />
@@ -128,7 +133,7 @@ export function ShippingForm({ defaultName = '', productLabel = 'protection ston
               <FormItem>
                 <FormControl>
                   <Input
-                    placeholder="Street Address"
+                    placeholder={t("Street Address")}
                     {...field}
                     data-testid="input-shipping-line1"
                   />
@@ -144,7 +149,7 @@ export function ShippingForm({ defaultName = '', productLabel = 'protection ston
               <FormItem>
                 <FormControl>
                   <Input
-                    placeholder="Apt, Suite, etc. (optional)"
+                    placeholder={t("Apt, Suite, etc. (optional)")}
                     {...field}
                     data-testid="input-shipping-line2"
                   />
@@ -161,7 +166,7 @@ export function ShippingForm({ defaultName = '', productLabel = 'protection ston
                 <FormItem>
                   <FormControl>
                     <Input
-                      placeholder="City"
+                      placeholder={t("City")}
                       {...field}
                       data-testid="input-shipping-city"
                     />
@@ -176,7 +181,7 @@ export function ShippingForm({ defaultName = '', productLabel = 'protection ston
                 <FormItem>
                   <FormControl>
                     <Input
-                      placeholder="State / Province"
+                      placeholder={t("State / Province")}
                       {...field}
                       data-testid="input-shipping-state"
                     />
@@ -194,7 +199,7 @@ export function ShippingForm({ defaultName = '', productLabel = 'protection ston
                 <FormItem>
                   <FormControl>
                     <Input
-                      placeholder="Postal Code"
+                      placeholder={t("Postal Code")}
                       {...field}
                       data-testid="input-shipping-postal"
                     />
@@ -210,7 +215,7 @@ export function ShippingForm({ defaultName = '', productLabel = 'protection ston
                   <Select onValueChange={field.onChange} defaultValue={field.value}>
                     <FormControl>
                       <SelectTrigger data-testid="select-shipping-country">
-                        <SelectValue placeholder="Country" />
+                        <SelectValue placeholder={t("Country")} />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent data-testid="select-content-country">
@@ -241,10 +246,10 @@ export function ShippingForm({ defaultName = '', productLabel = 'protection ston
           {isSubmitting ? (
             <span className="flex items-center justify-center gap-2">
               <Loader2 className="w-5 h-5 animate-spin" data-testid="spinner-shipping" />
-              <span data-testid="text-button-saving">Saving...</span>
+              <span data-testid="text-button-saving">{t("Saving...")}</span>
             </span>
           ) : (
-            <span data-testid="text-button-submit">Ship My {productLabel.charAt(0).toUpperCase() + productLabel.slice(1)} →</span>
+            <span data-testid="text-button-submit">{t("Ship My {v0} →", { v0: productLabel.charAt(0).toUpperCase() + productLabel.slice(1) })}</span>
           )}
         </Button>
       </form>

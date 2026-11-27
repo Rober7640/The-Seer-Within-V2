@@ -10,6 +10,7 @@
 import { trackPurchase } from "./facebook";
 import { trackGAdsPurchase } from "./gtm";
 import { trackABConversion } from "../hooks/useABTest";
+import { purchaseCurrency } from "./locale";
 
 const PURCHASE_TRACKED_KEY = "seer_purchase_tracked";
 
@@ -48,7 +49,7 @@ export function fireMainPurchaseEvents(sessionId: string, data: MainPurchaseData
   // would be down to whichever arrived first. Identical to purchaseAmount
   // whenever there is no bump.
   const orderTotal = purchaseAmount + (data.bumpAmountCents || 0) / 100;
-  trackPurchase(orderTotal, "USD", data.email ?? undefined, "Energy Clearing Ritual", sessionId, { skipServerRelay: true });
+  trackPurchase(orderTotal, purchaseCurrency(), data.email ?? undefined, "Energy Clearing Ritual", sessionId, { skipServerRelay: true });
   trackGAdsPurchase("main", orderTotal, sessionId);
 
   // V1 prompt A/B (v1_clearing_theme_palm_2026) — primary metric =
@@ -71,7 +72,7 @@ export function fireMainPurchaseEvents(sessionId: string, data: MainPurchaseData
       amount: { value: String(purchaseAmount) },
       externalId: sessionId,
       customerId: data.email,
-      currencyCode: "USD",
+      currencyCode: purchaseCurrency(),
     });
   }
 }

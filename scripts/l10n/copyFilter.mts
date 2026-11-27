@@ -1,0 +1,278 @@
+// Shared rules for "is this string literal buyer-facing copy?"
+//
+// Used by literal-inventory.mts (sizing + the copy-move guard) and wrap-t.mts
+// (the codemod that wraps inline copy in t()). Keeping ONE predicate means the
+// guard and the codemod can never disagree about what counts as copy.
+
+import ts from "typescript";
+
+// JSX attributes and object keys whose string values are never copy.
+export const NON_COPY_KEYS = new Set([
+  "className", "class", "key", "href", "src", "id", "type", "variant", "name",
+  "role", "htmlFor", "to", "path", "data-testid", "style", "size", "autoComplete",
+  "inputMode", "target", "rel", "method", "state", "inputType", "value", "stage",
+  "bucket", "funnel", "param", "prefix", "posthog", "event", "eventName", "kind",
+  "mode", "currency", "product", "bumpProduct", "metadata", "color", "icon",
+  "fill", "stroke", "viewBox", "d", "transform", "as", "asChild",
+  "media_type", "model", "status", "code", "countryCode", "slug", "deck", "card",
+  // analytics payloads: Meta / PostHog match these exactly, so they stay English
+  "content_name", "content_category", "content_type", "content_ids", "contentName",
+  "event_name", "eventLabel", "offer", "offerKey", "sku", "productKey",
+]);
+
+// Whole files that are plumbing (analytics, tracking). Nothing in them is shown
+// to the buyer, and their strings are matched by Meta / PostHog / n8n.
+export const NON_COPY_FILES = /(^|\/)client\/src\/lib\/(facebook|posthog|tiktok|analytics|tracking|attribution)\.ts$/;
+
+// Calls whose string arguments are logging / analytics / plumbing, never copy.
+export const NON_COPY_CALLEES = /^(console|logger|log|Sentry|posthog|captureException|track\w*|trackPH|fbq|window\.fbq|sendServerEvent|gtag|ttq|fetch|setLocation|navigate|localStorage|sessionStorage|document|window\.(localStorage|sessionStorage|location|addEventListener|history|open)|new URL|URLSearchParams|JSON|require|import)\b/;
+
+// String methods whose literal arguments are matching logic, never copy.
+const MATCH_METHODS = new Set([
+  "includes", "startsWith", "endsWith", "indexOf", "lastIndexOf", "match",
+  "matchAll", "replace", "replaceAll", "split", "test", "search", "get", "has",
+  "set", "getItem", "setItem", "removeItem", "querySelector", "querySelectorAll",
+  "getElementById", "addEventListener", "removeEventListener", "padStart", "padEnd",
+  "join", "toLocaleString", "toLocaleDateString", "toLocaleTimeString",
+]);
+
+export function isClassNameLike(t: string): boolean {
+  const tokens = t.split(/\s+/).filter(Boolean);
+  if (!tokens.every((tok) => /^[!a-z0-9:\[\]\/\.\-#%_()]+$/i.test(tok))) return false;
+  // A Tailwind variant has something AFTER its colon ("hover:bg-x"); a word that
+  // merely ends in one ("Shipping to:", "Email:") is a label, not a class.
+  const classy = tokens.filter((tok) => /[-\[]/.test(tok) || /:./.test(tok) || /^(flex|grid|block|hidden|relative|absolute|fixed|inline|italic|uppercase|truncate|underline|rounded|shadow|border|transition|container)$/.test(tok));
+  return classy.length / tokens.length >= 0.5;
+}
+
+export function isCopyText(raw: string): boolean {
+  const t = raw.trim();
+  if (t.length < 2 || !/[A-Za-z]/.test(t)) return false;
+  if (/^(https?:|mailto:|tel:|\/|\.\/|#)/.test(t)) return false;
+  if (isClassNameLike(t)) return false;
+  if (!/\s/.test(t)) {
+    // single token: keep Capitalised words, words with apostrophes, punctuated words
+    if (/^[A-Z][a-zà-ÿ']+[.!?…,:]*$/.test(t)) return true;
+    if (/[a-z]'[a-z]/i.test(t) || /[.!?…]$/.test(t)) return /[a-z]{2,}/i.test(t);
+    return false;
+  }
+  if (/^[A-Z0-9_]+( [A-Z0-9_]+)*$/.test(t) && /_/.test(t)) return false; // ENUM_LIKE
+  return true;
+}
+
+/** The property / attribute name a literal is the value of, if any. */
+export function keyOf(node: ts.Node): string | null {
+  const p = node.parent;
+  if (!p) return null;
+  if (ts.isPropertyAssignment(p) && p.initializer === node) {
+    const n = p.name;
+    if (ts.isIdentifier(n) || ts.isStringLiteral(n)) return n.text;
+  }
+  if (ts.isJsxAttribute(p)) return p.name.getText();
+  if (ts.isJsxExpression(p) && p.parent && ts.isJsxAttribute(p.parent)) return p.parent.name.getText();
+  if (ts.isBinaryExpression(p) && p.right === node && ts.isPropertyAccessExpression(p.left)) return p.left.name.text;
+  // default parameter values: function f(contentName = "…")
+  if (ts.isParameter(p) && p.initializer === node && ts.isIdentifier(p.name)) return p.name.text;
+  if (ts.isBindingElement(p) && p.initializer === node && ts.isIdentifier(p.name)) return p.name.text;
+  return null;
+}
+
+/** The callee text of the nearest call this node is an ARGUMENT of (not nested deeper). */
+function directCallOf(node: ts.Node): ts.CallExpression | ts.NewExpression | null {
+  let n: ts.Node = node;
+  // walk up through parentheses / conditional branches / || ?? defaults
+  while (n.parent && (ts.isParenthesizedExpression(n.parent) || ts.isConditionalExpression(n.parent) ||
+    (ts.isBinaryExpression(n.parent) && [ts.SyntaxKind.BarBarToken, ts.SyntaxKind.QuestionQuestionToken].includes(n.parent.operatorToken.kind)))) n = n.parent;
+  const p = n.parent;
+  if (p && (ts.isCallExpression(p) || ts.isNewExpression(p)) && p.arguments?.includes(n as ts.Expression)) return p;
+  return null;
+}
+
+/** True when the literal sits in a non-copy position (logs, comparisons, keys, types, matching). */
+export function inNonCopyPosition(node: ts.Node): boolean {
+  const k = keyOf(node);
+  if (k && NON_COPY_KEYS.has(k)) return true;
+  // <input accept="image/*"> is a file filter; an object's `accept:` is a button label.
+  if (k === "accept" && node.parent && (ts.isJsxAttribute(node.parent) || ts.isJsxExpression(node.parent))) return true;
+  for (let n: ts.Node | undefined = node.parent; n; n = n.parent) {
+    // anything inside a style object (style={{…}} or style: {…}) is CSS, never copy
+    if (ts.isJsxAttribute(n) && n.name.getText() === "style") return true;
+    if (ts.isPropertyAssignment(n) && (ts.isIdentifier(n.name) || ts.isStringLiteral(n.name)) && n.name.text === "style") return true;
+    if (ts.isCallExpression(n) && NON_COPY_CALLEES.test(n.expression.getText())) return true;
+    if (ts.isNewExpression(n) && /^(URL|URLSearchParams|RegExp|Error)$/.test(n.expression.getText())) return true;
+    if (ts.isImportDeclaration(n) || ts.isExportDeclaration(n)) return true;
+    if (ts.isElementAccessExpression(n) && n.argumentExpression === node) return true;
+    if (ts.isLiteralTypeNode(n)) return true;
+    if (ts.isCaseClause(n) && n.expression === node) return true;
+    if (ts.isTaggedTemplateExpression(n)) return true;
+  }
+  const call = directCallOf(node);
+  if (call && ts.isCallExpression(call) && ts.isPropertyAccessExpression(call.expression) && MATCH_METHODS.has(call.expression.name.text)) return true;
+  const p = node.parent;
+  if (p && ts.isBinaryExpression(p) && [ts.SyntaxKind.EqualsEqualsEqualsToken, ts.SyntaxKind.ExclamationEqualsEqualsToken, ts.SyntaxKind.EqualsEqualsToken, ts.SyntaxKind.ExclamationEqualsToken].includes(p.operatorToken.kind)) return true;
+  return false;
+}
+
+/** True when the node is inside a function body (evaluated at call time, not module load). */
+export function inFunctionScope(node: ts.Node): boolean {
+  for (let n: ts.Node | undefined = node.parent; n; n = n.parent) {
+    if (ts.isFunctionLike(n) && (n as ts.FunctionLikeDeclaration).body) return true;
+  }
+  return false;
+}
+
+/** True when the node is already the text argument of t()/tl(). */
+export function alreadyTranslated(node: ts.Node): boolean {
+  const p = node.parent;
+  if (!p) return false;
+  // msg("a " + "b {x}"): each piece of a folded key
+  if (ts.isBinaryExpression(p) && p.operatorToken.kind === ts.SyntaxKind.PlusToken) {
+    let top: ts.Node = p;
+    while (top.parent && ts.isBinaryExpression(top.parent) && top.parent.operatorToken.kind === ts.SyntaxKind.PlusToken) top = top.parent;
+    if (top.parent && ts.isParenthesizedExpression(top.parent)) top = top.parent;
+    const call = top.parent;
+    return !!call && ts.isCallExpression(call) && call.expression.getText() === "msg" && call.arguments[0] === top;
+  }
+  if (!ts.isCallExpression(p)) return false;
+  const callee = p.expression.getText();
+  if ((callee === "t" || callee === "tr" || callee === "tx" || callee === "msg") && p.arguments[0] === node) return true;
+  if ((callee === "tl" || callee === "translate") && p.arguments[1] === node) return true;
+  return false;
+}
+
+/** For a t()/tl() call, the placeholder names declared in its vars object literal. */
+export function declaredVars(call: ts.CallExpression, varsIndex: number): Set<string> {
+  const out = new Set<string>();
+  const arg = call.arguments[varsIndex];
+  if (arg && ts.isObjectLiteralExpression(arg)) {
+    for (const prop of arg.properties) {
+      if ((ts.isPropertyAssignment(prop) || ts.isShorthandPropertyAssignment(prop)) && (ts.isIdentifier(prop.name) || ts.isStringLiteral(prop.name))) out.add(prop.name.text);
+    }
+  }
+  return out;
+}
+
+// HTML entities React decodes inside JSX text. Anything else is reported by the
+// codemod and left for a human, rather than guessed.
+const ENTITIES: Record<string, string> = {
+  amp: "&", lt: "<", gt: ">", quot: '"', apos: "'", nbsp: "\u00A0", mdash: "\u2014",
+  ndash: "\u2013", hellip: "\u2026", rsquo: "\u2019", lsquo: "\u2018", ldquo: "\u201C",
+  rdquo: "\u201D", copy: "\u00A9", reg: "\u00AE", trade: "\u2122", middot: "\u00B7",
+  bull: "\u2022", times: "\u00D7", euro: "\u20AC", rarr: "\u2192", larr: "\u2190",
+};
+
+/** Decode JSX-text entities; returns null if an unknown named entity is present. */
+export function decodeJsxEntities(raw: string): string | null {
+  let unknown = false;
+  const out = raw.replace(/&(#x[0-9a-f]+|#[0-9]+|[a-z]+);/gi, (whole, body: string) => {
+    if (body[0] === "#") {
+      const code = body[1] === "x" || body[1] === "X" ? parseInt(body.slice(2), 16) : parseInt(body.slice(1), 10);
+      return String.fromCodePoint(code);
+    }
+    const hit = ENTITIES[body.toLowerCase()];
+    if (hit === undefined) { unknown = true; return whole; }
+    return hit;
+  });
+  return unknown ? null : out;
+}
+
+/** Babel's cleanJSXElementLiteralChild: the exact string React renders for a JSX text node. */
+export function cleanJsxText(raw: string): string {
+  const lines = raw.split(/\r\n|\n|\r/);
+  let lastNonEmpty = 0;
+  lines.forEach((l, i) => { if (/[^ \t]/.test(l)) lastNonEmpty = i; });
+  let str = "";
+  lines.forEach((line, i) => {
+    const isFirst = i === 0, isLast = i === lines.length - 1, isLastNonEmpty = i === lastNonEmpty;
+    let trimmed = line.replace(/\t/g, " ");
+    if (!isFirst) trimmed = trimmed.replace(/^[ ]+/, "");
+    if (!isLast) trimmed = trimmed.replace(/[ ]+$/, "");
+    if (trimmed) {
+      if (!isLastNonEmpty) trimmed += " ";
+      str += trimmed;
+    }
+  });
+  return str;
+}
+
+/** Text of a string/template literal as the inventory records it (templates use ${} per slot). */
+export function literalText(e: ts.Expression): string | null {
+  if (ts.isStringLiteral(e) || ts.isNoSubstitutionTemplateLiteral(e)) return e.text;
+  if (ts.isTemplateExpression(e)) {
+    let s = e.head.text;
+    for (const span of e.templateSpans) s += "${}" + span.literal.text;
+    return s;
+  }
+  return null;
+}
+
+/** t("…", vars) / tr("…", vars): the key with declared placeholders normalised to ${}. */
+export function translatedText(e: ts.Expression): string | null {
+  if (!ts.isCallExpression(e)) return null;
+  const callee = e.expression.getText();
+  if (callee !== "t" && callee !== "tr" && callee !== "tx") return null;
+  const first = e.arguments[0];
+  if (!first || !(ts.isStringLiteral(first) || ts.isNoSubstitutionTemplateLiteral(first))) return null;
+  return normalizeKey(e, first.text);
+}
+
+export const RICH_TAG = /<([a-z][a-z0-9]*)>([\s\S]*?)<\/\1>/g;
+
+/** Key text as the inventory records it: declared {vars} → ${}, and for tx() each <tag>…</tag> → ${}. */
+export function normalizeKey(call: ts.CallExpression | ts.BinaryExpression, key: string): string {
+  // A piece of msg("a " + "b {x}"): find the msg() call it belongs to.
+  while (!ts.isCallExpression(call)) {
+    const up: ts.Node = call.parent;
+    if (ts.isCallExpression(up)) { call = up; break; }
+    if (!ts.isBinaryExpression(up) && !ts.isParenthesizedExpression(up)) return key;
+    call = up as ts.BinaryExpression;
+  }
+  const callee = call.expression.getText();
+  // msg() declares no vars (they are passed where the text is translated): every
+  // {name} in it is a placeholder.
+  if (callee === "msg") return key.replace(/\{([A-Za-z_][A-Za-z0-9_]*)\}/g, "${}");
+  const names = declaredVars(call, callee === "tx" ? 2 : callee === "tl" ? 2 : 1);
+  let out = key.replace(/\{([A-Za-z_][A-Za-z0-9_]*)\}/g, (w, n: string) => (names.has(n) ? "${}" : w));
+  if (callee === "tx") out = out.replace(RICH_TAG, "${}");
+  return out;
+}
+
+/** For tx(): the text inside each <tag>…</tag> (placeholders normalised), recorded as its own entry. */
+export function richInnerTexts(call: ts.CallExpression): string[] {
+  if (call.expression.getText() !== "tx") return [];
+  const first = call.arguments[0];
+  if (!first || !(ts.isStringLiteral(first) || ts.isNoSubstitutionTemplateLiteral(first))) return [];
+  const names = declaredVars(call, 2);
+  return [...first.text.matchAll(RICH_TAG)].map((m) => m[2].replace(/\{([A-Za-z_][A-Za-z0-9_]*)\}/g, (w, n: string) => (names.has(n) ? "${}" : w)));
+}
+
+/**
+ * The run of children of one JSX element, as React renders it: text children
+ * cleaned the way Babel does, direct literal / t() children inline, any other
+ * child (expression or nested element) as ${}. Comments are skipped.
+ * Both the inventory and the codemod read runs through this, so merging
+ * "Pay " + {price} into t("Pay {price}", …) leaves the recorded run unchanged.
+ */
+export function jsxRunText(el: ts.JsxElement | ts.JsxFragment): { text: string; consumed: Set<ts.Node> } {
+  let text = "";
+  const consumed = new Set<ts.Node>();
+  for (const c of el.children) {
+    if (ts.isJsxText(c)) {
+      const r = cleanJsxText(c.text);
+      text += decodeJsxEntities(r) ?? r;
+      consumed.add(c);
+    } else if (ts.isJsxExpression(c)) {
+      if (!c.expression) continue; // {/* comment */}
+      const lit = literalText(c.expression);
+      const tr = lit === null ? translatedText(c.expression) : null;
+      // a t()/tx() child: only its KEY is consumed; its vars are still visited,
+      // because before the wrap they were ordinary expressions with their own copy
+      if (lit !== null) { text += lit; consumed.add(c.expression); }
+      else if (tr !== null) { text += tr; consumed.add((c.expression as ts.CallExpression).arguments[0]); }
+      else text += "${}";
+    } else {
+      text += "${}";
+    }
+  }
+  return { text, consumed };
+}

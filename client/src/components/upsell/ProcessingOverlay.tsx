@@ -1,10 +1,11 @@
 import { Loader2 } from 'lucide-react'
+import { t } from "@/lib/i18n";
 
 interface ProcessingOverlayProps {
   message?: string
 }
 
-export function ProcessingOverlay({ message = "Processing your protection..." }: ProcessingOverlayProps) {
+export function ProcessingOverlay({ message = t("Processing your protection...") }: ProcessingOverlayProps) {
   return (
     <div 
       className="absolute inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50"
