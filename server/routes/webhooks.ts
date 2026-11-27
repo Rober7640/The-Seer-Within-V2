@@ -9,6 +9,7 @@ import { readSmsConsent, smsConsentRecordText } from '../lib/smsConsent';
 import { followUpEmails, userFollowUpPreferences, migrationDripEmails, topupEmails, aidenFollowupEmails, personaFollowupEmails, evelynFollowupEmails, users, emailSuppression, creditPurchases, soulmateLanderSessions } from '@shared/schema';
 import { and, eq, sql } from 'drizzle-orm';
 import logger from '../lib/logger';
+import { resolveLocale } from '@shared/locales';
 import { posthog } from '../lib/posthog';
 import * as paypal from '../lib/paypal';
 import { fireV2PurchaseEvent, fireStripePurchaseEvent } from '../lib/facebook';
@@ -1157,6 +1158,9 @@ router.post('/stripe', async (req: Request, res: Response) => {
           // two systems. The main paid list deliberately keeps storing pi_….
           stripeOrderId: session.id,
           tags: bumpTags,
+          // Webhook has no cookie → take the order's language from its metadata so a
+          // French bump buyer routes to the French bump list (when that env var is set).
+          locale: resolveLocale(session.metadata?.locale),
         }).catch((err) =>
           logger.error('AWeber bump paid list error (non-blocking):', err),
         );
