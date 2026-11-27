@@ -732,6 +732,7 @@ async function fulfilMain(order: PaiOrder, settled: PaiTransaction, x: BuyerExtr
     type: order.type,
     funnel: funnel,
     amountCents: total,
+    currency: requestCurrency().toUpperCase(),
     email: order.email,
     firstName: order.firstName,
   }).catch(() => { /* logged inside */ });
@@ -989,6 +990,7 @@ async function fulfilUpsell(f: Fulfil, deps: PaiLiveDeps): Promise<void> {
     product: spec.product,
     funnel: f.funnel,
     amountCents: spec.cents,
+    currency: requestCurrency().toUpperCase(),
     email: f.email,
     firstName: f.firstName,
   }).catch(() => { /* logged inside */ });

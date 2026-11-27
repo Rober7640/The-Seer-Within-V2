@@ -1180,6 +1180,9 @@ router.post('/stripe', async (req: Request, res: Response) => {
         type: metadata.type,
         funnel: metadata.funnel,
         amountCents: session.amount_total ?? 0,
+        // Report the order's real currency to Meta (EUR for France) so ROAS is
+        // not skewed by a €35 order counted as $35. English = "USD", unchanged.
+        currency: (session.currency ?? "usd").toUpperCase(),
         email: metadata.email || session.customer_email || undefined,
         firstName: metadata.firstName || undefined,
       }).catch(() => { /* logged inside */ });
@@ -1258,6 +1261,7 @@ router.post('/stripe', async (req: Request, res: Response) => {
         type: metadata.type,
         funnel: metadata.funnel,
         amountCents: pi.amount,
+        currency: (pi.currency ?? "usd").toUpperCase(),
         email: metadata.email,
         firstName: metadata.firstName,
       }).catch(() => { /* logged inside */ });

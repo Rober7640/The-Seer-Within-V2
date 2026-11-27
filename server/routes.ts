@@ -2938,6 +2938,7 @@ export async function registerRoutes(
             clickId: trackdeskClickId,
             conversionType: "upsell1",
             amount: upsell1Cents / 100,
+            currency: (session.currency ?? "usd").toUpperCase(),
             externalId: `${checkoutSessionId}_upsell1`,
             customerId: email || "",
           }).catch((err) => logger.warn("Trackdesk upsell1 error (non-blocking):", err));
@@ -3674,6 +3675,7 @@ export async function registerRoutes(
             clickId: trackdeskClickId,
             conversionType: "upsell2",
             amount: amount / 100,
+            currency: (session.currency ?? "usd").toUpperCase(),
             externalId: `${checkoutSessionId}_upsell2`,
             customerId: email || "",
           }).catch((err) => logger.warn("Trackdesk upsell2 error (non-blocking):", err));
