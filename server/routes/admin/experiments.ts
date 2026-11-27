@@ -44,6 +44,7 @@ import {
   V1_TAROT_SHADOW_EXPERIMENT_KEY,
   V1_CLOSE_DEPTH_EXPERIMENT_KEY,
   V1_FB_CHAT_FLOW_EXPERIMENT_KEY,
+  V1_HOME_CHAT_FLOW_EXPERIMENT_KEY,
   PERSONA_PROMPT_KEY_PREFIX,
   isPersonaPromptKey,
 } from '../../lib/experiments';
@@ -200,6 +201,8 @@ const V1_MAIN_FUNNEL_KEYS: readonly string[] = [
   V1_DOWNSELL_BUMP_PRICE_KEY,
   // /fb chat flow A vs B — visitor-keyed, see VISITOR_KEYED_V1_MAIN_KEYS.
   V1_FB_CHAT_FLOW_EXPERIMENT_KEY,
+  // base-V1 (root /) chat flow A vs B — same shape as /fb, visitor-keyed.
+  V1_HOME_CHAT_FLOW_EXPERIMENT_KEY,
 ];
 
 // Which v1_main_funnel tests are keyed on a VISITOR COOKIE assigned at the lander
@@ -210,6 +213,7 @@ const VISITOR_KEYED_V1_MAIN_KEYS: readonly string[] = [
   V1_TAROT_VERSION_EXPERIMENT_KEY,
   V1_TAROT_SHADOW_EXPERIMENT_KEY,
   V1_FB_CHAT_FLOW_EXPERIMENT_KEY,
+  V1_HOME_CHAT_FLOW_EXPERIMENT_KEY,
 ];
 
 // Only the PRICE test's arms carry a price payload. The commitment gate and the
