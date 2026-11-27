@@ -753,6 +753,7 @@ async function fulfilMain(order: PaiOrder, settled: PaiTransaction, x: BuyerExtr
       clickId: order.trackdeskClickId,
       conversionType: 'sale',
       amount: total / 100,
+      currency: requestCurrency().toUpperCase(),
       externalId: txn,
       customerId: order.email,
     });
@@ -961,6 +962,7 @@ async function fulfilUpsell(f: Fulfil, deps: PaiLiveDeps): Promise<void> {
       clickId: f.trackdeskClickId,
       conversionType: spec.step,
       amount: spec.cents / 100,
+      currency: requestCurrency().toUpperCase(),
       externalId: `${f.orderId}_${spec.step}`,
       customerId: f.email || '',
     });

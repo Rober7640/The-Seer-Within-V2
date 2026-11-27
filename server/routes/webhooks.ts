@@ -836,6 +836,7 @@ router.post('/stripe', async (req: Request, res: Response) => {
         clickId: trackdeskClickId,
         conversionType,
         amount: amountTotal,
+        currency: (session.currency ?? "usd").toUpperCase(),
         externalId,
         customerId: email,
       });
