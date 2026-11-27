@@ -1,4 +1,4 @@
-import { dateLocale } from "@/lib/locale";
+import { dateLocale, purchaseCurrency } from "@/lib/locale";
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useSearch, useLocation } from 'wouter';
 import { CosmicBackground } from '../components/CosmicBackground';
@@ -159,7 +159,7 @@ export default function Upsell2Page() {
         // back to $47 for pre-test conversations where it isn't recorded.
         if (data.upsellPurchased && !beFunnel) {
           const upsell1Dollars = (data.upsellAmountCents ?? 4700) / 100;
-          trackUpsellPurchase(upsell1Dollars, "USD", data.email, "Protection Ritual + Volcanic Stone", sid ?? undefined, 'u1', { skipServerRelay: true });
+          trackUpsellPurchase(upsell1Dollars, purchaseCurrency(), data.email, "Protection Ritual + Volcanic Stone", sid ?? undefined, 'u1', { skipServerRelay: true });
           trackGAdsPurchase("upsell1", upsell1Dollars, sid);
 
           // Trackdesk affiliate conversion tracking - upsell 1

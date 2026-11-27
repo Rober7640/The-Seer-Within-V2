@@ -92,7 +92,7 @@ export const LOCALES: Record<LocaleCode, LocaleDef> = {
     languageName: "français",
     register: "vous",
     market: { country: "FR", currency: "eur", stripeLocale: "fr", intl: "fr-FR", hotlineCountry: "FR" },
-    suffix: { product: " - FR", aweber: "-fr" },
+    suffix: { product: " - FR", aweber: "-frnch" },
     serves: { funnels: ["fb", "tarot"], paths: ["/privacy", "/terms", "/refund"] },
     live: false,
   },

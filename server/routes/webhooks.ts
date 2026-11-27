@@ -9,6 +9,7 @@ import { readSmsConsent, smsConsentRecordText } from '../lib/smsConsent';
 import { followUpEmails, userFollowUpPreferences, migrationDripEmails, topupEmails, aidenFollowupEmails, personaFollowupEmails, evelynFollowupEmails, users, emailSuppression, creditPurchases, soulmateLanderSessions } from '@shared/schema';
 import { and, eq, sql } from 'drizzle-orm';
 import logger from '../lib/logger';
+import { resolveLocale } from '@shared/locales';
 import { posthog } from '../lib/posthog';
 import * as paypal from '../lib/paypal';
 import { fireV2PurchaseEvent, fireStripePurchaseEvent } from '../lib/facebook';
@@ -836,6 +837,7 @@ router.post('/stripe', async (req: Request, res: Response) => {
         clickId: trackdeskClickId,
         conversionType,
         amount: amountTotal,
+        currency: (session.currency ?? "usd").toUpperCase(),
         externalId,
         customerId: email,
       });
@@ -1156,6 +1158,9 @@ router.post('/stripe', async (req: Request, res: Response) => {
           // two systems. The main paid list deliberately keeps storing pi_….
           stripeOrderId: session.id,
           tags: bumpTags,
+          // Webhook has no cookie → take the order's language from its metadata so a
+          // French bump buyer routes to the French bump list (when that env var is set).
+          locale: resolveLocale(session.metadata?.locale),
         }).catch((err) =>
           logger.error('AWeber bump paid list error (non-blocking):', err),
         );
@@ -1180,6 +1185,9 @@ router.post('/stripe', async (req: Request, res: Response) => {
         type: metadata.type,
         funnel: metadata.funnel,
         amountCents: session.amount_total ?? 0,
+        // Report the order's real currency to Meta (EUR for France) so ROAS is
+        // not skewed by a €35 order counted as $35. English = "USD", unchanged.
+        currency: (session.currency ?? "usd").toUpperCase(),
         email: metadata.email || session.customer_email || undefined,
         firstName: metadata.firstName || undefined,
       }).catch(() => { /* logged inside */ });
@@ -1258,6 +1266,7 @@ router.post('/stripe', async (req: Request, res: Response) => {
         type: metadata.type,
         funnel: metadata.funnel,
         amountCents: pi.amount,
+        currency: (pi.currency ?? "usd").toUpperCase(),
         email: metadata.email,
         firstName: metadata.firstName,
       }).catch(() => { /* logged inside */ });

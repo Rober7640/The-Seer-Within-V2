@@ -67,6 +67,15 @@ export function currentLocale(): LocaleCode {
 }
 
 /**
+ * The currency to report on the client Purchase pixels (FB Pixel + GAds), so the
+ * browser fire matches the server Conversions API for the same event_id. "USD"
+ * for English (unchanged); "EUR" for a French visit.
+ */
+export function purchaseCurrency(): string {
+  return localeDef(currentLocale()).market.currency.toUpperCase();
+}
+
+/**
  * The locale for on-screen dates and times. English returns undefined, i.e. the
  * browser's own locale, exactly as today; a translated page uses its language,
  * so a French page never shows "Thursday 3:31 PM" on an English browser.

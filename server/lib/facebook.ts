@@ -348,6 +348,9 @@ interface StripeFbEventParams {
   type?: string;
   funnel?: string;
   amountCents: number;
+  // The order's currency (uppercased, e.g. "EUR"). Defaults to "USD" so every
+  // existing caller and every English order is unchanged.
+  currency?: string;
   email?: string;
   firstName?: string;
 }
@@ -410,7 +413,7 @@ export async function fireStripePurchaseEvent(
       eventId,
       eventSourceUrl: eventSourceUrlForStripeEvent(params.product, params.funnel),
       value: params.amountCents / 100,
-      currency: 'USD',
+      currency: params.currency ?? 'USD',
       contentName,
       contentCategory,
       userData: { email, firstName },
