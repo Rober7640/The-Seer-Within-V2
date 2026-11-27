@@ -175,6 +175,7 @@ import {
 import { collectsPhoneAtCheckout } from "./lib/checkoutPhone";
 import { smsConsentSessionParams, smsConsentSessionMetadata } from "./lib/smsConsent";
 import { localeMetadata, requestLocale, requestCurrency, requestStripeLocale, shippingCountries } from "./lib/locale";
+import { resolveLocale, type LocaleCode } from "@shared/locales";
 import { addLeadToKit } from "./lib/kit";
 import { resolveLunaTyHandoff } from "./lib/lunaThankyouGift";
 import { evelynTyPersonaFor, isEvelynTyConversation, resolveEvelynTyHandoff } from "./lib/evelynThankyouGift";
@@ -2866,7 +2867,10 @@ export async function registerRoutes(
       upsell1AttemptFunnel = funnel ?? null;
       const upsellPayment = await stripe.paymentIntents.create({
         amount: upsell1Cents,
-        currency: "usd",
+        // An off-session charge MUST use the ORIGINAL order's currency, never the
+        // request locale (the cookie may be stale on this call) — a EUR customer
+        // charged in USD is rejected by Stripe and the 1-click silently fails.
+        currency: session.currency ?? "usd",
         customer: customerId,
         payment_method: paymentMethodId,
         off_session: true,
@@ -2896,6 +2900,9 @@ export async function registerRoutes(
           ...srcMetadata(session.metadata?.src),
           // …and the offer-page marker, same inheritance (empty unless an offer-page order).
           ...retargetOfferMetadata(session.metadata?.src, session.metadata?.rtfmt),
+          // Inherit the order's language from the ORIGINAL session so n8n routes the
+          // upsell reading to the French flow too. Absent on English orders.
+          ...localeMetadata(resolveLocale(session.metadata?.locale)),
         },
       });
 
@@ -3090,12 +3097,19 @@ export async function registerRoutes(
         // lookup error it stays undefined and fbSuffix() falls back to " - TEA", i.e.
         // today's behaviour. Never fatal — a failed label lookup must not block a charge.
         let inheritReadDevice: string | undefined;
+        // The order's currency + language ride the SAME retrieve. On a lookup
+        // error both default to today's behaviour (USD / English), so a failed
+        // lookup can never block the fallback checkout.
+        let inheritCurrency: string = "usd";
+        let inheritLocale: LocaleCode = "en";
         try {
           const orig = await stripe.checkout.sessions.retrieve(originalSessionId);
           inheritNoemail = orig.metadata?.noemail === "1";
           inheritSrc = normaliseSrc(orig.metadata?.src);
           inheritRtfmt = retargetOfferMetadata(orig.metadata?.src, orig.metadata?.rtfmt);
           inheritReadDevice = readDeviceFromSession(orig);
+          inheritCurrency = orig.currency ?? "usd";
+          inheritLocale = resolveLocale(orig.metadata?.locale);
         } catch (e) {
           logger.warn("Upsell fallback: noemail/src/device lookup failed (non-fatal)", e);
         }
@@ -3103,10 +3117,12 @@ export async function registerRoutes(
         const session = await stripe.checkout.sessions.create({
           customer_email: email,
           payment_method_types: ["card"],
+          // Match the ORIGINAL order's language on the hosted page.
+          locale: requestStripeLocale(inheritLocale),
           line_items: [
             {
               price_data: {
-                currency: "usd",
+                currency: inheritCurrency,
                 product_data: {
                   name: upsell1NameFor(inheritReadDevice),
                   description: "Charged black lava protection talisman",
@@ -3128,10 +3144,11 @@ export async function registerRoutes(
               ...(inheritNoemail && { noemail: "1" }),
               ...(inheritSrc && { src: inheritSrc }),
               ...inheritRtfmt,
+              ...localeMetadata(inheritLocale),
             },
           },
           shipping_address_collection: {
-            allowed_countries: ["US", "CA", "GB", "AU", "NZ", "SG"],
+            allowed_countries: shippingCountries(["US", "CA", "GB", "AU", "NZ", "SG"], inheritLocale) as Stripe.Checkout.SessionCreateParams.ShippingAddressCollection.AllowedCountry[],
           },
           success_url: `${getBaseUrl(req)}${funnelPath("/welcome2", funnel)}?session_id=${encodeURIComponent(originalSessionId)}&fallback_session_id={CHECKOUT_SESSION_ID}`,
           cancel_url: `${getBaseUrl(req)}${funnelPath("/welcome1", funnel)}?session_id=${encodeURIComponent(originalSessionId)}&declined=true`,
@@ -3147,6 +3164,7 @@ export async function registerRoutes(
             ...(inheritNoemail && { noemail: "1" }),
             ...(inheritSrc && { src: inheritSrc }),
             ...inheritRtfmt,
+            ...localeMetadata(inheritLocale),
           },
         });
 
