@@ -2506,3 +2506,32 @@ Unit: `client/src/lib/upsellCopy/fbU1Filter.test.ts`, `client/src/lib/upsellCopy
 - [ ] Dev DB: a chat-flow B buyer in arm B sees "beside the candle that bent at your name"; a chat-flow A buyer sees "on my altar"
 - [ ] Dev DB: `/admin/experiments` results for the key tally offered / bought / revenue per arm (tallyUpsell1)
 - [ ] Stripe TEST: accept in arm B charges $47 on the saved card, shipping form, then `/fb/welcome2`; the 1-click fallback still opens the hosted checkout
+
+## /fb Upsell 2 copy test — `v1_fb_u2_copy_2026`, today vs "the bracelet is a magnet" (2026-11-27, uncommitted on `prod/fb-upsell`)
+
+Spec `docs/superpowers/specs/2026-11-27-v1-fb-u2-copy-2026.md`; draft SQL `improve-v1/create-fb-u2-copy-experiment-2026-11-27.sql`.
+Unit (all vitest): `client/src/lib/upsellCopy/fbU2Magnet.test.ts`, `client/src/lib/upsellCopy/upsell2Fields.test.ts`,
+`client/src/lib/fbU2Copy.test.ts`, `server/lib/fbU2Copy.test.ts`, `server/lib/upsell2Funnel.test.ts`,
+`server/lib/prompts.u2Magnet.test.ts`, `server/routes/admin/upsell2Funnel.test.ts`.
+
+- [x] Arm B matches the approved script line for line, all four topics × candle on/off; OTHER TOPICS swaps applied; someone keeps love's lines except Q2 *(fbU2Magnet.test.ts parses the script)*
+- [x] Arm B walks PATH_A_OPEN / PATH_B_OPEN → … → URGENCY on `V1_CHAIN_2`, no pauses; bracelet photo after INTRODUCE bubble 5 *(fbU2Magnet.test.ts)*
+- [x] No em/en dash, no ALL CAPS word, "..." kept; the five proof lines match today's apart from the "..." swap; guarantee line matches today's *(fbU2Magnet.test.ts)*
+- [x] Placeholders fill for every topic; someone's Q2 reads "them" with no name on file *(fbU2Magnet.test.ts)*
+- [x] Typed answers: every button lands on its branch; "Love and more" → more; typed "no" / unknown → default; a no carrying a yes word never takes yes; curly apostrophes *(fbU2Magnet.test.ts)*
+- [x] Arm A: `/fb/welcome2` with no override resolves `V1_UPSELL2`, fingerprint pinned to f1fb8d4; V1, the retarget copy and every backend offer get today's Q1-Q3, matching, accept text, AI fallbacks, success lines and reading request *(upsell2Fields.test.ts)*
+- [x] $47 SUCCESS extra bubble after bubble 1 for arm B only; never on the $30 downsell *(upsell2Fields.test.ts)*
+- [x] Server: /fb only (price_variant `_fb`), no lane, known topic, both paths, no price rule; draft/off, bad id, any throw ⇒ today, nothing logged; exposure on hashEmail with conversationId, path, topic, candle *(server/lib/fbU2Copy.test.ts)*
+- [x] Client: only /fb/welcome2 asks; non-OK / bad body / network error / >2s ⇒ today; `?u2copy=magnet(&chatflow=b)` never calls the server *(client/src/lib/fbU2Copy.test.ts)*
+- [x] Today's manifest prompts byte-identical to f1fb8d4; magnet prompts carry the bans, her topic's stones in order, no quoted sample lines; a reply breaking a ban is dropped; arm B's failures give no messages (script fallback), today's still give the generic lines *(prompts.u2Magnet.test.ts)*
+- [x] Tally: per arm pooled rows + all / path A / path B detail, $47 vs $30 buyers, zero rows for an empty arm *(upsell2Funnel.test.ts)*; the SQL run once against a throwaway local Postgres with fixture rows (NULL type, Payments.AI 'manifestation_bracelet' type, no path in context, missing conversation, other key, pre-start row)
+- [x] Admin: `upsell2_funnel` allowed for `v1_fb_u2_copy_2026` only *(server/routes/admin/upsell2Funnel.test.ts)*
+- [ ] Playwright: `/fb/welcome2?demo=true&u2copy=magnet` plays B to the CTA ("Yes, set my bracelet tonight"); `?demo=true` alone plays today's script
+- [ ] Playwright: `&chatflow=b` shows "beside the candle that bent at your name"; without it "on my altar"
+- [ ] Playwright: on /fb/welcome2, `/api/fb/u2-copy` is called before the first bubble; stubbed to hang, the chat starts on today's script within ~2.5s
+- [ ] Playwright: /welcome2, /fb2, /fb-palm, /fb-tarot (incl. a retarget order), /fb-read, /gdn and `/offers/upsell` Upsell 2 never call `/api/fb/u2-copy`
+- [ ] Playwright: arm B's `/api/upsell2/reading` requests carry `copy: "magnet"`; arm A's carry no `copy` key; stub the endpoint to return `{messages: []}` and B plays the script's fallback lines
+- [ ] Dev DB, test RUNNING: a plain /fb test order gets one exposure row (`upsell2_chat_start`, context conversationId / path / topic / candle); a reload adds none
+- [ ] Dev DB: a `?lane=` order and a /fb-tarot order get no exposure and today's script
+- [ ] Dev DB: `/admin/experiments` results show the per-arm table and "Upsell 2 by price and path"
+- [ ] Stripe TEST: accept in arm B charges $47 on the saved card and shows the extra "I'll set it tonight" bubble; decline → $30 downsell charges $30 with no extra bubble; path B collects shipping; the hosted fallback still works

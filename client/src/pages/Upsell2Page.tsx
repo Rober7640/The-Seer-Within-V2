@@ -12,6 +12,14 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import type { Bucket } from '@shared/types';
 import { upsell2CopyOverrideFor } from '../lib/upsellCopy/retargetUpsell2';
+import type { Upsell2Copy } from '@/lib/upsellCopy/types';
+import {
+  FB_U2_TODAY,
+  fbU2CopyFor,
+  fbU2CopyPreview,
+  fetchFbU2Copy,
+  isFbU2CopyRoute,
+} from '../lib/fbU2Copy';
 
 interface UserData {
   firstName: string;
@@ -47,6 +55,14 @@ export default function Upsell2Page() {
   const [error, setError] = useState<string | null>(null);
   const [inputValue, setInputValue] = useState('');
 
+  // /fb Upsell 2 copy test (v1_fb_u2_copy_2026). Only /fb/welcome2 asks, and the chat
+  // waits for the answer (at most FB_U2_COPY_TIMEOUT_MS) because the server logs the
+  // exposure as it answers. Every other funnel is ready at once with no override, so its
+  // chat starts exactly as before. undefined ⇒ today's V1_UPSELL2.
+  const [fbU2Route] = useState(() => isFbU2CopyRoute());
+  const [fbU2Override, setFbU2Override] = useState<Upsell2Copy | undefined>(undefined);
+  const [copyReady, setCopyReady] = useState(() => !fbU2Route);
+
   // ⚠ See UpsellPage.tsx: these chat pages never scroll internally, so past
   // roughly the eighth message everything — including the footer's buttons —
   // sits below the fold. Offer 02 opts into the fix; rolling it out to the six
@@ -79,6 +95,12 @@ export default function Upsell2Page() {
           country: 'US',
         },
       });
+      // /fb demo: only the ?u2copy= preview can switch the script. No server call.
+      if (fbU2Route) {
+        const preview = fbU2CopyPreview(searchString);
+        setFbU2Override(preview ? fbU2CopyFor(preview, 'love') : undefined);
+        setCopyReady(true);
+      }
       setIsLoading(false);
       return;
     }
@@ -175,6 +197,21 @@ export default function Upsell2Page() {
         if (declined === 'true') {
           setError('declined');
         }
+
+        // /fb Upsell 2 copy test: decided before the first bubble. The ?u2copy= preview
+        // never calls the server (never logged). A buyer back from a declined fallback (no
+        // chat runs) or a /fb-tarot retarget buyer (her own fixed copy) is never asked: both
+        // can only be A.
+        if (fbU2Route) {
+          const preview = fbU2CopyPreview(searchString);
+          const arm =
+            preview ??
+            (declined !== 'true' && data?.retarget !== true && sid
+              ? await fetchFbU2Copy(sid)
+              : FB_U2_TODAY);
+          setFbU2Override(fbU2CopyFor(arm, data?.bucket));
+          setCopyReady(true);
+        }
       } catch (err) {
         setError('Could not load your session');
         console.error(err);
@@ -189,10 +226,12 @@ export default function Upsell2Page() {
   // Retarget buyers never chatted, so the two AI-written beats (manifest reveal + stone
   // personalisation) are FIXED copy for them (lib/upsellCopy/retargetUpsell2.ts).
   // `undefined` for every other buyer ⇒ the hook resolves its copy exactly as before.
+  // The retarget copy always wins; the /fb Upsell 2 copy test's arm B only ever applies
+  // on /fb/welcome2, where no retarget buyer is asked (see above).
   const copyOverride = useMemo(
-    () => upsell2CopyOverrideFor(userData),
+    () => upsell2CopyOverrideFor(userData) ?? fbU2Override,
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [userData?.retarget, userData?.retargetBucket, userData?.bucket],
+    [userData?.retarget, userData?.retargetBucket, userData?.bucket, fbU2Override],
   );
 
   const {
@@ -207,6 +246,7 @@ export default function Upsell2Page() {
     isProcessing,
     isComplete,
     upsell2Bought,
+    acceptLabel,
     downsellDeclineLabel,
     showContinue,
     continueLabel,
@@ -221,7 +261,7 @@ export default function Upsell2Page() {
   } = useUpsell2Chat({
     userData,
     sessionId,
-    enabled: !!userData && !error,
+    enabled: !!userData && !error && copyReady,
     braceletImage: '/manifestation_bracelet.png',
     copyOverride,
   });
@@ -406,6 +446,7 @@ export default function Upsell2Page() {
               onAccept={handleAccept}
               onDecline={handleDecline}
               isProcessing={isProcessing}
+              acceptLabel={acceptLabel}
             />
           </div>
         )}

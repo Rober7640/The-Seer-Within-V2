@@ -870,6 +870,143 @@ export async function tallyUpsell1(opts: Upsell1TallyOptions): Promise<TallyResu
   });
 }
 
+// ── Upsell 2 funnel (conversion type `upsell2_funnel`) ─────────────────────────────────
+
+/** One arm's Upsell 2 numbers, for everyone (`path: 'all'`) or one opening path. */
+export interface Upsell2ArmDetail {
+  variant: string;
+  path: 'all' | 'A' | 'B';
+  exposures: number;       // buyers who reached Upsell 2 (the exposure is logged as its chat starts)
+  buyers: number;          // bought the bracelet, either price
+  fullBuyers: number;      // at $47
+  downsellBuyers: number;  // at the $30 downsell
+  revenueUsd: number;      // upsell2_amount, so the $30 downsell counts at $30
+  revPerExposureUsd: number;
+  conversionPct: number;
+}
+
+export interface Upsell2FunnelResult extends TallyResult {
+  // Per arm: `all` first, then path A (bought Upsell 1) and path B (declined it).
+  upsell2Detail: Upsell2ArmDetail[];
+}
+
+/**
+ * Pure: per-(variant, path) SQL rows → the standard per-arm rows (pooled over both paths,
+ * what significance and SRM are read on) plus the per-arm × path detail. Every arm gets all
+ * three detail rows, zeros included, so the two arms always sit side by side.
+ *
+ * Expected row shape: { variant, path: 'A'|'B', exposures, buyers, full_buyers,
+ * downsell_buyers, revenue_cents }.
+ */
+export function assembleUpsell2Funnel(
+  raw: Record<string, unknown>[],
+  controlKey: string,
+  treatmentKey: string,
+): Upsell2FunnelResult {
+  type Sum = { exposures: number; buyers: number; full: number; downsell: number; cents: number };
+  const zero = (): Sum => ({ exposures: 0, buyers: 0, full: 0, downsell: 0, cents: 0 });
+  const by = new Map<string, Record<'all' | 'A' | 'B', Sum>>();
+  for (const r of raw) {
+    const v = String(r.variant);
+    const path = r.path === 'A' ? 'A' : 'B';
+    if (!by.has(v)) by.set(v, { all: zero(), A: zero(), B: zero() });
+    const slot = by.get(v)!;
+    const add: Sum = {
+      exposures: Number(r.exposures) || 0,
+      buyers: Number(r.buyers) || 0,
+      full: Number(r.full_buyers) || 0,
+      downsell: Number(r.downsell_buyers) || 0,
+      cents: Number(r.revenue_cents) || 0,
+    };
+    for (const k of ['all', path] as const) {
+      slot[k].exposures += add.exposures;
+      slot[k].buyers += add.buyers;
+      slot[k].full += add.full;
+      slot[k].downsell += add.downsell;
+      slot[k].cents += add.cents;
+    }
+  }
+
+  const pooled = Array.from(by.entries()).map(([variant, p]) => ({
+    variant,
+    viewers: p.all.exposures,
+    buyers: p.all.buyers,
+    revenue_cents: p.all.cents,
+  }));
+  const { rows } = assembleRows(pooled, controlKey, treatmentKey);
+  // Everyone exposed reached Upsell 2, so viewers is the full assigned population and the
+  // default SRM denominator (viewers) is right.
+  const stats = finalizeStats(rows, controlKey, treatmentKey);
+
+  const upsell2Detail: Upsell2ArmDetail[] = [];
+  for (const row of rows) {
+    const p = by.get(row.variant) ?? { all: zero(), A: zero(), B: zero() };
+    for (const path of ['all', 'A', 'B'] as const) {
+      const x = p[path];
+      upsell2Detail.push({
+        variant: row.variant,
+        path,
+        exposures: x.exposures,
+        buyers: x.buyers,
+        fullBuyers: x.full,
+        downsellBuyers: x.downsell,
+        revenueUsd: x.cents / 100,
+        revPerExposureUsd: x.exposures ? Math.round(x.cents / x.exposures) / 100 : 0,
+        conversionPct: x.exposures ? +((x.buyers / x.exposures) * 100).toFixed(2) : 0,
+      });
+    }
+  }
+  return { ...stats, upsell2Detail };
+}
+
+/**
+ * Results for an Upsell 2 test (the /fb Upsell 2 copy test, v1_fb_u2_copy_2026, first).
+ * Mirrors tallyUpsell1: arm membership is EXPLICIT, read from `experiment_exposures`, and
+ * the purchase comes from the linked conversation (context.conversationId).
+ *
+ *   exposures   every exposure: she reached Upsell 2 (it is logged as the chat starts)
+ *   buyer       c.upsell2_purchased
+ *   revenue     c.upsell2_amount, so a $30 downsell counts at $30
+ *   full / downsell
+ *               downsell = upsell2_type 'downsell' or 3000 paid; everything else bought is
+ *               full. (Read off the amount too: one Payments.AI write path stamps the type as
+ *               'manifestation_bracelet' rather than 'full' / 'downsell'.)
+ *   path        the opening she was shown, from the exposure context (A bought Upsell 1, B
+ *               declined it); an exposure without one falls back to her row's
+ *               upsell_purchased.
+ *
+ * KNOWN EDGES (same shape as tallyUpsell1, roughly symmetric across arms): attribution
+ * follows the linked conversation row; conversations are reused per email and the upsell2
+ * flags are never reset, so a returning buyer who bought the bracelet on an EARLIER order
+ * reads as a buyer here. There is no Upsell 2 payment timestamp to tell the two apart.
+ */
+// Never NULL (a NULL here would drop the row from BOTH the full and the downsell count).
+const U2_DOWNSELL = sql`(COALESCE(c.upsell2_type, '') = 'downsell' OR COALESCE(c.upsell2_amount, 0) = 3000)`;
+
+export async function tallyUpsell2(opts: Upsell1TallyOptions): Promise<Upsell2FunnelResult> {
+  const result = await db.execute(sql`
+    SELECT e.variant AS variant,
+           CASE WHEN e.context->>'path' IN ('A', 'B') THEN e.context->>'path'
+                WHEN c.upsell_purchased THEN 'A'
+                ELSE 'B' END                                                     AS path,
+           count(*)                                                              AS exposures,
+           count(*) FILTER (WHERE c.upsell2_purchased)                           AS buyers,
+           count(*) FILTER (WHERE c.upsell2_purchased AND NOT ${U2_DOWNSELL})    AS full_buyers,
+           count(*) FILTER (WHERE c.upsell2_purchased AND ${U2_DOWNSELL})        AS downsell_buyers,
+           COALESCE(sum(COALESCE(c.upsell2_amount, 0)) FILTER (WHERE c.upsell2_purchased), 0) AS revenue_cents
+    FROM experiment_exposures e
+    LEFT JOIN conversations c ON c.id = e.context->>'conversationId'
+    WHERE e.experiment_key = ${opts.key}
+      AND e.created_at >= ${opts.startISO}
+    GROUP BY 1, 2;
+  `);
+  return assembleUpsell2Funnel(
+    result.rows as Record<string, unknown>[],
+    opts.controlKey ?? 'A',
+    opts.treatmentKey ?? 'B',
+  );
+}
+
 export interface EventTallyOptions {
   key: string;
   startISO: string;
@@ -2078,6 +2215,48 @@ export async function resolveFbU1Copy(
 ): Promise<{ filter: boolean; variant: string | null; enrolled: boolean }> {
   const subject = typeof email === 'string' && email.trim() ? email.trim().toLowerCase() : null;
   return fbU1CopyArm(await assign(key, subject, { funnel: 'v1-fb' }));
+}
+
+// ── /fb UPSELL 2 COPY: today's script (A) vs "hook M, the magnet" (B) ─────────────────
+// A (control, `{}`) is today's V1_UPSELL2, byte for byte. B (`{copy:'magnet'}`) is the new
+// script, client/src/lib/upsellCopy/fbU2Magnet.ts, plus its own pair of AI prompts
+// (buildManifestRevealMagnetPrompt / buildManifestPersonalizeMagnetPrompt). Same price
+// ($47 / $30 downsell), same charge, same chain of stages, same bracelet photo. Spec:
+// docs/superpowers/specs/2026-11-27-v1-fb-u2-copy-2026.md.
+//
+// WHO IS IN is read off HER ORDER ROW, never the client (fbU2CopyIneligible in
+// server/lib/fbU2Copy.ts): /fb (price_variant carries `_fb`), no belief lane, a known topic.
+// Both paths (A bought Upsell 1, B declined it) and both /fb chat-flow arms.
+//
+// SUBJECT is the normalised email, exactly as v1_fb_u1_copy_2026: bucketed on
+// email.trim().toLowerCase(), exposure keyed on hashEmail(email) with the conversationId,
+// the path, the topic and the candle flag in the context, so tallyUpsell2 (conversion
+// 'upsell2_funnel') can join and split it.
+//
+// ASSIGNED + LOGGED in one call when the Upsell 2 chat starts (GET /api/fb/u2-copy), before
+// the first bubble. Every failure path answers A.
+export const V1_FB_U2_COPY_EXPERIMENT_KEY = 'v1_fb_u2_copy_2026';
+
+/** Pure part of resolveFbU2Copy: an assignment → the arm. Only an applied `{copy:'magnet'}` is B. */
+export function fbU2CopyArm(
+  a: Assignment | null | undefined,
+): { magnet: boolean; variant: string | null; enrolled: boolean } {
+  if (!a) return { magnet: false, variant: null, enrolled: false };
+  return { magnet: a.applied && a.payload?.copy === 'magnet', variant: a.variant, enrolled: a.enrolled };
+}
+
+/**
+ * Which Upsell 2 script does this /fb buyer get? `magnet` is true only when the assigned
+ * arm is applied AND its payload says `{copy:'magnet'}`, so a draft / paused test, a
+ * missing email or a malformed payload all give today's copy. `enrolled` tells the caller
+ * to log the exposure. Eligibility (/fb, no lane, topic) is the caller's job.
+ */
+export async function resolveFbU2Copy(
+  email: string | null | undefined,
+  key: string = V1_FB_U2_COPY_EXPERIMENT_KEY, // overridable so tests never touch the live experiment
+): Promise<{ magnet: boolean; variant: string | null; enrolled: boolean }> {
+  const subject = typeof email === 'string' && email.trim() ? email.trim().toLowerCase() : null;
+  return fbU2CopyArm(await assign(key, subject, { funnel: 'v1-fb' }));
 }
 
 // ── HOME (base V1) CHAT FLOW A vs B — interview vs reading ────────────────────

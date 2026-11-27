@@ -5,6 +5,7 @@ import {
   type GatewayAttemptRow,
   type GatewayLanderRow,
 } from "@/components/admin/GatewaySplitPanel";
+import { Upsell2FunnelPanel, type Upsell2ArmDetail } from "@/components/admin/Upsell2FunnelPanel";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { adminFetch } from "@/hooks/useAdmin";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -125,6 +126,8 @@ interface ResultsResponse {
   gatewayDetail?: GatewayArmDetail[];
   gatewayByLander?: GatewayLanderRow[];
   attempts?: GatewayAttemptRow[];
+  // Upsell 2 (conversion type upsell2_funnel): per arm, $47 vs $30, path A vs B.
+  upsell2Detail?: Upsell2ArmDetail[];
   // What the superseded buyer definition would have counted, and why each row was
   // dropped. Present on v1_main_funnel tallies only.
   excluded?: Array<{
@@ -731,6 +734,10 @@ export default function ExperimentsDashboard() {
                   >
                     <option value="credit_purchase">credit_purchase (V2 coin purchase)</option>
                     <option value="upsell1_funnel">upsell1_funnel (V1 upsell-1)</option>
+                    {/* Listed for the same reason as v1_main_funnel below: a running
+                        upsell2_funnel test must keep its own type when its weights are
+                        edited, or the save would send credit_purchase and 409. */}
+                    <option value="upsell2_funnel">upsell2_funnel (V1 upsell-2)</option>
                     {/* 🔴 v1_main_funnel was missing from this list even though four
                         experiments use it. Harmless while every field was frozen on a
                         started test — the form simply could not be saved. It stopped
@@ -1231,6 +1238,8 @@ export default function ExperimentsDashboard() {
                         byLander={results.gatewayByLander}
                         attempts={results.attempts}
                       />
+
+                      <Upsell2FunnelPanel detail={results.upsell2Detail} />
 
                       {/* Order-bump take rate. Deliberately ABOVE the per-lander
                           diagnostics: it is a headline number people actually ask

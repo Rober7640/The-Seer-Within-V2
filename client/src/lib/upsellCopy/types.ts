@@ -147,6 +147,39 @@ export interface Upsell2Copy {
   downsellDeclineLabel: string;
   // The italic line above the downsell's button. Unset: V1's own line, for every offer but 11.
   downsellReassurance?: string;
+  // ── Optional own questions, typed-answer matching and buy-step lines (the /fb Upsell 2
+  // copy test's arm B, v1_fb_u2_copy_2026, first). ⛔ Unset ⇒ exactly today: V1's shared
+  // UPSELL2_QUESTION_1/2/3, UPSELL2_QUESTION_*_REPLIES and detectU2Q1/2/3Intent (resolved in
+  // ./questions.ts), today's accept button and reply bubble, today's two AI fallback lines,
+  // today's AI prompts, and no extra success bubble. V1_UPSELL2, the retarget copy and every
+  // backend offer set none of them.
+  QUESTION_1?: string;
+  QUESTION_1_REPLIES?: QuickReply[];
+  QUESTION_2?: string;
+  QUESTION_2_REPLIES?: QuickReply[];
+  QUESTION_3?: string;
+  QUESTION_3_REPLIES?: QuickReply[];
+  // Answer → branch key, per question. A button tap goes through this too (the hook matches
+  // the button's own text), so each one must send its own three buttons to their branches.
+  detectIntent?: {
+    q1?: (input: string) => string;
+    q2?: (input: string) => string;
+    q3?: (input: string) => string;
+  };
+  // Label on the $47 accept button AND the bubble it posts as her reply. Unset ⇒ today's
+  // button ("Yes, send me the Manifestation Bracelet") and bubble ("Yes, I want the
+  // Manifestation Bracelet").
+  acceptLabel?: string;
+  // The one bubble played when the AI reveal / stone personalisation comes back empty.
+  // Unset ⇒ today's two lines in useUpsell2Chat.
+  revealFallback?: string;
+  personalizeFallback?: string;
+  // Which prompt pair /api/upsell2/reading writes the two AI beats with. Unset ⇒ the field
+  // is not sent at all, so the request is byte-identical to today's.
+  aiPrompts?: "magnet";
+  // One extra bubble after bubble 1 of SUCCESS_HAS_SHIPPING / SUCCESS_NEEDS_SHIPPING, for a
+  // $47 (full-price) buyer only; the $30 downsell accept never plays it. Unset ⇒ none.
+  fullPriceSuccessExtra?: string;
   placeholderNames: readonly string[];
 }
 

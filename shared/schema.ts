@@ -1094,11 +1094,13 @@ export interface LanderScope {
 // How a subject's outcome is scored when tallying.
 export interface ExperimentConversion {
   // credit_purchase = join to credit_purchases (V2); upsell1_funnel = V1
-  // conversations Upsell-1 take-rate; v1_main_funnel = V1 main/downsell purchase;
+  // conversations Upsell-1 take-rate; upsell2_funnel = V1 conversations Upsell-2
+  // take-rate + revenue, full vs downsell, by path (tallyUpsell2);
+  // v1_main_funnel = V1 main/downsell purchase;
   // event = generic visitor conversion.
   // gateway_split = the Stripe-vs-Payments.AI split (exposure at checkout → paid →
   // all revenue, + per-processor approval rates from payment_attempts).
-  type: "credit_purchase" | "upsell1_funnel" | "v1_main_funnel" | "event" | "gateway_split";
+  type: "credit_purchase" | "upsell1_funnel" | "upsell2_funnel" | "v1_main_funnel" | "event" | "gateway_split";
   windowDays?: number;                  // attribution window after first exposure (default 7)
   name?: string;                        // event name (type='event')
   targetN?: number;                     // pre-registered per-arm exposure target (fixed-horizon,

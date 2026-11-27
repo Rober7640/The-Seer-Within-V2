@@ -7,34 +7,26 @@ import {
   QuickReply,
   personalizeMessages,
   personalizeMessage,
-  detectU2Q1Intent,
-  detectU2Q2Intent,
-  detectU2Q3Intent,
-  UPSELL2_GAP,
-  UPSELL2_QUESTION_1,
-  UPSELL2_QUESTION_1_REPLIES,
-  UPSELL2_AFTER_Q1,
-  UPSELL2_INTRODUCE,
-  UPSELL2_STONES,
-  UPSELL2_QUESTION_2,
-  UPSELL2_QUESTION_2_REPLIES,
-  UPSELL2_AFTER_Q2,
-  UPSELL2_RITUAL_INSTRUCTION,
-  UPSELL2_RITUAL_PATH_A_EXTRA,
-  UPSELL2_WHAT_RECEIVE,
-  UPSELL2_QUESTION_3,
-  UPSELL2_QUESTION_3_REPLIES,
-  UPSELL2_AFTER_Q3,
-  UPSELL2_SOCIAL_PROOF,
-  UPSELL2_PRICE,
-  UPSELL2_URGENCY,
-  UPSELL2_DOWNSELL,
-  UPSELL2_SUCCESS,
-  UPSELL2_SUCCESS_HAS_SHIPPING,
-  UPSELL2_SUCCESS_NEEDS_SHIPPING,
-  UPSELL2_SHIPPING_CONFIRMED,
-  UPSELL2_SOFT_DECLINE,
 } from "@/lib/upsell2Messages";
+// Questions 1, 2 and 3, their buttons, their AFTER branches and the typed-answer matching
+// come from the resolved copy, falling back to V1's shared constants when the copy sets none
+// (V1, the retarget copy and every backend offer). Only the /fb Upsell 2 copy test's arm B
+// (v1_fb_u2_copy_2026) asks its own.
+import {
+  upsell2Question1,
+  upsell2Question2,
+  upsell2Question3,
+  upsell2Intent,
+} from "@/lib/upsellCopy/questions";
+// The buy step, the two AI fallback lines and the reading request read the copy too, with
+// today's text and today's request body as the defaults (lib/upsellCopy/upsell2Fields.ts).
+import {
+  buyStepLines,
+  upsell2ReadingBody,
+  UPSELL2_ACCEPT_BUBBLE,
+  UPSELL2_PERSONALIZE_FALLBACK,
+  UPSELL2_REVEAL_FALLBACK,
+} from "@/lib/upsellCopy/upsell2Fields";
 import {
   upsell2Copy,
   displayName,
@@ -226,16 +218,9 @@ export function useUpsell2Chat({
         const response = await fetch("/api/upsell2/reading", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            type,
-            userData: {
-              firstName: userData.firstName,
-              bucket: userData.bucket,
-              concern: userData.concern,
-              personName: userData.personName,
-            },
-            concern: userData.concern,
-          }),
+          // The /fb Upsell 2 copy test's arm B asks for its own prompt pair. Unset (every
+          // other buyer) ⇒ no `copy` key at all, so the body is byte-identical to today's.
+          body: upsell2ReadingBody(type, userData, copy.aiPrompts),
         });
         const data = await response.json();
         return data.messages || [];
@@ -244,7 +229,7 @@ export function useUpsell2Chat({
         return [];
       }
     },
-    [userData],
+    [userData, copy],
   );
 
   const processStage = useCallback(
@@ -296,7 +281,7 @@ export function useUpsell2Chat({
             } else {
               await sendBotMessage(
                 pMsg(
-                  "I see something beyond the block, {firstName}... something trying to reach you.",
+                  copy.revealFallback ?? UPSELL2_REVEAL_FALLBACK,
                 ),
               );
             }
@@ -311,15 +296,15 @@ export function useUpsell2Chat({
           break;
 
         case "QUESTION_1":
-          await sendBotMessage(pMsg(UPSELL2_QUESTION_1));
-          setQuickReplies(UPSELL2_QUESTION_1_REPLIES);
+          await sendBotMessage(pMsg(upsell2Question1(copy).question));
+          setQuickReplies(upsell2Question1(copy).replies);
           setShowQuickReplies(true);
           setInputEnabled(true);
           setStage("WAITING_Q1");
           break;
 
         case "AFTER_Q1": {
-          const after1 = copy.AFTER_Q1 ?? UPSELL2_AFTER_Q1;
+          const after1 = upsell2Question1(copy).after;
           const q1Response = after1[responseKey || "default"] || after1.default;
           await sendBotMessages(p(q1Response));
           advance("AFTER_Q1");
@@ -340,15 +325,15 @@ export function useUpsell2Chat({
           break;
 
         case "QUESTION_2":
-          await sendBotMessage(pMsg(UPSELL2_QUESTION_2));
-          setQuickReplies(UPSELL2_QUESTION_2_REPLIES);
+          await sendBotMessage(pMsg(upsell2Question2(copy).question));
+          setQuickReplies(upsell2Question2(copy).replies);
           setShowQuickReplies(true);
           setInputEnabled(true);
           setStage("WAITING_Q2");
           break;
 
         case "AFTER_Q2": {
-          const after2 = copy.AFTER_Q2 ?? UPSELL2_AFTER_Q2;
+          const after2 = upsell2Question2(copy).after;
           const q2Response = after2[responseKey || "default"] || after2.default;
           await sendBotMessages(p(q2Response));
           advance("AFTER_Q2");
@@ -368,7 +353,7 @@ export function useUpsell2Chat({
             } else {
               await sendBotMessage(
                 pMsg(
-                  "The stones that speak loudest to your energy are calling, {firstName}.",
+                  copy.personalizeFallback ?? UPSELL2_PERSONALIZE_FALLBACK,
                 ),
               );
             }
@@ -391,15 +376,15 @@ export function useUpsell2Chat({
           break;
 
         case "QUESTION_3":
-          await sendBotMessage(pMsg(UPSELL2_QUESTION_3));
-          setQuickReplies(UPSELL2_QUESTION_3_REPLIES);
+          await sendBotMessage(pMsg(upsell2Question3(copy).question));
+          setQuickReplies(upsell2Question3(copy).replies);
           setShowQuickReplies(true);
           setInputEnabled(true);
           setStage("WAITING_Q3");
           break;
 
         case "AFTER_Q3": {
-          const after3 = copy.AFTER_Q3 ?? UPSELL2_AFTER_Q3;
+          const after3 = upsell2Question3(copy).after;
           const q3Response = after3[responseKey || "default"] || after3.default;
           await sendBotMessages(p(q3Response));
           advance("AFTER_Q3");
@@ -463,17 +448,17 @@ export function useUpsell2Chat({
       resetUI();
 
       if (stage === "WAITING_Q1") {
-        const intent = detectU2Q1Intent(input);
+        const intent = upsell2Intent(copy, 1)(input);
         await processStage("AFTER_Q1", intent);
       } else if (stage === "WAITING_Q2") {
-        const intent = detectU2Q2Intent(input);
+        const intent = upsell2Intent(copy, 2)(input);
         await processStage("AFTER_Q2", intent);
       } else if (stage === "WAITING_Q3") {
-        const intent = detectU2Q3Intent(input);
+        const intent = upsell2Intent(copy, 3)(input);
         await processStage("AFTER_Q3", intent);
       }
     },
-    [stage, addUserMessage, resetUI, processStage],
+    [stage, copy, addUserMessage, resetUI, processStage],
   );
 
   // The CONTINUE tap — see useUpsellChat. Asks nothing, branches nowhere.
@@ -498,7 +483,7 @@ export function useUpsell2Chat({
 
     setShowCTA(false);
     setIsProcessing(true);
-    addUserMessage("Yes, I want the Manifestation Bracelet");
+    addUserMessage(copy.acceptLabel ?? UPSELL2_ACCEPT_BUBBLE);
 
     // Tab-scoped tarot attribution, gated on the funnel so a palm/fb upsell in the
     // same tab can never pick up tarot properties. No-op for every other funnel.
@@ -577,11 +562,13 @@ export function useUpsell2Chat({
               }),
             }).catch(() => {});
           }
-          await sendBotMessages(p(copy.SUCCESS_HAS_SHIPPING));
+          // $47 accept: arm B of the /fb Upsell 2 copy test adds one bubble after bubble 1
+          // (copy.fullPriceSuccessExtra). Unset ⇒ the very same lines as before.
+          await sendBotMessages(p(buyStepLines(copy.SUCCESS_HAS_SHIPPING, copy, "full")));
           setIsProcessing(false);
           await processStage("COMPLETE");
         } else {
-          await sendBotMessages(p(copy.SUCCESS_NEEDS_SHIPPING));
+          await sendBotMessages(p(buyStepLines(copy.SUCCESS_NEEDS_SHIPPING, copy, "full")));
           setIsProcessing(false);
           setShowShippingForm(true);
           setStage("SHIPPING");
@@ -771,11 +758,13 @@ export function useUpsell2Chat({
               }),
             }).catch(() => {});
           }
-          await sendBotMessages(p(copy.SUCCESS_HAS_SHIPPING));
+          // $30 accept: never arm B's extra "I'll set it tonight" bubble (the downsell
+          // bracelet is not set to her wish tonight). Same lines as before for every copy.
+          await sendBotMessages(p(buyStepLines(copy.SUCCESS_HAS_SHIPPING, copy, "downsell")));
           setIsProcessing(false);
           await processStage("COMPLETE");
         } else {
-          await sendBotMessages(p(copy.SUCCESS_NEEDS_SHIPPING));
+          await sendBotMessages(p(buyStepLines(copy.SUCCESS_NEEDS_SHIPPING, copy, "downsell")));
           setIsProcessing(false);
           setShowShippingForm(true);
           setStage("SHIPPING");
@@ -927,6 +916,8 @@ export function useUpsell2Chat({
 
   return {
     messages,
+    // undefined ⇒ Upsell2CTA renders today's button text.
+    acceptLabel: copy.acceptLabel,
     downsellDeclineLabel: copy.downsellDeclineLabel,
     downsellReassurance: copy.downsellReassurance,
     showContinue,

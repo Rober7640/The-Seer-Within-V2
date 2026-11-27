@@ -20,6 +20,9 @@ import {
   buildReadingPrompt, // legacy
   buildManifestRevealPrompt,
   buildManifestPersonalizePrompt,
+  buildManifestRevealMagnetPrompt,
+  buildManifestPersonalizeMagnetPrompt,
+  magnetReplyProblem,
   buildPalmOpenerPrompt,
   buildPalmReflectPrompt,
   buildTarotReflectPrompt,
@@ -38,7 +41,13 @@ interface ClaudeResponse {
   objectionType?: string
 }
 
-async function callClaude(prompt: string): Promise<ClaudeResponse> {
+// `fallback` is what a failed call answers. Every caller but one omits it and gets the
+// generic lines below, exactly as before; the /fb Upsell 2 copy test's arm B passes `() => []`
+// so the page plays the script's own fallback line instead of these "energy" lines.
+async function callClaude(
+  prompt: string,
+  fallback: () => string[] = getFallbackMessages,
+): Promise<ClaudeResponse> {
   try {
     // V1-only model override via env var (per-Railway-service → isolates dev from prod AND
     // V1 from V2, and is instantly reversible by removing it). UNSET → the shared conversation
@@ -80,14 +89,14 @@ async function callClaude(prompt: string): Promise<ClaudeResponse> {
     }
 
     logger.error('Failed to parse Claude response:', text)
-    return { messages: getFallbackMessages() }
+    return { messages: fallback() }
   } catch (error) {
     if (isCircuitOpenError(error)) {
       logger.warn('Anthropic circuit open, using fallback messages')
     } else {
       logger.error('Claude API error:', error)
     }
-    return { messages: getFallbackMessages() }
+    return { messages: fallback() }
   }
 }
 
@@ -178,6 +187,29 @@ export async function generateManifestReveal(userData: UserData, concern: string
 export async function generateManifestPersonalize(userData: UserData, concern: string): Promise<ClaudeResponse> {
   const prompt = buildManifestPersonalizePrompt(userData, concern)
   return callClaude(prompt)
+}
+
+// /fb Upsell 2 copy test (v1_fb_u2_copy_2026), arm B ONLY: the magnet prompts. A failed
+// call, or a reply that breaks one of the prompt's hard rules (magnetReplyProblem: a banned
+// word, a dash, "you know"), answers NO messages, so the page plays the script's own
+// fallback line (client/src/lib/upsellCopy/fbU2Magnet.ts). At most three bubbles reach her.
+async function magnetReply(prompt: string, kind: 'reveal' | 'personalize'): Promise<ClaudeResponse> {
+  const r = await callClaude(prompt, () => [])
+  const messages = r.messages.slice(0, 3)
+  const problem = magnetReplyProblem(messages, kind)
+  if (problem) {
+    if (problem !== 'empty') logger.warn('U2 magnet reply dropped, playing the fallback line', { kind, problem })
+    return { messages: [] }
+  }
+  return { messages }
+}
+
+export async function generateManifestRevealMagnet(userData: UserData, concern: string): Promise<ClaudeResponse> {
+  return magnetReply(buildManifestRevealMagnetPrompt(userData, concern), 'reveal')
+}
+
+export async function generateManifestPersonalizeMagnet(userData: UserData, concern: string): Promise<ClaudeResponse> {
+  return magnetReply(buildManifestPersonalizeMagnetPrompt(userData, concern), 'personalize')
 }
 
 // Palm "quiz bridge" Version C — LLM-generated opening reading from the tapped

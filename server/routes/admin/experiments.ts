@@ -19,6 +19,7 @@ import { GATEWAY_ARM_PAI, GATEWAY_ARM_STRIPE, GATEWAY_EXPERIMENT_KEY } from '@sh
 import {
   tally,
   tallyUpsell1,
+  tallyUpsell2,
   tallyEvent,
   tallyV1Main,
   tallyV1MainBySign,
@@ -45,6 +46,7 @@ import {
   V1_CLOSE_DEPTH_EXPERIMENT_KEY,
   V1_FB_CHAT_FLOW_EXPERIMENT_KEY,
   V1_FB_U1_COPY_EXPERIMENT_KEY,
+  V1_FB_U2_COPY_EXPERIMENT_KEY,
   PERSONA_PROMPT_KEY_PREFIX,
   isPersonaPromptKey,
 } from '../../lib/experiments';
@@ -96,7 +98,7 @@ const scopeSchema = z
 
 const conversionSchema = z
   .object({
-    type: z.enum(['credit_purchase', 'upsell1_funnel', 'v1_main_funnel', 'event', 'gateway_split']),
+    type: z.enum(['credit_purchase', 'upsell1_funnel', 'upsell2_funnel', 'v1_main_funnel', 'event', 'gateway_split']),
     windowDays: z.number().int().positive().max(365).optional(),
     name: z.string().optional(),
     targetN: z.number().int().nonnegative().max(10_000_000).optional(), // pre-registered per-arm N
@@ -162,6 +164,20 @@ export function upsell1PayloadCheck(
   variants: Array<{ key: string; payload?: Record<string, unknown> }>,
 ): string | null {
   return key === V1_FB_U1_COPY_EXPERIMENT_KEY ? null : u1PayloadError(variants);
+}
+
+// `upsell2_funnel` (tallyUpsell2: exposure ⋈ conversations via context.conversationId, split
+// by the path on the exposure) is wired to the one key that logs its own Upsell 2 exposures
+// with that conversationId and path: the /fb Upsell 2 copy test (GET /api/fb/u2-copy, at
+// chat start). Any other key would run inert (status=running but never applied or logged),
+// so it is refused, on create AND on edit. Its arms carry no price: Upsell 2 is $47 / $30
+// for every V1 order.
+export const UPSELL2_FUNNEL_KEYS: readonly string[] = [V1_FB_U2_COPY_EXPERIMENT_KEY];
+
+export function upsell2FunnelKeyError(key: string): string | null {
+  return UPSELL2_FUNNEL_KEYS.includes(key)
+    ? null
+    : `conversion type 'upsell2_funnel' is only supported for: ${UPSELL2_FUNNEL_KEYS.join(', ')}`;
 }
 
 // Keys legitimately measured by `v1_main_funnel` (exposure log ⋈ conversations,
@@ -672,6 +688,30 @@ router.get('/:key/results', async (req: Request, res: Response) => {
         });
       }
       result = await tallyUpsell1({ key, startISO, controlKey, treatmentKey });
+    } else if (conversionType === 'upsell2_funnel') {
+      // Upsell 2 (the /fb copy test). Own response block (upsell2Detail: per arm, full vs
+      // downsell, path A vs B) on top of the standard rows, so the generic table still
+      // renders exposures → buyers → revenue → revenue per exposure.
+      if (!controlKey || !treatmentKey) {
+        return res.json({
+          experiment: meta,
+          started: true,
+          unsupported: 'experiment needs at least 2 arms to measure',
+          params,
+          rows: [],
+        });
+      }
+      const u2 = await tallyUpsell2({ key, startISO, controlKey, treatmentKey });
+      return res.json({
+        experiment: meta,
+        started: true,
+        params,
+        rows: u2.rows,
+        upsell2Detail: u2.upsell2Detail,
+        srm: await augmentSrm(u2.srm, exp.variants, exp, controlKey, treatmentKey),
+        significance: u2.significance,
+        progress: await progressOf(exp, key),
+      });
     } else if (conversionType === 'v1_main_funnel') {
       // Sourced from the exposure log ⋈ conversations (confirmed main/downsell
       // purchase). Needs ≥2 arms to compare.
@@ -823,6 +863,11 @@ router.post('/', async (req: Request, res: Response) => {
       if (keyErr) return res.status(400).json({ error: keyErr });
       const err = upsell1PayloadCheck(data.key, data.variants);
       if (err) return res.status(400).json({ error: err });
+    }
+    // upsell2_funnel is wired to the /fb Upsell 2 copy test only. See UPSELL2_FUNNEL_KEYS.
+    if (data.conversion?.type === 'upsell2_funnel') {
+      const keyErr = upsell2FunnelKeyError(data.key);
+      if (keyErr) return res.status(400).json({ error: keyErr });
     }
     // gateway_split is read by ONE code path (the /api/checkout gateway fork), keyed
     // on GATEWAY_EXPERIMENT_KEY; any other key would run inert. Reject it.
@@ -991,6 +1036,10 @@ router.patch('/:key', async (req: Request, res: Response) => {
     if (effectiveConvType === 'upsell1_funnel' && data.variants) {
       const err = upsell1PayloadCheck(key, data.variants);
       if (err) return res.status(400).json({ error: err });
+    }
+    if (effectiveConvType === 'upsell2_funnel') {
+      const keyErr = upsell2FunnelKeyError(key);
+      if (keyErr) return res.status(400).json({ error: keyErr });
     }
     if (effectiveConvType === 'v1_main_funnel' && data.variants && needsV1MainPricePayload(key)) {
       const err = v1MainPayloadError(data.variants);

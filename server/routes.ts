@@ -82,6 +82,8 @@ import {
   handleObjection,
   generateManifestReveal,
   generateManifestPersonalize,
+  generateManifestRevealMagnet,
+  generateManifestPersonalizeMagnet,
   generatePalmOpener,
   generatePalmReflect,
   generateTarotReflect,
@@ -121,6 +123,8 @@ import {
   resolveFbU1Copy,
   fbChatFlowShowedCandle,
   V1_FB_U1_COPY_EXPERIMENT_KEY,
+  resolveFbU2Copy,
+  V1_FB_U2_COPY_EXPERIMENT_KEY,
   logExposure,
   exposureSign,
   hashEmail,
@@ -135,6 +139,7 @@ import {
 import { TAROT_C_PATH, shouldRedirectTarotC, tarotBTarget } from "./lib/tarotRedirect";
 import { ensureVisitorId, readVisitorId } from "./lib/visitorCookie";
 import { fbU1CopyForOrder, FB_U1_COPY_TODAY, type FbU1CopyDeps } from "./lib/fbU1Copy";
+import { fbU2CopyForOrder, FB_U2_COPY_TODAY, type FbU2CopyDeps } from "./lib/fbU2Copy";
 import { cleanEarlier } from "./lib/fbChatFlowPrompts";
 import {
   V1_BUMP_CENTS,
@@ -348,6 +353,9 @@ const upsell2ReadingSchema = z.object({
     personName: z.string().optional(),
   }),
   concern: z.string().optional(),
+  // The /fb Upsell 2 copy test's arm B sends "magnet" (v1_fb_u2_copy_2026). Anything else,
+  // or nothing, is today's prompts. Loose on purpose: an odd value must never 400 the chat.
+  copy: z.string().max(40).optional(),
 });
 
 // Ad-traffic funnel helpers — see /fb, /fb2, /gdn routes on the client. Funnel
@@ -1842,6 +1850,32 @@ export async function registerRoutes(
     } catch (error) {
       logger.warn("fb u1-copy assign failed (falling back to today's copy):", error);
       return res.json(FB_U1_COPY_TODAY);
+    }
+  });
+
+  // /fb UPSELL 2 COPY A vs B (v1_fb_u2_copy_2026) — which Upsell 2 script this /fb buyer
+  // gets: today's (A) or "hook M, the magnet" (B). Asked by the client when the Upsell 2
+  // chat starts, BEFORE the first bubble. Same shape as /api/fb/u1-copy: the exposure is
+  // logged in the same call that hands back the arm, with the path (A bought Upsell 1, B
+  // declined it), the topic and whether the candle line shows. Who is in is read off HER
+  // ORDER ROW (session_id → conversations), never the client: /fb, no belief lane, a known
+  // topic (server/lib/fbU2Copy.ts). `candle` (B only) says she saw the candle in /fb chat B,
+  // which picks one RITUAL_INSTRUCTION line. Every failure path answers today's copy. The
+  // client only calls this from /fb/welcome2 and gives up after 2s (then A).
+  const fbU2CopyDeps: FbU2CopyDeps = {
+    findOrder: (orderId) => getConversationByStripeSession(orderId),
+    resolveArm: (email) => resolveFbU2Copy(email),
+    sawCandle: (ids) => fbChatFlowShowedCandle(ids),
+    logExposure: (subjectId, variant, context) =>
+      logExposure(V1_FB_U2_COPY_EXPERIMENT_KEY, subjectId, variant, "upsell2_chat_start", { ...context }),
+  };
+  app.get("/api/fb/u2-copy", async (req: Request, res: Response) => {
+    res.set("Cache-Control", "no-store");
+    try {
+      return res.json(await fbU2CopyForOrder(req.query.session_id, readVisitorId(req), fbU2CopyDeps));
+    } catch (error) {
+      logger.warn("fb u2-copy assign failed (falling back to today's copy):", error);
+      return res.json(FB_U2_COPY_TODAY);
     }
   });
 
@@ -3650,7 +3684,10 @@ export async function registerRoutes(
         });
       }
 
-      const { type, userData, concern } = parseResult.data;
+      const { type, userData, concern, copy } = parseResult.data;
+      // Arm B of the /fb Upsell 2 copy test gets its own prompt pair; every other request
+      // takes exactly today's path below.
+      const magnet = copy === "magnet";
       const userDataForClaude = {
         firstName: userData.firstName,
         bucket: userData.bucket,
@@ -3659,7 +3696,15 @@ export async function registerRoutes(
       };
 
       let result;
-      if (type === "manifest_reveal") {
+      if (magnet) {
+        // Never the generic "energy" fallback lines: on any failure (or a reply that breaks
+        // the script's rules) this answers no messages, and the page plays the script's own
+        // fallback line (fbU2Magnet.ts).
+        result =
+          type === "manifest_reveal"
+            ? await generateManifestRevealMagnet(userDataForClaude as any, concern || userData.concern || "")
+            : await generateManifestPersonalizeMagnet(userDataForClaude as any, concern || userData.concern || "");
+      } else if (type === "manifest_reveal") {
         result = await generateManifestReveal(
           userDataForClaude as any,
           concern || userData.concern || "",
