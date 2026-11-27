@@ -89,6 +89,23 @@ export interface Upsell1Copy {
   // What the small print under the buy buttons says she gets: "{price} includes <this> + free
   // shipping". Unset ⇒ V1's "charged stone".
   priceNoteItem?: string;
+  // ── Optional own questions 2 and 3, and typed-answer matching (the /fb Upsell 1 copy
+  // test's arm B, v1_fb_u1_copy_2026, first). ⛔ Unset ⇒ V1's shared UPSELL_QUESTION_2/3,
+  // UPSELL_*_REPLIES, UPSELL_AFTER_Q2/3 and detectQ1/2/3Intent, exactly as before. V1_UPSELL1
+  // and every backend offer set none of them. Resolved in ./questions.ts.
+  QUESTION_2?: string;
+  QUESTION_2_REPLIES?: QuickReply[];
+  AFTER_Q2?: Record<string, string[]>;
+  QUESTION_3?: string;
+  QUESTION_3_REPLIES?: QuickReply[];
+  AFTER_Q3?: Record<string, string[]>;
+  // Answer → branch key, per question. A button tap goes through this too (the hook matches
+  // the button's own text), so each one must send its own three buttons to their branches.
+  detectIntent?: {
+    q1?: (input: string) => string;
+    q2?: (input: string) => string;
+    q3?: (input: string) => string;
+  };
   // First names that are placeholders rather than names. /api/upsell/user-data's
   // Stripe fallback stamps "Friend" when checkout carried no firstName metadata,
   // which 02's does not — and "It's done, Friend" is worse copy than Evelyn's own

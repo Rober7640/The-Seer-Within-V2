@@ -11,6 +11,15 @@ import type { Bucket } from "@shared/types";
 import lavaStoneImage from "../assets/images/lava-stone.jpg";
 import { funnelPath, isTwinFlameOffer } from "../lib/funnel";
 import { claimMainPurchaseSlot, releaseMainPurchaseSlot, fireMainPurchaseEvents } from "../lib/mainPurchaseEvents";
+import type { Upsell1Copy } from "@/lib/upsellCopy/types";
+import {
+  FB_U1_COPY_PRICE_CENTS,
+  FB_U1_TODAY,
+  fbU1CopyFor,
+  fbU1CopyPreview,
+  fetchFbU1Copy,
+  isFbU1CopyRoute,
+} from "../lib/fbU1Copy";
 
 interface UserData {
   firstName: string;
@@ -33,6 +42,14 @@ export default function UpsellPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [inputValue, setInputValue] = useState("");
+
+  // /fb Upsell 1 copy test (v1_fb_u1_copy_2026). Only /fb/welcome1 asks, and the chat
+  // waits for the answer (at most FB_U1_COPY_TIMEOUT_MS) because the server logs the
+  // exposure as it answers. Every other funnel is ready at once with no override, so its
+  // chat starts exactly as before. undefined ⇒ today's V1_UPSELL1.
+  const [fbU1Route] = useState(() => isFbU1CopyRoute());
+  const [copyOverride, setCopyOverride] = useState<Upsell1Copy | undefined>(undefined);
+  const [copyReady, setCopyReady] = useState(() => !fbU1Route);
 
   // ⚠ These chat pages never scroll INTERNALLY: the message list is
   // `flex-1 overflow-y-auto` inside a `min-h-screen` column, and a flex item's
@@ -66,6 +83,12 @@ export default function UpsellPage() {
         personName: null,
         stripeCustomerId: null,
       });
+      // /fb demo: only the ?u1copy= preview can switch the script. No server call.
+      if (fbU1Route) {
+        const preview = fbU1CopyPreview(searchString);
+        setCopyOverride(preview ? fbU1CopyFor(preview, "love") : undefined);
+        setCopyReady(true);
+      }
       setIsLoading(false);
       return;
     }
@@ -117,6 +140,20 @@ export default function UpsellPage() {
         if (declined === "true") {
           setError("declined");
         }
+
+        // /fb Upsell 1 copy test: decided before the first bubble. The ?u1copy= preview
+        // never calls the server (never logged). A buyer whose price isn't $47, or who is
+        // back from a declined fallback (no chat runs), is never asked: both can only be A.
+        if (fbU1Route) {
+          const preview = fbU1CopyPreview(searchString);
+          const arm =
+            preview ??
+            (declined !== "true" && data?.upsell1PriceCents === FB_U1_COPY_PRICE_CENTS
+              ? await fetchFbU1Copy(orderId)
+              : FB_U1_TODAY);
+          setCopyOverride(fbU1CopyFor(arm, data?.bucket));
+          setCopyReady(true);
+        }
       } catch (err) {
         // Release the dedup slot so a retry on remount can fire.
         if (shouldTrack) {
@@ -156,8 +193,9 @@ export default function UpsellPage() {
   } = useUpsellChat({
     userData,
     sessionId,
-    enabled: !!userData && !error,
+    enabled: !!userData && !error && copyReady,
     lavaStoneImage,
+    copyOverride,
   });
 
   // Auto-scroll to bottom. The footer flags are deps on purpose: when the quick

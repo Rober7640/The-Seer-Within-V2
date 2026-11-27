@@ -118,6 +118,9 @@ import {
   resolveHomeChatFlow,
   V1_HOME_CHAT_FLOW_EXPERIMENT_KEY,
   V1_HOME_FUNNEL_SCOPE,
+  resolveFbU1Copy,
+  fbChatFlowShowedCandle,
+  V1_FB_U1_COPY_EXPERIMENT_KEY,
   logExposure,
   exposureSign,
   hashEmail,
@@ -131,6 +134,7 @@ import {
 } from "./lib/experiments";
 import { TAROT_C_PATH, shouldRedirectTarotC, tarotBTarget } from "./lib/tarotRedirect";
 import { ensureVisitorId, readVisitorId } from "./lib/visitorCookie";
+import { fbU1CopyForOrder, FB_U1_COPY_TODAY, type FbU1CopyDeps } from "./lib/fbU1Copy";
 import { cleanEarlier } from "./lib/fbChatFlowPrompts";
 import {
   V1_BUMP_CENTS,
@@ -1813,6 +1817,31 @@ export async function registerRoutes(
     } catch (error) {
       logger.warn("fb chat-flow assign failed (falling back to flow a):", error);
       return res.json({ flow: "a" });
+    }
+  });
+
+  // /fb UPSELL 1 COPY A vs B (v1_fb_u1_copy_2026) — which Upsell 1 script this /fb buyer
+  // gets: today's (A) or "hook 6, the stone is a filter" (B). Asked by the client when the
+  // Upsell 1 chat starts, BEFORE the first bubble. Same shape as /api/fb/chat-flow: the
+  // exposure is logged in the same call that hands back the arm. Who is in is read off HER
+  // ORDER ROW (session_id → conversations), never the client: /fb, no belief lane, Upsell 1
+  // price exactly $47, a known topic (server/lib/fbU1Copy.ts). `candle` (B only) says she saw
+  // the candle in /fb chat B, which picks one RITUAL line. Every failure path answers today's
+  // copy. The client only calls this from /fb/welcome1 and gives up after 2s (then A).
+  const fbU1CopyDeps: FbU1CopyDeps = {
+    findOrder: (orderId) => getConversationByStripeSession(orderId),
+    resolveArm: (email) => resolveFbU1Copy(email),
+    sawCandle: (ids) => fbChatFlowShowedCandle(ids),
+    logExposure: (subjectId, variant, context) =>
+      logExposure(V1_FB_U1_COPY_EXPERIMENT_KEY, subjectId, variant, "upsell1_chat_start", context),
+  };
+  app.get("/api/fb/u1-copy", async (req: Request, res: Response) => {
+    res.set("Cache-Control", "no-store");
+    try {
+      return res.json(await fbU1CopyForOrder(req.query.session_id, readVisitorId(req), fbU1CopyDeps));
+    } catch (error) {
+      logger.warn("fb u1-copy assign failed (falling back to today's copy):", error);
+      return res.json(FB_U1_COPY_TODAY);
     }
   });
 

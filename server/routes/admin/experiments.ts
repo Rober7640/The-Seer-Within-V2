@@ -44,6 +44,7 @@ import {
   V1_TAROT_SHADOW_EXPERIMENT_KEY,
   V1_CLOSE_DEPTH_EXPERIMENT_KEY,
   V1_FB_CHAT_FLOW_EXPERIMENT_KEY,
+  V1_FB_U1_COPY_EXPERIMENT_KEY,
   PERSONA_PROMPT_KEY_PREFIX,
   isPersonaPromptKey,
 } from '../../lib/experiments';
@@ -138,6 +139,29 @@ function u1PayloadError(variants: Array<{ key: string; payload?: Record<string, 
     }
   }
   return null;
+}
+
+// `upsell1_funnel` (tallyUpsell1: exposure ⋈ conversations via context.conversationId) is
+// wired to the keys that have their OWN resolver and log their own exposures with that
+// conversationId: the Upsell-1 PRICE test (priceVariant.ts, at lead capture) and the /fb
+// Upsell-1 COPY test (GET /api/fb/u1-copy, at chat start). Any other key would run inert
+// (status=running but never applied or logged), so it is still refused.
+export const UPSELL1_FUNNEL_KEYS: readonly string[] = [U1_PRICE_EXPERIMENT_KEY, V1_FB_U1_COPY_EXPERIMENT_KEY];
+
+export function upsell1FunnelKeyError(key: string): string | null {
+  return UPSELL1_FUNNEL_KEYS.includes(key)
+    ? null
+    : `conversion type 'upsell1_funnel' is only supported for: ${UPSELL1_FUNNEL_KEYS.join(', ')}`;
+}
+
+// The price rule (every arm needs a positive upsell1Cents) for every upsell1_funnel key
+// EXCEPT the copy test, which changes no price: its arms are {} and {copy:'filter'}, and the
+// price comes from the order row as always. Every other key is checked exactly as before.
+export function upsell1PayloadCheck(
+  key: string,
+  variants: Array<{ key: string; payload?: Record<string, unknown> }>,
+): string | null {
+  return key === V1_FB_U1_COPY_EXPERIMENT_KEY ? null : u1PayloadError(variants);
 }
 
 // Keys legitimately measured by `v1_main_funnel` (exposure log ⋈ conversations,
@@ -791,16 +815,13 @@ router.post('/', async (req: Request, res: Response) => {
     if (!parsed.success) return badRequest(res, parsed);
     const data = parsed.data;
 
-    // upsell1_funnel is wired to ONE money key (the Upsell-1 charge path in
-    // priceVariant.ts consults only u1_price_2026); a second one would run inert
-    // (status=running but never pricing or logging). Reject it explicitly.
+    // upsell1_funnel is wired to the Upsell-1 keys with their own resolver (the price
+    // test, and the /fb copy test); any other key would run inert (status=running but
+    // never applied or logged). Reject it explicitly. See UPSELL1_FUNNEL_KEYS.
     if (data.conversion?.type === 'upsell1_funnel') {
-      if (data.key !== U1_PRICE_EXPERIMENT_KEY) {
-        return res.status(400).json({
-          error: `conversion type 'upsell1_funnel' is only supported for the '${U1_PRICE_EXPERIMENT_KEY}' experiment`,
-        });
-      }
-      const err = u1PayloadError(data.variants);
+      const keyErr = upsell1FunnelKeyError(data.key);
+      if (keyErr) return res.status(400).json({ error: keyErr });
+      const err = upsell1PayloadCheck(data.key, data.variants);
       if (err) return res.status(400).json({ error: err });
     }
     // gateway_split is read by ONE code path (the /api/checkout gateway fork), keyed
@@ -968,7 +989,7 @@ router.patch('/:key', async (req: Request, res: Response) => {
     // conversion is still checked.
     const effectiveConvType = data.conversion?.type ?? exp.conversion?.type;
     if (effectiveConvType === 'upsell1_funnel' && data.variants) {
-      const err = u1PayloadError(data.variants);
+      const err = upsell1PayloadCheck(key, data.variants);
       if (err) return res.status(400).json({ error: err });
     }
     if (effectiveConvType === 'v1_main_funnel' && data.variants && needsV1MainPricePayload(key)) {

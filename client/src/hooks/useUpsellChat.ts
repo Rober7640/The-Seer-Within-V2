@@ -6,20 +6,16 @@ import {
   QuickReply,
   personalizeMessages,
   personalizeMessage,
-  detectQ1Intent,
-  detectQ2Intent,
-  detectQ3Intent,
-  // Questions 2 and 3 are still V1-only constants: offer 02 asks nothing, so its
-  // chain never routes into these stages. Everything else now comes from the
-  // resolved copy (lib/backendOffers.ts).
-  UPSELL_QUESTION_2,
-  UPSELL_QUESTION_2_REPLIES,
-  UPSELL_AFTER_Q2,
-  UPSELL_QUESTION_3,
-  UPSELL_QUESTION_3_REPLIES,
-  UPSELL_AFTER_Q3,
   formatUpsellPrice,
 } from "@/lib/upsellMessages";
+// Questions 2 and 3 and the typed-answer matching come from the resolved copy, falling
+// back to V1's shared constants when the copy sets none (V1 and every backend offer). Only
+// the /fb Upsell 1 copy test's arm B (v1_fb_u1_copy_2026) asks its own.
+import {
+  upsell1Question2,
+  upsell1Question3,
+  upsell1Intent,
+} from "@/lib/upsellCopy/questions";
 import { getTrackdeskClickId } from "@/lib/facebook";
 import {
   upsell1Copy,
@@ -305,17 +301,16 @@ export function useUpsellChat({
           break;
 
         case "QUESTION_2":
-          await sendBotMessage(pMsg(UPSELL_QUESTION_2));
-          setQuickReplies(UPSELL_QUESTION_2_REPLIES);
+          await sendBotMessage(pMsg(upsell1Question2(copy).question));
+          setQuickReplies(upsell1Question2(copy).replies);
           setShowQuickReplies(true);
           setInputEnabled(true);
           setStage("WAITING_Q2");
           break;
 
         case "AFTER_Q2":
-          const q2Response =
-            UPSELL_AFTER_Q2[responseKey || "default"] ||
-            UPSELL_AFTER_Q2.default;
+          const q2After = upsell1Question2(copy).after;
+          const q2Response = q2After[responseKey || "default"] || q2After.default;
           await sendBotMessages(p(q2Response));
           advance("AFTER_Q2");
           break;
@@ -331,17 +326,16 @@ export function useUpsellChat({
           break;
 
         case "QUESTION_3":
-          await sendBotMessage(pMsg(UPSELL_QUESTION_3));
-          setQuickReplies(UPSELL_QUESTION_3_REPLIES);
+          await sendBotMessage(pMsg(upsell1Question3(copy).question));
+          setQuickReplies(upsell1Question3(copy).replies);
           setShowQuickReplies(true);
           setInputEnabled(true);
           setStage("WAITING_Q3");
           break;
 
         case "AFTER_Q3":
-          const q3Response =
-            UPSELL_AFTER_Q3[responseKey || "default"] ||
-            UPSELL_AFTER_Q3.default;
+          const q3After = upsell1Question3(copy).after;
+          const q3Response = q3After[responseKey || "default"] || q3After.default;
           await sendBotMessages(p(q3Response));
           advance("AFTER_Q3");
           break;
@@ -405,17 +399,17 @@ export function useUpsellChat({
       resetUI();
 
       if (stage === "WAITING_Q1") {
-        const intent = detectQ1Intent(input);
+        const intent = upsell1Intent(copy, 1)(input);
         await processStage("AFTER_Q1", intent);
       } else if (stage === "WAITING_Q2") {
-        const intent = detectQ2Intent(input);
+        const intent = upsell1Intent(copy, 2)(input);
         await processStage("AFTER_Q2", intent);
       } else if (stage === "WAITING_Q3") {
-        const intent = detectQ3Intent(input);
+        const intent = upsell1Intent(copy, 3)(input);
         await processStage("AFTER_Q3", intent);
       }
     },
-    [stage, addUserMessage, resetUI, processStage],
+    [stage, copy, addUserMessage, resetUI, processStage],
   );
 
   // The CONTINUE tap. Posts her word as a bubble — the point is that the screen

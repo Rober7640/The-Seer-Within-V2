@@ -1993,6 +1993,93 @@ export async function resolveFbChatFlow(
   return { b: a.applied && a.payload?.flow === 'b', variant: a.variant, enrolled: a.enrolled };
 }
 
+/**
+ * Did this /fb buyer SEE the candle bend at her name, i.e. was her chat /fb chat B?
+ * Read for one line of the Upsell 1 copy test (v1_fb_u1_copy_2026, arm B's RITUAL bubble
+ * 2). The exposure row is the record of what she was shown: the client awaits
+ * /api/fb/chat-flow, which logs the arm in the same call, before the greeting. With no row
+ * at all, only a CONCLUDED chat-flow test rolled out to B means she saw it (that rollout
+ * logs nothing). Everything else, including any read error, is false: the fallback line
+ * ("on my altar") names nothing she missed.
+ *
+ * ⚠ Lane buyers never see the candle even in chat B (their opener replaces the name
+ * reading), so the caller must rule lanes out first; the Upsell 1 test does.
+ */
+export async function fbChatFlowShowedCandle(
+  visitorIds: string[],
+  key: string = V1_FB_CHAT_FLOW_EXPERIMENT_KEY, // overridable so tests never touch the live experiment
+): Promise<boolean> {
+  const ids = visitorIds.filter((id) => typeof id === 'string' && id.length > 0);
+  if (ids.length === 0) return false;
+  try {
+    const rows = await db
+      .select({ variant: experimentExposures.variant })
+      .from(experimentExposures)
+      .where(and(eq(experimentExposures.experimentKey, key), inArray(experimentExposures.subjectId, ids)));
+    if (rows.length > 0) {
+      const exp = await getExperiment(key);
+      return chatFlowVariantsShowCandle(rows.map((r) => r.variant), exp?.variants);
+    }
+    const rollout = await resolveFbChatFlow(ids[0], key);
+    return rollout.b && !rollout.enrolled;
+  } catch (err) {
+    logger.warn('fb chat-flow candle lookup failed (using the altar line)', {
+      error: (err as Error).message,
+    });
+    return false;
+  }
+}
+
+/** Pure part of fbChatFlowShowedCandle: does any logged arm carry the `{flow:'b'}` payload? */
+export function chatFlowVariantsShowCandle(
+  loggedVariants: string[],
+  configured: ExperimentVariant[] | null | undefined,
+): boolean {
+  const arms = Array.isArray(configured) ? configured : [];
+  return loggedVariants.some((v) => arms.find((a) => a.key === v)?.payload?.flow === 'b');
+}
+
+// ── /fb UPSELL 1 COPY: today's script (A) vs "hook 6, the stone is a filter" (B) ──────
+// A (control, `{}`) is today's V1_UPSELL1, byte for byte. B (`{copy:'filter'}`) is the
+// new script, client/src/lib/upsellCopy/fbU1Filter.ts. Copy only: same price, same charge,
+// same chain of stages, same stone photo. Spec:
+// docs/superpowers/specs/2026-11-27-v1-fb-u1-copy-2026.md.
+//
+// WHO IS IN is read off HER ORDER ROW, never the client (fbU1CopyIneligible in
+// server/lib/fbU1Copy.ts): /fb (price_variant carries `_fb`), no belief lane, an Upsell 1
+// price of exactly $47 (conversations.upsell1_amount_cents = 4700, so only u1_price_2026's
+// $47 arm while that test runs, and everyone once it rolls out $47), and a known topic.
+//
+// SUBJECT is the normalised email, exactly as u1_price_2026: bucketed on
+// email.trim().toLowerCase(), exposure keyed on hashEmail(email) with the conversationId in
+// the context, so tallyUpsell1 (conversion 'upsell1_funnel') reads it unchanged.
+//
+// ASSIGNED + LOGGED in one call when the Upsell 1 chat starts (GET /api/fb/u1-copy), before
+// the first bubble. Every failure path answers A.
+export const V1_FB_U1_COPY_EXPERIMENT_KEY = 'v1_fb_u1_copy_2026';
+
+/** Pure part of resolveFbU1Copy: an assignment → the arm. Only an applied `{copy:'filter'}` is B. */
+export function fbU1CopyArm(
+  a: Assignment | null | undefined,
+): { filter: boolean; variant: string | null; enrolled: boolean } {
+  if (!a) return { filter: false, variant: null, enrolled: false };
+  return { filter: a.applied && a.payload?.copy === 'filter', variant: a.variant, enrolled: a.enrolled };
+}
+
+/**
+ * Which Upsell 1 script does this /fb buyer get? `filter` is true only when the assigned
+ * arm is applied AND its payload says `{copy:'filter'}`, so a draft / paused test, a
+ * missing email or a malformed payload all give today's copy. `enrolled` tells the caller
+ * to log the exposure. Eligibility (/fb, no lane, $47, topic) is the caller's job.
+ */
+export async function resolveFbU1Copy(
+  email: string | null | undefined,
+  key: string = V1_FB_U1_COPY_EXPERIMENT_KEY, // overridable so tests never touch the live experiment
+): Promise<{ filter: boolean; variant: string | null; enrolled: boolean }> {
+  const subject = typeof email === 'string' && email.trim() ? email.trim().toLowerCase() : null;
+  return fbU1CopyArm(await assign(key, subject, { funnel: 'v1-fb' }));
+}
+
 // ── HOME (base V1) CHAT FLOW A vs B — interview vs reading ────────────────────
 // The same reading as /fb, run as its OWN test on the base V1 funnel (the "/" / "/chat"
 // storefront, no URL prefix). Arm A is today's home chat; arm B reuses /fb's reading

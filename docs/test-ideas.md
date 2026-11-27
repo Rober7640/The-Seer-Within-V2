@@ -2483,3 +2483,26 @@ Registry `shared/beliefLanes.ts`; server HTML `server/lib/laneHtml.ts` (static.t
 - [ ] Lane survives a reload of /fb/chat (sessionStorage + saved userData.lane); a fresh tab on plain /fb clears it
 - [ ] Meta Sharing Debugger on the deployed /fb?lane=manifest shows the lane title, description and image alt
 - [ ] /, /fb2, /gdn, /fb-tarot, /fb-palm with ?lane=manifest behave exactly as without it
+
+## /fb Upsell 1 copy test — `v1_fb_u1_copy_2026`, today vs "the stone is a filter" (2026-11-27, uncommitted on `prod/fb-upsell`)
+
+Spec `docs/superpowers/specs/2026-11-27-v1-fb-u1-copy-2026.md`; draft SQL `improve-v1/create-fb-u1-copy-experiment-2026-11-27.sql`.
+Unit: `client/src/lib/upsellCopy/fbU1Filter.test.ts`, `client/src/lib/upsellCopy/questions.test.ts`,
+`client/src/lib/fbU1Copy.test.ts` (vitest); `server/lib/fbU1Copy.test.ts`, `server/routes/admin/upsell1Funnel.test.ts` (tsx --test).
+
+- [x] Arm B matches the approved script line for line, all four topics, both RITUAL lines *(fbU1Filter.test.ts parses the script)*
+- [x] Arm B walks CONFIRMATION → … → OFFER on `V1_CHAIN_1`, no pauses, lava stone photo, no downsell *(fbU1Filter.test.ts)*
+- [x] Placeholders fill for every topic; `{personName}` falls back to "them"; no em/en dash *(fbU1Filter.test.ts)*
+- [x] Typed answers: every button lands on its branch; Q1 "not always" → maybe; Q3 "only what's mine" (straight or curly ') → yes; defaults unsure / understand / what *(fbU1Filter.test.ts)*
+- [x] Arm A: `/fb/welcome1` with no override resolves `V1_UPSELL1`, fingerprint pinned to 3c0deb8; V1 and every backend offer get the same Q2/Q3/matching objects as before *(questions.test.ts)*
+- [x] Server: /fb only (price_variant `_fb`), no lane, exactly 4700, known topic; draft/off, bad id, any throw ⇒ today, nothing logged; exposure on hashEmail with conversationId *(fbU1Copy.test.ts)*
+- [x] Client: only /fb/welcome1 asks; non-OK / bad body / network error / >2s ⇒ today; `?u1copy=filter(&chatflow=b)` never calls the server *(fbU1Copy.test.ts)*
+- [x] Admin: `upsell1_funnel` allowed for `u1_price_2026` + `v1_fb_u1_copy_2026` only; price key keeps the upsell1Cents rule *(upsell1Funnel.test.ts)*
+- [ ] Playwright: `/fb/welcome1?demo=true&u1copy=filter` plays B to the CTA ("Yes, set my stone tonight", "$47 includes …"); `?demo=true` alone plays today's script
+- [ ] Playwright: on /fb/welcome1, `/api/fb/u1-copy` is called before the first bubble; stubbed to hang, the chat starts on today's script within ~2.5s
+- [ ] Playwright: /welcome1, /fb2, /fb-palm, /fb-tarot, /fb-read, /gdn Upsell 1 never call `/api/fb/u1-copy`
+- [ ] Dev DB, test RUNNING: a $47 plain /fb test order gets one exposure row (`upsell1_chat_start`, context.conversationId = her row); a reload adds none
+- [ ] Dev DB: a $39 / $35 order, a `?lane=` order and a /fb-tarot order get no exposure and today's script
+- [ ] Dev DB: a chat-flow B buyer in arm B sees "beside the candle that bent at your name"; a chat-flow A buyer sees "on my altar"
+- [ ] Dev DB: `/admin/experiments` results for the key tally offered / bought / revenue per arm (tallyUpsell1)
+- [ ] Stripe TEST: accept in arm B charges $47 on the saved card, shipping form, then `/fb/welcome2`; the 1-click fallback still opens the hosted checkout
