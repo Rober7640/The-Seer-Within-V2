@@ -174,7 +174,7 @@ import {
 } from "./lib/aweber";
 import { collectsPhoneAtCheckout } from "./lib/checkoutPhone";
 import { smsConsentSessionParams, smsConsentSessionMetadata } from "./lib/smsConsent";
-import { localeMetadata, requestLocale } from "./lib/locale";
+import { localeMetadata, requestLocale, requestCurrency, requestStripeLocale, shippingCountries } from "./lib/locale";
 import { addLeadToKit } from "./lib/kit";
 import { resolveLunaTyHandoff } from "./lib/lunaThankyouGift";
 import { evelynTyPersonaFor, isEvelynTyConversation, resolveEvelynTyHandoff } from "./lib/evelynThankyouGift";
@@ -1437,10 +1437,13 @@ export async function registerRoutes(
           phone_number_collection: { enabled: true },
         }),
         payment_method_types: ["card"],
+        // French order → Stripe hosted page renders in French; undefined for
+        // English leaves Stripe's own detection exactly as today.
+        locale: requestStripeLocale(),
         line_items: [
           {
             price_data: {
-              currency: "usd",
+              currency: requestCurrency(),
               product_data: {
                 name: productName,
                 // Unchanged for every order except a retarget order with no name,
@@ -1461,7 +1464,7 @@ export async function registerRoutes(
             ? [
                 {
                   price_data: {
-                    currency: "usd",
+                    currency: requestCurrency(),
                     product_data: {
                       // Carries the SAME funnel suffix as the main line above
                       // (" - PALM" / " - TAROT"), from the same fbSuffix() call,
