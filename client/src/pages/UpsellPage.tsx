@@ -6,6 +6,7 @@ import { BackgroundMusic } from "../components/BackgroundMusic";
 import { UpsellCTA, ShippingForm, QuickReplies } from "../components/upsell";
 import { useUpsellChat, Message } from "../hooks/useUpsellChat";
 import { trackPurchase } from "../lib/facebook";
+import { purchaseCurrency } from "../lib/locale";
 import { trackGAdsPurchase } from "../lib/gtm";
 import { Volume2, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -125,7 +126,7 @@ export default function UpsellPage() {
           // would be down to whichever arrived first. Identical to purchaseAmount
           // whenever there is no bump.
           const orderTotal = purchaseAmount + (data.bumpAmountCents || 0) / 100;
-          trackPurchase(orderTotal, "USD", data.email, "Energy Clearing Ritual", sid ?? undefined, { skipServerRelay: true });
+          trackPurchase(orderTotal, purchaseCurrency(), data.email, "Energy Clearing Ritual", sid ?? undefined, { skipServerRelay: true });
           trackGAdsPurchase("main", orderTotal, sid);
 
           // V1 prompt A/B (v1_clearing_theme_palm_2026) — primary metric =

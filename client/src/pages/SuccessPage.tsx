@@ -4,6 +4,7 @@ import { CosmicBackground } from "../components/CosmicBackground";
 import { Link } from "wouter";
 import { CheckCircle, Package, Mail, Sparkles, Gem, MessageCircle } from "lucide-react";
 import { trackPurchase, trackUpsellPurchase, trackUpsell2Purchase } from "../lib/facebook";
+import { purchaseCurrency } from "../lib/locale";
 import { trackGAdsPurchase } from "../lib/gtm";
 import { currentFunnel } from "../lib/funnel";
 import { t } from "@/lib/i18n";
@@ -190,9 +191,9 @@ export default function SuccessPage() {
           if (boughtUpsell2 && sessionId) {
             const amount = (data.upsell2Amount || 4700) / 100;
             if (currentFunnel()) {
-              trackUpsell2Purchase(amount, "USD", data.email, "Manifestation Bracelet", sessionId, { skipServerRelay: true });
+              trackUpsell2Purchase(amount, purchaseCurrency(), data.email, "Manifestation Bracelet", sessionId, { skipServerRelay: true });
             } else {
-              trackUpsellPurchase(amount, "USD", data.email, "Manifestation Bracelet", sessionId, 'u2', { skipServerRelay: true });
+              trackUpsellPurchase(amount, purchaseCurrency(), data.email, "Manifestation Bracelet", sessionId, 'u2', { skipServerRelay: true });
             }
             trackGAdsPurchase("upsell2", amount, sessionId);
           }
